@@ -1,15 +1,24 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Next Level Dating Club API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: audits
+    description: Profile audit operations
+  - name: profiles
+    description: Dating profile operations
+  - name: messages
+    description: Message coaching operations
+  - name: insights
+    description: Email insight import operations
+  - name: waitlist
+    description: Waitlist operations
 paths:
   /healthz:
     get:
@@ -24,6 +33,317 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /audits:
+    get:
+      operationId: listAudits
+      tags: [audits]
+      summary: List all profile audits for current session
+      responses:
+        "200":
+          description: List of audits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Audit"
+    post:
+      operationId: createAudit
+      tags: [audits]
+      summary: Create a new profile audit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuditInput"
+      responses:
+        "201":
+          description: Created audit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Audit"
+
+  /audits/{id}:
+    get:
+      operationId: getAudit
+      tags: [audits]
+      summary: Get a single audit by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Audit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Audit"
+        "404":
+          description: Not found
+
+  /audits/{id}/generate:
+    post:
+      operationId: generateAuditReport
+      tags: [audits]
+      summary: Generate AI profile audit report for an audit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Generated report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditReport"
+
+  /audits/summary:
+    get:
+      operationId: getAuditSummary
+      tags: [audits]
+      summary: Get aggregate summary of user audits (scores, trends)
+      responses:
+        "200":
+          description: Audit summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditSummary"
+
+  /profiles:
+    get:
+      operationId: listProfiles
+      tags: [profiles]
+      summary: List saved dating profiles
+      responses:
+        "200":
+          description: List of profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DatingProfile"
+    post:
+      operationId: createProfile
+      tags: [profiles]
+      summary: Save a dating profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DatingProfileInput"
+      responses:
+        "201":
+          description: Saved profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DatingProfile"
+
+  /profiles/{id}:
+    get:
+      operationId: getProfile
+      tags: [profiles]
+      summary: Get a dating profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DatingProfile"
+    patch:
+      operationId: updateProfile
+      tags: [profiles]
+      summary: Update a dating profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DatingProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DatingProfile"
+
+  /profiles/{id}/rewrite:
+    post:
+      operationId: rewriteProfileBio
+      tags: [profiles]
+      summary: Generate AI-rewritten bio and prompts for a profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Rewritten bio and prompts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileRewrite"
+
+  /messages:
+    get:
+      operationId: listMessageCoachingSessions
+      tags: [messages]
+      summary: List message coaching sessions
+      responses:
+        "200":
+          description: List of coaching sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MessageCoachingSession"
+    post:
+      operationId: createMessageCoachingSession
+      tags: [messages]
+      summary: Create a message coaching session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageCoachingInput"
+      responses:
+        "201":
+          description: Created session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageCoachingSession"
+
+  /messages/{id}/coach:
+    post:
+      operationId: coachMessage
+      tags: [messages]
+      summary: Get AI coaching advice for a specific message session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Coaching response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageCoachingResponse"
+
+  /insights:
+    get:
+      operationId: listInsights
+      tags: [insights]
+      summary: List email insight imports
+      responses:
+        "200":
+          description: List of insights
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EmailInsight"
+    post:
+      operationId: createInsight
+      tags: [insights]
+      summary: Submit email/message history for communication pattern analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailInsightInput"
+      responses:
+        "201":
+          description: Created insight
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailInsight"
+
+  /insights/{id}/analyze:
+    post:
+      operationId: analyzeInsight
+      tags: [insights]
+      summary: Run AI analysis on pasted email/message history
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailInsightAnalysis"
+
+  /waitlist:
+    post:
+      operationId: joinWaitlist
+      tags: [waitlist]
+      summary: Join the podcast launch waitlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WaitlistInput"
+      responses:
+        "201":
+          description: Joined waitlist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WaitlistEntry"
+    get:
+      operationId: getWaitlistStats
+      tags: [waitlist]
+      summary: Get waitlist stats (count, spots remaining)
+      responses:
+        "200":
+          description: Waitlist stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WaitlistStats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +354,420 @@ components:
       required:
         - status
 
+    AuditInput:
+      type: object
+      required: [firstName, age, gender, orientation, datingGoal, currentApps, bio]
+      properties:
+        firstName:
+          type: string
+        age:
+          type: integer
+        gender:
+          type: string
+        orientation:
+          type: string
+        datingGoal:
+          type: string
+        currentApps:
+          type: array
+          items:
+            type: string
+        bio:
+          type: string
+        prompts:
+          type: ["string", "null"]
+        recentMessageSample:
+          type: ["string", "null"]
+        photoCount:
+          type: ["integer", "null"]
+        relationshipHistory:
+          type: ["string", "null"]
+        biggestChallenge:
+          type: ["string", "null"]
+
+    Audit:
+      type: object
+      required: [id, firstName, age, gender, datingGoal, currentApps, bio, createdAt, status]
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        age:
+          type: integer
+        gender:
+          type: string
+        orientation:
+          type: string
+        datingGoal:
+          type: string
+        currentApps:
+          type: array
+          items:
+            type: string
+        bio:
+          type: string
+        prompts:
+          type: ["string", "null"]
+        recentMessageSample:
+          type: ["string", "null"]
+        photoCount:
+          type: ["integer", "null"]
+        relationshipHistory:
+          type: ["string", "null"]
+        biggestChallenge:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, generating, complete, error]
+        readinessScore:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    AuditReport:
+      type: object
+      required: [auditId, readinessScore, overallGrade, strengths, risks, bioAudit, rewrittenBio, rewrittenPrompts, photoGuidance, actionPlan, messagingStyle, coachingCta]
+      properties:
+        auditId:
+          type: integer
+        readinessScore:
+          type: integer
+        overallGrade:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        risks:
+          type: array
+          items:
+            type: string
+        bioAudit:
+          type: string
+        rewrittenBio:
+          type: string
+        rewrittenPrompts:
+          type: array
+          items:
+            $ref: "#/components/schemas/RewrittenPrompt"
+        photoGuidance:
+          type: array
+          items:
+            $ref: "#/components/schemas/PhotoGuidanceItem"
+        actionPlan:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActionPlanItem"
+        messagingStyle:
+          type: string
+        coachingCta:
+          type: string
+
+    RewrittenPrompt:
+      type: object
+      required: [original, rewritten, tip]
+      properties:
+        original:
+          type: string
+        rewritten:
+          type: string
+        tip:
+          type: string
+
+    PhotoGuidanceItem:
+      type: object
+      required: [category, status, advice]
+      properties:
+        category:
+          type: string
+        status:
+          type: string
+          enum: [good, needs_work, missing]
+        advice:
+          type: string
+
+    ActionPlanItem:
+      type: object
+      required: [priority, title, description, timeframe]
+      properties:
+        priority:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        timeframe:
+          type: string
+
+    AuditSummary:
+      type: object
+      required: [totalAudits, averageScore, latestScore, scoreHistory, topStrengths, topRisks]
+      properties:
+        totalAudits:
+          type: integer
+        averageScore:
+          type: number
+        latestScore:
+          type: ["integer", "null"]
+        scoreHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScoreHistoryPoint"
+        topStrengths:
+          type: array
+          items:
+            type: string
+        topRisks:
+          type: array
+          items:
+            type: string
+
+    ScoreHistoryPoint:
+      type: object
+      required: [date, score]
+      properties:
+        date:
+          type: string
+        score:
+          type: integer
+
+    DatingProfileInput:
+      type: object
+      required: [platform, bio]
+      properties:
+        platform:
+          type: string
+        bio:
+          type: string
+        prompts:
+          type: ["string", "null"]
+        photoCount:
+          type: ["integer", "null"]
+        notes:
+          type: ["string", "null"]
+
+    DatingProfileUpdate:
+      type: object
+      properties:
+        platform:
+          type: string
+        bio:
+          type: string
+        prompts:
+          type: ["string", "null"]
+        photoCount:
+          type: ["integer", "null"]
+        notes:
+          type: ["string", "null"]
+
+    DatingProfile:
+      type: object
+      required: [id, platform, bio, createdAt]
+      properties:
+        id:
+          type: integer
+        platform:
+          type: string
+        bio:
+          type: string
+        prompts:
+          type: ["string", "null"]
+        photoCount:
+          type: ["integer", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    ProfileRewrite:
+      type: object
+      required: [profileId, rewrittenBio, rewrittenPrompts, tips]
+      properties:
+        profileId:
+          type: integer
+        rewrittenBio:
+          type: string
+        rewrittenPrompts:
+          type: array
+          items:
+            $ref: "#/components/schemas/RewrittenPrompt"
+        tips:
+          type: array
+          items:
+            type: string
+
+    MessageCoachingInput:
+      type: object
+      required: [matchName, conversationContext, yourLastMessage]
+      properties:
+        matchName:
+          type: string
+        conversationContext:
+          type: string
+        yourLastMessage:
+          type: string
+        goal:
+          type: ["string", "null"]
+
+    MessageCoachingSession:
+      type: object
+      required: [id, matchName, conversationContext, yourLastMessage, createdAt, status]
+      properties:
+        id:
+          type: integer
+        matchName:
+          type: string
+        conversationContext:
+          type: string
+        yourLastMessage:
+          type: string
+        goal:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, complete]
+        createdAt:
+          type: string
+
+    MessageCoachingResponse:
+      type: object
+      required: [sessionId, analysis, suggestedReplies, tone, redFlags, coachTip]
+      properties:
+        sessionId:
+          type: integer
+        analysis:
+          type: string
+        suggestedReplies:
+          type: array
+          items:
+            $ref: "#/components/schemas/SuggestedReply"
+        tone:
+          type: string
+        redFlags:
+          type: array
+          items:
+            type: string
+        coachTip:
+          type: string
+
+    SuggestedReply:
+      type: object
+      required: [style, text, rationale]
+      properties:
+        style:
+          type: string
+        text:
+          type: string
+        rationale:
+          type: string
+
+    EmailInsightInput:
+      type: object
+      required: [pastedContent, sourceLabel]
+      properties:
+        pastedContent:
+          type: string
+        sourceLabel:
+          type: string
+        consentGiven:
+          type: boolean
+
+    EmailInsight:
+      type: object
+      required: [id, sourceLabel, pastedContent, createdAt, status]
+      properties:
+        id:
+          type: integer
+        sourceLabel:
+          type: string
+        pastedContent:
+          type: string
+        consentGiven:
+          type: boolean
+        status:
+          type: string
+          enum: [pending, analyzing, complete, error]
+        createdAt:
+          type: string
+
+    EmailInsightAnalysis:
+      type: object
+      required: [insightId, communicationPatterns, attachmentStyle, strengths, growthAreas, datingProfileTips, summary]
+      properties:
+        insightId:
+          type: integer
+        communicationPatterns:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommunicationPattern"
+        attachmentStyle:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        growthAreas:
+          type: array
+          items:
+            type: string
+        datingProfileTips:
+          type: array
+          items:
+            type: string
+        summary:
+          type: string
+
+    CommunicationPattern:
+      type: object
+      required: [pattern, frequency, impact]
+      properties:
+        pattern:
+          type: string
+        frequency:
+          type: string
+        impact:
+          type: string
+
+    WaitlistInput:
+      type: object
+      required: [email, firstName]
+      properties:
+        email:
+          type: string
+        firstName:
+          type: string
+        podcastSource:
+          type: ["string", "null"]
+        interestedIn:
+          type: ["string", "null"]
+
+    WaitlistEntry:
+      type: object
+      required: [id, email, firstName, position, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        firstName:
+          type: string
+        position:
+          type: integer
+        podcastSource:
+          type: ["string", "null"]
+        interestedIn:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    WaitlistStats:
+      type: object
+      required: [totalCount, spotsRemaining, nextMilestone]
+      properties:
+        totalCount:
+          type: integer
+        spotsRemaining:
+          type: integer
+        nextMilestone:
+          type: integer
