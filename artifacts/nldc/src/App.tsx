@@ -12,6 +12,10 @@ import Insights from "@/pages/Insights";
 import Integrations from "@/pages/Integrations";
 import Pricing from "@/pages/Pricing";
 import Waitlist from "@/pages/Waitlist";
+import Diagnosis from "@/pages/Diagnosis";
+import Lab from "@/pages/Lab";
+import SignalCheck from "@/pages/SignalCheck";
+import Roadmap from "@/pages/Roadmap";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +31,10 @@ function Router() {
       <Route path="/integrations" component={Integrations} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/waitlist" component={Waitlist} />
+      <Route path="/diagnosis" component={Diagnosis} />
+      <Route path="/lab" component={Lab} />
+      <Route path="/signal-check" component={SignalCheck} />
+      <Route path="/roadmap" component={Roadmap} />
       <Route component={NotFound} />
     </Switch>
   );

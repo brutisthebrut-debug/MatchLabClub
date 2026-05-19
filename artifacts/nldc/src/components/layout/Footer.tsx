@@ -1,40 +1,56 @@
 import { Link } from "wouter";
+import { Sparkles } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-foreground text-background py-12 md:py-16">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
+    <footer className="relative border-t border-white/5 bg-[hsl(232_38%_5%)] overflow-hidden">
+      {/* Decorative orb */}
+      <div className="orb orb-violet absolute w-96 h-96 -bottom-32 -left-32 opacity-60 pointer-events-none" />
+
+      <div className="container mx-auto px-4 md:px-6 py-14 md:py-16 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-12">
           <div className="col-span-1 md:col-span-2">
-            <Link href="/" className="font-serif text-2xl font-bold text-primary mb-4 block inline-block">
-              Next Level Dating Club
+            <Link href="/" className="flex items-center gap-2.5 mb-5 w-fit group">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-serif text-lg font-bold gradient-text-violet">Next Level Dating Club</span>
             </Link>
-            <p className="text-muted max-w-sm mt-4 text-sm leading-relaxed">
-              Premium dating coaching that actually works. 
-              No vague advice. Just specific, actionable guidance to find the relationship you deserve.
+            <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
+              The private coaching studio for people who want to be understood accurately — not just liked more.
+            </p>
+            <p className="text-muted-foreground/50 text-xs mt-4 leading-relaxed max-w-xs">
+              No generic advice. No vague confidence tips. Just honest, specific, actionable coaching built around who you actually are.
             </p>
           </div>
+
           <div>
-            <h3 className="font-semibold text-lg mb-4 text-white">Product</h3>
-            <ul className="space-y-3 text-sm text-muted">
-              <li><Link href="/start" className="hover:text-primary transition-colors">Free Profile Audit</Link></li>
-              <li><Link href="/pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
-              <li><Link href="/coach" className="hover:text-primary transition-colors">Message Coaching</Link></li>
-              <li><Link href="/insights" className="hover:text-primary transition-colors">Email Insights</Link></li>
+            <h3 className="font-sans font-semibold text-sm text-foreground/70 uppercase tracking-widest mb-5">Product</h3>
+            <ul className="space-y-3 text-sm">
+              <li><Link href="/start" className="text-muted-foreground hover:text-foreground transition-colors">Free Dating Audit</Link></li>
+              <li><Link href="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</Link></li>
+              <li><Link href="/coach" className="text-muted-foreground hover:text-foreground transition-colors">Message Coaching</Link></li>
+              <li><Link href="/insights" className="text-muted-foreground hover:text-foreground transition-colors">Import Communication Patterns</Link></li>
+              <li><Link href="/integrations" className="text-muted-foreground hover:text-foreground transition-colors">Integrations</Link></li>
             </ul>
           </div>
+
           <div>
-            <h3 className="font-semibold text-lg mb-4 text-white">Legal</h3>
-            <ul className="space-y-3 text-sm text-muted">
-              <li><Link href="#" className="hover:text-primary transition-colors">Privacy Promise</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Terms of Service</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Contact Us</Link></li>
+            <h3 className="font-sans font-semibold text-sm text-foreground/70 uppercase tracking-widest mb-5">Trust</h3>
+            <ul className="space-y-3 text-sm">
+              <li><Link href="/integrations" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Promise</Link></li>
+              <li><Link href="/waitlist" className="text-muted-foreground hover:text-foreground transition-colors">Podcast Listeners</Link></li>
+              <li><Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
+              <li><Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">Contact Us</Link></li>
             </ul>
           </div>
         </div>
-        <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-muted">
+
+        <div className="divider-gradient mt-12 mb-8" />
+
+        <div className="flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground/50 gap-2">
           <p>&copy; {new Date().getFullYear()} Next Level Dating Club. All rights reserved.</p>
-          <p className="mt-2 md:mt-0">Private, secure, and confidential.</p>
+          <p>Private, encrypted, confidential. Your data is never sold.</p>
         </div>
       </div>
     </footer>
