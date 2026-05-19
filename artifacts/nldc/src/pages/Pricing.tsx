@@ -2,57 +2,64 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { CheckCircle, ArrowRight, Headphones, Sparkles } from "lucide-react";
+import { CheckCircle, ArrowRight, Headphones, Sparkles, Zap, Heart } from "lucide-react";
 import { useState } from "react";
 
 const TIERS = [
   {
-    name: "Free Audit",
+    name: "Signal Check",
     price: "$0",
     promoPrice: null,
     period: "",
     popular: false,
     badge: null,
-    desc: "See exactly where you stand — with honesty, not flattery.",
+    desc: "Instant clarity on where you stand — with honesty, not flattery.",
     cta: "Get My Free Audit",
     href: "/start",
-    accentColor: "hsl(228 18% 55%)",
+    accentColor: "hsl(228 18% 60%)",
+    icon: Sparkles,
     features: [
-      "1 complete Dating Readiness Audit",
-      "Your Dating Readiness Score (0–100)",
-      "Bio critique — honest, specific, no fluff",
+      "1 complete Profile Signal Audit",
+      "Your Signal Score (0–100)",
+      "Signal Spectrum — 8 dimensions",
+      "Bio critique — honest and specific",
       "Top 3 action items",
       "2 photo guidance points",
-      "Import Communication Patterns (demo)",
+      "Chemistry Lab — message analysis (demo)",
     ],
     excluded: [
       "Rewritten bio + prompts",
       "Full photo checklist (5 categories)",
       "Message coaching sessions",
-      "Full 5-step action plan",
+      "7-day action plan",
       "Score history tracking",
     ],
-    walkaway: ["Your score", "Your top 3 action items", "What you're projecting"],
+    walkaway: ["Your Signal Score", "Your top 3 action items", "What you're actually projecting"],
   },
   {
-    name: "Full Dating Reset",
+    name: "The Dating Reset",
     price: "$97",
     promoPrice: null,
     period: "one-time",
     popular: true,
     badge: "Most Popular",
-    desc: "Everything you need to completely transform how you're presenting yourself.",
+    desc: "A complete rebuild of how you present yourself — profile, prompts, messaging, photos, and a 7-day action plan.",
     cta: "Begin My Reset",
     href: "/start",
     accentColor: "hsl(268 52% 68%)",
+    icon: Zap,
     features: [
-      "Unlimited Dating Readiness Audits",
-      "Complete rewritten bio + all prompts",
+      "Unlimited Profile Signal Audits",
+      "Full Signal Spectrum across 8 dimensions",
+      "Complete rewritten bio — sounds like you, not a template",
+      "All prompts rewritten with coach notes",
       "Full photo checklist (5 categories)",
+      "Dating Diagnosis — pattern review",
+      "Chemistry Lab — full message coaching",
       "10 message coaching sessions",
-      "Full 5-step personalised action plan",
+      "7-day personalised action plan",
       "Score history + progress tracking",
-      "Import Communication Patterns (full)",
+      "Communication Pattern Import (full)",
       "Priority access to new features",
     ],
     excluded: [
@@ -60,7 +67,7 @@ const TIERS = [
       "Weekly strategy sessions",
       "Members-only community",
     ],
-    walkaway: ["A rewritten profile that sounds like you", "10 message coaching credits", "A score you can actually track"],
+    walkaway: ["A profile rewritten to actually sound like you", "Your 7-day action plan", "10 message coaching credits + Chemistry Lab access"],
   },
   {
     name: "Monthly Coaching",
@@ -69,33 +76,41 @@ const TIERS = [
     period: "per month",
     popular: false,
     badge: "Podcast Listener Deal",
-    desc: "Everything in Reset — plus ongoing coaching, strategy sessions, and community.",
+    desc: "Everything in The Dating Reset — plus a real human coach in your corner, every week.",
     cta: "Start My Coaching",
     href: "/waitlist",
     accentColor: "hsl(43 65% 65%)",
+    icon: Heart,
     features: [
-      "Everything in Full Dating Reset",
+      "Everything in The Dating Reset",
       "Direct access to a real dating coach",
       "Weekly 45-min strategy session",
       "Unlimited message coaching",
       "Audit after every major profile change",
       "Members-only community access",
       "Pre-date coaching briefs",
-      "Priority feature access — everything first",
+      "Priority access to all new features — first",
     ],
     excluded: [],
-    walkaway: ["A real coach in your corner", "Unlimited coaching, unlimited audits", "A community of people doing the work"],
+    walkaway: ["A real coach in your corner, weekly", "Unlimited coaching and audits", "A community of people doing the work"],
   },
 ];
 
 const FAQS = [
-  { q: "How is this different from generic dating advice?", a: "We give you specific, personalised output: a rewritten version of YOUR bio, coaching on YOUR messages, and an action plan built around YOUR situation. Nothing here could apply to someone else — that's the point." },
-  { q: "Is the Free Audit actually free? No hidden catch?", a: "Yes, completely free. We give you a real, substantive audit because we believe if you see the quality, you'll upgrade. You get the score, the critique, and your top 3 action items — no credit card required." },
-  { q: "How does the coaching engine work?", a: "Our coaching engine is deterministic — built on structured dating frameworks, real profile patterns, and coaching methodology. For Monthly Coaching, a human coach reviews every report and is directly available to you." },
+  { q: "How is this different from generic dating advice?", a: "We give you specific, personalised output: a rewritten version of YOUR bio, coaching on YOUR messages, your Signal Spectrum across 8 dimensions, and an action plan built around YOUR situation. Nothing here could apply to someone else — that's the point." },
+  { q: "Is the free audit actually free? No hidden catch?", a: "Yes, completely free. We give you a real, substantive audit including your Signal Score and Spectrum because we believe if you see the quality, you'll upgrade. No credit card required." },
+  { q: "What is The Dating Reset, exactly?", a: "It's a complete overhaul of your dating presence — your bio rewritten to sound like you, all prompts improved, a full photo checklist, your 8-dimension Signal Spectrum, Dating Diagnosis, Chemistry Lab message coaching, and a 7-day action plan. One payment, everything included." },
+  { q: "How does the coaching engine work?", a: "Our coaching engine is deterministic — built on structured dating frameworks, real profile patterns, and coaching methodology. No external AI API means it never fails from rate limits. For Monthly Coaching, a human coach reviews and is directly available to you." },
   { q: "What if I'm not happy?", a: "We'll redo it or refund it. Dating is vulnerable and we take this seriously. Reach out within 30 days and we'll make it right — no questions asked." },
-  { q: "Is my data private?", a: "Your bios, messages, and profile data are encrypted and never sold or shared with any third party. You can delete everything permanently from your account at any time." },
-  { q: "How quickly will I see results?", a: "Most members who implement the action plan see measurably better results — more matches, better conversations, more dates — within 7–14 days. We track your score over time so progress is visible, not just felt." },
+  { q: "Is my data private?", a: "Your bios, messages, and profile data are encrypted and never sold or shared with any third party. You can delete everything permanently from your account at any time. See our full consent-first privacy architecture on the Integrations page." },
+  { q: "How quickly will I see results?", a: "Most members who implement the action plan see measurably better results — more matches, better conversations, more dates — within 7–14 days. We track your Signal Score over time so progress is visible, not just felt." },
 ];
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] },
+});
 
 export default function Pricing() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -105,13 +120,13 @@ export default function Pricing() {
       <div className="min-h-screen mesh-bg py-10 px-4">
         <div className="orb orb-violet fixed w-[500px] h-[500px] -top-40 -right-40 opacity-40 pointer-events-none" />
         <div className="orb orb-gold fixed w-[300px] h-[300px] bottom-20 -left-20 opacity-30 pointer-events-none" />
+
         <div className="max-w-5xl mx-auto relative z-10">
 
           {/* Podcast Banner */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+          <motion.div {...fadeUp(0)}
             className="relative rounded-2xl p-5 mb-12 text-center overflow-hidden shimmer"
-            style={{ background: "linear-gradient(135deg, hsl(43 65% 62% / 0.15) 0%, hsl(43 65% 45% / 0.08) 100%)", border: "1px solid hsl(43 65% 62% / 0.25)" }}
+            style={{ background: "linear-gradient(135deg, hsl(43 65% 62% / 0.15), hsl(43 65% 45% / 0.08))", border: "1px solid hsl(43 65% 62% / 0.25)" }}
             data-testid="banner-podcast-promo"
           >
             <div className="flex items-center justify-center gap-3 flex-wrap">
@@ -123,11 +138,31 @@ export default function Pricing() {
             </div>
           </motion.div>
 
+          {/* Shebangs Partner */}
+          <motion.div {...fadeUp(0.04)}
+            className="relative rounded-2xl p-4 mb-10 overflow-hidden"
+            style={{ background: "hsl(232 34% 13% / 0.6)", border: "1px solid hsl(232 28% 22%)" }}
+          >
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Launch partner</span>
+              <div className="h-4 w-px bg-white/10" />
+              <a href="https://shebangs.com" target="_blank" rel="noopener noreferrer"
+                className="font-semibold text-foreground text-sm hover:text-[hsl(43_65%_68%)] transition-colors">
+                Shebangs.com
+              </a>
+              <span className="text-sm text-muted-foreground">— exclusive member perks for NLDC users</span>
+              <a href="https://shebangs.com" target="_blank" rel="noopener noreferrer"
+                className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                Learn more <ArrowRight className="w-3 h-3" />
+              </a>
+            </div>
+          </motion.div>
+
           {/* Header */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="text-center mb-14">
+          <motion.div {...fadeUp(0.07)} className="text-center mb-14">
             <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-3">Invest in clarity</p>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Simple, honest pricing.</h1>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed">
               Start free. Upgrade when you see the quality. Cancel or delete anytime.
             </p>
           </motion.div>
@@ -135,38 +170,38 @@ export default function Pricing() {
           {/* Pricing Cards */}
           <div className="grid md:grid-cols-3 gap-5 mb-20">
             {TIERS.map((tier, i) => (
-              <motion.div
-                key={tier.name}
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.07 }}
+              <motion.div key={tier.name} {...fadeUp(0.12 + i * 0.07)}
                 className="relative flex flex-col"
                 data-testid={`card-pricing-${tier.name.toLowerCase().replace(/ /g, "-")}`}
               >
                 {tier.badge && (
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10">
-                    <span
-                      className="px-3 py-1 rounded-full text-xs font-bold shadow-lg whitespace-nowrap"
+                    <span className="px-3 py-1 rounded-full text-xs font-bold shadow-lg whitespace-nowrap"
                       style={{
                         background: tier.popular
                           ? "linear-gradient(135deg, hsl(268 52% 65%), hsl(285 45% 58%))"
                           : "linear-gradient(135deg, hsl(43 65% 55%), hsl(43 65% 42%))",
                         color: "white",
                         boxShadow: tier.popular ? "0 4px 16px hsl(268 52% 68% / 0.4)" : "0 4px 16px hsl(43 65% 55% / 0.4)",
-                      }}
-                    >
+                      }}>
                       {tier.badge}
                     </span>
                   </div>
                 )}
 
-                <div
-                  className={`flex-1 flex flex-col glass rounded-3xl p-7 pt-8 ${tier.popular ? "border-violet-glow" : "border border-white/8"}`}
-                  style={tier.popular ? { boxShadow: "0 0 60px hsl(268 52% 68% / 0.12), 0 20px 50px rgb(0 0 0 / 0.4)" } : {}}
-                >
+                <div className={`flex-1 flex flex-col rounded-3xl p-7 pt-8 ${tier.popular ? "mirror-card" : "glass border border-white/8"}`}
+                  style={tier.popular ? { border: "1px solid hsl(268 52% 68% / 0.35)", boxShadow: "0 0 60px hsl(268 52% 68% / 0.12), 0 20px 50px rgb(0 0 0 / 0.4)" } : {}}>
+
+                  {tier.popular && <div className="line-accent mb-6" />}
+
                   <div className="mb-6">
-                    <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: tier.accentColor }}>{tier.name}</p>
-                    <div className="flex items-end gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${tier.accentColor.replace(")", " / 0.12)")}`, border: `1px solid ${tier.accentColor.replace(")", " / 0.2)")}` }}>
+                        <tier.icon className="w-4 h-4" style={{ color: tier.accentColor }} />
+                      </div>
+                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: tier.accentColor }}>{tier.name}</p>
+                    </div>
+                    <div className="flex items-end gap-2 mb-3">
                       {tier.promoPrice ? (
                         <>
                           <span className="text-4xl font-bold text-foreground" data-testid={`price-${i}`}>{tier.promoPrice}</span>
@@ -181,10 +216,10 @@ export default function Pricing() {
                   </div>
 
                   {/* What you walk away with */}
-                  <div className="rounded-xl p-3.5 mb-5" style={{ background: `${tier.accentColor.replace(")", " / 0.07)")}`, border: `1px solid ${tier.accentColor.replace(")", " / 0.15)")}` }}>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: tier.accentColor }}>What you walk away with</p>
+                  <div className="rounded-xl p-4 mb-5" style={{ background: `${tier.accentColor.replace(")", " / 0.07)")}`, border: `1px solid ${tier.accentColor.replace(")", " / 0.15)")}` }}>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: tier.accentColor }}>What you walk away with</p>
                     {tier.walkaway.map((w, j) => (
-                      <div key={j} className="flex items-start gap-2 text-xs text-foreground/80 mt-1">
+                      <div key={j} className="flex items-start gap-2 text-xs text-foreground/80 mt-1.5">
                         <Sparkles className="w-3 h-3 flex-shrink-0 mt-0.5" style={{ color: tier.accentColor }} />
                         {w}
                       </div>
@@ -206,16 +241,13 @@ export default function Pricing() {
                     ))}
                   </div>
 
-                  <Button
-                    asChild
-                    className="w-full rounded-full h-11 font-semibold border-0"
+                  <Button asChild className="w-full rounded-full h-12 font-semibold border-0"
                     style={
                       tier.popular
                         ? { background: "linear-gradient(135deg, hsl(268 52% 65%), hsl(285 45% 58%))", boxShadow: "0 4px 20px hsl(268 52% 68% / 0.4)" }
-                        : { background: `${tier.accentColor.replace(")", " / 0.15)")}`, color: tier.accentColor, border: `1px solid ${tier.accentColor.replace(")", " / 0.25)")}` }
+                        : { background: `${tier.accentColor.replace(")", " / 0.14)")}`, color: tier.accentColor, border: `1px solid ${tier.accentColor.replace(")", " / 0.25)")}` }
                     }
-                    data-testid={`button-pricing-cta-${i}`}
-                  >
+                    data-testid={`button-pricing-cta-${i}`}>
                     <Link href={tier.href}>
                       {tier.cta} <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
@@ -226,16 +258,14 @@ export default function Pricing() {
           </div>
 
           {/* FAQ */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="max-w-2xl mx-auto">
+          <motion.div {...fadeUp(0.35)} className="max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold text-foreground text-center mb-8">Frequently asked questions</h2>
             <div className="space-y-3">
               {FAQS.map((faq, i) => (
                 <div key={i} className="glass border border-white/8 rounded-2xl overflow-hidden" data-testid={`faq-${i}`}>
-                  <button
-                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
                     className="w-full flex items-center justify-between p-5 text-left hover:bg-white/2 transition-colors"
-                    data-testid={`button-faq-${i}`}
-                  >
+                    data-testid={`button-faq-${i}`}>
                     <p className="font-semibold text-foreground text-sm pr-4">{faq.q}</p>
                     <span className={`text-lg transition-transform flex-shrink-0 ${openFaq === i ? "rotate-45 text-[hsl(268_52%_68%)]" : "text-muted-foreground"}`}>+</span>
                   </button>
@@ -250,14 +280,10 @@ export default function Pricing() {
           </motion.div>
 
           {/* Final CTA */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="text-center mt-16">
+          <motion.div {...fadeUp(0.4)} className="text-center mt-16">
             <p className="text-muted-foreground mb-4 text-sm">Start with the free audit. No commitment, no credit card.</p>
-            <Button
-              asChild size="lg"
-              className="rounded-full px-10 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse"
-              data-testid="button-final-cta"
-            >
-              <Link href="/start">Get My Free Audit <ArrowRight className="ml-2 h-5 w-5" /></Link>
+            <Button asChild size="lg" className="rounded-full px-10 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse" data-testid="button-final-cta">
+              <Link href="/start">Get My Free Signal Audit <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
           </motion.div>
         </div>

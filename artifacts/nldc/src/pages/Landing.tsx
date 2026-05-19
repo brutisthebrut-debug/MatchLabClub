@@ -59,9 +59,9 @@ export default function Landing() {
               className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-10"
               {...fadeUp(0.15)}
             >
-              Your profile isn't failing you because you're not dateable.
-              It's failing you because it doesn't show who you actually are.
-              We fix that — honestly, specifically, without the generic advice.
+              Your profile is saying something right now — with or without your input.
+              We show you exactly what it's communicating, rewrite what isn't working,
+              coach your conversations, and hand you a practical action plan to see real results.
             </motion.p>
 
             {/* CTAs */}
@@ -168,7 +168,7 @@ export default function Landing() {
                 <div className="w-10 h-10 rounded-full bg-[hsl(232_28%_20%)] flex items-center justify-center text-sm font-bold text-muted-foreground">J</div>
                 <div>
                   <p className="font-semibold text-foreground/70 text-sm">Jordan, 31</p>
-                  <p className="text-xs text-muted-foreground/60">Dating Readiness Score: 42/100</p>
+                  <p className="text-xs text-muted-foreground/60">Signal Score: 42/100</p>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed italic">
@@ -195,7 +195,7 @@ export default function Landing() {
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] flex items-center justify-center text-sm font-bold text-white shadow-[0_0_12px_hsl(268_52%_68%/0.4)]">J</div>
                 <div>
                   <p className="font-semibold text-foreground text-sm">Jordan, 31</p>
-                  <p className="text-xs text-[hsl(43_65%_68%)] font-medium">Dating Readiness Score: 78/100 ↑</p>
+                  <p className="text-xs text-[hsl(43_65%_68%)] font-medium">Signal Score: 78/100 ↑</p>
                 </div>
               </div>
               <p className="text-sm text-foreground leading-relaxed">
@@ -343,14 +343,14 @@ export default function Landing() {
             <h2 className="text-3xl md:text-4xl font-bold text-foreground">
               Every tool you need. <span className="gradient-text italic">All in one place.</span>
             </h2>
-            <p className="text-muted-foreground mt-4 max-w-xl mx-auto">From a 3-minute free check to a full dating reset — all free to start, all built around your specific situation.</p>
+            <p className="text-muted-foreground mt-4 max-w-xl mx-auto">From a 3-minute Signal Check to a full Dating Reset — all free to start, all built around your specific profile and situation.</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
             {[
               { icon: Sparkles, title: "Dating Diagnosis", desc: "Paste your bio and get your profile category, a diagnostic summary, what's working, and what to fix first.", href: "/diagnosis", badge: "Free", badgeColor: "hsl(142 55% 60%)", accentColor: "hsl(268 52% 68%)" },
               { icon: TrendingUp, title: "3-Min Signal Check", desc: "Fastest entry point: paste your bio, get your Signal Strength score and one rewritten line — in 3 minutes flat.", href: "/signal-check", badge: "Free · Podcast", badgeColor: "hsl(43 65% 65%)", accentColor: "hsl(43 65% 65%)" },
-              { icon: CheckCircle, title: "Full Profile Audit", desc: "Complete Dating Readiness Score, bio rewrite, all prompts, photo checklist, messaging analysis, and 5-step action plan.", href: "/start", badge: "Free to Start", badgeColor: "hsl(268 52% 68%)", accentColor: "hsl(142 55% 60%)" },
-              { icon: MessageSquare, title: "Message Lab", desc: "Paste any message or conversation. Get tone analysis, likely impression, and 4 reply options — Warm, Clear, Playful, Direct.", href: "/lab", badge: "Free", badgeColor: "hsl(190 55% 60%)", accentColor: "hsl(190 55% 60%)" },
+              { icon: CheckCircle, title: "Profile Signal Audit", desc: "Complete Signal Score, Signal Spectrum (8 dimensions), bio rewrite, all prompts, photo checklist, messaging analysis, and 7-day action plan.", href: "/start", badge: "Free to Start", badgeColor: "hsl(268 52% 68%)", accentColor: "hsl(142 55% 60%)" },
+              { icon: MessageSquare, title: "Chemistry Lab", desc: "Paste any message or conversation. Get tone analysis, your recommended next action, and 5 reply options — Warm, Playful, Direct, Date Ask, Graceful Exit.", href: "/lab", badge: "Free", badgeColor: "hsl(190 55% 60%)", accentColor: "hsl(190 55% 60%)" },
               { icon: MessageSquare, title: "Message Coach", desc: "Deeper session coaching: paste a full conversation, choose your goal, and receive 3 tailored reply options with rationale.", href: "/coach", badge: "Free", badgeColor: "hsl(285 45% 65%)", accentColor: "hsl(285 45% 65%)" },
               { icon: Shield, title: "Platform Vision", desc: "See the full 5-level dating intelligence roadmap — from free audit to private personal intelligence. Investor-demo ready.", href: "/roadmap", badge: "Vision", badgeColor: "hsl(43 65% 65%)", accentColor: "hsl(43 65% 65%)" },
             ].map((tool, i) => (
@@ -372,6 +372,35 @@ export default function Landing() {
                 </Link>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── What We Fix — 4-pillar positioning ── */}
+      <section className="py-16 md:py-20 border-t border-white/5">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <motion.div className="text-center mb-10" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-3">Four things we fix</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+                Most dating problems come from the same four places.
+              </h2>
+            </motion.div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { num: "01", title: "What you're projecting", desc: "We show you what your profile is actually communicating — and how it reads to someone swiping.", color: "hsl(268 52% 68%)", bg: "hsl(268 52% 68% / 0.07)", border: "hsl(268 52% 68% / 0.2)" },
+                { num: "02", title: "Your profile text", desc: "Your bio and prompts, rewritten to sound genuinely like you — specific, memorable, and worth responding to.", color: "hsl(43 65% 65%)", bg: "hsl(43 65% 65% / 0.07)", border: "hsl(43 65% 65% / 0.2)" },
+                { num: "03", title: "Your conversations", desc: "Tone analysis and 5 tailored reply options — from warm to direct to date invitation — for every situation.", color: "hsl(190 55% 60%)", bg: "hsl(190 55% 60% / 0.07)", border: "hsl(190 55% 60% / 0.2)" },
+                { num: "04", title: "Your action plan", desc: "A concrete, prioritised 7-day plan built around your specific audit — not generic advice.", color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.07)", border: "hsl(142 55% 60% / 0.2)" },
+              ].map((item, i) => (
+                <motion.div key={i} className="rounded-2xl p-6 card-hover" style={{ background: item.bg, border: `1px solid ${item.border}` }}
+                  initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
+                  <p className="text-2xl font-bold font-mono mb-3" style={{ color: item.color }}>{item.num}</p>
+                  <h3 className="font-bold text-foreground text-sm mb-2">{item.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -412,6 +441,37 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── Mission ── */}
+      <section className="py-20 md:py-24 border-t border-white/5 relative overflow-hidden">
+        <div className="orb orb-violet absolute w-[350px] h-[350px] right-0 top-10 opacity-35 pointer-events-none" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-3xl mx-auto text-center">
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-5">Why we exist</p>
+              <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-7 leading-tight">
+                Most people don't know<br />
+                <span className="gradient-text-violet italic">what they're communicating.</span>
+              </h2>
+              <div className="line-accent max-w-xs mx-auto mb-8" />
+              <p className="text-lg text-muted-foreground leading-relaxed mb-6">
+                Your dating profile isn't failing because you're not interesting. It's failing because the way you're presenting yourself doesn't match who you actually are. That gap — between who you are and what your profile shows — is exactly what we close.
+              </p>
+              <p className="text-muted-foreground leading-relaxed mb-8">
+                We believe everyone deserves to understand what they're communicating — and to feel genuinely confident in how they show up. Not through flattery, not through generic advice, but through honest, specific reflection that shows you what to change and why.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold glow-pulse">
+                  <Link href="/start">Get My Free Signal Audit <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                </Button>
+                <Button asChild variant="ghost" className="rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5">
+                  <Link href="/roadmap">Our Vision <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Podcast Launch Block ── */}
       <section className="py-20 md:py-28 relative overflow-hidden border-t border-white/5">
         <div className="orb orb-violet absolute w-[500px] h-[500px] -right-40 top-0 opacity-60 pointer-events-none" />
@@ -444,6 +504,18 @@ export default function Landing() {
                 className="space-y-4"
                 initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
               >
+                {/* Shebangs partner card */}
+                <div className="glass border border-white/8 rounded-3xl p-5 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm text-white" style={{ background: "linear-gradient(135deg, hsl(43 65% 55%), hsl(348 55% 55%))" }}>S</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <a href="https://shebangs.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground text-sm hover:text-[hsl(43_65%_68%)] transition-colors">Shebangs.com</a>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-[hsl(43_65%_62%/0.12)] text-[hsl(43_65%_68%)] border border-[hsl(43_65%_62%/0.2)] font-semibold">Launch Partner</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">Exclusive member perks for NLDC users — available after signup.</p>
+                  </div>
+                </div>
+
                 {/* Podcast card */}
                 <div className="glass border-gold-glow rounded-3xl p-6 shimmer">
                   <div className="flex items-center gap-4 mb-4">
