@@ -4,7 +4,17 @@ import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import { useListAudits, useGetAuditSummary, getGetAuditSummaryQueryKey } from "@workspace/api-client-react";
+import {
+  useListAudits,
+  useGetAuditSummary,
+  getGetAuditSummaryQueryKey,
+  useListProfiles,
+  useListMessageCoachingSessions,
+  useListInsights,
+  getListProfilesQueryKey,
+  getListMessageCoachingSessionsQueryKey,
+  getListInsightsQueryKey,
+} from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import {
@@ -203,13 +213,34 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
 
 export default function Dashboard() {
   useMeta("Your Dashboard", "Your Signal Score history, recent audits, coaching sessions, and quick actions — all in one place.");
+  const { isAuthenticated } = useAuth();
   const { data: audits, isLoading: auditsLoading } = useListAudits();
   const { data: summary, isLoading: summaryLoading } = useGetAuditSummary({
     query: { queryKey: getGetAuditSummaryQueryKey() }
   });
+  const { data: profiles, isLoading: profilesLoading } = useListProfiles({
+    query: { enabled: isAuthenticated, queryKey: getListProfilesQueryKey() },
+  });
+  const { data: messageSessions, isLoading: messagesLoading } = useListMessageCoachingSessions({
+    query: { enabled: isAuthenticated, queryKey: getListMessageCoachingSessionsQueryKey() },
+  });
+  const { data: insights, isLoading: insightsLoading } = useListInsights({
+    query: { enabled: isAuthenticated, queryKey: getListInsightsQueryKey() },
+  });
 
-  const { isAuthenticated } = useAuth();
   const hasRealAudits = !!(audits && audits.length > 0);
+  const hasProfiles = !!(profiles && profiles.length > 0);
+  const hasMessages = !!(messageSessions && messageSessions.length > 0);
+  const hasInsights = !!(insights && insights.length > 0);
+  const accountDataLoading =
+    auditsLoading || profilesLoading || messagesLoading || insightsLoading;
+  const isBrandNewUser =
+    isAuthenticated &&
+    !accountDataLoading &&
+    !hasRealAudits &&
+    !hasProfiles &&
+    !hasMessages &&
+    !hasInsights;
   const showDemo = !isAuthenticated && !hasRealAudits;
   const displayAudits = hasRealAudits ? audits : showDemo ? DEMO_AUDITS : [];
   const EMPTY_SUMMARY = { totalAudits: 0, averageScore: 0, latestScore: 0, scoreHistory: [], topStrengths: [], topRisks: [] };
@@ -338,7 +369,32 @@ export default function Dashboard() {
             )}
           </motion.div>
 
+          {isBrandNewUser && (
+            <motion.div {...fadeUp(0.1)} className="mb-5" data-testid="dashboard-empty-state">
+              <div className="relative rounded-3xl p-6 sm:p-10 text-center overflow-hidden shimmer"
+                style={{ background: "linear-gradient(135deg, hsl(268 52% 68% / 0.12), hsl(285 45% 60% / 0.08), hsl(43 65% 62% / 0.06))" }}>
+                <div className="absolute inset-0 border border-[hsl(268_52%_68%/0.2)] rounded-3xl pointer-events-none" />
+                <div className="orb orb-violet absolute w-64 h-64 -right-20 -top-20 opacity-50 pointer-events-none" />
+                <div className="relative z-10">
+                  <div className="w-16 h-16 rounded-2xl bg-[hsl(268_52%_68%/0.15)] border border-[hsl(268_52%_68%/0.25)] mx-auto mb-4 flex items-center justify-center">
+                    <Sparkles className="w-7 h-7 text-[hsl(268_52%_78%)]" />
+                  </div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-[hsl(268_60%_82%)] mb-2">Welcome to Next Level Dating Club</p>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">Your dashboard is ready for its first signal</h2>
+                  <p className="text-muted-foreground mb-6 max-w-lg mx-auto text-sm leading-relaxed">
+                    Start your free Signal Audit and we'll fill this page with your real score, strengths, growth areas, and a 7-day action plan — all in about 3 minutes.
+                  </p>
+                  <Button asChild className="rounded-full px-8 bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold" data-testid="button-empty-state-start-audit">
+                    <Link href="/start">Start My First Audit <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                  </Button>
+                  <p className="text-[11px] text-muted-foreground/70 mt-4">Free · No credit card · Takes 3 minutes</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Signal Score + History */}
+          {!isBrandNewUser && (<>
           <div className="grid md:grid-cols-3 gap-5 mb-5">
             {/* Score Card */}
             <motion.div {...fadeUp(0.07)}
@@ -460,6 +516,7 @@ export default function Dashboard() {
               )}
             </motion.div>
           </div>
+          </>)}
 
           {/* Quick Actions — Grouped */}
           <motion.div {...fadeUp(0.22)} className="mb-5">
@@ -494,6 +551,7 @@ export default function Dashboard() {
           </motion.div>
 
           {/* Recent Audits */}
+          {!isBrandNewUser && (
           <motion.div {...fadeUp(0.26)} className="glass border border-white/8 rounded-3xl p-5 sm:p-6 mb-5">
             <div className="flex items-center justify-between mb-5">
               <h2 className="font-semibold text-foreground text-sm">Recent Audits</h2>
@@ -547,6 +605,7 @@ export default function Dashboard() {
               </div>
             )}
           </motion.div>
+          )}
 
           {/* Upgrade CTA */}
           <motion.div {...fadeUp(0.3)}
