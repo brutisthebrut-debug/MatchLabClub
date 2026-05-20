@@ -650,7 +650,9 @@ export const EnhanceAiResponse = zod.object({
   "output": zod.string(),
   "durationMs": zod.number(),
   "error": zod.string().optional(),
-  "model": zod.string().optional()
+  "model": zod.string().optional(),
+  "validated": zod.boolean().optional().describe('Set when a schema validation was attempted. True if the model output passed validation.'),
+  "attempts": zod.number().optional().describe('Number of model attempts made (1 = no retry, 2 = one retry).')
 })
 
 
@@ -692,7 +694,9 @@ export const TestAiResponse = zod.object({
   "output": zod.string(),
   "durationMs": zod.number(),
   "error": zod.string().optional(),
-  "model": zod.string().optional()
+  "model": zod.string().optional(),
+  "validated": zod.boolean().optional().describe('Set when a schema validation was attempted. True if the model output passed validation.'),
+  "attempts": zod.number().optional().describe('Number of model attempts made (1 = no retry, 2 = one retry).')
 })
 
 

@@ -1432,3 +1432,9 @@ components:
           type: string
         model:
           type: string
+        validated:
+          type: boolean
+          description: Set when a schema validation was attempted. True if the model output passed validation.
+        attempts:
+          type: integer
+          description: Number of model attempts made (1 = no retry, 2 = one retry).

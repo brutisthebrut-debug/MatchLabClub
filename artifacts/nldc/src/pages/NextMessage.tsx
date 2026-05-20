@@ -171,6 +171,7 @@ export default function NextMessage() {
   const [name, setName] = useState("");
   const [goal, setGoal] = useState("");
   const [result, setResult] = useState<NextMessageResult | null>(null);
+  const [usedFallback, setUsedFallback] = useState(false);
   const enhance = useEnhanceAi();
   const loading = enhance.isPending;
 
@@ -217,13 +218,17 @@ export default function NextMessage() {
           expectJson: true,
         },
       });
-      if (ai.isFallback || !ai.output.trim()) {
+      const validationFailed = ai.validated === false;
+      if (ai.isFallback || validationFailed || !ai.output.trim()) {
+        setUsedFallback(true);
         setResult(deterministic);
         return;
       }
       const parsed = tryParseNextMessage(ai.output, deterministic);
+      setUsedFallback(parsed == null);
       setResult(parsed ?? deterministic);
     } catch {
+      setUsedFallback(true);
       setResult(deterministic);
     }
   }
@@ -288,6 +293,28 @@ export default function NextMessage() {
                   <p className="text-xs text-muted-foreground font-medium flex items-center justify-center gap-1.5">
                     <AlertCircle className="w-3.5 h-3.5" />Example options — fill in context above to get yours
                   </p>
+                </div>
+              )}
+              {!isDemo && usedFallback && (
+                <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-2xl border border-[hsl(43_65%_65%/0.25)] bg-[hsl(43_65%_65%/0.08)] px-4 py-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-[hsl(43_65%_70%)]" />
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      <span className="text-[hsl(43_65%_78%)] font-semibold">Using backup options.</span>{" "}
+                      The AI couldn't return a clean answer this time, so we showed you our coach-written set. You can try again for a fresh take.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={loading}
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full text-xs border-[hsl(43_65%_65%/0.4)] hover:border-[hsl(43_65%_65%/0.6)] hover:bg-[hsl(43_65%_65%/0.1)] flex-shrink-0"
+                    data-testid="button-retry-next-message"
+                  >
+                    {loading ? <Loader2 className="animate-spin mr-1.5 h-3.5 w-3.5" /> : <RefreshCw className="mr-1.5 h-3.5 w-3.5" />}
+                    Try again
+                  </Button>
                 </div>
               )}
               <div className="space-y-3">

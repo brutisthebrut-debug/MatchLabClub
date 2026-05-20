@@ -14,4 +14,8 @@ export interface AiTestResult {
   durationMs: number;
   error?: string;
   model?: string;
+  /** Set when a schema validation was attempted. True if the model output passed validation. */
+  validated?: boolean;
+  /** Number of model attempts made (1 = no retry, 2 = one retry). */
+  attempts?: number;
 }
