@@ -28,6 +28,10 @@ args = "test-claim-client"
 task = "workflow.run"
 args = "test-mobile-auth"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "e2e-founder-ocr-trend"
+
 [[workflows.workflow]]
 name = "test-claim-api"
 author = "agent"
@@ -60,6 +64,17 @@ args = "pnpm --filter @workspace/nldc-mobile run test"
 
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow]]
+name = "e2e-founder-ocr-trend"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd e2e && DATABASE_URL=\"$DATABASE_URL\" node_modules/.bin/playwright test --project=chromium"
+
+[workflows.workflow.metadata]
+isValidation = true
 
 [agent]
 stack = "PNPM_WORKSPACE"
