@@ -134,6 +134,22 @@ function generateMessages(context: string, lastMsg: string, name: string, goal: 
   };
 }
 
+const STORAGE_KEY = "nldc_next_message_result";
+
+function loadStoredResult(): NextMessageResult | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as NextMessageResult;
+  } catch {
+    return null;
+  }
+}
+
+function saveStoredResult(r: NextMessageResult) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(r)); } catch {}
+}
+
 const DEMO: NextMessageResult = {
   options: [
     { style: "Safe",       text: "I keep coming back to what you said about [thing from conversation]. What made you say that?",                                           when: "When you want to restart without pressure.",                                  color: "hsl(228 18% 65%)", bg: "hsl(228 18% 65% / 0.08)" },
@@ -174,7 +190,7 @@ export default function NextMessage() {
   const [lastMsg, setLastMsg] = useState("");
   const [name, setName] = useState("");
   const [goal, setGoal] = useState("");
-  const [result, setResult] = useState<NextMessageResult | null>(null);
+  const [result, setResult] = useState<NextMessageResult | null>(loadStoredResult);
   const [usedFallback, setUsedFallback] = useState(false);
   const enhance = useEnhanceAi();
   const loading = enhance.isPending;
@@ -228,14 +244,18 @@ export default function NextMessage() {
       const validationFailed = ai.validated === false;
       if (ai.isFallback || validationFailed || !ai.output.trim()) {
         setUsedFallback(true);
+        saveStoredResult(deterministic);
         setResult(deterministic);
         return;
       }
       const parsed = tryParseNextMessage(ai.output, deterministic);
+      const final = parsed ?? deterministic;
       setUsedFallback(parsed == null);
-      setResult(parsed ?? deterministic);
+      saveStoredResult(final);
+      setResult(final);
     } catch {
       setUsedFallback(true);
+      saveStoredResult(deterministic);
       setResult(deterministic);
     }
   }
@@ -389,7 +409,7 @@ export default function NextMessage() {
               )}
               {result && (
                 <div className="mt-5 flex justify-center">
-                  <button onClick={() => { setResult(null); setContext(""); setLastMsg(""); setName(""); setGoal(""); }}
+                  <button onClick={() => { try { localStorage.removeItem(STORAGE_KEY); } catch {} setResult(null); setContext(""); setLastMsg(""); setName(""); setGoal(""); }}
                     className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
                     <RefreshCw className="w-3.5 h-3.5" />New conversation
                   </button>

@@ -128,6 +128,22 @@ const DEMO_RESULT: BlueprintResult = {
   growthEdge: "Show up for the version of you that exists after five minutes together, not just the version that walks in. Your job is to create more conditions for that to happen, earlier.",
 };
 
+const STORAGE_KEY = "nldc_blueprint_result";
+
+function loadStoredResult(): BlueprintResult | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as BlueprintResult;
+  } catch {
+    return null;
+  }
+}
+
+function saveStoredResult(r: BlueprintResult) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(r)); } catch {}
+}
+
 const SECTIONS = [
   { key: "firstImpression",    title: "First Impression",      color: "hsl(268 52% 68%)",  desc: "What you project before anyone knows you well" },
   { key: "repeatingPattern",   title: "Repeating Pattern",     color: "hsl(43 65% 65%)",   desc: "What keeps showing up across dating experiences" },
@@ -165,7 +181,7 @@ export default function Blueprint() {
   const [pattern, setPattern] = useState("");
   const [misread, setMisread] = useState("");
   const [want, setWant] = useState("");
-  const [result, setResult] = useState<BlueprintResult | null>(null);
+  const [result, setResult] = useState<BlueprintResult | null>(loadStoredResult);
   const [usedFallback, setUsedFallback] = useState(false);
   const enhance = useEnhanceAi();
   const loading = enhance.isPending;
@@ -199,14 +215,18 @@ export default function Blueprint() {
       const validationFailed = ai.validated === false;
       if (ai.isFallback || validationFailed || !ai.output.trim()) {
         setUsedFallback(true);
+        saveStoredResult(deterministic);
         setResult(deterministic);
         return;
       }
       const parsed = parseAiJson(blueprintSchema, ai.output);
+      const final = parsed ?? deterministic;
       setUsedFallback(parsed == null);
-      setResult(parsed ?? deterministic);
+      saveStoredResult(final);
+      setResult(final);
     } catch {
       setUsedFallback(true);
+      saveStoredResult(deterministic);
       setResult(deterministic);
     }
   }
@@ -347,7 +367,7 @@ export default function Blueprint() {
               )}
               {result && (
                 <div className="mt-5 flex justify-center">
-                  <button onClick={() => { setResult(null); setText(""); setPattern(""); setMisread(""); setWant(""); }}
+                  <button onClick={() => { try { localStorage.removeItem(STORAGE_KEY); } catch {} setResult(null); setText(""); setPattern(""); setMisread(""); setWant(""); }}
                     className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
                     <RefreshCw className="w-3.5 h-3.5" />Start over
                   </button>
