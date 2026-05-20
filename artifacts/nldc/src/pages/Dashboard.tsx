@@ -301,16 +301,48 @@ export default function Dashboard() {
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set());
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const selectionMode = selectedIds.size > 0;
+  const [selectionMode, setSelectionMode] = useState(false);
+  const lastClickedIdRef = useRef<number | null>(null);
 
-  const toggleSelected = (id: number) =>
+  const toggleSelected = (id: number) => {
+    lastClickedIdRef.current = id;
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  const clearSelection = () => setSelectedIds(new Set());
+  };
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+    setSelectionMode(false);
+    lastClickedIdRef.current = null;
+  };
+  const enterSelectionMode = () => {
+    setSelectionMode(true);
+    lastClickedIdRef.current = null;
+  };
+  const selectRangeTo = (id: number, visibleIds: number[]) => {
+    const anchor = lastClickedIdRef.current;
+    if (anchor === null || anchor === id) {
+      toggleSelected(id);
+      return;
+    }
+    const startIdx = visibleIds.indexOf(anchor);
+    const endIdx = visibleIds.indexOf(id);
+    if (startIdx === -1 || endIdx === -1) {
+      toggleSelected(id);
+      return;
+    }
+    const [lo, hi] = startIdx < endIdx ? [startIdx, endIdx] : [endIdx, startIdx];
+    const rangeIds = visibleIds.slice(lo, hi + 1);
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      for (const rid of rangeIds) next.add(rid);
+      return next;
+    });
+    lastClickedIdRef.current = id;
+  };
 
   const staleAudits = useMemo(
     () =>
@@ -909,6 +941,30 @@ export default function Dashboard() {
                 {hasRealAudits && (
                   selectionMode ? (
                     <>
+                      <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none" data-testid="label-select-all">
+                        <Checkbox
+                          checked={
+                            audits && audits.length > 0 && audits.every((a) => selectedIds.has(a.id))
+                              ? true
+                              : selectedIds.size > 0
+                                ? "indeterminate"
+                                : false
+                          }
+                          onCheckedChange={(checked) => {
+                            if (!audits) return;
+                            if (checked === true) {
+                              setSelectedIds(new Set(audits.map((a) => a.id)));
+                              lastClickedIdRef.current = null;
+                            } else {
+                              setSelectedIds(new Set());
+                              lastClickedIdRef.current = null;
+                            }
+                          }}
+                          aria-label="Select all visible audits"
+                          data-testid="checkbox-select-all"
+                        />
+                        Select all
+                      </label>
                       <span className="text-xs text-muted-foreground" data-testid="text-selection-count">
                         {selectedIds.size} selected
                       </span>
@@ -926,7 +982,7 @@ export default function Dashboard() {
                         variant="destructive"
                         className="text-xs rounded-full"
                         onClick={() => setConfirmOpen(true)}
-                        disabled={bulkDeleteAudits.isPending}
+                        disabled={bulkDeleteAudits.isPending || selectedIds.size === 0}
                         data-testid="button-delete-selected"
                       >
                         Delete selected
@@ -937,7 +993,7 @@ export default function Dashboard() {
                       variant="ghost"
                       size="sm"
                       className="text-muted-foreground hover:text-foreground text-xs"
-                      onClick={() => audits && audits.length > 0 && toggleSelected(audits[0].id)}
+                      onClick={enterSelectionMode}
                       data-testid="button-enter-select"
                     >
                       Select
@@ -972,16 +1028,24 @@ export default function Dashboard() {
                   const staleHint = staleHintFromGeneratedAt(audit.reportGeneratedAt);
                   const isSelected = selectedIds.has(audit.id);
                   if (selectionMode) {
+                    const visibleIds = audits!.map((a) => a.id);
+                    const handleRowActivate = (shiftKey: boolean) => {
+                      if (shiftKey && lastClickedIdRef.current !== null && lastClickedIdRef.current !== audit.id) {
+                        selectRangeTo(audit.id, visibleIds);
+                      } else {
+                        toggleSelected(audit.id);
+                      }
+                    };
                     return (
                       <div
                         key={audit.id}
                         role="button"
                         tabIndex={0}
-                        onClick={() => toggleSelected(audit.id)}
+                        onClick={(e) => handleRowActivate(e.shiftKey)}
                         onKeyDown={(e) => {
                           if (e.key === " " || e.key === "Enter") {
                             e.preventDefault();
-                            toggleSelected(audit.id);
+                            handleRowActivate(e.shiftKey);
                           }
                         }}
                         className={`flex items-center justify-between p-3 sm:p-4 rounded-2xl border transition-all cursor-pointer card-hover gap-3 ${
@@ -995,7 +1059,13 @@ export default function Dashboard() {
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={() => toggleSelected(audit.id)}
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if ((e as React.MouseEvent).shiftKey && lastClickedIdRef.current !== null && lastClickedIdRef.current !== audit.id) {
+                                e.preventDefault();
+                                selectRangeTo(audit.id, visibleIds);
+                              }
+                            }}
                             aria-label={`Select ${audit.firstName}'s audit`}
                             data-testid={`checkbox-audit-${audit.id}`}
                           />
