@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { motion } from "framer-motion";
+import { WelcomePanel } from "@/components/WelcomePanel";
 import { Zap, CheckCircle2, Circle, RefreshCw, Shield, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -180,26 +181,16 @@ export default function PatternBreaker() {
           </motion.div>
 
           {isBrandNewUser && (
-            <motion.div
-              {...fadeUp(0.04)}
-              className="mb-6"
-              data-testid="pattern-breaker-empty-state"
-            >
-              <div className="relative rounded-3xl p-6 sm:p-8 text-center overflow-hidden shimmer"
-                style={{ background: "linear-gradient(135deg, hsl(268 52% 68% / 0.12), hsl(142 55% 60% / 0.08))" }}>
-                <div className="absolute inset-0 border border-[hsl(268_52%_68%/0.2)] rounded-3xl pointer-events-none" />
-                <div className="relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-[hsl(142_55%_60%/0.15)] border border-[hsl(142_55%_60%/0.25)] mx-auto mb-4 flex items-center justify-center">
-                    <Zap className="w-6 h-6 text-[hsl(142_55%_70%)]" />
-                  </div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-[hsl(142_60%_78%)] mb-2">Welcome to Pattern Breaker</p>
-                  <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Break your first pattern</h2>
-                  <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
-                    Check off any action below this week. Even one small shift starts to interrupt the loops that keep people stuck.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
+            <WelcomePanel
+              variant="shimmer"
+              tint="violet-green"
+              icon={<Zap className="w-6 h-6" />}
+              eyebrow="Welcome to Pattern Breaker"
+              title="Break your first pattern"
+              description="Check off any action below this week. Even one small shift starts to interrupt the loops that keep people stuck."
+              testId="pattern-breaker-empty-state"
+              delay={0.04}
+            />
           )}
 
           {/* Progress */}

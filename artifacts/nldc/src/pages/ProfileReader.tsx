@@ -213,26 +213,16 @@ export default function ProfileReader() {
           </div>
 
           {isBrandNewUser && (
-            <motion.div
-              {...fadeUp(0.1)}
-              className="mb-6"
-              data-testid="profile-reader-empty-state"
-            >
-              <div className="relative rounded-3xl p-6 sm:p-8 text-center overflow-hidden shimmer"
-                style={{ background: "linear-gradient(135deg, hsl(268 52% 68% / 0.12), hsl(190 55% 60% / 0.08))" }}>
-                <div className="absolute inset-0 border border-[hsl(268_52%_68%/0.2)] rounded-3xl pointer-events-none" />
-                <div className="relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-[hsl(268_52%_68%/0.15)] border border-[hsl(268_52%_68%/0.25)] mx-auto mb-4 flex items-center justify-center">
-                    <Eye className="w-6 h-6 text-[hsl(268_52%_78%)]" />
-                  </div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-[hsl(268_60%_82%)] mb-2">Welcome to Profile Reader</p>
-                  <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Read your first profile</h2>
-                  <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
-                    Paste someone's bio above and we'll surface likely signals, fit clues, questions worth asking, and a suggested opener — without overreading.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
+            <WelcomePanel
+              variant="shimmer"
+              tint="violet-teal"
+              icon={<Eye className="w-6 h-6" />}
+              eyebrow="Welcome to Profile Reader"
+              title="Read your first profile"
+              description="Paste someone's bio above and we'll surface likely signals, fit clues, questions worth asking, and a suggested opener — without overreading."
+              testId="profile-reader-empty-state"
+              delay={0.1}
+            />
           )}
 
           <AnimatePresence>

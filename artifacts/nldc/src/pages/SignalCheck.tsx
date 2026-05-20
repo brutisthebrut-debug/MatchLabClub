@@ -395,28 +395,17 @@ export default function SignalCheck() {
 
             {/* WELCOME EMPTY STATE for brand-new authenticated users */}
             {isBrandNewUser && (
-              <motion.div
+              <WelcomePanel
                 key="welcome"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-5"
-                data-testid="signal-check-empty-state"
-              >
-                <div className="relative rounded-3xl p-6 sm:p-8 text-center overflow-hidden shimmer"
-                  style={{ background: "linear-gradient(135deg, hsl(43 65% 65% / 0.12), hsl(268 52% 68% / 0.08))" }}>
-                  <div className="absolute inset-0 border border-[hsl(43_65%_65%/0.2)] rounded-3xl pointer-events-none" />
-                  <div className="relative z-10">
-                    <div className="w-14 h-14 rounded-2xl bg-[hsl(43_65%_65%/0.15)] border border-[hsl(43_65%_65%/0.25)] mx-auto mb-4 flex items-center justify-center">
-                      <Sparkles className="w-6 h-6 text-[hsl(43_65%_72%)]" />
-                    </div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-[hsl(43_65%_72%)] mb-2">Welcome to Signal Check</p>
-                    <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Run your first signal check</h2>
-                    <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
-                      Paste your bio below and we'll give you a Signal Strength score, your profile category, your top improvement, and a rewritten line — in about three minutes.
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
+                variant="shimmer"
+                tint="gold"
+                icon={<Sparkles className="w-6 h-6" />}
+                eyebrow="Welcome to Signal Check"
+                title="Run your first signal check"
+                description="Paste your bio below and we'll give you a Signal Strength score, your profile category, your top improvement, and a rewritten line — in about three minutes."
+                testId="signal-check-empty-state"
+                wrapperClassName="mb-5"
+              />
             )}
 
             {/* FORM */}

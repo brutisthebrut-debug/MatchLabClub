@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { FallbackNotice } from "@/components/FallbackNotice";
+import { WelcomePanel } from "@/components/WelcomePanel";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -309,26 +310,15 @@ export default function Coach() {
           </motion.div>
 
           {isBrandNewUser && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}
-              className="mb-6"
-              data-testid="coach-empty-state"
-            >
-              <div className="relative rounded-3xl p-6 sm:p-8 text-center overflow-hidden shimmer"
-                style={{ background: "linear-gradient(135deg, hsl(268 52% 68% / 0.12), hsl(285 45% 60% / 0.08))" }}>
-                <div className="absolute inset-0 border border-[hsl(268_52%_68%/0.2)] rounded-3xl pointer-events-none" />
-                <div className="relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-[hsl(285_45%_62%/0.15)] border border-[hsl(285_45%_62%/0.25)] mx-auto mb-4 flex items-center justify-center">
-                    <MessageSquare className="w-6 h-6 text-[hsl(285_52%_78%)]" />
-                  </div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-[hsl(285_60%_82%)] mb-2">Welcome to Message Coach</p>
-                  <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Coach your first message</h2>
-                  <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
-                    Paste any dating app conversation below and we'll deliver three calibrated reply options — Playful, Direct, and Warm — each with the rationale a real coach would give.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
+            <WelcomePanel
+              variant="shimmer"
+              tint="purple"
+              icon={<MessageSquare className="w-6 h-6" />}
+              eyebrow="Welcome to Message Coach"
+              title="Coach your first message"
+              description="Paste any dating app conversation below and we'll deliver three calibrated reply options — Playful, Direct, and Warm — each with the rationale a real coach would give."
+              testId="coach-empty-state"
+            />
           )}
 
           {/* Screenshot upload */}

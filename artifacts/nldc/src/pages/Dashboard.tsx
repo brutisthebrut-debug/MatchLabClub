@@ -56,6 +56,7 @@ import {
 } from "@/lib/pendingAuditDeletes";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { HandoffShareDialog } from "@/components/HandoffShareDialog";
+import { WelcomePanel } from "@/components/WelcomePanel";
 import { hasAnyAnonymousIds } from "@/lib/anonymousIds";
 import {
   AUTO_REFRESH_BATCH_SIZE,
@@ -1069,27 +1070,24 @@ export default function Dashboard() {
           </motion.div>
 
           {isBrandNewUser && (
-            <motion.div {...fadeUp(0.1)} className="mb-5" data-testid="dashboard-empty-state">
-              <div className="relative rounded-3xl p-6 sm:p-10 text-center overflow-hidden shimmer"
-                style={{ background: "linear-gradient(135deg, hsl(268 52% 68% / 0.12), hsl(285 45% 60% / 0.08), hsl(43 65% 62% / 0.06))" }}>
-                <div className="absolute inset-0 border border-[hsl(268_52%_68%/0.2)] rounded-3xl pointer-events-none" />
-                <div className="orb orb-violet absolute w-64 h-64 -right-20 -top-20 opacity-50 pointer-events-none" />
-                <div className="relative z-10">
-                  <div className="w-16 h-16 rounded-2xl bg-[hsl(268_52%_68%/0.15)] border border-[hsl(268_52%_68%/0.25)] mx-auto mb-4 flex items-center justify-center">
-                    <Sparkles className="w-7 h-7 text-[hsl(268_52%_78%)]" />
-                  </div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-[hsl(268_60%_82%)] mb-2">Welcome to Next Level Dating Club</p>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">Your dashboard is ready for its first signal</h2>
-                  <p className="text-muted-foreground mb-6 max-w-lg mx-auto text-sm leading-relaxed">
-                    Start your free Signal Audit and we'll fill this page with your real score, strengths, growth areas, and a 7-day action plan — all in about 3 minutes.
-                  </p>
-                  <Button asChild className="rounded-full px-8 bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold" data-testid="button-empty-state-start-audit">
-                    <Link href="/start">Start My First Audit <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                  </Button>
-                  <p className="text-[11px] text-muted-foreground/70 mt-4">Free · No credit card · Takes 3 minutes</p>
-                </div>
-              </div>
-            </motion.div>
+            <WelcomePanel
+              variant="shimmer"
+              tint="violet"
+              size="lg"
+              showOrb
+              icon={<Sparkles className="w-7 h-7" />}
+              eyebrow="Welcome to Next Level Dating Club"
+              title="Your dashboard is ready for its first signal"
+              description="Start your free Signal Audit and we'll fill this page with your real score, strengths, growth areas, and a 7-day action plan — all in about 3 minutes."
+              testId="dashboard-empty-state"
+              delay={0.1}
+              wrapperClassName="mb-5"
+            >
+              <Button asChild className="rounded-full px-8 bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold" data-testid="button-empty-state-start-audit">
+                <Link href="/start">Start My First Audit <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+              <p className="text-[11px] text-muted-foreground/70 mt-4">Free · No credit card · Takes 3 minutes</p>
+            </WelcomePanel>
           )}
 
           {/* Signal Score + History */}
