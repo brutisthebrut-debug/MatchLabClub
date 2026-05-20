@@ -1,11 +1,13 @@
 import { Router, type IRouter } from "express";
 import { db, waitlistTable } from "@workspace/db";
-import { count, eq } from "drizzle-orm";
+import { count, eq, sql } from "drizzle-orm";
+import { z } from "zod/v4";
 import {
   JoinWaitlistBody,
   GetWaitlistStatsResponse,
 } from "@workspace/api-zod";
 import { sendMail } from "../lib/mailer";
+import { requireFounder } from "../middlewares/founderAuth";
 
 const router: IRouter = Router();
 
@@ -117,5 +119,147 @@ router.post("/waitlist", async (req, res): Promise<void> => {
     createdAt: entry.createdAt instanceof Date ? entry.createdAt.toISOString() : String(entry.createdAt),
   });
 });
+
+function getAppBaseUrl(): string {
+  const explicit = process.env["APP_BASE_URL"]?.trim();
+  if (explicit) return explicit.replace(/\/$/, "");
+  const domains = process.env["REPLIT_DOMAINS"]?.split(",")[0]?.trim();
+  if (domains) return `https://${domains}`;
+  return "https://nextleveldatingclub.com";
+}
+
+async function sendWaitlistActivationEmail(
+  req: Parameters<Parameters<IRouter["post"]>[1]>[0],
+  to: string,
+  firstName: string,
+): Promise<boolean> {
+  const baseUrl = getAppBaseUrl();
+  const claimUrl = `${baseUrl}/?welcome=1&from=waitlist`;
+  const subject = "You're in — your Next Level Dating Club spot just opened 🎉";
+  const greeting = firstName?.trim() ? `Hi ${firstName.trim()},` : "Hi there,";
+  const text = `${greeting}
+
+Great news — your spot in the Next Level Dating Club is ready.
+
+Claim your access and run your first free profile audit here:
+${claimUrl}
+
+What's waiting for you as an early listener:
+  • A free, founder-tier profile audit
+  • Founding-member pricing on paid plans
+  • Priority access to new coaching tools
+  • Podcast-exclusive bonus content
+
+If the link above doesn't work, paste it into your browser. This email was sent because you joined the waitlist — if that wasn't you, just ignore it.
+
+— The Next Level Dating Club team
+`;
+  const html = `<!doctype html>
+<html>
+  <body style="font-family: -apple-system, Segoe UI, sans-serif; line-height: 1.6; color: #222; max-width: 560px; margin: 0 auto; padding: 24px;">
+    <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 26px; margin: 0 0 12px;">You're in.</h1>
+    <p>${greeting.replace(/,$/, "")} — your spot in the <strong>Next Level Dating Club</strong> just opened.</p>
+    <p style="margin: 24px 0;">
+      <a href="${claimUrl}" style="display: inline-block; background: #111; color: #fff; padding: 12px 20px; border-radius: 999px; text-decoration: none; font-weight: 600;">Claim your spot</a>
+    </p>
+    <p>What's waiting for you as an early listener:</p>
+    <ul style="padding-left: 20px;">
+      <li>A free, founder-tier profile audit</li>
+      <li>Founding-member pricing on paid plans</li>
+      <li>Priority access to new coaching tools</li>
+      <li>Podcast-exclusive bonus content</li>
+    </ul>
+    <p style="color: #666; font-size: 13px; margin-top: 24px;">If the button doesn't work, copy this link: ${claimUrl}</p>
+    <p style="margin-top: 24px;">— The Next Level Dating Club team</p>
+  </body>
+</html>`;
+  try {
+    await sendMail({ to, subject, text, html });
+    return true;
+  } catch (err) {
+    req.log.error(
+      { err, to },
+      "Failed to send waitlist activation email (activation still recorded)",
+    );
+    return false;
+  }
+}
+
+const ActivateWaitlistBody = z
+  .object({
+    id: z.number().int().positive().optional(),
+    email: z.string().email().optional(),
+    resend: z.boolean().optional(),
+  })
+  .refine((v) => v.id !== undefined || v.email !== undefined, {
+    message: "Provide either `id` or `email`.",
+  });
+
+router.post(
+  "/founder/waitlist/activate",
+  requireFounder,
+  async (req, res): Promise<void> => {
+    const parsed = ActivateWaitlistBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    const { id, email, resend } = parsed.data;
+
+    const rows = id !== undefined
+      ? await db.select().from(waitlistTable).where(eq(waitlistTable.id, id))
+      : await db
+          .select()
+          .from(waitlistTable)
+          .where(sql`lower(${waitlistTable.email}) = ${email!.trim().toLowerCase()}`);
+    const entry = rows[0];
+    if (!entry) {
+      res.status(404).json({ error: "Waitlist entry not found." });
+      return;
+    }
+
+    const alreadyActivated = !!entry.activatedAt;
+    if (alreadyActivated && !resend) {
+      res.status(200).json({
+        ok: true,
+        alreadyActivated: true,
+        emailSent: false,
+        entry: serializeEntry(entry),
+      });
+      return;
+    }
+
+    const now = new Date();
+    const sent = await sendWaitlistActivationEmail(req, entry.email, entry.firstName);
+
+    const [updated] = await db
+      .update(waitlistTable)
+      .set({
+        activatedAt: entry.activatedAt ?? now,
+        ...(sent ? { activationEmailSentAt: now } : {}),
+      })
+      .where(eq(waitlistTable.id, entry.id))
+      .returning();
+
+    res.status(200).json({
+      ok: true,
+      alreadyActivated,
+      emailSent: sent,
+      entry: serializeEntry(updated ?? entry),
+    });
+  },
+);
+
+function serializeEntry(entry: typeof waitlistTable.$inferSelect) {
+  return {
+    ...entry,
+    createdAt: entry.createdAt instanceof Date ? entry.createdAt.toISOString() : String(entry.createdAt),
+    activatedAt: entry.activatedAt instanceof Date ? entry.activatedAt.toISOString() : entry.activatedAt,
+    activationEmailSentAt:
+      entry.activationEmailSentAt instanceof Date
+        ? entry.activationEmailSentAt.toISOString()
+        : entry.activationEmailSentAt,
+  };
+}
 
 export default router;

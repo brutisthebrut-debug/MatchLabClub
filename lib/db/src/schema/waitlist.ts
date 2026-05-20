@@ -10,6 +10,8 @@ export const waitlistTable = pgTable("waitlist", {
   podcastSource: text("podcast_source"),
   interestedIn: text("interested_in"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  activatedAt: timestamp("activated_at"),
+  activationEmailSentAt: timestamp("activation_email_sent_at"),
 });
 
 export const insertWaitlistSchema = createInsertSchema(waitlistTable).omit({ id: true, createdAt: true, userId: true });
