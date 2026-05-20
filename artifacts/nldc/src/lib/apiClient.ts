@@ -146,6 +146,29 @@ export interface AiMetricsResponse {
 export const getAiMetrics = () =>
   get<AiMetricsResponse>("/founder/ai-metrics");
 
+export interface AiMetricsTrendPoint {
+  day: string;
+  toolName: string;
+  total: number;
+  firstTryOk: number;
+  retriedOk: number;
+  fallbacks: number;
+  validationFailures: number;
+  firstTrySuccessRate: number;
+  overallSuccessRate: number;
+  fallbackRate: number;
+  avgAttempts: number;
+  avgDurationMs: number;
+}
+export interface AiMetricsTrendsResponse {
+  days: number;
+  since: string;
+  series: AiMetricsTrendPoint[];
+}
+
+export const getAiMetricsTrends = (days: number) =>
+  get<AiMetricsTrendsResponse>(`/founder/ai-metrics/trends?days=${encodeURIComponent(String(days))}`);
+
 export const getAiThresholds = (founderKey: string) =>
   fetch(`${BASE}/founder/ai-thresholds`, {
     headers: { "x-founder-key": founderKey },

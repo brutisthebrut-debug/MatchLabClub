@@ -3,10 +3,11 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import {
   getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
-  getAiThresholds, updateAiThresholds,
+  getAiThresholds, updateAiThresholds, getAiMetricsTrends,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
-  type AiThresholdsResponse, type AiPerToolThreshold
+  type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse
 } from "@/lib/apiClient";
+import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
 import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
@@ -726,6 +727,175 @@ function TableShell({ headers, rows }: { headers: string[]; rows: (string | numb
   );
 }
 
+const TREND_DAY_OPTIONS = [30, 90, 180] as const;
+type TrendDays = (typeof TREND_DAY_OPTIONS)[number];
+type TrendMetric = "firstTrySuccessRate" | "fallbackRate";
+
+const TREND_COLORS = [
+  "hsl(268 52% 68%)",
+  "hsl(142 55% 60%)",
+  "hsl(43 65% 65%)",
+  "hsl(190 55% 60%)",
+  "hsl(348 55% 65%)",
+  "hsl(228 40% 65%)",
+  "hsl(310 50% 68%)",
+  "hsl(95 45% 60%)",
+];
+
+function fmtTrendDay(day: string) {
+  const d = new Date(day + "T00:00:00Z");
+  if (Number.isNaN(d.getTime())) return day;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
+  const [days, setDays] = useState<TrendDays>(90);
+  const [metric, setMetric] = useState<TrendMetric>("firstTrySuccessRate");
+  const [data, setData] = useState<AiMetricsTrendsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setErr(null);
+    getAiMetricsTrends(days)
+      .then((res) => { if (!cancelled) setData(res); })
+      .catch((e: unknown) => { if (!cancelled) setErr(e instanceof Error ? e.message : "Failed to load"); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [days, refreshKey]);
+
+  const { chartRows, toolNames } = (() => {
+    if (!data) return { chartRows: [] as Array<Record<string, number | string>>, toolNames: [] as string[] };
+    const byDay = new Map<string, Record<string, number | string>>();
+    const toolTotals = new Map<string, number>();
+    for (const p of data.series) {
+      toolTotals.set(p.toolName, (toolTotals.get(p.toolName) ?? 0) + p.total);
+      let row = byDay.get(p.day);
+      if (!row) {
+        row = { day: p.day };
+        byDay.set(p.day, row);
+      }
+      const value = metric === "firstTrySuccessRate" ? p.firstTrySuccessRate : p.fallbackRate;
+      row[p.toolName] = Math.round(value * 1000) / 10;
+    }
+    const tools = [...toolTotals.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([name]) => name);
+    const rows = [...byDay.values()].sort((a, b) => String(a.day).localeCompare(String(b.day)));
+    return { chartRows: rows, toolNames: tools };
+  })();
+
+  const hasData = chartRows.length > 0 && toolNames.length > 0;
+
+  return (
+    <div className="glass rounded-2xl p-6 space-y-5">
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">AI Reliability Trends</p>
+          <p className="text-base font-semibold text-foreground">
+            {metric === "firstTrySuccessRate" ? "First-try success rate" : "Fallback rate"} per tool over time
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {loading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground/60" />}
+          <div className="flex rounded-lg border border-white/10 overflow-hidden">
+            {(["firstTrySuccessRate", "fallbackRate"] as TrendMetric[]).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMetric(m)}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                  metric === m
+                    ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_52%_78%)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                }`}
+              >
+                {m === "firstTrySuccessRate" ? "First-try %" : "Fallback %"}
+              </button>
+            ))}
+          </div>
+          <div className="flex rounded-lg border border-white/10 overflow-hidden">
+            {TREND_DAY_OPTIONS.map((d) => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setDays(d)}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                  days === d
+                    ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_52%_78%)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                }`}
+              >
+                {d}d
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {err && <p className="text-xs text-red-400">Could not load AI metrics trends: {err}</p>}
+
+      {!err && !loading && !hasData && (
+        <p className="text-sm text-muted-foreground/70 italic">
+          No daily AI metrics recorded in the last {days} days yet.
+        </p>
+      )}
+
+      {hasData && (
+        <div className="w-full" style={{ height: 320 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartRows} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.4)" />
+              <XAxis
+                dataKey="day"
+                tickFormatter={fmtTrendDay}
+                stroke="hsl(var(--muted-foreground) / 0.7)"
+                fontSize={11}
+                minTickGap={24}
+              />
+              <YAxis
+                domain={[0, 100]}
+                tickFormatter={(v) => `${v}%`}
+                stroke="hsl(var(--muted-foreground) / 0.7)"
+                fontSize={11}
+                width={40}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: "hsl(var(--background))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+                labelFormatter={(label) => fmtTrendDay(String(label))}
+                formatter={(value: number | string, name) => [
+                  typeof value === "number" ? `${value.toFixed(1)}%` : value,
+                  name,
+                ]}
+              />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              {toolNames.map((name, i) => (
+                <Line
+                  key={name}
+                  type="monotone"
+                  dataKey={name}
+                  stroke={TREND_COLORS[i % TREND_COLORS.length]}
+                  strokeWidth={2}
+                  dot={false}
+                  connectNulls
+                  isAnimationActive={false}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function fmtDate(iso: string) {
   try {
     return new Date(iso).toLocaleDateString("en-US", {
@@ -934,6 +1104,7 @@ function Dashboard() {
         <div className="space-y-8">
           <AiStatusPanel />
           <AiMetricsPanel refreshKey={refreshKey} />
+          <AiReliabilityTrendsPanel refreshKey={refreshKey} />
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <StatCard label="Leads captured" value={stats?.leads ?? "—"} icon={Inbox} color="hsl(268 52% 68%)" />
             <StatCard label="Purchase interest" value={stats?.purchaseInterest ?? "—"} icon={ShoppingBag} color="hsl(348 55% 58%)" />
