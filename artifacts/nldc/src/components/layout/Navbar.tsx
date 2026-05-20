@@ -41,10 +41,18 @@ const GROWTH_TRACKER = [
 ];
 
 const OFFERS = [
-  { name: "Pricing",       href: "/pricing",    desc: "Free · $97 · $197 — see what's included" },
-  { name: "Podcast Perks", href: "/waitlist",   desc: "Listener discount + early access perks" },
-  { name: "Integrations",  href: "/integrations", desc: "Settings, privacy controls & connected apps" },
-  { name: "Platform Vision", href: "/roadmap",  desc: "What's live, in dev, and on the roadmap" },
+  { name: "Pricing",          href: "/pricing",      desc: "Free · $97 · $197 — see what's included" },
+  { name: "Podcast Perks",    href: "/waitlist",     desc: "Listener discount + early access perks" },
+  { name: "Platform Vision",  href: "/roadmap",      desc: "What's live, in dev, and on the roadmap" },
+];
+
+const SETTINGS_TRUST = [
+  { name: "Wellness Center",    href: "/wellness",           desc: "8 dimensions of your readiness" },
+  { name: "Life Context",       href: "/life-context",       desc: "Approved insights, one view" },
+  { name: "User Control",       href: "/user-control",       desc: "Approve, edit, export, delete" },
+  { name: "Future Connections", href: "/future-connections", desc: "Sources we'd consider next" },
+  { name: "Integrations",       href: "/integrations",       desc: "Connected apps & privacy" },
+  { name: "Privacy",            href: "/privacy",            desc: "How we handle data" },
 ];
 
 type DropdownId = "blueprint" | "messages" | "growth" | "offers" | null;
@@ -174,24 +182,37 @@ export function Navbar() {
             </div>
           )}
 
-          {/* Offers */}
+          {/* Offers + Settings/Trust */}
           <button
             onClick={() => toggle("offers")}
-            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${activeMenu === "offers" || isActive(["/pricing", "/waitlist", "/integrations", "/roadmap"]) ? "text-[hsl(43_65%_72%)] bg-white/5" : "text-muted-foreground hover:text-foreground hover:bg-white/4"}`}
+            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${activeMenu === "offers" || isActive(["/pricing", "/waitlist", "/integrations", "/roadmap", "/wellness", "/life-context", "/user-control", "/future-connections", "/privacy"]) ? "text-[hsl(43_65%_72%)] bg-white/5" : "text-muted-foreground hover:text-foreground hover:bg-white/4"}`}
           >
             <Gift className="w-3.5 h-3.5" />
             Offers
             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${activeMenu === "offers" ? "rotate-180" : ""}`} />
           </button>
           {activeMenu === "offers" && (
-            <div className="absolute top-16 right-4 w-64 glass-strong rounded-2xl p-3 shadow-[0_20px_60px_rgb(0_0_0/0.5)] border border-[hsl(43_65%_65%/0.2)] animate-in fade-in-0 zoom-in-95 z-50">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pt-1 pb-2">Offers &amp; Settings</p>
-              {OFFERS.map(t => (
-                <Link key={t.href} href={t.href} onClick={closeAll} className="flex flex-col gap-0.5 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors">
-                  <span className="text-xs font-semibold text-foreground leading-tight">{t.name}</span>
-                  <span className="text-[11px] text-muted-foreground/70 leading-tight">{t.desc}</span>
-                </Link>
-              ))}
+            <div className="absolute top-16 right-4 w-[580px] glass-strong rounded-2xl p-3 shadow-[0_20px_60px_rgb(0_0_0/0.5)] border border-[hsl(43_65%_65%/0.2)] animate-in fade-in-0 zoom-in-95 z-50">
+              <div className="grid grid-cols-2 gap-x-2">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pt-1 pb-2">Offers</p>
+                  {OFFERS.map(t => (
+                    <Link key={t.href} href={t.href} onClick={closeAll} className="flex flex-col gap-0.5 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors">
+                      <span className="text-xs font-semibold text-foreground leading-tight">{t.name}</span>
+                      <span className="text-[11px] text-muted-foreground/70 leading-tight">{t.desc}</span>
+                    </Link>
+                  ))}
+                </div>
+                <div className="border-l border-white/5">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pt-1 pb-2">Settings &amp; Trust</p>
+                  {SETTINGS_TRUST.map(t => (
+                    <Link key={t.href} href={t.href} onClick={closeAll} className="flex flex-col gap-0.5 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors">
+                      <span className="text-xs font-semibold text-foreground leading-tight">{t.name}</span>
+                      <span className="text-[11px] text-muted-foreground/70 leading-tight">{t.desc}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
@@ -247,8 +268,13 @@ export function Navbar() {
             <Link key={t.href} href={t.href} onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">{t.name}</Link>
           ))}
           <div className="h-px bg-white/5 my-2" />
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1">Offers &amp; Settings</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1">Offers</p>
           {OFFERS.map(t => (
+            <Link key={t.href} href={t.href} onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">{t.name}</Link>
+          ))}
+          <div className="h-px bg-white/5 my-2" />
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1">Settings &amp; Trust</p>
+          {SETTINGS_TRUST.map(t => (
             <Link key={t.href} href={t.href} onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">{t.name}</Link>
           ))}
           <div className="h-px bg-white/5 my-2" />

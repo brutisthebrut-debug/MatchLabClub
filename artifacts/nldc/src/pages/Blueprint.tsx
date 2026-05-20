@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -140,14 +141,21 @@ const SECTIONS = [
   { key: "growthEdge",         title: "Growth Edge",           color: "hsl(43 65% 65%)",   desc: "One concrete shift that would change your results" },
 ];
 
-function CopyBtn({ text }: { text: string }) {
+function CopyBtn({ text, label }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
   return (
     <button
-      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+      onClick={() => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        toast({ title: "Copied to clipboard", description: label ? `${label} ready to paste.` : undefined });
+        setTimeout(() => setCopied(false), 2000);
+      }}
       className="flex items-center gap-1.5 text-xs transition-colors flex-shrink-0"
       style={{ color: copied ? "hsl(142 55% 60%)" : undefined }}
       title="Copy to clipboard"
+      data-testid="button-copy-blueprint"
     >
       {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground/50" />}
     </button>

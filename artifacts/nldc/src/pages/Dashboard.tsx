@@ -11,7 +11,7 @@ import {
   TrendingUp, AlertTriangle, Clock, Sparkles, Trophy, Eye,
   ChevronRight, FlaskConical, Stethoscope, Zap,
   Wand2, ScanFace, BarChart2, Heart, Compass, BookOpen,
-  MessageCircle, User, Map, Brain, Rss, Shield, Users, BarChart, Lightbulb
+  MessageCircle, User, Map, Brain, Rss, Shield, Users, BarChart, Lightbulb, Layers
 } from "lucide-react";
 
 function ScoreRing({ score }: { score: number }) {
@@ -91,6 +91,10 @@ const QUICK_ACTIONS = [
   { icon: Heart,         label: "Post-Meeting Reflect", desc: "Pursue / pause / pass read",    href: "/reflection",            color: "hsl(348 55% 65%)" },
   { icon: Eye,           label: "Connection Style",     desc: "Your attachment pattern",       href: "/connection-style",      color: "hsl(285 45% 65%)" },
   { icon: Compass,       label: "Compat. Compass",      desc: "Dynamics that support you",     href: "/compatibility-compass", color: "hsl(142 55% 60%)" },
+  { icon: Heart,         label: "Wellness Center",      desc: "8 dimensions of readiness",     href: "/wellness",              color: "hsl(43 65% 65%)"  },
+  { icon: Shield,        label: "User Control",         desc: "Approve, edit, export, delete", href: "/user-control",          color: "hsl(142 55% 60%)" },
+  { icon: Layers,        label: "Life Context",         desc: "Your approved insights",        href: "/life-context",          color: "hsl(268 52% 68%)" },
+  { icon: Eye,           label: "Future Connections",   desc: "Sources we'd consider next",    href: "/future-connections",    color: "hsl(190 55% 60%)" },
   { icon: Settings,      label: "Integrations",         desc: "Manage connections",            href: "/integrations",          color: "hsl(228 18% 55%)" },
   { icon: Map,           label: "Platform Vision",      desc: "See what's coming",             href: "/roadmap",               color: "hsl(43 65% 60%)"  },
   { icon: Clock,         label: "My Timeline",          desc: "Log wins, patterns, questions", href: "/progress/timeline",     color: "hsl(190 55% 60%)" },

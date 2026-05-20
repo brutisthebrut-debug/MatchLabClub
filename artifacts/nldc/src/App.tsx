@@ -43,6 +43,10 @@ import ProgressControl from "@/pages/ProgressControl";
 import ProgressInsightsRoadmap from "@/pages/ProgressInsightsRoadmap";
 import ProgressReadiness from "@/pages/ProgressReadiness";
 import ProgressCompanion from "@/pages/ProgressCompanion";
+import WellnessCenter from "@/pages/WellnessCenter";
+import UserControl from "@/pages/UserControl";
+import LifeContext from "@/pages/LifeContext";
+import FutureConnections from "@/pages/FutureConnections";
 
 const queryClient = new QueryClient();
 
@@ -93,6 +97,11 @@ function Router() {
       <Route path="/progress/insights-roadmap" component={ProgressInsightsRoadmap} />
       <Route path="/progress/readiness" component={ProgressReadiness} />
       <Route path="/progress/companion" component={ProgressCompanion} />
+      {/* Wellness & Control */}
+      <Route path="/wellness" component={WellnessCenter} />
+      <Route path="/user-control" component={UserControl} />
+      <Route path="/life-context" component={LifeContext} />
+      <Route path="/future-connections" component={FutureConnections} />
       <Route component={NotFound} />
     </Switch>
   );
