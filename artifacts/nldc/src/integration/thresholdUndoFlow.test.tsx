@@ -305,6 +305,8 @@ vi.mock("@/lib/apiClient", () => ({
   getOcrLearnedRules: vi.fn(async () => ({ rules: [] })),
   runOcrLearn: vi.fn(async () => ({ scannedAudits: 0, candidates: 0, persisted: 0 })),
   clearOcrLearnedRules: vi.fn(async () => {}),
+  getAlertSettings: vi.fn(async () => ({ rebreachCooldownMinutes: 15 })),
+  updateAlertSettings: vi.fn(async (_key: string, minutes: number) => ({ rebreachCooldownMinutes: minutes })),
 }));
 
 vi.mock("@workspace/api-client-react", () => ({
