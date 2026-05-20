@@ -3,7 +3,7 @@ import express, { type Express, type Request, type Response, type NextFunction }
 import cookieParser from "cookie-parser";
 import request from "supertest";
 import crypto from "crypto";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import {
   db,
   pool,
@@ -16,6 +16,7 @@ import {
 } from "@workspace/db";
 import type { AuthUser } from "@workspace/api-zod";
 import claimRouter from "./claim";
+import auditsRouter from "./audits";
 import { ANON_CLAIM_COOKIE } from "../lib/anonClaimToken";
 import {
   signHandoffToken,
@@ -1143,6 +1144,190 @@ describe("Email Insights: anonymous-to-user claim via handoff (POST /api/claim-a
     } finally {
       // jti was never inserted (route bailed before DB write) so no redemption to clean up
       await db.delete(emailInsightsTable).where(eq(emailInsightsTable.id, insightId));
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Smoke test: full cookie-cleared handoff flow (mobile anonymous audit claim)
+// ---------------------------------------------------------------------------
+// Simulates the end-to-end scenario where:
+//   1. An anonymous mobile session creates an audit (server issues anon_claim cookie).
+//   2. The user clears their cookies or switches devices.
+//   3. They issue a handoff token (using the cookie from step 1).
+//   4. On the new cookie-less session they authenticate and redeem the handoff.
+//   5. The audit is confirmed to be owned by the authenticated user.
+// ---------------------------------------------------------------------------
+
+describe("Smoke: anonymous audit survives cookie-clear via handoff flow", () => {
+  const SMOKE_USER_ID = `smoke-handoff-${crypto.randomBytes(6).toString("hex")}`;
+
+  interface FullTestApp {
+    app: Express;
+    setUser: (user: { id: string } | null) => void;
+  }
+
+  function makeFullTestApp(): FullTestApp {
+    const app = express();
+    app.use(express.json());
+    app.use(cookieParser());
+
+    let currentUser: { id: string } | null = null;
+
+    app.use((req: Request, _res: Response, next: NextFunction) => {
+      if (currentUser) {
+        const user: AuthUser = {
+          id: currentUser.id,
+          email: null,
+          firstName: null,
+          lastName: null,
+          profileImageUrl: null,
+        };
+        req.user = user;
+      }
+      const noop = () => undefined;
+      // @ts-expect-error — test stub for pino logger
+      req.log = { info: noop, warn: noop, error: noop, debug: noop, child: () => ({ info: noop, warn: noop, error: noop, debug: noop }) };
+      next();
+    });
+
+    app.use("/api", auditsRouter);
+    app.use("/api", claimRouter);
+
+    return {
+      app,
+      setUser: (user) => {
+        currentUser = user;
+      },
+    };
+  }
+
+  it("anonymous audit is recoverable after cookie clear via handoff issue + redeem", async () => {
+    const fullApp = makeFullTestApp();
+
+    // Step 1: Create an anonymous audit (no existing cookie — server will issue one).
+    fullApp.setUser(null);
+    const createRes = await request(fullApp.app)
+      .post("/api/audits")
+      .send({
+        firstName: "MobileUser",
+        age: 27,
+        gender: "m",
+        orientation: "straight",
+        datingGoal: "find a relationship",
+        currentApps: ["Hinge"],
+        bio: "Just a mobile anon user looking for love",
+      });
+
+    expect(createRes.status).toBe(201);
+    const auditId: number = createRes.body.id;
+    expect(typeof auditId).toBe("number");
+
+    // Extract the anon_claim cookie that the server just set.
+    const rawSetCookie = createRes.headers["set-cookie"] as string[] | string | undefined;
+    const cookies = Array.isArray(rawSetCookie) ? rawSetCookie : rawSetCookie ? [rawSetCookie] : [];
+    const anonCookieEntry = cookies.find((c) => c.startsWith(`${ANON_CLAIM_COOKIE}=`));
+    expect(anonCookieEntry).toBeDefined();
+    const anonToken = anonCookieEntry!.split("=")[1]!.split(";")[0]!;
+    expect(anonToken).toMatch(/^[a-f0-9]{64}$/);
+
+    // Confirm the DB row is anonymous at this point.
+    const [beforeClaim] = await db
+      .select()
+      .from(auditsTable)
+      .where(eq(auditsTable.id, auditId));
+    expect(beforeClaim.userId).toBeNull();
+    expect(beforeClaim.anonymousClaimToken).toBe(anonToken);
+
+    let jti: string | undefined;
+    try {
+      // Step 2: Issue a handoff token using the cookie (simulates "Continue on another device").
+      const issueRes = await request(fullApp.app)
+        .post("/api/claim-anonymous/handoff/issue")
+        .set("Cookie", [`${ANON_CLAIM_COOKIE}=${anonToken}`])
+        .send({});
+
+      expect(issueRes.status).toBe(200);
+      const handoffToken: string = issueRes.body.handoff;
+      expect(typeof handoffToken).toBe("string");
+      const verified = verifyHandoffToken(handoffToken);
+      expect(verified).not.toBeNull();
+      expect(verified!.anonToken).toBe(anonToken);
+      jti = verified!.jti;
+
+      // Step 3: Simulate cookie cleared — authenticate and redeem via handoff (no cookie header).
+      fullApp.setUser({ id: SMOKE_USER_ID });
+      const redeemRes = await request(fullApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        // intentionally no Cookie header — simulates cleared cookies / new device
+        .send({ handoff: handoffToken, auditIds: [auditId] });
+
+      expect(redeemRes.status).toBe(200);
+      expect(redeemRes.body.claimed.audits).toBe(1);
+
+      // Step 4: Verify the audit is now owned by the authenticated user.
+      const [afterClaim] = await db
+        .select()
+        .from(auditsTable)
+        .where(eq(auditsTable.id, auditId));
+      expect(afterClaim.userId).toBe(SMOKE_USER_ID);
+      expect(afterClaim.anonymousClaimToken).toBeNull();
+
+      // Step 5: Verify the audit appears when listing audits as the authenticated user.
+      const listRes = await request(fullApp.app)
+        .get("/api/audits");
+
+      expect(listRes.status).toBe(200);
+      const auditIds: number[] = (listRes.body as Array<{ id: number }>).map((a) => a.id);
+      expect(auditIds).toContain(auditId);
+    } finally {
+      if (jti) {
+        await db
+          .delete(handoffTokenRedemptionsTable)
+          .where(eq(handoffTokenRedemptionsTable.jti, jti));
+      }
+      await db.delete(auditsTable).where(eq(auditsTable.id, auditId));
+    }
+  });
+
+  it("audit remains anonymous if handoff is never redeemed (cookies cleared with no recovery)", async () => {
+    const fullApp = makeFullTestApp();
+    fullApp.setUser(null);
+
+    // Create an anonymous audit.
+    const createRes = await request(fullApp.app)
+      .post("/api/audits")
+      .send({
+        firstName: "LostUser",
+        age: 25,
+        gender: "f",
+        orientation: "straight",
+        datingGoal: "casual dating",
+        currentApps: ["Tinder"],
+        bio: "Cookie cleared, no handoff issued",
+      });
+
+    expect(createRes.status).toBe(201);
+    const auditId: number = createRes.body.id;
+
+    try {
+      // Authenticate WITHOUT a cookie or handoff — audit should NOT appear.
+      fullApp.setUser({ id: SMOKE_USER_ID });
+      const listRes = await request(fullApp.app).get("/api/audits");
+      expect(listRes.status).toBe(200);
+
+      const auditIds: number[] = (listRes.body as Array<{ id: number }>).map((a) => a.id);
+      expect(auditIds).not.toContain(auditId);
+
+      // Confirm row is still anonymous in the DB.
+      const [row] = await db
+        .select()
+        .from(auditsTable)
+        .where(and(eq(auditsTable.id, auditId), isNull(auditsTable.userId)));
+      expect(row).toBeDefined();
+      expect(row.userId).toBeNull();
+    } finally {
+      await db.delete(auditsTable).where(eq(auditsTable.id, auditId));
     }
   });
 });
