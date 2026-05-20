@@ -22,7 +22,7 @@ export default function Landing() {
       {/* ── Podcast Banner ── */}
       <div className="bg-gradient-to-r from-[hsl(268_52%_55%/0.08)] via-[hsl(285_45%_55%/0.05)] to-[hsl(43_65%_55%/0.07)] border-b border-foreground/8 py-2.5">
         <div className="container mx-auto px-4 flex items-center justify-center gap-2.5 text-sm font-medium">
-          <Headphones className="w-4 h-4 text-[hsl(43_65%_42%)]" />
+          <Headphones className="w-4 h-4 text-[hsl(43_65%_62%)]" />
           <span className="text-foreground/80">As heard on <strong className="text-foreground">The Love Reset Podcast</strong></span>
           <span className="hidden md:inline text-muted-foreground">—</span>
           <Link href="/waitlist" className="hidden md:inline gradient-text-gold font-semibold hover:opacity-80 transition-opacity">
@@ -42,7 +42,7 @@ export default function Landing() {
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
             <motion.div {...fadeUp(0)}>
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border border-[hsl(268_52%_55%/0.3)] text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_48%)] mb-8">
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border border-[hsl(268_52%_68%/0.3)] text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_80%)] mb-8">
                 <span className="w-1.5 h-1.5 rounded-full bg-[hsl(268_52%_68%)] animate-pulse" />
                 Podcast Launch — Limited Early Access
               </span>
@@ -118,7 +118,7 @@ export default function Landing() {
               <div className="text-sm">
                 <span className="text-foreground font-semibold">2,847 audits</span>
                 <span className="text-muted-foreground"> completed. Avg score gain: </span>
-                <span className="text-[hsl(43_65%_42%)] font-semibold">+23 pts.</span>
+                <span className="text-[hsl(43_65%_65%)] font-semibold">+23 pts.</span>
               </div>
             </motion.div>
           </div>
