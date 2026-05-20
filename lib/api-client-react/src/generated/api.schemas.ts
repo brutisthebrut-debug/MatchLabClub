@@ -54,6 +54,21 @@ export interface ClaimAnonymousInput {
   insightIds?: number[];
 }
 
+export interface AnonymousClaimHandoff {
+  /** Opaque signed token. Treat as a secret — anyone holding it can claim the underlying anonymous data after signing in before it expires. */
+  handoff: string;
+  expiresAt: string;
+}
+
+export interface RedeemAnonymousClaimHandoffInput {
+  /** @minLength 1 */
+  handoff: string;
+  auditIds?: number[];
+  profileIds?: number[];
+  messageSessionIds?: number[];
+  insightIds?: number[];
+}
+
 export type ClaimAnonymousResultClaimed = {
   audits: number;
   profiles: number;

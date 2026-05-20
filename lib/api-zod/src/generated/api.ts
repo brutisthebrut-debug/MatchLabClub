@@ -116,6 +116,58 @@ export const ClaimAnonymousDataResponse = zod.object({
 
 
 /**
+ * Issues a short-lived, HMAC-signed token derived from the caller's
+`anon_claim` cookie. The user can paste this token (or a link
+containing it) into another browser or device, sign in there, and call
+`redeemAnonymousClaimHandoff` to claim the audits, dating profiles,
+message coaching sessions, and email insights tied to the original
+anonymous browser — without needing the original cookie. The token
+expires automatically and is single-use in practice (a successful
+claim nulls the underlying anonymous token).
+
+ * @summary Mint a signed cross-device handoff token for the current anonymous browser
+ */
+export const IssueAnonymousClaimHandoffResponse = zod.object({
+  "handoff": zod.string().describe('Opaque signed token. Treat as a secret — anyone holding it can claim the underlying anonymous data after signing in before it expires.'),
+  "expiresAt": zod.coerce.date()
+})
+
+
+/**
+ * Verifies the handoff token's signature and expiry, then runs the same
+claim logic as `claimAnonymousData` — but scoped to the anonymous
+token embedded in the handoff rather than the browser's `anon_claim`
+cookie. Requires an authenticated session. Only rows whose
+`anonymous_claim_token` matches the signed value are reassigned.
+
+ * @summary Claim anonymous data using a signed handoff token instead of the browser cookie
+ */
+export const RedeemAnonymousClaimHandoffHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+
+
+
+export const RedeemAnonymousClaimHandoffBody = zod.object({
+  "handoff": zod.string().min(1),
+  "auditIds": zod.array(zod.number()).optional(),
+  "profileIds": zod.array(zod.number()).optional(),
+  "messageSessionIds": zod.array(zod.number()).optional(),
+  "insightIds": zod.array(zod.number()).optional()
+})
+
+export const RedeemAnonymousClaimHandoffResponse = zod.object({
+  "claimed": zod.object({
+  "audits": zod.number(),
+  "profiles": zod.number(),
+  "messages": zod.number(),
+  "insights": zod.number()
+})
+})
+
+
+/**
  * Returns a single JSON document containing the authenticated user's
 profile record plus every audit, dating profile, message coaching
 session, and email insight tied to that user. Intended to power a

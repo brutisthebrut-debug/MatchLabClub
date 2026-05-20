@@ -15,6 +15,10 @@ import {
 import type { AuthUser } from "@workspace/api-zod";
 import claimRouter from "./claim";
 import { ANON_CLAIM_COOKIE } from "../lib/anonClaimToken";
+import {
+  signHandoffToken,
+  verifyHandoffToken,
+} from "../lib/handoffToken";
 
 interface TestApp {
   app: Express;
@@ -344,6 +348,203 @@ describe("POST /api/claim-anonymous", () => {
         .where(eq(auditsTable.id, ids.ownedAuditId));
       expect(row.userId).toBeNull();
       expect(row.anonymousClaimToken).toBe(token);
+    } finally {
+      await cleanup(ids);
+    }
+  });
+});
+
+describe("handoff token sign/verify", () => {
+  it("round-trips a valid token", () => {
+    const anon = crypto.randomBytes(32).toString("hex");
+    const issued = signHandoffToken(anon);
+    expect(verifyHandoffToken(issued.token)).toBe(anon);
+  });
+
+  it("rejects an expired token", () => {
+    const anon = crypto.randomBytes(32).toString("hex");
+    const issued = signHandoffToken(anon, -1);
+    expect(verifyHandoffToken(issued.token)).toBeNull();
+  });
+
+  it("rejects a tampered payload", () => {
+    const anon = crypto.randomBytes(32).toString("hex");
+    const issued = signHandoffToken(anon);
+    const [body, sig] = issued.token.split(".");
+    // Flip a character in the body — signature should no longer verify.
+    const tamperedBody =
+      body!.slice(0, -1) + (body!.slice(-1) === "A" ? "B" : "A");
+    expect(verifyHandoffToken(`${tamperedBody}.${sig}`)).toBeNull();
+  });
+
+  it("rejects garbage input", () => {
+    expect(verifyHandoffToken("")).toBeNull();
+    expect(verifyHandoffToken("not-a-token")).toBeNull();
+    expect(verifyHandoffToken(undefined)).toBeNull();
+    expect(verifyHandoffToken(123)).toBeNull();
+  });
+});
+
+describe("POST /api/claim-anonymous/handoff/issue", () => {
+  it("returns a signed token derived from the anon cookie", async () => {
+    const token = makeToken();
+    const res = await request(testApp.app)
+      .post("/api/claim-anonymous/handoff/issue")
+      .set("Cookie", [`${ANON_CLAIM_COOKIE}=${token}`])
+      .send({});
+    expect(res.status).toBe(200);
+    expect(typeof res.body.handoff).toBe("string");
+    expect(typeof res.body.expiresAt).toBe("string");
+    expect(verifyHandoffToken(res.body.handoff)).toBe(token);
+  });
+
+  it("rejects callers without an anon cookie", async () => {
+    const res = await request(testApp.app)
+      .post("/api/claim-anonymous/handoff/issue")
+      .send({});
+    expect(res.status).toBe(400);
+  });
+
+  it("does not require authentication", async () => {
+    testApp.setUser(null);
+    const token = makeToken();
+    const res = await request(testApp.app)
+      .post("/api/claim-anonymous/handoff/issue")
+      .set("Cookie", [`${ANON_CLAIM_COOKIE}=${token}`])
+      .send({});
+    expect(res.status).toBe(200);
+  });
+});
+
+describe("POST /api/claim-anonymous/handoff/redeem", () => {
+  let token: string;
+  let ids: SeedIds;
+
+  beforeEach(async () => {
+    token = makeToken();
+    ids = await seed(token);
+  });
+
+  it("returns 401 when unauthenticated", async () => {
+    testApp.setUser(null);
+    try {
+      const handoff = signHandoffToken(token).token;
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .send({ handoff, auditIds: [ids.ownedAuditId] });
+      expect(res.status).toBe(401);
+
+      const [row] = await db
+        .select()
+        .from(auditsTable)
+        .where(eq(auditsTable.id, ids.ownedAuditId));
+      expect(row.userId).toBeNull();
+    } finally {
+      await cleanup(ids);
+    }
+  });
+
+  it("claims rows matching the signed token WITHOUT a browser cookie", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    try {
+      const handoff = signHandoffToken(token).token;
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        // intentionally no Cookie header — this is the cross-device case
+        .send({
+          handoff,
+          auditIds: [ids.ownedAuditId],
+          profileIds: [ids.ownedProfileId],
+          messageSessionIds: [ids.ownedMessageId],
+          insightIds: [ids.ownedInsightId],
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({
+        claimed: { audits: 1, profiles: 1, messages: 1, insights: 1 },
+      });
+
+      const [audit] = await db
+        .select()
+        .from(auditsTable)
+        .where(eq(auditsTable.id, ids.ownedAuditId));
+      expect(audit.userId).toBe(TEST_USER_ID);
+      expect(audit.anonymousClaimToken).toBeNull();
+    } finally {
+      await cleanup(ids);
+    }
+  });
+
+  it("rejects an expired handoff token", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    try {
+      const handoff = signHandoffToken(token, -1).token;
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .send({ handoff, auditIds: [ids.ownedAuditId] });
+
+      expect(res.status).toBe(400);
+
+      const [row] = await db
+        .select()
+        .from(auditsTable)
+        .where(eq(auditsTable.id, ids.ownedAuditId));
+      expect(row.userId).toBeNull();
+      expect(row.anonymousClaimToken).toBe(token);
+    } finally {
+      await cleanup(ids);
+    }
+  });
+
+  it("never claims rows tagged with a different anonymous token", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    try {
+      // Sign a handoff for token A but try to claim a row tagged with token B.
+      const handoff = signHandoffToken(token).token;
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .send({
+          handoff,
+          auditIds: [ids.strangerAnonAuditId, ids.ownedAuditId],
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.claimed.audits).toBe(1);
+
+      const [stranger] = await db
+        .select()
+        .from(auditsTable)
+        .where(eq(auditsTable.id, ids.strangerAnonAuditId));
+      expect(stranger.userId).toBeNull();
+      expect(stranger.anonymousClaimToken).not.toBe(token);
+    } finally {
+      await cleanup(ids);
+    }
+  });
+
+  it("never touches rows already owned by another user", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    try {
+      const handoff = signHandoffToken(token).token;
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .send({
+          handoff,
+          auditIds: [ids.otherUsersAuditId, ids.ownedAuditId],
+        });
+      expect(res.status).toBe(200);
+      expect(res.body.claimed.audits).toBe(1);
+
+      const [other] = await db
+        .select()
+        .from(auditsTable)
+        .where(
+          and(
+            eq(auditsTable.id, ids.otherUsersAuditId),
+            eq(auditsTable.userId, OTHER_USER_ID),
+          ),
+        );
+      expect(other?.userId).toBe(OTHER_USER_ID);
     } finally {
       await cleanup(ids);
     }

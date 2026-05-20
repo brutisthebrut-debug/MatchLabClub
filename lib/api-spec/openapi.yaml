@@ -172,6 +172,74 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /claim-anonymous/handoff/issue:
+    post:
+      tags: [Auth]
+      operationId: issueAnonymousClaimHandoff
+      summary: Mint a signed cross-device handoff token for the current anonymous browser
+      description: |
+        Issues a short-lived, HMAC-signed token derived from the caller's
+        `anon_claim` cookie. The user can paste this token (or a link
+        containing it) into another browser or device, sign in there, and call
+        `redeemAnonymousClaimHandoff` to claim the audits, dating profiles,
+        message coaching sessions, and email insights tied to the original
+        anonymous browser — without needing the original cookie. The token
+        expires automatically and is single-use in practice (a successful
+        claim nulls the underlying anonymous token).
+      responses:
+        '200':
+          description: A handoff token usable on another browser within the TTL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnonymousClaimHandoff'
+        '400':
+          description: This browser has no anonymous claim cookie to hand off.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /claim-anonymous/handoff/redeem:
+    post:
+      tags: [Auth]
+      operationId: redeemAnonymousClaimHandoff
+      summary: Claim anonymous data using a signed handoff token instead of the browser cookie
+      description: |
+        Verifies the handoff token's signature and expiry, then runs the same
+        claim logic as `claimAnonymousData` — but scoped to the anonymous
+        token embedded in the handoff rather than the browser's `anon_claim`
+        cookie. Requires an authenticated session. Only rows whose
+        `anonymous_claim_token` matches the signed value are reassigned.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedeemAnonymousClaimHandoffInput'
+      responses:
+        '200':
+          description: Counts of rows successfully claimed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimAnonymousResult'
+        '400':
+          description: The handoff token is malformed, expired, or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /account/export:
     get:
       tags: [Auth]
@@ -914,6 +982,39 @@ components:
     ClaimAnonymousInput:
       type: object
       properties:
+        auditIds:
+          type: array
+          items:
+            type: integer
+        profileIds:
+          type: array
+          items:
+            type: integer
+        messageSessionIds:
+          type: array
+          items:
+            type: integer
+        insightIds:
+          type: array
+          items:
+            type: integer
+    AnonymousClaimHandoff:
+      type: object
+      required: [handoff, expiresAt]
+      properties:
+        handoff:
+          type: string
+          description: Opaque signed token. Treat as a secret — anyone holding it can claim the underlying anonymous data after signing in before it expires.
+        expiresAt:
+          type: string
+          format: date-time
+    RedeemAnonymousClaimHandoffInput:
+      type: object
+      required: [handoff]
+      properties:
+        handoff:
+          type: string
+          minLength: 1
         auditIds:
           type: array
           items:

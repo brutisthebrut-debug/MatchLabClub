@@ -27,6 +27,7 @@ import type {
   AiStatus,
   AiTestInput,
   AiTestResult,
+  AnonymousClaimHandoff,
   Audit,
   AuditFromScreenshot400,
   AuditInput,
@@ -58,6 +59,7 @@ import type {
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
   ProfileRewrite,
+  RedeemAnonymousClaimHandoffInput,
   ScreenshotAuditInput,
   ScreenshotAuditReport,
   TestAiParams,
@@ -614,6 +616,162 @@ export const useClaimAnonymousData = <TError = ErrorType<AuthErrorEnvelope>,
         TContext
       > => {
       return useMutation(getClaimAnonymousDataMutationOptions(options));
+    }
+
+export const getIssueAnonymousClaimHandoffUrl = () => {
+
+
+
+
+  return `/api/claim-anonymous/handoff/issue`
+}
+
+/**
+ * Issues a short-lived, HMAC-signed token derived from the caller's
+`anon_claim` cookie. The user can paste this token (or a link
+containing it) into another browser or device, sign in there, and call
+`redeemAnonymousClaimHandoff` to claim the audits, dating profiles,
+message coaching sessions, and email insights tied to the original
+anonymous browser — without needing the original cookie. The token
+expires automatically and is single-use in practice (a successful
+claim nulls the underlying anonymous token).
+
+ * @summary Mint a signed cross-device handoff token for the current anonymous browser
+ */
+export const issueAnonymousClaimHandoff = async ( options?: RequestInit): Promise<AnonymousClaimHandoff> => {
+
+  return customFetch<AnonymousClaimHandoff>(getIssueAnonymousClaimHandoffUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getIssueAnonymousClaimHandoffMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof issueAnonymousClaimHandoff>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof issueAnonymousClaimHandoff>>, TError,void, TContext> => {
+
+const mutationKey = ['issueAnonymousClaimHandoff'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof issueAnonymousClaimHandoff>>, void> = () => {
+
+
+          return  issueAnonymousClaimHandoff(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IssueAnonymousClaimHandoffMutationResult = NonNullable<Awaited<ReturnType<typeof issueAnonymousClaimHandoff>>>
+
+    export type IssueAnonymousClaimHandoffMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Mint a signed cross-device handoff token for the current anonymous browser
+ */
+export const useIssueAnonymousClaimHandoff = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof issueAnonymousClaimHandoff>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof issueAnonymousClaimHandoff>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getIssueAnonymousClaimHandoffMutationOptions(options));
+    }
+
+export const getRedeemAnonymousClaimHandoffUrl = () => {
+
+
+
+
+  return `/api/claim-anonymous/handoff/redeem`
+}
+
+/**
+ * Verifies the handoff token's signature and expiry, then runs the same
+claim logic as `claimAnonymousData` — but scoped to the anonymous
+token embedded in the handoff rather than the browser's `anon_claim`
+cookie. Requires an authenticated session. Only rows whose
+`anonymous_claim_token` matches the signed value are reassigned.
+
+ * @summary Claim anonymous data using a signed handoff token instead of the browser cookie
+ */
+export const redeemAnonymousClaimHandoff = async (redeemAnonymousClaimHandoffInput: RedeemAnonymousClaimHandoffInput, options?: RequestInit): Promise<ClaimAnonymousResult> => {
+
+  return customFetch<ClaimAnonymousResult>(getRedeemAnonymousClaimHandoffUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      redeemAnonymousClaimHandoffInput,)
+  }
+);}
+
+
+
+
+export const getRedeemAnonymousClaimHandoffMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof redeemAnonymousClaimHandoff>>, TError,{data: BodyType<RedeemAnonymousClaimHandoffInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof redeemAnonymousClaimHandoff>>, TError,{data: BodyType<RedeemAnonymousClaimHandoffInput>}, TContext> => {
+
+const mutationKey = ['redeemAnonymousClaimHandoff'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof redeemAnonymousClaimHandoff>>, {data: BodyType<RedeemAnonymousClaimHandoffInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  redeemAnonymousClaimHandoff(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RedeemAnonymousClaimHandoffMutationResult = NonNullable<Awaited<ReturnType<typeof redeemAnonymousClaimHandoff>>>
+    export type RedeemAnonymousClaimHandoffMutationBody = BodyType<RedeemAnonymousClaimHandoffInput>
+    export type RedeemAnonymousClaimHandoffMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Claim anonymous data using a signed handoff token instead of the browser cookie
+ */
+export const useRedeemAnonymousClaimHandoff = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof redeemAnonymousClaimHandoff>>, TError,{data: BodyType<RedeemAnonymousClaimHandoffInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof redeemAnonymousClaimHandoff>>,
+        TError,
+        {data: BodyType<RedeemAnonymousClaimHandoffInput>},
+        TContext
+      > => {
+      return useMutation(getRedeemAnonymousClaimHandoffMutationOptions(options));
     }
 
 export const getExportMyDataUrl = () => {
