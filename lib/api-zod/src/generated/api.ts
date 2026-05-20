@@ -237,9 +237,57 @@ export const ExportMyDataResponse = zod.object({
 })),
   "messagingStyle": zod.string(),
   "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
+  "previousReport": zod.union([zod.object({
+  "auditId": zod.number(),
+  "readinessScore": zod.number(),
+  "overallGrade": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "risks": zod.array(zod.string()),
+  "bioAudit": zod.string(),
+  "rewrittenBio": zod.string(),
+  "rewrittenPrompts": zod.array(zod.object({
+  "original": zod.string(),
+  "rewritten": zod.string(),
+  "tip": zod.string()
+})),
+  "photoGuidance": zod.array(zod.object({
+  "category": zod.string(),
+  "status": zod.enum(['good', 'needs_work', 'missing']),
+  "advice": zod.string()
+})),
+  "actionPlan": zod.array(zod.object({
+  "priority": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "timeframe": zod.string()
+})),
+  "messagingStyle": zod.string(),
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
+  "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
+  "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
   "createdAt": zod.string(),
   "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
 })),
@@ -378,9 +426,57 @@ export const DownloadEmailedExportResponse = zod.object({
 })),
   "messagingStyle": zod.string(),
   "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
+  "previousReport": zod.union([zod.object({
+  "auditId": zod.number(),
+  "readinessScore": zod.number(),
+  "overallGrade": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "risks": zod.array(zod.string()),
+  "bioAudit": zod.string(),
+  "rewrittenBio": zod.string(),
+  "rewrittenPrompts": zod.array(zod.object({
+  "original": zod.string(),
+  "rewritten": zod.string(),
+  "tip": zod.string()
+})),
+  "photoGuidance": zod.array(zod.object({
+  "category": zod.string(),
+  "status": zod.enum(['good', 'needs_work', 'missing']),
+  "advice": zod.string()
+})),
+  "actionPlan": zod.array(zod.object({
+  "priority": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "timeframe": zod.string()
+})),
+  "messagingStyle": zod.string(),
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
+  "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
+  "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
   "createdAt": zod.string(),
   "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
 })),
@@ -512,9 +608,57 @@ export const ListAuditsResponseItem = zod.object({
 })),
   "messagingStyle": zod.string(),
   "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
+  "previousReport": zod.union([zod.object({
+  "auditId": zod.number(),
+  "readinessScore": zod.number(),
+  "overallGrade": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "risks": zod.array(zod.string()),
+  "bioAudit": zod.string(),
+  "rewrittenBio": zod.string(),
+  "rewrittenPrompts": zod.array(zod.object({
+  "original": zod.string(),
+  "rewritten": zod.string(),
+  "tip": zod.string()
+})),
+  "photoGuidance": zod.array(zod.object({
+  "category": zod.string(),
+  "status": zod.enum(['good', 'needs_work', 'missing']),
+  "advice": zod.string()
+})),
+  "actionPlan": zod.array(zod.object({
+  "priority": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "timeframe": zod.string()
+})),
+  "messagingStyle": zod.string(),
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
+  "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
+  "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
   "createdAt": zod.string(),
   "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
 })
@@ -591,9 +735,57 @@ export const GetAuditResponse = zod.object({
 })),
   "messagingStyle": zod.string(),
   "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
+  "previousReport": zod.union([zod.object({
+  "auditId": zod.number(),
+  "readinessScore": zod.number(),
+  "overallGrade": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "risks": zod.array(zod.string()),
+  "bioAudit": zod.string(),
+  "rewrittenBio": zod.string(),
+  "rewrittenPrompts": zod.array(zod.object({
+  "original": zod.string(),
+  "rewritten": zod.string(),
+  "tip": zod.string()
+})),
+  "photoGuidance": zod.array(zod.object({
+  "category": zod.string(),
+  "status": zod.enum(['good', 'needs_work', 'missing']),
+  "advice": zod.string()
+})),
+  "actionPlan": zod.array(zod.object({
+  "priority": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "timeframe": zod.string()
+})),
+  "messagingStyle": zod.string(),
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
+  "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
+  "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
   "createdAt": zod.string(),
   "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
 })
@@ -672,9 +864,57 @@ export const ListTrashedAuditsResponseItem = zod.object({
 })),
   "messagingStyle": zod.string(),
   "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
+  "previousReport": zod.union([zod.object({
+  "auditId": zod.number(),
+  "readinessScore": zod.number(),
+  "overallGrade": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "risks": zod.array(zod.string()),
+  "bioAudit": zod.string(),
+  "rewrittenBio": zod.string(),
+  "rewrittenPrompts": zod.array(zod.object({
+  "original": zod.string(),
+  "rewritten": zod.string(),
+  "tip": zod.string()
+})),
+  "photoGuidance": zod.array(zod.object({
+  "category": zod.string(),
+  "status": zod.enum(['good', 'needs_work', 'missing']),
+  "advice": zod.string()
+})),
+  "actionPlan": zod.array(zod.object({
+  "priority": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "timeframe": zod.string()
+})),
+  "messagingStyle": zod.string(),
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
+  "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
+  "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
   "createdAt": zod.string(),
   "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
 })
@@ -737,9 +977,57 @@ export const RestoreAuditResponse = zod.object({
 })),
   "messagingStyle": zod.string(),
   "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
+  "previousReport": zod.union([zod.object({
+  "auditId": zod.number(),
+  "readinessScore": zod.number(),
+  "overallGrade": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "risks": zod.array(zod.string()),
+  "bioAudit": zod.string(),
+  "rewrittenBio": zod.string(),
+  "rewrittenPrompts": zod.array(zod.object({
+  "original": zod.string(),
+  "rewritten": zod.string(),
+  "tip": zod.string()
+})),
+  "photoGuidance": zod.array(zod.object({
+  "category": zod.string(),
+  "status": zod.enum(['good', 'needs_work', 'missing']),
+  "advice": zod.string()
+})),
+  "actionPlan": zod.array(zod.object({
+  "priority": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "timeframe": zod.string()
+})),
+  "messagingStyle": zod.string(),
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
+  "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
+  "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
   "createdAt": zod.string(),
   "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
 })
@@ -821,7 +1109,16 @@ export const GenerateAuditReportResponse = zod.object({
 })),
   "messagingStyle": zod.string(),
   "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
 })
 
 
@@ -906,7 +1203,16 @@ export const AuditFromScreenshotResponse = zod.object({
 })),
   "messagingStyle": zod.string(),
   "coachingCta": zod.string(),
-  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
 })
 })
 

@@ -80,6 +80,7 @@ export * from './photoGuidanceItem';
 export * from './photoGuidanceItemStatus';
 export * from './profileRewrite';
 export * from './redeemAnonymousClaimHandoffInput';
+export * from './reportChangeSummary';
 export * from './rewrittenPrompt';
 export * from './scoreHistoryPoint';
 export * from './screenshotAuditInput';

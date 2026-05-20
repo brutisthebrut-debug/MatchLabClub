@@ -55,6 +55,12 @@ function serializeAudit(a: typeof auditsTable.$inferSelect) {
       a.reportGeneratedAt instanceof Date
         ? a.reportGeneratedAt.toISOString()
         : a.reportGeneratedAt ?? null,
+    previousReport: a.previousReport ?? null,
+    previousReadinessScore: a.previousReadinessScore ?? null,
+    previousReportGeneratedAt:
+      a.previousReportGeneratedAt instanceof Date
+        ? a.previousReportGeneratedAt.toISOString()
+        : a.previousReportGeneratedAt ?? null,
     createdAt:
       a.createdAt instanceof Date ? a.createdAt.toISOString() : String(a.createdAt),
     deletedAt:
@@ -372,6 +378,10 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
     return;
   }
 
+  const priorReport = audit.report ?? null;
+  const priorScore = audit.readinessScore ?? null;
+  const priorGeneratedAt = audit.reportGeneratedAt ?? null;
+
   await db.update(auditsTable).set({ status: "generating" }).where(eq(auditsTable.id, id));
 
   const report = generateAuditReport({
@@ -385,18 +395,73 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
     sourceApp: audit.sourceApp,
   });
 
-  const fullReport = { auditId: id, ...report };
+  const changeSummary = buildChangeSummary(priorReport, priorScore, report);
+  const fullReport = {
+    auditId: id,
+    ...report,
+    ...(changeSummary ? { changeSummary } : {}),
+  };
+
   await db.update(auditsTable)
     .set({
       status: "complete",
       readinessScore: report.readinessScore,
       report: fullReport,
       reportGeneratedAt: new Date(),
+      ...(priorReport
+        ? {
+            previousReport: priorReport,
+            previousReadinessScore: priorScore,
+            previousReportGeneratedAt: priorGeneratedAt,
+          }
+        : {}),
     })
     .where(eq(auditsTable.id, id));
 
   res.json(GenerateAuditReportResponse.parse(fullReport));
 });
+
+function buildChangeSummary(
+  prior: Record<string, unknown> | null,
+  priorScore: number | null,
+  next: { readinessScore: number; strengths: string[]; risks: string[] },
+): {
+  scoreDelta: number;
+  previousScore: number;
+  newScore: number;
+  addedStrengths: string[];
+  removedStrengths: string[];
+  addedRisks: string[];
+  removedRisks: string[];
+} | null {
+  if (!prior || priorScore === null) return null;
+  const priorStrengths = Array.isArray(
+    (prior as { strengths?: unknown }).strengths,
+  )
+    ? ((prior as { strengths: unknown[] }).strengths.filter(
+        (s): s is string => typeof s === "string",
+      ))
+    : [];
+  const priorRisks = Array.isArray((prior as { risks?: unknown }).risks)
+    ? ((prior as { risks: unknown[] }).risks.filter(
+        (s): s is string => typeof s === "string",
+      ))
+    : [];
+  const prevSet = (xs: string[]) => new Set(xs.map((x) => x.trim()));
+  const ps = prevSet(priorStrengths);
+  const ns = prevSet(next.strengths);
+  const pr = prevSet(priorRisks);
+  const nr = prevSet(next.risks);
+  return {
+    scoreDelta: next.readinessScore - priorScore,
+    previousScore: priorScore,
+    newScore: next.readinessScore,
+    addedStrengths: next.strengths.filter((s) => !ps.has(s.trim())),
+    removedStrengths: priorStrengths.filter((s) => !ns.has(s.trim())),
+    addedRisks: next.risks.filter((s) => !pr.has(s.trim())),
+    removedRisks: priorRisks.filter((s) => !nr.has(s.trim())),
+  };
+}
 
 router.post("/audits/extract-screenshot", async (req, res): Promise<void> => {
   const parsed = ExtractScreenshotBody.safeParse(req.body);

@@ -241,6 +241,57 @@ describe("POST /api/audits/:id/generate", () => {
       .send({});
     expect(res.status).toBe(404);
   });
+
+  it("on first generation returns no changeSummary, but on regeneration returns a diff vs the previous run", async () => {
+    const id = await createAudit({ id: USER_ID });
+    testApp.setUser({ id: USER_ID });
+
+    const first = await request(testApp.app)
+      .post(`/api/audits/${id}/generate`)
+      .send({});
+    expect(first.status).toBe(200);
+    expect(first.body.changeSummary ?? null).toBeNull();
+
+    const { dumpTable } = await import("../lib/testDb");
+    const row = dumpTable("audits").find((r) => r.id === id) as Record<string, unknown>;
+    expect(row.report).not.toBeNull();
+    const firstScore = row.readinessScore as number;
+
+    // Mutate the stored report to simulate a prior run with different
+    // strengths/risks/score so we can verify the diff math. dumpTable
+    // returns the live rows array, so direct mutation is sufficient.
+    row.readinessScore = 40;
+    row.report = {
+      ...(row.report as Record<string, unknown>),
+      readinessScore: 40,
+      strengths: ["Old strength A", "Shared strength"],
+      risks: ["Old risk only"],
+    };
+
+    const second = await request(testApp.app)
+      .post(`/api/audits/${id}/generate`)
+      .send({});
+    expect(second.status).toBe(200);
+    expect(second.body.changeSummary).toBeTruthy();
+    expect(second.body.changeSummary.previousScore).toBe(40);
+    expect(second.body.changeSummary.newScore).toBe(firstScore);
+    expect(second.body.changeSummary.scoreDelta).toBe(firstScore - 40);
+    expect(second.body.changeSummary.removedStrengths).toContain("Old strength A");
+    expect(second.body.changeSummary.removedRisks).toContain("Old risk only");
+    expect(Array.isArray(second.body.changeSummary.addedStrengths)).toBe(true);
+    expect(Array.isArray(second.body.changeSummary.addedRisks)).toBe(true);
+
+    const afterRegen = dumpTable("audits").find((r) => r.id === id) as
+      | {
+          previousReport?: Record<string, unknown> | null;
+          previousReadinessScore?: number | null;
+          previousReportGeneratedAt?: Date | null;
+        }
+      | undefined;
+    expect(afterRegen?.previousReadinessScore).toBe(40);
+    expect(afterRegen?.previousReport).toBeTruthy();
+    expect(afterRegen?.previousReportGeneratedAt).toBeTruthy();
+  });
 });
 
 describe("GET /api/audits/summary", () => {

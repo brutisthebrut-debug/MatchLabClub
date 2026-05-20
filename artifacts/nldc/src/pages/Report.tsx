@@ -10,8 +10,28 @@ import { useGetAudit, useGenerateAuditReport, getGetAuditQueryKey } from "@works
 import {
   CheckCircle, XCircle, AlertCircle, ArrowRight, Copy, Check,
   Trophy, Calendar, Eye, Sparkles, MessageSquare, Camera,
-  TrendingUp, Lightbulb, Heart, Zap, RefreshCw
+  TrendingUp, Lightbulb, Heart, Zap, RefreshCw, Plus, Minus, ArrowUp, ArrowDown
 } from "lucide-react";
+
+type ChangeSummary = {
+  scoreDelta: number;
+  previousScore: number;
+  newScore: number;
+  addedStrengths: string[];
+  removedStrengths: string[];
+  addedRisks: string[];
+  removedRisks: string[];
+};
+
+function hasChanges(c: ChangeSummary): boolean {
+  return (
+    c.scoreDelta !== 0 ||
+    c.addedStrengths.length > 0 ||
+    c.removedStrengths.length > 0 ||
+    c.addedRisks.length > 0 ||
+    c.removedRisks.length > 0
+  );
+}
 
 // Keep in sync with `ENGINE_VERSION` in artifacts/api-server/src/lib/aiEngine.ts.
 // Saved reports tagged with a different (or missing) version are flagged as stale.
@@ -221,6 +241,13 @@ export default function Report() {
   }
 
   const r = report ?? (auditId ? null : DEMO_REPORT) ?? DEMO_REPORT;
+  const changeSummary: ChangeSummary | null =
+    (report as unknown as { changeSummary?: ChangeSummary | null } | null)
+      ?.changeSummary ??
+    (storedReport as unknown as { changeSummary?: ChangeSummary | null } | null)
+      ?.changeSummary ??
+    null;
+  const showChangeSummary = !!auditId && !!changeSummary && hasChanges(changeSummary);
   const grade = r.readinessScore >= 85 ? "A" : r.readinessScore >= 72 ? "B" : r.readinessScore >= 58 ? "C" : r.readinessScore >= 42 ? "D" : "F";
   const scoreColor = r.readinessScore >= 75 ? "hsl(142 55% 60%)" : r.readinessScore >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
 
@@ -333,6 +360,111 @@ export default function Report() {
               </div>
             </div>
           </motion.div>
+
+          {/* ── What Changed (after regenerate) ── */}
+          {showChangeSummary && changeSummary ? (
+            <motion.div
+              {...fadeUp(0.03)}
+              className="glass border border-[hsl(268_52%_68%/0.3)] rounded-3xl p-6 bg-[hsl(268_52%_68%/0.06)]"
+              data-testid="card-what-changed"
+            >
+              <div className="flex items-center gap-2.5 mb-4">
+                <Sparkles className="w-5 h-5 text-[hsl(268_60%_78%)]" />
+                <h2 className="text-lg font-bold text-foreground">What changed since last run</h2>
+                {changeSummary.scoreDelta !== 0 ? (
+                  <span
+                    className={`ml-auto inline-flex items-center gap-1 text-sm font-bold px-2.5 py-1 rounded-full ${
+                      changeSummary.scoreDelta > 0
+                        ? "bg-[hsl(142_55%_60%/0.15)] text-[hsl(142_55%_70%)] border border-[hsl(142_55%_60%/0.3)]"
+                        : "bg-[hsl(348_55%_65%/0.15)] text-[hsl(348_55%_75%)] border border-[hsl(348_55%_65%/0.3)]"
+                    }`}
+                    data-testid="badge-score-delta"
+                  >
+                    {changeSummary.scoreDelta > 0 ? (
+                      <ArrowUp className="w-3.5 h-3.5" />
+                    ) : (
+                      <ArrowDown className="w-3.5 h-3.5" />
+                    )}
+                    {changeSummary.scoreDelta > 0 ? "+" : ""}
+                    {changeSummary.scoreDelta} pts
+                  </span>
+                ) : (
+                  <span
+                    className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full bg-white/5 text-muted-foreground border border-white/10"
+                    data-testid="badge-score-delta"
+                  >
+                    Score unchanged
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mb-4" data-testid="text-score-from-to">
+                Signal Score: {changeSummary.previousScore} → {changeSummary.newScore}
+              </p>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  {changeSummary.addedStrengths.length > 0 ? (
+                    <div data-testid="list-added-strengths">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-[hsl(142_55%_70%)] mb-2">New strengths</p>
+                      <ul className="space-y-1.5">
+                        {changeSummary.addedStrengths.map((s, i) => (
+                          <li key={`as-${i}`} className="flex items-start gap-2 text-xs text-foreground">
+                            <Plus className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[hsl(142_55%_60%)]" />
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {changeSummary.removedStrengths.length > 0 ? (
+                    <div data-testid="list-removed-strengths">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2 mt-3">No longer flagged as strengths</p>
+                      <ul className="space-y-1.5">
+                        {changeSummary.removedStrengths.map((s, i) => (
+                          <li key={`rs-${i}`} className="flex items-start gap-2 text-xs text-muted-foreground line-through">
+                            <Minus className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </div>
+                <div className="space-y-2">
+                  {changeSummary.addedRisks.length > 0 ? (
+                    <div data-testid="list-added-risks">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-[hsl(348_55%_75%)] mb-2">New risks</p>
+                      <ul className="space-y-1.5">
+                        {changeSummary.addedRisks.map((s, i) => (
+                          <li key={`ar-${i}`} className="flex items-start gap-2 text-xs text-foreground">
+                            <Plus className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[hsl(348_55%_65%)]" />
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {changeSummary.removedRisks.length > 0 ? (
+                    <div data-testid="list-removed-risks">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2 mt-3">No longer flagged as risks</p>
+                      <ul className="space-y-1.5">
+                        {changeSummary.removedRisks.map((s, i) => (
+                          <li key={`rr-${i}`} className="flex items-start gap-2 text-xs text-muted-foreground line-through">
+                            <Minus className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+              {audit?.previousReportGeneratedAt ? (
+                <p className="text-[10px] text-muted-foreground mt-4 pt-3 border-t border-white/8">
+                  Comparing to your previous run from {formatGeneratedAt(audit.previousReportGeneratedAt)}.
+                </p>
+              ) : null}
+            </motion.div>
+          ) : null}
 
           {/* ── Signal Spectrum ── */}
           <motion.div {...fadeUp(0.05)} className="glass border border-white/8 rounded-3xl p-8" data-testid="card-signal-spectrum">

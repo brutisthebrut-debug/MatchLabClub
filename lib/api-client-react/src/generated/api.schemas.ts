@@ -153,6 +153,19 @@ export interface ActionPlanItem {
   timeframe: string;
 }
 
+export interface ReportChangeSummary {
+  /** newScore minus previousScore (negative when the score dropped). */
+  scoreDelta: number;
+  previousScore: number;
+  newScore: number;
+  /** Strengths present in the new report but not in the prior one. */
+  addedStrengths: string[];
+  /** Strengths from the prior report that no longer appear. */
+  removedStrengths: string[];
+  addedRisks: string[];
+  removedRisks: string[];
+}
+
 export interface AuditReport {
   auditId: number;
   readinessScore: number;
@@ -174,6 +187,12 @@ export interface AuditReport {
      * @nullable
      */
   engineVersion?: string | null;
+  /** A short "what changed since last time" diff vs the immediately prior
+  run. Only populated on regeneration responses (and the freshly-saved
+  report). Null on the very first generation or when no prior report
+  exists to compare against.
+   */
+  changeSummary?: ReportChangeSummary | null;
 }
 
 export interface Audit {
@@ -214,6 +233,21 @@ export interface Audit {
      * @nullable
      */
   reportGeneratedAt?: string | null;
+  /** The mini-report from the immediately prior regeneration, kept so
+  users can see what changed. Null when the audit has never been
+  regenerated (or the report has never been generated).
+   */
+  previousReport?: AuditReport | null;
+  /**
+     * Readiness score from the prior regeneration (null if never regenerated).
+     * @nullable
+     */
+  previousReadinessScore?: number | null;
+  /**
+     * ISO timestamp of the prior regeneration's report (null if never regenerated).
+     * @nullable
+     */
+  previousReportGeneratedAt?: string | null;
   createdAt: string;
   /**
      * ISO timestamp when the audit was soft-deleted. Null for active

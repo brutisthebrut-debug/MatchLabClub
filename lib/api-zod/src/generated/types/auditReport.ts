@@ -7,6 +7,7 @@
  */
 import type { ActionPlanItem } from './actionPlanItem';
 import type { PhotoGuidanceItem } from './photoGuidanceItem';
+import type { ReportChangeSummary } from './reportChangeSummary';
 import type { RewrittenPrompt } from './rewrittenPrompt';
 
 export interface AuditReport {
@@ -30,4 +31,10 @@ export interface AuditReport {
      * @nullable
      */
   engineVersion?: string | null;
+  /** A short "what changed since last time" diff vs the immediately prior
+  run. Only populated on regeneration responses (and the freshly-saved
+  report). Null on the very first generation or when no prior report
+  exists to compare against.
+   */
+  changeSummary?: ReportChangeSummary | null;
 }

@@ -45,6 +45,16 @@ function formatGeneratedAt(iso: string): string {
   });
 }
 
+interface ChangeSummary {
+  scoreDelta: number;
+  previousScore: number;
+  newScore: number;
+  addedStrengths: string[];
+  removedStrengths: string[];
+  addedRisks: string[];
+  removedRisks: string[];
+}
+
 interface ReportShape {
   readinessScore: number;
   overallGrade: string;
@@ -54,6 +64,17 @@ interface ReportShape {
   rewrittenBio: string;
   messagingStyle: string;
   coachingCta: string;
+  changeSummary?: ChangeSummary | null;
+}
+
+function changeSummaryHasChanges(c: ChangeSummary): boolean {
+  return (
+    c.scoreDelta !== 0 ||
+    c.addedStrengths.length > 0 ||
+    c.removedStrengths.length > 0 ||
+    c.addedRisks.length > 0 ||
+    c.removedRisks.length > 0
+  );
 }
 
 export default function AuditDetailScreen() {
@@ -126,6 +147,7 @@ export default function AuditDetailScreen() {
       rewrittenBio: r.rewrittenBio,
       messagingStyle: r.messagingStyle,
       coachingCta: r.coachingCta,
+      changeSummary: r.changeSummary ?? null,
     });
   }, [storedReport, report]);
 
@@ -145,6 +167,9 @@ export default function AuditDetailScreen() {
           rewrittenBio: r.rewrittenBio,
           messagingStyle: r.messagingStyle,
           coachingCta: r.coachingCta,
+          changeSummary:
+            (r as unknown as { changeSummary?: ChangeSummary | null })
+              .changeSummary ?? null,
         });
       })
       .catch((err) => {
@@ -192,6 +217,9 @@ export default function AuditDetailScreen() {
           rewrittenBio: r.rewrittenBio,
           messagingStyle: r.messagingStyle,
           coachingCta: r.coachingCta,
+          changeSummary:
+            (r as unknown as { changeSummary?: ChangeSummary | null })
+              .changeSummary ?? null,
         });
       })
       .catch((err) => {
@@ -375,6 +403,167 @@ export default function AuditDetailScreen() {
           </View>
         ) : null}
 
+        {report?.changeSummary && changeSummaryHasChanges(report.changeSummary) ? (
+          <View
+            style={[
+              styles.changeCard,
+              {
+                backgroundColor: `${colors.violet}10`,
+                borderColor: colors.violet,
+              },
+            ]}
+            testID="card-what-changed"
+          >
+            <View style={styles.changeHeader}>
+              <Feather name="zap" size={14} color={colors.violet} />
+              <Text style={[styles.changeTitle, { color: colors.foreground }]}>
+                What changed since last run
+              </Text>
+              <View
+                style={[
+                  styles.changeDeltaBadge,
+                  {
+                    backgroundColor:
+                      report.changeSummary.scoreDelta > 0
+                        ? `${colors.success}22`
+                        : report.changeSummary.scoreDelta < 0
+                        ? `${colors.rose}22`
+                        : `${colors.mutedForeground}22`,
+                    borderColor:
+                      report.changeSummary.scoreDelta > 0
+                        ? colors.success
+                        : report.changeSummary.scoreDelta < 0
+                        ? colors.rose
+                        : colors.mutedForeground,
+                  },
+                ]}
+              >
+                {report.changeSummary.scoreDelta !== 0 ? (
+                  <Feather
+                    name={
+                      report.changeSummary.scoreDelta > 0
+                        ? "arrow-up"
+                        : "arrow-down"
+                    }
+                    size={11}
+                    color={
+                      report.changeSummary.scoreDelta > 0
+                        ? colors.success
+                        : colors.rose
+                    }
+                  />
+                ) : null}
+                <Text
+                  style={[
+                    styles.changeDeltaText,
+                    {
+                      color:
+                        report.changeSummary.scoreDelta > 0
+                          ? colors.success
+                          : report.changeSummary.scoreDelta < 0
+                          ? colors.rose
+                          : colors.mutedForeground,
+                    },
+                  ]}
+                >
+                  {report.changeSummary.scoreDelta === 0
+                    ? "Score unchanged"
+                    : `${report.changeSummary.scoreDelta > 0 ? "+" : ""}${report.changeSummary.scoreDelta} pts`}
+                </Text>
+              </View>
+            </View>
+            <Text
+              style={[styles.changeSubText, { color: colors.mutedForeground }]}
+            >
+              Signal Score: {report.changeSummary.previousScore} →{" "}
+              {report.changeSummary.newScore}
+            </Text>
+            {report.changeSummary.addedStrengths.length > 0 ? (
+              <View style={styles.changeGroup}>
+                <Text style={[styles.changeGroupTitle, { color: colors.success }]}>
+                  New strengths
+                </Text>
+                {report.changeSummary.addedStrengths.map((s, i) => (
+                  <ChangeLine
+                    key={`as-${i}`}
+                    color={colors.success}
+                    icon="plus"
+                    text={s}
+                  />
+                ))}
+              </View>
+            ) : null}
+            {report.changeSummary.removedStrengths.length > 0 ? (
+              <View style={styles.changeGroup}>
+                <Text
+                  style={[
+                    styles.changeGroupTitle,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  No longer strengths
+                </Text>
+                {report.changeSummary.removedStrengths.map((s, i) => (
+                  <ChangeLine
+                    key={`rs-${i}`}
+                    color={colors.mutedForeground}
+                    icon="minus"
+                    text={s}
+                    strikethrough
+                  />
+                ))}
+              </View>
+            ) : null}
+            {report.changeSummary.addedRisks.length > 0 ? (
+              <View style={styles.changeGroup}>
+                <Text style={[styles.changeGroupTitle, { color: colors.rose }]}>
+                  New risks
+                </Text>
+                {report.changeSummary.addedRisks.map((s, i) => (
+                  <ChangeLine
+                    key={`ar-${i}`}
+                    color={colors.rose}
+                    icon="plus"
+                    text={s}
+                  />
+                ))}
+              </View>
+            ) : null}
+            {report.changeSummary.removedRisks.length > 0 ? (
+              <View style={styles.changeGroup}>
+                <Text
+                  style={[
+                    styles.changeGroupTitle,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  No longer risks
+                </Text>
+                {report.changeSummary.removedRisks.map((s, i) => (
+                  <ChangeLine
+                    key={`rr-${i}`}
+                    color={colors.mutedForeground}
+                    icon="minus"
+                    text={s}
+                    strikethrough
+                  />
+                ))}
+              </View>
+            ) : null}
+            {audit?.previousReportGeneratedAt ? (
+              <Text
+                style={[
+                  styles.changeFooter,
+                  { color: colors.mutedForeground, borderTopColor: colors.cardBorder },
+                ]}
+              >
+                Comparing to your previous run from{" "}
+                {formatGeneratedAt(audit.previousReportGeneratedAt)}.
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
+
         {audit ? (
           <Section
             title="What we read"
@@ -490,6 +679,33 @@ function Section({
         </Text>
       </View>
       {children}
+    </View>
+  );
+}
+
+function ChangeLine({
+  color,
+  icon,
+  text,
+  strikethrough = false,
+}: {
+  color: string;
+  icon: React.ComponentProps<typeof Feather>["name"];
+  text: string;
+  strikethrough?: boolean;
+}) {
+  return (
+    <View style={styles.changeLine}>
+      <Feather name={icon} size={12} color={color} style={styles.changeIcon} />
+      <Text
+        style={[
+          styles.changeLineText,
+          { color },
+          strikethrough ? styles.strikethrough : null,
+        ]}
+      >
+        {text}
+      </Text>
     </View>
   );
 }
@@ -622,6 +838,76 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   bullet: { width: 6, height: 6, borderRadius: 3, marginTop: 7 },
+  changeCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    gap: 8,
+  },
+  changeHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  changeTitle: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  changeDeltaBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  changeDeltaText: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.3,
+  },
+  changeSubText: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_500Medium",
+    letterSpacing: 0.2,
+  },
+  changeGroup: {
+    marginTop: 6,
+    gap: 4,
+  },
+  changeGroupTitle: {
+    fontSize: 10,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+    marginBottom: 2,
+  },
+  changeLine: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+  },
+  changeIcon: {
+    marginTop: 3,
+  },
+  changeLineText: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 17,
+  },
+  strikethrough: {
+    textDecorationLine: "line-through",
+  },
+  changeFooter: {
+    fontSize: 10,
+    fontFamily: "PlusJakartaSans_500Medium",
+    paddingTop: 8,
+    borderTopWidth: 1,
+    marginTop: 4,
+  },
   itemText: {
     flex: 1,
     fontSize: 14,

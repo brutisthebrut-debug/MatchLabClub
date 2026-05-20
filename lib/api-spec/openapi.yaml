@@ -1379,6 +1379,20 @@ components:
         reportGeneratedAt:
           type: ["string", "null"]
           description: ISO timestamp the stored report was generated. Null if no report has been generated yet.
+        previousReport:
+          oneOf:
+            - $ref: "#/components/schemas/AuditReport"
+            - type: "null"
+          description: |
+            The mini-report from the immediately prior regeneration, kept so
+            users can see what changed. Null when the audit has never been
+            regenerated (or the report has never been generated).
+        previousReadinessScore:
+          type: ["integer", "null"]
+          description: Readiness score from the prior regeneration (null if never regenerated).
+        previousReportGeneratedAt:
+          type: ["string", "null"]
+          description: ISO timestamp of the prior regeneration's report (null if never regenerated).
         createdAt:
           type: string
         deletedAt:
@@ -1433,6 +1447,45 @@ components:
             Version tag of the deterministic engine that produced this report.
             Older saved reports may be missing this field; clients should treat
             a missing or non-matching value as stale and offer a re-run.
+        changeSummary:
+          oneOf:
+            - $ref: "#/components/schemas/ReportChangeSummary"
+            - type: "null"
+          description: |
+            A short "what changed since last time" diff vs the immediately prior
+            run. Only populated on regeneration responses (and the freshly-saved
+            report). Null on the very first generation or when no prior report
+            exists to compare against.
+
+    ReportChangeSummary:
+      type: object
+      required: [scoreDelta, previousScore, newScore, addedStrengths, removedStrengths, addedRisks, removedRisks]
+      properties:
+        scoreDelta:
+          type: integer
+          description: newScore minus previousScore (negative when the score dropped).
+        previousScore:
+          type: integer
+        newScore:
+          type: integer
+        addedStrengths:
+          type: array
+          items:
+            type: string
+          description: Strengths present in the new report but not in the prior one.
+        removedStrengths:
+          type: array
+          items:
+            type: string
+          description: Strengths from the prior report that no longer appear.
+        addedRisks:
+          type: array
+          items:
+            type: string
+        removedRisks:
+          type: array
+          items:
+            type: string
 
     RewrittenPrompt:
       type: object

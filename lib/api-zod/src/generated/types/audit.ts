@@ -47,6 +47,21 @@ export interface Audit {
      * @nullable
      */
   reportGeneratedAt?: string | null;
+  /** The mini-report from the immediately prior regeneration, kept so
+  users can see what changed. Null when the audit has never been
+  regenerated (or the report has never been generated).
+   */
+  previousReport?: AuditReport | null;
+  /**
+     * Readiness score from the prior regeneration (null if never regenerated).
+     * @nullable
+     */
+  previousReadinessScore?: number | null;
+  /**
+     * ISO timestamp of the prior regeneration's report (null if never regenerated).
+     * @nullable
+     */
+  previousReportGeneratedAt?: string | null;
   createdAt: string;
   /**
      * ISO timestamp when the audit was soft-deleted. Null for active
