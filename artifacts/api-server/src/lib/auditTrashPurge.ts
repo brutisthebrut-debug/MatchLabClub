@@ -1,6 +1,9 @@
 import { and, isNotNull, lt } from "drizzle-orm";
 import { db, auditsTable } from "@workspace/db";
 import { logger } from "./logger";
+import { recordJobHeartbeat } from "./jobHeartbeat";
+
+const AUDIT_TRASH_PURGE_JOB = "audit_trash_purge";
 
 const DEFAULT_RETENTION_DAYS = 30;
 const DEFAULT_INTERVAL_HOURS = 24;
@@ -46,6 +49,7 @@ export async function purgeExpiredTrashedAudits(
         "No soft-deleted audits past retention window",
       );
     }
+    await recordJobHeartbeat(AUDIT_TRASH_PURGE_JOB);
     return deleted;
   } catch (err) {
     logger.warn(

@@ -2,6 +2,9 @@ import { sql, eq } from "drizzle-orm";
 import { db, aiToolAlertStateTable } from "@workspace/db";
 import { sendMail } from "./mailer";
 import { logger } from "./logger";
+import { recordJobHeartbeat } from "./jobHeartbeat";
+
+const AI_RELIABILITY_ALERTS_JOB = "ai_reliability_alerts";
 
 export const ALERT_WINDOW = 50;
 export const ALERT_MIN_SAMPLE = 10;
@@ -461,6 +464,7 @@ export function startAiReliabilityAlertsJob(): void {
             "AI reliability alert state transitions",
           );
         }
+        void recordJobHeartbeat(AI_RELIABILITY_ALERTS_JOB);
       })
       .catch((err: unknown) => {
         logger.warn(

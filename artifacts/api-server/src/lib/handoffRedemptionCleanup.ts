@@ -1,6 +1,9 @@
 import { lt } from "drizzle-orm";
 import { db, handoffTokenRedemptionsTable } from "@workspace/db";
 import { logger } from "./logger";
+import { recordJobHeartbeat } from "./jobHeartbeat";
+
+const HANDOFF_REDEMPTION_CLEANUP_JOB = "handoff_redemption_cleanup";
 
 /**
  * Once a handoff `jti` is past its embedded `exp`, the signed token can no
@@ -42,6 +45,7 @@ export async function pruneExpiredHandoffRedemptions(
         "Pruned expired handoff_token_redemptions rows",
       );
     }
+    await recordJobHeartbeat(HANDOFF_REDEMPTION_CLEANUP_JOB);
     return deleted;
   } catch (err) {
     logger.warn(

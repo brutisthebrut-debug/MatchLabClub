@@ -4,11 +4,12 @@ import { useMeta } from "@/hooks/useMeta";
 import {
   getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
   getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges, undoAiThresholdChange,
-  getRollupHeartbeat, getOcrMismatches,
+  getRollupHeartbeat, getOcrMismatches, getBackgroundJobs,
   getOcrLearnedRules, runOcrLearn, clearOcrLearnedRules,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
   type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
   type AiThresholdChange, type RollupHeartbeatResponse,
+  type BackgroundJobStatus, type BackgroundJobsResponse,
   type OcrMismatchesResponse, type OcrMismatchesSort, type OcrMismatchesWindow,
   type OcrCorrectionField,
   type OcrLearnedRule, type OcrLearnResult
@@ -667,6 +668,115 @@ function formatAge(ms: number): string {
   if (hr < 48) return `${hr}h ago`;
   const days = Math.floor(hr / 24);
   return `${days}d ago`;
+}
+
+function formatJobName(jobName: string): string {
+  return jobName
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+function formatThreshold(ms: number): string {
+  const min = Math.round(ms / 60000);
+  if (min < 60) return `${min}m`;
+  const hr = Math.round(min / 60);
+  if (hr < 48) return `${hr}h`;
+  return `${Math.round(hr / 24)}d`;
+}
+
+function BackgroundJobsPanel({ refreshKey }: { refreshKey: number }) {
+  const [data, setData] = useState<BackgroundJobsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setErr(null);
+    getBackgroundJobs()
+      .then(setData)
+      .catch((e: unknown) => setErr(e instanceof Error ? e.message : "Failed to load"))
+      .finally(() => setLoading(false));
+  }, [refreshKey]);
+
+  const okColor = "hsl(142 55% 60%)";
+  const warnColor = "hsl(348 65% 70%)";
+  const staleCount = data?.jobs.filter((j) => j.stale).length ?? 0;
+  const totalCount = data?.jobs.length ?? 0;
+  const allHealthy = data !== null && staleCount === 0;
+
+  return (
+    <div
+      className="glass rounded-2xl p-6 space-y-4"
+      data-testid="background-jobs-panel"
+    >
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
+            Background Jobs
+          </p>
+          <p className="text-base font-semibold text-foreground">
+            Scheduled job heartbeats
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {loading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground/60" />}
+          {!loading && data && (
+            <span
+              className="text-xs font-semibold px-2 py-0.5 rounded-full"
+              style={{
+                color: allHealthy ? okColor : warnColor,
+                background: allHealthy ? "hsl(142 55% 60% / 0.12)" : "hsl(348 65% 70% / 0.12)",
+              }}
+            >
+              {allHealthy ? "All healthy" : `${staleCount}/${totalCount} stale`}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {err && (
+        <p className="text-xs text-red-400">Could not load job status: {err}</p>
+      )}
+
+      {data && (
+        <ul className="space-y-2">
+          {data.jobs.map((job: BackgroundJobStatus) => {
+            const color = job.stale ? warnColor : okColor;
+            const Icon = job.stale ? AlertTriangle : CheckCircle2;
+            return (
+              <li
+                key={job.jobName}
+                className="rounded-xl p-3 border flex items-start gap-3"
+                style={{
+                  background: `${color.replace(")", " / 0.07)")}`,
+                  borderColor: `${color.replace(")", " / 0.30)")}`,
+                }}
+              >
+                <Icon className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color }} />
+                <div className="min-w-0 flex-1 space-y-0.5">
+                  <p className="text-sm font-medium text-foreground leading-tight">
+                    {formatJobName(job.jobName)}
+                  </p>
+                  <p className="text-xs text-muted-foreground/70">
+                    {job.lastSuccessAt
+                      ? `Last ran ${formatAge(job.ageMs ?? 0)} · stale after ${formatThreshold(job.staleThresholdMs)}`
+                      : `Never run · stale after ${formatThreshold(job.staleThresholdMs)}`}
+                  </p>
+                </div>
+                <span
+                  className="text-xs font-semibold shrink-0 mt-0.5"
+                  style={{ color }}
+                >
+                  {job.stale ? "Stale" : "OK"}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 function RollupHeartbeatPanel({ refreshKey }: { refreshKey: number }) {
@@ -1992,7 +2102,7 @@ function Dashboard() {
       {tab === "overview" && (
         <div className="space-y-8">
           <AiStatusPanel />
-          <RollupHeartbeatPanel refreshKey={refreshKey} />
+          <BackgroundJobsPanel refreshKey={refreshKey} />
           <OcrMismatchesPanel refreshKey={refreshKey} />
           <AiMetricsPanel refreshKey={refreshKey} />
           <AiReliabilityTrendsPanel refreshKey={refreshKey} />

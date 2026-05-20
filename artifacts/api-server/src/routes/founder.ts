@@ -13,6 +13,7 @@ import {
   AI_ALERT_GLOBAL_KEY,
   coachFollowUpsTable,
   aiToolAlertStateTable,
+  jobHeartbeatsTable,
 } from "@workspace/db";
 import { and, count, sql, desc, gte, asc, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod/v4";
@@ -27,6 +28,7 @@ import {
   getRollupHeartbeat,
   getRollupStaleThresholdMs,
 } from "../lib/aiMetricsRetention";
+import { KNOWN_JOB_NAMES, getStaleThresholdMs } from "../lib/jobHeartbeat";
 
 const router: IRouter = Router();
 
@@ -344,6 +346,48 @@ router.get("/founder/rollup-heartbeat", async (_req, res): Promise<void> => {
     staleThresholdMs,
     stale: ageMs > staleThresholdMs,
   });
+});
+
+router.get("/founder/background-jobs", async (_req, res): Promise<void> => {
+  const rows = await db
+    .select()
+    .from(jobHeartbeatsTable)
+    .orderBy(asc(jobHeartbeatsTable.jobName));
+
+  const byName = new Map(
+    rows.map((r) => [
+      r.jobName,
+      r.lastSuccessAt instanceof Date
+        ? r.lastSuccessAt
+        : new Date(r.lastSuccessAt as unknown as string),
+    ]),
+  );
+
+  const allNames = new Set([
+    ...KNOWN_JOB_NAMES,
+    ...rows.map((r) => r.jobName),
+  ]);
+
+  const now = Date.now();
+  const jobs = Array.from(allNames)
+    .sort()
+    .map((jobName) => {
+      const lastSuccessAt = byName.get(jobName) ?? null;
+      const staleThresholdMs = getStaleThresholdMs(jobName);
+      if (!lastSuccessAt) {
+        return { jobName, lastSuccessAt: null, ageMs: null, staleThresholdMs, stale: true };
+      }
+      const ageMs = now - lastSuccessAt.getTime();
+      return {
+        jobName,
+        lastSuccessAt: lastSuccessAt.toISOString(),
+        ageMs,
+        staleThresholdMs,
+        stale: ageMs > staleThresholdMs,
+      };
+    });
+
+  res.json({ jobs });
 });
 
 router.get("/founder/ai-metrics/trends", async (req, res): Promise<void> => {

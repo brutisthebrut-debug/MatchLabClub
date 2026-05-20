@@ -1,6 +1,9 @@
 import { lt, or, and, isNotNull } from "drizzle-orm";
 import { db, dataExportTokensTable } from "@workspace/db";
 import { logger } from "./logger";
+import { recordJobHeartbeat } from "./jobHeartbeat";
+
+const EXPORT_TOKEN_CLEANUP_JOB = "export_token_cleanup";
 
 const DEFAULT_GRACE_MINUTES = 60;
 const DEFAULT_INTERVAL_MINUTES = 15;
@@ -49,6 +52,7 @@ export async function pruneExpiredExportTokens(
         "No expired data_export_tokens rows to prune",
       );
     }
+    await recordJobHeartbeat(EXPORT_TOKEN_CLEANUP_JOB);
     return deleted;
   } catch (err) {
     logger.warn(

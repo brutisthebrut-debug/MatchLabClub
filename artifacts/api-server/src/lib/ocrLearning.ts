@@ -7,6 +7,9 @@ import type {
 } from "@workspace/db";
 import type { SourceApp } from "./profileParser";
 import { logger } from "./logger";
+import { recordJobHeartbeat } from "./jobHeartbeat";
+
+const OCR_LEARNING_JOB = "ocr_learning";
 
 export interface LearnedRules {
   nameSubstitutions: Map<string, string>;
@@ -275,6 +278,7 @@ export async function learnFromCorrections(): Promise<{
   }
 
   await refreshLearnedRulesCache();
+  await recordJobHeartbeat(OCR_LEARNING_JOB);
 
   return { scannedAudits: rows.length, candidates, persisted };
 }

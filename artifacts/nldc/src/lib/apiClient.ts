@@ -163,6 +163,21 @@ export interface RollupHeartbeatResponse {
 export const getRollupHeartbeat = () =>
   get<RollupHeartbeatResponse>("/founder/rollup-heartbeat");
 
+export interface BackgroundJobStatus {
+  jobName: string;
+  lastSuccessAt: string | null;
+  ageMs: number | null;
+  staleThresholdMs: number;
+  stale: boolean;
+}
+
+export interface BackgroundJobsResponse {
+  jobs: BackgroundJobStatus[];
+}
+
+export const getBackgroundJobs = () =>
+  get<BackgroundJobsResponse>("/founder/background-jobs");
+
 export interface AiMetricsTrendPoint {
   day: string;
   toolName: string;

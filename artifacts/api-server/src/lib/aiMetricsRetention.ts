@@ -4,36 +4,14 @@ import {
   aiRequestMetricsTable,
   aiRequestMetricsDailyTable,
   jobHeartbeatsTable,
-  AI_METRICS_ROLLUP_JOB,
 } from "@workspace/db";
 import { logger } from "./logger";
+import { recordJobHeartbeat, getStaleThresholdMs } from "./jobHeartbeat";
 
-const DEFAULT_ROLLUP_STALE_HOURS = 36;
+const AI_METRICS_ROLLUP_JOB = "ai_metrics_rollup";
 
 export function getRollupStaleThresholdMs(): number {
-  const hours = readPositiveNumberEnv(
-    "AI_METRICS_ROLLUP_STALE_HOURS",
-    DEFAULT_ROLLUP_STALE_HOURS,
-  );
-  return hours * 60 * 60 * 1000;
-}
-
-async function recordRollupHeartbeat(): Promise<void> {
-  try {
-    const now = new Date();
-    await db
-      .insert(jobHeartbeatsTable)
-      .values({ jobName: AI_METRICS_ROLLUP_JOB, lastSuccessAt: now })
-      .onConflictDoUpdate({
-        target: jobHeartbeatsTable.jobName,
-        set: { lastSuccessAt: now },
-      });
-  } catch (err) {
-    logger.warn(
-      { err: err instanceof Error ? err.message : String(err) },
-      "Failed to record ai_metrics rollup heartbeat",
-    );
-  }
+  return getStaleThresholdMs(AI_METRICS_ROLLUP_JOB);
 }
 
 export async function getRollupHeartbeat(): Promise<Date | null> {
@@ -196,7 +174,7 @@ export async function rollupThenPruneAiMetrics(): Promise<{
     return { rolledUp: 0, pruned: 0, skippedPrune: true };
   }
   const pruned = await pruneOldAiMetrics();
-  await recordRollupHeartbeat();
+  await recordJobHeartbeat(AI_METRICS_ROLLUP_JOB);
   return { rolledUp, pruned, skippedPrune: false };
 }
 
