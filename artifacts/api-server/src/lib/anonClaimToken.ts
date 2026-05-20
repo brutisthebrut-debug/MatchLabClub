@@ -8,7 +8,7 @@ function setCookie(res: Response, value: string): void {
   res.cookie(ANON_CLAIM_COOKIE, value, {
     httpOnly: true,
     secure: true,
-    sameSite: "lax",
+    sameSite: "none",
     path: "/",
     maxAge: ANON_CLAIM_TTL,
   });

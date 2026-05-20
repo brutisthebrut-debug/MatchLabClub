@@ -25,6 +25,7 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
 let _unauthorizedHandler: UnauthorizedHandler | null = null;
+let _credentials: RequestCredentials = "same-origin";
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -35,6 +36,21 @@ let _unauthorizedHandler: UnauthorizedHandler | null = null;
  */
 export function setBaseUrl(url: string | null): void {
   _baseUrl = url ? url.replace(/\/+$/, "") : null;
+}
+
+/**
+ * Set the `credentials` mode used for every fetch request.
+ *
+ * Defaults to `"same-origin"` (browser default).  Set to `"include"` when the
+ * API lives on a different origin from the page — for example, in an Expo web
+ * build that calls a remote API server — so that cookies (e.g. `anon_claim`)
+ * are attached to cross-origin requests.
+ *
+ * The value is ignored when the caller already passes `credentials` in the
+ * per-request `options` object.
+ */
+export function setCredentials(mode: RequestCredentials): void {
+  _credentials = mode;
 }
 
 /**
@@ -386,7 +402,8 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  const credentials = init.credentials ?? _credentials;
+  const response = await fetch(input, { ...init, method, headers, credentials });
 
   if (!response.ok) {
     if (response.status === 401 && _unauthorizedHandler) {

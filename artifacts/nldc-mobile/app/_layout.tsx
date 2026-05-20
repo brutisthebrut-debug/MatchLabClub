@@ -7,7 +7,7 @@ import {
   useFonts,
 } from "@expo-google-fonts/plus-jakarta-sans";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
+import { setAuthTokenGetter, setBaseUrl, setCredentials } from "@workspace/api-client-react";
 import { AuthProvider, getStoredAuthToken } from "@/lib/auth";
 import { useClaimAnonymousOnLogin } from "@/lib/useClaimAnonymousOnLogin";
 import * as Notifications from "expo-notifications";
@@ -47,6 +47,7 @@ SplashScreen.preventAutoHideAsync();
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
 if (domain) {
   setBaseUrl(`https://${domain}`);
+  setCredentials("include");
 }
 
 setAuthTokenGetter(() => getStoredAuthToken());
