@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "wouter";
+import { Link, useSearch, useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
@@ -294,6 +294,27 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
 
 const UNDO_WINDOW_MS = 5000;
 
+const VALID_SORTS: AuditSort[] = ["newest", "topScore"];
+const VALID_RANGES: AuditScoreRange[] = ["all", "low", "medium", "high"];
+
+function parseAuditFiltersFromSearch(search: string): {
+  searchInput: string;
+  sort: AuditSort;
+  scoreRange: AuditScoreRange;
+} {
+  const params = new URLSearchParams(search);
+  const q = params.get("q") ?? "";
+  const sortParam = params.get("sort") ?? "";
+  const rangeParam = params.get("range") ?? "";
+  const sort: AuditSort = (VALID_SORTS as string[]).includes(sortParam)
+    ? (sortParam as AuditSort)
+    : "newest";
+  const scoreRange: AuditScoreRange = (VALID_RANGES as string[]).includes(rangeParam)
+    ? (rangeParam as AuditScoreRange)
+    : "all";
+  return { searchInput: q, sort, scoreRange };
+}
+
 export default function Dashboard() {
   useMeta("Your Dashboard", "Your Signal Score history, recent audits, coaching sessions, and quick actions — all in one place.");
   const { isAuthenticated } = useAuth();
@@ -301,10 +322,34 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const PAGE_SIZE = 50;
 
-  const [searchInput, setSearchInput] = useState("");
-  const [sort, setSort] = useState<AuditSort>("newest");
-  const [scoreRange, setScoreRange] = useState<AuditScoreRange>("all");
+  const rawSearch = useSearch();
+  const [, navigate] = useLocation();
+
+  const [searchInput, setSearchInput] = useState<string>(
+    () => parseAuditFiltersFromSearch(rawSearch).searchInput,
+  );
+  const [sort, setSort] = useState<AuditSort>(
+    () => parseAuditFiltersFromSearch(rawSearch).sort,
+  );
+  const [scoreRange, setScoreRange] = useState<AuditScoreRange>(
+    () => parseAuditFiltersFromSearch(rawSearch).scoreRange,
+  );
+
   const debouncedQuery = useDebouncedValue(searchInput.trim(), 250);
+
+  // Sync filter state → URL so choices survive page reload and navigation.
+  // We drive state → URL (not URL → state) to avoid feedback loops.
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (debouncedQuery) params.set("q", debouncedQuery);
+    if (sort !== "newest") params.set("sort", sort);
+    if (scoreRange !== "all") params.set("range", scoreRange);
+    const newSearch = params.toString();
+    const target = newSearch ? `/?${newSearch}` : "/";
+    navigate(target, { replace: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedQuery, sort, scoreRange]);
+
   const filtersActive =
     debouncedQuery.length > 0 || sort !== "newest" || scoreRange !== "all";
   const filterParams = useMemo<ListAuditsParams>(
