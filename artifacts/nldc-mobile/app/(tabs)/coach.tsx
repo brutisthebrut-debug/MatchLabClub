@@ -767,6 +767,7 @@ export default function CoachScreen() {
                       styles.screenshotStatus,
                       { color: colors.foreground },
                     ]}
+                    testID="text-coach-screenshot-status"
                   >
                     {extractScreenshot.isPending
                       ? "Reading screenshot…"
@@ -919,6 +920,8 @@ export default function CoachScreen() {
                       },
                     ]}
                     testID={`button-coach-source-app-${app.toLowerCase()}`}
+                    accessibilityState={{ selected }}
+                    aria-pressed={selected}
                   >
                     <Text
                       style={[
@@ -946,6 +949,7 @@ export default function CoachScreen() {
               placeholder="Paste the last few messages — what was said, who said what."
               placeholderTextColor={colors.mutedForeground}
               multiline
+              testID="input-coach-context"
               style={[
                 styles.input,
                 styles.multiline,
