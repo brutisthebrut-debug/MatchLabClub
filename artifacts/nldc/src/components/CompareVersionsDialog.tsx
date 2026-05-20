@@ -45,6 +45,76 @@ function computeDiff(a: string[], b: string[]): { text: string; status: "added" 
   });
 }
 
+type WordToken = { word: string; status: "added" | "removed" | "kept" };
+
+function wordDiff(textA: string, textB: string): WordToken[] {
+  const wordsA = textA.match(/\S+/g) ?? [];
+  const wordsB = textB.match(/\S+/g) ?? [];
+  const m = wordsA.length;
+  const n = wordsB.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = wordsA[i - 1] === wordsB[j - 1]
+        ? dp[i - 1][j - 1] + 1
+        : Math.max(dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  const tokens: WordToken[] = [];
+  let i = m;
+  let j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && wordsA[i - 1] === wordsB[j - 1]) {
+      tokens.unshift({ word: wordsA[i - 1], status: "kept" });
+      i--;
+      j--;
+    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      tokens.unshift({ word: wordsB[j - 1], status: "added" });
+      j--;
+    } else {
+      tokens.unshift({ word: wordsA[i - 1], status: "removed" });
+      i--;
+    }
+  }
+  return tokens;
+}
+
+function WordDiffView({ tokens }: { tokens: WordToken[] }) {
+  return (
+    <p className="text-sm leading-relaxed" data-testid="bio-word-diff">
+      {tokens.map((token, i) => {
+        const space = i < tokens.length - 1 ? " " : "";
+        if (token.status === "added") {
+          return (
+            <span key={i}>
+              <mark className="bg-[hsl(142_55%_60%/0.22)] text-[hsl(142_55%_72%)] rounded px-0.5 not-italic">
+                {token.word}
+              </mark>
+              {space}
+            </span>
+          );
+        }
+        if (token.status === "removed") {
+          return (
+            <span key={i}>
+              <mark className="bg-[hsl(348_55%_65%/0.22)] text-[hsl(348_55%_75%)] line-through rounded px-0.5 not-italic">
+                {token.word}
+              </mark>
+              {space}
+            </span>
+          );
+        }
+        return (
+          <span key={i} className="text-muted-foreground">
+            {token.word}
+            {space}
+          </span>
+        );
+      })}
+    </p>
+  );
+}
+
 function DiffItem({ item }: { item: { text: string; status: "added" | "removed" | "kept" } }) {
   if (item.status === "added") {
     return (
@@ -95,6 +165,7 @@ export function CompareVersionsDialog({
 
   const bioA = repA?.rewrittenBio ?? repA?.bioAudit ?? null;
   const bioB = repB?.rewrittenBio ?? repB?.bioAudit ?? null;
+  const bioTokens = (bioA || bioB) ? wordDiff(bioA ?? "", bioB ?? "") : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -196,36 +267,26 @@ export function CompareVersionsDialog({
             )}
           </div>
 
-          {/* ── Bio side-by-side ── */}
-          {(bioA || bioB) ? (
+          {/* ── Bio word-level diff ── */}
+          {bioTokens ? (
             <div
               className="rounded-2xl border border-white/10 bg-[hsl(232_28%_12%)] p-5"
               data-testid="compare-bio-section"
             >
-              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-4">
-                Rewritten bio
-              </p>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="rounded-xl p-4 bg-[hsl(232_28%_10%)] border border-white/8" data-testid="compare-bio-a">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                    {formatGeneratedAt(versionA.generatedAt)}
-                  </p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {bioA ?? <span className="italic opacity-50">No bio data</span>}
-                  </p>
-                </div>
-                <div
-                  className="rounded-xl p-4 border border-[hsl(268_52%_68%/0.3)] bg-[hsl(268_52%_68%/0.06)]"
-                  data-testid="compare-bio-b"
-                >
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(268_60%_78%)] mb-2">
-                    {formatGeneratedAt(versionB.generatedAt)}
-                  </p>
-                  <p className="text-sm text-foreground leading-relaxed">
-                    {bioB ?? <span className="italic opacity-50">No bio data</span>}
-                  </p>
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Rewritten bio
+                </p>
+                <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <mark className="bg-[hsl(348_55%_65%/0.22)] text-[hsl(348_55%_75%)] rounded px-1 not-italic line-through">removed</mark>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <mark className="bg-[hsl(142_55%_60%/0.22)] text-[hsl(142_55%_72%)] rounded px-1 not-italic">added</mark>
+                  </span>
                 </div>
               </div>
+              <WordDiffView tokens={bioTokens} />
             </div>
           ) : null}
 

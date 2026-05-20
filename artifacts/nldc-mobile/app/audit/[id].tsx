@@ -1451,6 +1451,7 @@ function CompareVersionsModal({
   const risksDiff = computeDiff(repA?.risks ?? [], repB?.risks ?? []);
   const bioA = repA?.rewrittenBio ?? null;
   const bioB = repB?.rewrittenBio ?? null;
+  const bioTokens = (bioA || bioB) ? wordDiff(bioA ?? "", bioB ?? "") : null;
 
   const scoreColorA =
     scoreA >= 75 ? colors.success : scoreA >= 55 ? colors.gold : colors.rose;
@@ -1617,47 +1618,32 @@ function CompareVersionsModal({
             )}
           </View>
 
-          {/* Bio */}
-          {(bioA || bioB) ? (
-            <>
-              <View
-                style={[
-                  styles.compareSection,
-                  { backgroundColor: colors.card, borderColor: colors.cardBorder },
-                ]}
-                testID="compare-bio-section"
-              >
+          {/* Bio word-level diff */}
+          {bioTokens ? (
+            <View
+              style={[
+                styles.compareSection,
+                { backgroundColor: colors.card, borderColor: colors.cardBorder },
+              ]}
+              testID="compare-bio-section"
+            >
+              <View style={styles.compareBioHeader}>
                 <Text
-                  style={[
-                    styles.compareSectionTitle,
-                    { color: colors.mutedForeground },
-                  ]}
+                  style={[styles.compareSectionTitle, { color: colors.mutedForeground }]}
                 >
-                  REWRITTEN BIO — {formatGeneratedAt(versionA.generatedAt).toUpperCase()}
+                  REWRITTEN BIO
                 </Text>
-                <Text style={[styles.body, { color: colors.mutedForeground }]} testID="compare-bio-a">
-                  {bioA ?? "No bio data"}
-                </Text>
+                <View style={styles.compareBioLegend}>
+                  <Text style={[styles.compareBioLegendChip, { backgroundColor: `${colors.rose}38`, color: colors.rose }]}>
+                    removed
+                  </Text>
+                  <Text style={[styles.compareBioLegendChip, { backgroundColor: `${colors.success}38`, color: colors.success }]}>
+                    added
+                  </Text>
+                </View>
               </View>
-              <View
-                style={[
-                  styles.compareSection,
-                  {
-                    backgroundColor: `${colors.violet}08`,
-                    borderColor: colors.violet,
-                  },
-                ]}
-              >
-                <Text
-                  style={[styles.compareSectionTitle, { color: colors.violet }]}
-                >
-                  REWRITTEN BIO — {formatGeneratedAt(versionB.generatedAt).toUpperCase()}
-                </Text>
-                <Text style={[styles.body, { color: colors.foreground }]} testID="compare-bio-b">
-                  {bioB ?? "No bio data"}
-                </Text>
-              </View>
-            </>
+              <WordDiffText tokens={bioTokens} />
+            </View>
           ) : null}
 
           {/* Legend */}
@@ -1692,6 +1678,86 @@ function computeDiff(a: string[], b: string[]): DiffItem[] {
     if (!setA.has(text) && setB.has(text)) return { text, status: "added" as const };
     return { text, status: "removed" as const };
   });
+}
+
+type WordToken = { word: string; status: "added" | "removed" | "kept" };
+
+function wordDiff(textA: string, textB: string): WordToken[] {
+  const wordsA = textA.match(/\S+/g) ?? [];
+  const wordsB = textB.match(/\S+/g) ?? [];
+  const m = wordsA.length;
+  const n = wordsB.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = wordsA[i - 1] === wordsB[j - 1]
+        ? dp[i - 1][j - 1] + 1
+        : Math.max(dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  const tokens: WordToken[] = [];
+  let i = m;
+  let j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && wordsA[i - 1] === wordsB[j - 1]) {
+      tokens.unshift({ word: wordsA[i - 1], status: "kept" });
+      i--;
+      j--;
+    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      tokens.unshift({ word: wordsB[j - 1], status: "added" });
+      j--;
+    } else {
+      tokens.unshift({ word: wordsA[i - 1], status: "removed" });
+      i--;
+    }
+  }
+  return tokens;
+}
+
+function WordDiffText({ tokens }: { tokens: WordToken[] }) {
+  const colors = useColors();
+  return (
+    <Text style={styles.body} testID="bio-word-diff">
+      {tokens.map((token, i) => {
+        const space = i < tokens.length - 1 ? " " : "";
+        if (token.status === "added") {
+          return (
+            <Text
+              key={i}
+              style={{
+                backgroundColor: `${colors.success}38`,
+                color: colors.success,
+              }}
+            >
+              {token.word}
+              {space}
+            </Text>
+          );
+        }
+        if (token.status === "removed") {
+          return (
+            <Text
+              key={i}
+              style={{
+                backgroundColor: `${colors.rose}38`,
+                color: colors.rose,
+                textDecorationLine: "line-through",
+              }}
+            >
+              {token.word}
+              {space}
+            </Text>
+          );
+        }
+        return (
+          <Text key={i} style={{ color: colors.mutedForeground }}>
+            {token.word}
+            {space}
+          </Text>
+        );
+      })}
+    </Text>
+  );
 }
 
 function CompareDiffItem({ item }: { item: DiffItem }) {
@@ -2479,6 +2545,26 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "PlusJakartaSans_500Medium",
     lineHeight: 18,
+  },
+  compareBioHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 10,
+  },
+  compareBioLegend: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  compareBioLegendChip: {
+    fontSize: 10,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    overflow: "hidden",
   },
   historyList: { borderTopWidth: 1 },
   versionRow: {
