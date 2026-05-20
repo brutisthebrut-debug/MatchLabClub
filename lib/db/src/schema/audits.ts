@@ -18,6 +18,7 @@ export const auditsTable = pgTable("audits", {
   photoCount: integer("photo_count"),
   relationshipHistory: text("relationship_history"),
   biggestChallenge: text("biggest_challenge"),
+  sourceApp: text("source_app"),
   status: text("status").notNull().default("pending"),
   source: text("source").notNull().default("manual"),
   readinessScore: integer("readiness_score"),

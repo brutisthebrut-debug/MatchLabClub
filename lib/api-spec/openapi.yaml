@@ -870,6 +870,9 @@ components:
           type: ["string", "null"]
         biggestChallenge:
           type: ["string", "null"]
+        sourceApp:
+          type: ["string", "null"]
+          description: Dating app the audit originated from (e.g. "Hinge"), detected from OCR or supplied by the client.
         status:
           type: string
           enum: [pending, generating, complete, error]

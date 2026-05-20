@@ -126,6 +126,11 @@ export interface Audit {
   relationshipHistory?: string | null;
   /** @nullable */
   biggestChallenge?: string | null;
+  /**
+     * Dating app the audit originated from (e.g. "Hinge"), detected from OCR or supplied by the client.
+     * @nullable
+     */
+  sourceApp?: string | null;
   status: AuditStatus;
   source: AuditSource;
   /** @nullable */

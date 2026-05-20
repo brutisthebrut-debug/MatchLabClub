@@ -170,7 +170,7 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
     return;
   }
 
-  let extracted: { bio: string; prompts: string[]; rawText: string };
+  let extracted: Awaited<ReturnType<typeof extractProfileFromScreenshot>>;
   try {
     extracted = await extractProfileFromScreenshot(parsed.data.imageBase64);
   } catch (err) {
@@ -184,9 +184,12 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
     return;
   }
 
-  const firstName = parsed.data.firstName?.trim() || "Match";
+  const firstName =
+    parsed.data.firstName?.trim() || extracted.firstName || "Match";
+  const age = extracted.age ?? 30;
   const datingGoal = parsed.data.datingGoal?.trim() || "find a relationship";
-  const sourceApp = parsed.data.sourceApp?.trim() || "Hinge";
+  const sourceApp =
+    parsed.data.sourceApp?.trim() || extracted.sourceApp || "Hinge";
 
   const promptsText = extracted.prompts.length ? extracted.prompts.join("\n") : null;
 
@@ -194,13 +197,14 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
     .insert(auditsTable)
     .values({
       firstName,
-      age: 30,
+      age,
       gender: "unspecified",
       orientation: "unspecified",
       datingGoal,
       currentApps: [sourceApp],
       bio: extracted.bio || extracted.rawText,
       prompts: promptsText,
+      sourceApp,
       status: "generating",
       source: "screenshot",
       userId: req.user?.id ?? null,

@@ -1,5 +1,8 @@
 import { createWorker, type Worker } from "tesseract.js";
 import { logger } from "./logger";
+import { parseProfileText, type SourceApp } from "./profileParser";
+
+export { parseProfileText, type SourceApp, type ParsedProfile } from "./profileParser";
 
 let workerPromise: Promise<Worker> | null = null;
 
@@ -21,45 +24,14 @@ function stripDataUrlPrefix(input: string): string {
   return input;
 }
 
-const PROMPT_HINTS = [
-  "the way to win me over is",
-  "i'm looking for",
-  "a green flag i look for",
-  "my simple pleasures",
-  "we'll get along if",
-  "i go crazy for",
-  "the key to my heart is",
-  "my most irrational fear",
-  "two truths and a lie",
-  "dating me is like",
-  "my love language is",
-  "i quote too much from",
-  "i'll know i've found the one when",
-  "the best way to ask me out is by",
-  "what makes a good relationship great",
-  "first round is on me if",
-  "the dorkiest thing about me is",
-  "fact about me that surprises people",
-  "i'm convinced that",
-  "my favorite quality in a person",
-  "all i ask is that you",
-];
-
-function isLikelyPromptLine(line: string): boolean {
-  const lower = line.toLowerCase();
-  if (PROMPT_HINTS.some((h) => lower.includes(h))) return true;
-  if (line.length < 60 && /\?$/.test(line)) return true;
-  if (line.length < 80 && /^(my|the|i|we|a|first|two|dating|all)\b/i.test(line) && /(\.\.\.|…|:)$/.test(line)) {
-    return true;
-  }
-  return false;
-}
-
 /**
- * Run OCR on a base64-encoded image and best-effort split the extracted
- * text into a bio paragraph and a list of prompt lines.
+ * Run OCR on a base64-encoded image, then run the deterministic parser to
+ * pull out firstName, age, sourceApp, bio and the list of prompts.
  */
 export async function extractProfileFromScreenshot(imageBase64: string): Promise<{
+  firstName: string | null;
+  age: number | null;
+  sourceApp: SourceApp | null;
   bio: string;
   prompts: string[];
   rawText: string;
@@ -78,21 +50,6 @@ export async function extractProfileFromScreenshot(imageBase64: string): Promise
   const rawText = (data.text || "").trim();
   logger.debug({ length: rawText.length }, "OCR completed");
 
-  const lines = rawText
-    .split(/\r?\n/)
-    .map((l) => l.replace(/\s+/g, " ").trim())
-    .filter((l) => l.length > 1);
-
-  const prompts: string[] = [];
-  const bioLines: string[] = [];
-  for (const line of lines) {
-    if (isLikelyPromptLine(line)) {
-      prompts.push(line);
-    } else if (line.length >= 8) {
-      bioLines.push(line);
-    }
-  }
-
-  const bio = bioLines.join(" ").trim();
-  return { bio, prompts, rawText };
+  const parsed = parseProfileText(rawText);
+  return { ...parsed, rawText };
 }
