@@ -296,6 +296,52 @@ describe("POST /api/audits/:id/generate", () => {
   });
 });
 
+describe("GET /api/audits/:id/versions", () => {
+  it("returns all generated versions newest-first, with a backfill on first regenerate", async () => {
+    const id = await createAudit({ id: USER_ID });
+    testApp.setUser({ id: USER_ID });
+
+    await request(testApp.app).post(`/api/audits/${id}/generate`).send({});
+    const afterFirst = await request(testApp.app).get(
+      `/api/audits/${id}/versions`,
+    );
+    expect(afterFirst.status).toBe(200);
+    expect(Array.isArray(afterFirst.body.versions)).toBe(true);
+    expect(afterFirst.body.versions.length).toBe(1);
+    expect(afterFirst.body.versions[0].auditId).toBe(id);
+    expect(afterFirst.body.versions[0].readinessScore).toBeGreaterThan(0);
+
+    await request(testApp.app).post(`/api/audits/${id}/generate`).send({});
+    const afterSecond = await request(testApp.app).get(
+      `/api/audits/${id}/versions`,
+    );
+    expect(afterSecond.status).toBe(200);
+    expect(afterSecond.body.versions.length).toBe(2);
+    const [latest, older] = afterSecond.body.versions;
+    expect(new Date(latest.generatedAt).getTime()).toBeGreaterThanOrEqual(
+      new Date(older.generatedAt).getTime(),
+    );
+
+    const single = await request(testApp.app).get(
+      `/api/audits/${id}/versions/${older.id}`,
+    );
+    expect(single.status).toBe(200);
+    expect(single.body.id).toBe(older.id);
+    expect(single.body.auditId).toBe(id);
+    expect(single.body.report).toBeTruthy();
+  });
+
+  it("returns 404 for a version that doesn't belong to the audit", async () => {
+    const id = await createAudit({ id: USER_ID });
+    testApp.setUser({ id: USER_ID });
+    await request(testApp.app).post(`/api/audits/${id}/generate`).send({});
+    const res = await request(testApp.app).get(
+      `/api/audits/${id}/versions/9999999`,
+    );
+    expect(res.status).toBe(404);
+  });
+});
+
 describe("GET /api/audits/summary", () => {
   it("returns an empty summary contract for callers with no audits", async () => {
     const freshUser = { id: `summary-empty-${crypto.randomBytes(4).toString("hex")}` };

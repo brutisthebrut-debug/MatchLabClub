@@ -1342,6 +1342,140 @@ export const GenerateAuditReportResponse = zod.object({
 
 
 /**
+ * Returns the chronological log of report versions for an audit — one
+entry per generation, newest first. Each entry includes the readiness
+score at that point, the stored report, and (for regenerations) the
+change summary diff vs the immediately prior run. Used to render a
+regeneration timeline on the audit detail page.
+
+ * @summary List every regeneration of a single audit's report
+ */
+export const ListAuditReportVersionsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListAuditReportVersionsResponse = zod.object({
+  "auditId": zod.number(),
+  "versions": zod.array(zod.object({
+  "id": zod.number(),
+  "auditId": zod.number(),
+  "readinessScore": zod.number(),
+  "report": zod.object({
+  "auditId": zod.number(),
+  "readinessScore": zod.number(),
+  "overallGrade": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "risks": zod.array(zod.string()),
+  "bioAudit": zod.string(),
+  "rewrittenBio": zod.string(),
+  "rewrittenPrompts": zod.array(zod.object({
+  "original": zod.string(),
+  "rewritten": zod.string(),
+  "tip": zod.string()
+})),
+  "photoGuidance": zod.array(zod.object({
+  "category": zod.string(),
+  "status": zod.enum(['good', 'needs_work', 'missing']),
+  "advice": zod.string()
+})),
+  "actionPlan": zod.array(zod.object({
+  "priority": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "timeframe": zod.string()
+})),
+  "messagingStyle": zod.string(),
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('\"What changed since last time\" diff at the moment this version was\ngenerated. Null for the first generation of an audit.\n'),
+  "engineVersion": zod.string().nullish().describe('Engine version tag at the time this version was produced.'),
+  "generatedAt": zod.string().describe('ISO timestamp this version was generated.')
+})).describe('Report versions for this audit, newest first.')
+})
+
+
+/**
+ * @summary Fetch a single historical report version for an audit
+ */
+export const GetAuditReportVersionParams = zod.object({
+  "id": zod.coerce.number(),
+  "versionId": zod.coerce.number()
+})
+
+export const GetAuditReportVersionResponse = zod.object({
+  "id": zod.number(),
+  "auditId": zod.number(),
+  "readinessScore": zod.number(),
+  "report": zod.object({
+  "auditId": zod.number(),
+  "readinessScore": zod.number(),
+  "overallGrade": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "risks": zod.array(zod.string()),
+  "bioAudit": zod.string(),
+  "rewrittenBio": zod.string(),
+  "rewrittenPrompts": zod.array(zod.object({
+  "original": zod.string(),
+  "rewritten": zod.string(),
+  "tip": zod.string()
+})),
+  "photoGuidance": zod.array(zod.object({
+  "category": zod.string(),
+  "status": zod.enum(['good', 'needs_work', 'missing']),
+  "advice": zod.string()
+})),
+  "actionPlan": zod.array(zod.object({
+  "priority": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "timeframe": zod.string()
+})),
+  "messagingStyle": zod.string(),
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n'),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),
+  "changeSummary": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
+  "previousScore": zod.number(),
+  "newScore": zod.number(),
+  "addedStrengths": zod.array(zod.string()).describe('Strengths present in the new report but not in the prior one.'),
+  "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
+  "addedRisks": zod.array(zod.string()),
+  "removedRisks": zod.array(zod.string())
+}),zod.null()]).optional().describe('\"What changed since last time\" diff at the moment this version was\ngenerated. Null for the first generation of an audit.\n'),
+  "engineVersion": zod.string().nullish().describe('Engine version tag at the time this version was produced.'),
+  "generatedAt": zod.string().describe('ISO timestamp this version was generated.')
+})
+
+
+/**
  * Accepts a base64-encoded screenshot of a dating profile and returns the
 OCR-extracted firstName, age, sourceApp, bio and prompts. No audit is
 persisted — the client should let the user correct any mistakes and then

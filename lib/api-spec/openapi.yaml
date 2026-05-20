@@ -807,6 +807,73 @@ paths:
               schema:
                 $ref: "#/components/schemas/AuditReport"
 
+  /audits/{id}/versions:
+    get:
+      operationId: listAuditReportVersions
+      tags: [audits]
+      summary: List every regeneration of a single audit's report
+      description: |
+        Returns the chronological log of report versions for an audit — one
+        entry per generation, newest first. Each entry includes the readiness
+        score at that point, the stored report, and (for regenerations) the
+        change summary diff vs the immediately prior run. Used to render a
+        regeneration timeline on the audit detail page.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of report versions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditReportVersionList"
+        "404":
+          description: Audit not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /audits/{id}/versions/{versionId}:
+    get:
+      operationId: getAuditReportVersion
+      tags: [audits]
+      summary: Fetch a single historical report version for an audit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A single historical report version
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditReportVersion"
+        "404":
+          description: Audit or version not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
   /audits/extract-screenshot:
     post:
       operationId: extractScreenshot
@@ -1715,6 +1782,44 @@ components:
           type: array
           items:
             type: string
+
+    AuditReportVersion:
+      type: object
+      required: [id, auditId, readinessScore, report, generatedAt]
+      properties:
+        id:
+          type: integer
+        auditId:
+          type: integer
+        readinessScore:
+          type: integer
+        report:
+          $ref: "#/components/schemas/AuditReport"
+        changeSummary:
+          oneOf:
+            - $ref: "#/components/schemas/ReportChangeSummary"
+            - type: "null"
+          description: |
+            "What changed since last time" diff at the moment this version was
+            generated. Null for the first generation of an audit.
+        engineVersion:
+          type: ["string", "null"]
+          description: Engine version tag at the time this version was produced.
+        generatedAt:
+          type: string
+          description: ISO timestamp this version was generated.
+
+    AuditReportVersionList:
+      type: object
+      required: [auditId, versions]
+      properties:
+        auditId:
+          type: integer
+        versions:
+          type: array
+          description: Report versions for this audit, newest first.
+          items:
+            $ref: "#/components/schemas/AuditReportVersion"
 
     RewrittenPrompt:
       type: object

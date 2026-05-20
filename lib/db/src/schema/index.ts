@@ -1,5 +1,6 @@
 export * from "./auth";
 export * from "./audits";
+export * from "./audit_report_versions";
 export * from "./profiles";
 export * from "./messages";
 export * from "./insights";

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, asc, desc, eq, gte, ilike, inArray, isNull, isNotNull, lt, or, sql, type SQL } from "drizzle-orm";
-import { db, auditsTable } from "@workspace/db";
+import { db, auditsTable, auditReportVersionsTable } from "@workspace/db";
 import {
   CreateAuditBody,
   ListAuditsResponse,
@@ -17,6 +17,8 @@ import {
   EmptyTrashResponse,
   RestoreAllTrashResponse,
   ListExpiringTrashedAuditsResponse,
+  ListAuditReportVersionsResponse,
+  GetAuditReportVersionResponse,
 } from "@workspace/api-zod";
 import { generateAuditReport } from "../lib/aiEngine";
 import { getRetentionDays } from "../lib/auditTrashPurge";
@@ -505,12 +507,13 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
     ...(changeSummary ? { changeSummary } : {}),
   };
 
+  const newGeneratedAt = new Date();
   await db.update(auditsTable)
     .set({
       status: "complete",
       readinessScore: report.readinessScore,
       report: fullReport,
-      reportGeneratedAt: new Date(),
+      reportGeneratedAt: newGeneratedAt,
       ...(priorReport
         ? {
             previousReport: priorReport,
@@ -521,8 +524,129 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
     })
     .where(eq(auditsTable.id, id));
 
+  // Append the new report to the versions log. If this is the first time we
+  // see this audit but a prior report exists (legacy audits created before the
+  // versions table), backfill the prior snapshot first so the timeline shows
+  // both runs.
+  const existingVersions = await db
+    .select({ id: auditReportVersionsTable.id })
+    .from(auditReportVersionsTable)
+    .where(eq(auditReportVersionsTable.auditId, id))
+    .limit(1);
+  if (existingVersions.length === 0 && priorReport && priorScore !== null) {
+    const priorEngineVersion =
+      (priorReport as { engineVersion?: string | null }).engineVersion ?? null;
+    await db.insert(auditReportVersionsTable).values({
+      auditId: id,
+      readinessScore: priorScore,
+      report: priorReport,
+      changeSummary: null,
+      engineVersion: priorEngineVersion,
+      generatedAt: priorGeneratedAt ?? newGeneratedAt,
+    });
+  }
+  await db.insert(auditReportVersionsTable).values({
+    auditId: id,
+    readinessScore: report.readinessScore,
+    report: fullReport,
+    changeSummary: changeSummary ?? null,
+    engineVersion: report.engineVersion ?? null,
+    generatedAt: newGeneratedAt,
+  });
+
   res.json(GenerateAuditReportResponse.parse(fullReport));
 });
+
+function serializeReportVersion(v: typeof auditReportVersionsTable.$inferSelect) {
+  return {
+    id: v.id,
+    auditId: v.auditId,
+    readinessScore: v.readinessScore,
+    report: v.report,
+    changeSummary: v.changeSummary ?? null,
+    engineVersion: v.engineVersion ?? null,
+    generatedAt:
+      v.generatedAt instanceof Date
+        ? v.generatedAt.toISOString()
+        : String(v.generatedAt),
+  };
+}
+
+router.get("/audits/:id/versions", async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+
+  // Ownership check via the parent audit. Avoids exposing version rows from
+  // other users even if the route is hit directly.
+  const [audit] = await db
+    .select()
+    .from(auditsTable)
+    .where(and(eq(auditsTable.id, id), activeOwnerScope(req)));
+  if (!audit) {
+    res.status(404).json({ error: "Audit not found" });
+    return;
+  }
+
+  const versions = await db
+    .select()
+    .from(auditReportVersionsTable)
+    .where(eq(auditReportVersionsTable.auditId, id))
+    .orderBy(desc(auditReportVersionsTable.generatedAt));
+
+  res.json(
+    ListAuditReportVersionsResponse.parse({
+      auditId: id,
+      versions: versions.map(serializeReportVersion),
+    }),
+  );
+});
+
+router.get(
+  "/audits/:id/versions/:versionId",
+  async (req, res): Promise<void> => {
+    const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const rawVid = Array.isArray(req.params.versionId)
+      ? req.params.versionId[0]
+      : req.params.versionId;
+    const id = parseInt(rawId, 10);
+    const versionId = parseInt(rawVid, 10);
+    if (isNaN(id) || isNaN(versionId)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+
+    const [audit] = await db
+      .select()
+      .from(auditsTable)
+      .where(and(eq(auditsTable.id, id), activeOwnerScope(req)));
+    if (!audit) {
+      res.status(404).json({ error: "Audit not found" });
+      return;
+    }
+
+    const [version] = await db
+      .select()
+      .from(auditReportVersionsTable)
+      .where(
+        and(
+          eq(auditReportVersionsTable.id, versionId),
+          eq(auditReportVersionsTable.auditId, id),
+        ) as SQL,
+      );
+    if (!version) {
+      res.status(404).json({ error: "Version not found" });
+      return;
+    }
+
+    res.json(
+      GetAuditReportVersionResponse.parse(serializeReportVersion(version)),
+    );
+  },
+);
 
 function buildChangeSummary(
   prior: Record<string, unknown> | null,
@@ -738,15 +862,26 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
   });
 
   const fullReport = { auditId: audit.id, ...report };
+  const firstGeneratedAt = new Date();
   await db
     .update(auditsTable)
     .set({
       status: "complete",
       readinessScore: report.readinessScore,
       report: fullReport,
-      reportGeneratedAt: new Date(),
+      reportGeneratedAt: firstGeneratedAt,
     })
     .where(eq(auditsTable.id, audit.id));
+
+  // First version of the report for this new audit.
+  await db.insert(auditReportVersionsTable).values({
+    auditId: audit.id,
+    readinessScore: report.readinessScore,
+    report: fullReport,
+    changeSummary: null,
+    engineVersion: report.engineVersion ?? null,
+    generatedAt: firstGeneratedAt,
+  });
 
   res.json(
     AuditFromScreenshotResponse.parse({

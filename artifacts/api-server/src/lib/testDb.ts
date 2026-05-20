@@ -87,6 +87,14 @@ const stores: Record<string, Store> = {
       status: "pending",
     },
   },
+  audit_report_versions: {
+    rows: [],
+    nextId: 1,
+    defaults: {
+      changeSummary: null,
+      engineVersion: null,
+    },
+  },
 };
 
 let monotonicClockMs = 0;
@@ -126,6 +134,7 @@ function makeTable(name: string): FakeTable {
 }
 
 export const auditsTable = makeTable("audits");
+export const auditReportVersionsTable = makeTable("audit_report_versions");
 export const messageCoachingSessionsTable = makeTable("message_coaching_sessions");
 export const emailInsightsTable = makeTable("email_insights");
 

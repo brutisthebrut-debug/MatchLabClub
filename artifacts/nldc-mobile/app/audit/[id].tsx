@@ -1,11 +1,13 @@
 import { Feather } from "@expo/vector-icons";
 import {
   getGetAuditQueryKey,
+  getListAuditReportVersionsQueryKey,
   getListAuditsQueryKey,
   useDeleteAudit,
   useGenerateAuditReport,
   useGetAudit,
   useGetEngineMeta,
+  useListAuditReportVersions,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -87,6 +89,35 @@ interface ReportShape {
   changeSummary?: ChangeSummary | null;
 }
 
+type VersionEntry = {
+  id: number;
+  readinessScore: number;
+  generatedAt: string;
+  changeSummary?: unknown;
+  report?: unknown;
+};
+
+function summarizeVersion(v: VersionEntry, idx: number, total: number): string {
+  const cs = v.changeSummary as ChangeSummary | null | undefined;
+  if (!cs) {
+    return idx === total - 1 ? "First generation" : `Score ${v.readinessScore}`;
+  }
+  const bits: string[] = [];
+  if (cs.addedStrengths?.length)
+    bits.push(`+${cs.addedStrengths.length} strength${cs.addedStrengths.length === 1 ? "" : "s"}`);
+  if (cs.removedStrengths?.length)
+    bits.push(`−${cs.removedStrengths.length} strength${cs.removedStrengths.length === 1 ? "" : "s"}`);
+  if (cs.addedRisks?.length)
+    bits.push(`+${cs.addedRisks.length} risk${cs.addedRisks.length === 1 ? "" : "s"}`);
+  if (cs.removedRisks?.length)
+    bits.push(`−${cs.removedRisks.length} risk${cs.removedRisks.length === 1 ? "" : "s"}`);
+  if (bits.length === 0)
+    return cs.scoreDelta === 0
+      ? "Re-run, no changes"
+      : `Score ${cs.scoreDelta > 0 ? "+" : ""}${cs.scoreDelta}`;
+  return bits.join(" · ");
+}
+
 function changeSummaryHasChanges(c: ChangeSummary): boolean {
   return (
     c.scoreDelta !== 0 ||
@@ -111,11 +142,21 @@ export default function AuditDetailScreen() {
   const auditQuery = useGetAudit(valid ? id : 0);
   const { data: engineMeta } = useGetEngineMeta();
   const currentEngineVersion = engineMeta?.engineVersion ?? null;
+  const versionsQuery = useListAuditReportVersions(valid ? id : 0, {
+    query: {
+      enabled: valid,
+      queryKey: getListAuditReportVersionsQueryKey(valid ? id : 0),
+    },
+  });
+  const versions = versionsQuery.data?.versions ?? [];
   const generate = useGenerateAuditReport({
     mutation: {
       onSuccess: () => {
         if (valid) {
           queryClient.invalidateQueries({ queryKey: getGetAuditQueryKey(id) });
+          queryClient.invalidateQueries({
+            queryKey: getListAuditReportVersionsQueryKey(id),
+          });
         }
       },
     },
@@ -154,6 +195,8 @@ export default function AuditDetailScreen() {
   };
   const [report, setReport] = useState<ReportShape | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [viewingVersionId, setViewingVersionId] = useState<number | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const storedReport = auditQuery.data?.report ?? null;
 
@@ -238,6 +281,7 @@ export default function AuditDetailScreen() {
     generate
       .mutateAsync({ id })
       .then((r) => {
+        setViewingVersionId(null);
         setReport({
           readinessScore: r.readinessScore,
           overallGrade: r.overallGrade,
@@ -260,6 +304,48 @@ export default function AuditDetailScreen() {
         setErrorMsg(m);
       });
   };
+
+  const viewVersion = (versionId: number) => {
+    const v = versions.find((x) => x.id === versionId);
+    if (!v) return;
+    const r = v.report as unknown as ReportShape;
+    setViewingVersionId(versionId);
+    setReport({
+      readinessScore: r.readinessScore,
+      overallGrade: r.overallGrade,
+      strengths: r.strengths,
+      risks: r.risks,
+      bioAudit: r.bioAudit,
+      rewrittenBio: r.rewrittenBio,
+      messagingStyle: r.messagingStyle,
+      coachingCta: r.coachingCta,
+      changeSummary:
+        (v.changeSummary as ChangeSummary | null | undefined) ?? null,
+    });
+  };
+
+  const viewLatest = () => {
+    setViewingVersionId(null);
+    if (storedReport) {
+      const r = storedReport as unknown as ReportShape;
+      setReport({
+        readinessScore: r.readinessScore,
+        overallGrade: r.overallGrade,
+        strengths: r.strengths,
+        risks: r.risks,
+        bioAudit: r.bioAudit,
+        rewrittenBio: r.rewrittenBio,
+        messagingStyle: r.messagingStyle,
+        coachingCta: r.coachingCta,
+        changeSummary: r.changeSummary ?? null,
+      });
+    }
+  };
+
+  const viewingVersion =
+    viewingVersionId != null
+      ? versions.find((v) => v.id === viewingVersionId) ?? null
+      : null;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -646,6 +732,234 @@ export default function AuditDetailScreen() {
                 Comparing to your previous run from{" "}
                 {formatGeneratedAt(audit.previousReportGeneratedAt)}.
               </Text>
+            ) : null}
+          </View>
+        ) : null}
+
+        {viewingVersion ? (
+          <View
+            style={[
+              styles.versionBanner,
+              {
+                backgroundColor: `${colors.teal}14`,
+                borderColor: colors.teal,
+              },
+            ]}
+            testID="banner-viewing-version"
+          >
+            <Feather name="clock" size={14} color={colors.teal} />
+            <View style={styles.versionBannerText}>
+              <Text style={[styles.versionBannerTitle, { color: colors.foreground }]}>
+                Viewing version from {formatGeneratedAt(viewingVersion.generatedAt)} (score {viewingVersion.readinessScore})
+              </Text>
+              <Text
+                style={[
+                  styles.versionBannerSubtitle,
+                  { color: colors.mutedForeground },
+                ]}
+              >
+                Historical snapshot — your latest report hasn't changed.
+              </Text>
+            </View>
+            <Pressable
+              onPress={viewLatest}
+              hitSlop={8}
+              style={({ pressed }) => [
+                styles.versionBannerButton,
+                {
+                  borderColor: colors.teal,
+                  backgroundColor: `${colors.teal}22`,
+                  opacity: pressed ? 0.7 : 1,
+                },
+              ]}
+              accessibilityLabel="Back to latest version"
+              testID="button-view-latest"
+            >
+              <Text style={[styles.versionBannerButtonText, { color: colors.teal }]}>
+                Latest
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        {valid && versions.length > 1 ? (
+          <View
+            style={[
+              styles.historyCard,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+            testID="card-regeneration-history"
+          >
+            <Pressable
+              onPress={() => setHistoryOpen((o) => !o)}
+              style={({ pressed }) => [
+                styles.historyHeader,
+                { opacity: pressed ? 0.7 : 1 },
+              ]}
+              accessibilityLabel="Toggle regeneration history"
+              accessibilityState={{ expanded: historyOpen }}
+              testID="button-toggle-history"
+            >
+              <Feather name="clock" size={16} color={colors.violet} />
+              <View style={styles.historyHeaderText}>
+                <Text style={[styles.historyTitle, { color: colors.foreground }]}>
+                  Regeneration history
+                </Text>
+                <Text
+                  style={[
+                    styles.historySubtitle,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  {versions.length} versions on file — tap any to view it.
+                </Text>
+              </View>
+              <Feather
+                name={historyOpen ? "chevron-up" : "chevron-down"}
+                size={16}
+                color={colors.mutedForeground}
+              />
+            </Pressable>
+            {historyOpen ? (
+              <View
+                style={[styles.historyList, { borderTopColor: colors.cardBorder }]}
+                testID="list-versions"
+              >
+                {versions.map((v, idx) => {
+                  const isLatest = idx === 0;
+                  const isActive =
+                    (viewingVersionId == null && isLatest) ||
+                    viewingVersionId === v.id;
+                  const cs = v.changeSummary as
+                    | ChangeSummary
+                    | null
+                    | undefined;
+                  const delta = cs?.scoreDelta ?? null;
+                  const summaryLine = summarizeVersion(v, idx, versions.length);
+                  const badgeColor =
+                    v.readinessScore >= 75
+                      ? colors.success
+                      : v.readinessScore >= 55
+                      ? colors.gold
+                      : colors.rose;
+                  return (
+                    <Pressable
+                      key={v.id}
+                      onPress={() =>
+                        isLatest ? viewLatest() : viewVersion(v.id)
+                      }
+                      style={({ pressed }) => [
+                        styles.versionRow,
+                        {
+                          borderTopColor: colors.cardBorder,
+                          backgroundColor: isActive
+                            ? `${colors.violet}10`
+                            : pressed
+                            ? `${colors.mutedForeground}10`
+                            : "transparent",
+                        },
+                      ]}
+                      testID={`button-view-version-${v.id}`}
+                    >
+                      <View
+                        style={[
+                          styles.versionScore,
+                          {
+                            backgroundColor: `${badgeColor}22`,
+                            borderColor: badgeColor,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[styles.versionScoreText, { color: badgeColor }]}
+                        >
+                          {v.readinessScore}
+                        </Text>
+                      </View>
+                      <View style={styles.versionMeta}>
+                        <View style={styles.versionTitleRow}>
+                          <Text
+                            style={[
+                              styles.versionTitle,
+                              { color: colors.foreground },
+                            ]}
+                            testID={`text-version-time-${v.id}`}
+                          >
+                            {formatGeneratedAt(v.generatedAt)}
+                          </Text>
+                          {isLatest ? (
+                            <View
+                              style={[
+                                styles.versionPill,
+                                {
+                                  backgroundColor: `${colors.success}22`,
+                                  borderColor: colors.success,
+                                },
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.versionPillText,
+                                  { color: colors.success },
+                                ]}
+                              >
+                                Latest
+                              </Text>
+                            </View>
+                          ) : null}
+                          {delta !== null && delta !== 0 ? (
+                            <View
+                              style={[
+                                styles.versionPill,
+                                {
+                                  backgroundColor: `${
+                                    delta > 0 ? colors.success : colors.rose
+                                  }22`,
+                                  borderColor:
+                                    delta > 0 ? colors.success : colors.rose,
+                                },
+                              ]}
+                              testID={`badge-version-delta-${v.id}`}
+                            >
+                              <Feather
+                                name={delta > 0 ? "arrow-up" : "arrow-down"}
+                                size={10}
+                                color={delta > 0 ? colors.success : colors.rose}
+                              />
+                              <Text
+                                style={[
+                                  styles.versionPillText,
+                                  {
+                                    color:
+                                      delta > 0 ? colors.success : colors.rose,
+                                  },
+                                ]}
+                              >
+                                {delta > 0 ? "+" : ""}
+                                {delta}
+                              </Text>
+                            </View>
+                          ) : null}
+                        </View>
+                        <Text
+                          style={[
+                            styles.versionSummary,
+                            { color: colors.mutedForeground },
+                          ]}
+                          testID={`text-version-summary-${v.id}`}
+                        >
+                          {summaryLine}
+                        </Text>
+                      </View>
+                      <Feather
+                        name="chevron-right"
+                        size={14}
+                        color={colors.mutedForeground}
+                      />
+                    </Pressable>
+                  );
+                })}
+              </View>
             ) : null}
           </View>
         ) : null}
@@ -1058,5 +1372,106 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     borderTopWidth: 1,
     marginTop: 4,
+  },
+  versionBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  versionBannerText: { flex: 1, gap: 2 },
+  versionBannerTitle: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  versionBannerSubtitle: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  versionBannerButton: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  versionBannerButtonText: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.4,
+  },
+  historyCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  historyHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  historyHeaderText: { flex: 1, gap: 2 },
+  historyTitle: {
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  historySubtitle: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  historyList: { borderTopWidth: 1 },
+  versionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+  },
+  versionScore: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  versionScoreText: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  versionMeta: { flex: 1, gap: 3 },
+  versionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flexWrap: "wrap",
+  },
+  versionTitle: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  versionPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  versionPillText: {
+    fontSize: 9,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+  },
+  versionSummary: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_500Medium",
   },
 });

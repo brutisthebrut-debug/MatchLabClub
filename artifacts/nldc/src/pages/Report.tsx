@@ -6,11 +6,12 @@ import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import { useGetAudit, useGenerateAuditReport, useGetEngineMeta, getGetAuditQueryKey } from "@workspace/api-client-react";
+import { useGetAudit, useGenerateAuditReport, useGetEngineMeta, useListAuditReportVersions, getGetAuditQueryKey, getListAuditReportVersionsQueryKey } from "@workspace/api-client-react";
 import {
   CheckCircle, XCircle, AlertCircle, ArrowRight, Copy, Check,
   Trophy, Calendar, Eye, Sparkles, MessageSquare, Camera,
-  TrendingUp, Lightbulb, Heart, Zap, RefreshCw, Plus, Minus, ArrowUp, ArrowDown
+  TrendingUp, Lightbulb, Heart, Zap, RefreshCw, Plus, Minus, ArrowUp, ArrowDown,
+  History, ChevronDown, ChevronUp
 } from "lucide-react";
 
 type ChangeSummary = {
@@ -31,6 +32,28 @@ function hasChanges(c: ChangeSummary): boolean {
     c.addedRisks.length > 0 ||
     c.removedRisks.length > 0
   );
+}
+
+type VersionEntry = {
+  id: number;
+  readinessScore: number;
+  generatedAt: string;
+  changeSummary?: unknown;
+  report?: unknown;
+};
+
+function summarizeVersion(v: VersionEntry, idx: number, total: number): string {
+  const cs = v.changeSummary as ChangeSummary | null | undefined;
+  if (!cs) {
+    return idx === total - 1 ? "First generation" : `Score ${v.readinessScore}`;
+  }
+  const bits: string[] = [];
+  if (cs.addedStrengths?.length) bits.push(`+${cs.addedStrengths.length} strength${cs.addedStrengths.length === 1 ? "" : "s"}`);
+  if (cs.removedStrengths?.length) bits.push(`−${cs.removedStrengths.length} strength${cs.removedStrengths.length === 1 ? "" : "s"}`);
+  if (cs.addedRisks?.length) bits.push(`+${cs.addedRisks.length} risk${cs.addedRisks.length === 1 ? "" : "s"}`);
+  if (cs.removedRisks?.length) bits.push(`−${cs.removedRisks.length} risk${cs.removedRisks.length === 1 ? "" : "s"}`);
+  if (bits.length === 0) return cs.scoreDelta === 0 ? "Re-run, no changes" : `Score ${cs.scoreDelta > 0 ? "+" : ""}${cs.scoreDelta}`;
+  return bits.join(" · ");
 }
 
 function formatGeneratedAt(iso: string): string {
@@ -221,6 +244,13 @@ export default function Report() {
   const [report, setReport] = useState<typeof DEMO_REPORT | null>(null);
   const [generating, setGenerating] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [viewingVersionId, setViewingVersionId] = useState<number | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const versionsQuery = useListAuditReportVersions(auditId, {
+    query: { enabled: !!auditId, queryKey: getListAuditReportVersionsQueryKey(auditId) },
+  });
+  const versions = versionsQuery.data?.versions ?? [];
 
   const storedReport = audit?.report ?? null;
 
@@ -255,10 +285,24 @@ export default function Report() {
     try {
       const result = await generateReport.mutateAsync({ id: auditId });
       setReport(result as typeof DEMO_REPORT);
+      setViewingVersionId(null);
       queryClient.invalidateQueries({ queryKey: getGetAuditQueryKey(auditId) });
+      queryClient.invalidateQueries({ queryKey: getListAuditReportVersionsQueryKey(auditId) });
     } finally {
       setRegenerating(false);
     }
+  }
+
+  function viewVersion(versionId: number) {
+    const v = versions.find((x) => x.id === versionId);
+    if (!v) return;
+    setViewingVersionId(versionId);
+    setReport(v.report as unknown as typeof DEMO_REPORT);
+  }
+
+  function viewLatest() {
+    setViewingVersionId(null);
+    if (storedReport) setReport(storedReport as unknown as typeof DEMO_REPORT);
   }
 
   const r = report ?? (auditId ? null : DEMO_REPORT) ?? DEMO_REPORT;
@@ -268,7 +312,10 @@ export default function Report() {
     (storedReport as unknown as { changeSummary?: ChangeSummary | null } | null)
       ?.changeSummary ??
     null;
-  const showChangeSummary = !!auditId && !!changeSummary && hasChanges(changeSummary);
+  const viewingVersion = viewingVersionId != null
+    ? versions.find((v) => v.id === viewingVersionId) ?? null
+    : null;
+  const showChangeSummary = !!auditId && !!changeSummary && hasChanges(changeSummary) && !viewingVersion;
   const grade = r.readinessScore >= 85 ? "A" : r.readinessScore >= 72 ? "B" : r.readinessScore >= 58 ? "C" : r.readinessScore >= 42 ? "D" : "F";
   const scoreColor = r.readinessScore >= 75 ? "hsl(142 55% 60%)" : r.readinessScore >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
 
@@ -419,6 +466,134 @@ export default function Report() {
               </div>
             </div>
           </motion.div>
+
+          {/* ── Historical Version Banner ── */}
+          {viewingVersion ? (
+            <motion.div
+              {...fadeUp(0)}
+              className="glass border border-[hsl(190_55%_60%/0.35)] rounded-2xl px-4 py-3 bg-[hsl(190_55%_60%/0.08)] flex items-center gap-3 flex-wrap"
+              data-testid="banner-viewing-version"
+            >
+              <History className="w-5 h-5 text-[hsl(190_55%_70%)] flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">
+                  Viewing version from {formatGeneratedAt(viewingVersion.generatedAt)} (score {viewingVersion.readinessScore})
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  This is a historical snapshot. Your latest report hasn't changed.
+                </p>
+              </div>
+              <button
+                onClick={viewLatest}
+                className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-full border border-[hsl(190_55%_60%/0.5)] text-[hsl(190_55%_70%)] bg-[hsl(190_55%_60%/0.14)] hover:bg-[hsl(190_55%_60%/0.22)] transition-colors flex-shrink-0"
+                data-testid="button-view-latest"
+              >
+                Back to latest
+              </button>
+            </motion.div>
+          ) : null}
+
+          {/* ── Regeneration history ── */}
+          {!!auditId && versions.length > 1 ? (
+            <motion.div
+              {...fadeUp(0.02)}
+              className="glass border border-white/8 rounded-3xl"
+              data-testid="card-regeneration-history"
+            >
+              <button
+                type="button"
+                onClick={() => setHistoryOpen((o) => !o)}
+                className="w-full flex items-center gap-2.5 p-5 text-left"
+                data-testid="button-toggle-history"
+                aria-expanded={historyOpen}
+              >
+                <History className="w-5 h-5 text-[hsl(268_52%_72%)]" />
+                <div className="flex-1">
+                  <h2 className="text-base font-bold text-foreground">Regeneration history</h2>
+                  <p className="text-xs text-muted-foreground">
+                    {versions.length} version{versions.length === 1 ? "" : "s"} on file — tap any to view it.
+                  </p>
+                </div>
+                {historyOpen ? (
+                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                )}
+              </button>
+              {historyOpen ? (
+                <ol className="border-t border-white/8 divide-y divide-white/8" data-testid="list-versions">
+                  {versions.map((v, idx) => {
+                    const isLatest = idx === 0;
+                    const isActive =
+                      (viewingVersionId == null && isLatest) || viewingVersionId === v.id;
+                    const cs = v.changeSummary as ChangeSummary | null | undefined;
+                    const delta = cs?.scoreDelta ?? null;
+                    return (
+                      <li key={v.id} data-testid={`version-row-${v.id}`}>
+                        <button
+                          type="button"
+                          onClick={() => (isLatest ? viewLatest() : viewVersion(v.id))}
+                          className={`w-full flex items-start gap-3 p-4 text-left hover:bg-white/5 transition-colors ${
+                            isActive ? "bg-[hsl(268_52%_68%/0.06)]" : ""
+                          }`}
+                          data-testid={`button-view-version-${v.id}`}
+                        >
+                          <div
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 tabular-nums"
+                            style={{
+                              background:
+                                v.readinessScore >= 75
+                                  ? "hsl(142 55% 60% / 0.18)"
+                                  : v.readinessScore >= 55
+                                  ? "hsl(43 65% 65% / 0.18)"
+                                  : "hsl(348 55% 65% / 0.18)",
+                              color:
+                                v.readinessScore >= 75
+                                  ? "hsl(142 55% 70%)"
+                                  : v.readinessScore >= 55
+                                  ? "hsl(43 75% 72%)"
+                                  : "hsl(348 55% 75%)",
+                            }}
+                          >
+                            {v.readinessScore}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-sm font-semibold text-foreground" data-testid={`text-version-time-${v.id}`}>
+                                {formatGeneratedAt(v.generatedAt)}
+                              </p>
+                              {isLatest ? (
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(142_55%_60%/0.14)] text-[hsl(142_55%_70%)] border border-[hsl(142_55%_60%/0.3)]">
+                                  Latest
+                                </span>
+                              ) : null}
+                              {delta !== null && delta !== 0 ? (
+                                <span
+                                  className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                    delta > 0
+                                      ? "bg-[hsl(142_55%_60%/0.15)] text-[hsl(142_55%_70%)] border border-[hsl(142_55%_60%/0.3)]"
+                                      : "bg-[hsl(348_55%_65%/0.15)] text-[hsl(348_55%_75%)] border border-[hsl(348_55%_65%/0.3)]"
+                                  }`}
+                                  data-testid={`badge-version-delta-${v.id}`}
+                                >
+                                  {delta > 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                                  {delta > 0 ? "+" : ""}{delta}
+                                </span>
+                              ) : null}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5" data-testid={`text-version-summary-${v.id}`}>
+                              {summarizeVersion(v, idx, versions.length)}
+                            </p>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-2" />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ol>
+              ) : null}
+            </motion.div>
+          ) : null}
 
           {/* ── What Changed (after regenerate) ── */}
           {showChangeSummary && changeSummary ? (

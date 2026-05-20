@@ -33,6 +33,8 @@ import type {
   AuditFromScreenshot400,
   AuditInput,
   AuditReport,
+  AuditReportVersion,
+  AuditReportVersionList,
   AuditSummary,
   AuthErrorEnvelope,
   AuthUserEnvelope,
@@ -62,9 +64,11 @@ import type {
   ExtractMessageScreenshot400,
   ExtractScreenshot400,
   GetAiFallbackRateParams,
+  GetAuditReportVersion404,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
   InsightsRollup,
+  ListAuditReportVersions404,
   ListAuditsParams,
   ListExpiringTrashedAuditsParams,
   LogoutSuccess,
@@ -2431,6 +2435,171 @@ export const useGenerateAuditReport = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getGenerateAuditReportMutationOptions(options));
     }
+
+export const getListAuditReportVersionsUrl = (id: number,) => {
+
+
+
+
+  return `/api/audits/${id}/versions`
+}
+
+/**
+ * Returns the chronological log of report versions for an audit — one
+entry per generation, newest first. Each entry includes the readiness
+score at that point, the stored report, and (for regenerations) the
+change summary diff vs the immediately prior run. Used to render a
+regeneration timeline on the audit detail page.
+
+ * @summary List every regeneration of a single audit's report
+ */
+export const listAuditReportVersions = async (id: number, options?: RequestInit): Promise<AuditReportVersionList> => {
+
+  return customFetch<AuditReportVersionList>(getListAuditReportVersionsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAuditReportVersionsQueryKey = (id: number,) => {
+    return [
+    `/api/audits/${id}/versions`
+    ] as const;
+    }
+
+
+export const getListAuditReportVersionsQueryOptions = <TData = Awaited<ReturnType<typeof listAuditReportVersions>>, TError = ErrorType<ListAuditReportVersions404>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAuditReportVersions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAuditReportVersionsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAuditReportVersions>>> = ({ signal }) => listAuditReportVersions(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAuditReportVersions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAuditReportVersionsQueryResult = NonNullable<Awaited<ReturnType<typeof listAuditReportVersions>>>
+export type ListAuditReportVersionsQueryError = ErrorType<ListAuditReportVersions404>
+
+
+/**
+ * @summary List every regeneration of a single audit's report
+ */
+
+export function useListAuditReportVersions<TData = Awaited<ReturnType<typeof listAuditReportVersions>>, TError = ErrorType<ListAuditReportVersions404>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAuditReportVersions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAuditReportVersionsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetAuditReportVersionUrl = (id: number,
+    versionId: number,) => {
+
+
+
+
+  return `/api/audits/${id}/versions/${versionId}`
+}
+
+/**
+ * @summary Fetch a single historical report version for an audit
+ */
+export const getAuditReportVersion = async (id: number,
+    versionId: number, options?: RequestInit): Promise<AuditReportVersion> => {
+
+  return customFetch<AuditReportVersion>(getGetAuditReportVersionUrl(id,versionId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAuditReportVersionQueryKey = (id: number,
+    versionId: number,) => {
+    return [
+    `/api/audits/${id}/versions/${versionId}`
+    ] as const;
+    }
+
+
+export const getGetAuditReportVersionQueryOptions = <TData = Awaited<ReturnType<typeof getAuditReportVersion>>, TError = ErrorType<GetAuditReportVersion404>>(id: number,
+    versionId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuditReportVersion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAuditReportVersionQueryKey(id,versionId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuditReportVersion>>> = ({ signal }) => getAuditReportVersion(id,versionId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id && versionId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuditReportVersion>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAuditReportVersionQueryResult = NonNullable<Awaited<ReturnType<typeof getAuditReportVersion>>>
+export type GetAuditReportVersionQueryError = ErrorType<GetAuditReportVersion404>
+
+
+/**
+ * @summary Fetch a single historical report version for an audit
+ */
+
+export function useGetAuditReportVersion<TData = Awaited<ReturnType<typeof getAuditReportVersion>>, TError = ErrorType<GetAuditReportVersion404>>(
+ id: number,
+    versionId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuditReportVersion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAuditReportVersionQueryOptions(id,versionId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getExtractScreenshotUrl = () => {
 

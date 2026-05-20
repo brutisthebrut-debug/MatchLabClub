@@ -260,6 +260,30 @@ export interface Audit {
   deletedAt?: string | null;
 }
 
+export interface AuditReportVersion {
+  id: number;
+  auditId: number;
+  readinessScore: number;
+  report: AuditReport;
+  /** "What changed since last time" diff at the moment this version was
+  generated. Null for the first generation of an audit.
+   */
+  changeSummary?: ReportChangeSummary | null;
+  /**
+     * Engine version tag at the time this version was produced.
+     * @nullable
+     */
+  engineVersion?: string | null;
+  /** ISO timestamp this version was generated. */
+  generatedAt: string;
+}
+
+export interface AuditReportVersionList {
+  auditId: number;
+  /** Report versions for this audit, newest first. */
+  versions: AuditReportVersion[];
+}
+
 export interface ScoreHistoryPoint {
   date: string;
   score: number;
@@ -1067,6 +1091,14 @@ export type ListExpiringTrashedAuditsParams = {
  * @maximum 30
  */
 withinDays?: number;
+};
+
+export type ListAuditReportVersions404 = {
+  error?: string;
+};
+
+export type GetAuditReportVersion404 = {
+  error?: string;
 };
 
 export type ExtractScreenshot400 = {
