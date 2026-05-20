@@ -21,7 +21,7 @@ import {
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
 import { useListAudits, useGetWaitlistStats, useGetCoachFollowUpTimeline } from "@workspace/api-client-react";
-import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock } from "lucide-react";
+import { Lock, LogOut, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
 
 type AiMode = "live" | "fallback" | "setup-needed";
@@ -1297,6 +1297,8 @@ function AiMetricsPanel({ refreshKey, founderKey }: { refreshKey: number; founde
 
 const FOUNDER_KEY =
   (import.meta.env as Record<string, string>).VITE_FOUNDER_KEY || "nldc2024";
+
+const FOUNDER_KEY_STORAGE_KEY = "founder_key";
 
 function StatCard({ label, value, icon: Icon, color, "data-testid": testId }: { label: string; value: number | string; icon: React.ElementType; color: string; "data-testid"?: string }) {
   return (
@@ -2992,7 +2994,7 @@ function LockedView({ onSubmit }: { onSubmit: (key: string) => void }) {
 type Tab = "overview" | "leads" | "audits" | "purchases" | "waitlist" | "emails" | "testing" | "ocr-mismatches";
 
 
-function Dashboard() {
+function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   const [tab, setTab] = useState<Tab>("overview");
   const [stats, setStats] = useState<FounderStats | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -3030,13 +3032,23 @@ function Dashboard() {
           <h1 className="font-serif text-2xl font-bold text-foreground">Founder Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">Live data — your app, your numbers.</p>
         </div>
-        <button
-          onClick={() => setRefreshKey((k) => k + 1)}
-          className="flex items-center gap-2 px-4 py-2 glass rounded-xl text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setRefreshKey((k) => k + 1)}
+            className="flex items-center gap-2 px-4 py-2 glass rounded-xl text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+          <button
+            onClick={onSignOut}
+            className="flex items-center gap-2 px-4 py-2 glass rounded-xl text-sm text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="founder-sign-out"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Sign out
+          </button>
+        </div>
       </div>
 
       {/* Tab nav */}
@@ -3736,19 +3748,43 @@ export default function Founder() {
     typeof window !== "undefined" ? window.location.search : ""
   );
   const keyParam = params.get("key");
-  const [authenticated, setAuthenticated] = useState(keyParam === FOUNDER_KEY);
+
+  const [authenticated, setAuthenticated] = useState(() => {
+    if (keyParam === FOUNDER_KEY) return true;
+    try {
+      return localStorage.getItem(FOUNDER_KEY_STORAGE_KEY) === FOUNDER_KEY;
+    } catch {
+      return false;
+    }
+  });
+
+  const handleAuth = (key: string) => {
+    try {
+      localStorage.setItem(FOUNDER_KEY_STORAGE_KEY, key);
+    } catch {
+    }
+    setAuthenticated(true);
+  };
+
+  const handleSignOut = () => {
+    try {
+      localStorage.removeItem(FOUNDER_KEY_STORAGE_KEY);
+    } catch {
+    }
+    setAuthenticated(false);
+  };
 
   if (!authenticated) {
     return (
       <AppLayout>
-        <LockedView onSubmit={() => setAuthenticated(true)} />
+        <LockedView onSubmit={handleAuth} />
       </AppLayout>
     );
   }
 
   return (
     <AppLayout>
-      <Dashboard />
+      <Dashboard onSignOut={handleSignOut} />
     </AppLayout>
   );
 }

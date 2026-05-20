@@ -144,6 +144,7 @@ vi.mock("@/lib/apiClient", async () => {
 const originalFetch = globalThis.fetch;
 
 beforeEach(() => {
+  localStorage.clear();
   getOcrMismatchesMock.mockReset();
   getOcrMismatchesMock.mockResolvedValue(ocrMismatchesPayload);
   globalThis.fetch = vi.fn(async () =>

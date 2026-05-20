@@ -141,6 +141,7 @@ const seededTrendPayload = {
 };
 
 beforeEach(() => {
+  localStorage.clear();
   vi.stubGlobal("ResizeObserver", FakeResizeObserver);
   getOcrMismatchesMock.mockReset();
   getOcrMismatchesTrendsMock.mockReset();
