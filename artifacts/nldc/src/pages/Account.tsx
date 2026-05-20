@@ -53,7 +53,7 @@ export default function Account() {
 
   const { user, isAuthenticated, isLoading, login, logout } = useAuth();
   const { toast } = useToast();
-  const auditsQuery = useListAudits({
+  const auditsQuery = useListAudits(undefined, {
     query: { queryKey: getListAuditsQueryKey() },
   });
 
