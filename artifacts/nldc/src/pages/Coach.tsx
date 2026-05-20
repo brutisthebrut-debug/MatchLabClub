@@ -20,7 +20,7 @@ import { BarChart, Bar, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recha
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
-import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Clock, ArrowRight, Sparkles, Send, Upload, X, AlertCircle } from "lucide-react";
+import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Clock, ArrowRight, Sparkles, Send, Upload, X, AlertCircle, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 const GOALS = ["Get a date", "Keep it going", "Recover from awkward", "Re-engage after ghosting"];
 const SOURCE_APPS = ["Hinge", "Bumble", "Tinder"] as const;
@@ -505,12 +505,70 @@ export default function Coach() {
                           </div>
                         );
                       }
+                      const withData = buckets.filter((b) => b.total > 0);
+                      const latest = withData[withData.length - 1];
+                      const prior = withData[withData.length - 2];
+                      const latestRate = latest && latest.sendThroughRate != null ? Math.round(latest.sendThroughRate * 100) : null;
+                      const priorRate = prior && prior.sendThroughRate != null ? Math.round(prior.sendThroughRate * 100) : null;
+                      const baselineBuckets = withData.slice(-5, -1);
+                      const avgRate = baselineBuckets.length > 0
+                        ? Math.round(
+                            (baselineBuckets.reduce((s, b) => s + (b.sendThroughRate ?? 0), 0) / baselineBuckets.length) * 100,
+                          )
+                        : null;
+                      let callout: { text: string; tone: "up" | "down" | "flat" } | null = null;
+                      if (latestRate != null) {
+                        if (priorRate != null) {
+                          const delta = latestRate - priorRate;
+                          if (delta === 0) {
+                            callout = { text: "Flat vs. last week", tone: "flat" };
+                          } else if (priorRate === 0) {
+                            callout = { text: `Up from 0% last week to ${latestRate}%`, tone: "up" };
+                          } else if (latestRate === 0) {
+                            callout = { text: `Down from ${priorRate}% last week to 0%`, tone: "down" };
+                          } else {
+                            const pct = Math.round((Math.abs(delta) / priorRate) * 100);
+                            callout = {
+                              text: `${delta > 0 ? "Up" : "Down"} ${pct}% from last week`,
+                              tone: delta > 0 ? "up" : "down",
+                            };
+                          }
+                        } else if (avgRate != null && baselineBuckets.length >= 2) {
+                          const delta = latestRate - avgRate;
+                          if (delta === 0) {
+                            callout = { text: `Matches your ${baselineBuckets.length}-week average`, tone: "flat" };
+                          } else {
+                            callout = {
+                              text: `${delta > 0 ? "Up from" : "Down from"} your ${baselineBuckets.length}-week average of ${avgRate}%`,
+                              tone: delta > 0 ? "up" : "down",
+                            };
+                          }
+                        }
+                      }
+                      const toneStyles =
+                        callout?.tone === "up"
+                          ? { color: "hsl(142 55% 70%)", background: "hsl(142 55% 60% / 0.12)" }
+                          : callout?.tone === "down"
+                            ? { color: "hsl(0 65% 72%)", background: "hsl(0 55% 60% / 0.12)" }
+                            : { color: "hsl(0 0% 75%)", background: "hsl(232 28% 22%)" };
+                      const ToneIcon = callout?.tone === "up" ? TrendingUp : callout?.tone === "down" ? TrendingDown : Minus;
                       return (
                         <div className="mb-3" data-testid="timeline-chart">
                           <div className="flex items-baseline justify-between mb-1">
                             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Weekly send-through</p>
                             <p className="text-[10px] text-muted-foreground">last {buckets.length}w</p>
                           </div>
+                          {callout && (
+                            <div
+                              className="mb-2 inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[11px] font-medium"
+                              style={toneStyles}
+                              data-testid="timeline-callout"
+                              data-tone={callout.tone}
+                            >
+                              <ToneIcon className="w-3 h-3" />
+                              <span>{callout.text}</span>
+                            </div>
+                          )}
                           <div className="h-24">
                             <ResponsiveContainer width="100%" height="100%">
                               <BarChart data={chartData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
