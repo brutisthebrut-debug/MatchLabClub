@@ -89,12 +89,20 @@ const stores: Record<string, Store> = {
   },
 };
 
+let monotonicClockMs = 0;
+function nextClock(): Date {
+  const now = Date.now();
+  monotonicClockMs = Math.max(now, monotonicClockMs + 1);
+  return new Date(monotonicClockMs);
+}
+
 export function resetTestDb(): void {
   for (const key of Object.keys(stores)) {
     const s = stores[key];
     s.rows = [];
     s.nextId = 1;
   }
+  monotonicClockMs = 0;
 }
 
 export function dumpTable(name: string): Row[] {
@@ -194,14 +202,144 @@ export const inArray = (col: ColumnRef, vals: unknown[]): Pred => (row) =>
 export const desc = (col: ColumnRef): OrderSpec => ({ col: col.__col, dir: "desc" });
 export const asc = (col: ColumnRef): OrderSpec => ({ col: col.__col, dir: "asc" });
 
-// Routes use sql`false` to mean "no rows". We expose `sql` as a tag function
-// that returns a predicate evaluating the template. In-memory we can't run real
-// Postgres functions (word_similarity, similarity, %, GREATEST) so all raw SQL
-// expressions default to `false` — only the typed drizzle operators (ilike, eq,
-// etc.) do actual matching. This prevents postgres-only conditions from
-// incorrectly matching all rows in tests.
-type SqlTag = ((strings: TemplateStringsArray, ...values: unknown[]) => Pred) & Record<string, unknown>;
-export const sql: SqlTag = (() => false) as unknown as SqlTag;
+// `sql` is a tag function that captures its template parts so the SelectChain
+// can interpret a handful of well-known shapes used by route handlers (e.g.
+// `count(*) filter (where col = 'x')::int`, `max(col) filter (where col in (..))`,
+// and `${col} desc` for orderBy). When used as a where-clause predicate, it
+// defaults to `false` so postgres-only conditions don't incorrectly match all
+// rows in tests.
+interface SqlMeta {
+  __sql: true;
+  reconstructed: string;
+}
+type SqlPred = Pred & SqlMeta;
+type SqlTag = ((strings: TemplateStringsArray, ...values: unknown[]) => SqlPred) & Record<string, unknown>;
+
+function reconstructSql(
+  strings: ArrayLike<string>,
+  values: ReadonlyArray<unknown>,
+): string {
+  let out = "";
+  for (let i = 0; i < strings.length; i++) {
+    out += strings[i];
+    if (i < values.length) {
+      const v = values[i];
+      if (isColRef(v)) {
+        out += `{{COL:${v.__col}}}`;
+      } else if (isSqlMeta(v)) {
+        out += v.reconstructed;
+      } else if (typeof v === "string") {
+        out += `'${v}'`;
+      } else {
+        out += String(v);
+      }
+    }
+  }
+  return out;
+}
+
+function isSqlMeta(x: unknown): x is SqlPred {
+  return (
+    typeof x === "function" &&
+    (x as unknown as { __sql?: boolean }).__sql === true
+  );
+}
+
+export const sql: SqlTag = ((
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): SqlPred => {
+  const fn = (() => false) as Pred as SqlPred;
+  fn.__sql = true;
+  fn.reconstructed = reconstructSql(strings, values).trim();
+  return fn;
+}) as SqlTag;
+
+function compareForOrder(av: unknown, bv: unknown, dir: "asc" | "desc"): number {
+  if (av === bv) return 0;
+  if (av === null || av === undefined) return 1;
+  if (bv === null || bv === undefined) return -1;
+  const aCmp = av instanceof Date ? av.getTime() : (av as number | string);
+  const bCmp = bv instanceof Date ? bv.getTime() : (bv as number | string);
+  const cmp = aCmp < bCmp ? -1 : 1;
+  return dir === "desc" ? -cmp : cmp;
+}
+
+function parseLiteralList(listStr: string): string[] {
+  return listStr
+    .split(",")
+    .map((s) => s.trim().replace(/^'(.*)'$/, "$1"));
+}
+
+function computeAggregate(spec: unknown, rows: Row[]): unknown {
+  if (isColRef(spec)) return rows[0]?.[spec.__col];
+  if (!isSqlMeta(spec)) return spec;
+  const s = spec.reconstructed;
+
+  let m = s.match(
+    /^count\(\*\)\s*filter\s*\(where\s*\{\{COL:(\w+)\}\}\s*=\s*'([^']*)'\)\s*(?:::int)?$/i,
+  );
+  if (m) {
+    const [, col, lit] = m;
+    return rows.filter((r) => r[col] === lit).length;
+  }
+
+  m = s.match(
+    /^count\(\*\)\s*filter\s*\(where\s*\{\{COL:(\w+)\}\}\s+in\s*\(([^)]+)\)\)\s*(?:::int)?$/i,
+  );
+  if (m) {
+    const [, col, listStr] = m;
+    const vals = parseLiteralList(listStr);
+    return rows.filter((r) => vals.includes(r[col] as string)).length;
+  }
+
+  m = s.match(/^count\(\*\)\s*(?:::int)?$/i);
+  if (m) return rows.length;
+
+  m = s.match(
+    /^max\(\{\{COL:(\w+)\}\}\)\s*filter\s*\(where\s*\{\{COL:(\w+)\}\}\s+in\s*\(([^)]+)\)\)$/i,
+  );
+  if (m) {
+    const [, col, fCol, listStr] = m;
+    const vals = parseLiteralList(listStr);
+    const filtered = rows.filter((r) => vals.includes(r[fCol] as string));
+    return maxOf(filtered.map((r) => r[col]));
+  }
+
+  m = s.match(
+    /^max\(\{\{COL:(\w+)\}\}\)\s*filter\s*\(where\s*\{\{COL:(\w+)\}\}\s*=\s*'([^']*)'\)$/i,
+  );
+  if (m) {
+    const [, col, fCol, lit] = m;
+    const filtered = rows.filter((r) => r[fCol] === lit);
+    return maxOf(filtered.map((r) => r[col]));
+  }
+
+  return null;
+}
+
+function maxOf(values: unknown[]): unknown {
+  let best: unknown = null;
+  let bestCmp: number | null = null;
+  for (const v of values) {
+    if (v === null || v === undefined) continue;
+    const cmp = v instanceof Date ? v.getTime() : (v as number);
+    if (bestCmp === null || cmp > bestCmp) {
+      best = v;
+      bestCmp = cmp;
+    }
+  }
+  return best;
+}
+
+function hasAggregateSpec(projection: Record<string, unknown>): boolean {
+  for (const v of Object.values(projection)) {
+    if (isSqlMeta(v) && /^(count|max|min|sum|avg)\b/i.test(v.reconstructed)) {
+      return true;
+    }
+  }
+  return false;
+}
 
 // ---- Chainable query builder --------------------------------------------
 
@@ -228,6 +366,12 @@ class SelectChain extends AsyncChain<Row[]> {
   private orders: OrderSpec[] = [];
   private limitVal: number | undefined;
   private offsetVal = 0;
+  private projection: Record<string, unknown> | null;
+
+  constructor(projection?: Record<string, unknown>) {
+    super();
+    this.projection = projection ?? null;
+  }
 
   from(table: FakeTable): this {
     this.tableName = table.__name;
@@ -237,10 +381,18 @@ class SelectChain extends AsyncChain<Row[]> {
     if (typeof pred === "function") this.filters.push(pred);
     return this;
   }
-  orderBy(...args: Array<OrderSpec | ColumnRef>): this {
+  orderBy(...args: Array<OrderSpec | ColumnRef | SqlPred>): this {
     for (const a of args) {
-      if ((a as OrderSpec).dir) this.orders.push(a as OrderSpec);
-      else if (isColRef(a)) this.orders.push({ col: a.__col, dir: "asc" });
+      if (isSqlMeta(a)) {
+        const m = a.reconstructed.match(/^\{\{COL:(\w+)\}\}\s+(asc|desc)$/i);
+        if (m) {
+          this.orders.push({ col: m[1], dir: m[2].toLowerCase() as "asc" | "desc" });
+        }
+      } else if ((a as OrderSpec).dir) {
+        this.orders.push(a as OrderSpec);
+      } else if (isColRef(a)) {
+        this.orders.push({ col: a.__col, dir: "asc" });
+      }
     }
     return this;
   }
@@ -257,19 +409,31 @@ class SelectChain extends AsyncChain<Row[]> {
       this.filters.every((p) => p(r)),
     );
     for (const ord of [...this.orders].reverse()) {
-      rows = [...rows].sort((a, b) => {
-        const av = a[ord.col] as number | string | null;
-        const bv = b[ord.col] as number | string | null;
-        if (av === bv) return 0;
-        if (av === null || av === undefined) return 1;
-        if (bv === null || bv === undefined) return -1;
-        const cmp = av < bv ? -1 : 1;
-        return ord.dir === "desc" ? -cmp : cmp;
-      });
+      rows = [...rows].sort((a, b) => compareForOrder(a[ord.col], b[ord.col], ord.dir));
     }
     const end =
       this.limitVal !== undefined ? this.offsetVal + this.limitVal : undefined;
-    return rows.slice(this.offsetVal, end);
+    rows = rows.slice(this.offsetVal, end);
+
+    if (!this.projection) return rows;
+
+    if (hasAggregateSpec(this.projection)) {
+      const projected: Row = {};
+      for (const [key, spec] of Object.entries(this.projection)) {
+        projected[key] = computeAggregate(spec, rows);
+      }
+      return [projected];
+    }
+
+    return rows.map((row) => {
+      const projected: Row = {};
+      for (const [key, spec] of Object.entries(this.projection!)) {
+        if (isColRef(spec)) projected[key] = row[spec.__col];
+        else if (isSqlMeta(spec)) projected[key] = computeAggregate(spec, [row]);
+        else projected[key] = spec;
+      }
+      return projected;
+    });
   }
 }
 
@@ -296,7 +460,7 @@ class InsertChain extends AsyncChain<Row[]> {
       ...store.defaults,
       ...v,
       id: store.nextId++,
-      createdAt: new Date(),
+      createdAt: nextClock(),
     };
     store.rows.push(row);
     if (this.returningSpec === null || this.returningSpec === true) {
@@ -373,8 +537,8 @@ class DeleteChain extends AsyncChain<void> {
 }
 
 export const db = {
-  select() {
-    return new SelectChain();
+  select(projection?: Record<string, unknown>) {
+    return new SelectChain(projection);
   },
   insert(table: FakeTable) {
     return new InsertChain(table.__name);

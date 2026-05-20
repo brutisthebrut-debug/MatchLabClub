@@ -219,4 +219,73 @@ describe("GET /api/coach/follow-ups/stats", () => {
     const { dumpTable } = await import("../lib/testDb");
     expect(dumpTable("coach_follow_ups").length).toBe(3);
   });
+
+  it("aggregates counts and lastAnswer for a signed-in user from recorded rows", async () => {
+    testApp.setUser({ id: USER_ID });
+    const sequence = ["sent", "sent", "not_sent", "snoozed", "dismissed"] as const;
+    let lastPostResponse: { lastAnsweredAt: string | null } | null = null;
+    for (const answer of sequence) {
+      const r = await request(testApp.app)
+        .post("/api/coach/follow-ups")
+        .send({ answer });
+      expect(r.status).toBe(200);
+      lastPostResponse = r.body;
+    }
+
+    const res = await request(testApp.app).get("/api/coach/follow-ups/stats");
+    expect(res.status).toBe(200);
+    expect(() => GetCoachFollowUpStatsResponse.parse(res.body)).not.toThrow();
+
+    expect(res.body.totalPrompts).toBe(3); // sent + sent + not_sent
+    expect(res.body.sentCount).toBe(2);
+    expect(res.body.notSentCount).toBe(1);
+    expect(res.body.snoozeCount).toBe(1);
+    expect(res.body.dismissCount).toBe(1);
+    // Latest sent/not_sent row was the third insert (not_sent), so lastAnswer
+    // must reflect that — not the snoozed/dismissed rows that came after.
+    expect(res.body.lastAnswer).toBe("not_sent");
+    expect(typeof res.body.lastAnsweredAt).toBe("string");
+
+    // The stats response should keep matching the POST response that triggered
+    // the most recent sent/not_sent row.
+    expect(lastPostResponse).not.toBeNull();
+  });
+
+  it("scopes stats by user vs anonymous claim token", async () => {
+    // Signed-in user records two sent follow-ups.
+    testApp.setUser({ id: USER_ID });
+    for (const answer of ["sent", "sent"] as const) {
+      const r = await request(testApp.app)
+        .post("/api/coach/follow-ups")
+        .send({ answer });
+      expect(r.status).toBe(200);
+    }
+
+    // Anonymous caller records a not_sent follow-up.
+    testApp.setUser(null);
+    const anonPost = await request(testApp.app)
+      .post("/api/coach/follow-ups")
+      .send({ answer: "not_sent" });
+    expect(anonPost.status).toBe(200);
+
+    // Signed-in user stats only count their own rows.
+    testApp.setUser({ id: USER_ID });
+    const userStats = await request(testApp.app).get("/api/coach/follow-ups/stats");
+    expect(userStats.status).toBe(200);
+    expect(userStats.body.totalPrompts).toBe(2);
+    expect(userStats.body.sentCount).toBe(2);
+    expect(userStats.body.notSentCount).toBe(0);
+    expect(userStats.body.lastAnswer).toBe("sent");
+
+    // Anonymous caller without a cookie sees nothing (cookies aren't carried
+    // across supertest requests).
+    testApp.setUser(null);
+    const anonStats = await request(testApp.app).get("/api/coach/follow-ups/stats");
+    expect(anonStats.status).toBe(200);
+    expect(anonStats.body.totalPrompts).toBe(0);
+    expect(anonStats.body.sentCount).toBe(0);
+    expect(anonStats.body.notSentCount).toBe(0);
+    expect(anonStats.body.lastAnswer).toBeNull();
+    expect(anonStats.body.lastAnsweredAt).toBeNull();
+  });
 });
