@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -20,6 +20,7 @@ import {
   getListInsightsQueryKey,
   getListAuditsQueryKey,
   useDeleteAudit,
+  generateAuditReport,
   type Audit,
 } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -32,8 +33,28 @@ import {
   ChevronRight, FlaskConical, Stethoscope, Zap,
   Wand2, ScanFace, BarChart2, Heart, Compass, BookOpen, Camera,
   MessageCircle, User, Map, Brain, Rss, Shield, Users, BarChart, Lightbulb, Layers,
-  Calendar, Star, Images, Trash2,
+  Calendar, Star, Images, Trash2, RefreshCw,
 } from "lucide-react";
+
+const STALE_REPORT_MS = 30 * 24 * 60 * 60 * 1000;
+
+function staleHintFromGeneratedAt(generatedAt: string | null | undefined): string | null {
+  if (!generatedAt) return null;
+  const t = new Date(generatedAt).getTime();
+  if (Number.isNaN(t)) return null;
+  const age = Date.now() - t;
+  if (age < STALE_REPORT_MS) return null;
+  const weeks = Math.floor(age / (7 * 24 * 60 * 60 * 1000));
+  if (weeks >= 52) {
+    const years = Math.floor(weeks / 52);
+    return `Report from ${years === 1 ? "a year" : `${years} years`} ago`;
+  }
+  if (weeks >= 8) {
+    const months = Math.floor(weeks / 4);
+    return `Report from ${months} months ago`;
+  }
+  return `Report from ${weeks} weeks ago`;
+}
 
 function ScoreRing({ score }: { score: number }) {
   const radius = 54;
@@ -232,6 +253,62 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const listAuditsKey = getListAuditsQueryKey();
   const { data: audits, isLoading: auditsLoading } = useListAudits();
+
+  const staleAudits = useMemo(
+    () =>
+      (audits ?? []).filter((a) =>
+        staleHintFromGeneratedAt(a.reportGeneratedAt) !== null,
+      ),
+    [audits],
+  );
+  const [refreshState, setRefreshState] = useState<{
+    inProgress: boolean;
+    done: number;
+    total: number;
+    failed: number;
+  }>({ inProgress: false, done: 0, total: 0, failed: 0 });
+
+  const refreshStaleReports = useCallback(async () => {
+    if (refreshState.inProgress || staleAudits.length === 0) return;
+    setRefreshState({
+      inProgress: true,
+      done: 0,
+      total: staleAudits.length,
+      failed: 0,
+    });
+    let failed = 0;
+    for (let i = 0; i < staleAudits.length; i++) {
+      const audit = staleAudits[i];
+      try {
+        await generateAuditReport(audit.id);
+      } catch {
+        failed += 1;
+      }
+      setRefreshState((s) => ({
+        ...s,
+        done: i + 1,
+        failed,
+      }));
+    }
+    await queryClient.invalidateQueries({ queryKey: listAuditsKey });
+    await queryClient.invalidateQueries({ queryKey: getGetAuditSummaryQueryKey() });
+    setRefreshState((s) => ({ ...s, inProgress: false }));
+    toast({
+      title:
+        failed === 0
+          ? "Reports refreshed"
+          : failed === staleAudits.length
+            ? "Couldn't refresh reports"
+            : "Reports refreshed with some errors",
+      description:
+        failed === 0
+          ? `Regenerated ${staleAudits.length} stale ${
+              staleAudits.length === 1 ? "report" : "reports"
+            }.`
+          : `${staleAudits.length - failed} refreshed, ${failed} failed.`,
+      variant: failed === staleAudits.length ? "destructive" : undefined,
+    });
+  }, [refreshState.inProgress, staleAudits, queryClient, listAuditsKey, toast]);
   const deleteAudit = useDeleteAudit({
     mutation: {
       onError: () => {
@@ -666,11 +743,30 @@ export default function Dashboard() {
           {/* Recent Audits */}
           {!isBrandNewUser && (
           <motion.div {...fadeUp(0.26)} className="glass border border-white/8 rounded-3xl p-5 sm:p-6 mb-5">
-            <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center justify-between mb-5 gap-2 flex-wrap">
               <h2 className="font-semibold text-foreground text-sm">Recent Audits</h2>
-              <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-xs" data-testid="button-new-audit">
-                <Link href="/start">New Audit <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
-              </Button>
+              <div className="flex items-center gap-2">
+                {hasRealAudits && staleAudits.length > 0 ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-[hsl(43_65%_75%)] hover:text-[hsl(43_65%_85%)] text-xs"
+                    onClick={refreshStaleReports}
+                    disabled={refreshState.inProgress}
+                    data-testid="button-refresh-stale-reports"
+                    aria-label={`Refresh ${staleAudits.length} stale ${staleAudits.length === 1 ? "report" : "reports"}`}
+                  >
+                    <RefreshCw className={`mr-1 h-3.5 w-3.5 ${refreshState.inProgress ? "animate-spin" : ""}`} />
+                    {refreshState.inProgress
+                      ? `Refreshing ${refreshState.done}/${refreshState.total}…`
+                      : `Refresh stale (${staleAudits.length})`}
+                  </Button>
+                ) : null}
+                <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-xs" data-testid="button-new-audit">
+                  <Link href="/start">New Audit <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
+                </Button>
+              </div>
             </div>
             {auditsLoading ? (
               <div className="space-y-3">{[1,2].map(i => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)}</div>
@@ -692,6 +788,7 @@ export default function Dashboard() {
                   const color = score >= 75 ? "hsl(142 55% 60%)" : score >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
                   const bg    = score >= 75 ? "hsl(142 55% 45% / 0.12)" : score >= 55 ? "hsl(43 65% 55% / 0.12)" : "hsl(348 55% 55% / 0.12)";
                   const date  = new Date(audit.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                  const staleHint = staleHintFromGeneratedAt(audit.reportGeneratedAt);
                   return (
                     <div
                       key={audit.id}
@@ -704,9 +801,19 @@ export default function Dashboard() {
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-foreground text-sm truncate">{audit.firstName}'s Signal Audit</p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                          <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5 flex-wrap">
                             <Clock className="w-3 h-3 flex-shrink-0" /> {date}
                             <span className="hidden sm:inline">· {audit.currentApps?.join(", ")}</span>
+                            {staleHint ? (
+                              <span
+                                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[hsl(43_65%_55%/0.35)] bg-[hsl(43_65%_55%/0.12)] text-[hsl(43_65%_75%)]"
+                                data-testid={`badge-stale-${audit.id}`}
+                                title="This report was generated more than 30 days ago. Regenerate it for a fresh take."
+                              >
+                                <RefreshCw className="w-2.5 h-2.5" />
+                                {staleHint}
+                              </span>
+                            ) : null}
                           </p>
                         </div>
                       </Link>

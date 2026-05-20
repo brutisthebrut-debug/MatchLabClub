@@ -1,5 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import {
+  generateAuditReport,
+  getGetAuditSummaryQueryKey,
   getListAuditsQueryKey,
   listAudits,
   useBulkDeleteAudits,
@@ -91,6 +93,26 @@ function formatDate(iso: string): string {
     return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   }
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+const STALE_REPORT_MS = 30 * 24 * 60 * 60 * 1000;
+
+function staleHintFromGeneratedAt(generatedAt: string | null | undefined): string | null {
+  if (!generatedAt) return null;
+  const t = new Date(generatedAt).getTime();
+  if (Number.isNaN(t)) return null;
+  const age = Date.now() - t;
+  if (age < STALE_REPORT_MS) return null;
+  const weeks = Math.floor(age / (7 * 24 * 60 * 60 * 1000));
+  if (weeks >= 52) {
+    const years = Math.floor(weeks / 52);
+    return `Report from ${years === 1 ? "a year" : `${years} years`} ago`;
+  }
+  if (weeks >= 8) {
+    const months = Math.floor(weeks / 4);
+    return `Report from ${months} months ago`;
+  }
+  return `Report from ${weeks} weeks ago`;
 }
 
 function scoreColor(
@@ -350,6 +372,53 @@ export default function MatchesScreen() {
     [data],
   );
 
+  const staleAudits = React.useMemo(
+    () =>
+      audits.filter(
+        (a) => staleHintFromGeneratedAt(a.reportGeneratedAt) !== null,
+      ),
+    [audits],
+  );
+
+  const [refreshState, setRefreshState] = React.useState<{
+    inProgress: boolean;
+    done: number;
+    total: number;
+    failed: number;
+  }>({ inProgress: false, done: 0, total: 0, failed: 0 });
+
+  const refreshStaleReports = React.useCallback(async () => {
+    if (refreshState.inProgress || staleAudits.length === 0) return;
+    const items = staleAudits.slice();
+    setRefreshState({
+      inProgress: true,
+      done: 0,
+      total: items.length,
+      failed: 0,
+    });
+    let failed = 0;
+    for (let i = 0; i < items.length; i++) {
+      try {
+        await generateAuditReport(items[i].id);
+      } catch {
+        failed += 1;
+      }
+      setRefreshState((s) => ({ ...s, done: i + 1, failed }));
+    }
+    await queryClient.invalidateQueries({ queryKey: listKey });
+    await queryClient.invalidateQueries({ queryKey: getGetAuditSummaryQueryKey() });
+    setRefreshState((s) => ({ ...s, inProgress: false }));
+    if (Platform.OS !== "web") {
+      const msg =
+        failed === 0
+          ? `Regenerated ${items.length} stale ${items.length === 1 ? "report" : "reports"}.`
+          : failed === items.length
+            ? "Couldn't refresh reports. Try again."
+            : `${items.length - failed} refreshed, ${failed} failed.`;
+      Alert.alert("Reports refreshed", msg);
+    }
+  }, [refreshState.inProgress, staleAudits, queryClient, listKey]);
+
   const onScroll = React.useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       if (!hasNextPage || isFetchingNextPage || isLoading) return;
@@ -607,6 +676,34 @@ export default function MatchesScreen() {
           </View>
         ) : null}
 
+        {!showDemo && audits.length > 0 && !selectionMode && staleAudits.length > 0 ? (
+          <Pressable
+            onPress={refreshStaleReports}
+            disabled={refreshState.inProgress}
+            accessibilityRole="button"
+            accessibilityLabel={`Refresh ${staleAudits.length} stale ${staleAudits.length === 1 ? "report" : "reports"}`}
+            style={({ pressed }) => [
+              styles.refreshBar,
+              {
+                backgroundColor: `${colors.gold}1a`,
+                borderColor: colors.gold,
+                opacity: refreshState.inProgress ? 0.8 : pressed ? 0.7 : 1,
+              },
+            ]}
+          >
+            {refreshState.inProgress ? (
+              <ActivityIndicator size="small" color={colors.gold} />
+            ) : (
+              <Feather name="refresh-cw" size={14} color={colors.gold} />
+            )}
+            <Text style={[styles.refreshBarText, { color: colors.gold }]}>
+              {refreshState.inProgress
+                ? `Refreshing ${refreshState.done}/${refreshState.total}…`
+                : `Refresh ${staleAudits.length} stale ${staleAudits.length === 1 ? "report" : "reports"}`}
+            </Text>
+          </Pressable>
+        ) : null}
+
         {!showDemo && audits.length > 0 ? (
           <>
             {selectionMode ? (
@@ -668,6 +765,7 @@ export default function MatchesScreen() {
                       readinessScore={audit.readinessScore ?? null}
                       bio={audit.bio}
                       createdAt={audit.createdAt}
+                      reportGeneratedAt={audit.reportGeneratedAt ?? null}
                       onPress={onRowPress}
                       onLongPress={onRowLongPress}
                       selected={isSelected}
@@ -715,6 +813,7 @@ export default function MatchesScreen() {
                       readinessScore={audit.readinessScore ?? null}
                       bio={audit.bio}
                       createdAt={audit.createdAt}
+                      reportGeneratedAt={audit.reportGeneratedAt ?? null}
                       onPress={onRowPress}
                       onLongPress={onRowLongPress}
                     />
@@ -877,6 +976,7 @@ function MatchRow({
   readinessScore,
   bio,
   createdAt,
+  reportGeneratedAt,
   onPress,
   onLongPress,
   disabled,
@@ -886,6 +986,7 @@ function MatchRow({
   readinessScore: number | null;
   bio: string;
   createdAt: string;
+  reportGeneratedAt?: string | null;
   onPress?: () => void;
   onLongPress?: () => void;
   disabled?: boolean;
@@ -894,6 +995,7 @@ function MatchRow({
   const colors = useColors();
   const thumbnail = bio.trim().slice(0, 110);
   const ring = scoreColor(readinessScore, colors);
+  const staleHint = staleHintFromGeneratedAt(reportGeneratedAt);
 
   return (
     <Pressable
@@ -950,6 +1052,23 @@ function MatchRow({
         >
           {thumbnail || "No bio text extracted."}
         </Text>
+        {staleHint ? (
+          <View
+            style={[
+              styles.stalePill,
+              {
+                backgroundColor: `${colors.gold}1f`,
+                borderColor: `${colors.gold}66`,
+              },
+            ]}
+            accessibilityLabel={`${staleHint}. Tap refresh to regenerate.`}
+          >
+            <Feather name="refresh-cw" size={10} color={colors.gold} />
+            <Text style={[styles.stalePillText, { color: colors.gold }]}>
+              {staleHint}
+            </Text>
+          </View>
+        ) : null}
       </View>
       {!disabled && selected === undefined ? (
         <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
@@ -1097,6 +1216,36 @@ const styles = StyleSheet.create({
     fontFamily: "PlusJakartaSans_600SemiBold",
   },
   list: { gap: 10 },
+  refreshBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  refreshBarText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  stalePill: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginTop: 4,
+  },
+  stalePillText: {
+    fontSize: 10,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.3,
+  },
   footerLoading: {
     flexDirection: "row",
     alignItems: "center",
