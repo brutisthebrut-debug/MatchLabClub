@@ -17,6 +17,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { motion } from "framer-motion";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -364,47 +372,67 @@ export default function Dashboard() {
     failed: number;
   }>({ inProgress: false, done: 0, total: 0, failed: 0 });
 
-  const refreshStaleReports = useCallback(async () => {
-    if (refreshState.inProgress || staleAudits.length === 0) return;
-    setRefreshState({
-      inProgress: true,
-      done: 0,
-      total: staleAudits.length,
-      failed: 0,
-    });
-    let failed = 0;
-    for (let i = 0; i < staleAudits.length; i++) {
-      const audit = staleAudits[i];
-      try {
-        await generateAuditReport(audit.id);
-      } catch {
-        failed += 1;
+  const refreshAudits = useCallback(
+    async (items: Audit[]) => {
+      if (refreshState.inProgress || items.length === 0) return;
+      setRefreshState({
+        inProgress: true,
+        done: 0,
+        total: items.length,
+        failed: 0,
+      });
+      let failed = 0;
+      for (let i = 0; i < items.length; i++) {
+        try {
+          await generateAuditReport(items[i].id);
+        } catch {
+          failed += 1;
+        }
+        setRefreshState((s) => ({ ...s, done: i + 1, failed }));
       }
-      setRefreshState((s) => ({
-        ...s,
-        done: i + 1,
-        failed,
-      }));
-    }
-    await queryClient.invalidateQueries({ queryKey: listAuditsKey });
-    await queryClient.invalidateQueries({ queryKey: getGetAuditSummaryQueryKey() });
-    setRefreshState((s) => ({ ...s, inProgress: false }));
-    toast({
-      title:
-        failed === 0
-          ? "Reports refreshed"
-          : failed === staleAudits.length
-            ? "Couldn't refresh reports"
-            : "Reports refreshed with some errors",
-      description:
-        failed === 0
-          ? `Regenerated ${staleAudits.length} stale ${
-              staleAudits.length === 1 ? "report" : "reports"
-            }.`
-          : `${staleAudits.length - failed} refreshed, ${failed} failed.`,
-      variant: failed === staleAudits.length ? "destructive" : undefined,
+      await queryClient.invalidateQueries({ queryKey: listAuditsKey });
+      await queryClient.invalidateQueries({ queryKey: getGetAuditSummaryQueryKey() });
+      setRefreshState((s) => ({ ...s, inProgress: false }));
+      toast({
+        title:
+          failed === 0
+            ? "Reports refreshed"
+            : failed === items.length
+              ? "Couldn't refresh reports"
+              : "Reports refreshed with some errors",
+        description:
+          failed === 0
+            ? `Regenerated ${items.length} stale ${
+                items.length === 1 ? "report" : "reports"
+              }.`
+            : `${items.length - failed} refreshed, ${failed} failed.`,
+        variant: failed === items.length ? "destructive" : undefined,
+      });
+    },
+    [refreshState.inProgress, queryClient, listAuditsKey, toast],
+  );
+
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerSelected, setPickerSelected] = useState<Set<Audit["id"]>>(
+    new Set(),
+  );
+  const openRefreshPicker = useCallback(() => {
+    setPickerSelected(new Set(staleAudits.map((a) => a.id)));
+    setPickerOpen(true);
+  }, [staleAudits]);
+  const togglePickerSelected = useCallback((id: Audit["id"]) => {
+    setPickerSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
-  }, [refreshState.inProgress, staleAudits, queryClient, listAuditsKey, toast]);
+  }, []);
+  const confirmRefreshPicker = useCallback(async () => {
+    const chosen = staleAudits.filter((a) => pickerSelected.has(a.id));
+    setPickerOpen(false);
+    await refreshAudits(chosen);
+  }, [staleAudits, pickerSelected, refreshAudits]);
 
   // Background auto-refresh: when the user has opted in, quietly regenerate a
   // small batch of the oldest stale reports once per session so the list view
@@ -985,7 +1013,7 @@ export default function Dashboard() {
                     variant="ghost"
                     size="sm"
                     className="text-[hsl(43_65%_75%)] hover:text-[hsl(43_65%_85%)] text-xs"
-                    onClick={refreshStaleReports}
+                    onClick={openRefreshPicker}
                     disabled={refreshState.inProgress}
                     data-testid="button-refresh-stale-reports"
                     aria-label={`Refresh ${staleAudits.length} stale ${staleAudits.length === 1 ? "report" : "reports"}`}
@@ -1252,6 +1280,98 @@ export default function Dashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <DialogContent
+          className="max-w-md"
+          data-testid="dialog-refresh-stale-picker"
+        >
+          <DialogHeader>
+            <DialogTitle>Refresh stale reports</DialogTitle>
+            <DialogDescription>
+              Pick which old audits to regenerate. Uncheck any you'd rather skip.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span data-testid="text-refresh-picker-count">
+              {pickerSelected.size} of {staleAudits.length} selected
+            </span>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                className="text-xs underline-offset-2 hover:underline disabled:opacity-50"
+                onClick={() =>
+                  setPickerSelected(new Set(staleAudits.map((a) => a.id)))
+                }
+                disabled={pickerSelected.size === staleAudits.length}
+                data-testid="button-refresh-picker-select-all"
+              >
+                Select all
+              </button>
+              <button
+                type="button"
+                className="text-xs underline-offset-2 hover:underline disabled:opacity-50"
+                onClick={() => setPickerSelected(new Set())}
+                disabled={pickerSelected.size === 0}
+                data-testid="button-refresh-picker-clear"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+          <div className="max-h-72 overflow-y-auto -mx-2 px-2 space-y-1.5">
+            {staleAudits.map((audit) => {
+              const checked = pickerSelected.has(audit.id);
+              const staleHint = staleHintFromGeneratedAt(audit.reportGeneratedAt);
+              return (
+                <label
+                  key={audit.id}
+                  className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition-colors ${
+                    checked
+                      ? "border-[hsl(268_52%_68%/0.5)] bg-[hsl(268_52%_68%/0.08)]"
+                      : "border-white/6 hover:bg-white/2"
+                  }`}
+                  data-testid={`row-refresh-picker-${audit.id}`}
+                >
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={() => togglePickerSelected(audit.id)}
+                    aria-label={`Refresh ${audit.firstName}'s audit`}
+                    data-testid={`checkbox-refresh-picker-${audit.id}`}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {audit.firstName}
+                      {typeof audit.age === "number" ? `, ${audit.age}` : ""}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {staleHint ?? "Stale report"}
+                    </p>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setPickerOpen(false)}
+              data-testid="button-refresh-picker-cancel"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={confirmRefreshPicker}
+              disabled={pickerSelected.size === 0}
+              data-testid="button-refresh-picker-confirm"
+            >
+              Refresh {pickerSelected.size}{" "}
+              {pickerSelected.size === 1 ? "report" : "reports"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

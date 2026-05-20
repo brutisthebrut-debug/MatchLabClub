@@ -22,6 +22,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Modal,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   Platform,
@@ -424,37 +425,61 @@ export default function MatchesScreen() {
     failed: number;
   }>({ inProgress: false, done: 0, total: 0, failed: 0 });
 
-  const refreshStaleReports = React.useCallback(async () => {
-    if (refreshState.inProgress || staleAudits.length === 0) return;
-    const items = staleAudits.slice();
-    setRefreshState({
-      inProgress: true,
-      done: 0,
-      total: items.length,
-      failed: 0,
-    });
-    let failed = 0;
-    for (let i = 0; i < items.length; i++) {
-      try {
-        await generateAuditReport(items[i].id);
-      } catch {
-        failed += 1;
+  const runRefresh = React.useCallback(
+    async (items: Audit[]) => {
+      if (refreshState.inProgress || items.length === 0) return;
+      setRefreshState({
+        inProgress: true,
+        done: 0,
+        total: items.length,
+        failed: 0,
+      });
+      let failed = 0;
+      for (let i = 0; i < items.length; i++) {
+        try {
+          await generateAuditReport(items[i].id);
+        } catch {
+          failed += 1;
+        }
+        setRefreshState((s) => ({ ...s, done: i + 1, failed }));
       }
-      setRefreshState((s) => ({ ...s, done: i + 1, failed }));
-    }
-    await queryClient.invalidateQueries({ queryKey: listKey });
-    await queryClient.invalidateQueries({ queryKey: getGetAuditSummaryQueryKey() });
-    setRefreshState((s) => ({ ...s, inProgress: false }));
-    if (Platform.OS !== "web") {
-      const msg =
-        failed === 0
-          ? `Regenerated ${items.length} stale ${items.length === 1 ? "report" : "reports"}.`
-          : failed === items.length
-            ? "Couldn't refresh reports. Try again."
-            : `${items.length - failed} refreshed, ${failed} failed.`;
-      Alert.alert("Reports refreshed", msg);
-    }
-  }, [refreshState.inProgress, staleAudits, queryClient, listKey]);
+      await queryClient.invalidateQueries({ queryKey: listKey });
+      await queryClient.invalidateQueries({ queryKey: getGetAuditSummaryQueryKey() });
+      setRefreshState((s) => ({ ...s, inProgress: false }));
+      if (Platform.OS !== "web") {
+        const msg =
+          failed === 0
+            ? `Regenerated ${items.length} stale ${items.length === 1 ? "report" : "reports"}.`
+            : failed === items.length
+              ? "Couldn't refresh reports. Try again."
+              : `${items.length - failed} refreshed, ${failed} failed.`;
+        Alert.alert("Reports refreshed", msg);
+      }
+    },
+    [refreshState.inProgress, queryClient, listKey],
+  );
+
+  const [pickerOpen, setPickerOpen] = React.useState(false);
+  const [pickerSelected, setPickerSelected] = React.useState<Set<Audit["id"]>>(
+    new Set(),
+  );
+  const openRefreshPicker = React.useCallback(() => {
+    setPickerSelected(new Set(staleAudits.map((a) => a.id)));
+    setPickerOpen(true);
+  }, [staleAudits]);
+  const togglePickerSelected = React.useCallback((id: Audit["id"]) => {
+    setPickerSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+  const confirmRefreshPicker = React.useCallback(async () => {
+    const chosen = staleAudits.filter((a) => pickerSelected.has(a.id));
+    setPickerOpen(false);
+    await runRefresh(chosen);
+  }, [staleAudits, pickerSelected, runRefresh]);
 
   // Background auto-refresh: when the user has opted in, quietly regenerate a
   // small batch of the oldest stale reports once per session. Failures never
@@ -753,10 +778,10 @@ export default function MatchesScreen() {
 
         {!showDemo && audits.length > 0 && !selectionMode && staleAudits.length > 0 ? (
           <Pressable
-            onPress={refreshStaleReports}
+            onPress={openRefreshPicker}
             disabled={refreshState.inProgress}
             accessibilityRole="button"
-            accessibilityLabel={`Refresh ${staleAudits.length} stale ${staleAudits.length === 1 ? "report" : "reports"}`}
+            accessibilityLabel={`Pick which of ${staleAudits.length} stale ${staleAudits.length === 1 ? "report" : "reports"} to refresh`}
             style={({ pressed }) => [
               styles.refreshBar,
               {
@@ -919,6 +944,181 @@ export default function MatchesScreen() {
           onUndo={undoPendingDelete}
         />
       ) : null}
+
+      <Modal
+        transparent
+        visible={pickerOpen}
+        animationType="fade"
+        onRequestClose={() => setPickerOpen(false)}
+      >
+        <View style={styles.pickerBackdrop}>
+          <View
+            testID="dialog-refresh-stale-picker"
+            style={[
+              styles.pickerCard,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+          >
+            <Text style={[styles.pickerTitle, { color: colors.foreground }]}>
+              Refresh stale reports
+            </Text>
+            <Text
+              style={[styles.pickerBody, { color: colors.mutedForeground }]}
+            >
+              Pick which old audits to regenerate. Uncheck any you'd rather skip.
+            </Text>
+            <View style={styles.pickerToolbar}>
+              <Text
+                testID="text-refresh-picker-count"
+                style={[
+                  styles.pickerToolbarText,
+                  { color: colors.mutedForeground },
+                ]}
+              >
+                {pickerSelected.size} of {staleAudits.length} selected
+              </Text>
+              <View style={styles.pickerToolbarBtns}>
+                <Pressable
+                  testID="button-refresh-picker-select-all"
+                  disabled={pickerSelected.size === staleAudits.length}
+                  onPress={() =>
+                    setPickerSelected(new Set(staleAudits.map((a) => a.id)))
+                  }
+                  style={({ pressed }) => [
+                    {
+                      opacity:
+                        pickerSelected.size === staleAudits.length
+                          ? 0.4
+                          : pressed
+                            ? 0.6
+                            : 1,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.pickerLinkText, { color: colors.gold }]}
+                  >
+                    Select all
+                  </Text>
+                </Pressable>
+                <Pressable
+                  testID="button-refresh-picker-clear"
+                  disabled={pickerSelected.size === 0}
+                  onPress={() => setPickerSelected(new Set())}
+                  style={({ pressed }) => [
+                    {
+                      opacity:
+                        pickerSelected.size === 0 ? 0.4 : pressed ? 0.6 : 1,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.pickerLinkText, { color: colors.gold }]}
+                  >
+                    Clear
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+            <ScrollView style={styles.pickerList} contentContainerStyle={{ gap: 8 }}>
+              {staleAudits.map((audit) => {
+                const checked = pickerSelected.has(audit.id);
+                const hint = staleHintFromGeneratedAt(audit.reportGeneratedAt);
+                return (
+                  <Pressable
+                    key={audit.id}
+                    testID={`row-refresh-picker-${audit.id}`}
+                    onPress={() => togglePickerSelected(audit.id)}
+                    style={({ pressed }) => [
+                      styles.pickerRow,
+                      {
+                        borderColor: checked ? colors.gold : colors.cardBorder,
+                        backgroundColor: checked
+                          ? `${colors.gold}14`
+                          : "transparent",
+                        opacity: pressed ? 0.85 : 1,
+                      },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.pickerCheckbox,
+                        {
+                          borderColor: checked ? colors.gold : colors.cardBorder,
+                          backgroundColor: checked ? colors.gold : "transparent",
+                        },
+                      ]}
+                    >
+                      {checked ? (
+                        <Feather name="check" size={14} color="#000" />
+                      ) : null}
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text
+                        style={[
+                          styles.pickerRowTitle,
+                          { color: colors.foreground },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {audit.firstName}
+                        {typeof audit.age === "number" ? `, ${audit.age}` : ""}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.pickerRowMeta,
+                          { color: colors.mutedForeground },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {hint ?? "Stale report"}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+            <View style={styles.pickerActions}>
+              <Pressable
+                testID="button-refresh-picker-cancel"
+                onPress={() => setPickerOpen(false)}
+                style={({ pressed }) => [
+                  styles.pickerBtn,
+                  {
+                    borderColor: colors.cardBorder,
+                    opacity: pressed ? 0.85 : 1,
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.pickerBtnLabel, { color: colors.foreground }]}
+                >
+                  Cancel
+                </Text>
+              </Pressable>
+              <Pressable
+                testID="button-refresh-picker-confirm"
+                disabled={pickerSelected.size === 0}
+                onPress={confirmRefreshPicker}
+                style={({ pressed }) => [
+                  styles.pickerBtn,
+                  styles.pickerBtnPrimary,
+                  {
+                    backgroundColor: colors.gold,
+                    opacity:
+                      pickerSelected.size === 0 ? 0.4 : pressed ? 0.85 : 1,
+                  },
+                ]}
+              >
+                <Text style={[styles.pickerBtnLabel, { color: "#000" }]}>
+                  Refresh {pickerSelected.size}{" "}
+                  {pickerSelected.size === 1 ? "report" : "reports"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1464,5 +1664,97 @@ const styles = StyleSheet.create({
     left: 0,
     bottom: 0,
     height: 2,
+  },
+  pickerBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+  pickerCard: {
+    width: "100%",
+    maxWidth: 420,
+    maxHeight: "85%",
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 18,
+    gap: 12,
+  },
+  pickerTitle: {
+    fontSize: 17,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  pickerBody: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 18,
+  },
+  pickerToolbar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  pickerToolbarText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  pickerToolbarBtns: {
+    flexDirection: "row",
+    gap: 14,
+  },
+  pickerLinkText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  pickerList: {
+    maxHeight: 320,
+  },
+  pickerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 10,
+  },
+  pickerCheckbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pickerRowTitle: {
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  pickerRowMeta: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
+    marginTop: 2,
+  },
+  pickerActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 10,
+    marginTop: 4,
+  },
+  pickerBtn: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    minWidth: 90,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pickerBtnPrimary: {
+    borderColor: "transparent",
+  },
+  pickerBtnLabel: {
+    fontSize: 13.5,
+    fontFamily: "PlusJakartaSans_700Bold",
   },
 });
