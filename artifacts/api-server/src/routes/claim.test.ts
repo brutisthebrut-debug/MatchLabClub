@@ -848,3 +848,301 @@ describe("POST /api/claim-anonymous/handoff/redeem", () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// Email Insights — anonymous-to-user claim (cookie path)
+// ---------------------------------------------------------------------------
+
+describe("Email Insights: anonymous-to-user claim via cookie (POST /api/claim-anonymous)", () => {
+  const INSIGHT_USER_ID = `test-insight-claim-${crypto.randomBytes(6).toString("hex")}`;
+
+  async function seedInsight(anonToken: string): Promise<number> {
+    const [row] = await db
+      .insert(emailInsightsTable)
+      .values({
+        sourceLabel: "test inbox",
+        pastedContent: "test conversation",
+        anonymousClaimToken: anonToken,
+      })
+      .returning({ id: emailInsightsTable.id });
+    return row.id;
+  }
+
+  it("transfers an anonymous insight to the logged-in user via the anon cookie", async () => {
+    const token = makeToken();
+    const insightId = await seedInsight(token);
+    testApp.setUser({ id: INSIGHT_USER_ID });
+
+    try {
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous")
+        .set("Cookie", [`${ANON_CLAIM_COOKIE}=${token}`])
+        .send({ insightIds: [insightId] });
+
+      expect(res.status).toBe(200);
+      expect(res.body.claimed.insights).toBe(1);
+
+      const [row] = await db
+        .select()
+        .from(emailInsightsTable)
+        .where(eq(emailInsightsTable.id, insightId));
+      expect(row.userId).toBe(INSIGHT_USER_ID);
+      expect(row.anonymousClaimToken).toBeNull();
+    } finally {
+      await db.delete(emailInsightsTable).where(eq(emailInsightsTable.id, insightId));
+    }
+  });
+
+  it("clears the anon_claim cookie after successfully claiming an insight", async () => {
+    const token = makeToken();
+    const insightId = await seedInsight(token);
+    testApp.setUser({ id: INSIGHT_USER_ID });
+
+    try {
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous")
+        .set("Cookie", [`${ANON_CLAIM_COOKIE}=${token}`])
+        .send({ insightIds: [insightId] });
+
+      expect(res.status).toBe(200);
+      const setCookie = res.headers["set-cookie"];
+      const cookieHeader = Array.isArray(setCookie)
+        ? setCookie.join(";")
+        : String(setCookie ?? "");
+      expect(cookieHeader).toMatch(new RegExp(`${ANON_CLAIM_COOKIE}=;`));
+    } finally {
+      await db.delete(emailInsightsTable).where(eq(emailInsightsTable.id, insightId));
+    }
+  });
+
+  it("does NOT claim an insight that belongs to a different anonymous token", async () => {
+    const callerToken = makeToken();
+    const strangerToken = makeToken();
+    const strangerInsightId = await seedInsight(strangerToken);
+    testApp.setUser({ id: INSIGHT_USER_ID });
+
+    try {
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous")
+        .set("Cookie", [`${ANON_CLAIM_COOKIE}=${callerToken}`])
+        .send({ insightIds: [strangerInsightId] });
+
+      expect(res.status).toBe(200);
+      expect(res.body.claimed.insights).toBe(0);
+
+      const [row] = await db
+        .select()
+        .from(emailInsightsTable)
+        .where(eq(emailInsightsTable.id, strangerInsightId));
+      expect(row.userId).toBeNull();
+      expect(row.anonymousClaimToken).toBe(strangerToken);
+    } finally {
+      await db.delete(emailInsightsTable).where(eq(emailInsightsTable.id, strangerInsightId));
+    }
+  });
+
+  it("returns 401 and leaves the insight unclaimed when the caller is not authenticated", async () => {
+    const token = makeToken();
+    const insightId = await seedInsight(token);
+    testApp.setUser(null);
+
+    try {
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous")
+        .set("Cookie", [`${ANON_CLAIM_COOKIE}=${token}`])
+        .send({ insightIds: [insightId] });
+
+      expect(res.status).toBe(401);
+
+      const [row] = await db
+        .select()
+        .from(emailInsightsTable)
+        .where(eq(emailInsightsTable.id, insightId));
+      expect(row.userId).toBeNull();
+      expect(row.anonymousClaimToken).toBe(token);
+    } finally {
+      await db.delete(emailInsightsTable).where(eq(emailInsightsTable.id, insightId));
+    }
+  });
+
+  it("claims nothing when the caller has no anon cookie (returns 200 with insights: 0)", async () => {
+    const token = makeToken();
+    const insightId = await seedInsight(token);
+    testApp.setUser({ id: INSIGHT_USER_ID });
+
+    try {
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous")
+        // no Cookie header
+        .send({ insightIds: [insightId] });
+
+      expect(res.status).toBe(200);
+      expect(res.body.claimed.insights).toBe(0);
+
+      const [row] = await db
+        .select()
+        .from(emailInsightsTable)
+        .where(eq(emailInsightsTable.id, insightId));
+      expect(row.userId).toBeNull();
+      expect(row.anonymousClaimToken).toBe(token);
+    } finally {
+      await db.delete(emailInsightsTable).where(eq(emailInsightsTable.id, insightId));
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Email Insights — anonymous-to-user claim (handoff / cross-device path)
+// ---------------------------------------------------------------------------
+
+describe("Email Insights: anonymous-to-user claim via handoff (POST /api/claim-anonymous/handoff/redeem)", () => {
+  const INSIGHT_HANDOFF_USER_ID = `test-insight-handoff-${crypto.randomBytes(6).toString("hex")}`;
+
+  async function seedInsight(anonToken: string): Promise<number> {
+    const [row] = await db
+      .insert(emailInsightsTable)
+      .values({
+        sourceLabel: "test inbox",
+        pastedContent: "test conversation",
+        anonymousClaimToken: anonToken,
+      })
+      .returning({ id: emailInsightsTable.id });
+    return row.id;
+  }
+
+  it("transfers an anonymous insight to the logged-in user via a signed handoff token (no cookie needed)", async () => {
+    const anonToken = makeToken();
+    const insightId = await seedInsight(anonToken);
+    const issued = signHandoffToken(anonToken);
+    testApp.setUser({ id: INSIGHT_HANDOFF_USER_ID });
+
+    try {
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        // intentionally no Cookie header — simulates a different device
+        .send({ handoff: issued.token, insightIds: [insightId] });
+
+      expect(res.status).toBe(200);
+      expect(res.body.claimed.insights).toBe(1);
+
+      const [row] = await db
+        .select()
+        .from(emailInsightsTable)
+        .where(eq(emailInsightsTable.id, insightId));
+      expect(row.userId).toBe(INSIGHT_HANDOFF_USER_ID);
+      expect(row.anonymousClaimToken).toBeNull();
+    } finally {
+      await db
+        .delete(handoffTokenRedemptionsTable)
+        .where(eq(handoffTokenRedemptionsTable.jti, issued.jti));
+      await db.delete(emailInsightsTable).where(eq(emailInsightsTable.id, insightId));
+    }
+  });
+
+  it("does NOT claim an insight tagged with a different anonymous token even with a valid handoff", async () => {
+    const callerAnonToken = makeToken();
+    const strangerAnonToken = makeToken();
+    const strangerInsightId = await seedInsight(strangerAnonToken);
+    const issued = signHandoffToken(callerAnonToken);
+    testApp.setUser({ id: INSIGHT_HANDOFF_USER_ID });
+
+    try {
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .send({ handoff: issued.token, insightIds: [strangerInsightId] });
+
+      expect(res.status).toBe(200);
+      expect(res.body.claimed.insights).toBe(0);
+
+      const [row] = await db
+        .select()
+        .from(emailInsightsTable)
+        .where(eq(emailInsightsTable.id, strangerInsightId));
+      expect(row.userId).toBeNull();
+      expect(row.anonymousClaimToken).toBe(strangerAnonToken);
+    } finally {
+      await db
+        .delete(handoffTokenRedemptionsTable)
+        .where(eq(handoffTokenRedemptionsTable.jti, issued.jti));
+      await db
+        .delete(emailInsightsTable)
+        .where(eq(emailInsightsTable.id, strangerInsightId));
+    }
+  });
+
+  it("rejects a replayed handoff token and leaves insight unclaimed on the second attempt", async () => {
+    const anonToken = makeToken();
+    const insightId = await seedInsight(anonToken);
+    const issued = signHandoffToken(anonToken);
+    testApp.setUser({ id: INSIGHT_HANDOFF_USER_ID });
+
+    try {
+      // First redemption succeeds.
+      const first = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .send({ handoff: issued.token, insightIds: [insightId] });
+      expect(first.status).toBe(200);
+      expect(first.body.claimed.insights).toBe(1);
+
+      // Seed a fresh insight under the same anon token to try to grab via replay.
+      const [replayRow] = await db
+        .insert(emailInsightsTable)
+        .values({
+          sourceLabel: "post-claim inbox",
+          pastedContent: "new conversation after claim",
+          anonymousClaimToken: anonToken,
+        })
+        .returning({ id: emailInsightsTable.id });
+      const replayInsightId = replayRow.id;
+
+      try {
+        // Second redemption with the same handoff must be rejected.
+        const second = await request(testApp.app)
+          .post("/api/claim-anonymous/handoff/redeem")
+          .send({ handoff: issued.token, insightIds: [replayInsightId] });
+        expect(second.status).toBe(400);
+
+        const [stillAnon] = await db
+          .select()
+          .from(emailInsightsTable)
+          .where(eq(emailInsightsTable.id, replayInsightId));
+        expect(stillAnon.userId).toBeNull();
+        expect(stillAnon.anonymousClaimToken).toBe(anonToken);
+      } finally {
+        await db
+          .delete(emailInsightsTable)
+          .where(eq(emailInsightsTable.id, replayInsightId));
+      }
+    } finally {
+      await db
+        .delete(handoffTokenRedemptionsTable)
+        .where(eq(handoffTokenRedemptionsTable.jti, issued.jti));
+      await db.delete(emailInsightsTable).where(eq(emailInsightsTable.id, insightId));
+    }
+  });
+
+  it("returns 401 and leaves the insight unclaimed when the caller is not authenticated", async () => {
+    const anonToken = makeToken();
+    const insightId = await seedInsight(anonToken);
+    const issued = signHandoffToken(anonToken);
+    testApp.setUser(null);
+
+    try {
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .send({ handoff: issued.token, insightIds: [insightId] });
+
+      expect(res.status).toBe(401);
+
+      const [row] = await db
+        .select()
+        .from(emailInsightsTable)
+        .where(eq(emailInsightsTable.id, insightId));
+      expect(row.userId).toBeNull();
+      expect(row.anonymousClaimToken).toBe(anonToken);
+    } finally {
+      // jti was never inserted (route bailed before DB write) so no redemption to clean up
+      await db.delete(emailInsightsTable).where(eq(emailInsightsTable.id, insightId));
+    }
+  });
+});
