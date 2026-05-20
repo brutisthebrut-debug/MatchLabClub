@@ -22,6 +22,10 @@ import {
 } from "../lib/anonClaimToken";
 import { signHandoffToken, verifyHandoffToken } from "../lib/handoffToken";
 import { originFor, sendExpiredLink } from "../lib/expiredLinkPage";
+import {
+  checkHandoffRateLimit,
+  handoffRateLimitKey,
+} from "../lib/handoffRateLimit";
 
 function sendExpiredHandoff(
   req: Request,
@@ -275,6 +279,16 @@ router.post("/claim-anonymous/handoff/issue", (req, res): void => {
     });
     return;
   }
+
+  const rlKey = handoffRateLimitKey(req.ip, anonToken);
+  if (!checkHandoffRateLimit(rlKey)) {
+    res.status(429).json({
+      error:
+        "Too many handoff link requests. Please wait a minute before trying again.",
+    });
+    return;
+  }
+
   const issued = signHandoffToken(anonToken);
   res.json(
     IssueAnonymousClaimHandoffResponse.parse({
