@@ -7,12 +7,59 @@ const SCHEDULED_ID_KEY = "nldc.coach.scheduledReminderId";
 const DRAFT_KEY = "nldc.coach.savedDraft";
 const SEND_STATS_KEY = "nldc.coach.sendThroughStats";
 const PENDING_PROMPT_KEY = "nldc.coach.pendingFollowUpPrompt";
+const PREFS_KEY = "nldc.coach.reminderPrefs";
 
 export const COACH_REMINDER_DELAY_SECONDS = 2 * 60 * 60;
 export const COACH_NOTIFICATION_TYPE = "coach-unsent-reply";
 export const COACH_NOTIFICATION_CATEGORY = "coach-unsent-reply-followup";
 export const COACH_ACTION_SENT = "coach-followup-sent";
 export const COACH_ACTION_NOT_SENT = "coach-followup-not-sent";
+
+export const COACH_REMINDER_DELAY_OPTIONS: Array<{
+  label: string;
+  seconds: number;
+}> = [
+  { label: "30 min", seconds: 30 * 60 },
+  { label: "2 hr", seconds: 2 * 60 * 60 },
+  { label: "6 hr", seconds: 6 * 60 * 60 },
+];
+
+export interface CoachReminderPrefs {
+  enabled: boolean;
+  delaySeconds: number;
+}
+
+export const DEFAULT_COACH_REMINDER_PREFS: CoachReminderPrefs = {
+  enabled: true,
+  delaySeconds: COACH_REMINDER_DELAY_SECONDS,
+};
+
+export async function loadCoachReminderPrefs(): Promise<CoachReminderPrefs> {
+  try {
+    const raw = await AsyncStorage.getItem(PREFS_KEY);
+    if (!raw) return { ...DEFAULT_COACH_REMINDER_PREFS };
+    const parsed = JSON.parse(raw) as Partial<CoachReminderPrefs>;
+    const delaySeconds =
+      typeof parsed.delaySeconds === "number" && parsed.delaySeconds > 0
+        ? parsed.delaySeconds
+        : DEFAULT_COACH_REMINDER_PREFS.delaySeconds;
+    const enabled =
+      typeof parsed.enabled === "boolean"
+        ? parsed.enabled
+        : DEFAULT_COACH_REMINDER_PREFS.enabled;
+    return { enabled, delaySeconds };
+  } catch {
+    return { ...DEFAULT_COACH_REMINDER_PREFS };
+  }
+}
+
+export async function saveCoachReminderPrefs(prefs: CoachReminderPrefs) {
+  try {
+    await AsyncStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  } catch {
+    // ignore
+  }
+}
 
 export interface SavedCoachDraft {
   matchName: string;
@@ -115,10 +162,15 @@ export async function scheduleCoachReminder(opts: {
   delaySeconds?: number;
 }): Promise<string | null> {
   if (Platform.OS === "web") return null;
+  const prefs = await loadCoachReminderPrefs();
+  if (!prefs.enabled) {
+    await cancelCoachReminder();
+    return null;
+  }
   const permission = await Notifications.getPermissionsAsync();
   if (!permission.granted) return null;
   await cancelCoachReminder();
-  const delay = opts.delaySeconds ?? COACH_REMINDER_DELAY_SECONDS;
+  const delay = opts.delaySeconds ?? prefs.delaySeconds;
   const who = opts.matchName.trim() || "your match";
   try {
     const id = await Notifications.scheduleNotificationAsync({

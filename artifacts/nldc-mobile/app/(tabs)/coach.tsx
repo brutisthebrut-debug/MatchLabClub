@@ -6,7 +6,9 @@ import {
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Platform,
+  Pressable,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
@@ -21,15 +23,19 @@ import { useColors } from "@/hooks/useColors";
 import {
   cancelCoachReminder,
   clearCoachDraft,
+  COACH_REMINDER_DELAY_OPTIONS,
+  type CoachReminderPrefs,
   consumePendingCoachFollowUpPrompt,
+  DEFAULT_COACH_REMINDER_PREFS,
   ensureCoachNotificationPermission,
   loadCoachDraft,
+  loadCoachReminderPrefs,
   recordCoachFollowUp,
   saveCoachDraft,
+  saveCoachReminderPrefs,
   scheduleCoachReminder,
 } from "@/lib/coachNotifications";
 import { useFocusEffect } from "expo-router";
-import { Pressable } from "react-native";
 
 interface Reply {
   style: string;
@@ -74,6 +80,9 @@ export default function CoachScreen() {
   const [lastMessage, setLastMessage] = useState("");
   const [results, setResults] = useState<Reply[] | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [reminderPrefs, setReminderPrefs] = useState<CoachReminderPrefs>(
+    DEFAULT_COACH_REMINDER_PREFS,
+  );
 
   const createSession = useCreateMessageCoachingSession();
   const coach = useCoachMessage();
@@ -122,10 +131,30 @@ export default function CoachScreen() {
       setLastMessage(draft.lastMessage);
       setResults(draft.replies);
     });
+    loadCoachReminderPrefs().then((prefs) => {
+      if (cancelled) return;
+      setReminderPrefs(prefs);
+    });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  async function updateReminderPrefs(next: CoachReminderPrefs) {
+    setReminderPrefs(next);
+    await saveCoachReminderPrefs(next);
+    if (!next.enabled) {
+      await cancelCoachReminder();
+    }
+  }
+
+  async function onToggleReminder(value: boolean) {
+    await updateReminderPrefs({ ...reminderPrefs, enabled: value });
+  }
+
+  async function onPickDelay(seconds: number) {
+    await updateReminderPrefs({ ...reminderPrefs, delaySeconds: seconds });
+  }
 
   async function handleReplyCopied() {
     await cancelCoachReminder();
@@ -356,6 +385,72 @@ export default function CoachScreen() {
           />
         </View>
 
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.card, borderColor: colors.cardBorder },
+          ]}
+        >
+          <View style={styles.settingsHeader}>
+            <View style={styles.settingsHeaderText}>
+              <Text style={[styles.settingsTitle, { color: colors.foreground }]}>
+                Unsent-reply nudge
+              </Text>
+              <Text
+                style={[
+                  styles.settingsSubtitle,
+                  { color: colors.mutedForeground },
+                ]}
+              >
+                {reminderPrefs.enabled
+                  ? "We'll check back in if you haven't sent a reply yet."
+                  : "Off — we won't remind you about drafted replies."}
+              </Text>
+            </View>
+            <Switch
+              value={reminderPrefs.enabled}
+              onValueChange={onToggleReminder}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={Platform.OS === "android" ? colors.background : undefined}
+            />
+          </View>
+
+          <View style={styles.delayRow}>
+            {COACH_REMINDER_DELAY_OPTIONS.map((opt) => {
+              const selected = reminderPrefs.delaySeconds === opt.seconds;
+              const disabled = !reminderPrefs.enabled;
+              return (
+                <Pressable
+                  key={opt.seconds}
+                  onPress={() => onPickDelay(opt.seconds)}
+                  disabled={disabled}
+                  style={[
+                    styles.delayChip,
+                    {
+                      borderColor: selected ? colors.primary : colors.border,
+                      backgroundColor: selected
+                        ? `${colors.primary}22`
+                        : colors.input,
+                      opacity: disabled ? 0.45 : 1,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.delayChipText,
+                      {
+                        color: selected ? colors.primary : colors.foreground,
+                      },
+                    ]}
+                  >
+                    {opt.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
         <View style={styles.resultsHeader}>
           <Text style={[styles.resultsTitle, { color: colors.foreground }]}>
             {showingDemo ? "Sample replies" : "Your replies"}
@@ -515,5 +610,35 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "PlusJakartaSans_500Medium",
     lineHeight: 18,
+  },
+  settingsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  settingsHeaderText: { flex: 1, gap: 2 },
+  settingsTitle: {
+    fontSize: 15,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  settingsSubtitle: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  delayRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  delayChip: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignItems: "center",
+  },
+  delayChipText: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_600SemiBold",
   },
 });
