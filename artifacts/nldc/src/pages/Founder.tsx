@@ -563,10 +563,13 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
             First-try success rate fell below {pct(data.alertThreshold.firstTrySuccessRate)} over the
             last {data.alertThreshold.windowSize} requests (min {data.alertThreshold.minSample} samples).
           </p>
-          <ul className="text-xs text-foreground/85 space-y-1 pl-1">
+          <ul className="text-xs text-foreground/85 space-y-1.5 pl-1">
             {data.alerts.map((a) => (
-              <li key={a.toolName} className="flex items-center justify-between gap-2">
-                <span className="truncate">{a.toolName}</span>
+              <li key={a.toolName} className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{a.toolName}</p>
+                  <p className="text-[11px] text-muted-foreground/70 truncate">{a.reason}</p>
+                </div>
                 <span className="text-muted-foreground/70 shrink-0">
                   {pct(a.recentFirstTrySuccessRate)} · last {a.recentTotal}
                 </span>

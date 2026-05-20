@@ -44,6 +44,34 @@ interface ThresholdConfig {
   threshold: number;
 }
 
+function buildAlertReason(args: {
+  recentTotal: number;
+  recentFallbacks: number;
+  recentValidationFailures: number;
+  recentRetried: number;
+  recentFirstTrySuccessRate: number;
+}): string {
+  const { recentTotal, recentFallbacks, recentValidationFailures, recentRetried, recentFirstTrySuccessRate } = args;
+  const fallbackPct = recentTotal > 0 ? Math.round((recentFallbacks / recentTotal) * 100) : 0;
+  const successPct = Math.round(recentFirstTrySuccessRate * 100);
+
+  // Pick the dominant failure mode in the recent window.
+  if (
+    recentFallbacks > 0 &&
+    recentFallbacks >= recentValidationFailures &&
+    recentFallbacks >= recentRetried
+  ) {
+    return `${fallbackPct}% of recent runs used the fallback (${recentFallbacks}/${recentTotal})`;
+  }
+  if (recentValidationFailures > 0 && recentValidationFailures >= recentRetried) {
+    return `${recentValidationFailures} validation failure${recentValidationFailures === 1 ? "" : "s"} in last ${recentTotal}`;
+  }
+  if (recentRetried > 0) {
+    return `${recentRetried} of last ${recentTotal} needed a retry`;
+  }
+  return `First-try success ${successPct}% over last ${recentTotal}`;
+}
+
 async function loadThresholds(): Promise<{
   global: ThresholdConfig;
   perTool: Map<string, ThresholdConfig>;
@@ -106,13 +134,15 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
     rn: string | number;
     attempts: number;
     is_fallback: boolean;
+    validated: boolean;
   }>(sql`
-    select tool_name, attempts, is_fallback, rn
+    select tool_name, attempts, is_fallback, validated, rn
     from (
       select
         tool_name,
         attempts,
         is_fallback,
+        validated,
         row_number() over (partition by tool_name order by created_at desc) as rn
       from ai_request_metrics
     ) t
@@ -120,13 +150,17 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
     order by tool_name, rn
   `);
 
-  const recentByTool = new Map<string, Array<{ rn: number; attempts: number; isFallback: boolean }>>();
+  const recentByTool = new Map<
+    string,
+    Array<{ rn: number; attempts: number; isFallback: boolean; validated: boolean }>
+  >();
   for (const r of recentRows.rows ?? []) {
     const arr = recentByTool.get(r.tool_name) ?? [];
     arr.push({
       rn: Number(r.rn),
       attempts: Number(r.attempts),
       isFallback: Boolean(r.is_fallback),
+      validated: Boolean(r.validated),
     });
     recentByTool.set(r.tool_name, arr);
   }
@@ -162,6 +196,8 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
     const recentTotal = sliced.length;
     const recentFirstTryOk = sliced.filter((r) => r.attempts === 1 && !r.isFallback).length;
     const recentFallbacks = sliced.filter((r) => r.isFallback).length;
+    const recentValidationFailures = sliced.filter((r) => !r.validated).length;
+    const recentRetried = sliced.filter((r) => !r.isFallback && r.attempts > 1).length;
     const recentRate = recentTotal > 0 ? recentFirstTryOk / recentTotal : 0;
     const alert = recentTotal >= cfg.minSample && recentRate < cfg.threshold;
     return {
@@ -180,6 +216,8 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
         total: recentTotal,
         firstTryOk: recentFirstTryOk,
         fallbacks: recentFallbacks,
+        validationFailures: recentValidationFailures,
+        retried: recentRetried,
         firstTrySuccessRate: recentRate,
       },
       last24h: {
@@ -237,6 +275,13 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
       toolName: t.toolName,
       recentTotal: t.recent.total,
       recentFirstTrySuccessRate: t.recent.firstTrySuccessRate,
+      reason: buildAlertReason({
+        recentTotal: t.recent.total,
+        recentFallbacks: t.recent.fallbacks,
+        recentValidationFailures: t.recent.validationFailures,
+        recentRetried: t.recent.retried,
+        recentFirstTrySuccessRate: t.recent.firstTrySuccessRate,
+      }),
     })),
   });
 });

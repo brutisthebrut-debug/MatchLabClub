@@ -140,7 +140,12 @@ export interface AiMetricsResponse {
     firstTrySuccessRate: number;
   };
   perToolOverrides: AiPerToolThreshold[];
-  alerts: { toolName: string; recentTotal: number; recentFirstTrySuccessRate: number }[];
+  alerts: {
+    toolName: string;
+    recentTotal: number;
+    recentFirstTrySuccessRate: number;
+    reason: string;
+  }[];
 }
 
 export const getAiMetrics = () =>
