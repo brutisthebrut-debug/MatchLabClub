@@ -27,6 +27,8 @@ vi.mock("@workspace/api-client-react", () => ({
   useCreateAudit: () => ({ mutateAsync: createAuditMutateAsync, isPending: false }),
   useGenerateAuditReport: () => ({ mutateAsync: generateReportMutateAsync, isPending: false }),
   getListAuditsQueryKey: () => ["list-audits"],
+  useGetAiFallbackRate: () => ({ data: null, isLoading: false }),
+  getGetAiFallbackRateQueryKey: () => ["ai-fallback-rate"],
 }));
 
 vi.mock("@/components/layout/AppLayout", () => ({

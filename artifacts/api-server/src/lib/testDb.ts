@@ -195,12 +195,13 @@ export const desc = (col: ColumnRef): OrderSpec => ({ col: col.__col, dir: "desc
 export const asc = (col: ColumnRef): OrderSpec => ({ col: col.__col, dir: "asc" });
 
 // Routes use sql`false` to mean "no rows". We expose `sql` as a tag function
-// that returns a predicate matching `false` literal — anything else returns true.
+// that returns a predicate evaluating the template. In-memory we can't run real
+// Postgres functions (word_similarity, similarity, %, GREATEST) so all raw SQL
+// expressions default to `false` — only the typed drizzle operators (ilike, eq,
+// etc.) do actual matching. This prevents postgres-only conditions from
+// incorrectly matching all rows in tests.
 type SqlTag = ((strings: TemplateStringsArray, ...values: unknown[]) => Pred) & Record<string, unknown>;
-export const sql: SqlTag = ((strings: TemplateStringsArray) => {
-  if (strings && strings.join("").trim() === "false") return () => false;
-  return () => true;
-}) as SqlTag;
+export const sql: SqlTag = (() => false) as unknown as SqlTag;
 
 // ---- Chainable query builder --------------------------------------------
 

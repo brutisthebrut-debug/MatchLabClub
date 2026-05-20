@@ -163,7 +163,10 @@ describe("checkAiReliabilityAlerts", () => {
     const result = await checkAiReliabilityAlerts();
     expect(result.cleared).toContain(toolName);
     expect(result.breached).not.toContain(toolName);
-    expect(sendMailMock).not.toHaveBeenCalled();
+    expect(sendMailMock).toHaveBeenCalledTimes(1);
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({ subject: expect.stringContaining("recovered") }),
+    );
 
     const states = await db
       .select()

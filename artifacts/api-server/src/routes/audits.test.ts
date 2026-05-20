@@ -698,10 +698,12 @@ describe("POST /api/audits/bulk-delete", () => {
     expect([...res.body.deletedIds].sort()).toEqual([mine1, mine2].sort());
 
     const { dumpTable } = await import("../lib/testDb");
-    const remaining = dumpTable("audits").map((r) => r.id);
-    expect(remaining).not.toContain(mine1);
-    expect(remaining).not.toContain(mine2);
-    expect(remaining).toContain(theirs);
+    const allRows = dumpTable("audits");
+    const deleted = allRows.filter((r) => r.deletedAt !== null && r.deletedAt !== undefined).map((r) => r.id);
+    const kept = allRows.filter((r) => r.deletedAt === null || r.deletedAt === undefined).map((r) => r.id);
+    expect(deleted).toContain(mine1);
+    expect(deleted).toContain(mine2);
+    expect(kept).toContain(theirs);
   });
 
   it("scopes anonymous bulk deletes by anon_claim cookie", async () => {
@@ -752,11 +754,13 @@ describe("POST /api/audits/bulk-delete", () => {
     expect([...res.body.deletedIds].sort()).toEqual([a1Id, a2Id].sort());
 
     const { dumpTable } = await import("../lib/testDb");
-    const remaining = dumpTable("audits").map((r) => r.id);
-    expect(remaining).not.toContain(a1Id);
-    expect(remaining).not.toContain(a2Id);
-    expect(remaining).toContain(bId);
-    expect(remaining).toContain(authedId);
+    const allRows = dumpTable("audits");
+    const deleted = allRows.filter((r) => r.deletedAt !== null && r.deletedAt !== undefined).map((r) => r.id);
+    const kept = allRows.filter((r) => r.deletedAt === null || r.deletedAt === undefined).map((r) => r.id);
+    expect(deleted).toContain(a1Id);
+    expect(deleted).toContain(a2Id);
+    expect(kept).toContain(bId);
+    expect(kept).toContain(authedId);
   });
 
   it("returns an empty deletedIds list (not 404) when caller owns none of the ids", async () => {
