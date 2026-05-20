@@ -1239,6 +1239,80 @@ export default function AuditDetailScreen() {
             </Section>
 
             <Section
+              title="Rewritten bio"
+              iconBg={`${colors.violet}22`}
+              iconColor={colors.violet}
+              icon="feather"
+              headerRight={<PrevCopyButton text={report.rewrittenBio} />}
+            >
+              <Text style={[styles.body, { color: colors.foreground }]} testID="text-rewritten-bio">
+                {report.rewrittenBio}
+              </Text>
+            </Section>
+
+            {report.rewrittenPrompts && report.rewrittenPrompts.length > 0 ? (
+              <Section
+                title="Prompt rewrites"
+                iconBg={`${colors.gold}22`}
+                iconColor={colors.gold}
+                icon="message-square"
+              >
+                {report.rewrittenPrompts.map((p, i) => (
+                  <View
+                    key={`rp-${i}`}
+                    style={styles.prevPromptItem}
+                    testID={`card-prompt-rewrite-${i}`}
+                  >
+                    <Text style={[styles.prevPromptOriginal, { color: colors.mutedForeground }]}>
+                      {p.original}
+                    </Text>
+                    <View style={styles.prevPromptRewrittenRow}>
+                      <Text style={[styles.prevPromptRewritten, { color: colors.foreground, flex: 1 }]}>
+                        {p.rewritten}
+                      </Text>
+                      <PrevCopyButton text={p.rewritten} />
+                    </View>
+                    {p.tip ? (
+                      <Text style={[styles.body, { color: colors.mutedForeground, fontSize: 12 }]}>
+                        {p.tip}
+                      </Text>
+                    ) : null}
+                  </View>
+                ))}
+              </Section>
+            ) : null}
+
+            {report.actionPlan && report.actionPlan.length > 0 ? (
+              <Section
+                title="Action plan"
+                iconBg={`${colors.violet}22`}
+                iconColor={colors.violet}
+                icon="target"
+              >
+                {report.actionPlan.map((item, i) => (
+                  <View
+                    key={`ap-${i}`}
+                    style={styles.prevActionItem}
+                    testID={`card-action-item-${i}`}
+                  >
+                    <View style={[styles.prevActionPriority, { backgroundColor: colors.violet }]}>
+                      <Text style={styles.prevActionPriorityText}>{item.priority}</Text>
+                    </View>
+                    <View style={styles.prevActionBody}>
+                      <Text style={[styles.prevActionTitle, { color: colors.foreground }]}>
+                        {item.title}
+                      </Text>
+                      <Text style={[styles.prevActionDesc, { color: colors.mutedForeground }]}>
+                        {item.description}
+                      </Text>
+                    </View>
+                    <PrevCopyButton text={`${item.title}: ${item.description}`} />
+                  </View>
+                ))}
+              </Section>
+            ) : null}
+
+            <Section
               title="How to open"
               iconBg={`${colors.gold}22`}
               iconColor={colors.gold}

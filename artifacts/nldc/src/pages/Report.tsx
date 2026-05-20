@@ -1078,6 +1078,7 @@ export default function Report() {
                     </div>
                     <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{item.description}</p>
                   </div>
+                  <CopyButton text={`${item.title}: ${item.description}`} />
                 </div>
               ))}
             </div>
