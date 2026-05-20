@@ -111,6 +111,106 @@ My simple pleasures: The 45 minutes before the restaurant fills up. A dog that d
     after: `I run product at a startup that's about to be very loud (can't say more yet). I got the Stanford MBA, did the Google thing, and at some point realised ambition is more interesting when it has a 'why' behind it. I'm still figuring out what mine is. Outside work: marathon training, extremely opinionated about Italian food, and currently reading everything Zadie Smith has ever written. Looking for someone with a real interior life, not just a good CV.`,
     why: "Kept the credentials but made them feel earned rather than listed. Added the question behind the career. The 'looking for' section now signals what she actually wants, not just what she requires.",
   },
+  {
+    scenario: "The Late Bloomer",
+    platform: "OkCupid",
+    platformColor: "hsl(15 80% 60%)",
+    badge: "Returning to dating",
+    context: "Woman, 44. Divorced after a 14-year marriage. Back on apps for the first time since 2010. Her profile apologises for existing before saying anything real.",
+    before: `I know I'm a bit old for this but I decided to give it a try. I've been focused on my kids and career for a while and now I'm ready to date again. I'm told I'm funny once you get to know me. Looking for someone patient and kind.`,
+    after: `I spent my thirties building things — a career I'm proud of, two kids who are genuinely interesting people, and a very strong opinion about the correct way to make a risotto. I'm new to apps (dating was different in 2010) and I'm not in a rush. If you also think the third date is where conversations actually start, let's talk.`,
+    why: "Removed all the pre-apologies. Framing age as context rather than liability changed everything. Specific details — risotto, 2010, third date — do more work than any claim about personality.",
+  },
+  {
+    scenario: "Newly Single After Five Years",
+    platform: "Hinge",
+    platformColor: "hsl(268 55% 65%)",
+    badge: "Life transition",
+    context: "Man, 36. Three months out of a long-term relationship. His profile either overclaims total readiness or quietly signals he's not ready — both are off-putting.",
+    before: `Just got out of a long-term relationship and ready to start fresh. I'm independent, I know what I want, and I'm not looking for anything casual. Life's too short. Let's see where this goes.`,
+    after: `I'm three months out of a long relationship and I'm not going to pretend I have everything figured out. What I do know: I'm a good cook, I show up when I say I will, and I've learned that the fourth season of a show is usually when you find out if someone is actually funny. Looking for something real — whenever that happens.`,
+    why: "Honesty about the transition builds trust faster than claiming total readiness. Specific details humanise him. 'Whenever that happens' signals patience, which is exactly what someone newly single should project.",
+  },
+  {
+    scenario: "The Re-engagement Message",
+    platform: "Hinge",
+    platformColor: "hsl(268 55% 65%)",
+    badge: "Message coaching",
+    context: "Three days since his last message. She seemed interested. He wants to check in without appearing desperate or making her responsible for managing his anxiety.",
+    before: `Hey I wasn't sure if you saw my last message but just wanted to check in and see how your week is going? No pressure at all if you're busy I totally understand 😊`,
+    after: `Hey — saw you're into hiking. Have you done the Snowdon ridge route or is that still on the list?`,
+    why: "One specific question from her profile. Zero mention of the gap. No hedging or apologies. The original asked her to manage his feelings. This one just asks something she might actually want to answer.",
+  },
+  {
+    scenario: "Direct Consensual Flirt",
+    platform: "Feeld",
+    platformColor: "hsl(190 55% 60%)",
+    badge: "Flirting style",
+    context: "Non-binary person, 29. Knows what they want and isn't shy — but their opener is too vague to feel warm or safe. Directness without warmth reads as cold.",
+    before: `Hey there 👋 Your profile is really interesting. I'd love to get to know you better — DM me if you're interested!`,
+    after: `Your photos and profile made me smile — there's a warmth in how you've written it that I don't see often here. I'm Alex, 29, they/them. Curious, direct, and bad at small talk in the best possible way. What are you actually looking for right now?`,
+    why: "Named something specific. Introduced clearly. The closing question opens a real conversation and implicitly asks permission to have it. Consent and clarity feel natural, not clinical.",
+  },
+  {
+    scenario: "The Clean Exit",
+    platform: "Hinge",
+    platformColor: "hsl(268 55% 65%)",
+    badge: "Message coaching",
+    context: "She's been messaging someone for two weeks. Conversation keeps restarting after long gaps. She's not interested enough to meet but doesn't know how to close it without ghosting.",
+    before: `(She just stops replying and hopes they eventually stop messaging)`,
+    after: `Hey — I've really enjoyed our conversation but I don't think I'm the right match for you. No hard feelings at all. I hope you find someone great.`,
+    why: "Nineteen words that close the loop cleanly. No ghost, no fake busy, no vague 'let's catch up soon'. The other person gets closure. She gets to feel good about how she handled it. Both outcomes matter.",
+  },
+  {
+    scenario: "The Overclaimer",
+    platform: "Bumble",
+    platformColor: "hsl(43 75% 55%)",
+    badge: "Profile rewrite",
+    context: "Man, 32. Profile crammed with adjectives and superlatives. 'Ambitious, passionate, loyal, adventurous, loves to laugh.' Every claim needs to be shown — not stated.",
+    before: `Ambitious and passionate about everything I do. Fiercely loyal to the people I love. Love adventures — I've been to 23 countries. Looking for someone who matches my energy and loves to laugh. Life's too short not to live it fully.`,
+    after: `I run a small architecture firm — I got into it because I wanted to see the things I design actually used by people. 23 countries in, mostly solo, mostly without a plan. My friends describe me as the person who asks too many follow-up questions. Looking for someone with a genuine interest in something — anything, really.`,
+    why: "Every adjective in the original becomes a specific detail in the rewrite. 'Ambitious' becomes the architecture firm and why. 'Adventurous' becomes 23 countries solo without a plan. 'Loves to laugh' becomes the follow-up questions. Specifics create the impression that adjectives only claim.",
+  },
+  {
+    scenario: "Bi Visibility on a Dating App",
+    platform: "OkCupid",
+    platformColor: "hsl(15 80% 60%)",
+    badge: "Inclusive",
+    context: "Bi woman, 27. Profile doesn't mention her sexuality because she's been burned before. But vague is filtering for people who need her to stay vague.",
+    before: `I'm into all kinds of people and love meeting new connections. Open-minded and easy to talk to. Looking for someone real and genuine — I don't really have a 'type.'`,
+    after: `She/her, bi, and not particularly interested in pretending otherwise. I work in publishing, which means I have opinions about books that I will absolutely share if asked. I date men, women, and a few people who are neither. If that's a problem, we'll save each other time here.`,
+    why: "The original hedged into invisibility. The rewrite names it clearly and moves on — which is exactly the right energy. 'Save each other time' is direct without being defensive. Clarity filters for people who are actually a good fit.",
+  },
+  {
+    scenario: "The App-Fatigued Profile",
+    platform: "Hinge",
+    platformColor: "hsl(268 55% 65%)",
+    badge: "Honest energy",
+    context: "Woman, 33. Three years of on-and-off apps. Profile is technically fine but emotionally absent — written by someone going through the motions.",
+    before: `I work in marketing, love good food and good company, and spend weekends hiking or at the farmers market. Probably the only person on here who actually reads the whole profile before swiping. Looking for someone who's done the work and knows what they want.`,
+    after: `Genuinely tired of dating apps and still here, which I think says something. I work in marketing (long story). On weekends I do the farmers market, occasionally the long hike, and more often the couch with a book I'll describe as 'fine' to anyone who asks. If you've stopped sending opener questions and started sending actual thoughts about something — I think we'll get along.`,
+    why: "Naming the fatigue honestly is more appealing than performing enthusiasm. 'Still here, which says something' is both vulnerable and confident. The couch detail humanises her. The last line filters for people who communicate the way she wants to.",
+  },
+  {
+    scenario: "The Vague Interests Bio",
+    platform: "Tinder",
+    platformColor: "hsl(348 75% 60%)",
+    badge: "Most common",
+    context: "Man, 28. Lists interests that apply to roughly 90% of people on apps. Nothing here would make someone stop scrolling. Everything is true; nothing is specific.",
+    before: `Love music, travelling, good food, and going out as much as staying in. Gym in the mornings. Looking for someone to have adventures with and see where it goes.`,
+    after: `I DJ on Saturday mornings for an audience of exactly one (me, while cleaning the flat). I've eaten my way through eleven cities in five years and I have a spreadsheet to prove it. I go to the gym and I will not be bringing it up again. Looking for someone with an actual thing they care about — tell me what it is.`,
+    why: "Transformed every category into a specific. 'Music' became a real story. 'Travelling' became eleven cities and a spreadsheet. The gym line shows self-awareness. 'An actual thing they care about' is a filter that invites interesting people to respond.",
+  },
+  {
+    scenario: "Trans Profile — Clear and Confident",
+    platform: "OkCupid",
+    platformColor: "hsl(15 80% 60%)",
+    badge: "Identity-forward",
+    context: "Trans woman, 31. Previous profile buried her identity in disclaimers. She wants to be clear, confident, and not spend the first conversation explaining herself.",
+    before: `I should mention upfront that I'm trans (MtF). I know that's not for everyone and I completely understand if you're not open to that. Just want to be honest. If you're still here, I'm pretty normal — I like books, cooking, and long walks.`,
+    after: `She/her. Trans woman, four years in this city and still finding things to love about it. Software engineer by day, chaotic home cook by night. Looking for something real — someone who's realised that genuine curiosity about a person is more interesting than just being attracted to them. If my being trans is relevant to whether you reach out, I trust you to make that call before you do.`,
+    why: "The original apologised for existing and then buried the actual person. The rewrite states identity clearly in line one and moves straight to the person. 'I trust you to make that call' puts responsibility where it belongs without aggression. Specific details create a person, not a case study.",
+  },
 ];
 
 function RewriteCard({ r, index }: { r: Rewrite; index: number }) {
@@ -185,7 +285,7 @@ export default function Gallery() {
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Before & After</h1>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto">
               See how vague, generic, or off-putting copy becomes specific, clear, and compelling.
-              Eight real scenarios — straight, queer, casual, serious, every platform.
+              Eighteen scenarios — straight, queer, bi, trans, casual, serious, monogamous, non-monogamous, every platform.
             </p>
           </motion.div>
 

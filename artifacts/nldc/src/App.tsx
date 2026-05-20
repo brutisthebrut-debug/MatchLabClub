@@ -61,6 +61,8 @@ import Quiz from "@/pages/Quiz";
 import Gallery from "@/pages/Gallery";
 import ConnectionCenter from "@/pages/ConnectionCenter";
 import DataVault from "@/pages/DataVault";
+import DatingWinsLog from "@/pages/DatingWinsLog";
+import PatternBreaker from "@/pages/PatternBreaker";
 
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 
@@ -138,6 +140,8 @@ function Router() {
       <Route path="/gallery" component={Gallery} />
       <Route path="/connections" component={ConnectionCenter} />
       <Route path="/vault" component={DataVault} />
+      <Route path="/progress/wins" component={DatingWinsLog} />
+      <Route path="/progress/pattern-breaker" component={PatternBreaker} />
       <Route component={NotFound} />
     </Switch>
   );

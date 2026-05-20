@@ -78,6 +78,7 @@ function installFetchMock(): void {
           currentApps: body.currentApps ?? [],
           bio: body.bio ?? "",
           prompts: body.prompts ?? null,
+          source: body.source ?? null,
           status: "pending",
           readinessScore: null,
           createdAt: new Date().toISOString(),

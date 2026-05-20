@@ -6,7 +6,7 @@ import {
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse
 } from "@/lib/apiClient";
 import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
-import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send } from "lucide-react";
+import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
 
 type AiMode = "live" | "fallback" | "setup-needed";
@@ -384,7 +384,7 @@ function LockedView({ onSubmit }: { onSubmit: (key: string) => void }) {
   );
 }
 
-type Tab = "overview" | "leads" | "audits" | "purchases" | "waitlist";
+type Tab = "overview" | "leads" | "audits" | "purchases" | "waitlist" | "emails" | "testing";
 
 function Dashboard() {
   const [tab, setTab] = useState<Tab>("overview");
@@ -407,11 +407,13 @@ function Dashboard() {
   }, [refreshKey]);
 
   const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
-    { id: "overview", label: "Overview", icon: BarChart3 },
-    { id: "leads", label: `Leads (${leads.length})`, icon: Inbox },
-    { id: "audits", label: `Audits (${audits?.length ?? 0})`, icon: ListChecks },
-    { id: "purchases", label: `Purchase Interest (${purchases.length})`, icon: ShoppingBag },
-    { id: "waitlist", label: `Waitlist (${waitlistStats?.totalCount ?? 0})`, icon: Users },
+    { id: "overview",  label: "Overview",                              icon: BarChart3      },
+    { id: "leads",     label: `Leads (${leads.length})`,               icon: Inbox          },
+    { id: "audits",    label: `Audits (${audits?.length ?? 0})`,       icon: ListChecks     },
+    { id: "purchases", label: `Purchase Interest (${purchases.length})`, icon: ShoppingBag  },
+    { id: "waitlist",  label: `Waitlist (${waitlistStats?.totalCount ?? 0})`, icon: Users   },
+    { id: "emails",    label: "Email Templates",                       icon: Mail           },
+    { id: "testing",   label: "Testing Checklist",                     icon: ClipboardCheck },
   ];
 
   return (
@@ -533,9 +535,422 @@ function Dashboard() {
         </div>
       )}
 
+      {/* Email Templates */}
+      {tab === "emails" && <EmailTemplatesPanel />}
+
+      {/* Testing Checklist */}
+      {tab === "testing" && <TestingChecklistPanel />}
+
       <p className="text-xs text-muted-foreground/30 mt-12 text-center">
         Founder demo mode · Full auth + multi-user coming in V3
       </p>
+    </div>
+  );
+}
+
+/* ─── Email Templates Panel ─────────────────────────────────────────── */
+
+interface EmailTemplate {
+  name: string;
+  subject: string;
+  body: string;
+}
+
+const EMAIL_TEMPLATES: EmailTemplate[] = [
+  {
+    name: "Signal Check Result Follow-Up",
+    subject: "Your Signal Check result — one thing to try this week",
+    body: `Hi [First name],
+
+You ran a Signal Check with Next Level Dating Club recently. I wanted to follow up with one practical thing based on what tends to make the biggest difference.
+
+The most common issue we see isn't a bad profile — it's a profile that's technically fine but gives someone no specific reason to reach out. If that sounds familiar, try this: swap one generic phrase for a specific detail. "Love to travel" → the place. "Foodie" → the dish. One swap is enough to test it.
+
+If you want a full breakdown with rewrites and a specific action plan, your report is waiting at [link].
+
+Talk soon,
+[Founder name]
+Next Level Dating Club`,
+  },
+  {
+    name: "Day-After Profile Tip",
+    subject: "One thing that'll make your profile 10× more specific",
+    body: `Hi [First name],
+
+Quick one — you joined Next Level Dating Club yesterday and I wanted to send one actionable tip rather than wait for you to come back.
+
+Read your profile out loud. Anything that sounds stiff, written, or like it could apply to 80% of people on the app — rewrite it in your actual speaking voice.
+
+That's it. One pass, out loud, today.
+
+If you want help with the rewrite, the Profile Blueprint tool walks you through it: [link]
+
+— [Founder name]`,
+  },
+  {
+    name: "Before & After Example Email",
+    subject: "What a 3-minute rewrite actually looks like",
+    body: `Hi [First name],
+
+Here's a real before-and-after from our Gallery (all fictional, all based on patterns we see constantly).
+
+BEFORE: "Engineer. Love to travel and try new restaurants. Here for something real. DM me 😊"
+
+AFTER: "I'm a structural engineer who once convinced my entire team to spend a Friday afternoon testing whether a bridge could handle a spontaneous dance-off (it could). Currently three countries into a slow tour of every country with a really good national dish."
+
+The difference isn't talent. It's specificity. The second one was written in about 10 minutes.
+
+Your profile has the same potential. Here's where to start: [link]
+
+— [Founder name]`,
+  },
+  {
+    name: "Dating Reset Offer Email",
+    subject: "The Founder Reviewed Dating Reset — what's included",
+    body: `Hi [First name],
+
+I wanted to tell you about something we're offering to a small group of early users.
+
+The Founder Reviewed Dating Reset is a hands-on package:
+- Full AI profile audit with your score and breakdown
+- A personal note from me on the 1-2 highest-leverage things to fix
+- Complete bio rewrite + prompt rewrites
+- A tailored 7-day action plan
+
+It's $97 right now for early users. I'm reviewing these personally — limited spots.
+
+If you're serious about making real progress before summer, this is the most direct path.
+
+Claim your spot here: [link]
+
+— [Founder name]
+Next Level Dating Club`,
+  },
+  {
+    name: "Wingman Membership Invite",
+    subject: "You're invited — Wingman Studio early access",
+    body: `Hi [First name],
+
+You've been using Next Level Dating Club for a bit and I wanted to give you early access to something we're opening up.
+
+Wingman Studio is the ongoing coaching layer — it includes:
+- Help Me Reply: guided reply drafting for any situation
+- Improve My Profile: ongoing rewrite sessions
+- Weekly Growth Plan: a new focus every week
+- Flirt Coach: message drafts for any moment
+
+Early access is $19/month (regular price will be $29). You can cancel anytime.
+
+Join here: [link]
+
+— [Founder name]`,
+  },
+  {
+    name: "Beta Feedback Request",
+    subject: "One question from the founder — would mean a lot",
+    body: `Hi [First name],
+
+I'm the founder of Next Level Dating Club and I built this because I needed it myself. I tested every tool on my own old profiles and patterns before anyone else saw it.
+
+We're still early and your feedback shapes what we build next.
+
+One question: Did the output you got feel specific to you, or more generic?
+
+Hit reply and tell me — even one sentence helps. Or if you're willing to leave a short quote on what worked (or didn't), I'd be grateful.
+
+Thank you for being here early.
+
+— [Founder name]`,
+  },
+];
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    }).catch(() => {});
+  };
+  return (
+    <button
+      onClick={copy}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-colors"
+    >
+      {copied ? <CheckCircle2 className="w-3 h-3 text-[hsl(142_55%_60%)]" /> : <Copy className="w-3 h-3" />}
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
+}
+
+function EmailTemplatesPanel() {
+  return (
+    <div className="space-y-5">
+      <div>
+        <h2 className="font-semibold text-foreground mb-1">Email Follow-Up Templates</h2>
+        <p className="text-sm text-muted-foreground/60 leading-relaxed">
+          Copy-ready templates for nurturing early users. Replace <code className="text-xs bg-white/5 px-1 rounded">[placeholders]</code> before sending.
+          No sending infrastructure — this is a copy tool only.
+        </p>
+      </div>
+      {EMAIL_TEMPLATES.map((t, i) => (
+        <div key={i} className="glass border border-white/8 rounded-2xl overflow-hidden">
+          <div className="p-4 border-b border-white/5 flex items-start justify-between gap-3">
+            <div>
+              <p className="font-semibold text-foreground text-sm">{t.name}</p>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">
+                <span className="font-mono">Subject: </span>{t.subject}
+              </p>
+            </div>
+            <CopyButton text={`Subject: ${t.subject}\n\n${t.body}`} />
+          </div>
+          <pre className="p-4 text-xs text-muted-foreground/70 leading-relaxed whitespace-pre-wrap font-mono overflow-x-auto max-h-52 overflow-y-auto">
+            {t.body}
+          </pre>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Testing Checklist Panel ───────────────────────────────────────── */
+
+interface TestFlow {
+  id: string;
+  area: string;
+  flow: string;
+  steps: string[];
+}
+
+const TEST_FLOWS: TestFlow[] = [
+  {
+    id: "tf1", area: "Onboarding",
+    flow: "First-user journey (anonymous)",
+    steps: [
+      "Land on / — hero loads, no errors",
+      "Click 'Start Your Audit' → /start wizard opens",
+      "Complete all 5 wizard steps",
+      "Submit → redirects to /dashboard with signal score",
+      "Signal Check ring shows a score (not 0 or NaN)",
+    ],
+  },
+  {
+    id: "tf2", area: "Onboarding",
+    flow: "Shebangs partner visitor journey",
+    steps: [
+      "Navigate to /partners/shebangs",
+      "Page loads with partner branding",
+      "CTA links to /start or /signal-check",
+      "Returning to /dashboard shows demo data if unauthenticated",
+    ],
+  },
+  {
+    id: "tf3", area: "Core Tools",
+    flow: "Signal Check end-to-end",
+    steps: [
+      "Go to /signal-check",
+      "Fill out form with sample bio text",
+      "Submit → score ring animates",
+      "Strengths + Growth Areas show specific (not generic) content",
+      "AI confidence label visible (Strong read / Needs more context / Based on limited input)",
+      "Fallback mode still shows polished output if AI is unavailable",
+    ],
+  },
+  {
+    id: "tf4", area: "Core Tools",
+    flow: "Quiz + Archetype",
+    steps: [
+      "Go to /quiz → answers load",
+      "Complete quiz → archetype result shows",
+      "Go to /archetype → description and share button present",
+    ],
+  },
+  {
+    id: "tf5", area: "Core Tools",
+    flow: "Blueprint generation",
+    steps: [
+      "Go to /blueprint",
+      "Fill all 4 fields",
+      "Generate → output shows insight + rewrite",
+      "Copy button copies the output",
+      "Fallback shows polished deterministic result",
+    ],
+  },
+  {
+    id: "tf6", area: "Core Tools",
+    flow: "Next Message",
+    steps: [
+      "Go to /next-message",
+      "Enter match name, context, last message",
+      "Generate → 3 reply options show (Playful / Direct / Warm)",
+      "Each has rationale",
+      "Copy works on each",
+    ],
+  },
+  {
+    id: "tf7", area: "Core Tools",
+    flow: "Glow-Up Studio",
+    steps: [
+      "Go to /glow-up",
+      "Paste a bio",
+      "Generate → rewritten bio appears",
+      "Output is specific, not generic",
+    ],
+  },
+  {
+    id: "tf8", area: "Wingman Studio",
+    flow: "Help Me Reply workflow",
+    steps: [
+      "Go to /copilot → hub shows quick moments",
+      "Click 'Help Me Reply' → /copilot/reply",
+      "Enter scenario → guided reply output shows",
+    ],
+  },
+  {
+    id: "tf9", area: "Wingman Studio",
+    flow: "Flirt Coach",
+    steps: [
+      "Go to /copilot/flirt",
+      "Enter context → 3 flirt message options",
+      "Options feel distinct (not variations of the same thing)",
+    ],
+  },
+  {
+    id: "tf10", area: "Data & Trust",
+    flow: "Connection Center",
+    steps: [
+      "Go to /connections → empty state shows (if no matches)",
+      "Manual add flow works",
+      "Privacy notice visible",
+    ],
+  },
+  {
+    id: "tf11", area: "Data & Trust",
+    flow: "Data Vault — export + delete",
+    steps: [
+      "Go to /vault",
+      "Export button → triggers download or shows copy-ready data",
+      "Delete button → confirmation shown, data cleared",
+    ],
+  },
+  {
+    id: "tf12", area: "Data & Trust",
+    flow: "Wellness Center",
+    steps: [
+      "Go to /wellness",
+      "8 dimensions visible",
+      "Reflection or check-in prompt shows",
+    ],
+  },
+  {
+    id: "tf13", area: "Conversion",
+    flow: "Offer / checkout flow",
+    steps: [
+      "Go to /pricing — 3 tiers render",
+      "Click a paid tier → /checkout/:product",
+      "Checkout page shows correct product + price",
+      "Cancel → /checkout/cancel with graceful message",
+    ],
+  },
+  {
+    id: "tf14", area: "Mobile",
+    flow: "Mobile pass at 375px",
+    steps: [
+      "Resize browser to 375px wide",
+      "Dashboard: action groups readable, no horizontal overflow",
+      "Wizard: all steps tappable",
+      "Gallery: before/after cards stack vertically",
+      "Copy buttons accessible with thumb",
+    ],
+  },
+  {
+    id: "tf15", area: "AI Health",
+    flow: "AI + fallback status check",
+    steps: [
+      "Go to /founder → Overview tab",
+      "AI Status panel shows Live or Fallback clearly",
+      "AI Reliability panel shows per-tool success stats",
+      "Test prompt textarea works and shows output",
+      "Disconnect API key → all tools still produce polished fallback output",
+    ],
+  },
+];
+
+const AREA_COLORS: Record<string, string> = {
+  "Onboarding":      "hsl(268 52% 68%)",
+  "Core Tools":      "hsl(190 55% 60%)",
+  "Wingman Studio":  "hsl(348 55% 65%)",
+  "Data & Trust":    "hsl(142 55% 60%)",
+  "Conversion":      "hsl(43 65% 65%)",
+  "Mobile":          "hsl(228 40% 65%)",
+  "AI Health":       "hsl(15 80% 60%)",
+};
+
+function TestingChecklistPanel() {
+  const [checked, setChecked] = useState<Set<string>>(new Set());
+  const toggle = (id: string) =>
+    setChecked(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  const doneCount = checked.size;
+  const totalCount = TEST_FLOWS.length;
+  return (
+    <div className="space-y-5">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h2 className="font-semibold text-foreground mb-1">Manual Testing Checklist</h2>
+          <p className="text-sm text-muted-foreground/60 leading-relaxed">
+            Critical paths to run before any major launch or user push. Check off as you go — state resets on page refresh.
+          </p>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <p className="text-2xl font-bold text-foreground">{doneCount}/{totalCount}</p>
+          <p className="text-xs text-muted-foreground/50">flows verified</p>
+        </div>
+      </div>
+      <div className="h-1.5 bg-white/5 rounded-full overflow-hidden mb-2">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(142_55%_60%)] transition-all duration-500"
+          style={{ width: `${(doneCount / totalCount) * 100}%` }}
+        />
+      </div>
+      <div className="space-y-3">
+        {TEST_FLOWS.map(flow => {
+          const done = checked.has(flow.id);
+          const color = AREA_COLORS[flow.area] ?? "hsl(268 52% 68%)";
+          return (
+            <div key={flow.id}
+              className={`glass border rounded-2xl overflow-hidden transition-all ${done ? "border-[hsl(142_55%_60%/0.3)] opacity-60" : "border-white/8"}`}
+            >
+              <div className="p-4 flex items-start gap-3">
+                <button onClick={() => toggle(flow.id)} className="flex-shrink-0 mt-0.5">
+                  {done
+                    ? <CheckCircle2 className="w-5 h-5 text-[hsl(142_55%_60%)]" />
+                    : <Circle className="w-5 h-5 text-muted-foreground/25 hover:text-muted-foreground/50 transition-colors" />
+                  }
+                </button>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
+                      style={{ color, borderColor: color.replace(")", " / 0.3)"), background: color.replace(")", " / 0.1)") }}>
+                      {flow.area}
+                    </span>
+                    <span className={`text-sm font-semibold ${done ? "line-through text-muted-foreground/40" : "text-foreground"}`}>
+                      {flow.flow}
+                    </span>
+                  </div>
+                  <ul className="space-y-1">
+                    {flow.steps.map((step, j) => (
+                      <li key={j} className="flex items-start gap-2 text-xs text-muted-foreground/55">
+                        <span className="text-muted-foreground/25 flex-shrink-0 mt-0.5">·</span>
+                        {step}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

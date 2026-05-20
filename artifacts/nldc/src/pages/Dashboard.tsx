@@ -137,10 +137,12 @@ const ACTION_GROUPS = [
   {
     label: "Growth Tracker", color: "hsl(142 55% 60%)",
     items: [
-      { icon: Clock,         label: "My Timeline",       desc: "Log wins, patterns, questions",    href: "/progress/timeline"  },
-      { icon: Brain,         label: "Pattern Board",     desc: "Recurring themes",                 href: "/progress/patterns"  },
-      { icon: BarChart,      label: "Scorecard",         desc: "7 growth dimension meters",        href: "/progress/scorecard" },
-      { icon: Users,         label: "Companion",         desc: "Copy-ready situation guidance",    href: "/progress/companion" },
+      { icon: Trophy,        label: "Dating Wins Log",   desc: "Log moments of courage + wins",    href: "/progress/wins"           },
+      { icon: Zap,           label: "Pattern Breaker",   desc: "5 actions to shift this week",     href: "/progress/pattern-breaker"},
+      { icon: Clock,         label: "My Timeline",       desc: "Log wins, patterns, questions",    href: "/progress/timeline"       },
+      { icon: Brain,         label: "Pattern Board",     desc: "Recurring themes",                 href: "/progress/patterns"       },
+      { icon: BarChart,      label: "Scorecard",         desc: "7 growth dimension meters",        href: "/progress/scorecard"      },
+      { icon: Users,         label: "Companion",         desc: "Copy-ready situation guidance",    href: "/progress/companion"      },
     ],
   },
   {
