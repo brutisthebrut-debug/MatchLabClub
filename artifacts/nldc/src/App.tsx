@@ -100,7 +100,7 @@ function Router() {
       <Route path="/checkout/success" component={CheckoutSuccess} />
       <Route path="/checkout/cancel" component={CheckoutCancel} />
       <Route path="/checkout/:product">
-        {(params) => <Checkout product={params?.product ?? "dating-reset"} />}
+        {(params: { product?: string } | null) => <Checkout product={params?.product ?? "dating-reset"} />}
       </Route>
       <Route path="/founder" component={Founder} />
       <Route path="/partners/shebangs" component={ShebangsPartner} />
