@@ -6,6 +6,7 @@ const STALE_THRESHOLDS_MS: Record<string, number> = {
   ai_reliability_alerts:      10 * 60 * 1000,
   audit_trash_purge:          36 * 60 * 60 * 1000,
   export_token_cleanup:       30 * 60 * 1000,
+  geoip_update:               32 * 24 * 60 * 60 * 1000,
   handoff_redemption_cleanup: 2 * 60 * 60 * 1000,
   ocr_learning:               48 * 60 * 60 * 1000,
 };
@@ -17,6 +18,7 @@ export const KNOWN_JOB_NAMES: readonly string[] = [
   "ai_reliability_alerts",
   "audit_trash_purge",
   "export_token_cleanup",
+  "geoip_update",
   "handoff_redemption_cleanup",
   "ocr_learning",
 ];

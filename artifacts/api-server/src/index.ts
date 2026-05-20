@@ -9,6 +9,7 @@ import { startAuditVersionPurgeJob } from "./lib/auditVersionPurge";
 import { refreshLearnedRulesCache } from "./lib/ocrLearning";
 import { startOcrLearningJob } from "./lib/ocrLearningJob";
 import { startAuditTrashPushJob } from "./lib/auditTrashPushJob";
+import { startGeoipUpdateJob } from "./lib/geoipUpdateJob";
 
 const rawPort = process.env["PORT"];
 
@@ -38,6 +39,7 @@ app.listen(port, (err) => {
   startAuditTrashPurgeJob();
   startAuditVersionPurgeJob();
   startAuditTrashPushJob();
+  startGeoipUpdateJob();
   refreshLearnedRulesCache().catch((err) =>
     logger.warn({ err }, "Initial OCR learned-rules load failed"),
   );
