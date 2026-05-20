@@ -6,6 +6,7 @@ import {
   getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges, undoAiThresholdChange,
   getRollupHeartbeat, getOcrMismatches, getBackgroundJobs,
   getOcrLearnedRules, runOcrLearn, clearOcrLearnedRules, getOcrMismatchesTrends,
+  getAlertSettings, updateAlertSettings, resetAlertSettings,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
   type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
   type AiThresholdChange, type RollupHeartbeatResponse,
@@ -14,6 +15,7 @@ import {
   type OcrCorrectionField,
   type OcrLearnedRule, type OcrLearnResult,
   type OcrMismatchesTrendsResponse, type OcrMismatchTrendEntry,
+  type AlertSettingsResponse,
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
 import { useListAudits, useGetWaitlistStats, useGetCoachFollowUpTimeline } from "@workspace/api-client-react";
@@ -217,16 +219,26 @@ function AlertThresholdEditor({
   const [overrides, setOverrides] = useState<AiPerToolThreshold[]>([]);
   const [newTool, setNewTool] = useState<string>("");
 
+  const [alertSettings, setAlertSettings] = useState<AlertSettingsResponse | null>(null);
+  const [cooldownMinutes, setCooldownMinutes] = useState(15);
+  const [savingCooldown, setSavingCooldown] = useState(false);
+  const [cooldownSaved, setCooldownSaved] = useState(false);
+
   const load = async () => {
     setLoading(true);
     setErr(null);
     try {
-      const t = await getAiThresholds(FOUNDER_KEY);
+      const [t, s] = await Promise.all([
+        getAiThresholds(FOUNDER_KEY),
+        getAlertSettings(FOUNDER_KEY),
+      ]);
       setThresholds(t);
       setGlobalWindow(t.global.windowSize);
       setGlobalMin(t.global.minSample);
       setGlobalRate(Math.round(t.global.firstTrySuccessRate * 100));
       setOverrides(t.perTool);
+      setAlertSettings(s);
+      setCooldownMinutes(s.rebreachCooldownMinutes);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed to load");
     } finally {
@@ -320,6 +332,37 @@ function AlertThresholdEditor({
     }
   };
 
+  const saveCooldown = async () => {
+    const clamped = Math.max(1, Math.min(1440, Math.round(cooldownMinutes)));
+    setSavingCooldown(true);
+    setErr(null);
+    try {
+      const updated = await updateAlertSettings(FOUNDER_KEY, clamped);
+      setAlertSettings(updated);
+      setCooldownMinutes(updated.rebreachCooldownMinutes);
+      setCooldownSaved(true);
+      setTimeout(() => setCooldownSaved(false), 2000);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to save cooldown");
+    } finally {
+      setSavingCooldown(false);
+    }
+  };
+
+  const resetCooldown = async () => {
+    setSavingCooldown(true);
+    setErr(null);
+    try {
+      const updated = await resetAlertSettings(FOUNDER_KEY);
+      setAlertSettings(updated);
+      setCooldownMinutes(updated.rebreachCooldownMinutes);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to reset cooldown");
+    } finally {
+      setSavingCooldown(false);
+    }
+  };
+
   if (!open) {
     return (
       <button
@@ -391,6 +434,54 @@ function AlertThresholdEditor({
                   className="w-full mt-1 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-foreground outline-none focus:border-[hsl(268_52%_68%/0.5)]"
                 />
               </label>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-white/8">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
+              Re-alert cooldown
+            </p>
+            <p className="text-[11px] text-muted-foreground/60 mb-3">
+              Minimum healthy time after a recovery before the same tool can trigger another breach email.
+            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <label className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  max={1440}
+                  value={cooldownMinutes}
+                  onChange={(e) => setCooldownMinutes(Math.max(1, Math.min(1440, Number(e.target.value) || 1)))}
+                  className="w-24 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-foreground outline-none focus:border-[hsl(268_52%_68%/0.5)]"
+                />
+                <span className="text-xs text-muted-foreground/70">minutes</span>
+              </label>
+              <button
+                onClick={() => void saveCooldown()}
+                disabled={savingCooldown}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {savingCooldown && <Loader2 className="w-3 h-3 animate-spin" />}
+                {cooldownSaved ? "Saved!" : "Save"}
+              </button>
+              {alertSettings?.isOverridden && (
+                <button
+                  onClick={() => void resetCooldown()}
+                  disabled={savingCooldown}
+                  className="text-xs text-muted-foreground/70 hover:text-foreground px-3 py-1.5 rounded-lg border border-white/10"
+                >
+                  Reset to {alertSettings.envMinutes === alertSettings.defaultMinutes
+                    ? `default (${alertSettings.defaultMinutes}m)`
+                    : `env (${alertSettings.envMinutes}m)`}
+                </button>
+              )}
+              {alertSettings && !alertSettings.isOverridden && (
+                <span className="text-[10px] text-muted-foreground/50">
+                  Using {alertSettings.envMinutes !== alertSettings.defaultMinutes
+                    ? `env var (${alertSettings.envMinutes}m)`
+                    : `default (${alertSettings.defaultMinutes}m)`}
+                </span>
+              )}
             </div>
           </div>
 

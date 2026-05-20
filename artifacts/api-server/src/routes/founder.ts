@@ -14,6 +14,8 @@ import {
   coachFollowUpsTable,
   aiToolAlertStateTable,
   jobHeartbeatsTable,
+  founderSettingsTable,
+  FOUNDER_SETTINGS_REBREACH_COOLDOWN,
 } from "@workspace/db";
 import { and, count, sql, desc, gte, asc, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod/v4";
@@ -29,6 +31,10 @@ import {
   getRollupStaleThresholdMs,
 } from "../lib/aiMetricsRetention";
 import { KNOWN_JOB_NAMES, getStaleThresholdMs } from "../lib/jobHeartbeat";
+import {
+  DEFAULT_REBREACH_COOLDOWN_MINUTES,
+  getEnvRebreachCooldownMinutes,
+} from "../lib/aiReliabilityAlerts";
 
 const router: IRouter = Router();
 
@@ -1023,6 +1029,67 @@ router.put("/founder/ai-thresholds", requireFounder, async (req, res): Promise<v
       minSample: c.minSample,
       firstTrySuccessRate: c.threshold,
     })),
+  });
+});
+
+const MAX_REBREACH_COOLDOWN_MINUTES = 1440;
+
+router.get("/founder/alert-settings", requireFounder, async (_req, res): Promise<void> => {
+  const [row] = await db
+    .select()
+    .from(founderSettingsTable)
+    .where(eq(founderSettingsTable.key, FOUNDER_SETTINGS_REBREACH_COOLDOWN))
+    .limit(1);
+  const envMinutes = getEnvRebreachCooldownMinutes();
+  res.json({
+    rebreachCooldownMinutes: row != null ? row.value : envMinutes,
+    envMinutes,
+    defaultMinutes: DEFAULT_REBREACH_COOLDOWN_MINUTES,
+    isOverridden: row != null,
+    updatedAt: row?.updatedAt instanceof Date ? row.updatedAt.toISOString() : null,
+  });
+});
+
+const putAlertSettingsSchema = z.object({
+  rebreachCooldownMinutes: z
+    .number()
+    .min(1, "Must be at least 1 minute")
+    .max(MAX_REBREACH_COOLDOWN_MINUTES, `Cannot exceed ${MAX_REBREACH_COOLDOWN_MINUTES} minutes`),
+});
+
+router.put("/founder/alert-settings", requireFounder, async (req, res): Promise<void> => {
+  const parsed = putAlertSettingsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid alert settings payload.", details: parsed.error.format() });
+    return;
+  }
+  const { rebreachCooldownMinutes } = parsed.data;
+  const now = new Date();
+  await db
+    .insert(founderSettingsTable)
+    .values({ key: FOUNDER_SETTINGS_REBREACH_COOLDOWN, value: rebreachCooldownMinutes, updatedAt: now })
+    .onConflictDoUpdate({
+      target: founderSettingsTable.key,
+      set: { value: rebreachCooldownMinutes, updatedAt: now },
+    });
+  res.json({
+    rebreachCooldownMinutes,
+    updatedAt: now.toISOString(),
+    isOverridden: true,
+  });
+});
+
+router.delete("/founder/alert-settings/rebreach-cooldown", requireFounder, async (_req, res): Promise<void> => {
+  await db
+    .delete(founderSettingsTable)
+    .where(eq(founderSettingsTable.key, FOUNDER_SETTINGS_REBREACH_COOLDOWN));
+  const envMinutes = getEnvRebreachCooldownMinutes();
+  res.json({
+    rebreachCooldownMinutes: envMinutes,
+    envMinutes,
+    defaultMinutes: DEFAULT_REBREACH_COOLDOWN_MINUTES,
+    isOverridden: false,
+    updatedAt: null,
   });
 });
 

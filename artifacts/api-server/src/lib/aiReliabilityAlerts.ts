@@ -1,5 +1,10 @@
 import { sql, eq } from "drizzle-orm";
-import { db, aiToolAlertStateTable } from "@workspace/db";
+import {
+  db,
+  aiToolAlertStateTable,
+  founderSettingsTable,
+  FOUNDER_SETTINGS_REBREACH_COOLDOWN,
+} from "@workspace/db";
 import { sendMail } from "./mailer";
 import { logger } from "./logger";
 import { recordJobHeartbeat } from "./jobHeartbeat";
@@ -14,12 +19,28 @@ export const DEFAULT_SEND_FAILURE_ALERT_THRESHOLD = 3;
 const DEFAULT_INTERVAL_MINUTES = 5;
 const DEFAULT_REBREACH_COOLDOWN_MINUTES = 15;
 
-function getRebreachCooldownMs(): number {
-  const minutes = readPositiveNumberEnv(
+export function getEnvRebreachCooldownMinutes(): number {
+  return readPositiveNumberEnv(
     "AI_RELIABILITY_REBREACH_COOLDOWN_MINUTES",
     DEFAULT_REBREACH_COOLDOWN_MINUTES,
   );
-  return minutes * 60 * 1000;
+}
+
+export { DEFAULT_REBREACH_COOLDOWN_MINUTES };
+
+async function getRebreachCooldownMs(): Promise<number> {
+  try {
+    const [row] = await db
+      .select()
+      .from(founderSettingsTable)
+      .where(eq(founderSettingsTable.key, FOUNDER_SETTINGS_REBREACH_COOLDOWN))
+      .limit(1);
+    const minutes =
+      row != null ? row.value : getEnvRebreachCooldownMinutes();
+    return minutes * 60 * 1000;
+  } catch {
+    return getEnvRebreachCooldownMinutes() * 60 * 1000;
+  }
 }
 
 export const PERSISTENT_SEND_FAILURE_EVENT =
@@ -283,7 +304,7 @@ export async function checkAiReliabilityAlerts(
       // Cooldown: if the tool recently recovered, suppress the new breach
       // email until enough healthy time has passed. We still record the
       // re-breach in state so the dashboard reflects reality.
-      const cooldownMs = getRebreachCooldownMs();
+      const cooldownMs = await getRebreachCooldownMs();
       const lastClearedAt = prev?.lastClearedAt ?? null;
       const inCooldown =
         lastClearedAt !== null &&

@@ -431,3 +431,47 @@ export const getPurchaseInterestList = () =>
   get<PurchaseInterest[]>("/purchase-interest");
 
 export type OcrCorrectionField = OcrCorrectionFieldName;
+
+export interface AlertSettingsResponse {
+  rebreachCooldownMinutes: number;
+  envMinutes: number;
+  defaultMinutes: number;
+  isOverridden: boolean;
+  updatedAt: string | null;
+}
+
+export const getAlertSettings = (founderKey: string) =>
+  fetch(`${BASE}/founder/alert-settings`, {
+    headers: { "x-founder-key": founderKey },
+  }).then(async (res) => {
+    if (!res.ok) throw new Error(`GET /founder/alert-settings failed (${res.status})`);
+    return res.json() as Promise<AlertSettingsResponse>;
+  });
+
+export const updateAlertSettings = (founderKey: string, rebreachCooldownMinutes: number) =>
+  fetch(`${BASE}/founder/alert-settings`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "x-founder-key": founderKey,
+    },
+    body: JSON.stringify({ rebreachCooldownMinutes }),
+  }).then(async (res) => {
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`PUT /founder/alert-settings failed (${res.status}): ${text}`);
+    }
+    return res.json() as Promise<AlertSettingsResponse>;
+  });
+
+export const resetAlertSettings = (founderKey: string) =>
+  fetch(`${BASE}/founder/alert-settings/rebreach-cooldown`, {
+    method: "DELETE",
+    headers: { "x-founder-key": founderKey },
+  }).then(async (res) => {
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`DELETE /founder/alert-settings/rebreach-cooldown failed (${res.status}): ${text}`);
+    }
+    return res.json() as Promise<AlertSettingsResponse>;
+  });
