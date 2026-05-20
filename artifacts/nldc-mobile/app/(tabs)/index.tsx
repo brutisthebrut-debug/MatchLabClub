@@ -351,6 +351,30 @@ export default function ScoreScreen() {
                   ]}
                 />
               </View>
+              {sendStats.snoozeCount > 0 || sendStats.dismissCount > 0 ? (
+                <Text
+                  style={[
+                    styles.sendDeferText,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  <Feather name="clock" size={11} color={colors.mutedForeground} />
+                  {"  "}
+                  {sendStats.snoozeCount > 0
+                    ? `Snoozed ${sendStats.snoozeCount} time${
+                        sendStats.snoozeCount === 1 ? "" : "s"
+                      }`
+                    : null}
+                  {sendStats.snoozeCount > 0 && sendStats.dismissCount > 0
+                    ? " · "
+                    : null}
+                  {sendStats.dismissCount > 0
+                    ? `Dismissed ${sendStats.dismissCount} time${
+                        sendStats.dismissCount === 1 ? "" : "s"
+                      }`
+                    : null}
+                </Text>
+              ) : null}
             </>
           ) : (
             <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
@@ -480,6 +504,11 @@ const styles = StyleSheet.create({
   sendBarFill: {
     height: "100%",
     borderRadius: 3,
+  },
+  sendDeferText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
+    marginTop: 6,
   },
   emptyText: {
     fontSize: 13,

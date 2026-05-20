@@ -25,7 +25,9 @@ import {
   COACH_SNOOZE_3H_SECONDS,
   cancelCoachReminder,
   configureNotificationHandler,
+  recordCoachDismissed,
   recordCoachFollowUp,
+  recordCoachSnoozed,
   setPendingCoachFollowUpPrompt,
   snoozeCoachReminder,
 } from "@/lib/coachNotifications";
@@ -87,6 +89,7 @@ function RootLayoutNav() {
           matchName,
           delaySeconds: COACH_SNOOZE_1H_SECONDS,
         });
+        await recordCoachSnoozed();
         return;
       }
       if (action === COACH_ACTION_SNOOZE_3H) {
@@ -94,10 +97,12 @@ function RootLayoutNav() {
           matchName,
           delaySeconds: COACH_SNOOZE_3H_SECONDS,
         });
+        await recordCoachSnoozed();
         return;
       }
       if (action === COACH_ACTION_DISMISS) {
         await cancelCoachReminder();
+        await recordCoachDismissed();
         return;
       }
       await setPendingCoachFollowUpPrompt();

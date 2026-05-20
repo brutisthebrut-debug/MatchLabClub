@@ -82,6 +82,8 @@ export interface CoachSendStats {
   totalPrompts: number;
   sentCount: number;
   notSentCount: number;
+  snoozeCount: number;
+  dismissCount: number;
   lastAnsweredAt: number | null;
   lastAnswer: CoachFollowUpAnswer | null;
 }
@@ -90,6 +92,8 @@ const EMPTY_STATS: CoachSendStats = {
   totalPrompts: 0,
   sentCount: 0,
   notSentCount: 0,
+  snoozeCount: 0,
+  dismissCount: 0,
   lastAnsweredAt: null,
   lastAnswer: null,
 };
@@ -269,6 +273,7 @@ export async function recordCoachFollowUp(
   try {
     const current = await loadCoachSendStats();
     const next: CoachSendStats = {
+      ...current,
       totalPrompts: current.totalPrompts + 1,
       sentCount: current.sentCount + (answer === "sent" ? 1 : 0),
       notSentCount: current.notSentCount + (answer === "not_sent" ? 1 : 0),
@@ -292,6 +297,32 @@ export async function recordCoachFollowUp(
   }
 }
 
+export async function recordCoachSnoozed() {
+  try {
+    const current = await loadCoachSendStats();
+    const next: CoachSendStats = {
+      ...current,
+      snoozeCount: current.snoozeCount + 1,
+    };
+    await AsyncStorage.setItem(SEND_STATS_KEY, JSON.stringify(next));
+  } catch {
+    // ignore
+  }
+}
+
+export async function recordCoachDismissed() {
+  try {
+    const current = await loadCoachSendStats();
+    const next: CoachSendStats = {
+      ...current,
+      dismissCount: current.dismissCount + 1,
+    };
+    await AsyncStorage.setItem(SEND_STATS_KEY, JSON.stringify(next));
+  } catch {
+    // ignore
+  }
+}
+
 export async function loadCoachSendStats(): Promise<CoachSendStats> {
   try {
     const raw = await AsyncStorage.getItem(SEND_STATS_KEY);
@@ -301,6 +332,8 @@ export async function loadCoachSendStats(): Promise<CoachSendStats> {
       totalPrompts: parsed.totalPrompts ?? 0,
       sentCount: parsed.sentCount ?? 0,
       notSentCount: parsed.notSentCount ?? 0,
+      snoozeCount: parsed.snoozeCount ?? 0,
+      dismissCount: parsed.dismissCount ?? 0,
       lastAnsweredAt: parsed.lastAnsweredAt ?? null,
       lastAnswer: parsed.lastAnswer ?? null,
     };
