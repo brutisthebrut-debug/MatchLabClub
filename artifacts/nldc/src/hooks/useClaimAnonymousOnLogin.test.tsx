@@ -1,0 +1,177 @@
+import React from "react";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { renderHook, waitFor, act } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+// --- Mocks ----------------------------------------------------------------
+
+// Mock the auth hook so we can flip authentication state at will.
+const mockUseAuth = vi.fn();
+vi.mock("@workspace/replit-auth-web", () => ({
+  useAuth: () => mockUseAuth(),
+}));
+
+// Mock the API client. `useClaimAnonymousData` returns a mutation-like object;
+// we record the body it was called with and resolve with a canned response.
+const claimMutateImpl = vi.fn();
+
+vi.mock("@workspace/api-client-react", () => {
+  const claimAnonymousData = vi.fn();
+  return {
+    useClaimAnonymousData: () => ({
+      mutate: (vars: { data: unknown }, opts?: { onSuccess?: (r: unknown) => void; onError?: (e: unknown) => void }) => {
+        claimMutateImpl(vars, opts);
+      },
+    }),
+    claimAnonymousData,
+    getListAuditsQueryKey: () => ["audits"],
+    getGetAuditSummaryQueryKey: () => ["audit-summary"],
+    getListProfilesQueryKey: () => ["profiles"],
+    getListMessageCoachingSessionsQueryKey: () => ["message-sessions"],
+    getListInsightsQueryKey: () => ["insights"],
+  };
+});
+
+// Import AFTER mocks are registered.
+import { useClaimAnonymousOnLogin } from "./useClaimAnonymousOnLogin";
+import {
+  rememberAnonymousId,
+  hasAnyAnonymousIds,
+  readAnonymousIds,
+} from "@/lib/anonymousIds";
+
+// --- Helpers --------------------------------------------------------------
+
+function wrapper({ children }: { children: React.ReactNode }) {
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
+}
+
+beforeEach(() => {
+  localStorage.clear();
+  mockUseAuth.mockReset();
+  claimMutateImpl.mockReset();
+});
+
+afterEach(() => {
+  localStorage.clear();
+});
+
+describe("useClaimAnonymousOnLogin — full anon→login→claim flow", () => {
+  it("does nothing while auth is loading", () => {
+    mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: true, user: null });
+    rememberAnonymousId("audits", 7);
+
+    renderHook(() => useClaimAnonymousOnLogin(), { wrapper });
+
+    expect(claimMutateImpl).not.toHaveBeenCalled();
+  });
+
+  it("does nothing for an anonymous visitor with audits in localStorage", () => {
+    mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false, user: null });
+    rememberAnonymousId("audits", 7);
+
+    renderHook(() => useClaimAnonymousOnLogin(), { wrapper });
+
+    expect(claimMutateImpl).not.toHaveBeenCalled();
+    expect(hasAnyAnonymousIds()).toBe(true);
+  });
+
+  it("on login, claims the IDs stored anonymously and refetches dashboard data", async () => {
+    // Simulate the full path:
+    //   1) anon visitor created an audit (id 42) and a profile (id 99)
+    rememberAnonymousId("audits", 42);
+    rememberAnonymousId("profiles", 99);
+
+    //   2) user logs in
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { id: "user-abc", email: null },
+    });
+
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const invalidateSpy = vi.spyOn(qc, "invalidateQueries");
+
+    function localWrapper({ children }: { children: React.ReactNode }) {
+      return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
+    }
+
+    renderHook(() => useClaimAnonymousOnLogin(), { wrapper: localWrapper });
+
+    //   3) the claim mutation was fired with the exact IDs from localStorage
+    await waitFor(() => expect(claimMutateImpl).toHaveBeenCalledTimes(1));
+    const [vars, opts] = claimMutateImpl.mock.calls[0];
+    expect(vars).toEqual({
+      data: {
+        auditIds: [42],
+        profileIds: [99],
+        messageSessionIds: [],
+        insightIds: [],
+      },
+    });
+
+    //   4) on success, anon IDs are cleared and dashboard queries are invalidated
+    act(() => {
+      opts.onSuccess({ claimed: { audits: 1, profiles: 1, messages: 0, insights: 0 } });
+    });
+
+    expect(readAnonymousIds()).toEqual({
+      auditIds: [],
+      profileIds: [],
+      messageSessionIds: [],
+      insightIds: [],
+    });
+
+    const invalidatedKeys = invalidateSpy.mock.calls.map((c) => c[0]?.queryKey?.[0]);
+    expect(invalidatedKeys).toEqual(
+      expect.arrayContaining([
+        "audits",
+        "audit-summary",
+        "profiles",
+        "message-sessions",
+        "insights",
+      ]),
+    );
+  });
+
+  it("does not call claim when the user is authenticated but has no anon IDs", () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { id: "user-xyz", email: null },
+    });
+
+    renderHook(() => useClaimAnonymousOnLogin(), { wrapper });
+
+    expect(claimMutateImpl).not.toHaveBeenCalled();
+  });
+
+  it("allows retry on the next render if the claim errors out", async () => {
+    rememberAnonymousId("audits", 5);
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { id: "user-1", email: null },
+    });
+
+    const { rerender } = renderHook(() => useClaimAnonymousOnLogin(), { wrapper });
+
+    await waitFor(() => expect(claimMutateImpl).toHaveBeenCalledTimes(1));
+    const [, opts] = claimMutateImpl.mock.calls[0];
+    act(() => {
+      opts.onError(new Error("network down"));
+    });
+
+    // IDs are preserved (no clear was triggered)
+    expect(hasAnyAnonymousIds()).toBe(true);
+
+    // Next render with same user retries
+    rerender();
+    await waitFor(() => expect(claimMutateImpl).toHaveBeenCalledTimes(2));
+  });
+});
