@@ -408,6 +408,24 @@ export default function Account() {
               >
                 Cancel
               </AlertDialogCancel>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  void handleDownload();
+                }}
+                disabled={isExporting || deleteAccount.isPending}
+                className="rounded-md text-sm font-medium"
+                data-testid="button-account-delete-download"
+              >
+                {isExporting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4 mr-2" />
+                )}
+                Download my data first
+              </Button>
               <AlertDialogAction
                 onClick={(e) => {
                   e.preventDefault();
