@@ -66,6 +66,7 @@ import PatternBreaker from "@/pages/PatternBreaker";
 import WhatChanged from "@/pages/WhatChanged";
 import Feedback from "@/pages/Feedback";
 import SampleReport from "@/pages/SampleReport";
+import Scan from "@/pages/Scan";
 
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 
@@ -148,6 +149,7 @@ function Router() {
       <Route path="/copilot/what-changed" component={WhatChanged} />
       <Route path="/feedback" component={Feedback} />
       <Route path="/sample-report" component={SampleReport} />
+      <Route path="/scan" component={Scan} />
       <Route component={NotFound} />
     </Switch>
   );

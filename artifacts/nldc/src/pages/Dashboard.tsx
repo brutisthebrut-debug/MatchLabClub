@@ -21,7 +21,7 @@ import {
   ArrowRight, FileText, MessageSquare, Mail, Settings,
   TrendingUp, AlertTriangle, Clock, Sparkles, Trophy, Eye,
   ChevronRight, FlaskConical, Stethoscope, Zap,
-  Wand2, ScanFace, BarChart2, Heart, Compass, BookOpen,
+  Wand2, ScanFace, BarChart2, Heart, Compass, BookOpen, Camera,
   MessageCircle, User, Map, Brain, Rss, Shield, Users, BarChart, Lightbulb, Layers,
   Calendar, Star, Images
 } from "lucide-react";
@@ -91,6 +91,7 @@ const ACTION_GROUPS = [
     label: "Start Here", color: "hsl(268 52% 68%)",
     items: [
       { icon: FileText,      label: "New Audit",         desc: "Full profile audit + 7-day plan",  href: "/start"          },
+      { icon: Camera,        label: "Scan a Profile",    desc: "Screenshot → instant mini-audit",  href: "/scan"           },
       { icon: Zap,           label: "Signal Check",      desc: "3-minute quick read",              href: "/signal-check"   },
     ],
   },
