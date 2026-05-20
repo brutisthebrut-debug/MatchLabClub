@@ -153,6 +153,16 @@ export interface AiMetricsResponse {
 export const getAiMetrics = () =>
   get<AiMetricsResponse>("/founder/ai-metrics");
 
+export interface RollupHeartbeatResponse {
+  lastSuccessAt: string | null;
+  ageMs: number | null;
+  staleThresholdMs: number;
+  stale: boolean;
+}
+
+export const getRollupHeartbeat = () =>
+  get<RollupHeartbeatResponse>("/founder/rollup-heartbeat");
+
 export interface AiMetricsTrendPoint {
   day: string;
   toolName: string;

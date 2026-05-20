@@ -1,6 +1,53 @@
-import { lt, sql } from "drizzle-orm";
-import { db, aiRequestMetricsTable, aiRequestMetricsDailyTable } from "@workspace/db";
+import { eq, lt, sql } from "drizzle-orm";
+import {
+  db,
+  aiRequestMetricsTable,
+  aiRequestMetricsDailyTable,
+  jobHeartbeatsTable,
+  AI_METRICS_ROLLUP_JOB,
+} from "@workspace/db";
 import { logger } from "./logger";
+
+const DEFAULT_ROLLUP_STALE_HOURS = 36;
+
+export function getRollupStaleThresholdMs(): number {
+  const hours = readPositiveNumberEnv(
+    "AI_METRICS_ROLLUP_STALE_HOURS",
+    DEFAULT_ROLLUP_STALE_HOURS,
+  );
+  return hours * 60 * 60 * 1000;
+}
+
+async function recordRollupHeartbeat(): Promise<void> {
+  try {
+    const now = new Date();
+    await db
+      .insert(jobHeartbeatsTable)
+      .values({ jobName: AI_METRICS_ROLLUP_JOB, lastSuccessAt: now })
+      .onConflictDoUpdate({
+        target: jobHeartbeatsTable.jobName,
+        set: { lastSuccessAt: now },
+      });
+  } catch (err) {
+    logger.warn(
+      { err: err instanceof Error ? err.message : String(err) },
+      "Failed to record ai_metrics rollup heartbeat",
+    );
+  }
+}
+
+export async function getRollupHeartbeat(): Promise<Date | null> {
+  const rows = await db
+    .select({ lastSuccessAt: jobHeartbeatsTable.lastSuccessAt })
+    .from(jobHeartbeatsTable)
+    .where(eq(jobHeartbeatsTable.jobName, AI_METRICS_ROLLUP_JOB))
+    .limit(1);
+  const row = rows[0];
+  if (!row) return null;
+  return row.lastSuccessAt instanceof Date
+    ? row.lastSuccessAt
+    : new Date(row.lastSuccessAt as unknown as string);
+}
 
 const DEFAULT_RETENTION_DAYS = 30;
 const DEFAULT_INTERVAL_HOURS = 24;
@@ -149,6 +196,7 @@ export async function rollupThenPruneAiMetrics(): Promise<{
     return { rolledUp: 0, pruned: 0, skippedPrune: true };
   }
   const pruned = await pruneOldAiMetrics();
+  await recordRollupHeartbeat();
   return { rolledUp, pruned, skippedPrune: false };
 }
 

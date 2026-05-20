@@ -22,6 +22,10 @@ import {
   listLearnedRules,
   clearLearnedRules,
 } from "../lib/ocrLearning";
+import {
+  getRollupHeartbeat,
+  getRollupStaleThresholdMs,
+} from "../lib/aiMetricsRetention";
 
 const router: IRouter = Router();
 
@@ -298,6 +302,27 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
         recentFirstTrySuccessRate: t.recent.firstTrySuccessRate,
       }),
     })),
+  });
+});
+
+router.get("/founder/rollup-heartbeat", async (_req, res): Promise<void> => {
+  const lastSuccessAt = await getRollupHeartbeat();
+  const staleThresholdMs = getRollupStaleThresholdMs();
+  if (!lastSuccessAt) {
+    res.json({
+      lastSuccessAt: null,
+      ageMs: null,
+      staleThresholdMs,
+      stale: true,
+    });
+    return;
+  }
+  const ageMs = Date.now() - lastSuccessAt.getTime();
+  res.json({
+    lastSuccessAt: lastSuccessAt.toISOString(),
+    ageMs,
+    staleThresholdMs,
+    stale: ageMs > staleThresholdMs,
   });
 });
 

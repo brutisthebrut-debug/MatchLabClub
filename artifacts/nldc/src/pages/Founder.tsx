@@ -4,9 +4,10 @@ import { useMeta } from "@/hooks/useMeta";
 import {
   getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
   getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges,
+  getRollupHeartbeat,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
   type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
-  type AiThresholdChange
+  type AiThresholdChange, type RollupHeartbeatResponse
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
@@ -600,6 +601,89 @@ function ThresholdChangeLog({ refreshKey }: { refreshKey: number }) {
             </li>
           ))}
         </ul>
+      )}
+    </div>
+  );
+}
+
+function formatAge(ms: number): string {
+  const sec = Math.floor(ms / 1000);
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 48) return `${hr}h ago`;
+  const days = Math.floor(hr / 24);
+  return `${days}d ago`;
+}
+
+function RollupHeartbeatPanel({ refreshKey }: { refreshKey: number }) {
+  const [data, setData] = useState<RollupHeartbeatResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setErr(null);
+    getRollupHeartbeat()
+      .then(setData)
+      .catch((e: unknown) => setErr(e instanceof Error ? e.message : "Failed to load"))
+      .finally(() => setLoading(false));
+  }, [refreshKey]);
+
+  const stale = data?.stale ?? false;
+  const thresholdHours = data ? Math.round(data.staleThresholdMs / (60 * 60 * 1000)) : 36;
+  const okColor = "hsl(142 55% 60%)";
+  const warnColor = "hsl(348 65% 70%)";
+  const color = stale ? warnColor : okColor;
+  const Icon = stale ? AlertTriangle : CheckCircle2;
+
+  return (
+    <div
+      className="glass rounded-2xl p-6 space-y-3"
+      data-testid="rollup-heartbeat-panel"
+    >
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
+            Nightly Rollup Heartbeat
+          </p>
+          <p className="text-base font-semibold text-foreground">
+            Last successful AI reliability rollup
+          </p>
+        </div>
+        {loading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground/60" />}
+      </div>
+
+      {err && (
+        <p className="text-xs text-red-400">Could not load heartbeat: {err}</p>
+      )}
+
+      {data && (
+        <div
+          className="rounded-xl p-4 border flex items-start gap-3"
+          style={{
+            background: `${color.replace(")", " / 0.10)")}`,
+            borderColor: `${color.replace(")", " / 0.40)")}`,
+          }}
+        >
+          <Icon className="w-4 h-4 mt-0.5 shrink-0" style={{ color }} />
+          <div className="min-w-0 space-y-1">
+            <p className="text-sm font-semibold" style={{ color }}>
+              {stale
+                ? data.lastSuccessAt
+                  ? `Stale — last ran ${formatAge(data.ageMs ?? 0)}`
+                  : "Never run on this database"
+                : `Healthy — last ran ${formatAge(data.ageMs ?? 0)}`}
+            </p>
+            <p className="text-xs text-muted-foreground/80">
+              {data.lastSuccessAt
+                ? `Heartbeat at ${new Date(data.lastSuccessAt).toLocaleString()}.`
+                : "No heartbeat recorded yet — the rollup job may not have completed since deploy."}
+              {" "}Alerts when older than ~{thresholdHours} hours.
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -1269,6 +1353,7 @@ function Dashboard() {
       {tab === "overview" && (
         <div className="space-y-8">
           <AiStatusPanel />
+          <RollupHeartbeatPanel refreshKey={refreshKey} />
           <AiMetricsPanel refreshKey={refreshKey} />
           <AiReliabilityTrendsPanel refreshKey={refreshKey} />
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

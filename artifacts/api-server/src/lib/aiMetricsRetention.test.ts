@@ -2,7 +2,15 @@ import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import express, { type Express } from "express";
 import request from "supertest";
 import { sql } from "drizzle-orm";
-import { db, pool, aiRequestMetricsTable, aiRequestMetricsDailyTable } from "@workspace/db";
+import {
+  db,
+  pool,
+  aiRequestMetricsTable,
+  aiRequestMetricsDailyTable,
+  jobHeartbeatsTable,
+  AI_METRICS_ROLLUP_JOB,
+} from "@workspace/db";
+import { eq } from "drizzle-orm";
 import {
   rollupAiMetricsForDay,
   rollupOldAiMetrics,
@@ -50,6 +58,7 @@ function dayString(daysAgo: number): string {
 async function clearMetrics(): Promise<void> {
   await db.execute(sql`truncate table ai_request_metrics restart identity`);
   await db.execute(sql`truncate table ai_request_metrics_daily restart identity`);
+  await db.delete(jobHeartbeatsTable).where(eq(jobHeartbeatsTable.jobName, AI_METRICS_ROLLUP_JOB));
 }
 
 async function makeTrendsApp(): Promise<Express> {
@@ -273,6 +282,68 @@ describe("rollupThenPruneAiMetrics", () => {
     const days = res.body.series.map((s: { day: string }) => s.day);
     const sorted = [...days].sort();
     expect(days).toEqual(sorted);
+  });
+
+  it("rollupThenPruneAiMetrics records a heartbeat row on success", async () => {
+    await seedRaw([
+      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(2, 1) },
+    ]);
+    const before = Date.now();
+    await rollupThenPruneAiMetrics();
+    const rows = await db
+      .select()
+      .from(jobHeartbeatsTable)
+      .where(eq(jobHeartbeatsTable.jobName, AI_METRICS_ROLLUP_JOB));
+    expect(rows).toHaveLength(1);
+    const ts = rows[0].lastSuccessAt instanceof Date
+      ? rows[0].lastSuccessAt.getTime()
+      : new Date(rows[0].lastSuccessAt as unknown as string).getTime();
+    expect(ts).toBeGreaterThanOrEqual(before - 5);
+    expect(ts).toBeLessThanOrEqual(Date.now() + 5);
+  });
+
+  it("GET /api/founder/rollup-heartbeat reports fresh status after a successful rollup", async () => {
+    await seedRaw([
+      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(2, 1) },
+    ]);
+    await rollupThenPruneAiMetrics();
+
+    const app = await makeTrendsApp();
+    const res = await request(app).get("/api/founder/rollup-heartbeat");
+    expect(res.status).toBe(200);
+    expect(res.body.lastSuccessAt).toEqual(expect.any(String));
+    expect(typeof res.body.ageMs).toBe("number");
+    expect(res.body.ageMs).toBeLessThan(60_000);
+    expect(res.body.stale).toBe(false);
+    expect(typeof res.body.staleThresholdMs).toBe("number");
+    expect(res.body.staleThresholdMs).toBeGreaterThan(0);
+  });
+
+  it("GET /api/founder/rollup-heartbeat reports stale=true when no heartbeat exists", async () => {
+    const app = await makeTrendsApp();
+    const res = await request(app).get("/api/founder/rollup-heartbeat");
+    expect(res.status).toBe(200);
+    expect(res.body.lastSuccessAt).toBeNull();
+    expect(res.body.ageMs).toBeNull();
+    expect(res.body.stale).toBe(true);
+  });
+
+  it("GET /api/founder/rollup-heartbeat reports stale=true when heartbeat is older than the threshold", async () => {
+    // Insert an old heartbeat (2 days ago) — older than the 36-hour default.
+    const old = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    await db
+      .insert(jobHeartbeatsTable)
+      .values({ jobName: AI_METRICS_ROLLUP_JOB, lastSuccessAt: old })
+      .onConflictDoUpdate({
+        target: jobHeartbeatsTable.jobName,
+        set: { lastSuccessAt: old },
+      });
+
+    const app = await makeTrendsApp();
+    const res = await request(app).get("/api/founder/rollup-heartbeat");
+    expect(res.status).toBe(200);
+    expect(res.body.stale).toBe(true);
+    expect(res.body.ageMs).toBeGreaterThan(36 * 60 * 60 * 1000);
   });
 
   it("GET /api/founder/ai-metrics/trends honors the days query param window", async () => {
