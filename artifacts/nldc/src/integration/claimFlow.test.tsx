@@ -41,8 +41,11 @@ vi.mock("wouter", () => ({
 import {
   useCreateAudit,
   useListAudits,
+  useListInsights,
+  useCreateInsight,
   useRecordCoachFollowUp,
   type Audit,
+  type EmailInsight,
 } from "@workspace/api-client-react";
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 import {
@@ -73,11 +76,19 @@ interface StoredFollowUp {
   anonToken: string | null;
 }
 
+interface StoredInsight {
+  insight: EmailInsight;
+  userId: string | null;
+  anonToken: string | null;
+}
+
 interface ServerState {
   audits: StoredAudit[];
   followUps: StoredFollowUp[];
+  insights: StoredInsight[];
   nextId: number;
   nextFollowUpId: number;
+  nextInsightId: number;
   claimCalls: number;
   lastClaimBody: Record<string, unknown> | null;
   redeemCalls: number;
@@ -106,8 +117,10 @@ interface ServerState {
 const server: ServerState = {
   audits: [],
   followUps: [],
+  insights: [],
   nextId: 1,
   nextFollowUpId: 1,
+  nextInsightId: 1,
   claimCalls: 0,
   lastClaimBody: null,
   redeemCalls: 0,
@@ -204,6 +217,35 @@ function installFetchMock(): void {
           anonToken: authState.isAuthenticated ? null : currentAnonToken,
         });
         return jsonResponse(201, audit);
+      }
+
+      // GET /api/insights — list visible insights for the current "user".
+      if (method === "GET" && url.endsWith("/api/insights")) {
+        const currentUserId = authState.isAuthenticated ? authState.user!.id : null;
+        const visible = server.insights
+          .filter((row) => row.userId === currentUserId)
+          .map((row) => row.insight);
+        return jsonResponse(200, visible);
+      }
+
+      // POST /api/insights — create an insight. Authed -> owned, anon -> userId=null.
+      if (method === "POST" && url.endsWith("/api/insights")) {
+        const body = init?.body ? JSON.parse(String(init.body)) : {};
+        const insight: EmailInsight = {
+          id: server.nextInsightId++,
+          sourceLabel: body.sourceLabel ?? "My messages",
+          sourceApp: body.sourceApp ?? null,
+          pastedContent: body.pastedContent ?? "",
+          consentGiven: body.consentGiven ?? false,
+          status: "pending",
+          createdAt: new Date().toISOString(),
+        };
+        server.insights.push({
+          insight,
+          userId: authState.isAuthenticated ? authState.user!.id : null,
+          anonToken: authState.isAuthenticated ? null : currentAnonToken,
+        });
+        return jsonResponse(201, insight);
       }
 
       // POST /api/coach/follow-ups — record a follow-up. Authed -> owned, anon -> userId=null.
@@ -327,6 +369,9 @@ function installFetchMock(): void {
         const followUpIds: number[] = Array.isArray(body.followUpIds)
           ? body.followUpIds
           : [];
+        const insightIds: number[] = Array.isArray(body.insightIds)
+          ? body.insightIds
+          : [];
         let claimed = 0;
         for (const row of server.audits) {
           if (
@@ -351,12 +396,24 @@ function installFetchMock(): void {
             claimedFollowUps += 1;
           }
         }
+        let claimedInsights = 0;
+        for (const row of server.insights) {
+          if (
+            insightIds.includes(row.insight.id) &&
+            row.userId === null &&
+            row.anonToken === parsed.anonToken
+          ) {
+            row.userId = authState.user!.id;
+            row.anonToken = null;
+            claimedInsights += 1;
+          }
+        }
         const response = {
           claimed: {
             audits: claimed,
             profiles: 0,
             messages: 0,
-            insights: 0,
+            insights: claimedInsights,
             followUps: claimedFollowUps,
           },
         };
@@ -430,8 +487,10 @@ beforeEach(() => {
   sessionStorage.clear();
   server.audits = [];
   server.followUps = [];
+  server.insights = [];
   server.nextId = 1;
   server.nextFollowUpId = 1;
+  server.nextInsightId = 1;
   server.claimCalls = 0;
   server.lastClaimBody = null;
   server.redeemCalls = 0;
@@ -554,6 +613,46 @@ function AnonFollowUpRecorder({ onRecorded }: { onRecorded: (id: number) => void
 function ClaimOnly() {
   useClaimAnonymousOnLogin();
   return null;
+}
+
+function AnonInsightCreator({ onCreated }: { onCreated: (id: number) => void }) {
+  const create = useCreateInsight();
+  const firedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (firedRef.current) return;
+    firedRef.current = true;
+    create.mutate(
+      {
+        data: {
+          sourceLabel: "Hinge chat",
+          pastedContent: "Hey! How's it going?",
+          consentGiven: true,
+        },
+      },
+      {
+        onSuccess: (insight) => {
+          rememberAnonymousId("insights", insight.id);
+          onCreated(insight.id);
+        },
+      },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
+}
+
+function InsightList() {
+  useClaimAnonymousOnLogin();
+  const { data: insights } = useListInsights();
+  return (
+    <ul data-testid="insight-list">
+      {(insights ?? []).map((ins) => (
+        <li key={ins.id} data-testid={`insight-${ins.id}`}>
+          {ins.sourceLabel} (#{ins.id})
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 describe("Anonymous coach follow-up follows the user into their account", () => {
@@ -1084,5 +1183,162 @@ describe("Cross-device hand-off claim flow", () => {
 
     // Navigation must have been directed to /start.
     expect(mockSetLocation).toHaveBeenCalledWith("/start");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Cross-device hand-off for Email Insights
+//
+// Device A (anonymous) creates an Email Insight, mints a signed hand-off
+// token, and builds a share URL. Device B (a fresh browser) opens the link,
+// signs in, and the insight appears in its list. Also verifies the no-op path:
+// when there are no anonymous insight IDs the redeem call still succeeds and
+// sends an empty insightIds array (no regression for users without insights).
+// ---------------------------------------------------------------------------
+
+describe("Anonymous Email Insight follows the user into their account via cross-device hand-off", () => {
+  it("device A's anonymous insight appears on device B after the hand-off link is redeemed", async () => {
+    // ===== DEVICE A — anonymous, creates an insight =====
+    currentAnonToken = "anon-token-insight-A";
+
+    let createdInsightId: number | undefined;
+    const deviceA = render(
+      <Wrap>
+        <AnonInsightCreator onCreated={(id) => (createdInsightId = id)} />
+      </Wrap>,
+    );
+
+    await waitFor(() => expect(createdInsightId).toBeDefined());
+    expect(server.insights).toHaveLength(1);
+    expect(server.insights[0]!.userId).toBeNull();
+    expect(server.insights[0]!.anonToken).toBe("anon-token-insight-A");
+
+    // The insight id was written to localStorage.
+    expect(readAnonymousIds().insightIds).toEqual([createdInsightId!]);
+
+    // Device A mints a hand-off token and builds the share URL.
+    const issueRes = await fetch("/api/claim-anonymous/handoff/issue", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(issueRes.status).toBe(200);
+    const issueBody = (await issueRes.json()) as { handoff: string };
+
+    const shareUrl = buildHandoffShareUrl(issueBody.handoff);
+    expect(shareUrl).toContain("nldc_handoff=");
+
+    deviceA.unmount();
+
+    // ===== DEVICE B — fresh browser, opens the share URL =====
+    switchToFreshBrowser();
+    openUrlInActiveBrowser(shareUrl);
+
+    // Device B has no anon cookie and no localStorage ids.
+    expect(hasAnyAnonymousIds()).toBe(false);
+
+    act(() => {
+      authState = {
+        isAuthenticated: true,
+        isLoading: false,
+        user: { id: "user-insight-B", email: null },
+      };
+    });
+
+    render(
+      <Wrap>
+        <InsightList />
+      </Wrap>,
+    );
+
+    // Device A's insight appears in device B's insight list.
+    await waitFor(() => {
+      expect(screen.getByTestId(`insight-${createdInsightId}`)).toBeTruthy();
+    });
+
+    // Redeem was called exactly once; cookie-scoped claim must not fire.
+    expect(server.redeemCalls).toBe(1);
+    expect(server.claimCalls).toBe(0);
+
+    // Redeem payload carried the insight id from the URL.
+    expect(server.lastRedeemBody?.insightIds).toEqual([createdInsightId!]);
+    expect(server.lastRedeemBody?.handoff).toBe(issueBody.handoff);
+
+    // Server response reports the insight was claimed.
+    expect(server.lastRedeemResponse?.claimed.insights).toBe(1);
+
+    // Ownership transferred on the server side.
+    expect(server.insights[0]!.userId).toBe("user-insight-B");
+    expect(server.insights[0]!.anonToken).toBeNull();
+
+    // Handoff token burned (single-use).
+    expect(server.usedHandoffTokens.has(issueBody.handoff)).toBe(true);
+
+    // Pending handoff cleared from sessionStorage after a successful redeem.
+    await waitFor(() =>
+      expect(sessionStorage.getItem("nldc:pendingHandoff")).toBeNull(),
+    );
+
+    // Query-string stripped from the address bar.
+    expect(window.location.search).toBe("");
+  });
+
+  it("no insightIds in the redeem body when device A had no anonymous insights (no regression)", async () => {
+    // ===== DEVICE A — anonymous, creates an AUDIT only (no insights) =====
+    currentAnonToken = "anon-token-no-insights-A";
+
+    let createdAuditId: number | undefined;
+    const deviceA = render(
+      <Wrap>
+        <AnonAuditCreator onCreated={(id) => (createdAuditId = id)} />
+      </Wrap>,
+    );
+
+    await waitFor(() => expect(createdAuditId).toBeDefined());
+
+    // Confirm no insight IDs are in localStorage.
+    expect(readAnonymousIds().insightIds).toEqual([]);
+
+    const issueRes = await fetch("/api/claim-anonymous/handoff/issue", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    const issueBody = (await issueRes.json()) as { handoff: string };
+    const shareUrl = buildHandoffShareUrl(issueBody.handoff);
+
+    deviceA.unmount();
+
+    // ===== DEVICE B — fresh browser, opens the share URL =====
+    switchToFreshBrowser();
+    openUrlInActiveBrowser(shareUrl);
+
+    act(() => {
+      authState = {
+        isAuthenticated: true,
+        isLoading: false,
+        user: { id: "user-no-insights-B", email: null },
+      };
+    });
+
+    render(
+      <Wrap>
+        <InsightList />
+      </Wrap>,
+    );
+
+    // Wait for redeem to fire.
+    await waitFor(() => expect(server.redeemCalls).toBe(1));
+
+    // insightIds is an empty array (not omitted), which is the no-op path.
+    expect(server.lastRedeemBody?.insightIds).toEqual([]);
+
+    // Server responded with zero claimed insights — no crash, no regression.
+    expect(server.lastRedeemResponse?.claimed.insights).toBe(0);
+
+    // Pending handoff cleared.
+    await waitFor(() =>
+      expect(sessionStorage.getItem("nldc:pendingHandoff")).toBeNull(),
+    );
   });
 });
