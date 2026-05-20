@@ -13,11 +13,13 @@ import React from "react";
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -46,6 +48,8 @@ function daysUntilPurge(iso: string | null | undefined): number {
   return Math.max(0, 30 - elapsed);
 }
 
+const PURGE_CONFIRM_PHRASE = "delete";
+
 export default function TrashScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -54,6 +58,16 @@ export default function TrashScreen() {
     useListTrashedAudits();
   const restore = useRestoreAudit();
   const purge = usePurgeAudit();
+
+  const [purgeTarget, setPurgeTarget] = React.useState<Audit | null>(null);
+  const [purgeConfirmText, setPurgeConfirmText] = React.useState("");
+  const isPurgeConfirmed =
+    purgeConfirmText.trim().toLowerCase() === PURGE_CONFIRM_PHRASE;
+
+  const closePurgeConfirm = React.useCallback(() => {
+    setPurgeTarget(null);
+    setPurgeConfirmText("");
+  }, []);
 
   const invalidate = React.useCallback(() => {
     void queryClient.invalidateQueries({
@@ -77,36 +91,34 @@ export default function TrashScreen() {
     [restore, invalidate],
   );
 
-  const handlePurge = React.useCallback(
-    (audit: Audit) => {
-      Alert.alert(
-        "Delete forever?",
-        `${audit.firstName ?? "This match"} will be permanently removed. This cannot be undone.`,
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Delete",
-            style: "destructive",
-            onPress: () =>
-              purge.mutate(
-                { id: audit.id },
-                {
-                  onSuccess: () => invalidate(),
-                  onError: () =>
-                    Alert.alert(
-                      "Couldn't delete",
-                      "Please try again in a moment.",
-                    ),
-                },
-              ),
-          },
-        ],
-      );
-    },
-    [purge, invalidate],
-  );
+  const handlePurge = React.useCallback((audit: Audit) => {
+    setPurgeConfirmText("");
+    setPurgeTarget(audit);
+  }, []);
+
+  const handleConfirmPurge = React.useCallback(() => {
+    if (!purgeTarget) return;
+    const id = purgeTarget.id;
+    purge.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          invalidate();
+          closePurgeConfirm();
+        },
+        onError: () => {
+          closePurgeConfirm();
+          Alert.alert("Couldn't delete", "Please try again in a moment.");
+        },
+      },
+    );
+  }, [purge, purgeTarget, invalidate, closePurgeConfirm]);
 
   const audits = (data ?? []) as Audit[];
+
+  const purgeTargetName = purgeTarget?.firstName ?? "This match";
+  const isPurging =
+    purge.isPending && purge.variables?.id === purgeTarget?.id;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -217,6 +229,7 @@ export default function TrashScreen() {
                     </Text>
                   </Pressable>
                   <Pressable
+                    testID={`button-trash-purge-${audit.id}`}
                     accessibilityRole="button"
                     accessibilityLabel={`Permanently delete ${audit.firstName ?? "match"}`}
                     onPress={() => handlePurge(audit)}
@@ -241,6 +254,117 @@ export default function TrashScreen() {
           })
         )}
       </ScrollView>
+
+      <Modal
+        transparent
+        visible={purgeTarget !== null}
+        animationType="fade"
+        onRequestClose={() => {
+          if (!isPurging) closePurgeConfirm();
+        }}
+      >
+        <View style={styles.modalBackdrop}>
+          <View
+            testID="dialog-confirm-purge-audit"
+            style={[
+              styles.modalCard,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.modalTitle, { color: colors.foreground }]}>
+              Delete forever?
+            </Text>
+            <Text style={[styles.modalBody, { color: colors.mutedForeground }]}>
+              {purgeTargetName} will be permanently removed. This can't be
+              undone.
+            </Text>
+            <View style={styles.modalConfirmField}>
+              <Text
+                style={[styles.modalLabel, { color: colors.mutedForeground }]}
+              >
+                Type{" "}
+                <Text
+                  style={{
+                    color: colors.foreground,
+                    fontFamily: "PlusJakartaSans_700Bold",
+                  }}
+                >
+                  delete
+                </Text>{" "}
+                to confirm
+              </Text>
+              <TextInput
+                testID="input-trash-purge-confirm"
+                value={purgeConfirmText}
+                onChangeText={setPurgeConfirmText}
+                placeholder="delete"
+                placeholderTextColor={colors.mutedForeground}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="off"
+                spellCheck={false}
+                editable={!isPurging}
+                style={[
+                  styles.modalInput,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.input ?? colors.card,
+                    color: colors.foreground,
+                  },
+                ]}
+              />
+            </View>
+            <View style={styles.modalActions}>
+              <Pressable
+                testID="button-trash-purge-cancel"
+                disabled={isPurging}
+                onPress={() => closePurgeConfirm()}
+                style={({ pressed }) => [
+                  styles.modalBtn,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.input ?? colors.card,
+                    opacity: isPurging ? 0.5 : pressed ? 0.85 : 1,
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.modalBtnLabel, { color: colors.foreground }]}
+                >
+                  Cancel
+                </Text>
+              </Pressable>
+              <Pressable
+                testID="button-trash-purge-confirm"
+                disabled={isPurging || !isPurgeConfirmed}
+                onPress={() => handleConfirmPurge()}
+                style={({ pressed }) => [
+                  styles.modalBtn,
+                  styles.modalBtnDanger,
+                  {
+                    backgroundColor: colors.destructive ?? "#ef4444",
+                    opacity: isPurging
+                      ? 0.7
+                      : !isPurgeConfirmed
+                        ? 0.5
+                        : pressed
+                          ? 0.85
+                          : 1,
+                  },
+                ]}
+              >
+                {isPurging ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={[styles.modalBtnLabel, { color: "#fff" }]}>
+                    Delete forever
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -282,5 +406,66 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 420,
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 20,
+    gap: 12,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  modalBody: {
+    fontSize: 13.5,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 19,
+  },
+  modalConfirmField: {
+    gap: 6,
+  },
+  modalLabel: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 10,
+    marginTop: 6,
+  },
+  modalBtn: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    minWidth: 90,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalBtnDanger: {
+    borderColor: "transparent",
+  },
+  modalBtnLabel: {
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_700Bold",
   },
 });
