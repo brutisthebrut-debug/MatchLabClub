@@ -300,6 +300,8 @@ vi.mock("@/lib/apiClient", () => ({
     perField: [],
     recent: [],
   })),
+  getBackgroundJobs: vi.fn(async () => ({ jobs: [] })),
+  getOcrMismatchesTrends: vi.fn(async () => ({ days: 30, since: new Date().toISOString(), series: [] })),
   getOcrLearnedRules: vi.fn(async () => ({ rules: [] })),
   runOcrLearn: vi.fn(async () => ({ scannedAudits: 0, candidates: 0, persisted: 0 })),
   clearOcrLearnedRules: vi.fn(async () => {}),

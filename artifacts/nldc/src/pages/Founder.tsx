@@ -1747,21 +1747,45 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
                       width={24}
                     />
                     <Tooltip
-                      contentStyle={{
-                        background: "hsl(268 30% 12%)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        borderRadius: 8,
-                        fontSize: 11,
-                      }}
-                      labelFormatter={(label) =>
-                        groupBy === "week"
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload || payload.length === 0) return null;
+                        const dayLabel = groupBy === "week"
                           ? `Week of ${fmtTrendDay(String(label))}`
-                          : fmtTrendDay(String(label))
-                      }
-                      formatter={(value: number, name: string) => [
-                        value,
-                        OCR_FIELD_LABELS[name] ?? name,
-                      ]}
+                          : fmtTrendDay(String(label));
+                        const fields = payload
+                          .filter((p) => p.dataKey !== "total")
+                          .map((p) => ({
+                            key: String(p.dataKey),
+                            label: OCR_FIELD_LABELS[String(p.dataKey)] ?? String(p.dataKey),
+                            value: Number(p.value ?? 0),
+                            color: String(p.color ?? "#fff"),
+                          }))
+                          .sort((a, b) => b.value - a.value);
+                        const totalEntry = payload.find((p) => p.dataKey === "total");
+                        const total = totalEntry ? Number(totalEntry.value ?? 0) : fields.reduce((s, f) => s + f.value, 0);
+                        return (
+                          <div style={{
+                            background: "hsl(268 30% 12%)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: 8,
+                            fontSize: 11,
+                            padding: "8px 12px",
+                            minWidth: 160,
+                          }}>
+                            <p style={{ color: "rgba(255,255,255,0.5)", marginBottom: 6, fontWeight: 600 }}>{dayLabel}</p>
+                            {fields.map((f) => (
+                              <div key={f.key} style={{ display: "flex", justifyContent: "space-between", gap: 16, marginBottom: 3 }}>
+                                <span style={{ color: f.color, opacity: 0.9 }}>{f.label}</span>
+                                <span style={{ color: "rgba(255,255,255,0.85)", fontVariantNumeric: "tabular-nums" }}>{f.value}</span>
+                              </div>
+                            ))}
+                            <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", marginTop: 5, paddingTop: 5, display: "flex", justifyContent: "space-between", gap: 16 }}>
+                              <span style={{ color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>Total</span>
+                              <span style={{ color: "rgba(255,255,255,0.95)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{total}</span>
+                            </div>
+                          </div>
+                        );
+                      }}
                     />
                     <Legend
                       wrapperStyle={{ fontSize: 10, opacity: 0.7 }}
