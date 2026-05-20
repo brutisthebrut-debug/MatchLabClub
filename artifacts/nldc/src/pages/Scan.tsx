@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import {
   useAuditFromScreenshot,
@@ -128,7 +128,9 @@ export default function Scan() {
   const [draft, setDraft] = useState<ExtractedDraft | null>(null);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const dragDepthRef = useRef(0);
 
   const extract = useExtractScreenshot();
   const scan = useAuditFromScreenshot();
@@ -136,6 +138,10 @@ export default function Scan() {
   async function onFileChosen(file: File | null | undefined) {
     if (!file) return;
     setErrorMsg(null);
+    if (!file.type.startsWith("image/")) {
+      setErrorMsg("That doesn't look like an image. Try a screenshot instead.");
+      return;
+    }
     try {
       const img = await fileToBase64(file);
       setPicked(img);
@@ -144,6 +150,59 @@ export default function Scan() {
     } catch {
       setErrorMsg("Couldn't read that file. Try a different screenshot.");
     }
+  }
+
+  useEffect(() => {
+    function onPaste(e: ClipboardEvent) {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const target = e.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable) {
+          return;
+        }
+      }
+      for (const item of items) {
+        if (item.kind === "file" && item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            void onFileChosen(file);
+            return;
+          }
+        }
+      }
+    }
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, []);
+
+  function onDragEnter(e: React.DragEvent<HTMLDivElement>) {
+    if (!e.dataTransfer?.types?.includes("Files")) return;
+    e.preventDefault();
+    dragDepthRef.current += 1;
+    setIsDragging(true);
+  }
+
+  function onDragOver(e: React.DragEvent<HTMLDivElement>) {
+    if (!e.dataTransfer?.types?.includes("Files")) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  }
+
+  function onDragLeave(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+    if (dragDepthRef.current === 0) setIsDragging(false);
+  }
+
+  function onDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    dragDepthRef.current = 0;
+    setIsDragging(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) void onFileChosen(file);
   }
 
   async function extractFromImage() {
@@ -271,8 +330,16 @@ export default function Scan() {
         {/* Upload card */}
         <motion.div
           {...fadeUp(0.05)}
-          className="glass border border-white/8 rounded-2xl p-6 mb-6"
+          className={`glass border rounded-2xl p-6 mb-6 transition-colors ${
+            isDragging
+              ? "border-[hsl(285_45%_70%)] bg-[hsl(285_45%_70%)]/10 ring-2 ring-[hsl(285_45%_70%)]/40"
+              : "border-white/8"
+          }`}
           data-testid="card-upload"
+          onDragEnter={onDragEnter}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
         >
           {picked ? (
             <div className="flex flex-col items-center gap-4">
@@ -327,6 +394,16 @@ export default function Scan() {
                   Works best on Hinge, Bumble, or Tinder screenshots where
                   the bio and prompts are visible. The image is processed on
                   our server — never stored.
+                </p>
+                <p
+                  className="text-xs text-muted-foreground/80"
+                  data-testid="text-paste-hint"
+                >
+                  Drop an image here, or press{" "}
+                  <kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/10 font-mono text-[10px]">
+                    ⌘/Ctrl + V
+                  </kbd>{" "}
+                  to paste a screenshot.
                 </p>
               </div>
               <input
