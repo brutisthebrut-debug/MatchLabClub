@@ -850,6 +850,55 @@ paths:
         "400":
           description: Invalid request body
 
+  /audits/{id}/correct-source-app:
+    post:
+      operationId: correctAuditSourceApp
+      tags: [audits]
+      summary: Record a user correction for a mis-detected source app
+      description: |
+        Called when the user indicates the source app shown on their report is
+        wrong. Stores the mismatch in the audit's `ocrCorrections` field so the
+        OCR learning pipeline can promote it to a rule after the configured
+        occurrence threshold, and updates the audit's `sourceApp` to the value
+        the user chose. Pass `null` for `correctedApp` to mark the app as unknown.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CorrectSourceAppInput"
+      responses:
+        "200":
+          description: Correction recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CorrectSourceAppResult"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "404":
+          description: Audit not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
   /audits/{id}/generate:
     post:
       operationId: generateAuditReport
@@ -1841,6 +1890,28 @@ components:
             Indicates which field (name or bio) was the primary match source and,
             for bio matches, a short excerpt around the matched text so users can
             see why the result appeared.
+
+    CorrectSourceAppInput:
+      type: object
+      required: [correctedApp]
+      properties:
+        correctedApp:
+          type: ["string", "null"]
+          description: |
+            The app the user says the audit actually came from — one of "Hinge",
+            "Bumble", "Tinder", "CoffeeMeetsBagel". Pass null to mark the app
+            as unknown/unrecognised.
+
+    CorrectSourceAppResult:
+      type: object
+      required: [success, sourceApp]
+      properties:
+        success:
+          type: boolean
+          const: true
+        sourceApp:
+          type: ["string", "null"]
+          description: The updated sourceApp value now stored on the audit.
 
     AuditMatchContext:
       type: object

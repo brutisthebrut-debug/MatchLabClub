@@ -289,6 +289,26 @@ export interface Audit {
   matchContext?: AuditMatchContext | null;
 }
 
+export interface CorrectSourceAppInput {
+  /**
+     * The app the user says the audit actually came from — one of "Hinge",
+  "Bumble", "Tinder", "CoffeeMeetsBagel". Pass null to mark the app
+  as unknown/unrecognised.
+
+     * @nullable
+     */
+  correctedApp: string | null;
+}
+
+export interface CorrectSourceAppResult {
+  success: true;
+  /**
+     * The updated sourceApp value now stored on the audit.
+     * @nullable
+     */
+  sourceApp: string | null;
+}
+
 export interface AuditReportVersion {
   id: number;
   auditId: number;
@@ -1201,6 +1221,14 @@ export type ListExpiringTrashedAuditsParams = {
  * @maximum 30
  */
 withinDays?: number;
+};
+
+export type CorrectAuditSourceApp400 = {
+  error?: string;
+};
+
+export type CorrectAuditSourceApp404 = {
+  error?: string;
 };
 
 export type ListAuditReportVersions404 = {

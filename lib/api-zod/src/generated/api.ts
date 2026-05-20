@@ -1370,6 +1370,29 @@ export const BulkDeleteAuditsResponse = zod.object({
 
 
 /**
+ * Called when the user indicates the source app shown on their report is
+wrong. Stores the mismatch in the audit's `ocrCorrections` field so the
+OCR learning pipeline can promote it to a rule after the configured
+occurrence threshold, and updates the audit's `sourceApp` to the value
+the user chose. Pass `null` for `correctedApp` to mark the app as unknown.
+
+ * @summary Record a user correction for a mis-detected source app
+ */
+export const CorrectAuditSourceAppParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const CorrectAuditSourceAppBody = zod.object({
+  "correctedApp": zod.string().nullable().describe('The app the user says the audit actually came from — one of \"Hinge\",\n\"Bumble\", \"Tinder\", \"CoffeeMeetsBagel\". Pass null to mark the app\nas unknown\/unrecognised.\n')
+})
+
+export const CorrectAuditSourceAppResponse = zod.object({
+  "success": zod.boolean(),
+  "sourceApp": zod.string().nullable().describe('The updated sourceApp value now stored on the audit.')
+})
+
+
+/**
  * @summary Generate AI profile audit report for an audit
  */
 export const GenerateAuditReportParams = zod.object({

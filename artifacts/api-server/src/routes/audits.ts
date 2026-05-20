@@ -20,6 +20,7 @@ import {
   ListAuditReportVersionsResponse,
   GetAuditReportVersionResponse,
 } from "@workspace/api-zod";
+import { z } from "zod/v4";
 import { generateAuditReport } from "../lib/aiEngine";
 import { getRetentionDays } from "../lib/auditTrashPurge";
 import { pruneVersionsForAudit } from "../lib/auditVersionPurge";
@@ -430,6 +431,69 @@ router.get("/audits/:id", async (req, res): Promise<void> => {
   }
 
   res.json(GetAuditResponse.parse(serializeAudit(audit)));
+});
+
+const VALID_SOURCE_APPS = new Set(["Hinge", "Bumble", "Tinder", "CoffeeMeetsBagel"]);
+
+const CorrectSourceAppBody = z.object({
+  correctedApp: z.string().nullable(),
+});
+
+router.post("/audits/:id/correct-source-app", async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+
+  const parsed = CorrectSourceAppBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const { correctedApp } = parsed.data;
+
+  if (correctedApp !== null && !VALID_SOURCE_APPS.has(correctedApp)) {
+    res.status(400).json({
+      error: `Invalid app. Must be one of: ${[...VALID_SOURCE_APPS].join(", ")}, or null.`,
+    });
+    return;
+  }
+
+  const [audit] = await db
+    .select()
+    .from(auditsTable)
+    .where(and(eq(auditsTable.id, id), activeOwnerScope(req)));
+  if (!audit) {
+    res.status(404).json({ error: "Audit not found" });
+    return;
+  }
+
+  const previousApp = audit.sourceApp ?? null;
+
+  const updatedCorrections: OcrCorrectionsRecord = {
+    ...((audit.ocrCorrections as OcrCorrectionsRecord | null) ?? {}),
+  };
+
+  if (previousApp !== correctedApp) {
+    const entry: OcrCorrectionEntry = {
+      raw: previousApp,
+      corrected: correctedApp,
+    };
+    updatedCorrections.sourceApp = entry;
+  }
+
+  await db
+    .update(auditsTable)
+    .set({
+      sourceApp: correctedApp,
+      ocrCorrections: Object.keys(updatedCorrections).length > 0 ? updatedCorrections : null,
+    })
+    .where(eq(auditsTable.id, id));
+
+  res.json({ success: true, sourceApp: correctedApp });
 });
 
 router.delete("/audits/:id", async (req, res): Promise<void> => {

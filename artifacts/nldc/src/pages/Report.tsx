@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
-import { useGetAudit, useGenerateAuditReport, useGetEngineMeta, useListAuditReportVersions, getGetAuditQueryKey, getListAuditReportVersionsQueryKey } from "@workspace/api-client-react";
+import { useGetAudit, useGenerateAuditReport, useGetEngineMeta, useListAuditReportVersions, getGetAuditQueryKey, getListAuditReportVersionsQueryKey, useCorrectAuditSourceApp } from "@workspace/api-client-react";
 import {
   CheckCircle, XCircle, AlertCircle, ArrowRight, Copy, Check,
   Trophy, Calendar, Eye, Sparkles, MessageSquare, Camera,
@@ -231,6 +231,68 @@ const REPLY_STYLES: Record<string, { gradient: string; emoji: string; border: st
   "Graceful Exit": { gradient: "linear-gradient(135deg, hsl(228 25% 40%), hsl(232 28% 32%))", emoji: "🤍", border: "hsl(228 25% 50% / 0.25)" },
 };
 
+const SOURCE_APPS = ["Hinge", "Bumble", "Tinder", "CoffeeMeetsBagel"] as const;
+
+function SourceAppPicker({
+  current,
+  saving,
+  onSelect,
+  onConfirm,
+  onCancel,
+}: {
+  current: string | null;
+  saving: boolean;
+  onSelect: (app: string | null) => void;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5" data-testid="source-app-picker">
+      {SOURCE_APPS.map((app) => (
+        <button
+          key={app}
+          onClick={() => onSelect(app)}
+          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border transition-colors ${
+            current === app
+              ? "bg-[hsl(268_52%_68%/0.25)] text-[hsl(268_60%_78%)] border-[hsl(268_52%_68%/0.6)]"
+              : "bg-white/4 text-muted-foreground border-white/10 hover:border-white/25 hover:text-foreground"
+          }`}
+          data-testid={`picker-app-${app.toLowerCase()}`}
+        >
+          {app}
+        </button>
+      ))}
+      <button
+        onClick={() => onSelect(null)}
+        className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border transition-colors ${
+          current === null
+            ? "bg-[hsl(268_52%_68%/0.25)] text-[hsl(268_60%_78%)] border-[hsl(268_52%_68%/0.6)]"
+            : "bg-white/4 text-muted-foreground border-white/10 hover:border-white/25 hover:text-foreground"
+        }`}
+        data-testid="picker-app-unknown"
+      >
+        Unknown
+      </button>
+      <button
+        onClick={onConfirm}
+        disabled={saving}
+        className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[hsl(268_52%_55%/0.8)] text-white border border-[hsl(268_52%_68%/0.4)] hover:bg-[hsl(268_52%_55%)] disabled:opacity-50 transition-colors"
+        data-testid="button-confirm-source-app"
+      >
+        {saving ? "Saving…" : "Save"}
+      </button>
+      <button
+        onClick={onCancel}
+        disabled={saving}
+        className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+        data-testid="button-cancel-source-app"
+      >
+        Cancel
+      </button>
+    </span>
+  );
+}
+
 function ShareReportBtn() {
   const [copied, setCopied] = useState(false);
   return (
@@ -272,6 +334,10 @@ export default function Report() {
   const [compareMode, setCompareMode] = useState(false);
   const [compareIds, setCompareIds] = useState<number[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [sourceAppPickerOpen, setSourceAppPickerOpen] = useState(false);
+  const [pendingSourceApp, setPendingSourceApp] = useState<string | null>(null);
+  const [sourceAppCorrected, setSourceAppCorrected] = useState(false);
+  const correctSourceApp = useCorrectAuditSourceApp();
 
   const versionsQuery = useListAuditReportVersions(auditId, {
     query: { enabled: !!auditId, queryKey: getListAuditReportVersionsQueryKey(auditId) },
@@ -435,13 +501,54 @@ export default function Report() {
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                     {audit?.firstName ?? "Your"} · Profile Signal Audit
                   </p>
-                  {audit?.sourceApp ? (
-                    <span
-                      className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.12)] text-[hsl(268_60%_78%)] border border-[hsl(268_52%_68%/0.3)]"
-                      data-testid="badge-source-app"
-                    >
-                      {audit.sourceApp}
+                  {audit ? (
+                    <span className="inline-flex items-center gap-1">
+                      <span
+                        className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.12)] text-[hsl(268_60%_78%)] border border-[hsl(268_52%_68%/0.3)]"
+                        data-testid="badge-source-app"
+                      >
+                        {sourceAppCorrected
+                          ? (pendingSourceApp ?? "Unknown")
+                          : (audit.sourceApp ?? "Unknown")}
+                      </span>
+                      {auditId && !sourceAppPickerOpen ? (
+                        <button
+                          className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                          onClick={() => {
+                            setPendingSourceApp(
+                              sourceAppCorrected ? pendingSourceApp : (audit.sourceApp ?? null),
+                            );
+                            setSourceAppPickerOpen(true);
+                          }}
+                          data-testid="button-wrong-app"
+                        >
+                          Wrong app?
+                        </button>
+                      ) : null}
                     </span>
+                  ) : null}
+                  {sourceAppPickerOpen ? (
+                    <SourceAppPicker
+                      current={pendingSourceApp ?? audit?.sourceApp ?? null}
+                      saving={correctSourceApp.isPending}
+                      onSelect={(app) => setPendingSourceApp(app)}
+                      onConfirm={() => {
+                        if (!auditId) return;
+                        correctSourceApp.mutate(
+                          { id: auditId, data: { correctedApp: pendingSourceApp } },
+                          {
+                            onSuccess: () => {
+                              setSourceAppCorrected(true);
+                              setSourceAppPickerOpen(false);
+                              queryClient.invalidateQueries({
+                                queryKey: getGetAuditQueryKey(auditId),
+                              });
+                            },
+                          },
+                        );
+                      }}
+                      onCancel={() => setSourceAppPickerOpen(false)}
+                    />
                   ) : null}
                 </div>
                 <div className="flex items-center gap-3 mb-3">

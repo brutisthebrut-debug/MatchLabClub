@@ -49,6 +49,10 @@ import type {
   CoachFollowUpRecorded,
   CoachFollowUpStats,
   CoachFollowUpTimeline,
+  CorrectAuditSourceApp400,
+  CorrectAuditSourceApp404,
+  CorrectSourceAppInput,
+  CorrectSourceAppResult,
   DatingProfile,
   DatingProfileInput,
   DatingProfileUpdate,
@@ -2528,6 +2532,84 @@ export const useBulkDeleteAudits = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getBulkDeleteAuditsMutationOptions(options));
+    }
+
+export const getCorrectAuditSourceAppUrl = (id: number,) => {
+
+
+
+
+  return `/api/audits/${id}/correct-source-app`
+}
+
+/**
+ * Called when the user indicates the source app shown on their report is
+wrong. Stores the mismatch in the audit's `ocrCorrections` field so the
+OCR learning pipeline can promote it to a rule after the configured
+occurrence threshold, and updates the audit's `sourceApp` to the value
+the user chose. Pass `null` for `correctedApp` to mark the app as unknown.
+
+ * @summary Record a user correction for a mis-detected source app
+ */
+export const correctAuditSourceApp = async (id: number,
+    correctSourceAppInput: CorrectSourceAppInput, options?: RequestInit): Promise<CorrectSourceAppResult> => {
+
+  return customFetch<CorrectSourceAppResult>(getCorrectAuditSourceAppUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      correctSourceAppInput,)
+  }
+);}
+
+
+
+
+export const getCorrectAuditSourceAppMutationOptions = <TError = ErrorType<CorrectAuditSourceApp400 | CorrectAuditSourceApp404>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof correctAuditSourceApp>>, TError,{id: number;data: BodyType<CorrectSourceAppInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof correctAuditSourceApp>>, TError,{id: number;data: BodyType<CorrectSourceAppInput>}, TContext> => {
+
+const mutationKey = ['correctAuditSourceApp'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof correctAuditSourceApp>>, {id: number;data: BodyType<CorrectSourceAppInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  correctAuditSourceApp(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CorrectAuditSourceAppMutationResult = NonNullable<Awaited<ReturnType<typeof correctAuditSourceApp>>>
+    export type CorrectAuditSourceAppMutationBody = BodyType<CorrectSourceAppInput>
+    export type CorrectAuditSourceAppMutationError = ErrorType<CorrectAuditSourceApp400 | CorrectAuditSourceApp404>
+
+    /**
+ * @summary Record a user correction for a mis-detected source app
+ */
+export const useCorrectAuditSourceApp = <TError = ErrorType<CorrectAuditSourceApp400 | CorrectAuditSourceApp404>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof correctAuditSourceApp>>, TError,{id: number;data: BodyType<CorrectSourceAppInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof correctAuditSourceApp>>,
+        TError,
+        {id: number;data: BodyType<CorrectSourceAppInput>},
+        TContext
+      > => {
+      return useMutation(getCorrectAuditSourceAppMutationOptions(options));
     }
 
 export const getGenerateAuditReportUrl = (id: number,) => {

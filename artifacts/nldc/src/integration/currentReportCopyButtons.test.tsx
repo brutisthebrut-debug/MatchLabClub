@@ -47,6 +47,7 @@ vi.mock("@workspace/api-client-react", () => ({
       ],
     },
   }),
+  useCorrectAuditSourceApp: () => ({ mutate: vi.fn(), isPending: false }),
   getGetAuditQueryKey: (id: number) => ["audit", id],
   getListAuditReportVersionsQueryKey: (id: number) => ["audit-versions", id],
 }));

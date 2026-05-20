@@ -43,6 +43,7 @@ vi.mock("@workspace/api-client-react", () => ({
   useListAuditReportVersions: () => ({
     data: { versions: [{ id: 1, readinessScore: 72, generatedAt: new Date().toISOString(), report: NEW_CURRENT_REPORT }] },
   }),
+  useCorrectAuditSourceApp: () => ({ mutate: vi.fn(), isPending: false }),
   getGetAuditQueryKey: (id: number) => ["audit", id],
   getListAuditReportVersionsQueryKey: (id: number) => ["audit-versions", id],
 }));
