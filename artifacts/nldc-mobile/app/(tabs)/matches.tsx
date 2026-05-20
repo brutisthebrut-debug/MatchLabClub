@@ -10,6 +10,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -53,6 +54,9 @@ const DEMO_MATCHES: DemoMatch[] = [
   },
 ];
 
+type SortOrder = "newest" | "topScore";
+type ScoreRange = "all" | "low" | "medium" | "high";
+
 function formatDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
@@ -77,6 +81,14 @@ function scoreColor(
   return colors.rose;
 }
 
+function matchesScoreRange(score: number | null, range: ScoreRange): boolean {
+  if (range === "all") return true;
+  if (score === null) return false;
+  if (range === "high") return score >= 75;
+  if (range === "medium") return score >= 55 && score < 75;
+  return score < 55;
+}
+
 export default function MatchesScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -86,12 +98,41 @@ export default function MatchesScreen() {
     source: "screenshot",
   });
 
+  const [query, setQuery] = React.useState("");
+  const [sort, setSort] = React.useState<SortOrder>("newest");
+  const [range, setRange] = React.useState<ScoreRange>("all");
+
   const topInset = Platform.OS === "web" ? Math.max(insets.top, 24) : insets.top;
   const bottomInset =
     Platform.OS === "web" ? Math.max(insets.bottom, 34) + 84 : insets.bottom + 80;
 
-  const audits = (data ?? []).slice().reverse();
-  const showDemo = !isLoading && audits.length === 0;
+  const allAudits = React.useMemo(() => (data ?? []).slice().reverse(), [data]);
+
+  const filteredAudits = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const filtered = allAudits.filter((a) => {
+      if (!matchesScoreRange(a.readinessScore ?? null, range)) return false;
+      if (!q) return true;
+      const name = (a.firstName ?? "").toLowerCase();
+      const bio = (a.bio ?? "").toLowerCase();
+      return name.includes(q) || bio.includes(q);
+    });
+    const sorted = filtered.slice();
+    if (sort === "topScore") {
+      sorted.sort((a, b) => (b.readinessScore ?? -1) - (a.readinessScore ?? -1));
+    } else {
+      sorted.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    }
+    return sorted;
+  }, [allAudits, query, sort, range]);
+
+  const showDemo = !isLoading && allAudits.length === 0;
+  const hasFilters = query.trim().length > 0 || sort !== "newest" || range !== "all";
+  const showNoResults =
+    !isLoading && allAudits.length > 0 && filteredAudits.length === 0;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -107,12 +148,88 @@ export default function MatchesScreen() {
             tintColor={colors.primary}
           />
         }
+        keyboardShouldPersistTaps="handled"
       >
         <ScreenHeader
           eyebrow="My Matches"
           title="Profiles you've scanned"
           subtitle="Every screenshot you audit lands here. Tap one to re-open its mini-report."
         />
+
+        {!showDemo && allAudits.length > 0 ? (
+          <View style={styles.controls}>
+            <View
+              style={[
+                styles.searchBar,
+                { backgroundColor: colors.card, borderColor: colors.cardBorder },
+              ]}
+            >
+              <Feather name="search" size={14} color={colors.mutedForeground} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Search by name or bio"
+                placeholderTextColor={colors.mutedForeground}
+                style={[styles.searchInput, { color: colors.foreground }]}
+                autoCorrect={false}
+                autoCapitalize="none"
+                returnKeyType="search"
+              />
+              {query.length > 0 ? (
+                <Pressable
+                  onPress={() => setQuery("")}
+                  hitSlop={8}
+                  accessibilityLabel="Clear search"
+                >
+                  <Feather name="x" size={14} color={colors.mutedForeground} />
+                </Pressable>
+              ) : null}
+            </View>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chipRow}
+            >
+              <Chip
+                label="Newest"
+                icon="clock"
+                active={sort === "newest"}
+                onPress={() => setSort("newest")}
+              />
+              <Chip
+                label="Top score"
+                icon="award"
+                active={sort === "topScore"}
+                onPress={() => setSort("topScore")}
+              />
+              <View style={[styles.divider, { backgroundColor: colors.cardBorder }]} />
+              <Chip
+                label="All"
+                active={range === "all"}
+                onPress={() => setRange("all")}
+              />
+              <Chip
+                label="High 75+"
+                tone="success"
+                active={range === "high"}
+                onPress={() => setRange("high")}
+              />
+              <Chip
+                label="Medium 55–74"
+                tone="gold"
+                active={range === "medium"}
+                onPress={() => setRange("medium")}
+              />
+              <Chip
+                label="Low <55"
+                tone="rose"
+                active={range === "low"}
+                onPress={() => setRange("low")}
+              />
+            </ScrollView>
+          </View>
+        ) : null}
 
         {isLoading ? (
           <View
@@ -190,9 +307,48 @@ export default function MatchesScreen() {
           </View>
         ) : null}
 
-        {!showDemo && audits.length > 0 ? (
+        {showNoResults ? (
+          <View
+            style={[
+              styles.emptyCard,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+          >
+            <View style={[styles.iconBubble, { backgroundColor: `${colors.violet}22` }]}>
+              <Feather name="filter" size={18} color={colors.violet} />
+            </View>
+            <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
+              No matches fit those filters
+            </Text>
+            <Text style={[styles.emptyBody, { color: colors.mutedForeground }]}>
+              Try a different search, score range, or sort order.
+            </Text>
+            {hasFilters ? (
+              <Pressable
+                onPress={() => {
+                  setQuery("");
+                  setSort("newest");
+                  setRange("all");
+                }}
+                style={({ pressed }) => [
+                  styles.resetBtn,
+                  {
+                    borderColor: colors.cardBorder,
+                    opacity: pressed ? 0.7 : 1,
+                  },
+                ]}
+              >
+                <Text style={[styles.resetBtnText, { color: colors.foreground }]}>
+                  Reset filters
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ) : null}
+
+        {!showDemo && filteredAudits.length > 0 ? (
           <View style={styles.list}>
-            {audits.map((audit) => (
+            {filteredAudits.map((audit) => (
               <MatchRow
                 key={audit.id}
                 firstName={audit.firstName}
@@ -206,6 +362,49 @@ export default function MatchesScreen() {
         ) : null}
       </ScrollView>
     </View>
+  );
+}
+
+function Chip({
+  label,
+  icon,
+  active,
+  tone,
+  onPress,
+}: {
+  label: string;
+  icon?: React.ComponentProps<typeof Feather>["name"];
+  active: boolean;
+  tone?: "success" | "gold" | "rose";
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  const toneColor =
+    tone === "success"
+      ? colors.success
+      : tone === "gold"
+        ? colors.gold
+        : tone === "rose"
+          ? colors.rose
+          : colors.primary;
+  const bg = active ? `${toneColor}22` : colors.card;
+  const border = active ? toneColor : colors.cardBorder;
+  const fg = active ? toneColor : colors.foreground;
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.chip,
+        {
+          backgroundColor: bg,
+          borderColor: border,
+          opacity: pressed ? 0.7 : 1,
+        },
+      ]}
+    >
+      {icon ? <Feather name={icon} size={12} color={fg} /> : null}
+      <Text style={[styles.chipText, { color: fg }]}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -275,6 +474,46 @@ function MatchRow({
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { paddingHorizontal: 20, gap: 14 },
+  controls: { gap: 10 },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: Platform.OS === "ios" ? 10 : 6,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_500Medium",
+    padding: 0,
+  },
+  chipRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingRight: 4,
+  },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  chipText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+  },
+  divider: {
+    width: 1,
+    height: 18,
+    marginHorizontal: 2,
+  },
   loadingCard: {
     flexDirection: "row",
     gap: 12,
@@ -324,6 +563,17 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     fontFamily: "PlusJakartaSans_500Medium",
     marginBottom: 6,
+  },
+  resetBtn: {
+    alignSelf: "flex-start",
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  resetBtnText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_600SemiBold",
   },
   demoLabelRow: {
     flexDirection: "row",
