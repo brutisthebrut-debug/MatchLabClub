@@ -14,6 +14,19 @@ vi.mock("@workspace/replit-auth-web", () => ({
   useAuth: () => authState,
 }));
 
+// Spy on toast so the replay test can assert on the 'already_used' branch.
+// Mocking the module keeps ToastAction from needing a real shadcn Toaster
+// context in jsdom.
+vi.mock("@/hooks/use-toast", () => ({
+  toast: vi.fn(),
+}));
+
+vi.mock("@/components/ui/toast", () => ({
+  ToastAction: ({ children }: { children: React.ReactNode }) => (
+    <button>{children}</button>
+  ),
+}));
+
 // IMPORTANT: import AFTER the mock is registered.
 import {
   useCreateAudit,
@@ -31,6 +44,7 @@ import {
   buildHandoffShareUrl,
   encodePendingHandoffParam,
 } from "@/lib/handoffLink";
+import { toast } from "@/hooks/use-toast";
 
 // ---------------------------------------------------------------------------
 // Fetch mock: simulates the server side of the claim flow.
@@ -419,6 +433,7 @@ beforeEach(() => {
   // clear this via `switchToFreshBrowser()` to model an untagged second device.
   currentAnonToken = "anon-default-browser";
   authState = { isAuthenticated: false, isLoading: false, user: null };
+  vi.mocked(toast).mockClear();
   window.history.replaceState(null, "", "/");
   installFetchMock();
   qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -849,5 +864,119 @@ describe("Cross-device hand-off claim flow", () => {
     // No usable token was ever issued through this path, so nothing was
     // burned in the single-use set.
     expect(server.usedHandoffTokens.size).toBe(0);
+  });
+
+  it("replaying an already-used hand-off link shows the 'already used' toast and does NOT re-claim the audit on device C", async () => {
+    // ===== DEVICE A — anonymous, creates an audit and mints a hand-off token =====
+    currentAnonToken = "anon-token-device-A";
+
+    let createdId: number | undefined;
+    const deviceA = render(
+      <Wrap>
+        <AnonAuditCreator onCreated={(id) => (createdId = id)} />
+      </Wrap>,
+    );
+
+    await waitFor(() => expect(createdId).toBeDefined());
+    expect(server.audits).toHaveLength(1);
+    expect(server.audits[0]!.userId).toBeNull();
+    expect(server.audits[0]!.anonToken).toBe("anon-token-device-A");
+
+    const issueRes = await fetch("/api/claim-anonymous/handoff/issue", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(issueRes.status).toBe(200);
+    const issueBody = (await issueRes.json()) as { handoff: string };
+    const shareUrl = buildHandoffShareUrl(issueBody.handoff);
+
+    deviceA.unmount();
+
+    // ===== DEVICE B — first redemption (the happy path, consumes the token) =====
+    switchToFreshBrowser();
+    openUrlInActiveBrowser(shareUrl);
+
+    act(() => {
+      authState = {
+        isAuthenticated: true,
+        isLoading: false,
+        user: { id: "user-device-B", email: null },
+      };
+    });
+
+    const deviceB = render(
+      <Wrap>
+        <ClaimOnly />
+      </Wrap>,
+    );
+
+    // Wait for device B's redeem to complete and burn the token.
+    await waitFor(() => expect(server.redeemCalls).toBe(1));
+    expect(server.audits[0]!.userId).toBe("user-device-B");
+    expect(server.usedHandoffTokens.has(issueBody.handoff)).toBe(true);
+
+    // Pending hand-off is cleared from sessionStorage after a successful redeem.
+    await waitFor(() =>
+      expect(sessionStorage.getItem("nldc:pendingHandoff")).toBeNull(),
+    );
+
+    deviceB.unmount();
+
+    // ===== DEVICE C — fresh browser, replays the same share URL =====
+    switchToFreshBrowser();
+    // Device C (a third device, or device B on a second visit) opens the
+    // exact same share URL whose token was already burned by device B.
+    openUrlInActiveBrowser(shareUrl);
+
+    act(() => {
+      authState = {
+        isAuthenticated: true,
+        isLoading: false,
+        user: { id: "user-device-C", email: null },
+      };
+    });
+
+    render(
+      <Wrap>
+        <ClaimOnly />
+      </Wrap>,
+    );
+
+    // The redeem call fires again — but the server rejects it as "already used".
+    await waitFor(() => expect(server.redeemCalls).toBe(2));
+
+    // The hook classifies the error as 'already_used' and shows the right toast.
+    await waitFor(() =>
+      expect(vi.mocked(toast)).toHaveBeenCalledWith(
+        expect.objectContaining({ title: "This link was already used" }),
+      ),
+    );
+
+    // The "Open dashboard" CTA was included in the toast.
+    const toastCall = vi.mocked(toast).mock.calls.find((args) =>
+      (args[0] as { title?: string }).title === "This link was already used",
+    );
+    expect(toastCall).toBeDefined();
+    const toastArg = toastCall![0] as { action?: React.ReactElement };
+    expect(toastArg.action).toBeDefined();
+
+    // The audit was NOT re-claimed by device C — it still belongs to device B.
+    const stored = server.audits.find((r) => r.audit.id === createdId);
+    expect(stored?.userId).toBe("user-device-B");
+    expect(stored?.anonToken).toBeNull();
+
+    // The single-use set still has exactly one entry (no double-burn).
+    expect(server.usedHandoffTokens.size).toBe(1);
+
+    // Pending hand-off is cleared from sessionStorage on device C too, so
+    // the dead token is not retried on subsequent renders.
+    await waitFor(() =>
+      expect(sessionStorage.getItem("nldc:pendingHandoff")).toBeNull(),
+    );
+
+    // The cookie-scoped claim must never have fired on any device —
+    // none of them had anonymous ids in localStorage.
+    expect(server.claimCalls).toBe(0);
   });
 });
