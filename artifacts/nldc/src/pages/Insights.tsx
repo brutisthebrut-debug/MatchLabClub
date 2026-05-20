@@ -484,7 +484,15 @@ export default function Insights() {
                               className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30"
                               data-testid="badge-insight-source"
                             >
-                              {analysis ? resultSource : DEMO_DETECTED_SOURCE}
+                              Tuned to {analysis ? resultSource : DEMO_DETECTED_SOURCE}
+                            </span>
+                          ) : analysis ? (
+                            <span
+                              className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border"
+                              data-testid="badge-insight-source-unknown"
+                              title="Select a source platform to personalize future analyses"
+                            >
+                              General analysis · pick a platform to personalize
                             </span>
                           ) : null}
                         </div>
