@@ -13,7 +13,7 @@ import {
   type OcrMismatchesResponse, type OcrMismatchesSort, type OcrMismatchesWindow,
   type OcrCorrectionField,
   type OcrLearnedRule, type OcrLearnResult,
-  type OcrMismatchesTrendsResponse,
+  type OcrMismatchesTrendsResponse, type OcrMismatchTrendEntry,
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
 import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
@@ -1103,6 +1103,33 @@ function fmtTrendDay(day: string) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+function getIsoWeekStart(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00Z");
+  const dow = d.getUTCDay();
+  const diff = dow === 0 ? -6 : 1 - dow;
+  d.setUTCDate(d.getUTCDate() + diff);
+  return d.toISOString().slice(0, 10);
+}
+
+function groupTrendByWeek(series: OcrMismatchTrendEntry[]): OcrMismatchTrendEntry[] {
+  const buckets = new Map<string, OcrMismatchTrendEntry>();
+  for (const entry of series) {
+    const weekStart = getIsoWeekStart(entry.day);
+    const existing = buckets.get(weekStart);
+    if (existing) {
+      existing.firstName  += entry.firstName;
+      existing.age        += entry.age;
+      existing.sourceApp  += entry.sourceApp;
+      existing.bio        += entry.bio;
+      existing.prompts    += entry.prompts;
+      existing.total      += entry.total;
+    } else {
+      buckets.set(weekStart, { ...entry, day: weekStart });
+    }
+  }
+  return [...buckets.values()].sort((a, b) => a.day.localeCompare(b.day));
+}
+
 function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
   const [days, setDays] = useState<TrendDays>(90);
   const [metric, setMetric] = useState<TrendMetric>("firstTrySuccessRate");
@@ -1544,6 +1571,7 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
   const [trendData, setTrendData] = useState<OcrMismatchesTrendsResponse | null>(null);
   const [trendLoading, setTrendLoading] = useState(true);
   const [trendError, setTrendError] = useState<string | null>(null);
+  const [groupBy, setGroupBy] = useState<"day" | "week">("day");
 
   const trendDays = windowDays === null ? 90 : windowDays;
 
@@ -1646,9 +1674,31 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
           </div>
 
           <div className="glass rounded-xl p-4 space-y-3" data-testid="ocr-trend-chart">
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
-              Corrections per day — last {trendDays} days
-            </h3>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                Corrections per {groupBy} — last {trendDays} days
+              </h3>
+              <div
+                className="flex items-center rounded-lg overflow-hidden border border-white/10 text-xs"
+                data-testid="ocr-trend-groupby-toggle"
+              >
+                {(["day", "week"] as const).map((opt) => (
+                  <button
+                    key={opt}
+                    data-testid={`ocr-trend-groupby-${opt}`}
+                    onClick={() => setGroupBy(opt)}
+                    className={[
+                      "px-3 py-1 capitalize transition-colors",
+                      groupBy === opt
+                        ? "bg-white/10 text-foreground font-medium"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+                    ].join(" ")}
+                  >
+                    {opt === "day" ? "Day" : "Week"}
+                  </button>
+                ))}
+              </div>
+            </div>
             {trendLoading && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Loader2 className="w-3 h-3 animate-spin" /> Loading trend…
@@ -1658,7 +1708,10 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
               <p className="text-xs text-[hsl(348_55%_68%)]">{trendError}</p>
             )}
             {trendData && !trendLoading && (() => {
-              const hasAnyData = trendData.series.some((s) => s.total > 0);
+              const chartSeries = groupBy === "week"
+                ? groupTrendByWeek(trendData.series)
+                : trendData.series;
+              const hasAnyData = chartSeries.some((s) => s.total > 0);
               if (!hasAnyData) {
                 return (
                   <p className="text-xs text-muted-foreground/50 italic py-6 text-center" data-testid="ocr-trend-empty">
@@ -1668,7 +1721,7 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
               }
               return (
                 <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={trendData.series} margin={{ top: 4, right: 12, bottom: 4, left: 0 }}>
+                  <LineChart data={chartSeries} margin={{ top: 4, right: 12, bottom: 4, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                     <XAxis
                       dataKey="day"
@@ -1692,7 +1745,11 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
                         borderRadius: 8,
                         fontSize: 11,
                       }}
-                      labelFormatter={fmtTrendDay}
+                      labelFormatter={(label) =>
+                        groupBy === "week"
+                          ? `Week of ${fmtTrendDay(String(label))}`
+                          : fmtTrendDay(String(label))
+                      }
                       formatter={(value: number, name: string) => [
                         value,
                         OCR_FIELD_LABELS[name] ?? name,
