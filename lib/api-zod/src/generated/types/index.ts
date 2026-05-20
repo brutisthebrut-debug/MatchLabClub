@@ -42,6 +42,7 @@ export * from './communicationPattern';
 export * from './datingProfile';
 export * from './datingProfileInput';
 export * from './datingProfileUpdate';
+export * from './deleteAuditResult';
 export * from './deleteMyAccountResult';
 export * from './deleteMyAccountResultDeleted';
 export * from './emailInsight';

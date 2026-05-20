@@ -1,13 +1,18 @@
 import { Feather } from "@expo/vector-icons";
 import {
+  getListAuditsQueryKey,
+  useDeleteAudit,
   useGenerateAuditReport,
   useGetAudit,
 } from "@workspace/api-client-react";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -37,9 +42,43 @@ export default function AuditDetailScreen() {
 
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const queryClient = useQueryClient();
 
   const auditQuery = useGetAudit(valid ? id : 0);
   const generate = useGenerateAuditReport();
+  const deleteAudit = useDeleteAudit({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: getListAuditsQueryKey({ source: "screenshot" }),
+        });
+        queryClient.invalidateQueries({ queryKey: getListAuditsQueryKey() });
+        if (router.canGoBack()) router.back();
+        else router.replace("/(tabs)/matches" as never);
+      },
+      onError: () => {
+        if (Platform.OS !== "web") {
+          Alert.alert("Couldn't delete", "Something went wrong. Try again.");
+        }
+      },
+    },
+  });
+
+  const askDelete = () => {
+    if (!valid) return;
+    const name = auditQuery.data?.firstName ?? "this match";
+    const message = `Remove ${name} from your matches? This can't be undone.`;
+    const run = () => deleteAudit.mutate({ id });
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined" && window.confirm(message)) run();
+      return;
+    }
+    Alert.alert("Delete match?", message, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: run },
+    ]);
+  };
   const [report, setReport] = useState<ReportShape | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -83,6 +122,21 @@ export default function AuditDetailScreen() {
       <Stack.Screen
         options={{
           title: audit?.firstName ? audit.firstName : "Mini-report",
+          headerRight: () =>
+            valid && audit ? (
+              <Pressable
+                onPress={askDelete}
+                disabled={deleteAudit.isPending}
+                hitSlop={12}
+                style={({ pressed }) => [
+                  styles.headerDelete,
+                  { opacity: deleteAudit.isPending ? 0.4 : pressed ? 0.6 : 1 },
+                ]}
+                accessibilityLabel="Delete match"
+              >
+                <Feather name="trash-2" size={20} color={colors.destructive} />
+              </Pressable>
+            ) : null,
         }}
       />
       <ScrollView
@@ -304,6 +358,10 @@ function Bullet({ color, text }: { color: string; text: string }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  headerDelete: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
   content: { paddingHorizontal: 20, paddingTop: 8, gap: 14 },
   loadingCard: {
     flexDirection: "row",

@@ -40,6 +40,7 @@ import type {
   DatingProfile,
   DatingProfileInput,
   DatingProfileUpdate,
+  DeleteAuditResult,
   DeleteMyAccountResult,
   EmailInsight,
   EmailInsightAnalysis,
@@ -1159,6 +1160,81 @@ export function useGetAudit<TData = Awaited<ReturnType<typeof getAudit>>, TError
 
 
 
+
+export const getDeleteAuditUrl = (id: number,) => {
+
+
+
+
+  return `/api/audits/${id}`
+}
+
+/**
+ * Permanently deletes a single audit. Only the audit owner (matched by
+userId for authenticated requests, or anonymous session for guests) can
+delete it. Returns 404 if the audit does not exist or is not owned by
+the caller.
+
+ * @summary Delete an audit owned by the current session
+ */
+export const deleteAudit = async (id: number, options?: RequestInit): Promise<DeleteAuditResult> => {
+
+  return customFetch<DeleteAuditResult>(getDeleteAuditUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteAuditMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAudit>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAudit>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteAudit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAudit>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAudit(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAuditMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAudit>>>
+
+    export type DeleteAuditMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete an audit owned by the current session
+ */
+export const useDeleteAudit = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAudit>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAudit>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteAuditMutationOptions(options));
+    }
 
 export const getGenerateAuditReportUrl = (id: number,) => {
 

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, eq, isNull, type SQL } from "drizzle-orm";
+import { and, eq, isNull, sql, type SQL } from "drizzle-orm";
 import { db, auditsTable } from "@workspace/db";
 import {
   CreateAuditBody,
@@ -9,22 +9,35 @@ import {
   GetAuditSummaryResponse,
   AuditFromScreenshotBody,
   AuditFromScreenshotResponse,
+  DeleteAuditResponse,
 } from "@workspace/api-zod";
 import { generateAuditReport } from "../lib/aiEngine";
-import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
+import {
+  getAnonClaimToken,
+  getOrCreateAnonClaimToken,
+} from "../lib/anonClaimToken";
 import { extractProfileFromScreenshot } from "../lib/ocr";
+import type { Request } from "express";
 
 const router: IRouter = Router();
 
-function userScope(userId: string | undefined): SQL {
-  return userId ? eq(auditsTable.userId, userId) : isNull(auditsTable.userId);
+function ownerScope(req: Request): SQL {
+  if (req.user?.id) return eq(auditsTable.userId, req.user.id);
+  const anonToken = getAnonClaimToken(req);
+  if (anonToken) {
+    return and(
+      isNull(auditsTable.userId),
+      eq(auditsTable.anonymousClaimToken, anonToken),
+    ) as SQL;
+  }
+  return sql`false`;
 }
 
 router.get("/audits/summary", async (req, res): Promise<void> => {
   const audits = await db
     .select()
     .from(auditsTable)
-    .where(userScope(req.user?.id))
+    .where(ownerScope(req))
     .orderBy(auditsTable.createdAt);
 
   const completed = audits.filter((a) => a.readinessScore !== null);
@@ -64,8 +77,8 @@ router.get("/audits", async (req, res): Promise<void> => {
       ? eq(auditsTable.source, sourceParam)
       : undefined;
   const where = sourceFilter
-    ? and(userScope(req.user?.id), sourceFilter)
-    : userScope(req.user?.id);
+    ? and(ownerScope(req), sourceFilter)
+    : ownerScope(req);
   const audits = await db
     .select()
     .from(auditsTable)
@@ -115,7 +128,7 @@ router.get("/audits/:id", async (req, res): Promise<void> => {
   const [audit] = await db
     .select()
     .from(auditsTable)
-    .where(and(eq(auditsTable.id, id), userScope(req.user?.id)));
+    .where(and(eq(auditsTable.id, id), ownerScope(req)));
   if (!audit) {
     res.status(404).json({ error: "Audit not found" });
     return;
@@ -125,6 +138,28 @@ router.get("/audits/:id", async (req, res): Promise<void> => {
     ...audit,
     createdAt: audit.createdAt instanceof Date ? audit.createdAt.toISOString() : String(audit.createdAt),
   }));
+});
+
+router.delete("/audits/:id", async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+
+  const [audit] = await db
+    .select()
+    .from(auditsTable)
+    .where(and(eq(auditsTable.id, id), ownerScope(req)));
+  if (!audit) {
+    res.status(404).json({ error: "Audit not found" });
+    return;
+  }
+
+  await db.delete(auditsTable).where(eq(auditsTable.id, id));
+
+  res.json(DeleteAuditResponse.parse({ success: true, deletedId: id }));
 });
 
 router.post("/audits/:id/generate", async (req, res): Promise<void> => {
@@ -138,7 +173,7 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
   const [audit] = await db
     .select()
     .from(auditsTable)
-    .where(and(eq(auditsTable.id, id), userScope(req.user?.id)));
+    .where(and(eq(auditsTable.id, id), ownerScope(req)));
   if (!audit) {
     res.status(404).json({ error: "Audit not found" });
     return;
@@ -193,6 +228,10 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
 
   const promptsText = extracted.prompts.length ? extracted.prompts.join("\n") : null;
 
+  const anonymousClaimToken = req.user?.id
+    ? null
+    : getOrCreateAnonClaimToken(req, res);
+
   const [audit] = await db
     .insert(auditsTable)
     .values({
@@ -208,6 +247,7 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
       status: "generating",
       source: "screenshot",
       userId: req.user?.id ?? null,
+      anonymousClaimToken,
     })
     .returning();
 

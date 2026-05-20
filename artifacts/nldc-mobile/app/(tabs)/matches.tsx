@@ -1,9 +1,16 @@
 import { Feather } from "@expo/vector-icons";
-import { useListAudits } from "@workspace/api-client-react";
+import {
+  getListAuditsQueryKey,
+  useDeleteAudit,
+  useListAudits,
+  type Audit,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useRef } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Platform,
   Pressable,
   RefreshControl,
@@ -13,6 +20,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Swipeable, RectButton } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/ScreenHeader";
@@ -94,13 +102,55 @@ export default function MatchesScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-  const { data, isLoading, isRefetching, refetch, error } = useListAudits({
-    source: "screenshot",
+  const listParams = { source: "screenshot" as const };
+  const { data, isLoading, isRefetching, refetch, error } = useListAudits(listParams);
+  const queryClient = useQueryClient();
+  const listKey = getListAuditsQueryKey(listParams);
+  const deleteAudit = useDeleteAudit({
+    mutation: {
+      onMutate: async ({ id }) => {
+        await queryClient.cancelQueries({ queryKey: listKey });
+        const previous = queryClient.getQueryData<Audit[]>(listKey);
+        if (previous) {
+          queryClient.setQueryData<Audit[]>(
+            listKey,
+            previous.filter((a) => a.id !== id),
+          );
+        }
+        return { previous };
+      },
+      onError: (_err, _vars, ctx) => {
+        if (ctx?.previous) {
+          queryClient.setQueryData(listKey, ctx.previous);
+        }
+        if (Platform.OS !== "web") {
+          Alert.alert("Couldn't delete", "Something went wrong. Try again.");
+        }
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: listKey });
+      },
+    },
   });
 
   const [query, setQuery] = React.useState("");
   const [sort, setSort] = React.useState<SortOrder>("newest");
   const [range, setRange] = React.useState<ScoreRange>("all");
+
+  const openSwipeRef = useRef<Swipeable | null>(null);
+
+  const askDelete = (id: number, name: string) => {
+    const message = `Remove ${name} from your matches? This can't be undone.`;
+    const run = () => deleteAudit.mutate({ id });
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined" && window.confirm(message)) run();
+      return;
+    }
+    Alert.alert("Delete match?", message, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: run },
+    ]);
+  };
 
   const topInset = Platform.OS === "web" ? Math.max(insets.top, 24) : insets.top;
   const bottomInset =
@@ -348,16 +398,49 @@ export default function MatchesScreen() {
 
         {!showDemo && filteredAudits.length > 0 ? (
           <View style={styles.list}>
-            {filteredAudits.map((audit) => (
-              <MatchRow
-                key={audit.id}
-                firstName={audit.firstName}
-                readinessScore={audit.readinessScore ?? null}
-                bio={audit.bio}
-                createdAt={audit.createdAt}
-                onPress={() => router.push(`/audit/${audit.id}` as never)}
-              />
-            ))}
+            {filteredAudits.map((audit) => {
+              let swipeRef: Swipeable | null = null;
+              return (
+                <Swipeable
+                  key={audit.id}
+                  ref={(r) => {
+                    swipeRef = r;
+                  }}
+                  friction={2}
+                  rightThreshold={40}
+                  overshootRight={false}
+                  onSwipeableWillOpen={() => {
+                    if (openSwipeRef.current && openSwipeRef.current !== swipeRef) {
+                      openSwipeRef.current.close();
+                    }
+                    openSwipeRef.current = swipeRef;
+                  }}
+                  renderRightActions={() => (
+                    <RectButton
+                      style={[
+                        styles.deleteAction,
+                        { backgroundColor: colors.destructive },
+                      ]}
+                      onPress={() => {
+                        swipeRef?.close();
+                        askDelete(audit.id, audit.firstName);
+                      }}
+                    >
+                      <Feather name="trash-2" size={18} color="#fff" />
+                      <Text style={styles.deleteActionText}>Delete</Text>
+                    </RectButton>
+                  )}
+                >
+                  <MatchRow
+                    firstName={audit.firstName}
+                    readinessScore={audit.readinessScore ?? null}
+                    bio={audit.bio}
+                    createdAt={audit.createdAt}
+                    onPress={() => router.push(`/audit/${audit.id}` as never)}
+                  />
+                </Swipeable>
+              );
+            })}
           </View>
         ) : null}
       </ScrollView>
@@ -639,5 +722,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     fontFamily: "PlusJakartaSans_500Medium",
+  },
+  deleteAction: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 84,
+    borderRadius: 16,
+    marginLeft: 8,
+    gap: 4,
+  },
+  deleteActionText: {
+    color: "#fff",
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_700Bold",
   },
 });

@@ -316,6 +316,24 @@ export const GetAuditResponse = zod.object({
 
 
 /**
+ * Permanently deletes a single audit. Only the audit owner (matched by
+userId for authenticated requests, or anonymous session for guests) can
+delete it. Returns 404 if the audit does not exist or is not owned by
+the caller.
+
+ * @summary Delete an audit owned by the current session
+ */
+export const DeleteAuditParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteAuditResponse = zod.object({
+  "success": zod.boolean(),
+  "deletedId": zod.number()
+})
+
+
+/**
  * @summary Generate AI profile audit report for an audit
  */
 export const GenerateAuditReportParams = zod.object({

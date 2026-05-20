@@ -483,6 +483,11 @@ export interface AccountExport {
   insights: EmailInsight[];
 }
 
+export interface DeleteAuditResult {
+  success: true;
+  deletedId: number;
+}
+
 export type DeleteMyAccountResultDeleted = {
   audits: number;
   profiles: number;
