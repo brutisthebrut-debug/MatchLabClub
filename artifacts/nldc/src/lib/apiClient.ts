@@ -468,7 +468,24 @@ export const deleteOcrRule = async (founderKey: string, id: string): Promise<voi
   }
 };
 
-export const clearOcrLearnedRules = async (founderKey: string): Promise<void> => {
+export const patchOcrRule = async (
+  founderKey: string,
+  id: string,
+): Promise<{ rule: OcrLearnedRule }> => {
+  const res = await fetch(`${BASE}/founder/ocr-rules/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "x-founder-key": founderKey },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`PATCH /founder/ocr-rules/:id failed (${res.status}): ${text}`);
+  }
+  return res.json();
+};
+
+export const clearOcrLearnedRules = async (
+  founderKey: string,
+): Promise<{ deleted: number; preserved: number }> => {
   const res = await fetch(`${BASE}/founder/ocr-rules`, {
     method: "DELETE",
     headers: { "x-founder-key": founderKey },
@@ -477,6 +494,7 @@ export const clearOcrLearnedRules = async (founderKey: string): Promise<void> =>
     const text = await res.text().catch(() => "");
     throw new Error(`DELETE /founder/ocr-rules failed (${res.status}): ${text}`);
   }
+  return res.json();
 };
 
 export interface OcrMismatchTrendEntry {

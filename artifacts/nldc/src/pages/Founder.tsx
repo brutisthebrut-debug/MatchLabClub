@@ -5,7 +5,7 @@ import {
   getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
   getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges, undoAiThresholdChange,
   getRollupHeartbeat, getOcrMismatches, getBackgroundJobs,
-  getOcrLearnedRules, runOcrLearn, clearOcrLearnedRules, deleteOcrRule, getOcrMismatchesTrends,
+  getOcrLearnedRules, runOcrLearn, clearOcrLearnedRules, deleteOcrRule, patchOcrRule, getOcrMismatchesTrends,
   getOcrPendingRules, approveOcrRule, rejectOcrRule, getOcrRuleReviewLog,
   getAlertSettings, updateAlertSettings, resetAlertSettings,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
@@ -2276,8 +2276,10 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
   const [running, setRunning] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+  const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
   const [lastRun, setLastRun] = useState<OcrLearnResult | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [clearResult, setClearResult] = useState<{ deleted: number; preserved: number } | null>(null);
   const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
@@ -2308,17 +2310,38 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
   };
 
   const handleClear = async () => {
-    if (!window.confirm("Clear all learned OCR rules? This cannot be undone.")) return;
+    const approvedCount = rules?.filter((r) => r.status === "approved").length ?? 0;
+    const msg = approvedCount > 0
+      ? `Clear all non-approved OCR rules? ${approvedCount} approved rule${approvedCount === 1 ? "" : "s"} will be preserved. This cannot be undone.`
+      : "Clear all learned OCR rules? This cannot be undone.";
+    if (!window.confirm(msg)) return;
     setClearing(true);
     setActionError(null);
+    setClearResult(null);
     try {
-      await clearOcrLearnedRules(FOUNDER_KEY);
+      const result = await clearOcrLearnedRules(FOUNDER_KEY);
+      setClearResult(result);
       setLastRun(null);
       setReloadTick((t) => t + 1);
     } catch (err: unknown) {
       setActionError(err instanceof Error ? err.message : "Failed to clear rules");
     } finally {
       setClearing(false);
+    }
+  };
+
+  const handleToggleApprove = async (id: string) => {
+    setTogglingIds((prev) => new Set(prev).add(id));
+    setActionError(null);
+    try {
+      const res = await patchOcrRule(FOUNDER_KEY, id);
+      setRules((prev) =>
+        prev ? prev.map((r) => (r.id === id ? res.rule : r)) : prev,
+      );
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Failed to update rule");
+    } finally {
+      setTogglingIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
     }
   };
 
@@ -2383,6 +2406,19 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
           <span><strong className="text-foreground">{lastRun.persisted}</strong> persisted</span>
         </div>
       )}
+      {clearResult && (
+        <div
+          data-testid="ocr-clear-result"
+          className="text-xs rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-foreground/70 flex flex-wrap gap-4"
+        >
+          <span><strong className="text-foreground">{clearResult.deleted}</strong> rule{clearResult.deleted === 1 ? "" : "s"} cleared</span>
+          {clearResult.preserved > 0 && (
+            <span className="text-[hsl(142_55%_70%)]">
+              <strong>{clearResult.preserved}</strong> approved rule{clearResult.preserved === 1 ? "" : "s"} preserved
+            </span>
+          )}
+        </div>
+      )}
       {actionError && (
         <p className="text-xs text-[hsl(348_55%_68%)]" data-testid="ocr-rules-action-error">{actionError}</p>
       )}
@@ -2442,6 +2478,21 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
                       <span className="ml-auto flex items-center gap-3 text-[10px] text-muted-foreground/60">
                         <span><strong className="text-foreground/80">{rule.occurrences}</strong> seen</span>
                         <span>{fmtDate(rule.learnedAt)}</span>
+                        <button
+                          data-testid={`btn-ocr-rule-approve-${rule.id}`}
+                          onClick={() => handleToggleApprove(rule.id)}
+                          disabled={togglingIds.has(rule.id) || clearing}
+                          title={rule.status === "approved" ? "Unapprove this rule (set back to pending)" : "Approve this rule (protect from learning runs and clear)"}
+                          className={`p-0.5 rounded disabled:opacity-40 transition-colors ${
+                            rule.status === "approved"
+                              ? "text-[hsl(142_55%_60%)] hover:text-[hsl(142_55%_45%)] hover:bg-[hsl(142_55%_50%/0.1)]"
+                              : "text-muted-foreground/40 hover:text-[hsl(142_55%_60%)] hover:bg-[hsl(142_55%_50%/0.1)]"
+                          }`}
+                        >
+                          {togglingIds.has(rule.id)
+                            ? <Loader2 className="w-3 h-3 animate-spin" />
+                            : <CheckCircle2 className="w-3 h-3" />}
+                        </button>
                         <button
                           data-testid={`btn-ocr-rule-delete-${rule.id}`}
                           onClick={() => handleDeleteRule(rule.id)}

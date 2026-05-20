@@ -385,7 +385,39 @@ export async function listOcrRuleReviewLog(limit = 50): Promise<typeof ocrRuleRe
     .limit(limit);
 }
 
-export async function clearLearnedRules(): Promise<void> {
-  await db.delete(ocrLearnedRulesTable).where(sql`true`);
-  cache = EMPTY_LEARNED_RULES;
+export async function clearLearnedRules(): Promise<{ deleted: number; preserved: number }> {
+  const preserved = await db
+    .select({ id: ocrLearnedRulesTable.id })
+    .from(ocrLearnedRulesTable)
+    .where(eq(ocrLearnedRulesTable.status, "approved"));
+
+  const result = await db
+    .delete(ocrLearnedRulesTable)
+    .where(sql`${ocrLearnedRulesTable.status} != 'approved'`)
+    .returning({ id: ocrLearnedRulesTable.id });
+
+  await refreshLearnedRulesCache();
+  return { deleted: result.length, preserved: preserved.length };
+}
+
+export async function toggleOcrRuleApproved(
+  id: string,
+): Promise<OcrLearnedRule | null> {
+  const [existing] = await db
+    .select()
+    .from(ocrLearnedRulesTable)
+    .where(eq(ocrLearnedRulesTable.id, id));
+  if (!existing) return null;
+
+  const newStatus = existing.status === "approved" ? "pending" : "approved";
+  const now = new Date();
+  const [updated] = await db
+    .update(ocrLearnedRulesTable)
+    .set({ status: newStatus, updatedAt: now })
+    .where(eq(ocrLearnedRulesTable.id, id))
+    .returning();
+  if (!updated) return null;
+
+  await refreshLearnedRulesCache();
+  return updated;
 }
