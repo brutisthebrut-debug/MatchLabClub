@@ -15,6 +15,7 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -77,6 +78,19 @@ interface ChangeSummary {
   removedRisks: string[];
 }
 
+interface PromptRewrite {
+  original: string;
+  rewritten: string;
+  tip?: string;
+}
+
+interface ActionItem {
+  priority: number;
+  title: string;
+  description: string;
+  timeframe?: string;
+}
+
 interface ReportShape {
   readinessScore: number;
   overallGrade: string;
@@ -87,6 +101,8 @@ interface ReportShape {
   messagingStyle: string;
   coachingCta: string;
   changeSummary?: ChangeSummary | null;
+  rewrittenPrompts?: PromptRewrite[];
+  actionPlan?: ActionItem[];
 }
 
 type VersionEntry = {
@@ -197,6 +213,7 @@ export default function AuditDetailScreen() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [viewingVersionId, setViewingVersionId] = useState<number | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [showPrevious, setShowPrevious] = useState(false);
 
   const storedReport = auditQuery.data?.report ?? null;
 
@@ -213,6 +230,8 @@ export default function AuditDetailScreen() {
       messagingStyle: r.messagingStyle,
       coachingCta: r.coachingCta,
       changeSummary: r.changeSummary ?? null,
+      rewrittenPrompts: r.rewrittenPrompts,
+      actionPlan: r.actionPlan,
     });
   }, [storedReport, report]);
 
@@ -235,6 +254,8 @@ export default function AuditDetailScreen() {
           changeSummary:
             (r as unknown as { changeSummary?: ChangeSummary | null })
               .changeSummary ?? null,
+          rewrittenPrompts: (r as unknown as ReportShape).rewrittenPrompts,
+          actionPlan: (r as unknown as ReportShape).actionPlan,
         });
       })
       .catch((err) => {
@@ -294,6 +315,8 @@ export default function AuditDetailScreen() {
           changeSummary:
             (r as unknown as { changeSummary?: ChangeSummary | null })
               .changeSummary ?? null,
+          rewrittenPrompts: (r as unknown as ReportShape).rewrittenPrompts,
+          actionPlan: (r as unknown as ReportShape).actionPlan,
         });
       })
       .catch((err) => {
@@ -723,16 +746,78 @@ export default function AuditDetailScreen() {
               </View>
             ) : null}
             {audit?.previousReportGeneratedAt ? (
-              <Text
+              <View
                 style={[
-                  styles.changeFooter,
-                  { color: colors.mutedForeground, borderTopColor: colors.cardBorder },
+                  styles.changeFooterRow,
+                  { borderTopColor: colors.cardBorder },
                 ]}
               >
-                Comparing to your previous run from{" "}
-                {formatGeneratedAt(audit.previousReportGeneratedAt)}.
-              </Text>
+                <Text
+                  style={[
+                    styles.changeFooter,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  Comparing to your previous run from{" "}
+                  {formatGeneratedAt(audit.previousReportGeneratedAt)}.
+                </Text>
+                {audit?.previousReport ? (
+                  <Pressable
+                    onPress={() => setShowPrevious(true)}
+                    hitSlop={8}
+                    style={({ pressed }) => [
+                      styles.viewPrevButton,
+                      {
+                        borderColor: colors.violet,
+                        backgroundColor: `${colors.violet}14`,
+                        opacity: pressed ? 0.7 : 1,
+                      },
+                    ]}
+                    accessibilityLabel="View previous version of this report"
+                    testID="button-view-previous-version"
+                  >
+                    <Feather name="eye" size={12} color={colors.violet} />
+                    <Text style={[styles.viewPrevText, { color: colors.violet }]}>
+                      View previous version
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </View>
             ) : null}
+          </View>
+        ) : audit?.previousReport && audit?.previousReportGeneratedAt ? (
+          <View
+            style={[
+              styles.prevLinkCard,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+            testID="card-previous-version-link"
+          >
+            <Feather name="eye" size={14} color={colors.violet} />
+            <Text
+              style={[styles.prevLinkText, { color: colors.mutedForeground }]}
+            >
+              Previous version from{" "}
+              {formatGeneratedAt(audit.previousReportGeneratedAt)} is available.
+            </Text>
+            <Pressable
+              onPress={() => setShowPrevious(true)}
+              hitSlop={8}
+              style={({ pressed }) => [
+                styles.viewPrevButton,
+                {
+                  borderColor: colors.violet,
+                  backgroundColor: `${colors.violet}14`,
+                  opacity: pressed ? 0.7 : 1,
+                },
+              ]}
+              accessibilityLabel="View previous version of this report"
+              testID="button-view-previous-version"
+            >
+              <Text style={[styles.viewPrevText, { color: colors.violet }]}>
+                View
+              </Text>
+            </Pressable>
           </View>
         ) : null}
 
@@ -1045,7 +1130,221 @@ export default function AuditDetailScreen() {
           </>
         ) : null}
       </ScrollView>
+
+      <Modal
+        visible={showPrevious}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowPrevious(false)}
+        transparent={false}
+      >
+        <View style={[styles.root, { backgroundColor: colors.background }]}>
+          <View
+            style={[
+              styles.modalHeader,
+              {
+                paddingTop: Platform.OS === "web" ? 16 : topInset,
+                borderBottomColor: colors.cardBorder,
+              },
+            ]}
+          >
+            <View style={styles.modalHeaderText}>
+              <Text style={[styles.modalTitle, { color: colors.foreground }]}>
+                Previous version
+              </Text>
+              <Text
+                style={[
+                  styles.modalSubtitle,
+                  { color: colors.mutedForeground },
+                ]}
+                testID="text-previous-version-generated-at"
+              >
+                {audit?.previousReportGeneratedAt
+                  ? `Generated ${formatGeneratedAt(audit.previousReportGeneratedAt)}`
+                  : "Earlier audit"}
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => setShowPrevious(false)}
+              hitSlop={12}
+              accessibilityLabel="Close previous version"
+              testID="button-close-previous-version"
+              style={({ pressed }) => [
+                styles.modalClose,
+                { opacity: pressed ? 0.6 : 1 },
+              ]}
+            >
+              <Feather name="x" size={22} color={colors.foreground} />
+            </Pressable>
+          </View>
+          <ScrollView
+            contentContainerStyle={[
+              styles.content,
+              { paddingBottom: bottomInset, paddingTop: 12 },
+            ]}
+            testID="previous-version-content"
+          >
+            {audit?.previousReport ? (
+              <PreviousReportContent
+                report={audit.previousReport as unknown as ReportShape}
+              />
+            ) : null}
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
+  );
+}
+
+function PreviousReportContent({ report: pr }: { report: ReportShape }) {
+  const colors = useColors();
+  return (
+    <>
+      <View
+        style={[
+          styles.ringCard,
+          { backgroundColor: colors.card, borderColor: colors.cardBorder },
+        ]}
+      >
+        <ScoreRing score={pr.readinessScore} />
+        <Text style={[styles.gradeText, { color: colors.foreground }]}>
+          Grade {pr.overallGrade}
+        </Text>
+        <Text style={[styles.nameText, { color: colors.mutedForeground }]}>
+          {pr.readinessScore} / 100 then
+        </Text>
+      </View>
+
+      <Section
+        title="Strengths then"
+        iconBg={`${colors.success}22`}
+        iconColor={colors.success}
+        icon="check-circle"
+      >
+        {pr.strengths.map((s, i) => (
+          <Bullet key={`ps-${i}`} color={colors.success} text={s} />
+        ))}
+      </Section>
+
+      <Section
+        title="Risks then"
+        iconBg={`${colors.rose}22`}
+        iconColor={colors.rose}
+        icon="alert-triangle"
+      >
+        {pr.risks.map((s, i) => (
+          <Bullet key={`pr-${i}`} color={colors.rose} text={s} />
+        ))}
+      </Section>
+
+      <Section
+        title="Previous bio audit"
+        iconBg={`${colors.violet}22`}
+        iconColor={colors.violet}
+        icon="edit-3"
+      >
+        <Text style={[styles.body, { color: colors.foreground }]}>
+          {pr.bioAudit}
+        </Text>
+      </Section>
+
+      <Section
+        title="Previous rewritten bio"
+        iconBg={`${colors.violet}22`}
+        iconColor={colors.violet}
+        icon="feather"
+      >
+        <Text
+          style={[styles.body, { color: colors.foreground }]}
+          testID="text-previous-rewritten-bio"
+        >
+          {pr.rewrittenBio}
+        </Text>
+      </Section>
+
+      {pr.rewrittenPrompts && pr.rewrittenPrompts.length > 0 ? (
+        <Section
+          title="Previous prompt rewrites"
+          iconBg={`${colors.gold}22`}
+          iconColor={colors.gold}
+          icon="message-square"
+        >
+          {pr.rewrittenPrompts.map((p, i) => (
+            <View
+              key={`pp-${i}`}
+              style={styles.prevPromptItem}
+              testID={`prev-prompt-${i}`}
+            >
+              <Text
+                style={[
+                  styles.prevPromptOriginal,
+                  { color: colors.mutedForeground },
+                ]}
+              >
+                {p.original}
+              </Text>
+              <Text
+                style={[styles.prevPromptRewritten, { color: colors.foreground }]}
+              >
+                {p.rewritten}
+              </Text>
+            </View>
+          ))}
+        </Section>
+      ) : null}
+
+      {pr.actionPlan && pr.actionPlan.length > 0 ? (
+        <Section
+          title="Previous action plan"
+          iconBg={`${colors.violet}22`}
+          iconColor={colors.violet}
+          icon="target"
+        >
+          {pr.actionPlan.map((item, i) => (
+            <View
+              key={`pa-${i}`}
+              style={styles.prevActionItem}
+              testID={`prev-action-${i}`}
+            >
+              <View
+                style={[
+                  styles.prevActionPriority,
+                  { backgroundColor: colors.violet },
+                ]}
+              >
+                <Text style={styles.prevActionPriorityText}>{item.priority}</Text>
+              </View>
+              <View style={styles.prevActionBody}>
+                <Text
+                  style={[styles.prevActionTitle, { color: colors.foreground }]}
+                >
+                  {item.title}
+                </Text>
+                <Text
+                  style={[
+                    styles.prevActionDesc,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  {item.description}
+                </Text>
+              </View>
+            </View>
+          ))}
+        </Section>
+      ) : null}
+
+      <Section
+        title="Previous opener strategy"
+        iconBg={`${colors.gold}22`}
+        iconColor={colors.gold}
+        icon="message-circle"
+      >
+        <Text style={[styles.body, { color: colors.foreground }]}>
+          {pr.messagingStyle}
+        </Text>
+      </Section>
+    </>
   );
 }
 
@@ -1342,11 +1641,116 @@ const styles = StyleSheet.create({
     textDecorationLine: "line-through",
   },
   changeFooter: {
+    flex: 1,
     fontSize: 10,
     fontFamily: "PlusJakartaSans_500Medium",
+  },
+  changeFooterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
     paddingTop: 8,
     borderTopWidth: 1,
     marginTop: 4,
+    flexWrap: "wrap",
+  },
+  viewPrevButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  viewPrevText: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.3,
+  },
+  prevLinkCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  prevLinkText: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 16,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    gap: 12,
+  },
+  modalHeaderText: {
+    flex: 1,
+    gap: 2,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  modalSubtitle: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  modalClose: {
+    padding: 4,
+  },
+  prevPromptItem: {
+    gap: 4,
+    paddingVertical: 6,
+  },
+  prevPromptOriginal: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
+    fontStyle: "italic",
+  },
+  prevPromptRewritten: {
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+    lineHeight: 20,
+  },
+  prevActionItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    paddingVertical: 6,
+  },
+  prevActionPriority: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  prevActionPriorityText: {
+    color: "white",
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  prevActionBody: {
+    flex: 1,
+    gap: 2,
+  },
+  prevActionTitle: {
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  prevActionDesc: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 17,
   },
   itemText: {
     flex: 1,

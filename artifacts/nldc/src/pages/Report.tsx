@@ -5,6 +5,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
 import { useGetAudit, useGenerateAuditReport, useGetEngineMeta, useListAuditReportVersions, getGetAuditQueryKey, getListAuditReportVersionsQueryKey } from "@workspace/api-client-react";
 import {
@@ -246,6 +247,7 @@ export default function Report() {
   const [regenerating, setRegenerating] = useState(false);
   const [viewingVersionId, setViewingVersionId] = useState<number | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [showPrevious, setShowPrevious] = useState(false);
 
   const versionsQuery = useListAuditReportVersions(auditId, {
     query: { enabled: !!auditId, queryKey: getListAuditReportVersionsQueryKey(auditId) },
@@ -693,10 +695,40 @@ export default function Report() {
                 </div>
               </div>
               {audit?.previousReportGeneratedAt ? (
-                <p className="text-[10px] text-muted-foreground mt-4 pt-3 border-t border-white/8">
-                  Comparing to your previous run from {formatGeneratedAt(audit.previousReportGeneratedAt)}.
-                </p>
+                <div className="flex items-center justify-between flex-wrap gap-2 mt-4 pt-3 border-t border-white/8">
+                  <p className="text-[10px] text-muted-foreground">
+                    Comparing to your previous run from {formatGeneratedAt(audit.previousReportGeneratedAt)}.
+                  </p>
+                  {audit?.previousReport ? (
+                    <button
+                      onClick={() => setShowPrevious(true)}
+                      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(268_52%_68%/0.3)] text-[hsl(268_60%_78%)] bg-[hsl(268_52%_68%/0.08)] hover:bg-[hsl(268_52%_68%/0.16)] transition-colors"
+                      data-testid="button-view-previous-version"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      View previous version
+                    </button>
+                  ) : null}
+                </div>
               ) : null}
+            </motion.div>
+          ) : audit?.previousReport && audit?.previousReportGeneratedAt ? (
+            <motion.div
+              {...fadeUp(0.03)}
+              className="glass border border-white/8 rounded-2xl px-4 py-3 flex items-center gap-3 flex-wrap"
+              data-testid="card-previous-version-link"
+            >
+              <Eye className="w-4 h-4 text-[hsl(268_60%_78%)] flex-shrink-0" />
+              <p className="text-xs text-muted-foreground flex-1 min-w-0">
+                Previous version from {formatGeneratedAt(audit.previousReportGeneratedAt)} is available.
+              </p>
+              <button
+                onClick={() => setShowPrevious(true)}
+                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(268_52%_68%/0.3)] text-[hsl(268_60%_78%)] bg-[hsl(268_52%_68%/0.08)] hover:bg-[hsl(268_52%_68%/0.16)] transition-colors flex-shrink-0"
+                data-testid="button-view-previous-version"
+              >
+                View previous version
+              </button>
             </motion.div>
           ) : null}
 
@@ -979,6 +1011,172 @@ export default function Report() {
           </motion.div>
         </div>
       </div>
+
+      <Dialog open={showPrevious} onOpenChange={setShowPrevious}>
+        <DialogContent
+          className="max-w-3xl max-h-[90vh] overflow-y-auto bg-[hsl(232_28%_10%)] border-white/10"
+          data-testid="dialog-previous-version"
+        >
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-foreground">
+              <Eye className="w-5 h-5 text-[hsl(268_60%_78%)]" />
+              Previous version
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground" data-testid="text-previous-version-generated-at">
+              {audit?.previousReportGeneratedAt
+                ? `Generated ${formatGeneratedAt(audit.previousReportGeneratedAt)}`
+                : "Earlier audit"}
+            </DialogDescription>
+          </DialogHeader>
+          {audit?.previousReport ? (
+            <PreviousReportView
+              report={audit.previousReport as unknown as typeof DEMO_REPORT}
+              generatedAt={audit.previousReportGeneratedAt ?? null}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
+  );
+}
+
+function PreviousReportView({
+  report: pr,
+  generatedAt,
+}: {
+  report: typeof DEMO_REPORT;
+  generatedAt: string | null;
+}) {
+  const scoreColor =
+    pr.readinessScore >= 75
+      ? "hsl(142 55% 60%)"
+      : pr.readinessScore >= 55
+      ? "hsl(43 65% 65%)"
+      : "hsl(348 55% 65%)";
+  const grade =
+    pr.readinessScore >= 85
+      ? "A"
+      : pr.readinessScore >= 72
+      ? "B"
+      : pr.readinessScore >= 58
+      ? "C"
+      : pr.readinessScore >= 42
+      ? "D"
+      : "F";
+  return (
+    <div className="space-y-5" data-testid="previous-version-content">
+      <div className="flex items-center gap-5 p-5 rounded-2xl border border-white/10 bg-[hsl(232_28%_12%)]">
+        <ScoreRing score={pr.readinessScore} />
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">
+            Previous Signal Score
+          </p>
+          <div className="flex items-center gap-3">
+            <span className="text-4xl font-bold" style={{ color: scoreColor }}>
+              {grade}
+            </span>
+            <p className="text-sm text-muted-foreground">
+              {pr.readinessScore} / 100
+              {generatedAt ? ` · ${formatGeneratedAt(generatedAt)}` : ""}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div className="panel-show rounded-2xl p-4">
+          <p className="text-xs font-bold uppercase tracking-wider text-[hsl(268_52%_72%)] mb-2">
+            Strengths then
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {pr.strengths.map((s, i) => (
+              <span key={i} className="tag-strength border px-2.5 py-1 rounded-full text-xs">
+                {s}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="panel-improve rounded-2xl p-4">
+          <p className="text-xs font-bold uppercase tracking-wider text-[hsl(43_65%_67%)] mb-2">
+            Risks then
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {pr.risks.map((s, i) => (
+              <span key={i} className="tag-risk border px-2.5 py-1 rounded-full text-xs">
+                {s}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-2xl p-4 border border-white/10 bg-[hsl(232_28%_12%)]">
+        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+          Bio audit (previous)
+        </p>
+        <p className="text-sm text-muted-foreground leading-relaxed">{pr.bioAudit}</p>
+      </div>
+
+      <div className="rounded-2xl p-4 border border-[hsl(268_52%_68%/0.25)] bg-[hsl(268_52%_68%/0.05)]">
+        <p className="text-xs font-bold uppercase tracking-wider text-[hsl(268_60%_78%)] mb-2">
+          Previous rewritten bio
+        </p>
+        <p className="text-sm text-foreground leading-relaxed" data-testid="text-previous-rewritten-bio">
+          {pr.rewrittenBio}
+        </p>
+      </div>
+
+      {pr.rewrittenPrompts?.length ? (
+        <div className="space-y-3">
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Previous prompt rewrites
+          </p>
+          {pr.rewrittenPrompts.map((p, i) => (
+            <div
+              key={i}
+              className="border border-white/8 rounded-2xl overflow-hidden"
+              data-testid={`prev-prompt-${i}`}
+            >
+              <div className="bg-[hsl(232_28%_14%)] px-4 py-3">
+                <p className="text-xs text-muted-foreground italic">{p.original}</p>
+              </div>
+              <div className="px-4 py-3 bg-[hsl(268_52%_68%/0.06)]">
+                <p className="text-sm text-foreground">{p.rewritten}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {pr.actionPlan?.length ? (
+        <div className="space-y-2">
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Previous action plan
+          </p>
+          {pr.actionPlan.map((item, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-3 p-3 rounded-2xl border border-white/8 bg-[hsl(232_28%_12%)]"
+              data-testid={`prev-action-${i}`}
+            >
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 text-white"
+                style={{
+                  background: "linear-gradient(135deg, hsl(268 52% 65%), hsl(285 45% 58%))",
+                }}
+              >
+                {item.priority}
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm text-foreground">{item.title}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                  {item.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
