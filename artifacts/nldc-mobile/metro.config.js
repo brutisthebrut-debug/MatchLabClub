@@ -16,6 +16,7 @@ config.resolver.blockList = [
   /\.cache\/openid-client\/.*/,
   /.*\.test\.[jt]sx?$/,
   /.*\.spec\.[jt]sx?$/,
+  /.*\/e2e\/test-results\/.*/,
 ];
 
 /**

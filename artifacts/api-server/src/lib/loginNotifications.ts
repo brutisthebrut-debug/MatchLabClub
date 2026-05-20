@@ -128,7 +128,7 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
     );
   }
 
-  await sendNewSignInPushNotification({ userId, device, displayLocation: location ?? displayIp });
+  await sendNewSignInPushNotification({ userId, device, displayLocation: displayLocation ?? displayIp });
 }
 
 async function sendNewSignInPushNotification(opts: {
