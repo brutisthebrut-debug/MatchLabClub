@@ -4,12 +4,15 @@ import {
   getGetCoachFollowUpTimelineQueryKey,
   useCoachMessage,
   useCreateMessageCoachingSession,
+  useExtractMessageScreenshot,
   useGetCoachFollowUpStats,
   useGetCoachFollowUpTimeline,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Image,
   Platform,
   Pressable,
   StyleSheet,
@@ -63,6 +66,18 @@ interface Reply {
   rationale: string;
 }
 
+const SOURCE_APPS = ["Hinge", "Bumble", "Tinder"] as const;
+type SourceApp = (typeof SOURCE_APPS)[number];
+
+function normalizeAppName(value: string | null | undefined): SourceApp | "" {
+  if (!value) return "";
+  const lower = value.toLowerCase();
+  if (lower.includes("hinge")) return "Hinge";
+  if (lower.includes("bumble")) return "Bumble";
+  if (lower.includes("tinder")) return "Tinder";
+  return "";
+}
+
 const DEMO_REPLIES: Reply[] = [
   {
     style: "Playful",
@@ -98,6 +113,9 @@ export default function CoachScreen() {
   const [matchName, setMatchName] = useState("");
   const [context, setContext] = useState("");
   const [lastMessage, setLastMessage] = useState("");
+  const [sourceApp, setSourceApp] = useState<SourceApp | "">("");
+  const [screenshotUri, setScreenshotUri] = useState<string | null>(null);
+  const [screenshotError, setScreenshotError] = useState<string | null>(null);
   const [results, setResults] = useState<Reply[] | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [reminderPrefs, setReminderPrefs] = useState<CoachReminderPrefs>(
@@ -106,6 +124,7 @@ export default function CoachScreen() {
 
   const createSession = useCreateMessageCoachingSession();
   const coach = useCoachMessage();
+  const extractScreenshot = useExtractMessageScreenshot();
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const followUpStatsQueryKey = useMemo(
@@ -156,6 +175,9 @@ export default function CoachScreen() {
     setMatchName("");
     setContext("");
     setLastMessage("");
+    setSourceApp("");
+    setScreenshotUri(null);
+    setScreenshotError(null);
   }
 
   useEffect(() => {
@@ -238,6 +260,64 @@ export default function CoachScreen() {
     [reminderPrefs.tomorrowMorningHour],
   );
 
+  async function processScreenshot(uri: string, base64: string) {
+    setScreenshotUri(uri);
+    setScreenshotError(null);
+    try {
+      const res = await extractScreenshot.mutateAsync({
+        data: { imageBase64: base64 },
+      });
+      if (res.conversationText) {
+        setContext((prev) =>
+          prev.trim() ? `${prev}\n${res.conversationText}` : res.conversationText,
+        );
+      }
+      const detected = normalizeAppName(res.sourceApp);
+      if (detected) setSourceApp(detected);
+    } catch {
+      setScreenshotError("Couldn't read that screenshot. Try a clearer image.");
+    }
+  }
+
+  async function pickScreenshotFromLibrary() {
+    setScreenshotError(null);
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      setScreenshotError("We need photo access to read the screenshot.");
+      return;
+    }
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      base64: true,
+      quality: 0.85,
+    });
+    if (!res.canceled && res.assets[0]?.base64) {
+      await processScreenshot(res.assets[0].uri, res.assets[0].base64);
+    }
+  }
+
+  async function takeScreenshotPhoto() {
+    setScreenshotError(null);
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) {
+      setScreenshotError("We need camera access to take a snapshot.");
+      return;
+    }
+    const res = await ImagePicker.launchCameraAsync({
+      mediaTypes: ["images"],
+      base64: true,
+      quality: 0.85,
+    });
+    if (!res.canceled && res.assets[0]?.base64) {
+      await processScreenshot(res.assets[0].uri, res.assets[0].base64);
+    }
+  }
+
+  function clearScreenshot() {
+    setScreenshotUri(null);
+    setScreenshotError(null);
+  }
+
   async function handleReplyCopied() {
     await cancelCoachReminder();
     await clearCoachDraft();
@@ -266,6 +346,7 @@ export default function CoachScreen() {
           conversationContext: context.trim(),
           yourLastMessage: lastMessage.trim(),
           goal: "Keep the conversation alive",
+          sourceApp: sourceApp || null,
         },
       });
       if (!isAuthenticated) {
@@ -625,6 +706,135 @@ export default function CoachScreen() {
             { backgroundColor: colors.card, borderColor: colors.cardBorder },
           ]}
         >
+          <View style={styles.screenshotBlock}>
+            <Text
+              style={[styles.fieldLabel, { color: colors.mutedForeground }]}
+            >
+              Chat screenshot (optional)
+            </Text>
+            {screenshotUri ? (
+              <View style={styles.screenshotPreviewRow}>
+                <Image
+                  source={{ uri: screenshotUri }}
+                  style={styles.screenshotPreview}
+                  testID="img-coach-screenshot-preview"
+                />
+                <View style={styles.screenshotInfo}>
+                  <Text
+                    style={[
+                      styles.screenshotStatus,
+                      { color: colors.foreground },
+                    ]}
+                  >
+                    {extractScreenshot.isPending
+                      ? "Reading screenshot…"
+                      : "Conversation auto-filled below"}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.screenshotHint,
+                      { color: colors.mutedForeground },
+                    ]}
+                  >
+                    {extractScreenshot.isPending
+                      ? "Pulling text and detecting the app."
+                      : "Tidy anything that looks off, then run the coach."}
+                  </Text>
+                  <Pressable
+                    onPress={clearScreenshot}
+                    style={[
+                      styles.screenshotClear,
+                      { borderColor: colors.border },
+                    ]}
+                    testID="button-coach-screenshot-clear"
+                  >
+                    <Feather name="x" size={12} color={colors.foreground} />
+                    <Text
+                      style={[
+                        styles.screenshotClearText,
+                        { color: colors.foreground },
+                      ]}
+                    >
+                      Remove
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.screenshotPickerRow}>
+                <Pressable
+                  onPress={takeScreenshotPhoto}
+                  disabled={extractScreenshot.isPending}
+                  style={[
+                    styles.screenshotPickBtn,
+                    {
+                      backgroundColor: colors.input,
+                      borderColor: colors.border,
+                      opacity: extractScreenshot.isPending ? 0.55 : 1,
+                    },
+                  ]}
+                  testID="button-coach-screenshot-camera"
+                >
+                  <Feather name="camera" size={18} color={colors.violet} />
+                  <Text
+                    style={[
+                      styles.screenshotPickLabel,
+                      { color: colors.foreground },
+                    ]}
+                  >
+                    Take photo
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={pickScreenshotFromLibrary}
+                  disabled={extractScreenshot.isPending}
+                  style={[
+                    styles.screenshotPickBtn,
+                    {
+                      backgroundColor: colors.input,
+                      borderColor: colors.border,
+                      opacity: extractScreenshot.isPending ? 0.55 : 1,
+                    },
+                  ]}
+                  testID="button-coach-screenshot-library"
+                >
+                  <Feather name="image" size={18} color={colors.gold} />
+                  <Text
+                    style={[
+                      styles.screenshotPickLabel,
+                      { color: colors.foreground },
+                    ]}
+                  >
+                    {extractScreenshot.isPending ? "Reading…" : "From library"}
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+            {screenshotError ? (
+              <View
+                style={[
+                  styles.errorBanner,
+                  {
+                    backgroundColor: `${colors.destructive}22`,
+                    borderColor: colors.destructive,
+                  },
+                ]}
+                testID="text-coach-screenshot-error"
+              >
+                <Feather
+                  name="alert-circle"
+                  size={14}
+                  color={colors.destructive}
+                />
+                <Text
+                  style={[styles.errorText, { color: colors.destructive }]}
+                >
+                  {screenshotError}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+
           <Field label="Their name (optional)">
             <TextInput
               value={matchName}
@@ -641,6 +851,48 @@ export default function CoachScreen() {
               ]}
             />
           </Field>
+
+          <View style={styles.sourceAppBlock}>
+            <Text
+              style={[styles.fieldLabel, { color: colors.mutedForeground }]}
+            >
+              Source app
+            </Text>
+            <View style={styles.sourceAppRow}>
+              {SOURCE_APPS.map((app) => {
+                const selected = sourceApp === app;
+                return (
+                  <Pressable
+                    key={app}
+                    onPress={() =>
+                      setSourceApp((prev) => (prev === app ? "" : app))
+                    }
+                    style={[
+                      styles.sourceAppChip,
+                      {
+                        borderColor: selected ? colors.violet : colors.border,
+                        backgroundColor: selected
+                          ? `${colors.violet}22`
+                          : colors.input,
+                      },
+                    ]}
+                    testID={`button-coach-source-app-${app.toLowerCase()}`}
+                  >
+                    <Text
+                      style={[
+                        styles.sourceAppChipText,
+                        {
+                          color: selected ? colors.violet : colors.foreground,
+                        },
+                      ]}
+                    >
+                      {app}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
 
           <Field label="The conversation so far">
             <TextInput
@@ -1122,6 +1374,65 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: "PlusJakartaSans_500Medium",
     minHeight: 46,
+  },
+  screenshotBlock: { gap: 8 },
+  screenshotPickerRow: { flexDirection: "row", gap: 10 },
+  screenshotPickBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  screenshotPickLabel: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+  },
+  screenshotPreviewRow: { flexDirection: "row", gap: 12 },
+  screenshotPreview: {
+    width: 96,
+    height: 128,
+    borderRadius: 12,
+    backgroundColor: "#0006",
+  },
+  screenshotInfo: { flex: 1, gap: 6 },
+  screenshotStatus: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  screenshotHint: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 17,
+  },
+  screenshotClear: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginTop: 2,
+  },
+  screenshotClearText: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  sourceAppBlock: { gap: 8 },
+  sourceAppRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
+  sourceAppChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+  },
+  sourceAppChipText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_600SemiBold",
   },
   multiline: { minHeight: 110, textAlignVertical: "top" },
   multilineShort: { minHeight: 80, textAlignVertical: "top" },
