@@ -32,6 +32,12 @@ export interface MySession {
      */
   ip?: string | null;
   /**
+     * Coarse geolocation derived from the sign-in IP, e.g. "Berlin, DE" or "Brooklyn, NY, US". Null when the IP is private, missing, or cannot be resolved. Computed at query time — no third-party calls are made.
+
+     * @nullable
+     */
+  ipLocation?: string | null;
+  /**
      * Which app the user signed in from.
      * @nullable
      */

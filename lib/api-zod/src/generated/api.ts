@@ -540,6 +540,7 @@ export const ListMySessionsResponse = zod.object({
   "userAgent": zod.string().nullish().describe('Raw user-agent string captured at sign-in. May be null for older sessions.'),
   "deviceLabel": zod.string().nullish().describe('A friendly summary of the browser and OS, e.g. \"Chrome on macOS\".'),
   "ip": zod.string().nullish().describe('IP address captured at sign-in. May be null for older sessions.'),
+  "ipLocation": zod.string().nullish().describe('Coarse geolocation derived from the sign-in IP, e.g. \"Berlin, DE\" or \"Brooklyn, NY, US\". Null when the IP is private, missing, or cannot be resolved. Computed at query time — no third-party calls are made.\n'),
   "channel": zod.union([zod.literal('web'),zod.literal('mobile'),zod.literal(null)]).nullish().describe('Which app the user signed in from.'),
   "current": zod.boolean().describe('True if this is the session making the request.')
 }))

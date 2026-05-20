@@ -2779,6 +2779,13 @@ components:
         ip:
           type: [string, 'null']
           description: IP address captured at sign-in. May be null for older sessions.
+        ipLocation:
+          type: [string, 'null']
+          description: >
+            Coarse geolocation derived from the sign-in IP, e.g. "Berlin, DE"
+            or "Brooklyn, NY, US". Null when the IP is private, missing, or
+            cannot be resolved. Computed at query time — no third-party calls
+            are made.
         channel:
           type: [string, 'null']
           enum: [web, mobile, null]

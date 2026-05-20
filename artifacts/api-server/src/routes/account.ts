@@ -22,6 +22,7 @@ import {
 } from "@workspace/api-zod";
 import { clearSession, getSessionId, SESSION_COOKIE } from "../lib/auth";
 import { describeUserAgent } from "../lib/userAgent";
+import { describeIpLocation } from "../lib/geoLocation";
 import { sendMail } from "../lib/mailer";
 import { originFor, sendExpiredLink } from "../lib/expiredLinkPage";
 
@@ -90,6 +91,7 @@ router.get("/account/sessions", async (req, res): Promise<void> => {
         userAgent: r.userAgent,
         deviceLabel: describeUserAgent(r.userAgent),
         ip: r.ip,
+        ipLocation: describeIpLocation(r.ip),
         channel:
           r.channel === "web" || r.channel === "mobile" ? r.channel : null,
         current: r.sid === callerSid,

@@ -274,7 +274,18 @@ export default function Sessions() {
                           >
                             {formatRelative(s.lastSeenAt)}
                           </span>
-                          {s.ip ? (
+                          {s.ipLocation ? (
+                            <>
+                              {" "}
+                              ·{" "}
+                              <span
+                                title={s.ip ?? undefined}
+                                data-testid={`session-location-${s.sid}`}
+                              >
+                                {s.ipLocation}
+                              </span>
+                            </>
+                          ) : s.ip ? (
                             <>
                               {" "}
                               ·{" "}
