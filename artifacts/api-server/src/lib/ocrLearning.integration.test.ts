@@ -90,6 +90,8 @@ describe("OCR learning loop (end-to-end)", () => {
     const { auditsTable, db } = await import("./testDb");
     const {
       learnFromCorrections,
+      listPendingRules,
+      approveOcrRule,
       getCachedLearnedRules,
     } = await import("./ocrLearning");
     const { parseProfileText } = await import("./profileParser");
@@ -135,8 +137,15 @@ describe("OCR learning loop (end-to-end)", () => {
     ).toMatchObject({ replacement: "Moe", occurrences: 2 });
     expect(result.persisted).toBeGreaterThanOrEqual(1);
 
-    // 3. Re-running the parser with the now-cached rules should produce the
-    //    corrected value on the first try — the user-visible promise.
+    // 3. Approve the learned rule (Task #253: rules are now gated on founder
+    //    approval before they affect parsing). After approval the cache
+    //    refreshes and the parser should produce the corrected value.
+    const pending = await listPendingRules();
+    expect(pending.length).toBeGreaterThanOrEqual(1);
+    for (const rule of pending) {
+      await approveOcrRule(rule.id, "test");
+    }
+
     const after = parseProfileText(RAW_OCR_TEXT, getCachedLearnedRules());
     expect(after.firstName).toBe("Moe");
 

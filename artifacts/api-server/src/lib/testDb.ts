@@ -146,6 +146,10 @@ export const auditReportVersionsTable = makeTable("audit_report_versions");
 export const messageCoachingSessionsTable = makeTable("message_coaching_sessions");
 export const emailInsightsTable = makeTable("email_insights");
 export const ocrLearnedRulesTable = makeTable("ocr_learned_rules");
+ensureStore("ocr_rule_review_log");
+export const ocrRuleReviewLogTable = makeTable("ocr_rule_review_log");
+ensureStore("job_heartbeats");
+export const jobHeartbeatsTable = makeTable("job_heartbeats");
 
 // Auxiliary tables touched indirectly (e.g. aiService records request metrics).
 // We register a store for them but don't expose typed table consts unless a
