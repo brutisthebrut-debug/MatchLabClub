@@ -40,8 +40,11 @@ import {
 import {
   ALERT_MIN_SAMPLE,
   ALERT_WINDOW,
+  DEFAULT_SEND_FAILURE_ALERT_THRESHOLD,
+  PERSISTENT_SEND_FAILURE_EVENT,
   checkAiReliabilityAlerts,
 } from "./aiReliabilityAlerts";
+import { logger } from "./logger";
 
 const usedToolNames: string[] = [];
 
@@ -241,6 +244,89 @@ describe("checkAiReliabilityAlerts", () => {
     } finally {
       delete process.env.AI_RELIABILITY_REBREACH_COOLDOWN_MINUTES;
     }
+  });
+
+  it("counts consecutive send failures and resets on success", async () => {
+    const toolName = uniqueTool("send-failures");
+    await seedMetrics(toolName, { total: 20, firstTryOk: 5 });
+
+    sendMailMock.mockRejectedValueOnce(new Error("smtp down"));
+
+    const first = await checkAiReliabilityAlerts();
+    expect(first.breached).not.toContain(toolName);
+    expect(sendMailMock).toHaveBeenCalledTimes(1);
+
+    let states = await db
+      .select()
+      .from(aiToolAlertStateTable)
+      .where(eq(aiToolAlertStateTable.toolName, toolName));
+    expect(states[0]?.breached).toBe(false);
+    expect(states[0]?.consecutiveSendFailures).toBe(1);
+    expect(states[0]?.lastSendFailureAt).toBeTruthy();
+    expect(states[0]?.lastSendFailureMessage).toBe("smtp down");
+
+    sendMailMock.mockRejectedValueOnce(new Error("smtp still down"));
+    await checkAiReliabilityAlerts();
+
+    states = await db
+      .select()
+      .from(aiToolAlertStateTable)
+      .where(eq(aiToolAlertStateTable.toolName, toolName));
+    expect(states[0]?.consecutiveSendFailures).toBe(2);
+    expect(states[0]?.breached).toBe(false);
+
+    // Mailer recovers — counter resets, state flips to breached.
+    sendMailMock.mockResolvedValueOnce({
+      delivered: true,
+      transport: "log" as const,
+    });
+    const third = await checkAiReliabilityAlerts();
+    expect(third.breached).toContain(toolName);
+
+    states = await db
+      .select()
+      .from(aiToolAlertStateTable)
+      .where(eq(aiToolAlertStateTable.toolName, toolName));
+    expect(states[0]?.breached).toBe(true);
+    expect(states[0]?.consecutiveSendFailures).toBe(0);
+    expect(states[0]?.lastSendFailureMessage).toBeNull();
+  });
+
+  it("emits a distinct error event once consecutive send failures hit the threshold", async () => {
+    const toolName = uniqueTool("send-failures-threshold");
+    await seedMetrics(toolName, { total: 20, firstTryOk: 5 });
+
+    const errorMock = vi.mocked(logger.error);
+    errorMock.mockClear();
+
+    const threshold = DEFAULT_SEND_FAILURE_ALERT_THRESHOLD;
+    for (let i = 0; i < threshold; i++) {
+      sendMailMock.mockRejectedValueOnce(new Error(`smtp fail ${i + 1}`));
+      await checkAiReliabilityAlerts();
+    }
+
+    const states = await db
+      .select()
+      .from(aiToolAlertStateTable)
+      .where(eq(aiToolAlertStateTable.toolName, toolName));
+    expect(states[0]?.consecutiveSendFailures).toBe(threshold);
+
+    const persistentCalls = errorMock.mock.calls.filter((c) => {
+      const ctx = c[0] as { event?: string; toolName?: string } | undefined;
+      return (
+        ctx?.event === PERSISTENT_SEND_FAILURE_EVENT &&
+        ctx?.toolName === toolName
+      );
+    });
+    expect(persistentCalls.length).toBeGreaterThanOrEqual(1);
+    const lastCtx = persistentCalls[persistentCalls.length - 1]?.[0] as {
+      failureCount: number;
+      threshold: number;
+      kind: string;
+    };
+    expect(lastCtx.failureCount).toBe(threshold);
+    expect(lastCtx.threshold).toBe(threshold);
+    expect(lastCtx.kind).toBe("breach");
   });
 
   it("never alerts when sample size is below ALERT_MIN_SAMPLE", async () => {

@@ -10,6 +10,11 @@ export const aiToolAlertStateTable = pgTable("ai_tool_alert_state", {
   lastRecentFirstTrySuccessRate: real("last_recent_first_try_success_rate")
     .notNull()
     .default(0),
+  consecutiveSendFailures: integer("consecutive_send_failures")
+    .notNull()
+    .default(0),
+  lastSendFailureAt: timestamp("last_send_failure_at", { withTimezone: true }),
+  lastSendFailureMessage: text("last_send_failure_message"),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

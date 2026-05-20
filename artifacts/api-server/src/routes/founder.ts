@@ -12,6 +12,7 @@ import {
   aiAlertThresholdChangesTable,
   AI_ALERT_GLOBAL_KEY,
   coachFollowUpsTable,
+  aiToolAlertStateTable,
 } from "@workspace/db";
 import { and, count, sql, desc, gte, asc, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod/v4";
@@ -267,6 +268,24 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
   const perToolNorm = perTool.map(norm);
   const alerts = perToolNorm.filter((t) => t.alert);
 
+  const alertStates = await db
+    .select({
+      toolName: aiToolAlertStateTable.toolName,
+      consecutiveSendFailures: aiToolAlertStateTable.consecutiveSendFailures,
+      lastSendFailureAt: aiToolAlertStateTable.lastSendFailureAt,
+      lastSendFailureMessage: aiToolAlertStateTable.lastSendFailureMessage,
+    })
+    .from(aiToolAlertStateTable);
+  const mailerHealth = alertStates
+    .filter((s) => (s.consecutiveSendFailures ?? 0) > 0)
+    .map((s) => ({
+      toolName: s.toolName,
+      consecutiveSendFailures: Number(s.consecutiveSendFailures ?? 0),
+      lastSendFailureAt: s.lastSendFailureAt,
+      lastSendFailureMessage: s.lastSendFailureMessage,
+    }))
+    .sort((a, b) => b.consecutiveSendFailures - a.consecutiveSendFailures);
+
   res.json({
     overall: {
       total: totalRows,
@@ -290,6 +309,7 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
       minSample: c.minSample,
       firstTrySuccessRate: c.threshold,
     })),
+    mailerHealth,
     alerts: alerts.map((t) => ({
       toolName: t.toolName,
       recentTotal: t.recent.total,

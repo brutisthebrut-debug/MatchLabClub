@@ -6,6 +6,7 @@ import { logger } from "./logger";
 export const ALERT_WINDOW = 50;
 export const ALERT_MIN_SAMPLE = 10;
 export const ALERT_THRESHOLD = 0.7;
+export const DEFAULT_SEND_FAILURE_ALERT_THRESHOLD = 3;
 
 const DEFAULT_INTERVAL_MINUTES = 5;
 const DEFAULT_REBREACH_COOLDOWN_MINUTES = 15;
@@ -16,6 +17,24 @@ function getRebreachCooldownMs(): number {
     DEFAULT_REBREACH_COOLDOWN_MINUTES,
   );
   return minutes * 60 * 1000;
+}
+
+export const PERSISTENT_SEND_FAILURE_EVENT =
+  "ai_reliability_email_delivery_persistently_failing";
+
+function readPositiveIntEnv(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return Math.floor(parsed);
+}
+
+export function getSendFailureAlertThreshold(): number {
+  return readPositiveIntEnv(
+    "AI_RELIABILITY_SEND_FAILURE_ALERT_THRESHOLD",
+    DEFAULT_SEND_FAILURE_ALERT_THRESHOLD,
+  );
 }
 
 function readPositiveNumberEnv(name: string, fallback: number): number {
@@ -165,6 +184,69 @@ async function sendBreachEmail(
   );
 }
 
+async function recordSendFailure(
+  toolName: string,
+  kind: "breach" | "recovered",
+  err: unknown,
+  now: Date,
+): Promise<void> {
+  const message = err instanceof Error ? err.message : String(err);
+  const upserted = await db
+    .insert(aiToolAlertStateTable)
+    .values({
+      toolName,
+      breached: false,
+      consecutiveSendFailures: 1,
+      lastSendFailureAt: now,
+      lastSendFailureMessage: message,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: aiToolAlertStateTable.toolName,
+      set: {
+        consecutiveSendFailures: sql`${aiToolAlertStateTable.consecutiveSendFailures} + 1`,
+        lastSendFailureAt: now,
+        lastSendFailureMessage: message,
+        updatedAt: now,
+      },
+    })
+    .returning({
+      consecutiveSendFailures: aiToolAlertStateTable.consecutiveSendFailures,
+    });
+
+  const failureCount = upserted[0]?.consecutiveSendFailures ?? 1;
+  const threshold = getSendFailureAlertThreshold();
+
+  if (failureCount >= threshold) {
+    logger.error(
+      {
+        event: PERSISTENT_SEND_FAILURE_EVENT,
+        toolName,
+        kind,
+        failureCount,
+        threshold,
+        err: message,
+      },
+      `AI reliability ${kind} email has failed ${failureCount} consecutive times; founder alerting for "${toolName}" is degraded`,
+    );
+  } else {
+    logger.error(
+      { err: message, toolName, failureCount },
+      `Failed to send AI reliability ${kind} email; will retry on next check`,
+    );
+  }
+}
+
+async function resetSendFailureCounter(toolName: string): Promise<void> {
+  await db
+    .update(aiToolAlertStateTable)
+    .set({
+      consecutiveSendFailures: 0,
+      lastSendFailureMessage: null,
+    })
+    .where(eq(aiToolAlertStateTable.toolName, toolName));
+}
+
 export async function checkAiReliabilityAlerts(): Promise<AlertCheckResult> {
   const recent = await fetchRecentByTool();
   const states = await db.select().from(aiToolAlertStateTable);
@@ -219,14 +301,12 @@ export async function checkAiReliabilityAlerts(): Promise<AlertCheckResult> {
       // logged warning counts as the one-time notification). If the email
       // throws, we leave state unchanged so the next scheduled run retries.
       let notified = false;
+      let sendError: unknown = null;
       try {
         await sendBreachEmail(toolName, r.total, rate);
         notified = true;
       } catch (err) {
-        logger.error(
-          { err: err instanceof Error ? err.message : String(err), toolName },
-          "Failed to send AI reliability breach email; will retry on next check",
-        );
+        sendError = err;
       }
 
       if (notified) {
@@ -239,6 +319,8 @@ export async function checkAiReliabilityAlerts(): Promise<AlertCheckResult> {
             lastNotifiedAt: now,
             lastRecentTotal: r.total,
             lastRecentFirstTrySuccessRate: rate,
+            consecutiveSendFailures: 0,
+            lastSendFailureMessage: null,
             updatedAt: now,
           })
           .onConflictDoUpdate({
@@ -249,10 +331,24 @@ export async function checkAiReliabilityAlerts(): Promise<AlertCheckResult> {
               lastNotifiedAt: now,
               lastRecentTotal: r.total,
               lastRecentFirstTrySuccessRate: rate,
+              consecutiveSendFailures: 0,
+              lastSendFailureMessage: null,
               updatedAt: now,
             },
           });
         breached.push(toolName);
+      } else if (sendError !== null) {
+        await recordSendFailure(toolName, "breach", sendError, now);
+        if (prev) {
+          await db
+            .update(aiToolAlertStateTable)
+            .set({
+              lastRecentTotal: r.total,
+              lastRecentFirstTrySuccessRate: rate,
+              updatedAt: now,
+            })
+            .where(eq(aiToolAlertStateTable.toolName, toolName));
+        }
       } else if (prev) {
         // Refresh observed stats without flipping breached, so the next
         // scheduled check still sees the breach and retries the email.
@@ -267,6 +363,7 @@ export async function checkAiReliabilityAlerts(): Promise<AlertCheckResult> {
       }
     } else if (!isBreached && wasBreached) {
       let notified = false;
+      let sendError: unknown = null;
       try {
         await sendRecoveredEmail(
           toolName,
@@ -277,10 +374,7 @@ export async function checkAiReliabilityAlerts(): Promise<AlertCheckResult> {
         );
         notified = true;
       } catch (err) {
-        logger.error(
-          { err: err instanceof Error ? err.message : String(err), toolName },
-          "Failed to send AI reliability recovered email; will retry on next check",
-        );
+        sendError = err;
       }
 
       if (notified) {
@@ -291,10 +385,24 @@ export async function checkAiReliabilityAlerts(): Promise<AlertCheckResult> {
             lastClearedAt: now,
             lastRecentTotal: r.total,
             lastRecentFirstTrySuccessRate: rate,
+            consecutiveSendFailures: 0,
+            lastSendFailureMessage: null,
             updatedAt: now,
           })
           .where(eq(aiToolAlertStateTable.toolName, toolName));
         cleared.push(toolName);
+      } else if (sendError !== null) {
+        await recordSendFailure(toolName, "recovered", sendError, now);
+        if (prev) {
+          await db
+            .update(aiToolAlertStateTable)
+            .set({
+              lastRecentTotal: r.total,
+              lastRecentFirstTrySuccessRate: rate,
+              updatedAt: now,
+            })
+            .where(eq(aiToolAlertStateTable.toolName, toolName));
+        }
       } else if (prev) {
         await db
           .update(aiToolAlertStateTable)
