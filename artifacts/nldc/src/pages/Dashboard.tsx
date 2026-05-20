@@ -171,6 +171,7 @@ export default function Dashboard() {
   const gradeColor = latestScore >= 75 ? "hsl(142 55% 60%)" : latestScore >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
   const scoreDelta = (displaySummary.latestScore ?? 0) - (displaySummary.scoreHistory[0]?.score ?? 0);
   const nextAction = getNextBestAction(latestScore, hasRealAudits);
+  const latestRealAudit = hasRealAudits ? audits![audits!.length - 1] : null;
 
   return (
     <AppLayout>
@@ -211,6 +212,64 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
+          {/* Continue Where You Left Off / Start Here */}
+          <motion.div {...fadeUp(0.07)} className="mb-5">
+            {hasRealAudits ? (
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">Continue where you left off</p>
+                <div className="grid sm:grid-cols-3 gap-3">
+                  <Link href={`/report/${latestRealAudit!.id}`} className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(268_52%_68%/0.3)] transition-all block card-hover">
+                    <div className="flex items-center gap-2 mb-1">
+                      <FileText className="w-3.5 h-3.5 text-[hsl(268_52%_68%)]" />
+                      <span className="text-xs font-semibold text-[hsl(268_52%_78%)]">Latest Report</span>
+                    </div>
+                    <p className="text-sm font-medium text-foreground truncate">{latestRealAudit!.firstName}'s Audit</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Score {latestRealAudit!.readinessScore} · {new Date(latestRealAudit!.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                  </Link>
+                  <Link href="/coach" className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(285_45%_62%/0.3)] transition-all block card-hover">
+                    <div className="flex items-center gap-2 mb-1">
+                      <MessageSquare className="w-3.5 h-3.5 text-[hsl(285_45%_65%)]" />
+                      <span className="text-xs font-semibold text-[hsl(285_52%_78%)]">Message Coach</span>
+                    </div>
+                    <p className="text-sm font-medium text-foreground">Coach a reply</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Paste a conversation → 3 styled options</p>
+                  </Link>
+                  <Link href="/progress/timeline" className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(190_55%_60%/0.3)] transition-all block card-hover">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Clock className="w-3.5 h-3.5 text-[hsl(190_55%_60%)]" />
+                      <span className="text-xs font-semibold text-[hsl(190_55%_72%)]">My Timeline</span>
+                    </div>
+                    <p className="text-sm font-medium text-foreground">Log a note</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Track wins, questions, patterns</p>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">Start here — 3 steps to your baseline</p>
+                <div className="grid sm:grid-cols-3 gap-3">
+                  {[
+                    { n: "1", title: "Get your Signal Audit", desc: "3 minutes · Free · Instant score", href: "/start", color: "hsl(268 52% 68%)", icon: Sparkles },
+                    { n: "2", title: "Build your Blueprint", desc: "Self-insight in 4 questions", href: "/blueprint", color: "hsl(43 65% 65%)", icon: BookOpen },
+                    { n: "3", title: "Check your Wellness", desc: "8 dimensions of readiness", href: "/wellness", color: "hsl(142 55% 60%)", icon: Heart },
+                  ].map(step => {
+                    const Icon = step.icon;
+                    return (
+                      <Link key={step.n} href={step.href} className="glass border border-white/8 rounded-2xl p-4 hover:border-white/15 transition-all block card-hover">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: step.color }}>Step {step.n}</span>
+                          <Icon className="w-3.5 h-3.5" style={{ color: step.color }} />
+                        </div>
+                        <p className="text-sm font-semibold text-foreground">{step.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{step.desc}</p>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </motion.div>
+
           {/* Signal Score + History */}
           <div className="grid md:grid-cols-3 gap-5 mb-5">
             {/* Score Card */}
@@ -222,6 +281,9 @@ export default function Dashboard() {
               {summaryLoading ? <Skeleton className="w-36 h-36 rounded-full" /> : <ScoreRing score={latestScore} />}
               <p className="text-5xl font-bold mt-3" style={{ color: gradeColor }} data-testid="grade-letter">{grade}</p>
               <p className="text-xs text-muted-foreground mt-1">Profile grade</p>
+              {!hasRealAudits && (
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-muted-foreground/50 mt-2 inline-block">Example data</span>
+              )}
               {scoreDelta > 0 && (
                 <div className="flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full bg-[hsl(142_55%_45%/0.12)] border border-[hsl(142_55%_45%/0.2)]">
                   <TrendingUp className="w-3.5 h-3.5 text-[hsl(142_55%_60%)]" />
@@ -366,25 +428,26 @@ export default function Dashboard() {
             </div>
             {auditsLoading ? (
               <div className="space-y-3">{[1,2].map(i => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)}</div>
-            ) : displayAudits.length === 0 ? (
-              <div className="text-center py-10">
-                <Sparkles className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            ) : !hasRealAudits ? (
+              <div className="text-center py-10" data-testid="audits-empty-state">
+                <div className="w-14 h-14 rounded-full bg-[hsl(268_52%_68%/0.1)] mx-auto mb-3 flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-[hsl(268_52%_78%)]" />
+                </div>
                 <p className="font-semibold text-foreground mb-1">No audits yet</p>
-                <p className="text-sm text-muted-foreground mb-5">Complete the intake to generate your Dating Blueprint.</p>
-                <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0" data-testid="button-start-first-audit">
-                  <Link href="/start">Get My Free Signal Audit</Link>
+                <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto leading-relaxed">Your first audit sets the baseline — Signal Score, bio critique, and a 7-day action plan.</p>
+                <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold" data-testid="button-start-first-audit">
+                  <Link href="/start">Get My Free Signal Audit <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
                 </Button>
               </div>
             ) : (
               <div className="space-y-3">
-                {displayAudits.slice().reverse().map((audit) => {
+                {audits!.slice().reverse().map((audit) => {
                   const score = audit.readinessScore ?? 0;
                   const color = score >= 75 ? "hsl(142 55% 60%)" : score >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
                   const bg    = score >= 75 ? "hsl(142 55% 45% / 0.12)" : score >= 55 ? "hsl(43 65% 55% / 0.12)" : "hsl(348 55% 55% / 0.12)";
                   const date  = new Date(audit.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-                  const reportHref = hasRealAudits ? `/report/${audit.id}` : "/start";
                   return (
-                    <Link key={audit.id} href={reportHref} data-testid={`row-audit-${audit.id}`}>
+                    <Link key={audit.id} href={`/report/${audit.id}`} data-testid={`row-audit-${audit.id}`}>
                       <div className="flex items-center justify-between p-3 sm:p-4 rounded-2xl border border-white/6 hover:border-[hsl(268_52%_68%/0.25)] hover:bg-white/2 transition-all cursor-pointer card-hover gap-3">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center font-bold text-sm flex-shrink-0" style={{ background: bg, color }}>

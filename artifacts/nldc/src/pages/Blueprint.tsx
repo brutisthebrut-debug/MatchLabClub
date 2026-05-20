@@ -170,13 +170,31 @@ export default function Blueprint() {
   const [want, setWant] = useState("");
   const [result, setResult] = useState<BlueprintResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [aiEdge, setAiEdge] = useState<string | null>(null);
+  const [aiEdgeLoading, setAiEdgeLoading] = useState(false);
 
   function handleAnalyze() {
     if (!text.trim()) return;
     setLoading(true);
-    setTimeout(() => {
+    setAiEdge(null);
+    setTimeout(async () => {
       setResult(analyzeBlueprint(text, pattern, misread, want));
       setLoading(false);
+
+      setAiEdgeLoading(true);
+      try {
+        const prompt = [`About me: ${text}`, pattern && `Pattern: ${pattern}`, misread && `Misread as: ${misread}`, want && `Looking for: ${want}`].filter(Boolean).join("\n");
+        const res = await fetch("/api/ai/enhance", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ toolName: "Dating Blueprint", prompt }),
+        });
+        if (res.ok) {
+          const data = await res.json() as { output: string; isFallback: boolean };
+          if (data.output && !data.isFallback) setAiEdge(data.output);
+        }
+      } catch { /* silent — deterministic result shown */ }
+      setAiEdgeLoading(false);
     }, 1200);
   }
 
@@ -273,9 +291,19 @@ export default function Blueprint() {
                   </motion.div>
                 ))}
               </div>
+              {(aiEdge || aiEdgeLoading) && (
+                <motion.div {...fadeUp(0.35)} className="mt-4 rounded-2xl border border-[hsl(268_52%_68%/0.2)] bg-[hsl(268_52%_68%/0.06)] px-5 py-4">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(268_52%_68%)]">Coaching Lens</p>
+                    {aiEdgeLoading && <Loader2 className="w-3 h-3 animate-spin text-[hsl(268_52%_68%)]" />}
+                    {aiEdge && !aiEdgeLoading && <span className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_52%_78%)]">AI</span>}
+                  </div>
+                  {aiEdge && <p className="text-sm text-muted-foreground leading-relaxed">{aiEdge}</p>}
+                </motion.div>
+              )}
               {result && (
                 <div className="mt-5 flex justify-center">
-                  <button onClick={() => { setResult(null); setText(""); setPattern(""); setMisread(""); setWant(""); }}
+                  <button onClick={() => { setResult(null); setText(""); setPattern(""); setMisread(""); setWant(""); setAiEdge(null); }}
                     className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
                     <RefreshCw className="w-3.5 h-3.5" />Start over
                   </button>

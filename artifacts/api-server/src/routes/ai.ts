@@ -86,7 +86,7 @@ router.post(
     const { toolName, prompt, context } = parsed.data;
     const ctx: AiContext = context ?? { toolName };
 
-    const fallback = "";
+    const fallback = `Coaching note for ${toolName}: Be specific and genuine — the most effective messages and profiles are honest, not strategic. Focus on what makes this moment or person unique, and respond to the actual situation rather than a template. Authenticity almost always outperforms a perfectly crafted line.`;
 
     const result = await generate(
       {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -140,12 +141,21 @@ const DEMO: NextMessageResult = {
   coachNote: "Personalize before sending — replace any bracketed text with something real from your conversation. The more specific, the better it lands.",
 };
 
-function CopyBtn({ text }: { text: string }) {
+function CopyBtn({ text, style: msgStyle }: { text: string; style?: string }) {
   const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
   return (
-    <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        toast({ title: "Copied!", description: msgStyle ? `${msgStyle} message ready to paste.` : "Message copied to clipboard." });
+        setTimeout(() => setCopied(false), 2000);
+      }}
       className="flex items-center gap-1.5 text-xs font-medium transition-colors flex-shrink-0"
-      style={{ color: copied ? "hsl(142 55% 60%)" : undefined }}>
+      style={{ color: copied ? "hsl(142 55% 60%)" : undefined }}
+      data-testid="button-copy-next-message"
+    >
       {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
       <span className={copied ? "" : "text-muted-foreground"}>{copied ? "Copied" : "Copy"}</span>
     </button>
@@ -160,11 +170,33 @@ export default function NextMessage() {
   const [goal, setGoal] = useState("");
   const [result, setResult] = useState<NextMessageResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [aiCoachNote, setAiCoachNote] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   function handleGenerate() {
     if (!context.trim() && !lastMsg.trim()) return;
     setLoading(true);
-    setTimeout(() => { setResult(generateMessages(context, lastMsg, name, goal)); setLoading(false); }, 800);
+    setAiCoachNote(null);
+    setTimeout(async () => {
+      const det = generateMessages(context, lastMsg, name, goal);
+      setResult(det);
+      setLoading(false);
+
+      setAiLoading(true);
+      try {
+        const parts = [context.trim() && `Conversation: ${context}`, lastMsg.trim() && `Last message sent: ${lastMsg}`, name.trim() && `Their name: ${name}`, goal && `Goal: ${goal}`].filter(Boolean).join("\n");
+        const res = await fetch("/api/ai/enhance", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ toolName: "Next Message", prompt: parts }),
+        });
+        if (res.ok) {
+          const data = await res.json() as { output: string; isFallback: boolean };
+          if (data.output && !data.isFallback) setAiCoachNote(data.output);
+        }
+      } catch { /* silent — deterministic note shown as fallback */ }
+      setAiLoading(false);
+    }, 800);
   }
 
   const show = result ?? DEMO;
@@ -238,7 +270,7 @@ export default function NextMessage() {
                       <span className="text-xs font-bold uppercase tracking-wider" style={{ color: opt.color }}>{opt.style}</span>
                       <div className="flex items-center gap-3">
                         <span className="text-xs text-muted-foreground/60 hidden sm:block">{opt.when}</span>
-                        <CopyBtn text={opt.text} />
+                        <CopyBtn text={opt.text} style={opt.style} />
                       </div>
                     </div>
                     <div className="px-5 py-4">
@@ -254,8 +286,14 @@ export default function NextMessage() {
                 ))}
               </div>
               <motion.div {...fadeUp(0.3)} className="mt-4 rounded-2xl border border-[hsl(268_52%_68%/0.2)] bg-[hsl(268_52%_68%/0.06)] px-5 py-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(268_52%_68%)] mb-1.5">Coach Note</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">{show.coachNote}</p>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(268_52%_68%)]">Coach Note</p>
+                  {aiLoading && <Loader2 className="w-3 h-3 animate-spin text-[hsl(268_52%_68%)]" />}
+                  {aiCoachNote && !aiLoading && <span className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_52%_78%)]">AI</span>}
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {aiCoachNote ?? show.coachNote}
+                </p>
               </motion.div>
               {result && (
                 <div className="mt-5 flex justify-center">
