@@ -1,7 +1,9 @@
 import React from "react";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, waitFor, act, cleanup } from "@testing-library/react";
+import { render, screen, waitFor, act, cleanup, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const mockSetLocation = vi.hoisted(() => vi.fn<[string], void>());
 
 // Mock the auth hook so we can flip from anonymous -> authenticated mid-test.
 let authState: {
@@ -22,9 +24,17 @@ vi.mock("@/hooks/use-toast", () => ({
 }));
 
 vi.mock("@/components/ui/toast", () => ({
-  ToastAction: ({ children }: { children: React.ReactNode }) => (
-    <button>{children}</button>
-  ),
+  ToastAction: ({
+    children,
+    onClick,
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+  }) => <button onClick={onClick}>{children}</button>,
+}));
+
+vi.mock("wouter", () => ({
+  useLocation: () => ["", mockSetLocation],
 }));
 
 // IMPORTANT: import AFTER the mock is registered.
@@ -434,6 +444,7 @@ beforeEach(() => {
   currentAnonToken = "anon-default-browser";
   authState = { isAuthenticated: false, isLoading: false, user: null };
   vi.mocked(toast).mockClear();
+  mockSetLocation.mockClear();
   window.history.replaceState(null, "", "/");
   installFetchMock();
   qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -978,5 +989,100 @@ describe("Cross-device hand-off claim flow", () => {
     // The cookie-scoped claim must never have fired on any device —
     // none of them had anonymous ids in localStorage.
     expect(server.claimCalls).toBe(0);
+  });
+
+  it("clicking 'Open dashboard' in the already-used toast navigates to /dashboard", async () => {
+    // ===== DEVICE A — anonymous, creates an audit and mints a hand-off token =====
+    currentAnonToken = "anon-token-device-A";
+
+    let createdId: number | undefined;
+    const deviceA = render(
+      <Wrap>
+        <AnonAuditCreator onCreated={(id) => (createdId = id)} />
+      </Wrap>,
+    );
+
+    await waitFor(() => expect(createdId).toBeDefined());
+
+    const issueRes = await fetch("/api/claim-anonymous/handoff/issue", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    const issueBody = (await issueRes.json()) as { handoff: string };
+    const shareUrl = buildHandoffShareUrl(issueBody.handoff);
+
+    deviceA.unmount();
+
+    // ===== DEVICE B — redeems and burns the token =====
+    switchToFreshBrowser();
+    openUrlInActiveBrowser(shareUrl);
+
+    act(() => {
+      authState = {
+        isAuthenticated: true,
+        isLoading: false,
+        user: { id: "user-device-B", email: null },
+      };
+    });
+
+    const deviceB = render(
+      <Wrap>
+        <ClaimOnly />
+      </Wrap>,
+    );
+
+    await waitFor(() => expect(server.redeemCalls).toBe(1));
+    expect(server.usedHandoffTokens.has(issueBody.handoff)).toBe(true);
+    await waitFor(() =>
+      expect(sessionStorage.getItem("nldc:pendingHandoff")).toBeNull(),
+    );
+
+    deviceB.unmount();
+
+    // ===== DEVICE C — replays the burned link, triggering the already-used toast =====
+    switchToFreshBrowser();
+    openUrlInActiveBrowser(shareUrl);
+
+    act(() => {
+      authState = {
+        isAuthenticated: true,
+        isLoading: false,
+        user: { id: "user-device-C", email: null },
+      };
+    });
+
+    render(
+      <Wrap>
+        <ClaimOnly />
+      </Wrap>,
+    );
+
+    // Wait for the already-used toast to fire.
+    await waitFor(() =>
+      expect(vi.mocked(toast)).toHaveBeenCalledWith(
+        expect.objectContaining({ title: "This link was already used" }),
+      ),
+    );
+
+    // Extract the action element from the toast call and render it in isolation.
+    const toastCall = vi.mocked(toast).mock.calls.find(
+      (args) =>
+        (args[0] as { title?: string }).title === "This link was already used",
+    );
+    expect(toastCall).toBeDefined();
+    const actionElement = (
+      toastCall![0] as { action?: React.ReactElement }
+    ).action;
+    expect(actionElement).toBeDefined();
+
+    const { getByRole } = render(<>{actionElement}</>);
+    const btn = getByRole("button", { name: /open dashboard/i });
+
+    // Click the CTA.
+    fireEvent.click(btn);
+
+    // Navigation must have been directed to /dashboard.
+    expect(mockSetLocation).toHaveBeenCalledWith("/dashboard");
   });
 });
