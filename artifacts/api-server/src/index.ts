@@ -5,6 +5,7 @@ import { startDataExportTokenCleanupJob } from "./lib/dataExportTokenCleanup";
 import { startHandoffRedemptionCleanupJob } from "./lib/handoffRedemptionCleanup";
 import { startAiReliabilityAlertsJob } from "./lib/aiReliabilityAlerts";
 import { startAuditTrashPurgeJob } from "./lib/auditTrashPurge";
+import { startAuditVersionPurgeJob } from "./lib/auditVersionPurge";
 import { refreshLearnedRulesCache } from "./lib/ocrLearning";
 import { startOcrLearningJob } from "./lib/ocrLearningJob";
 
@@ -34,6 +35,7 @@ app.listen(port, (err) => {
   startHandoffRedemptionCleanupJob();
   startAiReliabilityAlertsJob();
   startAuditTrashPurgeJob();
+  startAuditVersionPurgeJob();
   refreshLearnedRulesCache().catch((err) =>
     logger.warn({ err }, "Initial OCR learned-rules load failed"),
   );

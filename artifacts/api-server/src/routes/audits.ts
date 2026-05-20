@@ -22,6 +22,7 @@ import {
 } from "@workspace/api-zod";
 import { generateAuditReport } from "../lib/aiEngine";
 import { getRetentionDays } from "../lib/auditTrashPurge";
+import { pruneVersionsForAudit } from "../lib/auditVersionPurge";
 import {
   getAnonClaimToken,
   getOrCreateAnonClaimToken,
@@ -553,6 +554,10 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
     engineVersion: report.engineVersion ?? null,
     generatedAt: newGeneratedAt,
   });
+
+  // Trim versions beyond the retention cap immediately after insert so the
+  // table never accumulates unbounded rows for a single audit.
+  await pruneVersionsForAudit(id);
 
   res.json(GenerateAuditReportResponse.parse(fullReport));
 });
