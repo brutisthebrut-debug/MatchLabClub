@@ -70,6 +70,7 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeMenu, setActiveMenu] = useState<DropdownId>(null);
+  const [mobileSection, setMobileSection] = useState<string | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const { user, isAuthenticated, isLoading, login, logout } = useAuth();
 
@@ -278,80 +279,146 @@ export function Navbar() {
 
       {/* Mobile Nav */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-white/5 bg-[hsl(232_38%_7%/0.98)] backdrop-blur-xl p-5 flex flex-col gap-1 animate-in slide-in-from-top-2 max-h-[85vh] overflow-y-auto">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1 mt-1">Your Blueprint — Profile Tools</p>
-          {YOUR_BLUEPRINT_PROFILE.map(t => (
-            <Link key={t.href} href={t.href} onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">{t.name}</Link>
+        <div className="md:hidden border-t border-white/5 bg-[hsl(232_38%_7%/0.98)] backdrop-blur-xl animate-in slide-in-from-top-2 max-h-[85vh] overflow-y-auto">
+          {/* Accordion sections */}
+          {(
+            [
+              {
+                id: "blueprint",
+                label: "Your Blueprint",
+                icon: <BookOpen className="w-3.5 h-3.5" />,
+                color: "hsl(268 52% 78%)",
+                subsections: [
+                  { heading: "Profile Tools", links: YOUR_BLUEPRINT_PROFILE },
+                  { heading: "Self-Insight",  links: YOUR_BLUEPRINT_INSIGHT },
+                ],
+              },
+              {
+                id: "messages",
+                label: "Message Tools",
+                icon: <MessageSquare className="w-3.5 h-3.5" />,
+                color: "hsl(190 55% 72%)",
+                subsections: [{ heading: null, links: MESSAGE_TOOLS }],
+              },
+              {
+                id: "growth",
+                label: "Growth Tracker",
+                icon: <TrendingUp className="w-3.5 h-3.5" />,
+                color: "hsl(142 55% 72%)",
+                subsections: [{ heading: null, links: GROWTH_TRACKER }],
+              },
+              {
+                id: "wingman",
+                label: "Wingman Studio",
+                icon: <Sparkles className="w-3.5 h-3.5" />,
+                color: "hsl(268 52% 78%)",
+                subsections: [
+                  {
+                    heading: null,
+                    links: [
+                      { name: "✦ AI Copilot",           href: "/copilot",               desc: "" },
+                      { name: "Start My Reset",          href: "/copilot/reset",          desc: "" },
+                      { name: "Help Me Reply",           href: "/copilot/reply",          desc: "" },
+                      { name: "Improve My Profile",      href: "/copilot/profile",        desc: "" },
+                      { name: "Debrief What Happened",   href: "/copilot/debrief",        desc: "" },
+                      { name: "Weekly Growth Plan",      href: "/copilot/weekly-plan",    desc: "" },
+                      { name: "Prepare for a Date",      href: "/copilot/prep",           desc: "" },
+                      { name: "Flirt Coach",             href: "/copilot/flirt",          desc: "" },
+                      { name: "What Changed?",           href: "/copilot/what-changed",   desc: "" },
+                    ],
+                  },
+                ],
+              },
+              {
+                id: "offers",
+                label: "Offers & Vision",
+                icon: <Gift className="w-3.5 h-3.5" />,
+                color: "hsl(43 65% 72%)",
+                subsections: [{ heading: null, links: OFFERS }],
+              },
+              {
+                id: "settings",
+                label: "Settings & Trust",
+                icon: null,
+                color: "hsl(268 52% 68%)",
+                subsections: [{ heading: null, links: SETTINGS_TRUST }],
+              },
+            ] as Array<{
+              id: string;
+              label: string;
+              icon: React.ReactNode | null;
+              color: string;
+              subsections: Array<{ heading: string | null; links: Array<{ name: string; href: string; desc: string }> }>;
+            }>
+          ).map(section => (
+            <div key={section.id} className="border-b border-white/5 last:border-0">
+              <button
+                onClick={() => setMobileSection(prev => prev === section.id ? null : section.id)}
+                className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-white/3 transition-colors"
+              >
+                <span className="flex items-center gap-2.5 text-sm font-medium" style={{ color: mobileSection === section.id ? section.color : undefined }}>
+                  {section.icon && <span style={{ color: section.color }}>{section.icon}</span>}
+                  {section.label}
+                </span>
+                <ChevronDown
+                  className="w-3.5 h-3.5 transition-transform text-muted-foreground/40"
+                  style={{ transform: mobileSection === section.id ? "rotate(180deg)" : "rotate(0deg)" }}
+                />
+              </button>
+              {mobileSection === section.id && (
+                <div className="pb-2 px-5 flex flex-col gap-0">
+                  {section.subsections.map((sub, si) => (
+                    <div key={si}>
+                      {sub.heading && (
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/35 pt-2 pb-1">{sub.heading}</p>
+                      )}
+                      {sub.links.map(t => (
+                        <Link
+                          key={t.href}
+                          href={t.href}
+                          onClick={closeAll}
+                          className="block text-sm text-muted-foreground hover:text-foreground py-2 transition-colors leading-tight"
+                        >
+                          {t.name}
+                        </Link>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
-          <div className="h-px bg-white/5 my-2" />
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1">Your Blueprint — Self-Insight</p>
-          {YOUR_BLUEPRINT_INSIGHT.map(t => (
-            <Link key={t.href} href={t.href} onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">{t.name}</Link>
-          ))}
-          <div className="h-px bg-white/5 my-2" />
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1">Message Tools</p>
-          {MESSAGE_TOOLS.map(t => (
-            <Link key={t.href} href={t.href} onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">{t.name}</Link>
-          ))}
-          <div className="h-px bg-white/5 my-2" />
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1">Growth Tracker</p>
-          {GROWTH_TRACKER.map(t => (
-            <Link key={t.href} href={t.href} onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">{t.name}</Link>
-          ))}
-          <div className="h-px bg-white/5 my-2" />
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1">Offers</p>
-          {OFFERS.map(t => (
-            <Link key={t.href} href={t.href} onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">{t.name}</Link>
-          ))}
-          <div className="h-px bg-white/5 my-2" />
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1">Settings &amp; Trust</p>
-          {SETTINGS_TRUST.map(t => (
-            <Link key={t.href} href={t.href} onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">{t.name}</Link>
-          ))}
-          <div className="h-px bg-white/5 my-2" />
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1">Wingman Studio</p>
-          <Link href="/copilot" onClick={closeAll} className="text-sm font-semibold text-[hsl(268_52%_78%)] hover:text-foreground py-1.5">✦ AI Copilot</Link>
-          <Link href="/copilot/reset" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Start My Reset</Link>
-          <Link href="/copilot/reply" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Help Me Reply</Link>
-          <Link href="/copilot/profile" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Improve My Profile</Link>
-          <Link href="/copilot/debrief" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Debrief What Happened</Link>
-          <Link href="/copilot/weekly-plan"   onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Weekly Growth Plan</Link>
-          <Link href="/copilot/prep"         onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Prepare for a Date</Link>
-          <Link href="/copilot/flirt"        onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Flirt Coach</Link>
-          <Link href="/copilot/what-changed" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">What Changed?</Link>
-          <div className="h-px bg-white/5 my-2" />
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1">Quizzes &amp; Gallery</p>
-          <Link href="/quiz"     onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">Dating Signal Type Quiz</Link>
-          <Link href="/gallery"  onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">Before &amp; After Gallery</Link>
-          <div className="h-px bg-white/5 my-2" />
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1">Data &amp; Privacy</p>
-          <Link href="/connections" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">Connection Center</Link>
-          <Link href="/vault"       onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">Personal Data Vault</Link>
-          <div className="h-px bg-white/5 my-2" />
-          <Link href="/dashboard" onClick={closeAll} className="text-sm font-medium text-muted-foreground hover:text-foreground py-1.5">Dashboard</Link>
-          {isLoading ? null : isAuthenticated ? (
-            <button
-              type="button"
-              onClick={() => { closeAll(); logout(); }}
-              className="text-left text-sm font-medium text-muted-foreground hover:text-foreground py-1.5 flex items-center gap-2"
-              data-testid="button-logout-mobile"
-            >
-              <LogOut className="w-4 h-4" />Sign Out
-              <span className="ml-auto text-[11px] text-muted-foreground/70 truncate max-w-[140px]">{user?.firstName || user?.email}</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => { closeAll(); login(); }}
-              className="text-left text-sm font-medium text-muted-foreground hover:text-foreground py-1.5 flex items-center gap-2"
-              data-testid="button-login-mobile"
-            >
-              <LogIn className="w-4 h-4" />Sign In
-            </button>
-          )}
-          <Button asChild className="rounded-full w-full mt-3 bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold" onClick={closeAll}>
-            <Link href="/start">Start Here — Get My Free Audit</Link>
-          </Button>
+
+          {/* Bottom: Dashboard + auth + CTA */}
+          <div className="px-5 py-4 flex flex-col gap-1.5">
+            <Link href="/dashboard" onClick={closeAll}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground py-1.5 transition-colors">
+              Dashboard
+            </Link>
+            {isLoading ? null : isAuthenticated ? (
+              <button
+                type="button"
+                onClick={() => { closeAll(); logout(); }}
+                className="text-left text-sm font-medium text-muted-foreground hover:text-foreground py-1.5 flex items-center gap-2"
+                data-testid="button-logout-mobile"
+              >
+                <LogOut className="w-4 h-4" />Sign Out
+                <span className="ml-auto text-[11px] text-muted-foreground/70 truncate max-w-[140px]">{user?.firstName || user?.email}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { closeAll(); login(); }}
+                className="text-left text-sm font-medium text-muted-foreground hover:text-foreground py-1.5 flex items-center gap-2"
+                data-testid="button-login-mobile"
+              >
+                <LogIn className="w-4 h-4" />Sign In
+              </button>
+            )}
+            <Button asChild className="rounded-full w-full mt-2 bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold" onClick={closeAll}>
+              <Link href="/start">Start Here — Get My Free Audit</Link>
+            </Button>
+          </div>
         </div>
       )}
     </header>

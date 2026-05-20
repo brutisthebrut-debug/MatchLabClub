@@ -47,7 +47,7 @@ export default function ShebangsPartner() {
 
   useMeta(
     "Shebangs × NLDC — Exclusive Partner Offer",
-    "Shebangs.com members get exclusive access to NLDC's free Profile Signal Audit and 20% off The Dating Reset. Find out what your profile is really saying."
+    "Shebangs.club members get exclusive access to NLDC's free Profile Signal Audit and 20% off The Dating Reset. Find out what your profile is really saying."
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,7 +61,7 @@ export default function ShebangsPartner() {
         email: form.email,
         source: "shebangs",
         interest: "signal-audit",
-        metadata: { partnerSource: "shebangs.com", page: "/partners/shebangs" },
+        metadata: { partnerSource: "shebangs.club", page: "/partners/shebangs" },
       });
       setSubmitted(true);
     } catch {
@@ -80,7 +80,7 @@ export default function ShebangsPartner() {
           {/* Partner badge */}
           <div className="flex items-center justify-center gap-3 mb-8">
             <div className="glass px-4 py-2 rounded-full text-sm font-semibold text-muted-foreground border border-white/10">
-              Shebangs.com
+              Shebangs.club
             </div>
             <span className="text-muted-foreground/40">×</span>
             <div className="glass px-4 py-2 rounded-full text-sm font-semibold text-[hsl(268_52%_78%)] border border-[hsl(268_52%_68%/0.3)] flex items-center gap-1.5">
@@ -242,7 +242,7 @@ export default function ShebangsPartner() {
         <div className="container mx-auto px-4 md:px-6 max-w-3xl text-center">
           <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-widest mb-4">About this partnership</p>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
-            NLDC partnered with <a href="https://shebangs.com" target="_blank" rel="noopener noreferrer" className="text-[hsl(268_52%_78%)] hover:underline inline-flex items-center gap-1">Shebangs.com <ExternalLink className="w-3 h-3" /></a> because we share the same belief: dating should be approached with honesty, self-awareness, and a genuine desire to connect — not strategy and performance. Shebangs listeners already think this way. We're just here to help you show it.
+            NLDC partnered with <a href="https://shebangs.club" target="_blank" rel="noopener noreferrer" className="text-[hsl(268_52%_78%)] hover:underline inline-flex items-center gap-1">Shebangs.club <ExternalLink className="w-3 h-3" /></a> because we share the same belief: dating should be approached with honesty, self-awareness, and a genuine desire to connect — not strategy and performance. Shebangs listeners already think this way. We're just here to help you show it.
           </p>
         </div>
       </section>

@@ -149,12 +149,12 @@ export default function Pricing() {
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Launch partner</span>
               <div className="h-4 w-px bg-white/10" />
-              <a href="https://shebangs.com" target="_blank" rel="noopener noreferrer"
+              <a href="https://shebangs.club" target="_blank" rel="noopener noreferrer"
                 className="font-semibold text-foreground text-sm hover:text-[hsl(43_65%_68%)] transition-colors">
-                Shebangs.com
+                Shebangs.club
               </a>
               <span className="text-sm text-muted-foreground">— exclusive member perks for NLDC users</span>
-              <a href="https://shebangs.com" target="_blank" rel="noopener noreferrer"
+              <a href="https://shebangs.club" target="_blank" rel="noopener noreferrer"
                 className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                 Learn more <ArrowRight className="w-3 h-3" />
               </a>

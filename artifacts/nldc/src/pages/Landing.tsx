@@ -522,7 +522,7 @@ export default function Landing() {
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm text-white" style={{ background: "linear-gradient(135deg, hsl(43 65% 55%), hsl(348 55% 55%))" }}>S</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <a href="https://shebangs.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground text-sm hover:text-[hsl(43_65%_68%)] transition-colors">Shebangs.com</a>
+                      <a href="https://shebangs.club" target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground text-sm hover:text-[hsl(43_65%_68%)] transition-colors">Shebangs.club</a>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-[hsl(43_65%_62%/0.12)] text-[hsl(43_65%_68%)] border border-[hsl(43_65%_62%/0.2)] font-semibold">Launch Partner</span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">Exclusive member perks for NLDC users — available after signup.</p>
