@@ -219,6 +219,10 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary List all profile audits for current session
  */
+export const ListAuditsQueryParams = zod.object({
+  "source": zod.enum(['manual', 'screenshot']).optional()
+})
+
 export const ListAuditsResponseItem = zod.object({
   "id": zod.number(),
   "firstName": zod.string(),
@@ -234,6 +238,7 @@ export const ListAuditsResponseItem = zod.object({
   "relationshipHistory": zod.string().nullish(),
   "biggestChallenge": zod.string().nullish(),
   "status": zod.enum(['pending', 'generating', 'complete', 'error']),
+  "source": zod.enum(['manual', 'screenshot']),
   "readinessScore": zod.number().nullish(),
   "createdAt": zod.string()
 })
@@ -281,6 +286,7 @@ export const GetAuditResponse = zod.object({
   "relationshipHistory": zod.string().nullish(),
   "biggestChallenge": zod.string().nullish(),
   "status": zod.enum(['pending', 'generating', 'complete', 'error']),
+  "source": zod.enum(['manual', 'screenshot']),
   "readinessScore": zod.number().nullish(),
   "createdAt": zod.string()
 })

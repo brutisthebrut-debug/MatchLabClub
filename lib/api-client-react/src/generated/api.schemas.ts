@@ -99,6 +99,14 @@ export const AuditStatus = {
   error: 'error',
 } as const;
 
+export type AuditSource = typeof AuditSource[keyof typeof AuditSource];
+
+
+export const AuditSource = {
+  manual: 'manual',
+  screenshot: 'screenshot',
+} as const;
+
 export interface Audit {
   id: number;
   firstName: string;
@@ -119,6 +127,7 @@ export interface Audit {
   /** @nullable */
   biggestChallenge?: string | null;
   status: AuditStatus;
+  source: AuditSource;
   /** @nullable */
   readinessScore?: number | null;
   createdAt: string;
@@ -506,6 +515,18 @@ code?: string;
 state?: string;
 iss?: string;
 };
+
+export type ListAuditsParams = {
+source?: ListAuditsSource;
+};
+
+export type ListAuditsSource = typeof ListAuditsSource[keyof typeof ListAuditsSource];
+
+
+export const ListAuditsSource = {
+  manual: 'manual',
+  screenshot: 'screenshot',
+} as const;
 
 export type AuditFromScreenshot400 = {
   error?: string;

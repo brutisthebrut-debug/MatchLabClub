@@ -19,6 +19,7 @@ export const auditsTable = pgTable("audits", {
   relationshipHistory: text("relationship_history"),
   biggestChallenge: text("biggest_challenge"),
   status: text("status").notNull().default("pending"),
+  source: text("source").notNull().default("manual"),
   readinessScore: integer("readiness_score"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

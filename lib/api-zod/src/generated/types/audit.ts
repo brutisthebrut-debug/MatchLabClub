@@ -5,6 +5,7 @@
  * Next Level Dating Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { AuditSource } from './auditSource';
 import type { AuditStatus } from './auditStatus';
 
 export interface Audit {
@@ -27,6 +28,7 @@ export interface Audit {
   /** @nullable */
   biggestChallenge?: string | null;
   status: AuditStatus;
+  source: AuditSource;
   /** @nullable */
   readinessScore?: number | null;
   createdAt: string;

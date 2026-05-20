@@ -58,10 +58,18 @@ router.get("/audits/summary", async (req, res): Promise<void> => {
 });
 
 router.get("/audits", async (req, res): Promise<void> => {
+  const sourceParam = typeof req.query.source === "string" ? req.query.source : undefined;
+  const sourceFilter =
+    sourceParam === "manual" || sourceParam === "screenshot"
+      ? eq(auditsTable.source, sourceParam)
+      : undefined;
+  const where = sourceFilter
+    ? and(userScope(req.user?.id), sourceFilter)
+    : userScope(req.user?.id);
   const audits = await db
     .select()
     .from(auditsTable)
-    .where(userScope(req.user?.id))
+    .where(where)
     .orderBy(auditsTable.createdAt);
   res.json(ListAuditsResponse.parse(audits.map((a) => ({
     ...a,
@@ -194,6 +202,7 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
       bio: extracted.bio || extracted.rawText,
       prompts: promptsText,
       status: "generating",
+      source: "screenshot",
       userId: req.user?.id ?? null,
     })
     .returning();

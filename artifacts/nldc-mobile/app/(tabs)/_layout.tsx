@@ -60,6 +60,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="matches"
+        options={{
+          title: "Matches",
+          tabBarIcon: ({ color }) => (
+            <Feather name="users" size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="coach"
         options={{
           title: "Coach",

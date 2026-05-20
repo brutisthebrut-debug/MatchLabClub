@@ -245,6 +245,13 @@ paths:
       operationId: listAudits
       tags: [audits]
       summary: List all profile audits for current session
+      parameters:
+        - name: source
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [manual, screenshot]
       responses:
         "200":
           description: List of audits
@@ -833,7 +840,7 @@ components:
 
     Audit:
       type: object
-      required: [id, firstName, age, gender, datingGoal, currentApps, bio, createdAt, status]
+      required: [id, firstName, age, gender, datingGoal, currentApps, bio, createdAt, status, source]
       properties:
         id:
           type: integer
@@ -866,6 +873,9 @@ components:
         status:
           type: string
           enum: [pending, generating, complete, error]
+        source:
+          type: string
+          enum: [manual, screenshot]
         readinessScore:
           type: ["integer", "null"]
         createdAt:

@@ -45,6 +45,7 @@ import type {
   EmailInsightInput,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
+  ListAuditsParams,
   LogoutSuccess,
   MessageCoachingInput,
   MessageCoachingResponse,
@@ -845,20 +846,27 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
 
 
 
-export const getListAuditsUrl = () => {
+export const getListAuditsUrl = (params?: ListAuditsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/audits`
+  return stringifiedParams.length > 0 ? `/api/audits?${stringifiedParams}` : `/api/audits`
 }
 
 /**
  * @summary List all profile audits for current session
  */
-export const listAudits = async ( options?: RequestInit): Promise<Audit[]> => {
+export const listAudits = async (params?: ListAuditsParams, options?: RequestInit): Promise<Audit[]> => {
 
-  return customFetch<Audit[]>(getListAuditsUrl(),
+  return customFetch<Audit[]>(getListAuditsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -871,23 +879,23 @@ export const listAudits = async ( options?: RequestInit): Promise<Audit[]> => {
 
 
 
-export const getListAuditsQueryKey = () => {
+export const getListAuditsQueryKey = (params?: ListAuditsParams,) => {
     return [
-    `/api/audits`
+    `/api/audits`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getListAuditsQueryOptions = <TData = Awaited<ReturnType<typeof listAudits>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAudits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getListAuditsQueryOptions = <TData = Awaited<ReturnType<typeof listAudits>>, TError = ErrorType<unknown>>(params?: ListAuditsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAudits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListAuditsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListAuditsQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAudits>>> = ({ signal }) => listAudits({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAudits>>> = ({ signal }) => listAudits(params, { signal, ...requestOptions });
 
 
 
@@ -905,11 +913,11 @@ export type ListAuditsQueryError = ErrorType<unknown>
  */
 
 export function useListAudits<TData = Awaited<ReturnType<typeof listAudits>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAudits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ params?: ListAuditsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAudits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getListAuditsQueryOptions(options)
+  const queryOptions = getListAuditsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
