@@ -962,8 +962,27 @@ function formatCooldownRemaining(ms: number): string {
   return `${s}s`;
 }
 
+function useLiveCountdown(endsAt: string): number {
+  const endsAtMs = new Date(endsAt).getTime();
+  const [remaining, setRemaining] = useState(() => Math.max(0, endsAtMs - Date.now()));
+  useEffect(() => {
+    const tick = () => {
+      const r = Math.max(0, endsAtMs - Date.now());
+      setRemaining(r);
+      return r;
+    };
+    if (tick() <= 0) return;
+    const id = setInterval(() => {
+      if (tick() <= 0) clearInterval(id);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [endsAtMs]);
+  return remaining;
+}
+
 function CooldownBadge({ state }: { state: AiToolCooldownState }) {
-  const remaining = formatCooldownRemaining(state.cooldownRemainingMs);
+  const remainingMs = useLiveCountdown(state.cooldownEndsAt);
+  const remaining = formatCooldownRemaining(remainingMs);
   return (
     <span
       className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold shrink-0"
@@ -980,6 +999,11 @@ function CooldownBadge({ state }: { state: AiToolCooldownState }) {
   );
 }
 
+function CooldownCountdownText({ cooldown }: { cooldown: AiToolCooldownState }) {
+  const remainingMs = useLiveCountdown(cooldown.cooldownEndsAt);
+  return <>{formatCooldownRemaining(remainingMs)}</>;
+}
+
 function AiMetricsPanel({ refreshKey, founderKey }: { refreshKey: number; founderKey: string }) {
   const [data, setData] = useState<AiMetricsResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -994,6 +1018,16 @@ function AiMetricsPanel({ refreshKey, founderKey }: { refreshKey: number; founde
       .catch((e: unknown) => setErr(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false));
   }, [refreshKey, bump, founderKey]);
+
+  const hasActiveCooldowns = (data?.cooldownStates ?? []).some(
+    (c) => !c.rebreachedDuringCooldown && c.cooldownRemainingMs > 0,
+  );
+
+  useEffect(() => {
+    if (!hasActiveCooldowns) return;
+    const id = setInterval(() => setBump((x) => x + 1), 30_000);
+    return () => clearInterval(id);
+  }, [hasActiveCooldowns]);
 
   const pct = (n: number) => `${Math.round(n * 100)}%`;
   const overall = data?.overall;
@@ -1060,7 +1094,7 @@ function AiMetricsPanel({ refreshKey, founderKey }: { refreshKey: number; founde
                           title={`Re-alert suppressed — email held until cooldown expires at ${new Date(cooldown.cooldownEndsAt).toLocaleTimeString()}`}
                         >
                           <Clock className="w-3 h-3" />
-                          Re-alert suppressed (cooldown · {formatCooldownRemaining(cooldown.cooldownRemainingMs)} left)
+                          Re-alert suppressed (cooldown · <CooldownCountdownText cooldown={cooldown} /> left)
                         </span>
                       )}
                     </div>
