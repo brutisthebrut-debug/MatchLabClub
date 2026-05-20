@@ -58,6 +58,8 @@
   "dependencies": {
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
     "expo-clipboard": "^55.0.13",
-    "expo-notifications": "~0.32.17"
+    "expo-file-system": "~19.0.22",
+    "expo-notifications": "~0.32.17",
+    "expo-sharing": "~14.0.8"
   }
 }
