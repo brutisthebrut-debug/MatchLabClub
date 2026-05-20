@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, waitFor, cleanup, act } from "@testing-library/react";
+import { render, screen, waitFor, cleanup, act, fireEvent } from "@testing-library/react";
 
 const secureStore = new Map<string, string>();
 
@@ -18,11 +18,17 @@ vi.mock("expo-web-browser", () => ({
   maybeCompleteAuthSession: vi.fn(),
 }));
 
+// Module-level variables controlling the useAuthRequest mock.
+// The factory captures them by closure; they are initialised before any test runs.
+let mockAuthRequest: { codeVerifier: string } | null = { codeVerifier: "v" };
+let mockAuthResponse: Record<string, unknown> | null = null;
+let mockPromptAsync = vi.fn();
+
 vi.mock("expo-auth-session", () => ({
   Prompt: { Login: "login" },
   useAutoDiscovery: () => ({ issuer: "https://example.com" }),
   makeRedirectUri: () => "https://example.com/redirect",
-  useAuthRequest: () => [{ codeVerifier: "v" }, null, vi.fn()],
+  useAuthRequest: () => [mockAuthRequest, mockAuthResponse, mockPromptAsync],
 }));
 
 // Import AFTER mocks are registered.
@@ -70,6 +76,10 @@ beforeEach(() => {
   secureStore.clear();
   setAuthTokenGetter(null);
   setUnauthorizedHandler(null);
+  // Reset controllable useAuthRequest mock state to safe defaults.
+  mockAuthRequest = { codeVerifier: "v" };
+  mockAuthResponse = null;
+  mockPromptAsync = vi.fn();
   globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === "string" ? input : (input as Request).url ?? String(input);
     return await fetchHandler(url, init);
@@ -241,5 +251,193 @@ describe("mobile session expiration UX", () => {
     });
     expect(screen.getByTestId("account-signin-card")).toBeTruthy();
     expect(await SecureStore.getItemAsync(AUTH_TOKEN_KEY)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// A minimal consumer that exposes sign-in state for the failure-path tests.
+// ---------------------------------------------------------------------------
+function SignInView() {
+  const { isSigningIn, error, login } = useAuth();
+  return (
+    <div>
+      {error ? <div data-testid="signin-error">{error}</div> : null}
+      {isSigningIn ? <div data-testid="signing-in" /> : null}
+      <button data-testid="signin-btn" onClick={() => void login()} />
+    </div>
+  );
+}
+
+describe("mobile sign-in failure paths", () => {
+  // All token-exchange tests need a domain so getApiBaseUrl() returns a value.
+  beforeEach(() => {
+    process.env["EXPO_PUBLIC_DOMAIN"] = "test.example.com";
+    // No stored token → fetchUser short-circuits without hitting the network.
+    setFetchHandler(() => {
+      throw new Error("unexpected fetch — configure a handler per test");
+    });
+  });
+
+  afterEach(() => {
+    delete process.env["EXPO_PUBLIC_DOMAIN"];
+  });
+
+  // Helper: make promptAsync resolve as a successful OIDC redirect so that
+  // login() sets isSigningIn=true and leaves it there — the response effect
+  // (triggered by rerender below) is what drives the exchange and final reset.
+  function setupPromptAsyncSuccess() {
+    mockPromptAsync = vi.fn().mockResolvedValue({
+      type: "success",
+      params: { code: "prompt-code", state: "prompt-state" },
+    });
+  }
+
+  // Helper: click sign-in, confirm isSigningIn flips to true, then inject the
+  // OIDC response that triggers the token-exchange path.
+  async function startSignInAndTriggerExchange(
+    rerender: (ui: React.ReactElement) => void,
+  ) {
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("signin-btn"));
+    });
+    // isSigningIn should be true while the exchange is in-flight.
+    await waitFor(() => {
+      expect(screen.getByTestId("signing-in")).toBeTruthy();
+    });
+    // Inject the OIDC response and rerender to fire the response effect.
+    mockAuthResponse = {
+      type: "success",
+      params: { code: "test-code", state: "test-state" },
+    };
+    rerender(
+      <AuthProvider>
+        <SignInView />
+      </AuthProvider>,
+    );
+  }
+
+  it("shows an error and resets isSigningIn when token-exchange returns a 4xx", async () => {
+    setupPromptAsyncSuccess();
+    setFetchHandler((url) => {
+      if (url.includes("/api/mobile-auth/token-exchange")) {
+        return jsonResponse(400, { message: "Bad request" });
+      }
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    const { rerender } = render(
+      <AuthProvider>
+        <SignInView />
+      </AuthProvider>,
+    );
+
+    await startSignInAndTriggerExchange(rerender);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("signin-error").textContent).toBe(
+        "Couldn't complete sign-in (HTTP 400). Try again.",
+      );
+    });
+    // isSigningIn must be reset to false after the failure.
+    expect(screen.queryByTestId("signing-in")).toBeNull();
+  });
+
+  it("shows an error and resets isSigningIn when token-exchange returns a 5xx", async () => {
+    setupPromptAsyncSuccess();
+    setFetchHandler((url) => {
+      if (url.includes("/api/mobile-auth/token-exchange")) {
+        return jsonResponse(503, { message: "Service unavailable" });
+      }
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    const { rerender } = render(
+      <AuthProvider>
+        <SignInView />
+      </AuthProvider>,
+    );
+
+    await startSignInAndTriggerExchange(rerender);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("signin-error").textContent).toBe(
+        "Couldn't complete sign-in (HTTP 503). Try again.",
+      );
+    });
+    expect(screen.queryByTestId("signing-in")).toBeNull();
+  });
+
+  it("shows an error and resets isSigningIn when token-exchange returns no token", async () => {
+    setupPromptAsyncSuccess();
+    setFetchHandler((url) => {
+      if (url.includes("/api/mobile-auth/token-exchange")) {
+        return jsonResponse(200, {});
+      }
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    const { rerender } = render(
+      <AuthProvider>
+        <SignInView />
+      </AuthProvider>,
+    );
+
+    await startSignInAndTriggerExchange(rerender);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("signin-error").textContent).toBe(
+        "Sign-in didn't return a session. Try again.",
+      );
+    });
+    expect(screen.queryByTestId("signing-in")).toBeNull();
+  });
+
+  it("shows an error and resets isSigningIn when a network error is thrown during token-exchange", async () => {
+    setupPromptAsyncSuccess();
+    setFetchHandler((url) => {
+      if (url.includes("/api/mobile-auth/token-exchange")) {
+        throw new Error("Network request failed");
+      }
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    const { rerender } = render(
+      <AuthProvider>
+        <SignInView />
+      </AuthProvider>,
+    );
+
+    await startSignInAndTriggerExchange(rerender);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("signin-error").textContent).toBe(
+        "Network request failed",
+      );
+    });
+    expect(screen.queryByTestId("signing-in")).toBeNull();
+  });
+
+  it("shows an error immediately when login() is called before useAuthRequest is ready", async () => {
+    // Null request simulates the hook not yet having initialised (e.g. OIDC
+    // discovery still in flight).
+    mockAuthRequest = null;
+
+    render(
+      <AuthProvider>
+        <SignInView />
+      </AuthProvider>,
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("signin-btn"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("signin-error").textContent).toBe(
+        "Sign-in isn't ready yet. Try again in a moment.",
+      );
+    });
+    // isSigningIn must never have been set — there is no pending flow.
+    expect(screen.queryByTestId("signing-in")).toBeNull();
   });
 });
