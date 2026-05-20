@@ -189,6 +189,53 @@ describe("POST /api/audits/from-screenshot", () => {
     expect(row.ocrCorrections?.prompts).toBeUndefined();
   });
 
+  it("corrected-text path: records NO ocr_corrections when every rawExtracted field matches the corrected value", async () => {
+    const correctedBio = "Engineer who loves long hikes and slow Sundays.";
+    const correctedPrompts = ["My ideal Sunday: pottery and a long walk"];
+    const res = await request(app)
+      .post("/api/audits/from-screenshot")
+      .send({
+        firstName: "Riley",
+        age: 31,
+        sourceApp: "Hinge",
+        bio: correctedBio,
+        prompts: correctedPrompts,
+        rawOcrText: "Riley\n31\nEngineer who...",
+        rawExtracted: {
+          firstName: "Riley",
+          age: 31,
+          sourceApp: "Hinge",
+          bio: correctedBio,
+          prompts: correctedPrompts,
+        },
+      });
+
+    expect(res.status).toBe(200);
+
+    const { dumpTable } = await import("../lib/testDb");
+    const row = dumpTable("audits")[0];
+    expect(row.ocrCorrections).toBeNull();
+    // rawOcrText supplied by the client is still persisted so the audit is
+    // inspectable later, even when no diff was produced.
+    expect(row.rawOcrText).toBe("Riley\n31\nEngineer who...");
+  });
+
+  it("image-OCR path: stores raw_ocr_text and leaves ocr_corrections null", async () => {
+    const res = await request(app)
+      .post("/api/audits/from-screenshot")
+      .send({ imageBase64: toBase64(HINGE_OCR) });
+
+    expect(res.status).toBe(200);
+
+    const { dumpTable } = await import("../lib/testDb");
+    const row = dumpTable("audits")[0];
+    expect(row.rawOcrText).toBeTruthy();
+    expect(typeof row.rawOcrText).toBe("string");
+    expect((row.rawOcrText as string).length).toBeGreaterThan(0);
+    // No client corrections were provided, so no diff should be recorded.
+    expect(row.ocrCorrections).toBeNull();
+  });
+
   it("returns 400 when no readable profile text is found in the screenshot", async () => {
     const res = await request(app)
       .post("/api/audits/from-screenshot")
