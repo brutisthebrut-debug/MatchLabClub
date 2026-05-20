@@ -95,6 +95,14 @@ const stores: Record<string, Store> = {
       engineVersion: null,
     },
   },
+  ocr_learned_rules: {
+    rows: [],
+    nextId: 1,
+    defaults: {
+      scope: null,
+      occurrences: 0,
+    },
+  },
 };
 
 let monotonicClockMs = 0;
@@ -137,6 +145,7 @@ export const auditsTable = makeTable("audits");
 export const auditReportVersionsTable = makeTable("audit_report_versions");
 export const messageCoachingSessionsTable = makeTable("message_coaching_sessions");
 export const emailInsightsTable = makeTable("email_insights");
+export const ocrLearnedRulesTable = makeTable("ocr_learned_rules");
 
 // Auxiliary tables touched indirectly (e.g. aiService records request metrics).
 // We register a store for them but don't expose typed table consts unless a
@@ -450,6 +459,8 @@ class InsertChain extends AsyncChain<Row[]> {
   private tableName: string;
   private valuesObj: Row | null = null;
   private returningSpec: Record<string, ColumnRef> | true | null = null;
+  private conflictTarget: ColumnRef | ColumnRef[] | null = null;
+  private conflictSet: Row | null = null;
   constructor(tableName: string) {
     super();
     this.tableName = tableName;
@@ -462,13 +473,45 @@ class InsertChain extends AsyncChain<Row[]> {
     this.returningSpec = spec ?? true;
     return this;
   }
+  onConflictDoUpdate(opts: { target: ColumnRef | ColumnRef[]; set: Row }): this {
+    this.conflictTarget = opts.target;
+    this.conflictSet = opts.set;
+    return this;
+  }
+  onConflictDoNothing(_opts?: { target?: ColumnRef | ColumnRef[] }): this {
+    this.conflictTarget = _opts?.target ?? null;
+    this.conflictSet = null;
+    return this;
+  }
   protected execute(): Row[] {
     const store = ensureStore(this.tableName);
     const v = this.valuesObj ?? {};
+    const hasExplicitId = typeof v.id === "string" && v.id.length > 0;
+
+    if (this.conflictTarget) {
+      const targets = Array.isArray(this.conflictTarget)
+        ? this.conflictTarget
+        : [this.conflictTarget];
+      const existing = store.rows.find((r) =>
+        targets.every((t) => r[t.__col] === v[t.__col]),
+      );
+      if (existing) {
+        if (this.conflictSet) Object.assign(existing, this.conflictSet);
+        if (this.returningSpec === null || this.returningSpec === true) {
+          return [existing];
+        }
+        const projected: Row = {};
+        for (const [outKey, ref] of Object.entries(this.returningSpec)) {
+          projected[outKey] = existing[ref.__col];
+        }
+        return [projected];
+      }
+    }
+
     const row: Row = {
       ...store.defaults,
       ...v,
-      id: store.nextId++,
+      ...(hasExplicitId ? {} : { id: store.nextId++ }),
       createdAt: nextClock(),
     };
     store.rows.push(row);
