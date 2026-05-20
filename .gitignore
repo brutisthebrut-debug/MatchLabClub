@@ -48,3 +48,4 @@ Thumbs.db
 .cache/
 .local/
 e2e/test-results/
+e2e/test-results/.last-run.json
