@@ -16,6 +16,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -86,8 +87,18 @@ export default function AccountScreen() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleted, setDeleted] = useState(false);
   const [banner, setBanner] = useState<Banner>(null);
+
+  const DELETE_CONFIRM_PHRASE = "delete";
+  const isDeleteConfirmed =
+    deleteConfirmText.trim().toLowerCase() === DELETE_CONFIRM_PHRASE;
+
+  function closeConfirm() {
+    setConfirmOpen(false);
+    setDeleteConfirmText("");
+  }
 
   const fullName =
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
@@ -154,7 +165,7 @@ export default function AccountScreen() {
       // Tear down every cached query — the user is signed out and any
       // user-scoped data should not survive in memory.
       queryClient.clear();
-      setConfirmOpen(false);
+      closeConfirm();
       setDeleted(true);
       setBanner({
         kind: "success",
@@ -166,7 +177,7 @@ export default function AccountScreen() {
           ? err.message
           : "Couldn't delete your account. Please try again.";
       setBanner({ kind: "error", text: message });
-      setConfirmOpen(false);
+      closeConfirm();
       if (Platform.OS !== "web") {
         Alert.alert("Couldn't delete your account", message);
       }
@@ -497,7 +508,7 @@ export default function AccountScreen() {
         visible={confirmOpen}
         animationType="fade"
         onRequestClose={() => {
-          if (!isDeleting) setConfirmOpen(false);
+          if (!isDeleting) closeConfirm();
         }}
       >
         <View style={styles.modalBackdrop}>
@@ -516,11 +527,42 @@ export default function AccountScreen() {
               dating profiles, message coaching sessions, and email insights.
               You'll be signed out immediately. This can't be undone.
             </Text>
+            <View style={styles.modalConfirmField}>
+              <Text
+                style={[styles.modalLabel, { color: colors.mutedForeground }]}
+              >
+                Type{" "}
+                <Text style={{ color: colors.foreground, fontFamily: "PlusJakartaSans_700Bold" }}>
+                  delete
+                </Text>{" "}
+                to confirm
+              </Text>
+              <TextInput
+                testID="input-account-delete-confirm"
+                value={deleteConfirmText}
+                onChangeText={setDeleteConfirmText}
+                placeholder="delete"
+                placeholderTextColor={colors.mutedForeground}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="off"
+                spellCheck={false}
+                editable={!isDeleting}
+                style={[
+                  styles.modalInput,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.input,
+                    color: colors.foreground,
+                  },
+                ]}
+              />
+            </View>
             <View style={styles.modalActions}>
               <Pressable
                 testID="button-account-delete-cancel"
                 disabled={isDeleting}
-                onPress={() => setConfirmOpen(false)}
+                onPress={() => closeConfirm()}
                 style={({ pressed }) => [
                   styles.modalBtn,
                   {
@@ -536,7 +578,7 @@ export default function AccountScreen() {
               </Pressable>
               <Pressable
                 testID="button-account-delete-confirm"
-                disabled={isDeleting}
+                disabled={isDeleting || !isDeleteConfirmed}
                 onPress={() => {
                   void handleConfirmDelete();
                 }}
@@ -545,7 +587,14 @@ export default function AccountScreen() {
                   styles.modalBtnDanger,
                   {
                     backgroundColor: colors.destructive,
-                    opacity: isDeleting ? 0.7 : pressed ? 0.85 : 1,
+                    opacity:
+                      isDeleting
+                        ? 0.7
+                        : !isDeleteConfirmed
+                          ? 0.5
+                          : pressed
+                            ? 0.85
+                            : 1,
                   },
                 ]}
               >
@@ -659,6 +708,21 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     fontFamily: "PlusJakartaSans_500Medium",
     lineHeight: 19,
+  },
+  modalConfirmField: {
+    gap: 6,
+  },
+  modalLabel: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_500Medium",
   },
   modalActions: {
     flexDirection: "row",
