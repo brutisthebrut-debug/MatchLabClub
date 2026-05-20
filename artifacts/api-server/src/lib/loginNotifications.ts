@@ -71,8 +71,10 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
   const device = describeUserAgent(userAgent);
   const displayIp = ip || "unknown";
   const location = describeIpLocation(ip);
-  const displayLocation = location || "Approximate location unavailable";
   const channelLabel = channel === "mobile" ? "the mobile app" : "the web app";
+
+  // Plain-text: "Berlin, DE (1.2.3.4)" when location known, otherwise just the IP
+  const displayIpLine = location ? `${location} (${displayIp})` : displayIp;
 
   const text = [
     `Hi ${name},`,
@@ -81,14 +83,18 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
     "",
     `When: ${when}`,
     `Device: ${device}`,
-    `Approximate location: ${displayLocation}`,
-    `IP address: ${displayIp}`,
+    `IP address: ${displayIpLine}`,
     "",
     "If this was you, no action is needed.",
     "If you don't recognize this sign-in, please change your password right away.",
     "",
     "— Next Level Dating Club",
   ].join("\n");
+
+  // HTML: show location as the label with raw IP as tooltip; fall back to just the IP
+  const htmlIpField = location
+    ? `<span title="${displayIp}">${location}</span>`
+    : displayIp;
 
   const html = `<!doctype html>
 <html>
@@ -98,8 +104,7 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
     <p style="font-size: 13px; color: #666;">
       <strong>When:</strong> ${when}<br/>
       <strong>Device:</strong> ${device}<br/>
-      <strong>Approximate location:</strong> ${displayLocation}<br/>
-      <strong>IP address:</strong> ${displayIp}
+      <strong>IP address:</strong> ${htmlIpField}
     </p>
     <p>If this was you, no action is needed.</p>
     <p style="font-size: 13px; color: #666;">
