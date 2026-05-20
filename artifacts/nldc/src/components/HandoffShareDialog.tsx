@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Smartphone, Copy, Check, Loader2 } from "lucide-react";
+import { Smartphone, Copy, Check, Loader2, Download } from "lucide-react";
 import QRCode from "qrcode";
 import { useIssueAnonymousClaimHandoff } from "@workspace/api-client-react";
 import {
@@ -76,6 +76,15 @@ export function HandoffShareDialog() {
       });
       setOpen(false);
     }
+  }
+
+  function handleDownload(): void {
+    if (!qrDataUrl) return;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 23);
+    const a = document.createElement("a");
+    a.href = qrDataUrl;
+    a.download = `handoff-qr-${timestamp}.png`;
+    a.click();
   }
 
   async function handleCopy(): Promise<void> {
@@ -177,6 +186,16 @@ export function HandoffShareDialog() {
                     Copy link
                   </>
                 )}
+              </Button>
+              <Button
+                onClick={handleDownload}
+                size="sm"
+                variant="outline"
+                disabled={!qrDataUrl}
+                data-testid="button-handoff-download-qr"
+              >
+                <Download className="w-3.5 h-3.5 mr-1.5" />
+                Download QR
               </Button>
             </div>
             <p className="text-[11px] text-muted-foreground">
