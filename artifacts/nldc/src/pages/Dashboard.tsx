@@ -1,9 +1,13 @@
+import { useCallback, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ToastAction } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useListAudits,
   useGetAuditSummary,
@@ -14,6 +18,9 @@ import {
   getListProfilesQueryKey,
   getListMessageCoachingSessionsQueryKey,
   getListInsightsQueryKey,
+  getListAuditsQueryKey,
+  useDeleteAudit,
+  type Audit,
 } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from "recharts";
@@ -23,7 +30,7 @@ import {
   ChevronRight, FlaskConical, Stethoscope, Zap,
   Wand2, ScanFace, BarChart2, Heart, Compass, BookOpen, Camera,
   MessageCircle, User, Map, Brain, Rss, Shield, Users, BarChart, Lightbulb, Layers,
-  Calendar, Star, Images
+  Calendar, Star, Images, Trash2,
 } from "lucide-react";
 
 function ScoreRing({ score }: { score: number }) {
@@ -214,10 +221,103 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
   };
 }
 
+const UNDO_WINDOW_MS = 5000;
+
 export default function Dashboard() {
   useMeta("Your Dashboard", "Your Signal Score history, recent audits, coaching sessions, and quick actions — all in one place.");
   const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const listAuditsKey = getListAuditsQueryKey();
   const { data: audits, isLoading: auditsLoading } = useListAudits();
+  const deleteAudit = useDeleteAudit({
+    mutation: {
+      onError: () => {
+        toast({
+          title: "Couldn't delete",
+          description: "Something went wrong. Try again.",
+          variant: "destructive",
+        });
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: listAuditsKey });
+      },
+    },
+  });
+
+  const pendingRef = useRef<{
+    audit: Audit;
+    timer: ReturnType<typeof setTimeout>;
+  } | null>(null);
+
+  const finalizePending = useCallback(() => {
+    const pending = pendingRef.current;
+    if (!pending) return;
+    clearTimeout(pending.timer);
+    pendingRef.current = null;
+    deleteAudit.mutate({ id: pending.audit.id });
+  }, [deleteAudit]);
+
+  const undoPending = useCallback(() => {
+    const pending = pendingRef.current;
+    if (!pending) return;
+    clearTimeout(pending.timer);
+    pendingRef.current = null;
+    const current = queryClient.getQueryData<Audit[]>(listAuditsKey) ?? [];
+    if (!current.some((a) => a.id === pending.audit.id)) {
+      const restored = [...current, pending.audit].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+      queryClient.setQueryData<Audit[]>(listAuditsKey, restored);
+    }
+  }, [queryClient, listAuditsKey]);
+
+  const handleDeleteAudit = useCallback(
+    (audit: Audit) => {
+      if (pendingRef.current) finalizePending();
+      const previous = queryClient.getQueryData<Audit[]>(listAuditsKey);
+      if (previous) {
+        queryClient.setQueryData<Audit[]>(
+          listAuditsKey,
+          previous.filter((a) => a.id !== audit.id),
+        );
+      }
+      const timer = setTimeout(() => finalizePending(), UNDO_WINDOW_MS);
+      pendingRef.current = { audit, timer };
+      const t = toast({
+        title: "Match removed",
+        description: `${audit.firstName}'s audit was deleted.`,
+        duration: UNDO_WINDOW_MS,
+        action: (
+          <ToastAction
+            altText="Undo delete"
+            data-testid={`button-undo-delete-${audit.id}`}
+            onClick={() => {
+              undoPending();
+              t.dismiss();
+            }}
+          >
+            Undo
+          </ToastAction>
+        ),
+      });
+    },
+    [finalizePending, queryClient, listAuditsKey, toast, undoPending],
+  );
+
+  useEffect(() => {
+    return () => {
+      const pending = pendingRef.current;
+      if (pending) {
+        clearTimeout(pending.timer);
+        pendingRef.current = null;
+        deleteAudit.mutate({ id: pending.audit.id });
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const { data: summary, isLoading: summaryLoading } = useGetAuditSummary({
     query: { queryKey: getGetAuditSummaryQueryKey() }
   });
@@ -583,26 +683,39 @@ export default function Dashboard() {
                   const bg    = score >= 75 ? "hsl(142 55% 45% / 0.12)" : score >= 55 ? "hsl(43 65% 55% / 0.12)" : "hsl(348 55% 55% / 0.12)";
                   const date  = new Date(audit.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
                   return (
-                    <Link key={audit.id} href={`/report/${audit.id}`} data-testid={`row-audit-${audit.id}`}>
-                      <div className="flex items-center justify-between p-3 sm:p-4 rounded-2xl border border-white/6 hover:border-[hsl(268_52%_68%/0.25)] hover:bg-white/2 transition-all cursor-pointer card-hover gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center font-bold text-sm flex-shrink-0" style={{ background: bg, color }}>
-                            {score}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-foreground text-sm truncate">{audit.firstName}'s Signal Audit</p>
-                            <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                              <Clock className="w-3 h-3 flex-shrink-0" /> {date}
-                              <span className="hidden sm:inline">· {audit.currentApps?.join(", ")}</span>
-                            </p>
-                          </div>
+                    <div
+                      key={audit.id}
+                      className="flex items-center justify-between p-3 sm:p-4 rounded-2xl border border-white/6 hover:border-[hsl(268_52%_68%/0.25)] hover:bg-white/2 transition-all card-hover gap-3"
+                      data-testid={`row-audit-${audit.id}`}
+                    >
+                      <Link href={`/report/${audit.id}`} className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center font-bold text-sm flex-shrink-0" style={{ background: bg, color }}>
+                          {score}
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className={`text-xs px-2.5 py-1 rounded-full font-medium hidden sm:block ${audit.status === "complete" ? "tag-strength border" : "tag-risk border"}`}>{audit.status}</span>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        <div className="min-w-0">
+                          <p className="font-semibold text-foreground text-sm truncate">{audit.firstName}'s Signal Audit</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                            <Clock className="w-3 h-3 flex-shrink-0" /> {date}
+                            <span className="hidden sm:inline">· {audit.currentApps?.join(", ")}</span>
+                          </p>
                         </div>
+                      </Link>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium hidden sm:block ${audit.status === "complete" ? "tag-strength border" : "tag-risk border"}`}>{audit.status}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAudit(audit)}
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-[hsl(348_55%_78%)] hover:bg-[hsl(348_55%_55%/0.12)] transition-colors"
+                          aria-label={`Delete ${audit.firstName}'s audit`}
+                          data-testid={`button-delete-audit-${audit.id}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <Link href={`/report/${audit.id}`} aria-hidden="true" tabIndex={-1} className="text-muted-foreground">
+                          <ChevronRight className="w-4 h-4" />
+                        </Link>
                       </div>
-                    </Link>
+                    </div>
                   );
                 })}
               </div>
