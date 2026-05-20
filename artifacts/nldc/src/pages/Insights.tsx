@@ -18,10 +18,28 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
-import { Shield, Loader2, Mail, TrendingUp, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { Shield, Loader2, Mail, TrendingUp, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, X, Filter } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const SOURCE_APPS = ["Hinge", "Bumble", "Tinder", "iMessage", "Email"] as const;
 type InsightSource = (typeof SOURCE_APPS)[number];
+
+function scoreTraitsClient(content: string) {
+  const lower = content.toLowerCase();
+  const lines = content.split("\n").filter((l) => l.trim().length > 0);
+  const totalChars = lower.length;
+  const avgLine = lines.length > 0 ? totalChars / lines.length : totalChars;
+  const humorHits = (lower.match(/\b(haha|lol|jk|kidding|lmao)\b/g) || []).length;
+  const emotionalHits = (lower.match(/\b(feel|miss|hurt|sorry|love|care|happy|sad|excited)\b/g) || []).length;
+  const questionHits = (lower.match(/\?/g) || []).length;
+  const lineCount = Math.max(1, lines.length);
+  return {
+    warmth: Math.min(100, Math.round((emotionalHits / lineCount) * 200)),
+    curiosity: Math.min(100, Math.round((questionHits / lineCount) * 150)),
+    humor: Math.min(100, Math.round((humorHits / lineCount) * 220)),
+    verbosity: Math.min(100, Math.round((avgLine / 120) * 100)),
+  };
+}
 
 function detectSourceFromText(text: string): InsightSource | null {
   const t = text.toLowerCase();
@@ -92,6 +110,7 @@ export default function Insights() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [resultSource, setResultSource] = useState<InsightSource | null>(null);
   const [expandedPattern, setExpandedPattern] = useState<number | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<string | null>(null);
   const detectedSource =
     sourceApp || detectSourceFromText(`${sourceLabel}\n${content}`) || "";
   const queryClient = useQueryClient();
@@ -132,7 +151,10 @@ export default function Insights() {
     }
   }
 
-  const displayInsights = hasInsights ? insights! : (isAuthenticated ? [] : [DEMO_INSIGHT]);
+  const allDisplayInsights = hasInsights ? insights! : (isAuthenticated ? [] : [DEMO_INSIGHT]);
+  const displayInsights = sourceFilter
+    ? allDisplayInsights.filter((i) => i.sourceApp === sourceFilter)
+    : allDisplayInsights;
 
   const attachmentColor = (style: string) => {
     if (style.toLowerCase().includes("secure")) return "bg-green-50 text-green-700 border-green-200";
@@ -218,38 +240,57 @@ export default function Insights() {
                 </ul>
               )}
 
+              <p className="text-[10px] text-muted-foreground mb-3 flex items-center gap-1">
+                <Filter className="w-3 h-3" />
+                Click a source to filter your import history
+              </p>
+
               <div className="grid sm:grid-cols-2 gap-3">
-                {rollup.sources.map((s) => (
-                  <div
-                    key={s.sourceApp}
-                    className="border border-border rounded-2xl p-4"
-                    data-testid={`rollup-source-${s.sourceApp.toLowerCase()}`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span
-                        className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30"
-                      >
-                        {s.sourceApp}
-                      </span>
-                      <span className="text-xs text-muted-foreground">{s.count} import{s.count === 1 ? "" : "s"}</span>
-                    </div>
-                    <p className="text-sm font-semibold text-foreground leading-snug mb-1">{s.signaturePattern}</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed mb-3">{s.summary}</p>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {(["warmth", "curiosity", "verbosity", "humor"] as const).map((t) => (
-                        <div key={t} className="text-center">
-                          <div className="h-1 bg-secondary rounded-full overflow-hidden mb-1">
-                            <div
-                              className="h-full bg-primary"
-                              style={{ width: `${s.traits[t]}%` }}
-                            />
+                {rollup.sources.map((s) => {
+                  const isActive = sourceFilter === s.sourceApp;
+                  return (
+                    <button
+                      key={s.sourceApp}
+                      type="button"
+                      onClick={() => setSourceFilter(isActive ? null : s.sourceApp)}
+                      className={`text-left border rounded-2xl p-4 transition-all cursor-pointer ${
+                        isActive
+                          ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                          : "border-border hover:border-primary/40 hover:bg-secondary/30"
+                      }`}
+                      data-testid={`rollup-source-${s.sourceApp.toLowerCase()}`}
+                      aria-pressed={isActive}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span
+                          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                            isActive
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-primary/10 text-primary border-primary/30"
+                          }`}
+                        >
+                          {s.sourceApp}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{s.count} import{s.count === 1 ? "" : "s"}</span>
+                      </div>
+                      <p className="text-sm font-semibold text-foreground leading-snug mb-1">{s.signaturePattern}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed mb-3">{s.summary}</p>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {(["warmth", "curiosity", "verbosity", "humor"] as const).map((t) => (
+                          <div key={t} className="text-center">
+                            <div className="h-1 bg-secondary rounded-full overflow-hidden mb-1">
+                              <div
+                                className="h-full bg-primary"
+                                style={{ width: `${s.traits[t]}%` }}
+                              />
+                            </div>
+                            <p className="text-[9px] uppercase tracking-wide text-muted-foreground">{t}</p>
                           </div>
-                          <p className="text-[9px] uppercase tracking-wide text-muted-foreground">{t}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                        ))}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </motion.div>
           )}
@@ -460,35 +501,113 @@ export default function Insights() {
                   </div>
                 </div>
 
-                {/* Previous Insights */}
-                {displayInsights.length > 0 && (
-                  <div className="bg-card border border-card-border rounded-3xl p-6 mt-6">
-                    <p className="font-semibold text-foreground text-sm mb-4">Previous Imports</p>
-                    <div className="space-y-3">
-                      {displayInsights.slice().reverse().map((insight) => (
-                        <div key={insight.id} className="flex items-center gap-3 p-3 rounded-xl border border-border" data-testid={`card-insight-${insight.id}`}>
-                          <Mail className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="text-sm font-medium text-foreground truncate">{insight.sourceLabel}</p>
-                              {insight.sourceApp ? (
-                                <span
-                                  className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30"
-                                  data-testid={`badge-insight-source-${insight.id}`}
-                                >
-                                  {insight.sourceApp}
-                                </span>
-                              ) : null}
-                            </div>
-                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                              <Clock className="w-3 h-3" />
-                              {new Date(insight.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                            </p>
-                          </div>
-                          <Badge variant="secondary" className={insight.status === "complete" ? "bg-green-50 text-green-700" : ""}>{insight.status}</Badge>
+                {/* Previous Imports */}
+                {(allDisplayInsights.length > 0 || sourceFilter) && (
+                  <div className="bg-card border border-card-border rounded-3xl p-6 mt-6" data-testid="section-previous-imports">
+                    {/* Header row with filter badge */}
+                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                      <p className="font-semibold text-foreground text-sm">Previous Imports</p>
+                      {sourceFilter && (
+                        <div
+                          className="flex items-center gap-1.5 bg-primary/10 border border-primary/30 rounded-full px-3 py-1"
+                          data-testid="filter-active-badge"
+                        >
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                            Showing {sourceFilter} only · {displayInsights.length} import{displayInsights.length === 1 ? "" : "s"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setSourceFilter(null)}
+                            className="ml-1 text-primary hover:text-primary/70 transition-colors"
+                            aria-label="Clear filter"
+                            data-testid="button-clear-filter"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
                         </div>
-                      ))}
+                      )}
                     </div>
+
+                    {/* Optional trait-over-time chart for filtered source */}
+                    {sourceFilter && displayInsights.filter((i) => i.status === "complete").length >= 2 && (() => {
+                      const chartData = displayInsights
+                        .filter((i) => i.status === "complete")
+                        .slice()
+                        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+                        .map((i) => {
+                          const traits = scoreTraitsClient(i.pastedContent);
+                          return {
+                            date: new Date(i.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+                            ...traits,
+                          };
+                        });
+                      return (
+                        <div className="mb-5 rounded-2xl border border-border p-4" data-testid="chart-source-traits">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                            {sourceFilter} · Trait scores over time
+                          </p>
+                          <ResponsiveContainer width="100%" height={160}>
+                            <LineChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                              <XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                              <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                              <Tooltip
+                                contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid var(--border)" }}
+                                itemStyle={{ padding: "1px 0" }}
+                              />
+                              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 10, paddingTop: 8 }} />
+                              <Line type="monotone" dataKey="warmth" stroke="#f97316" strokeWidth={2} dot={{ r: 3 }} name="Warmth" />
+                              <Line type="monotone" dataKey="curiosity" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 3 }} name="Curiosity" />
+                              <Line type="monotone" dataKey="humor" stroke="#06b6d4" strokeWidth={2} dot={{ r: 3 }} name="Humor" />
+                              <Line type="monotone" dataKey="verbosity" stroke="#84cc16" strokeWidth={2} dot={{ r: 3 }} name="Verbosity" />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Filtered empty state */}
+                    {displayInsights.length === 0 && sourceFilter && (
+                      <p className="text-sm text-muted-foreground text-center py-4" data-testid="text-filter-empty">
+                        No imports from {sourceFilter} yet.{" "}
+                        <button
+                          type="button"
+                          className="text-primary underline underline-offset-2"
+                          onClick={() => setSourceFilter(null)}
+                        >
+                          Clear filter
+                        </button>{" "}
+                        to see all imports.
+                      </p>
+                    )}
+
+                    {/* Import list */}
+                    {displayInsights.length > 0 && (
+                      <div className="space-y-3">
+                        {displayInsights.slice().reverse().map((insight) => (
+                          <div key={insight.id} className="flex items-center gap-3 p-3 rounded-xl border border-border" data-testid={`card-insight-${insight.id}`}>
+                            <Mail className="w-4 h-4 text-muted-foreground" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-sm font-medium text-foreground truncate">{insight.sourceLabel}</p>
+                                {insight.sourceApp ? (
+                                  <span
+                                    className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30"
+                                    data-testid={`badge-insight-source-${insight.id}`}
+                                  >
+                                    {insight.sourceApp}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                <Clock className="w-3 h-3" />
+                                {new Date(insight.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                              </p>
+                            </div>
+                            <Badge variant="secondary" className={insight.status === "complete" ? "bg-green-50 text-green-700" : ""}>{insight.status}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </motion.div>
