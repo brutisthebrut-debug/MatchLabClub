@@ -21,6 +21,26 @@ import {
   clearAnonClaimToken,
 } from "../lib/anonClaimToken";
 import { signHandoffToken, verifyHandoffToken } from "../lib/handoffToken";
+import { originFor, sendExpiredLink } from "../lib/expiredLinkPage";
+
+function sendExpiredHandoff(
+  req: Request,
+  res: Response,
+  jsonError: string,
+): void {
+  sendExpiredLink(req, res, {
+    pageTitle: "Handoff link expired — Next Level Dating Club",
+    heading: "This hand-off link can&rsquo;t be used anymore",
+    bodyParagraphs: [
+      "&ldquo;Continue on another device&rdquo; links are single-use and only live for about 15 minutes for your security. This one has either already been used, expired, or we don&rsquo;t recognize it.",
+      "No worries &mdash; head back to the original device and tap &ldquo;Continue on another device&rdquo; again to get a fresh link.",
+    ],
+    ctaLabel: "Back to Next Level Dating Club",
+    ctaUrl: `${originFor(req)}/`,
+    jsonError,
+    jsonStatus: 400,
+  });
+}
 
 const router: IRouter = Router();
 
@@ -246,7 +266,7 @@ router.post(
     }
     const verified = verifyHandoffToken(parsed.data.handoff);
     if (!verified) {
-      res.status(400).json({ error: "Invalid or expired handoff token" });
+      sendExpiredHandoff(req, res, "Invalid or expired handoff token");
       return;
     }
 
@@ -268,9 +288,7 @@ router.post(
         { userId: req.user.id, jti: verified.jti },
         "Rejected replay of already-redeemed handoff token",
       );
-      res
-        .status(400)
-        .json({ error: "This handoff link has already been used" });
+      sendExpiredHandoff(req, res, "This handoff link has already been used");
       return;
     }
 

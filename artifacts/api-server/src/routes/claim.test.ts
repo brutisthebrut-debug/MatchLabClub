@@ -728,4 +728,63 @@ describe("POST /api/claim-anonymous/handoff/redeem", () => {
       await cleanup(ids);
     }
   });
+
+  it("returns a styled HTML expired page for browser navigations (invalid token)", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    try {
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .set("Accept", "text/html")
+        .send({ handoff: "not-a-real-token", auditIds: [ids.ownedAuditId] });
+
+      expect(res.status).toBe(410);
+      expect(res.headers["content-type"]).toMatch(/text\/html/);
+      expect(res.headers["cache-control"]).toBe("no-store");
+      expect(res.text).toMatch(/hand-?off link/i);
+      expect(res.text).toMatch(/Link expired/);
+      expect(res.text).toMatch(/Back to Next Level Dating Club/);
+    } finally {
+      await cleanup(ids);
+    }
+  });
+
+  it("preserves JSON response for non-browser clients (invalid token)", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    try {
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .set("Accept", "application/json")
+        .send({ handoff: "not-a-real-token", auditIds: [ids.ownedAuditId] });
+
+      expect(res.status).toBe(400);
+      expect(res.headers["content-type"]).toMatch(/application\/json/);
+      expect(res.body.error).toMatch(/invalid or expired/i);
+    } finally {
+      await cleanup(ids);
+    }
+  });
+
+  it("returns a styled HTML expired page for browser navigations on replay", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    const issued = signHandoffToken(token);
+    try {
+      const first = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .send({ handoff: issued.token, auditIds: [ids.ownedAuditId] });
+      expect(first.status).toBe(200);
+
+      const second = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .set("Accept", "text/html")
+        .send({ handoff: issued.token, auditIds: [ids.ownedAuditId] });
+      expect(second.status).toBe(410);
+      expect(second.headers["content-type"]).toMatch(/text\/html/);
+      expect(second.text).toMatch(/hand-?off link/i);
+    } finally {
+      await db
+        .delete(handoffTokenRedemptionsTable)
+        .where(eq(handoffTokenRedemptionsTable.jti, issued.jti));
+      await cleanup(ids);
+    }
+  });
 });
