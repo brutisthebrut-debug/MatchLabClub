@@ -1027,6 +1027,25 @@ export interface DeleteMyAccountResult {
   deleted: DeleteMyAccountResultDeleted;
 }
 
+export interface RegisterPushTokenInput {
+  /**
+     * Expo push token obtained via expo-notifications on the device.
+     * @minLength 1
+     * @maxLength 512
+     */
+  token: string;
+}
+
+export const RegisterPushTokenResultValue = {
+  success: true,
+} as const;
+export type RegisterPushTokenResult = typeof RegisterPushTokenResultValue;
+
+export const UnregisterPushTokenResultValue = {
+  success: true,
+} as const;
+export type UnregisterPushTokenResult = typeof UnregisterPushTokenResultValue;
+
 export interface EngineMeta {
   /** Version tag of the deterministic audit engine currently running on
   the server. Clients should treat saved reports tagged with a
@@ -1070,6 +1089,10 @@ export type HandleBrowserLoginCallbackParams = {
 code?: string;
 state?: string;
 iss?: string;
+};
+
+export type UnregisterPushTokenParams = {
+token: string;
 };
 
 export type ListAuditsParams = {

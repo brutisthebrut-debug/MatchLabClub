@@ -472,6 +472,68 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /push-tokens:
+    post:
+      tags: [Auth]
+      operationId: registerPushToken
+      summary: Register an Expo push token for the signed-in user
+      description: |
+        Stores an Expo push token server-side so the server can send
+        proactive push notifications (e.g. expiring-audit reminders) even
+        when the app is closed. Idempotent — re-registering the same token
+        is a no-op.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterPushTokenInput'
+      responses:
+        '200':
+          description: Token registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterPushTokenResult'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+    delete:
+      tags: [Auth]
+      operationId: unregisterPushToken
+      summary: Remove an Expo push token for the signed-in user
+      description: |
+        Deletes the given push token from the server so no further
+        push notifications are sent to that device. Called when the user
+        disables "Recently deleted reminders" or signs out.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Token removed (or was not registered — either way, success).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnregisterPushTokenResult'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /healthz:
     get:
       operationId: healthCheck
@@ -2837,6 +2899,32 @@ components:
               type: integer
             insights:
               type: integer
+
+    RegisterPushTokenInput:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 512
+          description: Expo push token obtained via expo-notifications on the device.
+
+    RegisterPushTokenResult:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+          const: true
+
+    UnregisterPushTokenResult:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+          const: true
 
     EngineMeta:
       type: object

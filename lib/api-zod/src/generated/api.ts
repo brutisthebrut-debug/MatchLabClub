@@ -610,6 +610,51 @@ export const DeleteMyAccountResponse = zod.object({
 
 
 /**
+ * Stores an Expo push token server-side so the server can send
+proactive push notifications (e.g. expiring-audit reminders) even
+when the app is closed. Idempotent — re-registering the same token
+is a no-op.
+
+ * @summary Register an Expo push token for the signed-in user
+ */
+export const RegisterPushTokenHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const registerPushTokenBodyTokenMax = 512;
+
+
+
+export const RegisterPushTokenBody = zod.object({
+  "token": zod.string().min(1).max(registerPushTokenBodyTokenMax).describe('Expo push token obtained via expo-notifications on the device.')
+})
+
+export const RegisterPushTokenResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * Deletes the given push token from the server so no further
+push notifications are sent to that device. Called when the user
+disables "Recently deleted reminders" or signs out.
+
+ * @summary Remove an Expo push token for the signed-in user
+ */
+export const UnregisterPushTokenQueryParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const UnregisterPushTokenHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const UnregisterPushTokenResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */

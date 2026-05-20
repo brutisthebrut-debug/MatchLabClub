@@ -14,6 +14,7 @@ import aiRouter from "./ai";
 import claimRouter from "./claim";
 import accountRouter from "./account";
 import coachFollowUpsRouter from "./coachFollowUps";
+import pushTokensRouter from "./push_tokens";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(aiRouter);
 router.use(claimRouter);
 router.use(accountRouter);
 router.use(coachFollowUpsRouter);
+router.use(pushTokensRouter);
 
 export default router;

@@ -1,10 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+import { registerPushToken, unregisterPushToken } from "@workspace/api-client-react";
 
 const PREFS_KEY = "nldc.trash.reminderPrefs";
 const SCHEDULED_ID_KEY = "nldc.trash.scheduledReminderId";
 const LAST_NOTIFIED_KEY = "nldc.trash.lastNotifiedSignature";
+const STORED_PUSH_TOKEN_KEY = "nldc.trash.expoPushToken";
 
 export const TRASH_NOTIFICATION_TYPE = "trash-purge-warning";
 export const TRASH_NOTIFICATION_CATEGORY = "trash-purge-warning";
@@ -41,6 +43,9 @@ export async function saveTrashReminderPrefs(prefs: TrashReminderPrefs) {
   }
   if (!prefs.enabled) {
     await cancelTrashReminder();
+    await deregisterPushTokenFromServer();
+  } else {
+    await registerPushTokenWithServer();
   }
 }
 
@@ -53,6 +58,61 @@ export async function cancelTrashReminder() {
     }
   } catch {
     // ignore
+  }
+}
+
+/**
+ * Obtains the Expo push token for this device and registers it with the
+ * server so the daily push job can notify the user about expiring audits
+ * even when the app is closed.
+ *
+ * Safe to call repeatedly — idempotent on both the client and server sides.
+ * Does nothing if the user hasn't granted notification permission, if the
+ * preference is disabled, or if we're running on a simulator/web.
+ */
+export async function registerPushTokenWithServer(): Promise<void> {
+  if (Platform.OS === "web") return;
+
+  const prefs = await loadTrashReminderPrefs();
+  if (!prefs.enabled) return;
+
+  let permission;
+  try {
+    permission = await Notifications.getPermissionsAsync();
+  } catch {
+    return;
+  }
+  if (!permission.granted) return;
+
+  try {
+    const tokenData = await Notifications.getExpoPushTokenAsync();
+    const token = tokenData.data;
+    if (!token) return;
+
+    await AsyncStorage.setItem(STORED_PUSH_TOKEN_KEY, token);
+    await registerPushToken({ token });
+  } catch {
+    // Best-effort — local notifications still work even if server registration fails.
+  }
+}
+
+/**
+ * Removes the stored push token from the server. Called when the user
+ * disables "Recently deleted reminders" so no further server-side push
+ * notifications are sent to this device.
+ */
+export async function deregisterPushTokenFromServer(): Promise<void> {
+  if (Platform.OS === "web") return;
+
+  try {
+    const token = await AsyncStorage.getItem(STORED_PUSH_TOKEN_KEY);
+    if (!token) return;
+
+    await unregisterPushToken({ token });
+    await AsyncStorage.removeItem(STORED_PUSH_TOKEN_KEY);
+  } catch {
+    // Best-effort — the server-side job simply won't have this token anymore
+    // once it's been deleted.
   }
 }
 
@@ -75,6 +135,7 @@ export function describeExpiringMessage(opts: {
 }): { title: string; body: string } {
   const { count, earliestDaysLeft } = opts;
   const noun = count === 1 ? "audit" : "audits";
+  void noun;
   const when =
     earliestDaysLeft <= 0
       ? "today"

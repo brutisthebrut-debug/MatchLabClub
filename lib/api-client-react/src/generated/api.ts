@@ -81,6 +81,8 @@ import type {
   MySessionsResponse,
   ProfileRewrite,
   RedeemAnonymousClaimHandoffInput,
+  RegisterPushTokenInput,
+  RegisterPushTokenResult,
   RestoreAllTrashResult,
   RevokeSessionsResult,
   ScreenshotAuditInput,
@@ -88,6 +90,8 @@ import type {
   ScreenshotExtractInput,
   ScreenshotExtractResult,
   TestAiParams,
+  UnregisterPushTokenParams,
+  UnregisterPushTokenResult,
   WaitlistEntry,
   WaitlistInput,
   WaitlistStats
@@ -1423,6 +1427,163 @@ export const useDeleteMyAccount = <TError = ErrorType<AuthErrorEnvelope>,
         TContext
       > => {
       return useMutation(getDeleteMyAccountMutationOptions(options));
+    }
+
+export const getRegisterPushTokenUrl = () => {
+
+
+
+
+  return `/api/push-tokens`
+}
+
+/**
+ * Stores an Expo push token server-side so the server can send
+proactive push notifications (e.g. expiring-audit reminders) even
+when the app is closed. Idempotent — re-registering the same token
+is a no-op.
+
+ * @summary Register an Expo push token for the signed-in user
+ */
+export const registerPushToken = async (registerPushTokenInput: RegisterPushTokenInput, options?: RequestInit): Promise<RegisterPushTokenResult> => {
+
+  return customFetch<RegisterPushTokenResult>(getRegisterPushTokenUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      registerPushTokenInput,)
+  }
+);}
+
+
+
+
+export const getRegisterPushTokenMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerPushToken>>, TError,{data: BodyType<RegisterPushTokenInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registerPushToken>>, TError,{data: BodyType<RegisterPushTokenInput>}, TContext> => {
+
+const mutationKey = ['registerPushToken'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registerPushToken>>, {data: BodyType<RegisterPushTokenInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  registerPushToken(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegisterPushTokenMutationResult = NonNullable<Awaited<ReturnType<typeof registerPushToken>>>
+    export type RegisterPushTokenMutationBody = BodyType<RegisterPushTokenInput>
+    export type RegisterPushTokenMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Register an Expo push token for the signed-in user
+ */
+export const useRegisterPushToken = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerPushToken>>, TError,{data: BodyType<RegisterPushTokenInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof registerPushToken>>,
+        TError,
+        {data: BodyType<RegisterPushTokenInput>},
+        TContext
+      > => {
+      return useMutation(getRegisterPushTokenMutationOptions(options));
+    }
+
+export const getUnregisterPushTokenUrl = (params: UnregisterPushTokenParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/push-tokens?${stringifiedParams}` : `/api/push-tokens`
+}
+
+/**
+ * Deletes the given push token from the server so no further
+push notifications are sent to that device. Called when the user
+disables "Recently deleted reminders" or signs out.
+
+ * @summary Remove an Expo push token for the signed-in user
+ */
+export const unregisterPushToken = async (params: UnregisterPushTokenParams, options?: RequestInit): Promise<UnregisterPushTokenResult> => {
+
+  return customFetch<UnregisterPushTokenResult>(getUnregisterPushTokenUrl(params),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getUnregisterPushTokenMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unregisterPushToken>>, TError,{params: UnregisterPushTokenParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unregisterPushToken>>, TError,{params: UnregisterPushTokenParams}, TContext> => {
+
+const mutationKey = ['unregisterPushToken'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unregisterPushToken>>, {params: UnregisterPushTokenParams}> = (props) => {
+          const {params} = props ?? {};
+
+          return  unregisterPushToken(params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnregisterPushTokenMutationResult = NonNullable<Awaited<ReturnType<typeof unregisterPushToken>>>
+
+    export type UnregisterPushTokenMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Remove an Expo push token for the signed-in user
+ */
+export const useUnregisterPushToken = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unregisterPushToken>>, TError,{params: UnregisterPushTokenParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unregisterPushToken>>,
+        TError,
+        {params: UnregisterPushTokenParams},
+        TContext
+      > => {
+      return useMutation(getUnregisterPushTokenMutationOptions(options));
     }
 
 export const getHealthCheckUrl = () => {

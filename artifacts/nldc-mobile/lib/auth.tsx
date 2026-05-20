@@ -11,6 +11,7 @@ import * as AuthSession from "expo-auth-session";
 import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
 import { setUnauthorizedHandler } from "@workspace/api-client-react";
+import { registerPushTokenWithServer, deregisterPushTokenFromServer } from "./auditTrashNotifications";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -137,6 +138,9 @@ export function AuthProvider({
         // A successful authenticated call clears any prior expired state.
         sessionExpiredRef.current = false;
         setUser(data.user);
+        // Register push token with server so the daily job can notify
+        // about expiring audits even when the app is closed.
+        registerPushTokenWithServer().catch(() => {});
       } else {
         // Server says "no user" with a 200 — treat the token as stale and
         // surface the same expired message so the user knows to sign in again.
@@ -261,6 +265,9 @@ export function AuthProvider({
       const token = await getStoredAuthToken();
       if (token) {
         const apiBase = getApiBaseUrl();
+        // Deregister push token before clearing the auth token so the API call
+        // can still authenticate. Best-effort — failure is non-fatal.
+        deregisterPushTokenFromServer().catch(() => {});
         await fetch(`${apiBase}/api/mobile-auth/logout`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },

@@ -8,6 +8,7 @@ import { startAuditTrashPurgeJob } from "./lib/auditTrashPurge";
 import { startAuditVersionPurgeJob } from "./lib/auditVersionPurge";
 import { refreshLearnedRulesCache } from "./lib/ocrLearning";
 import { startOcrLearningJob } from "./lib/ocrLearningJob";
+import { startAuditTrashPushJob } from "./lib/auditTrashPushJob";
 
 const rawPort = process.env["PORT"];
 
@@ -36,6 +37,7 @@ app.listen(port, (err) => {
   startAiReliabilityAlertsJob();
   startAuditTrashPurgeJob();
   startAuditVersionPurgeJob();
+  startAuditTrashPushJob();
   refreshLearnedRulesCache().catch((err) =>
     logger.warn({ err }, "Initial OCR learned-rules load failed"),
   );
