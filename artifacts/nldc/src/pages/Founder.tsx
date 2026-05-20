@@ -16,10 +16,11 @@ import {
   type OcrLearnedRule, type OcrLearnResult,
   type OcrMismatchesTrendsResponse, type OcrMismatchTrendEntry,
   type AlertSettingsResponse,
+  type AiToolCooldownState,
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
 import { useListAudits, useGetWaitlistStats, useGetCoachFollowUpTimeline } from "@workspace/api-client-react";
-import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine } from "lucide-react";
+import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
 
 type AiMode = "live" | "fallback" | "setup-needed";
@@ -949,6 +950,35 @@ function RollupHeartbeatPanel({ refreshKey }: { refreshKey: number }) {
   );
 }
 
+function formatCooldownRemaining(ms: number): string {
+  if (ms <= 0) return "0m";
+  const totalSeconds = Math.ceil(ms / 1000);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
+function CooldownBadge({ state }: { state: AiToolCooldownState }) {
+  const remaining = formatCooldownRemaining(state.cooldownRemainingMs);
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold shrink-0"
+      style={{
+        background: "hsl(43 65% 65% / 0.15)",
+        color: "hsl(43 65% 78%)",
+        border: "1px solid hsl(43 65% 65% / 0.40)",
+      }}
+      title={`Re-alert cooldown active — next alert allowed after ${new Date(state.cooldownEndsAt).toLocaleTimeString()}`}
+    >
+      <Clock className="w-3 h-3" />
+      {remaining} left
+    </span>
+  );
+}
+
 function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
   const [data, setData] = useState<AiMetricsResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1011,17 +1041,66 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
             last {data.alertThreshold.windowSize} requests (min {data.alertThreshold.minSample} samples).
           </p>
           <ul className="text-xs text-foreground/85 space-y-1.5 pl-1">
-            {data.alerts.map((a) => (
-              <li key={a.toolName} className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{a.toolName}</p>
-                  <p className="text-[11px] text-muted-foreground/70 truncate">{a.reason}</p>
-                </div>
-                <span className="text-muted-foreground/70 shrink-0">
-                  {pct(a.recentFirstTrySuccessRate)} · last {a.recentTotal}
-                </span>
-              </li>
-            ))}
+            {data.alerts.map((a) => {
+              const cooldown = data.cooldownStates?.find((c) => c.toolName === a.toolName);
+              return (
+                <li key={a.toolName} className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="truncate font-medium">{a.toolName}</p>
+                      {a.suppressedByCooldown && cooldown && (
+                        <span
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold shrink-0"
+                          style={{
+                            background: "hsl(43 65% 65% / 0.15)",
+                            color: "hsl(43 65% 78%)",
+                            border: "1px solid hsl(43 65% 65% / 0.40)",
+                          }}
+                          title={`Re-alert suppressed — email held until cooldown expires at ${new Date(cooldown.cooldownEndsAt).toLocaleTimeString()}`}
+                        >
+                          <Clock className="w-3 h-3" />
+                          Re-alert suppressed (cooldown · {formatCooldownRemaining(cooldown.cooldownRemainingMs)} left)
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground/70 truncate">{a.reason}</p>
+                  </div>
+                  <span className="text-muted-foreground/70 shrink-0">
+                    {pct(a.recentFirstTrySuccessRate)} · last {a.recentTotal}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
+      {data && (data.cooldownStates ?? []).filter((c) => !c.rebreachedDuringCooldown).length > 0 && (
+        <div
+          className="rounded-xl p-4 border space-y-2"
+          style={{
+            background: "hsl(43 65% 65% / 0.07)",
+            borderColor: "hsl(43 65% 65% / 0.30)",
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4" style={{ color: "hsl(43 65% 78%)" }} />
+            <p className="text-sm font-semibold" style={{ color: "hsl(43 65% 78%)" }}>
+              Re-alert cooldown active
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground/80">
+            These tools recently recovered. Re-breach emails are suppressed until the cooldown expires.
+          </p>
+          <ul className="text-xs text-foreground/85 space-y-1.5 pl-1">
+            {(data.cooldownStates ?? [])
+              .filter((c) => !c.rebreachedDuringCooldown)
+              .map((c) => (
+                <li key={c.toolName} className="flex items-center justify-between gap-3">
+                  <span className="truncate font-medium">{c.toolName}</span>
+                  <CooldownBadge state={c} />
+                </li>
+              ))}
           </ul>
         </div>
       )}

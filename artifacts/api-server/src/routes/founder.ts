@@ -34,6 +34,7 @@ import { KNOWN_JOB_NAMES, getStaleThresholdMs } from "../lib/jobHeartbeat";
 import {
   DEFAULT_REBREACH_COOLDOWN_MINUTES,
   getEnvRebreachCooldownMinutes,
+  getRebreachCooldownMs,
 } from "../lib/aiReliabilityAlerts";
 
 const router: IRouter = Router();
@@ -279,11 +280,19 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
   const alertStates = await db
     .select({
       toolName: aiToolAlertStateTable.toolName,
+      breached: aiToolAlertStateTable.breached,
+      lastClearedAt: aiToolAlertStateTable.lastClearedAt,
       consecutiveSendFailures: aiToolAlertStateTable.consecutiveSendFailures,
       lastSendFailureAt: aiToolAlertStateTable.lastSendFailureAt,
       lastSendFailureMessage: aiToolAlertStateTable.lastSendFailureMessage,
     })
     .from(aiToolAlertStateTable);
+
+  const now = new Date();
+  const cooldownMs = await getRebreachCooldownMs();
+
+  const alertStateByTool = new Map(alertStates.map((s) => [s.toolName, s]));
+
   const mailerHealth = alertStates
     .filter((s) => (s.consecutiveSendFailures ?? 0) > 0)
     .map((s) => ({
@@ -293,6 +302,28 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
       lastSendFailureMessage: s.lastSendFailureMessage,
     }))
     .sort((a, b) => b.consecutiveSendFailures - a.consecutiveSendFailures);
+
+  // Compute cooldown state for every tool that has a lastClearedAt timestamp
+  const cooldownStates = alertStates
+    .filter((s) => s.lastClearedAt !== null)
+    .map((s) => {
+      const lastClearedAt = s.lastClearedAt!;
+      const cooldownEndsAt = new Date(lastClearedAt.getTime() + cooldownMs);
+      const remainingMs = Math.max(0, cooldownEndsAt.getTime() - now.getTime());
+      const inCooldown = remainingMs > 0;
+      const rebreachedDuringCooldown = inCooldown && (s.breached ?? false);
+      return {
+        toolName: s.toolName,
+        inCooldown,
+        lastClearedAt: lastClearedAt.toISOString(),
+        cooldownEndsAt: cooldownEndsAt.toISOString(),
+        cooldownRemainingMs: remainingMs,
+        rebreachedDuringCooldown,
+      };
+    })
+    .filter((s) => s.inCooldown);
+
+  const cooldownToolNames = new Set(cooldownStates.map((s) => s.toolName));
 
   res.json({
     overall: {
@@ -318,18 +349,24 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
       firstTrySuccessRate: c.threshold,
     })),
     mailerHealth,
-    alerts: alerts.map((t) => ({
-      toolName: t.toolName,
-      recentTotal: t.recent.total,
-      recentFirstTrySuccessRate: t.recent.firstTrySuccessRate,
-      reason: buildAlertReason({
+    cooldownStates,
+    alerts: alerts.map((t) => {
+      const state = alertStateByTool.get(t.toolName);
+      const suppressedByCooldown = cooldownToolNames.has(t.toolName) && (state?.breached ?? false);
+      return {
+        toolName: t.toolName,
         recentTotal: t.recent.total,
-        recentFallbacks: t.recent.fallbacks,
-        recentValidationFailures: t.recent.validationFailures,
-        recentRetried: t.recent.retried,
         recentFirstTrySuccessRate: t.recent.firstTrySuccessRate,
-      }),
-    })),
+        reason: buildAlertReason({
+          recentTotal: t.recent.total,
+          recentFallbacks: t.recent.fallbacks,
+          recentValidationFailures: t.recent.validationFailures,
+          recentRetried: t.recent.retried,
+          recentFirstTrySuccessRate: t.recent.firstTrySuccessRate,
+        }),
+        suppressedByCooldown,
+      };
+    }),
   });
 });
 

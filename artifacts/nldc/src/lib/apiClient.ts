@@ -124,6 +124,15 @@ export interface AiThresholdsResponse {
   perTool: AiPerToolThreshold[];
   defaults: AiThresholdConfig;
 }
+export interface AiToolCooldownState {
+  toolName: string;
+  inCooldown: boolean;
+  lastClearedAt: string;
+  cooldownEndsAt: string;
+  cooldownRemainingMs: number;
+  rebreachedDuringCooldown: boolean;
+}
+
 export interface AiMetricsResponse {
   overall: {
     total: number;
@@ -142,11 +151,13 @@ export interface AiMetricsResponse {
     firstTrySuccessRate: number;
   };
   perToolOverrides: AiPerToolThreshold[];
+  cooldownStates: AiToolCooldownState[];
   alerts: {
     toolName: string;
     recentTotal: number;
     recentFirstTrySuccessRate: number;
     reason: string;
+    suppressedByCooldown: boolean;
   }[];
 }
 

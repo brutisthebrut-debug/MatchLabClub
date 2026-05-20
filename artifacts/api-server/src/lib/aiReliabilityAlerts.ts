@@ -28,7 +28,7 @@ export function getEnvRebreachCooldownMinutes(): number {
 
 export { DEFAULT_REBREACH_COOLDOWN_MINUTES };
 
-async function getRebreachCooldownMs(): Promise<number> {
+export async function getRebreachCooldownMs(): Promise<number> {
   try {
     const [row] = await db
       .select()
