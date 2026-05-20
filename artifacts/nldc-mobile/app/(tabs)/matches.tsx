@@ -463,8 +463,35 @@ export default function MatchesScreen() {
   const [pickerSelected, setPickerSelected] = React.useState<Set<Audit["id"]>>(
     new Set(),
   );
+  const [pickerSort, setPickerSort] = React.useState<"score" | "oldest" | "newest">("score");
+  const sortedStaleAudits = React.useMemo(() => {
+    const arr = [...staleAudits];
+    if (pickerSort === "score") {
+      return arr.sort((a, b) => {
+        const sa = a.readinessScore ?? -1;
+        const sb = b.readinessScore ?? -1;
+        if (sb !== sa) return sb - sa;
+        const ta = a.reportGeneratedAt ? new Date(a.reportGeneratedAt).getTime() : 0;
+        const tb = b.reportGeneratedAt ? new Date(b.reportGeneratedAt).getTime() : 0;
+        return ta - tb;
+      });
+    }
+    if (pickerSort === "oldest") {
+      return arr.sort((a, b) => {
+        const ta = a.reportGeneratedAt ? new Date(a.reportGeneratedAt).getTime() : 0;
+        const tb = b.reportGeneratedAt ? new Date(b.reportGeneratedAt).getTime() : 0;
+        return ta - tb;
+      });
+    }
+    return arr.sort((a, b) => {
+      const ta = a.reportGeneratedAt ? new Date(a.reportGeneratedAt).getTime() : 0;
+      const tb = b.reportGeneratedAt ? new Date(b.reportGeneratedAt).getTime() : 0;
+      return tb - ta;
+    });
+  }, [staleAudits, pickerSort]);
   const openRefreshPicker = React.useCallback(() => {
     setPickerSelected(new Set(staleAudits.map((a) => a.id)));
+    setPickerSort("score");
     setPickerOpen(true);
   }, [staleAudits]);
   const togglePickerSelected = React.useCallback((id: Audit["id"]) => {
@@ -1020,8 +1047,34 @@ export default function MatchesScreen() {
                 </Pressable>
               </View>
             </View>
+            <View
+              testID="refresh-picker-sort"
+              style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6, marginTop: 2 }}
+            >
+              <Text style={{ fontSize: 12, color: colors.mutedForeground }}>Sort:</Text>
+              {(["score", "oldest", "newest"] as const).map((opt) => (
+                <Pressable
+                  key={opt}
+                  testID={`button-refresh-picker-sort-${opt}`}
+                  onPress={() => setPickerSort(opt)}
+                  style={({ pressed }) => ({
+                    paddingHorizontal: 8,
+                    paddingVertical: 3,
+                    borderRadius: 99,
+                    borderWidth: 1,
+                    borderColor: pickerSort === opt ? colors.gold : colors.cardBorder,
+                    backgroundColor: pickerSort === opt ? `${colors.gold}20` : "transparent",
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <Text style={{ fontSize: 12, color: pickerSort === opt ? colors.gold : colors.mutedForeground }}>
+                    {opt === "score" ? "Score" : opt === "oldest" ? "Oldest first" : "Newest first"}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
             <ScrollView style={styles.pickerList} contentContainerStyle={{ gap: 8 }}>
-              {staleAudits.map((audit) => {
+              {sortedStaleAudits.map((audit) => {
                 const checked = pickerSelected.has(audit.id);
                 const hint = staleHintFromGeneratedAt(audit.reportGeneratedAt);
                 return (

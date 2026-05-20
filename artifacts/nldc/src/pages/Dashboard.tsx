@@ -459,8 +459,35 @@ export default function Dashboard() {
   const [pickerSelected, setPickerSelected] = useState<Set<Audit["id"]>>(
     new Set(),
   );
+  const [pickerSort, setPickerSort] = useState<"score" | "oldest" | "newest">("score");
+  const sortedStaleAudits = useMemo(() => {
+    const arr = [...staleAudits];
+    if (pickerSort === "score") {
+      return arr.sort((a, b) => {
+        const sa = a.readinessScore ?? -1;
+        const sb = b.readinessScore ?? -1;
+        if (sb !== sa) return sb - sa;
+        const ta = a.reportGeneratedAt ? new Date(a.reportGeneratedAt).getTime() : 0;
+        const tb = b.reportGeneratedAt ? new Date(b.reportGeneratedAt).getTime() : 0;
+        return ta - tb;
+      });
+    }
+    if (pickerSort === "oldest") {
+      return arr.sort((a, b) => {
+        const ta = a.reportGeneratedAt ? new Date(a.reportGeneratedAt).getTime() : 0;
+        const tb = b.reportGeneratedAt ? new Date(b.reportGeneratedAt).getTime() : 0;
+        return ta - tb;
+      });
+    }
+    return arr.sort((a, b) => {
+      const ta = a.reportGeneratedAt ? new Date(a.reportGeneratedAt).getTime() : 0;
+      const tb = b.reportGeneratedAt ? new Date(b.reportGeneratedAt).getTime() : 0;
+      return tb - ta;
+    });
+  }, [staleAudits, pickerSort]);
   const openRefreshPicker = useCallback(() => {
     setPickerSelected(new Set(staleAudits.map((a) => a.id)));
+    setPickerSort("score");
     setPickerOpen(true);
   }, [staleAudits]);
   const togglePickerSelected = useCallback((id: Audit["id"]) => {
@@ -1511,8 +1538,26 @@ export default function Dashboard() {
               </button>
             </div>
           </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground" data-testid="refresh-picker-sort">
+            <span className="shrink-0">Sort:</span>
+            {(["score", "oldest", "newest"] as const).map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => setPickerSort(opt)}
+                data-testid={`button-refresh-picker-sort-${opt}`}
+                className={`px-2 py-0.5 rounded-full border text-xs transition-colors ${
+                  pickerSort === opt
+                    ? "border-[hsl(268_52%_68%/0.6)] bg-[hsl(268_52%_68%/0.15)] text-foreground"
+                    : "border-white/10 hover:border-white/20 hover:bg-white/4"
+                }`}
+              >
+                {opt === "score" ? "Score" : opt === "oldest" ? "Oldest first" : "Newest first"}
+              </button>
+            ))}
+          </div>
           <div className="max-h-72 overflow-y-auto -mx-2 px-2 space-y-1.5">
-            {staleAudits.map((audit) => {
+            {sortedStaleAudits.map((audit) => {
               const checked = pickerSelected.has(audit.id);
               const staleHint = staleHintFromGeneratedAt(audit.reportGeneratedAt);
               return (
