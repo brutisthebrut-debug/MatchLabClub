@@ -18,6 +18,7 @@ import {
   ISSUER_URL,
   type SessionData,
 } from "../lib/auth";
+import { notifySignInIfNew, extractClientIp } from "../lib/loginNotifications";
 
 const OIDC_COOKIE_TTL = 10 * 60 * 1000;
 
@@ -184,6 +185,20 @@ router.get("/callback", async (req: Request, res: Response) => {
 
   const sid = await createSession(sessionData);
   setSessionCookie(res, sid);
+
+  try {
+    await notifySignInIfNew({
+      userId: dbUser.id,
+      email: dbUser.email,
+      firstName: dbUser.firstName,
+      ip: extractClientIp(req.headers as Record<string, unknown>, req.ip),
+      userAgent: (req.headers["user-agent"] as string) || "",
+      channel: "web",
+    });
+  } catch (err) {
+    req.log.error({ err, userId: dbUser.id }, "Sign-in notification failed");
+  }
+
   res.redirect(returnTo);
 });
 
@@ -253,6 +268,23 @@ router.post(
       };
 
       const sid = await createSession(sessionData);
+
+      try {
+        await notifySignInIfNew({
+          userId: dbUser.id,
+          email: dbUser.email,
+          firstName: dbUser.firstName,
+          ip: extractClientIp(req.headers as Record<string, unknown>, req.ip),
+          userAgent: (req.headers["user-agent"] as string) || "",
+          channel: "mobile",
+        });
+      } catch (err) {
+        req.log.error(
+          { err, userId: dbUser.id },
+          "Sign-in notification failed",
+        );
+      }
+
       res.json(ExchangeMobileAuthorizationCodeResponse.parse({ token: sid }));
     } catch (err) {
       req.log.error({ err }, "Mobile token exchange error");
