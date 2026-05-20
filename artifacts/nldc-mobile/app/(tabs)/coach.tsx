@@ -38,6 +38,10 @@ import {
   saveCoachDraft,
   saveCoachReminderPrefs,
   scheduleCoachReminder,
+  type SnoozeMode,
+  type SnoozeOption,
+  snoozeModesEqual,
+  snoozeOptionToMode,
 } from "@/lib/coachNotifications";
 import { useFocusEffect } from "expo-router";
 
@@ -160,17 +164,17 @@ export default function CoachScreen() {
     await updateReminderPrefs({ ...reminderPrefs, delaySeconds: seconds });
   }
 
-  async function onPickSnoozeShort(seconds: number) {
+  async function onPickSnoozeShort(mode: SnoozeMode) {
     await updateReminderPrefs({
       ...reminderPrefs,
-      snoozeShortSeconds: seconds,
+      snoozeShort: mode,
     });
   }
 
-  async function onPickSnoozeLong(seconds: number) {
+  async function onPickSnoozeLong(mode: SnoozeMode) {
     await updateReminderPrefs({
       ...reminderPrefs,
-      snoozeLongSeconds: seconds,
+      snoozeLong: mode,
     });
   }
 
@@ -481,14 +485,14 @@ export default function CoachScreen() {
           <SnoozeDurationPicker
             label="Short snooze"
             options={COACH_SNOOZE_SHORT_OPTIONS}
-            value={reminderPrefs.snoozeShortSeconds}
+            value={reminderPrefs.snoozeShort}
             onChange={onPickSnoozeShort}
             disabled={!reminderPrefs.enabled}
           />
           <SnoozeDurationPicker
             label="Long snooze"
             options={COACH_SNOOZE_LONG_OPTIONS}
-            value={reminderPrefs.snoozeLongSeconds}
+            value={reminderPrefs.snoozeLong}
             onChange={onPickSnoozeLong}
             disabled={!reminderPrefs.enabled}
           />
@@ -551,29 +555,30 @@ function SnoozeDurationPicker({
   disabled,
 }: {
   label: string;
-  options: Array<{ label: string; seconds: number }>;
-  value: number;
-  onChange: (seconds: number) => void;
+  options: SnoozeOption[];
+  value: SnoozeMode;
+  onChange: (mode: SnoozeMode) => void;
   disabled: boolean;
 }) {
   const colors = useColors();
-  const isPreset = options.some((o) => o.seconds === value);
-  const [customOpen, setCustomOpen] = useState(!isPreset);
+  const matchesPreset = options.some((o) => snoozeModesEqual(value, o));
+  const isCustomDuration = value.kind === "duration" && !matchesPreset;
+  const [customOpen, setCustomOpen] = useState(isCustomDuration);
   const [customText, setCustomText] = useState(
-    !isPreset ? String(Math.max(1, Math.round(value / 60))) : "",
+    isCustomDuration ? String(Math.max(1, Math.round(value.seconds / 60))) : "",
   );
 
   useEffect(() => {
-    if (isPreset) {
+    if (!isCustomDuration) {
       setCustomOpen(false);
       setCustomText("");
     } else {
       setCustomOpen(true);
       setCustomText((prev) =>
-        prev ? prev : String(Math.max(1, Math.round(value / 60))),
+        prev ? prev : String(Math.max(1, Math.round(value.seconds / 60))),
       );
     }
-  }, [value, isPreset]);
+  }, [value, isCustomDuration]);
 
   function commitCustom(text: string) {
     const minutes = parseInt(text, 10);
@@ -583,11 +588,11 @@ function SnoozeDurationPicker({
       seconds = COACH_SNOOZE_CUSTOM_MIN_SECONDS;
     if (seconds > COACH_SNOOZE_CUSTOM_MAX_SECONDS)
       seconds = COACH_SNOOZE_CUSTOM_MAX_SECONDS;
-    if (seconds === value) return;
-    onChange(seconds);
+    if (value.kind === "duration" && seconds === value.seconds) return;
+    onChange({ kind: "duration", seconds });
   }
 
-  const customSelected = customOpen && !isPreset;
+  const customSelected = customOpen && isCustomDuration;
 
   return (
     <View style={styles.pickerBlock}>
@@ -596,14 +601,16 @@ function SnoozeDurationPicker({
       </Text>
       <View style={styles.delayRow}>
         {options.map((opt) => {
-          const selected = !customOpen && value === opt.seconds;
+          const selected = !customOpen && snoozeModesEqual(value, opt);
+          const key =
+            opt.kind === "duration" ? `dur-${opt.seconds}` : opt.kind;
           return (
             <Pressable
-              key={opt.seconds}
+              key={key}
               onPress={() => {
                 setCustomOpen(false);
                 setCustomText("");
-                onChange(opt.seconds);
+                onChange(snoozeOptionToMode(opt));
               }}
               disabled={disabled}
               style={[
@@ -633,7 +640,11 @@ function SnoozeDurationPicker({
             if (!customOpen) {
               setCustomOpen(true);
               if (!customText) {
-                setCustomText(String(Math.max(1, Math.round(value / 60))));
+                const fallbackMinutes =
+                  value.kind === "duration"
+                    ? Math.max(1, Math.round(value.seconds / 60))
+                    : 30;
+                setCustomText(String(fallbackMinutes));
               }
             }
           }}

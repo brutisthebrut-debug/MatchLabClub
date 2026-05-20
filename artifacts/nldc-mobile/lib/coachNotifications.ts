@@ -31,22 +31,31 @@ export const COACH_REMINDER_DELAY_OPTIONS: Array<{
   { label: "6 hr", seconds: 6 * 60 * 60 },
 ];
 
-export const COACH_SNOOZE_SHORT_OPTIONS: Array<{
-  label: string;
-  seconds: number;
-}> = [
-  { label: "30 min", seconds: 30 * 60 },
-  { label: "1 hr", seconds: 60 * 60 },
-  { label: "2 hr", seconds: 2 * 60 * 60 },
+export type SnoozeTimeOfDayKind = "tonight" | "tomorrowMorning";
+
+export type SnoozeMode =
+  | { kind: "duration"; seconds: number }
+  | { kind: SnoozeTimeOfDayKind };
+
+export const COACH_TONIGHT_HOUR = 20;
+export const COACH_TOMORROW_MORNING_HOUR = 9;
+
+export type SnoozeOption =
+  | { kind: "duration"; label: string; seconds: number }
+  | { kind: SnoozeTimeOfDayKind; label: string };
+
+export const COACH_SNOOZE_SHORT_OPTIONS: SnoozeOption[] = [
+  { kind: "duration", label: "30 min", seconds: 30 * 60 },
+  { kind: "duration", label: "1 hr", seconds: 60 * 60 },
+  { kind: "duration", label: "2 hr", seconds: 2 * 60 * 60 },
+  { kind: "tonight", label: "Tonight (8pm)" },
 ];
 
-export const COACH_SNOOZE_LONG_OPTIONS: Array<{
-  label: string;
-  seconds: number;
-}> = [
-  { label: "3 hr", seconds: 3 * 60 * 60 },
-  { label: "6 hr", seconds: 6 * 60 * 60 },
-  { label: "12 hr", seconds: 12 * 60 * 60 },
+export const COACH_SNOOZE_LONG_OPTIONS: SnoozeOption[] = [
+  { kind: "duration", label: "3 hr", seconds: 3 * 60 * 60 },
+  { kind: "duration", label: "6 hr", seconds: 6 * 60 * 60 },
+  { kind: "duration", label: "12 hr", seconds: 12 * 60 * 60 },
+  { kind: "tomorrowMorning", label: "Tomorrow morning (9am)" },
 ];
 
 export const COACH_SNOOZE_CUSTOM_MIN_SECONDS = 5 * 60;
@@ -55,15 +64,15 @@ export const COACH_SNOOZE_CUSTOM_MAX_SECONDS = 24 * 60 * 60;
 export interface CoachReminderPrefs {
   enabled: boolean;
   delaySeconds: number;
-  snoozeShortSeconds: number;
-  snoozeLongSeconds: number;
+  snoozeShort: SnoozeMode;
+  snoozeLong: SnoozeMode;
 }
 
 export const DEFAULT_COACH_REMINDER_PREFS: CoachReminderPrefs = {
   enabled: true,
   delaySeconds: COACH_REMINDER_DELAY_SECONDS,
-  snoozeShortSeconds: COACH_SNOOZE_1H_SECONDS,
-  snoozeLongSeconds: COACH_SNOOZE_3H_SECONDS,
+  snoozeShort: { kind: "duration", seconds: COACH_SNOOZE_1H_SECONDS },
+  snoozeLong: { kind: "duration", seconds: COACH_SNOOZE_3H_SECONDS },
 };
 
 function clampSnoozeSeconds(seconds: number, fallback: number): number {
@@ -78,12 +87,73 @@ function clampSnoozeSeconds(seconds: number, fallback: number): number {
   return rounded;
 }
 
+function parseSnoozeMode(raw: unknown, fallback: SnoozeMode): SnoozeMode {
+  if (raw && typeof raw === "object") {
+    const kind = (raw as { kind?: unknown }).kind;
+    if (kind === "tonight" || kind === "tomorrowMorning") {
+      return { kind };
+    }
+    if (kind === "duration") {
+      const seconds = (raw as { seconds?: unknown }).seconds;
+      const fb =
+        fallback.kind === "duration"
+          ? fallback.seconds
+          : COACH_SNOOZE_1H_SECONDS;
+      return {
+        kind: "duration",
+        seconds: clampSnoozeSeconds(seconds as number, fb),
+      };
+    }
+  }
+  return fallback;
+}
+
 export function formatSnoozeDuration(seconds: number): string {
   const mins = Math.max(1, Math.round(seconds / 60));
   if (mins < 60) return `${mins} min`;
   const hours = mins / 60;
   if (Number.isInteger(hours)) return `${hours} hr`;
   return `${hours.toFixed(1)} hr`;
+}
+
+export function computeSnoozeDelaySeconds(
+  mode: SnoozeMode,
+  now: Date = new Date(),
+): number {
+  if (mode.kind === "duration") return mode.seconds;
+  const target = new Date(now);
+  if (mode.kind === "tonight") {
+    target.setHours(COACH_TONIGHT_HOUR, 0, 0, 0);
+    if (target.getTime() <= now.getTime()) {
+      target.setDate(target.getDate() + 1);
+    }
+  } else {
+    target.setDate(target.getDate() + 1);
+    target.setHours(COACH_TOMORROW_MORNING_HOUR, 0, 0, 0);
+  }
+  return Math.max(60, Math.round((target.getTime() - now.getTime()) / 1000));
+}
+
+export function snoozeModeActionLabel(mode: SnoozeMode): string {
+  if (mode.kind === "duration")
+    return `Remind me in ${formatSnoozeDuration(mode.seconds)}`;
+  if (mode.kind === "tonight") return "Remind me tonight";
+  return "Remind me tomorrow morning";
+}
+
+export function snoozeModesEqual(a: SnoozeMode, b: SnoozeOption): boolean {
+  if (a.kind !== b.kind) return false;
+  if (a.kind === "duration" && b.kind === "duration") {
+    return a.seconds === b.seconds;
+  }
+  return true;
+}
+
+export function snoozeOptionToMode(opt: SnoozeOption): SnoozeMode {
+  if (opt.kind === "duration") {
+    return { kind: "duration", seconds: opt.seconds };
+  }
+  return { kind: opt.kind };
 }
 
 export async function loadCoachReminderPrefs(): Promise<CoachReminderPrefs> {
@@ -99,15 +169,33 @@ export async function loadCoachReminderPrefs(): Promise<CoachReminderPrefs> {
       typeof parsed.enabled === "boolean"
         ? parsed.enabled
         : DEFAULT_COACH_REMINDER_PREFS.enabled;
-    const snoozeShortSeconds = clampSnoozeSeconds(
-      parsed.snoozeShortSeconds as number,
-      DEFAULT_COACH_REMINDER_PREFS.snoozeShortSeconds,
-    );
-    const snoozeLongSeconds = clampSnoozeSeconds(
-      parsed.snoozeLongSeconds as number,
-      DEFAULT_COACH_REMINDER_PREFS.snoozeLongSeconds,
-    );
-    return { enabled, delaySeconds, snoozeShortSeconds, snoozeLongSeconds };
+    const legacyShort = (parsed as { snoozeShortSeconds?: unknown })
+      .snoozeShortSeconds;
+    const legacyLong = (parsed as { snoozeLongSeconds?: unknown })
+      .snoozeLongSeconds;
+    const snoozeShort: SnoozeMode = parsed.snoozeShort
+      ? parseSnoozeMode(parsed.snoozeShort, DEFAULT_COACH_REMINDER_PREFS.snoozeShort)
+      : typeof legacyShort === "number"
+        ? {
+            kind: "duration",
+            seconds: clampSnoozeSeconds(
+              legacyShort,
+              COACH_SNOOZE_1H_SECONDS,
+            ),
+          }
+        : DEFAULT_COACH_REMINDER_PREFS.snoozeShort;
+    const snoozeLong: SnoozeMode = parsed.snoozeLong
+      ? parseSnoozeMode(parsed.snoozeLong, DEFAULT_COACH_REMINDER_PREFS.snoozeLong)
+      : typeof legacyLong === "number"
+        ? {
+            kind: "duration",
+            seconds: clampSnoozeSeconds(
+              legacyLong,
+              COACH_SNOOZE_3H_SECONDS,
+            ),
+          }
+        : DEFAULT_COACH_REMINDER_PREFS.snoozeLong;
+    return { enabled, delaySeconds, snoozeShort, snoozeLong };
   } catch {
     return { ...DEFAULT_COACH_REMINDER_PREFS };
   }
@@ -189,12 +277,12 @@ export async function applyCoachNotificationCategory(
         },
         {
           identifier: COACH_ACTION_SNOOZE_1H,
-          buttonTitle: `Remind me in ${formatSnoozeDuration(current.snoozeShortSeconds)}`,
+          buttonTitle: snoozeModeActionLabel(current.snoozeShort),
           options: { opensAppToForeground: false },
         },
         {
           identifier: COACH_ACTION_SNOOZE_3H,
-          buttonTitle: `Remind me in ${formatSnoozeDuration(current.snoozeLongSeconds)}`,
+          buttonTitle: snoozeModeActionLabel(current.snoozeLong),
           options: { opensAppToForeground: false },
         },
         {
@@ -275,7 +363,8 @@ export async function scheduleCoachReminder(opts: {
 
 export async function snoozeCoachReminder(opts: {
   matchName?: string;
-  delaySeconds: number;
+  delaySeconds?: number;
+  mode?: SnoozeMode;
 }): Promise<string | null> {
   if (Platform.OS === "web") return null;
   const prefs = await loadCoachReminderPrefs();
@@ -288,9 +377,13 @@ export async function snoozeCoachReminder(opts: {
     const draft = await loadCoachDraft();
     matchName = draft?.matchName?.trim() || "your match";
   }
+  const delaySeconds =
+    opts.mode !== undefined
+      ? computeSnoozeDelaySeconds(opts.mode)
+      : (opts.delaySeconds ?? COACH_SNOOZE_1H_SECONDS);
   return scheduleCoachReminder({
     matchName,
-    delaySeconds: opts.delaySeconds,
+    delaySeconds,
   });
 }
 

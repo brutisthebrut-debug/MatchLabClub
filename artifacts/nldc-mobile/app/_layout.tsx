@@ -95,7 +95,7 @@ function RootLayoutNav() {
         const prefs = await loadCoachReminderPrefs();
         await snoozeCoachReminder({
           matchName,
-          delaySeconds: prefs.snoozeShortSeconds,
+          mode: prefs.snoozeShort,
         });
         await recordCoachSnoozed();
         return;
@@ -104,7 +104,7 @@ function RootLayoutNav() {
         const prefs = await loadCoachReminderPrefs();
         await snoozeCoachReminder({
           matchName,
-          delaySeconds: prefs.snoozeLongSeconds,
+          mode: prefs.snoozeLong,
         });
         await recordCoachSnoozed();
         return;
