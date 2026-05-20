@@ -234,6 +234,7 @@ export const ExportMyDataResponse = zod.object({
   "messagingStyle": zod.string(),
   "coachingCta": zod.string()
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
+  "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "createdAt": zod.string()
 })),
   "profiles": zod.array(zod.object({
@@ -370,6 +371,7 @@ export const DownloadEmailedExportResponse = zod.object({
   "messagingStyle": zod.string(),
   "coachingCta": zod.string()
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
+  "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "createdAt": zod.string()
 })),
   "profiles": zod.array(zod.object({
@@ -499,6 +501,7 @@ export const ListAuditsResponseItem = zod.object({
   "messagingStyle": zod.string(),
   "coachingCta": zod.string()
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
+  "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "createdAt": zod.string()
 })
 export const ListAuditsResponse = zod.array(ListAuditsResponseItem)
@@ -575,6 +578,7 @@ export const GetAuditResponse = zod.object({
   "messagingStyle": zod.string(),
   "coachingCta": zod.string()
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
+  "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "createdAt": zod.string()
 })
 

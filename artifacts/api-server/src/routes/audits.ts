@@ -152,6 +152,10 @@ router.get("/audits", async (req, res): Promise<void> => {
   res.json(ListAuditsResponse.parse(audits.map((a) => ({
     ...a,
     report: a.report ?? null,
+    reportGeneratedAt:
+      a.reportGeneratedAt instanceof Date
+        ? a.reportGeneratedAt.toISOString()
+        : a.reportGeneratedAt ?? null,
     createdAt: a.createdAt instanceof Date ? a.createdAt.toISOString() : String(a.createdAt),
   }))));
 });
@@ -180,6 +184,10 @@ router.post("/audits", async (req, res): Promise<void> => {
   res.status(201).json(GetAuditResponse.parse({
     ...audit,
     report: audit.report ?? null,
+    reportGeneratedAt:
+      audit.reportGeneratedAt instanceof Date
+        ? audit.reportGeneratedAt.toISOString()
+        : audit.reportGeneratedAt ?? null,
     createdAt: audit.createdAt instanceof Date ? audit.createdAt.toISOString() : String(audit.createdAt),
   }));
 });
@@ -204,6 +212,10 @@ router.get("/audits/:id", async (req, res): Promise<void> => {
   res.json(GetAuditResponse.parse({
     ...audit,
     report: audit.report ?? null,
+    reportGeneratedAt:
+      audit.reportGeneratedAt instanceof Date
+        ? audit.reportGeneratedAt.toISOString()
+        : audit.reportGeneratedAt ?? null,
     createdAt: audit.createdAt instanceof Date ? audit.createdAt.toISOString() : String(audit.createdAt),
   }));
 });
@@ -262,7 +274,12 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
 
   const fullReport = { auditId: id, ...report };
   await db.update(auditsTable)
-    .set({ status: "complete", readinessScore: report.readinessScore, report: fullReport })
+    .set({
+      status: "complete",
+      readinessScore: report.readinessScore,
+      report: fullReport,
+      reportGeneratedAt: new Date(),
+    })
     .where(eq(auditsTable.id, id));
 
   res.json(GenerateAuditReportResponse.parse(fullReport));
@@ -393,7 +410,12 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
   const fullReport = { auditId: audit.id, ...report };
   await db
     .update(auditsTable)
-    .set({ status: "complete", readinessScore: report.readinessScore, report: fullReport })
+    .set({
+      status: "complete",
+      readinessScore: report.readinessScore,
+      report: fullReport,
+      reportGeneratedAt: new Date(),
+    })
     .where(eq(auditsTable.id, audit.id));
 
   res.json(

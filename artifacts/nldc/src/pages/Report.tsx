@@ -1,5 +1,6 @@
 import { useParams, Link } from "wouter";
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,22 @@ import { useGetAudit, useGenerateAuditReport, getGetAuditQueryKey } from "@works
 import {
   CheckCircle, XCircle, AlertCircle, ArrowRight, Copy, Check,
   Trophy, Calendar, Eye, Sparkles, MessageSquare, Camera,
-  TrendingUp, Lightbulb, Heart, Zap
+  TrendingUp, Lightbulb, Heart, Zap, RefreshCw
 } from "lucide-react";
+
+function formatGeneratedAt(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "earlier";
+  const diffMs = Date.now() - d.getTime();
+  const minutes = Math.round(diffMs / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.round(hours / 24);
+  if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
 
 /* ─── Score Ring ─── */
 function ScoreRing({ score }: { score: number }) {
@@ -152,6 +167,7 @@ export default function Report() {
   const auditId = parseInt(id ?? "0", 10);
   useMeta("Signal Report", "Your full audit — Signal Score, bio critique, AI rewrite, prompt rewrites, photo checklist, and 7-day action plan.");
 
+  const queryClient = useQueryClient();
   const { data: audit, isLoading: auditLoading } = useGetAudit(auditId, {
     query: { enabled: !!auditId, queryKey: getGetAuditQueryKey(auditId) }
   });
@@ -159,6 +175,7 @@ export default function Report() {
   const generateReport = useGenerateAuditReport();
   const [report, setReport] = useState<typeof DEMO_REPORT | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
 
   const storedReport = audit?.report ?? null;
 
@@ -176,6 +193,7 @@ export default function Report() {
       .mutateAsync({ id: auditId })
       .then((result) => {
         setReport(result as typeof DEMO_REPORT);
+        queryClient.invalidateQueries({ queryKey: getGetAuditQueryKey(auditId) });
       })
       .catch(() => {
         setReport(DEMO_REPORT);
@@ -185,6 +203,18 @@ export default function Report() {
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auditId, audit]);
+
+  async function regenerate() {
+    if (!auditId || regenerating) return;
+    setRegenerating(true);
+    try {
+      const result = await generateReport.mutateAsync({ id: auditId });
+      setReport(result as typeof DEMO_REPORT);
+      queryClient.invalidateQueries({ queryKey: getGetAuditQueryKey(auditId) });
+    } finally {
+      setRegenerating(false);
+    }
+  }
 
   const r = report ?? (auditId ? null : DEMO_REPORT) ?? DEMO_REPORT;
   const grade = r.readinessScore >= 85 ? "A" : r.readinessScore >= 72 ? "B" : r.readinessScore >= 58 ? "C" : r.readinessScore >= 42 ? "D" : "F";
@@ -259,6 +289,24 @@ export default function Report() {
                     <span key={i} className="tag-risk border px-2.5 py-1 rounded-full text-xs font-medium" data-testid={`badge-report-risk-${i}`}>{risk}</span>
                   ))}
                 </div>
+                {auditId ? (
+                  <div className="flex items-center justify-between flex-wrap gap-3 mt-5 pt-4 border-t border-white/8">
+                    <p className="text-xs text-muted-foreground" data-testid="text-report-generated-at">
+                      {audit?.reportGeneratedAt
+                        ? `Report from ${formatGeneratedAt(audit.reportGeneratedAt)}`
+                        : "Report generated at scan time"}
+                    </p>
+                    <button
+                      onClick={regenerate}
+                      disabled={regenerating || generating}
+                      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(268_52%_68%/0.3)] text-[hsl(268_60%_78%)] bg-[hsl(268_52%_68%/0.08)] hover:bg-[hsl(268_52%_68%/0.16)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      data-testid="button-regenerate-report"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${regenerating ? "animate-spin" : ""}`} />
+                      {regenerating ? "Refreshing…" : "Regenerate"}
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </div>
           </motion.div>

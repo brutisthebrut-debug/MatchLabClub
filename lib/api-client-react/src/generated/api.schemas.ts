@@ -198,6 +198,11 @@ export interface Audit {
   client should fall back to calling `generateAuditReport`.
    */
   report?: AuditReport | null;
+  /**
+     * ISO timestamp the stored report was generated. Null if no report has been generated yet.
+     * @nullable
+     */
+  reportGeneratedAt?: string | null;
   createdAt: string;
 }
 

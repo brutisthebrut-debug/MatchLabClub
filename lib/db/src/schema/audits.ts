@@ -23,6 +23,7 @@ export const auditsTable = pgTable("audits", {
   source: text("source").notNull().default("manual"),
   readinessScore: integer("readiness_score"),
   report: jsonb("report").$type<Record<string, unknown>>(),
+  reportGeneratedAt: timestamp("report_generated_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

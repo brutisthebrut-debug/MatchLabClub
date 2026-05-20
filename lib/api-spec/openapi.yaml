@@ -1211,6 +1211,9 @@ components:
             The persisted mini-report generated at scan time. Present for newer
             audits; older audits without a stored report return null and the
             client should fall back to calling `generateAuditReport`.
+        reportGeneratedAt:
+          type: ["string", "null"]
+          description: ISO timestamp the stored report was generated. Null if no report has been generated yet.
         createdAt:
           type: string
 

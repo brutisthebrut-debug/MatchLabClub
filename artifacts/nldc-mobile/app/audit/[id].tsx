@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import {
+  getGetAuditQueryKey,
   getListAuditsQueryKey,
   useDeleteAudit,
   useGenerateAuditReport,
@@ -22,6 +23,24 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScoreRing } from "@/components/ScoreRing";
 import { useColors } from "@/hooks/useColors";
+
+function formatGeneratedAt(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "earlier";
+  const diffMs = Date.now() - d.getTime();
+  const minutes = Math.round(diffMs / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.round(hours / 24);
+  if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
+  return d.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 interface ReportShape {
   readinessScore: number;
@@ -46,7 +65,15 @@ export default function AuditDetailScreen() {
   const queryClient = useQueryClient();
 
   const auditQuery = useGetAudit(valid ? id : 0);
-  const generate = useGenerateAuditReport();
+  const generate = useGenerateAuditReport({
+    mutation: {
+      onSuccess: () => {
+        if (valid) {
+          queryClient.invalidateQueries({ queryKey: getGetAuditQueryKey(id) });
+        }
+      },
+    },
+  });
   const deleteAudit = useDeleteAudit({
     mutation: {
       onSuccess: () => {
@@ -135,6 +162,37 @@ export default function AuditDetailScreen() {
   const promptList = audit?.prompts
     ? audit.prompts.split("\n").map((p) => p.trim()).filter(Boolean)
     : [];
+
+  const reportGeneratedAt = audit?.reportGeneratedAt ?? null;
+  const reportGeneratedLabel = reportGeneratedAt
+    ? formatGeneratedAt(reportGeneratedAt)
+    : null;
+
+  const regenerate = () => {
+    if (!valid || generate.isPending) return;
+    setErrorMsg(null);
+    generate
+      .mutateAsync({ id })
+      .then((r) => {
+        setReport({
+          readinessScore: r.readinessScore,
+          overallGrade: r.overallGrade,
+          strengths: r.strengths,
+          risks: r.risks,
+          bioAudit: r.bioAudit,
+          rewrittenBio: r.rewrittenBio,
+          messagingStyle: r.messagingStyle,
+          coachingCta: r.coachingCta,
+        });
+      })
+      .catch((err) => {
+        const m =
+          err instanceof Error
+            ? err.message
+            : "Couldn't refresh this mini-report.";
+        setErrorMsg(m);
+      });
+  };
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -243,6 +301,39 @@ export default function AuditDetailScreen() {
               {audit.firstName}
               {audit.currentApps[0] ? ` · ${audit.currentApps[0]}` : ""}
             </Text>
+            {reportGeneratedLabel || report ? (
+              <View style={styles.regenRow}>
+                <Text
+                  style={[styles.generatedText, { color: colors.mutedForeground }]}
+                >
+                  {reportGeneratedLabel
+                    ? `Report from ${reportGeneratedLabel}`
+                    : "Report generated"}
+                </Text>
+                <Pressable
+                  onPress={regenerate}
+                  disabled={generate.isPending}
+                  hitSlop={8}
+                  style={({ pressed }) => [
+                    styles.regenButton,
+                    {
+                      borderColor: colors.primary,
+                      opacity: generate.isPending ? 0.5 : pressed ? 0.7 : 1,
+                    },
+                  ]}
+                  accessibilityLabel="Regenerate mini-report"
+                >
+                  <Feather
+                    name="refresh-cw"
+                    size={12}
+                    color={colors.primary}
+                  />
+                  <Text style={[styles.regenText, { color: colors.primary }]}>
+                    {generate.isPending ? "Refreshing…" : "Regenerate"}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
           </View>
         ) : null}
 
@@ -424,6 +515,30 @@ const styles = StyleSheet.create({
   nameText: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans_600SemiBold",
+  },
+  regenRow: {
+    marginTop: 10,
+    alignItems: "center",
+    gap: 8,
+  },
+  generatedText: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_500Medium",
+    letterSpacing: 0.2,
+  },
+  regenButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  regenText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.3,
   },
   section: {
     borderWidth: 1,
