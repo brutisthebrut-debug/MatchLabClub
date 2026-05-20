@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useGetAuditSummary } from "@workspace/api-client-react";
-import React, { useMemo } from "react";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -16,6 +17,10 @@ import Svg, { Polyline } from "react-native-svg";
 import { ScoreRing } from "@/components/ScoreRing";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { useColors } from "@/hooks/useColors";
+import {
+  loadCoachSendStats,
+  type CoachSendStats,
+} from "@/lib/coachNotifications";
 
 const DEMO_HISTORY = [
   { date: "2025-04-01", score: 58 },
@@ -83,6 +88,24 @@ export default function ScoreScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { data, isLoading, isError, refetch, isFetching } = useGetAuditSummary();
+  const [sendStats, setSendStats] = useState<CoachSendStats | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      loadCoachSendStats().then((s) => {
+        if (active) setSendStats(s);
+      });
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
+
+  const sendThroughRate =
+    sendStats && sendStats.totalPrompts > 0
+      ? Math.round((sendStats.sentCount / sendStats.totalPrompts) * 100)
+      : 0;
 
   const summary = useMemo(() => {
     if (data && data.totalAudits > 0) {
@@ -249,6 +272,97 @@ export default function ScoreScreen() {
 
         <View
           style={[
+            styles.section,
+            { backgroundColor: colors.card, borderColor: colors.cardBorder },
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <View
+              style={[styles.iconBubble, { backgroundColor: `${colors.violet}22` }]}
+            >
+              <Feather name="send" size={16} color={colors.violet} />
+            </View>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+              Send-through rate
+            </Text>
+          </View>
+          {sendStats && sendStats.totalPrompts > 0 ? (
+            <>
+              <View style={styles.sendStatsRow}>
+                <View style={styles.sendStat}>
+                  <Text
+                    style={[styles.sendStatValue, { color: colors.foreground }]}
+                  >
+                    {sendThroughRate}%
+                  </Text>
+                  <Text
+                    style={[
+                      styles.sendStatLabel,
+                      { color: colors.mutedForeground },
+                    ]}
+                  >
+                    Sent
+                  </Text>
+                </View>
+                <View style={styles.sendStat}>
+                  <Text
+                    style={[styles.sendStatValue, { color: colors.foreground }]}
+                  >
+                    {sendStats.sentCount}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.sendStatLabel,
+                      { color: colors.mutedForeground },
+                    ]}
+                  >
+                    Replies sent
+                  </Text>
+                </View>
+                <View style={styles.sendStat}>
+                  <Text
+                    style={[styles.sendStatValue, { color: colors.foreground }]}
+                  >
+                    {sendStats.totalPrompts}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.sendStatLabel,
+                      { color: colors.mutedForeground },
+                    ]}
+                  >
+                    Coached
+                  </Text>
+                </View>
+              </View>
+              <View
+                style={[
+                  styles.sendBarTrack,
+                  { backgroundColor: `${colors.violet}22` },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.sendBarFill,
+                    {
+                      backgroundColor: colors.violet,
+                      width: `${sendThroughRate}%`,
+                    },
+                  ]}
+                />
+              </View>
+            </>
+          ) : (
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+              Draft a reply in Coach and we'll check in two hours later. Once
+              you've answered a few of those nudges, your send-through rate will
+              show up here.
+            </Text>
+          )}
+        </View>
+
+        <View
+          style={[
             styles.footerCard,
             { backgroundColor: colors.card, borderColor: colors.cardBorder },
           ]}
@@ -336,6 +450,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "PlusJakartaSans_500Medium",
     lineHeight: 20,
+  },
+  sendStatsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 4,
+  },
+  sendStat: {
+    flex: 1,
+    alignItems: "center",
+    gap: 2,
+  },
+  sendStatValue: {
+    fontSize: 22,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  sendStatLabel: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_500Medium",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  sendBarTrack: {
+    height: 6,
+    borderRadius: 3,
+    overflow: "hidden",
+    marginTop: 6,
+  },
+  sendBarFill: {
+    height: "100%",
+    borderRadius: 3,
+  },
+  emptyText: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 19,
   },
   footerCard: {
     flexDirection: "row",
