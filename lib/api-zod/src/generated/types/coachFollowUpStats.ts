@@ -11,6 +11,8 @@ export interface CoachFollowUpStats {
   totalPrompts: number;
   sentCount: number;
   notSentCount: number;
+  snoozeCount: number;
+  dismissCount: number;
   /** @nullable */
   lastAnsweredAt: string | null;
   /** @nullable */

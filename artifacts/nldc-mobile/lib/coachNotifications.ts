@@ -351,7 +351,9 @@ export async function recordCoachFollowUp(
   }
 }
 
-export async function recordCoachSnoozed() {
+export async function recordCoachSnoozed(opts?: {
+  sessionId?: number | null;
+}) {
   try {
     const current = await loadCoachSendStats();
     const next: CoachSendStats = {
@@ -362,9 +364,20 @@ export async function recordCoachSnoozed() {
   } catch {
     // ignore
   }
+
+  try {
+    await apiRecordCoachFollowUp({
+      answer: "snoozed",
+      sessionId: opts?.sessionId ?? null,
+    });
+  } catch {
+    // Offline / unauthenticated — local AsyncStorage copy is enough for now.
+  }
 }
 
-export async function recordCoachDismissed() {
+export async function recordCoachDismissed(opts?: {
+  sessionId?: number | null;
+}) {
   try {
     const current = await loadCoachSendStats();
     const next: CoachSendStats = {
@@ -374,6 +387,15 @@ export async function recordCoachDismissed() {
     await AsyncStorage.setItem(SEND_STATS_KEY, JSON.stringify(next));
   } catch {
     // ignore
+  }
+
+  try {
+    await apiRecordCoachFollowUp({
+      answer: "dismissed",
+      sessionId: opts?.sessionId ?? null,
+    });
+  } catch {
+    // Offline / unauthenticated — local AsyncStorage copy is enough for now.
   }
 }
 

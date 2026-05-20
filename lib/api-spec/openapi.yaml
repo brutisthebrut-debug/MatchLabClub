@@ -1603,19 +1603,32 @@ components:
       properties:
         answer:
           type: string
-          enum: [sent, not_sent]
+          enum: [sent, not_sent, snoozed, dismissed]
         sessionId:
           type: ["integer", "null"]
 
     CoachFollowUpStats:
       type: object
-      required: [totalPrompts, sentCount, notSentCount, lastAnsweredAt, lastAnswer]
+      required:
+        [
+          totalPrompts,
+          sentCount,
+          notSentCount,
+          snoozeCount,
+          dismissCount,
+          lastAnsweredAt,
+          lastAnswer,
+        ]
       properties:
         totalPrompts:
           type: integer
         sentCount:
           type: integer
         notSentCount:
+          type: integer
+        snoozeCount:
+          type: integer
+        dismissCount:
           type: integer
         lastAnsweredAt:
           type: ["string", "null"]

@@ -12,4 +12,6 @@ export type CoachFollowUpInputAnswer = typeof CoachFollowUpInputAnswer[keyof typ
 export const CoachFollowUpInputAnswer = {
   sent: 'sent',
   not_sent: 'not_sent',
+  snoozed: 'snoozed',
+  dismissed: 'dismissed',
 } as const;

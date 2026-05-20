@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, eq, isNull, sql, type SQL } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
 import { db, coachFollowUpsTable } from "@workspace/db";
 import {
   RecordCoachFollowUpBody,
@@ -36,6 +36,8 @@ async function loadStats(
       totalPrompts: 0,
       sentCount: 0,
       notSentCount: 0,
+      snoozeCount: 0,
+      dismissCount: 0,
       lastAnsweredAt: null as string | null,
       lastAnswer: null as "sent" | "not_sent" | null,
     };
@@ -43,10 +45,12 @@ async function loadStats(
 
   const [agg] = await db
     .select({
-      total: sql<number>`count(*)::int`,
+      total: sql<number>`count(*) filter (where ${coachFollowUpsTable.answer} in ('sent', 'not_sent'))::int`,
       sent: sql<number>`count(*) filter (where ${coachFollowUpsTable.answer} = 'sent')::int`,
       notSent: sql<number>`count(*) filter (where ${coachFollowUpsTable.answer} = 'not_sent')::int`,
-      lastAt: sql<Date | string | null>`max(${coachFollowUpsTable.createdAt})`,
+      snoozed: sql<number>`count(*) filter (where ${coachFollowUpsTable.answer} = 'snoozed')::int`,
+      dismissed: sql<number>`count(*) filter (where ${coachFollowUpsTable.answer} = 'dismissed')::int`,
+      lastAt: sql<Date | string | null>`max(${coachFollowUpsTable.createdAt}) filter (where ${coachFollowUpsTable.answer} in ('sent', 'not_sent'))`,
     })
     .from(coachFollowUpsTable)
     .where(where);
@@ -56,7 +60,12 @@ async function loadStats(
     const [latest] = await db
       .select({ answer: coachFollowUpsTable.answer })
       .from(coachFollowUpsTable)
-      .where(where)
+      .where(
+        and(
+          where,
+          inArray(coachFollowUpsTable.answer, ["sent", "not_sent"]),
+        ),
+      )
       .orderBy(sql`${coachFollowUpsTable.createdAt} desc`)
       .limit(1);
     if (latest?.answer === "sent" || latest?.answer === "not_sent") {
@@ -68,6 +77,8 @@ async function loadStats(
     totalPrompts: agg?.total ?? 0,
     sentCount: agg?.sent ?? 0,
     notSentCount: agg?.notSent ?? 0,
+    snoozeCount: agg?.snoozed ?? 0,
+    dismissCount: agg?.dismissed ?? 0,
     lastAnsweredAt: agg?.lastAt
       ? (agg.lastAt instanceof Date
           ? agg.lastAt.toISOString()
