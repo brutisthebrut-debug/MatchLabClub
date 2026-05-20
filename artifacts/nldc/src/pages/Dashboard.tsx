@@ -352,13 +352,15 @@ export default function Dashboard() {
 
   // Sync filter state → URL so choices survive page reload and navigation.
   // We drive state → URL (not URL → state) to avoid feedback loops.
+  // NOTE: target must stay on /dashboard — using "/" here would immediately
+  // redirect the user back to the Landing page on every mount.
   useEffect(() => {
     const params = new URLSearchParams();
     if (debouncedQuery) params.set("q", debouncedQuery);
     if (sort !== "newest") params.set("sort", sort);
     if (scoreRange !== "all") params.set("range", scoreRange);
     const newSearch = params.toString();
-    const target = newSearch ? `/?${newSearch}` : "/";
+    const target = newSearch ? `/dashboard?${newSearch}` : "/dashboard";
     navigate(target, { replace: true });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedQuery, sort, scoreRange]);

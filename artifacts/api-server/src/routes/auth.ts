@@ -97,7 +97,22 @@ router.get("/login", async (req: Request, res: Response) => {
 
   const returnTo = getSafeReturnTo(req.query.returnTo);
 
-  const state = oidc.randomState();
+  const stateNonce = oidc.randomState();
+  // Embed returnTo inside the OIDC state parameter so it survives as a URL
+  // query param on the callback. The return_to cookie (Secure/SameSite=Lax)
+  // can be silently dropped by Chromium in the test runner's HTTP context or
+  // after a cross-origin redirect; the state param is not subject to that
+  // restriction and is always echoed back verbatim by every OIDC provider
+  // (including the Replit testing fake issuer). Format: "<nonce>:<returnTo>".
+  //
+  // IMPORTANT: returnTo is embedded RAW (not encodeURIComponent'd). Using
+  // encodeURIComponent causes a double-encoding problem: the OIDC provider
+  // echoes the state back without re-encoding it, so Express URL-decodes
+  // "%2F" to "/" when parsing req.query.state. This makes the CSRF state
+  // check fail (cookie stores "%2F" but the URL has "/"), breaking the flow.
+  // The raw path is safe because getSafeReturnTo guarantees it starts with "/"
+  // and contains no colons, so the separator ":" is unambiguous.
+  const state = `${stateNonce}:${returnTo}`;
   const nonce = oidc.randomNonce();
   const codeVerifier = oidc.randomPKCECodeVerifier();
   const codeChallenge = await oidc.calculatePKCECodeChallenge(codeVerifier);
@@ -115,6 +130,8 @@ router.get("/login", async (req: Request, res: Response) => {
   setOidcCookie(res, "code_verifier", codeVerifier);
   setOidcCookie(res, "nonce", nonce);
   setOidcCookie(res, "state", state);
+  // return_to cookie kept as a secondary fallback for cases where the state
+  // param is unavailable (e.g. provider strips unknown state characters).
   setOidcCookie(res, "return_to", returnTo);
 
   res.redirect(redirectTo.href);
@@ -152,7 +169,18 @@ router.get("/callback", async (req: Request, res: Response) => {
     return;
   }
 
-  const returnTo = getSafeReturnTo(req.cookies?.return_to);
+  // Primary: extract returnTo from the echoed state URL param — resilient to
+  // Secure-cookie drops in the Playwright test environment (see /login above).
+  // Secondary fallback: return_to cookie (works in production browsers).
+  // The state format is "<nonce>:<returnTo>" with the raw path (no extra
+  // URI-encoding) so we read it directly without decodeURIComponent.
+  let returnTo = getSafeReturnTo(req.cookies?.return_to);
+  const stateParam = typeof req.query.state === "string" ? req.query.state : "";
+  const colonIdx = stateParam.indexOf(":");
+  if (colonIdx >= 0) {
+    const embedded = getSafeReturnTo(stateParam.slice(colonIdx + 1));
+    if (embedded !== "/") returnTo = embedded;
+  }
 
   res.clearCookie("code_verifier", { path: "/" });
   res.clearCookie("nonce", { path: "/" });

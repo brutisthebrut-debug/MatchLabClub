@@ -70,11 +70,11 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
   const when = now.toUTCString();
   const device = describeUserAgent(userAgent);
   const displayIp = ip || "unknown";
-  const location = describeIpLocation(ip);
+  const displayLocation = describeIpLocation(ip);
   const channelLabel = channel === "mobile" ? "the mobile app" : "the web app";
 
   // Plain-text: "Berlin, DE (1.2.3.4)" when location known, otherwise just the IP
-  const displayIpLine = location ? `${location} (${displayIp})` : displayIp;
+  const displayIpLine = displayLocation ? `${displayLocation} (${displayIp})` : displayIp;
 
   const text = [
     `Hi ${name},`,
@@ -92,8 +92,8 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
   ].join("\n");
 
   // HTML: show location as the label with raw IP as tooltip; fall back to just the IP
-  const htmlIpField = location
-    ? `<span title="${displayIp}">${location}</span>`
+  const htmlIpField = displayLocation
+    ? `<span title="${displayIp}">${displayLocation}</span>`
     : displayIp;
 
   const html = `<!doctype html>
@@ -134,7 +134,7 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
 async function sendNewSignInPushNotification(opts: {
   userId: string;
   device: string;
-  displayLocation: string;
+  displayLocation: string | null;
 }): Promise<void> {
   const { userId, device, displayLocation } = opts;
 
@@ -161,7 +161,7 @@ async function sendNewSignInPushNotification(opts: {
     .map((r) => ({
       to: r.token,
       title: "New sign-in detected",
-      body: `${device} · ${displayLocation}`,
+      body: displayLocation ? `${device} · ${displayLocation}` : device,
       sound: "default" as const,
       data: { type: NEW_SIGN_IN_NOTIFICATION_TYPE, screen: "/sessions" },
     }));

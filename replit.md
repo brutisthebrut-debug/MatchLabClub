@@ -82,6 +82,8 @@ _Populate as you build — explicit user instructions worth remembering across s
 - `pnpm --filter @workspace/nldc run typecheck` for frontend type checking (not `build`)
 - CSS: Google Fonts `@import url(...)` must appear at the very top of `index.css` (before Tailwind imports)
 - All API hooks from `@workspace/api-client-react`; mutations use `mutate({ data: { ... } })`
+- **Dashboard filter-sync effect must navigate to `/dashboard`, not `/`** — `Dashboard.tsx` has a `useEffect` that syncs filter state (search query, sort, score range) to the URL. Its `target` must always be `/dashboard[?params]`. Using `"/"` as the no-filter fallback immediately redirects every Dashboard mount to the Landing page. See `artifacts/nldc/src/pages/Dashboard.tsx` around the `debouncedQuery/sort/scoreRange` effect.
+- **OIDC `state` embed: use raw path, no `encodeURIComponent`** — `auth.ts` embeds `returnTo` in the OIDC state as `"<nonce>:<returnTo>"`. Do NOT wrap `returnTo` with `encodeURIComponent`: the Replit fake OIDC issuer echoes state without re-encoding it, so Express URL-decodes `%2F` to `/` on the callback, creating a mismatch between the stored cookie state and `req.query.state` → CSRF validation fails → redirect to `/`. The raw path survives round-trips correctly.
 
 ## Pointers
 
