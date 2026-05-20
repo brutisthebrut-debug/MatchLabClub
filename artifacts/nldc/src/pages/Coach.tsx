@@ -10,11 +10,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   useListMessageCoachingSessions, useCreateMessageCoachingSession,
   useCoachMessage, getListMessageCoachingSessionsQueryKey,
+  useGetCoachFollowUpStats, getGetCoachFollowUpStatsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
-import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Clock, ArrowRight, Sparkles } from "lucide-react";
+import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Clock, ArrowRight, Sparkles, Send } from "lucide-react";
 
 const GOALS = ["Get a date", "Keep it going", "Recover from awkward", "Re-engage after ghosting"];
 
@@ -85,6 +86,9 @@ export default function Coach() {
 
   const { isAuthenticated } = useAuth();
   const { data: sessions, isLoading: sessionsLoading } = useListMessageCoachingSessions();
+  const { data: followUpStats } = useGetCoachFollowUpStats({
+    query: { enabled: isAuthenticated, queryKey: getGetCoachFollowUpStatsQueryKey() },
+  });
   const createSession = useCreateMessageCoachingSession();
   const coachMessage = useCoachMessage();
   const isLoading = createSession.isPending || coachMessage.isPending;
@@ -207,6 +211,63 @@ export default function Coach() {
               </Button>
             </motion.div>
 
+            <div className="space-y-5">
+            {/* Send-through stats */}
+            {isAuthenticated && followUpStats && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
+                className="glass border border-white/8 rounded-3xl p-5"
+                data-testid="card-send-through-stats"
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <Send className="w-4 h-4 text-[hsl(190_55%_60%)]" />
+                  <p className="font-semibold text-foreground text-xs uppercase tracking-wider">Send-through</p>
+                </div>
+                {followUpStats.totalPrompts === 0 ? (
+                  <p className="text-xs text-muted-foreground leading-relaxed" data-testid="stats-empty-state">
+                    Answer the "did you send it?" prompts in the mobile app and we'll track how often your coached replies actually go out.
+                  </p>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      <div className="text-center">
+                        <p className="text-xl font-bold text-foreground" data-testid="stats-total-prompts">{followUpStats.totalPrompts}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">Prompts</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xl font-bold text-[hsl(142_55%_60%)]" data-testid="stats-sent-count">{followUpStats.sentCount}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">Sent</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xl font-bold text-muted-foreground" data-testid="stats-not-sent-count">{followUpStats.notSentCount}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">Skipped</p>
+                      </div>
+                    </div>
+                    {followUpStats.lastAnswer && followUpStats.lastAnsweredAt && (
+                      <div className="pt-3 border-t border-white/8">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Last answer</p>
+                        <div className="flex items-center justify-between">
+                          <span
+                            className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                            style={{
+                              background: followUpStats.lastAnswer === "sent" ? "hsl(142 55% 60% / 0.15)" : "hsl(232 28% 22%)",
+                              color: followUpStats.lastAnswer === "sent" ? "hsl(142 55% 70%)" : "hsl(0 0% 70%)",
+                            }}
+                            data-testid="stats-last-answer"
+                          >
+                            {followUpStats.lastAnswer === "sent" ? "Sent" : "Not sent"}
+                          </span>
+                          <span className="text-xs text-muted-foreground" data-testid="stats-last-answered-at">
+                            {new Date(followUpStats.lastAnsweredAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </motion.div>
+            )}
+
             {/* Recent Sessions */}
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
@@ -233,6 +294,7 @@ export default function Coach() {
               </div>
               )}
             </motion.div>
+            </div>
           </div>
 
           {/* Results */}
