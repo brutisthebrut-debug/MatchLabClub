@@ -13,4 +13,5 @@ export interface RedeemAnonymousClaimHandoffInput {
   profileIds?: number[];
   messageSessionIds?: number[];
   insightIds?: number[];
+  followUpIds?: number[];
 }

@@ -11,4 +11,5 @@ export type ClaimAnonymousResultClaimed = {
   profiles: number;
   messages: number;
   insights: number;
+  followUps: number;
 };

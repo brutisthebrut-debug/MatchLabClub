@@ -6,6 +6,7 @@ import {
   profilesTable,
   messageCoachingSessionsTable,
   emailInsightsTable,
+  coachFollowUpsTable,
 } from "@workspace/db";
 import {
   ClaimAnonymousDataBody,
@@ -27,6 +28,7 @@ interface ClaimIds {
   profileIds?: number[];
   messageSessionIds?: number[];
   insightIds?: number[];
+  followUpIds?: number[];
 }
 
 interface ClaimedCounts {
@@ -34,6 +36,7 @@ interface ClaimedCounts {
   profiles: number;
   messages: number;
   insights: number;
+  followUps: number;
 }
 
 function dedup(xs: number[] | undefined): number[] {
@@ -59,8 +62,9 @@ async function claimByAnonToken(
   const p = dedup(ids.profileIds);
   const m = dedup(ids.messageSessionIds);
   const i = dedup(ids.insightIds);
+  const f = dedup(ids.followUpIds);
 
-  const [audits, profiles, messages, insights] = await Promise.all([
+  const [audits, profiles, messages, insights, followUps] = await Promise.all([
     a.length
       ? db
           .update(auditsTable)
@@ -113,6 +117,19 @@ async function claimByAnonToken(
           )
           .returning({ id: emailInsightsTable.id })
       : Promise.resolve([]),
+    f.length
+      ? db
+          .update(coachFollowUpsTable)
+          .set({ userId, anonymousClaimToken: null })
+          .where(
+            and(
+              inArray(coachFollowUpsTable.id, f),
+              isNull(coachFollowUpsTable.userId),
+              eq(coachFollowUpsTable.anonymousClaimToken, anonToken),
+            ),
+          )
+          .returning({ id: coachFollowUpsTable.id })
+      : Promise.resolve([]),
   ]);
 
   return {
@@ -120,6 +137,7 @@ async function claimByAnonToken(
     profiles: profiles.length,
     messages: messages.length,
     insights: insights.length,
+    followUps: followUps.length,
   };
 }
 
@@ -134,9 +152,14 @@ function logIfShortfall(
     dedup(ids.auditIds).length +
     dedup(ids.profileIds).length +
     dedup(ids.messageSessionIds).length +
-    dedup(ids.insightIds).length;
+    dedup(ids.insightIds).length +
+    dedup(ids.followUpIds).length;
   const claimed =
-    counts.audits + counts.profiles + counts.messages + counts.insights;
+    counts.audits +
+    counts.profiles +
+    counts.messages +
+    counts.insights +
+    counts.followUps;
   if (requested > claimed) {
     req.log.warn(
       { userId, requested, claimed, via },
@@ -169,7 +192,13 @@ router.post("/claim-anonymous", async (req, res): Promise<void> => {
   if (!anonToken) {
     res.json(
       ClaimAnonymousDataResponse.parse({
-        claimed: { audits: 0, profiles: 0, messages: 0, insights: 0 },
+        claimed: {
+          audits: 0,
+          profiles: 0,
+          messages: 0,
+          insights: 0,
+          followUps: 0,
+        },
       }),
     );
     return;

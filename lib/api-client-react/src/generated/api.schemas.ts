@@ -52,6 +52,7 @@ export interface ClaimAnonymousInput {
   profileIds?: number[];
   messageSessionIds?: number[];
   insightIds?: number[];
+  followUpIds?: number[];
 }
 
 export interface AnonymousClaimHandoff {
@@ -67,6 +68,7 @@ export interface RedeemAnonymousClaimHandoffInput {
   profileIds?: number[];
   messageSessionIds?: number[];
   insightIds?: number[];
+  followUpIds?: number[];
 }
 
 export type ClaimAnonymousResultClaimed = {
@@ -74,6 +76,7 @@ export type ClaimAnonymousResultClaimed = {
   profiles: number;
   messages: number;
   insights: number;
+  followUps: number;
 };
 
 export interface ClaimAnonymousResult {

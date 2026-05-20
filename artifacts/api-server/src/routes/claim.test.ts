@@ -11,6 +11,7 @@ import {
   profilesTable,
   messageCoachingSessionsTable,
   emailInsightsTable,
+  coachFollowUpsTable,
 } from "@workspace/db";
 import type { AuthUser } from "@workspace/api-zod";
 import claimRouter from "./claim";
@@ -86,8 +87,11 @@ interface SeedIds {
   ownedProfileId: number;
   ownedMessageId: number;
   ownedInsightId: number;
+  ownedFollowUpId: number;
   otherUsersAuditId: number;
+  otherUsersFollowUpId: number;
   strangerAnonAuditId: number;
+  strangerAnonFollowUpId: number;
 }
 
 async function seed(token: string): Promise<SeedIds> {
@@ -131,6 +135,14 @@ async function seed(token: string): Promise<SeedIds> {
     })
     .returning({ id: emailInsightsTable.id });
 
+  const [ownedFollowUp] = await db
+    .insert(coachFollowUpsTable)
+    .values({
+      answer: "Try opening with a question about her photo.",
+      anonymousClaimToken: token,
+    })
+    .returning({ id: coachFollowUpsTable.id });
+
   // Row already owned by a different user — must NEVER be claimed.
   const [otherUsersAudit] = await db
     .insert(auditsTable)
@@ -144,6 +156,15 @@ async function seed(token: string): Promise<SeedIds> {
       anonymousClaimToken: null,
     })
     .returning({ id: auditsTable.id });
+
+  const [otherUsersFollowUp] = await db
+    .insert(coachFollowUpsTable)
+    .values({
+      answer: "Already-owned follow-up answer.",
+      userId: OTHER_USER_ID,
+      anonymousClaimToken: null,
+    })
+    .returning({ id: coachFollowUpsTable.id });
 
   // Row created by a different anonymous browser (different token).
   // The caller doesn't have this token, so it must be ignored.
@@ -159,13 +180,24 @@ async function seed(token: string): Promise<SeedIds> {
     })
     .returning({ id: auditsTable.id });
 
+  const [strangerAnonFollowUp] = await db
+    .insert(coachFollowUpsTable)
+    .values({
+      answer: "Stranger anon follow-up.",
+      anonymousClaimToken: makeToken(),
+    })
+    .returning({ id: coachFollowUpsTable.id });
+
   return {
     ownedAuditId: ownedAudit.id,
     ownedProfileId: ownedProfile.id,
     ownedMessageId: ownedMessage.id,
     ownedInsightId: ownedInsight.id,
+    ownedFollowUpId: ownedFollowUp.id,
     otherUsersAuditId: otherUsersAudit.id,
+    otherUsersFollowUpId: otherUsersFollowUp.id,
     strangerAnonAuditId: strangerAnonAudit.id,
+    strangerAnonFollowUpId: strangerAnonFollowUp.id,
   };
 }
 
@@ -186,6 +218,15 @@ async function cleanup(ids: SeedIds): Promise<void> {
   await db
     .delete(emailInsightsTable)
     .where(eq(emailInsightsTable.id, ids.ownedInsightId));
+  await db
+    .delete(coachFollowUpsTable)
+    .where(
+      inArray(coachFollowUpsTable.id, [
+        ids.ownedFollowUpId,
+        ids.otherUsersFollowUpId,
+        ids.strangerAnonFollowUpId,
+      ]),
+    );
 }
 
 describe("POST /api/claim-anonymous", () => {
@@ -231,11 +272,18 @@ describe("POST /api/claim-anonymous", () => {
           profileIds: [ids.ownedProfileId],
           messageSessionIds: [ids.ownedMessageId],
           insightIds: [ids.ownedInsightId],
+          followUpIds: [ids.ownedFollowUpId],
         });
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual({
-        claimed: { audits: 1, profiles: 1, messages: 1, insights: 1 },
+        claimed: {
+          audits: 1,
+          profiles: 1,
+          messages: 1,
+          insights: 1,
+          followUps: 1,
+        },
       });
 
       const [audit] = await db
@@ -263,6 +311,13 @@ describe("POST /api/claim-anonymous", () => {
         .from(emailInsightsTable)
         .where(eq(emailInsightsTable.id, ids.ownedInsightId));
       expect(insight.userId).toBe(TEST_USER_ID);
+
+      const [followUp] = await db
+        .select()
+        .from(coachFollowUpsTable)
+        .where(eq(coachFollowUpsTable.id, ids.ownedFollowUpId));
+      expect(followUp.userId).toBe(TEST_USER_ID);
+      expect(followUp.anonymousClaimToken).toBeNull();
 
       // anon_claim cookie should be cleared after a successful claim
       const setCookie = res.headers["set-cookie"];
@@ -329,6 +384,47 @@ describe("POST /api/claim-anonymous", () => {
     }
   });
 
+  it("claims follow-ups matching the caller's token and ignores foreign ones", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    try {
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous")
+        .set("Cookie", [`${ANON_CLAIM_COOKIE}=${token}`])
+        .send({
+          followUpIds: [
+            ids.ownedFollowUpId,
+            ids.strangerAnonFollowUpId,
+            ids.otherUsersFollowUpId,
+          ],
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.claimed.followUps).toBe(1);
+
+      const [owned] = await db
+        .select()
+        .from(coachFollowUpsTable)
+        .where(eq(coachFollowUpsTable.id, ids.ownedFollowUpId));
+      expect(owned.userId).toBe(TEST_USER_ID);
+      expect(owned.anonymousClaimToken).toBeNull();
+
+      const [stranger] = await db
+        .select()
+        .from(coachFollowUpsTable)
+        .where(eq(coachFollowUpsTable.id, ids.strangerAnonFollowUpId));
+      expect(stranger.userId).toBeNull();
+      expect(stranger.anonymousClaimToken).not.toBe(token);
+
+      const [other] = await db
+        .select()
+        .from(coachFollowUpsTable)
+        .where(eq(coachFollowUpsTable.id, ids.otherUsersFollowUpId));
+      expect(other.userId).toBe(OTHER_USER_ID);
+    } finally {
+      await cleanup(ids);
+    }
+  });
+
   it("claims nothing (but still returns 200) when the caller has no anon cookie", async () => {
     testApp.setUser({ id: TEST_USER_ID });
     try {
@@ -339,7 +435,13 @@ describe("POST /api/claim-anonymous", () => {
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual({
-        claimed: { audits: 0, profiles: 0, messages: 0, insights: 0 },
+        claimed: {
+          audits: 0,
+          profiles: 0,
+          messages: 0,
+          insights: 0,
+          followUps: 0,
+        },
       });
 
       const [row] = await db
@@ -457,11 +559,18 @@ describe("POST /api/claim-anonymous/handoff/redeem", () => {
           profileIds: [ids.ownedProfileId],
           messageSessionIds: [ids.ownedMessageId],
           insightIds: [ids.ownedInsightId],
+          followUpIds: [ids.ownedFollowUpId],
         });
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual({
-        claimed: { audits: 1, profiles: 1, messages: 1, insights: 1 },
+        claimed: {
+          audits: 1,
+          profiles: 1,
+          messages: 1,
+          insights: 1,
+          followUps: 1,
+        },
       });
 
       const [audit] = await db
@@ -470,6 +579,13 @@ describe("POST /api/claim-anonymous/handoff/redeem", () => {
         .where(eq(auditsTable.id, ids.ownedAuditId));
       expect(audit.userId).toBe(TEST_USER_ID);
       expect(audit.anonymousClaimToken).toBeNull();
+
+      const [followUp] = await db
+        .select()
+        .from(coachFollowUpsTable)
+        .where(eq(coachFollowUpsTable.id, ids.ownedFollowUpId));
+      expect(followUp.userId).toBe(TEST_USER_ID);
+      expect(followUp.anonymousClaimToken).toBeNull();
     } finally {
       await cleanup(ids);
     }

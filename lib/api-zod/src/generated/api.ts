@@ -102,7 +102,8 @@ export const ClaimAnonymousDataBody = zod.object({
   "auditIds": zod.array(zod.number()).optional(),
   "profileIds": zod.array(zod.number()).optional(),
   "messageSessionIds": zod.array(zod.number()).optional(),
-  "insightIds": zod.array(zod.number()).optional()
+  "insightIds": zod.array(zod.number()).optional(),
+  "followUpIds": zod.array(zod.number()).optional()
 })
 
 export const ClaimAnonymousDataResponse = zod.object({
@@ -110,7 +111,8 @@ export const ClaimAnonymousDataResponse = zod.object({
   "audits": zod.number(),
   "profiles": zod.number(),
   "messages": zod.number(),
-  "insights": zod.number()
+  "insights": zod.number(),
+  "followUps": zod.number()
 })
 })
 
@@ -154,7 +156,8 @@ export const RedeemAnonymousClaimHandoffBody = zod.object({
   "auditIds": zod.array(zod.number()).optional(),
   "profileIds": zod.array(zod.number()).optional(),
   "messageSessionIds": zod.array(zod.number()).optional(),
-  "insightIds": zod.array(zod.number()).optional()
+  "insightIds": zod.array(zod.number()).optional(),
+  "followUpIds": zod.array(zod.number()).optional()
 })
 
 export const RedeemAnonymousClaimHandoffResponse = zod.object({
@@ -162,7 +165,8 @@ export const RedeemAnonymousClaimHandoffResponse = zod.object({
   "audits": zod.number(),
   "profiles": zod.number(),
   "messages": zod.number(),
-  "insights": zod.number()
+  "insights": zod.number(),
+  "followUps": zod.number()
 })
 })
 

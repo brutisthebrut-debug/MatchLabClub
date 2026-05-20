@@ -1098,6 +1098,10 @@ components:
           type: array
           items:
             type: integer
+        followUpIds:
+          type: array
+          items:
+            type: integer
     AnonymousClaimHandoff:
       type: object
       required: [handoff, expiresAt]
@@ -1131,13 +1135,17 @@ components:
           type: array
           items:
             type: integer
+        followUpIds:
+          type: array
+          items:
+            type: integer
     ClaimAnonymousResult:
       type: object
       required: [claimed]
       properties:
         claimed:
           type: object
-          required: [audits, profiles, messages, insights]
+          required: [audits, profiles, messages, insights, followUps]
           properties:
             audits:
               type: integer
@@ -1146,6 +1154,8 @@ components:
             messages:
               type: integer
             insights:
+              type: integer
+            followUps:
               type: integer
     HealthStatus:
       type: object
