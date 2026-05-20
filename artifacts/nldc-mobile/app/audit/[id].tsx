@@ -5,6 +5,7 @@ import {
   useDeleteAudit,
   useGenerateAuditReport,
   useGetAudit,
+  useGetEngineMeta,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -23,9 +24,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScoreRing } from "@/components/ScoreRing";
 import { useColors } from "@/hooks/useColors";
-
-// Keep in sync with `ENGINE_VERSION` in artifacts/api-server/src/lib/aiEngine.ts.
-const CURRENT_ENGINE_VERSION = "2026-05-20";
 
 function formatGeneratedAt(iso: string): string {
   const d = new Date(iso);
@@ -89,6 +87,8 @@ export default function AuditDetailScreen() {
   const queryClient = useQueryClient();
 
   const auditQuery = useGetAudit(valid ? id : 0);
+  const { data: engineMeta } = useGetEngineMeta();
+  const currentEngineVersion = engineMeta?.engineVersion ?? null;
   const generate = useGenerateAuditReport({
     mutation: {
       onSuccess: () => {
@@ -200,7 +200,9 @@ export default function AuditDetailScreen() {
     (storedReport as { engineVersion?: string | null } | null)?.engineVersion ??
     null;
   const isStaleEngine =
-    !!storedReport && storedEngineVersion !== CURRENT_ENGINE_VERSION;
+    !!storedReport &&
+    !!currentEngineVersion &&
+    storedEngineVersion !== currentEngineVersion;
 
   const regenerate = () => {
     if (!valid || generate.isPending) return;

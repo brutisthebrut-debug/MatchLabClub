@@ -6,7 +6,7 @@ import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import { useGetAudit, useGenerateAuditReport, getGetAuditQueryKey } from "@workspace/api-client-react";
+import { useGetAudit, useGenerateAuditReport, useGetEngineMeta, getGetAuditQueryKey } from "@workspace/api-client-react";
 import {
   CheckCircle, XCircle, AlertCircle, ArrowRight, Copy, Check,
   Trophy, Calendar, Eye, Sparkles, MessageSquare, Camera,
@@ -32,10 +32,6 @@ function hasChanges(c: ChangeSummary): boolean {
     c.removedRisks.length > 0
   );
 }
-
-// Keep in sync with `ENGINE_VERSION` in artifacts/api-server/src/lib/aiEngine.ts.
-// Saved reports tagged with a different (or missing) version are flagged as stale.
-const CURRENT_ENGINE_VERSION = "2026-05-20";
 
 function formatGeneratedAt(iso: string): string {
   const d = new Date(iso);
@@ -196,6 +192,9 @@ export default function Report() {
     query: { enabled: !!auditId, queryKey: getGetAuditQueryKey(auditId) }
   });
 
+  const { data: engineMeta } = useGetEngineMeta();
+  const currentEngineVersion = engineMeta?.engineVersion ?? null;
+
   const generateReport = useGenerateAuditReport();
   const [report, setReport] = useState<typeof DEMO_REPORT | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -283,7 +282,8 @@ export default function Report() {
   const isStaleEngine =
     !!auditId &&
     !!storedReport &&
-    storedEngineVersion !== CURRENT_ENGINE_VERSION;
+    !!currentEngineVersion &&
+    storedEngineVersion !== currentEngineVersion;
 
   return (
     <AppLayout>

@@ -64,6 +64,7 @@ export * from './emailInsightAnalysis';
 export * from './emailInsightInput';
 export * from './emailInsightStatus';
 export * from './emailMyDataExportResult';
+export * from './engineMeta';
 export * from './extractMessageScreenshot400';
 export * from './extractScreenshot400';
 export * from './getAiFallbackRateParams';

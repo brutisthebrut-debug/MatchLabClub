@@ -717,6 +717,23 @@ paths:
                   error:
                     type: string
 
+  /meta/engine:
+    get:
+      operationId: getEngineMeta
+      tags: [health]
+      summary: Get the current deterministic engine version
+      description: |
+        Returns the version tag of the deterministic audit engine currently
+        running on the server. Clients compare this against the `engineVersion`
+        stored on a saved report to decide whether the report is stale.
+      responses:
+        "200":
+          description: Current engine metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EngineMeta"
+
   /audits/summary:
     get:
       operationId: getAuditSummary
@@ -2323,6 +2340,17 @@ components:
               type: integer
             insights:
               type: integer
+
+    EngineMeta:
+      type: object
+      required: [engineVersion]
+      properties:
+        engineVersion:
+          type: string
+          description: |
+            Version tag of the deterministic audit engine currently running on
+            the server. Clients should treat saved reports tagged with a
+            different (or missing) version as stale.
 
     AiTestResult:
       type: object

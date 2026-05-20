@@ -840,6 +840,14 @@ export interface DeleteMyAccountResult {
   deleted: DeleteMyAccountResultDeleted;
 }
 
+export interface EngineMeta {
+  /** Version tag of the deterministic audit engine currently running on
+  the server. Clients should treat saved reports tagged with a
+  different (or missing) version as stale.
+   */
+  engineVersion: string;
+}
+
 export type AiTestResultMode = typeof AiTestResultMode[keyof typeof AiTestResultMode];
 
 

@@ -56,6 +56,7 @@ import type {
   EmailInsightAnalysis,
   EmailInsightInput,
   EmailMyDataExportResult,
+  EngineMeta,
   ExtractMessageScreenshot400,
   ExtractScreenshot400,
   GetAiFallbackRateParams,
@@ -2102,6 +2103,87 @@ export const useAuditFromScreenshot = <TError = ErrorType<AuditFromScreenshot400
       > => {
       return useMutation(getAuditFromScreenshotMutationOptions(options));
     }
+
+export const getGetEngineMetaUrl = () => {
+
+
+
+
+  return `/api/meta/engine`
+}
+
+/**
+ * Returns the version tag of the deterministic audit engine currently
+running on the server. Clients compare this against the `engineVersion`
+stored on a saved report to decide whether the report is stale.
+
+ * @summary Get the current deterministic engine version
+ */
+export const getEngineMeta = async ( options?: RequestInit): Promise<EngineMeta> => {
+
+  return customFetch<EngineMeta>(getGetEngineMetaUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEngineMetaQueryKey = () => {
+    return [
+    `/api/meta/engine`
+    ] as const;
+    }
+
+
+export const getGetEngineMetaQueryOptions = <TData = Awaited<ReturnType<typeof getEngineMeta>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEngineMeta>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEngineMetaQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEngineMeta>>> = ({ signal }) => getEngineMeta({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEngineMeta>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEngineMetaQueryResult = NonNullable<Awaited<ReturnType<typeof getEngineMeta>>>
+export type GetEngineMetaQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the current deterministic engine version
+ */
+
+export function useGetEngineMeta<TData = Awaited<ReturnType<typeof getEngineMeta>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEngineMeta>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEngineMetaQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetAuditSummaryUrl = () => {
 

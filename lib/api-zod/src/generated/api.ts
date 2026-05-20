@@ -1218,6 +1218,18 @@ export const AuditFromScreenshotResponse = zod.object({
 
 
 /**
+ * Returns the version tag of the deterministic audit engine currently
+running on the server. Clients compare this against the `engineVersion`
+stored on a saved report to decide whether the report is stale.
+
+ * @summary Get the current deterministic engine version
+ */
+export const GetEngineMetaResponse = zod.object({
+  "engineVersion": zod.string().describe('Version tag of the deterministic audit engine currently running on\nthe server. Clients should treat saved reports tagged with a\ndifferent (or missing) version as stale.\n')
+})
+
+
+/**
  * @summary Get aggregate summary of user audits (scores, trends)
  */
 export const GetAuditSummaryResponse = zod.object({
