@@ -4,6 +4,7 @@ import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Copy, Check, RefreshCw, Share2 } from "lucide-react";
+import { useAuth } from "@workspace/replit-auth-web";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -235,6 +236,8 @@ export default function Archetype() {
   const [answers, setAnswers] = useState<number[]>(Array(QUESTIONS.length).fill(-1));
   const [result, setResult] = useState<ArchetypeKey | null>(null);
   const answered = answers.filter(a => a >= 0).length;
+  const { isAuthenticated } = useAuth();
+  const isBrandNewUser = isAuthenticated && !result;
 
   function handleAnswer(qi: number, oi: number) {
     setAnswers(prev => { const n = [...prev]; n[qi] = oi; return n; });
@@ -259,6 +262,21 @@ export default function Archetype() {
             <h1 className="text-3xl font-bold text-foreground">Dating Archetype</h1>
             <p className="text-muted-foreground mt-2">Six questions. A shareable result that actually says something true about how you connect.</p>
           </motion.div>
+
+          {isBrandNewUser && (
+            <motion.div {...fadeUp(0.03)} className="mb-6" data-testid="archetype-empty-state">
+              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to Dating Archetype</p>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Find out how you actually connect</h2>
+                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
+                  Six quick questions and you'll get a shareable archetype that names your dating style, the risk loop underneath it, and the one experiment that could change your results.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           <AnimatePresence mode="wait">
             {!result ? (
