@@ -148,7 +148,7 @@ function isPromptQuestion(line: string): boolean {
   return startsWithAnyPrompt(line, ALL_PROMPTS);
 }
 
-function detectSourceApp(lines: string[]): SourceApp | null {
+export function detectSourceApp(lines: string[]): SourceApp | null {
   const text = lines.join("\n");
   const lower = text.toLowerCase();
   const scores: Record<SourceApp, number> = { Hinge: 0, Bumble: 0, Tinder: 0 };

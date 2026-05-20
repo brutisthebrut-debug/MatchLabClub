@@ -5,9 +5,12 @@ import {
   CreateMessageCoachingSessionBody,
   ListMessageCoachingSessionsResponse,
   CoachMessageResponse,
+  ExtractMessageScreenshotBody,
+  ExtractMessageScreenshotResponse,
 } from "@workspace/api-zod";
 import { generateMessageCoaching } from "../lib/aiEngine";
 import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
+import { extractChatFromScreenshot } from "../lib/ocr";
 
 const router: IRouter = Router();
 
@@ -54,6 +57,36 @@ router.post("/messages", async (req, res): Promise<void> => {
     ...session,
     createdAt: session.createdAt instanceof Date ? session.createdAt.toISOString() : String(session.createdAt),
   });
+});
+
+router.post("/messages/extract-screenshot", async (req, res): Promise<void> => {
+  const parsed = ExtractMessageScreenshotBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  let extracted: Awaited<ReturnType<typeof extractChatFromScreenshot>>;
+  try {
+    extracted = await extractChatFromScreenshot(parsed.data.imageBase64);
+  } catch (err) {
+    req.log.error({ err }, "Chat OCR failed");
+    res.status(400).json({ error: "Couldn't read text from that screenshot. Try a clearer image." });
+    return;
+  }
+
+  if (!extracted.conversationText) {
+    res.status(400).json({ error: "No readable conversation text found in the screenshot." });
+    return;
+  }
+
+  res.json(
+    ExtractMessageScreenshotResponse.parse({
+      conversationText: extracted.conversationText,
+      sourceApp: extracted.sourceApp,
+      rawOcrText: extracted.rawText,
+    }),
+  );
 });
 
 router.post("/messages/:id/coach", async (req, res): Promise<void> => {

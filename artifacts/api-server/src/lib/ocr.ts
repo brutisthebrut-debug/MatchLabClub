@@ -1,6 +1,6 @@
 import { createWorker, type Worker } from "tesseract.js";
 import { logger } from "./logger";
-import { parseProfileText, type SourceApp } from "./profileParser";
+import { parseProfileText, detectSourceApp, type SourceApp } from "./profileParser";
 
 export { parseProfileText, type SourceApp, type ParsedProfile } from "./profileParser";
 
@@ -70,4 +70,67 @@ export async function extractProfileFromScreenshot(imageBase64: string): Promise
 
   const parsed = parseProfileText(rawText);
   return { ...parsed, rawText };
+}
+
+const CHAT_UI_NOISE: RegExp[] = [
+  /^send like$/i,
+  /^send a like$/i,
+  /^send a compliment$/i,
+  /^send$/i,
+  /^reply$/i,
+  /^message$/i,
+  /^type a message/i,
+  /^aa$/i,
+  /^delivered$/i,
+  /^read$/i,
+  /^seen$/i,
+  /^it'?s a match/i,
+  /^unmatch$/i,
+  /^report$/i,
+  /^block$/i,
+  /^\d{1,2}:\d{2}\s*(am|pm)?$/i,
+  /^(yesterday|today|now|just now|\d+\s?(m|h|d)\s?ago)$/i,
+  /^(mon|tue|wed|thu|fri|sat|sun)(day)?$/i,
+  /^[•·●○◆■\s]+$/,
+];
+
+function isChatNoise(line: string): boolean {
+  if (line.length < 2) return true;
+  return CHAT_UI_NOISE.some((rx) => rx.test(line));
+}
+
+/**
+ * Run OCR on a chat-screenshot and return the conversation text and the
+ * detected source app. We do *not* try to attribute messages to speakers —
+ * the user can fix that in the textarea. The goal is just to seed the
+ * coaching form with the visible text and the right app badge.
+ */
+export async function extractChatFromScreenshot(imageBase64: string): Promise<{
+  conversationText: string;
+  sourceApp: SourceApp | null;
+  rawText: string;
+}> {
+  const cleaned = stripDataUrlPrefix(imageBase64.trim());
+  if (!cleaned) {
+    throw new Error("Empty image payload");
+  }
+  const buffer = Buffer.from(cleaned, "base64");
+  if (buffer.length === 0) {
+    throw new Error("Invalid base64 image");
+  }
+
+  const worker = await getWorker();
+  const { data } = await worker.recognize(buffer);
+  const rawText = (data.text || "").trim();
+  logger.debug({ length: rawText.length }, "Chat OCR completed");
+
+  const lines = rawText
+    .split(/\r?\n/)
+    .map((l) => l.replace(/\s+/g, " ").trim())
+    .filter((l) => l.length > 0);
+
+  const sourceApp = detectSourceApp(lines);
+  const conversationText = lines.filter((l) => !isChatNoise(l)).join("\n");
+
+  return { conversationText, sourceApp, rawText };
 }

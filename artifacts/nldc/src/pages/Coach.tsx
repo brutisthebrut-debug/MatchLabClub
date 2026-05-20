@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
@@ -12,12 +12,13 @@ import {
   useCoachMessage, getListMessageCoachingSessionsQueryKey,
   useGetCoachFollowUpStats, getGetCoachFollowUpStatsQueryKey,
   useGetCoachFollowUpTimeline, getGetCoachFollowUpTimelineQueryKey,
+  useExtractMessageScreenshot,
 } from "@workspace/api-client-react";
 import { BarChart, Bar, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
-import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Clock, ArrowRight, Sparkles, Send } from "lucide-react";
+import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Clock, ArrowRight, Sparkles, Send, Upload, X, AlertCircle } from "lucide-react";
 
 const GOALS = ["Get a date", "Keep it going", "Recover from awkward", "Re-engage after ghosting"];
 const SOURCE_APPS = ["Hinge", "Bumble", "Tinder"] as const;
@@ -88,6 +89,33 @@ const STYLE_BG: Record<string, string> = {
   Warm: "hsl(43 65% 62% / 0.1)",
 };
 
+function fileToBase64(file: File): Promise<{ dataUrl: string; base64: string }> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error ?? new Error("Could not read file"));
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result !== "string") {
+        reject(new Error("Unexpected file reader result"));
+        return;
+      }
+      const comma = result.indexOf(",");
+      const base64 = comma >= 0 ? result.slice(comma + 1) : result;
+      resolve({ dataUrl: result, base64 });
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function normalizeAppName(value: string | null | undefined): SourceApp | "" {
+  if (!value) return "";
+  const lower = value.toLowerCase();
+  if (lower.includes("hinge")) return "Hinge";
+  if (lower.includes("bumble")) return "Bumble";
+  if (lower.includes("tinder")) return "Tinder";
+  return "";
+}
+
 export default function Coach() {
   useMeta("Message Coach", "Paste any dating app conversation and get three personalised reply options — Playful, Direct, and Warm — with coaching rationale for each.");
   const [matchName, setMatchName] = useState("");
@@ -97,8 +125,13 @@ export default function Coach() {
   const [sourceApp, setSourceApp] = useState<SourceApp | "">("");
   const [result, setResult] = useState<CoachingResult | null>(null);
   const [resultApp, setResultApp] = useState<SourceApp | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [screenshotError, setScreenshotError] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const detectedApp = sourceApp || detectAppFromText(`${context}\n${lastMessage}`) || "";
   const queryClient = useQueryClient();
+  const extractScreenshot = useExtractMessageScreenshot();
 
   const { isAuthenticated } = useAuth();
   const { data: sessions, isLoading: sessionsLoading } = useListMessageCoachingSessions();
@@ -113,6 +146,60 @@ export default function Coach() {
   const isLoading = createSession.isPending || coachMessage.isPending;
   const hasSessions = !!(sessions && sessions.length > 0);
   const isBrandNewUser = isAuthenticated && !sessionsLoading && !hasSessions && !result;
+
+  async function processScreenshotFile(file: File | null | undefined) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setScreenshotError("That doesn't look like an image. Try a PNG or JPEG.");
+      return;
+    }
+    setScreenshotError(null);
+    try {
+      const img = await fileToBase64(file);
+      setScreenshotPreview(img.dataUrl);
+      const res = await extractScreenshot.mutateAsync({
+        data: { imageBase64: img.base64 },
+      });
+      if (res.conversationText) {
+        setContext((prev) => (prev.trim() ? `${prev}\n${res.conversationText}` : res.conversationText));
+      }
+      const detected = normalizeAppName(res.sourceApp);
+      if (detected) setSourceApp(detected);
+    } catch (err) {
+      setScreenshotError(
+        err instanceof Error && err.message
+          ? "Couldn't read that screenshot. Try a clearer image."
+          : "Couldn't read that screenshot. Try a clearer image.",
+      );
+    }
+  }
+
+  function clearScreenshot() {
+    setScreenshotPreview(null);
+    setScreenshotError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  useEffect(() => {
+    function onPaste(e: ClipboardEvent) {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.kind === "file" && item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            void processScreenshotFile(file);
+            return;
+          }
+        }
+      }
+    }
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleCoach() {
     const appForRequest =
@@ -169,6 +256,97 @@ export default function Coach() {
               </div>
             </motion.div>
           )}
+
+          {/* Screenshot upload */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }}
+            className="mb-5"
+          >
+            <div
+              onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+              onDragLeave={() => setIsDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragOver(false);
+                const file = e.dataTransfer.files?.[0];
+                if (file) void processScreenshotFile(file);
+              }}
+              className={`glass border rounded-3xl p-5 transition-colors ${isDragOver ? "border-[hsl(268_52%_68%/0.6)] bg-[hsl(268_52%_68%/0.06)]" : "border-white/8"}`}
+              data-testid="card-coach-screenshot"
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => void processScreenshotFile(e.target.files?.[0])}
+                data-testid="input-coach-screenshot"
+              />
+              {screenshotPreview ? (
+                <div className="flex flex-col sm:flex-row items-start gap-4">
+                  <img
+                    src={screenshotPreview}
+                    alt="Chat screenshot preview"
+                    className="w-full sm:w-40 max-h-48 object-contain rounded-xl border border-white/8 bg-black/30"
+                    data-testid="img-coach-screenshot-preview"
+                  />
+                  <div className="flex-1 space-y-2">
+                    <p className="text-sm font-semibold text-foreground">
+                      {extractScreenshot.isPending ? "Reading screenshot…" : "Conversation auto-filled below"}
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {extractScreenshot.isPending
+                        ? "We're pulling the text and detecting which app this is from."
+                        : "Tidy anything that looks wrong, set your last message, and run the coach."}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearScreenshot}
+                      className="rounded-full"
+                      data-testid="button-coach-screenshot-clear"
+                    >
+                      <X className="h-3.5 w-3.5 mr-1.5" /> Remove
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[hsl(285_45%_62%)] to-[hsl(268_52%_58%)] flex items-center justify-center shrink-0">
+                    <Upload className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-semibold text-foreground">Drop a chat screenshot</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Drag it here, paste it (⌘V / Ctrl+V), or pick a file. We'll OCR the conversation and auto-detect the app.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={extractScreenshot.isPending}
+                    size="sm"
+                    className="rounded-full"
+                    data-testid="button-coach-screenshot-choose"
+                  >
+                    {extractScreenshot.isPending ? (
+                      <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Reading…</>
+                    ) : (
+                      <><Upload className="h-3.5 w-3.5 mr-1.5" /> Choose screenshot</>
+                    )}
+                  </Button>
+                </div>
+              )}
+              {screenshotError ? (
+                <div
+                  className="mt-3 flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive"
+                  data-testid="text-coach-screenshot-error"
+                >
+                  <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                  <span>{screenshotError}</span>
+                </div>
+              ) : null}
+            </div>
+          </motion.div>
 
           <div className="grid md:grid-cols-3 gap-5">
             {/* Form */}

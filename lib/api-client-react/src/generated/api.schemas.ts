@@ -275,6 +275,27 @@ export interface ScreenshotExtractResult {
   lowConfidenceFields: ScreenshotExtractResultLowConfidenceFieldsItem[];
 }
 
+export interface ChatScreenshotExtractInput {
+  /** Base64-encoded screenshot of a dating-app chat. May include a data
+  URL prefix (e.g. "data:image/jpeg;base64,..."); the server strips it.
+   */
+  imageBase64: string;
+}
+
+export interface ChatScreenshotExtractResult {
+  /** OCR-extracted conversation text, with obvious UI chrome (timestamps,
+  "Delivered", "Send", etc.) filtered out. The user is expected to
+  tidy it up in the Coach textarea before submitting.
+   */
+  conversationText: string;
+  /**
+     * Detected source app — "Hinge", "Bumble", "Tinder", or null when undetectable.
+     * @nullable
+     */
+  sourceApp?: string | null;
+  rawOcrText: string;
+}
+
 /**
  * The parser's original guesses from the prior extract-screenshot call.
 When the corrected values differ, the diff is recorded against the
@@ -821,6 +842,10 @@ export type ExtractScreenshot400 = {
 };
 
 export type AuditFromScreenshot400 = {
+  error?: string;
+};
+
+export type ExtractMessageScreenshot400 = {
   error?: string;
 };
 

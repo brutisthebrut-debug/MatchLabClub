@@ -38,6 +38,8 @@ import type {
   BeginBrowserLoginParams,
   BulkDeleteAuditsInput,
   BulkDeleteAuditsResult,
+  ChatScreenshotExtractInput,
+  ChatScreenshotExtractResult,
   ClaimAnonymousInput,
   ClaimAnonymousResult,
   CoachFollowUpInput,
@@ -52,6 +54,7 @@ import type {
   EmailInsightAnalysis,
   EmailInsightInput,
   EmailMyDataExportResult,
+  ExtractMessageScreenshot400,
   ExtractScreenshot400,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
@@ -2757,6 +2760,83 @@ export const useCoachMessage = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCoachMessageMutationOptions(options));
+    }
+
+export const getExtractMessageScreenshotUrl = () => {
+
+
+
+
+  return `/api/messages/extract-screenshot`
+}
+
+/**
+ * Accepts a base64-encoded screenshot of a dating-app chat and returns the
+OCR-extracted conversation text plus the detected source app (Hinge,
+Bumble, Tinder). No coaching session is persisted — the client should
+seed the coach form with these values and let the user correct
+anything before submitting.
+
+ * @summary OCR a chat screenshot and return conversation text + detected source app
+ */
+export const extractMessageScreenshot = async (chatScreenshotExtractInput: ChatScreenshotExtractInput, options?: RequestInit): Promise<ChatScreenshotExtractResult> => {
+
+  return customFetch<ChatScreenshotExtractResult>(getExtractMessageScreenshotUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      chatScreenshotExtractInput,)
+  }
+);}
+
+
+
+
+export const getExtractMessageScreenshotMutationOptions = <TError = ErrorType<ExtractMessageScreenshot400>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof extractMessageScreenshot>>, TError,{data: BodyType<ChatScreenshotExtractInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof extractMessageScreenshot>>, TError,{data: BodyType<ChatScreenshotExtractInput>}, TContext> => {
+
+const mutationKey = ['extractMessageScreenshot'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof extractMessageScreenshot>>, {data: BodyType<ChatScreenshotExtractInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  extractMessageScreenshot(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ExtractMessageScreenshotMutationResult = NonNullable<Awaited<ReturnType<typeof extractMessageScreenshot>>>
+    export type ExtractMessageScreenshotMutationBody = BodyType<ChatScreenshotExtractInput>
+    export type ExtractMessageScreenshotMutationError = ErrorType<ExtractMessageScreenshot400>
+
+    /**
+ * @summary OCR a chat screenshot and return conversation text + detected source app
+ */
+export const useExtractMessageScreenshot = <TError = ErrorType<ExtractMessageScreenshot400>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof extractMessageScreenshot>>, TError,{data: BodyType<ChatScreenshotExtractInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof extractMessageScreenshot>>,
+        TError,
+        {data: BodyType<ChatScreenshotExtractInput>},
+        TContext
+      > => {
+      return useMutation(getExtractMessageScreenshotMutationOptions(options));
     }
 
 export const getRecordCoachFollowUpUrl = () => {

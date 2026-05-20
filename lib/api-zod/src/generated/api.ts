@@ -669,7 +669,8 @@ export const ListTrashedAuditsResponseItem = zod.object({
   "timeframe": zod.string()
 })),
   "messagingStyle": zod.string(),
-  "coachingCta": zod.string()
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "createdAt": zod.string(),
@@ -733,7 +734,8 @@ export const RestoreAuditResponse = zod.object({
   "timeframe": zod.string()
 })),
   "messagingStyle": zod.string(),
-  "coachingCta": zod.string()
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "createdAt": zod.string(),
@@ -1059,6 +1061,26 @@ export const CoachMessageResponse = zod.object({
   "tone": zod.string(),
   "redFlags": zod.array(zod.string()),
   "coachTip": zod.string()
+})
+
+
+/**
+ * Accepts a base64-encoded screenshot of a dating-app chat and returns the
+OCR-extracted conversation text plus the detected source app (Hinge,
+Bumble, Tinder). No coaching session is persisted — the client should
+seed the coach form with these values and let the user correct
+anything before submitting.
+
+ * @summary OCR a chat screenshot and return conversation text + detected source app
+ */
+export const ExtractMessageScreenshotBody = zod.object({
+  "imageBase64": zod.string().describe('Base64-encoded screenshot of a dating-app chat. May include a data\nURL prefix (e.g. \"data:image\/jpeg;base64,...\"); the server strips it.\n')
+})
+
+export const ExtractMessageScreenshotResponse = zod.object({
+  "conversationText": zod.string().describe('OCR-extracted conversation text, with obvious UI chrome (timestamps,\n\"Delivered\", \"Send\", etc.) filtered out. The user is expected to\ntidy it up in the Coach textarea before submitting.\n'),
+  "sourceApp": zod.string().nullish().describe('Detected source app — \"Hinge\", \"Bumble\", \"Tinder\", or null when undetectable.'),
+  "rawOcrText": zod.string()
 })
 
 

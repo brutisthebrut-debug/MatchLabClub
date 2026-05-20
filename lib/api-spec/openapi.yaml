@@ -874,6 +874,40 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageCoachingResponse"
 
+  /messages/extract-screenshot:
+    post:
+      operationId: extractMessageScreenshot
+      tags: [messages]
+      summary: OCR a chat screenshot and return conversation text + detected source app
+      description: |
+        Accepts a base64-encoded screenshot of a dating-app chat and returns the
+        OCR-extracted conversation text plus the detected source app (Hinge,
+        Bumble, Tinder). No coaching session is persisted — the client should
+        seed the coach form with these values and let the user correct
+        anything before submitting.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatScreenshotExtractInput"
+      responses:
+        "200":
+          description: Extracted chat text and detected source app
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatScreenshotExtractResult"
+        "400":
+          description: Invalid image or no readable text found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
   /coach/follow-ups:
     post:
       operationId: recordCoachFollowUp
@@ -1504,6 +1538,32 @@ components:
           items:
             type: string
             enum: [firstName, age, sourceApp, bio, prompts]
+
+    ChatScreenshotExtractInput:
+      type: object
+      required: [imageBase64]
+      properties:
+        imageBase64:
+          type: string
+          description: |
+            Base64-encoded screenshot of a dating-app chat. May include a data
+            URL prefix (e.g. "data:image/jpeg;base64,..."); the server strips it.
+
+    ChatScreenshotExtractResult:
+      type: object
+      required: [conversationText, rawOcrText]
+      properties:
+        conversationText:
+          type: string
+          description: |
+            OCR-extracted conversation text, with obvious UI chrome (timestamps,
+            "Delivered", "Send", etc.) filtered out. The user is expected to
+            tidy it up in the Coach textarea before submitting.
+        sourceApp:
+          type: ["string", "null"]
+          description: Detected source app — "Hinge", "Bumble", "Tinder", or null when undetectable.
+        rawOcrText:
+          type: string
 
     ScreenshotAuditInput:
       type: object
