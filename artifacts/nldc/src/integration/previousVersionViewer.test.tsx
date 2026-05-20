@@ -154,6 +154,7 @@ function makeAudit(opts: { withPrevious: boolean }) {
 // ---------------------------------------------------------------------------
 
 let qc: QueryClient;
+let clipboardWriteSpy: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   auditDataRef.current = null;
@@ -161,6 +162,14 @@ beforeEach(() => {
   generateReportMock.mutateAsync.mockReset();
   generateReportMock.mutateAsync.mockResolvedValue(NEW_CURRENT_REPORT);
   qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+  // JSDOM doesn't implement navigator.clipboard — stub it out.
+  clipboardWriteSpy = vi.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, "clipboard", {
+    value: { writeText: clipboardWriteSpy },
+    writable: true,
+    configurable: true,
+  });
 });
 
 afterEach(() => {
@@ -320,5 +329,99 @@ describe("Previous-version viewer — web Report page", () => {
     await waitFor(() => {
       expect(screen.queryByTestId("button-view-previous-version")).toBeTruthy();
     });
+  });
+
+  // -------------------------------------------------------------------------
+  // Copy button tests
+  // -------------------------------------------------------------------------
+
+  async function openPreviousVersionDialog() {
+    auditDataRef.current = makeAudit({ withPrevious: true });
+
+    render(
+      <Wrap>
+        <Report />
+      </Wrap>,
+    );
+
+    const openBtn = await screen.findByTestId("button-view-previous-version");
+    fireEvent.click(openBtn);
+
+    return screen.findByTestId("dialog-previous-version");
+  }
+
+  it("clicking the bio rewrite copy button shows 'Copied' feedback", async () => {
+    const dialog = await openPreviousVersionDialog();
+
+    // The bio copy button lives in the "previous rewritten bio" section,
+    // which is the first copy button inside the dialog.
+    const copyBtns = within(dialog).getAllByTestId("button-copy-text");
+    const bioCopyBtn = copyBtns[0];
+
+    expect(bioCopyBtn.textContent).toMatch(/copy/i);
+
+    fireEvent.click(bioCopyBtn);
+
+    // Feedback should switch to "Copied".
+    await waitFor(() => {
+      expect(bioCopyBtn.textContent).toMatch(/copied/i);
+    });
+
+    // Clipboard should have been called with the previous bio text.
+    expect(clipboardWriteSpy).toHaveBeenCalledWith(PREVIOUS_REPORT.rewrittenBio);
+  });
+
+  it("clicking a prompt rewrite copy button shows 'Copied' feedback", async () => {
+    const dialog = await openPreviousVersionDialog();
+
+    // Scope to the first prompt card so we grab its copy button specifically.
+    const promptCard = within(dialog).getByTestId("prev-prompt-0");
+    const promptCopyBtn = within(promptCard).getByTestId("button-copy-text");
+
+    expect(promptCopyBtn.textContent).toMatch(/copy/i);
+
+    fireEvent.click(promptCopyBtn);
+
+    await waitFor(() => {
+      expect(promptCopyBtn.textContent).toMatch(/copied/i);
+    });
+
+    expect(clipboardWriteSpy).toHaveBeenCalledWith(
+      PREVIOUS_REPORT.rewrittenPrompts[0].rewritten,
+    );
+  });
+
+  it("clicking an action-plan copy button shows 'Copied' feedback", async () => {
+    const dialog = await openPreviousVersionDialog();
+
+    // Scope to the first action-plan card.
+    const actionCard = within(dialog).getByTestId("prev-action-0");
+    const actionCopyBtn = within(actionCard).getByTestId("button-copy-text");
+
+    expect(actionCopyBtn.textContent).toMatch(/copy/i);
+
+    fireEvent.click(actionCopyBtn);
+
+    await waitFor(() => {
+      expect(actionCopyBtn.textContent).toMatch(/copied/i);
+    });
+
+    const item = PREVIOUS_REPORT.actionPlan[0];
+    expect(clipboardWriteSpy).toHaveBeenCalledWith(
+      `${item.title}: ${item.description}`,
+    );
+  });
+
+  it("all three previous-version copy buttons are present when the dialog opens", async () => {
+    const dialog = await openPreviousVersionDialog();
+
+    // 1 bio copy + 1 prompt copy + 1 action copy = 3 total.
+    const copyBtns = within(dialog).getAllByTestId("button-copy-text");
+    expect(copyBtns).toHaveLength(3);
+
+    // All should start in the un-copied state.
+    for (const btn of copyBtns) {
+      expect(btn.textContent).toMatch(/^copy$/i);
+    }
   });
 });
