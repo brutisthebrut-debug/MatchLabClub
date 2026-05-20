@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +44,7 @@ import {
   generateAuditReport,
   deleteAudit as deleteAuditRequest,
   type Audit,
+  type ListAuditsParams,
 } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import {
@@ -65,8 +67,20 @@ import {
   ChevronRight, FlaskConical, Stethoscope, Zap,
   Wand2, ScanFace, BarChart2, Heart, Compass, BookOpen, Camera,
   MessageCircle, User, Map, Brain, Rss, Shield, Users, BarChart, Lightbulb, Layers,
-  Calendar, Star, Images, Trash2, RefreshCw,
+  Calendar, Star, Images, Trash2, RefreshCw, Search, X,
 } from "lucide-react";
+
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
+
+type AuditSort = "newest" | "topScore";
+type AuditScoreRange = "all" | "low" | "medium" | "high";
 
 const STALE_REPORT_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -286,9 +300,30 @@ export default function Dashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const PAGE_SIZE = 50;
+
+  const [searchInput, setSearchInput] = useState("");
+  const [sort, setSort] = useState<AuditSort>("newest");
+  const [scoreRange, setScoreRange] = useState<AuditScoreRange>("all");
+  const debouncedQuery = useDebouncedValue(searchInput.trim(), 250);
+  const filtersActive =
+    debouncedQuery.length > 0 || sort !== "newest" || scoreRange !== "all";
+  const filterParams = useMemo<ListAuditsParams>(
+    () => ({
+      sort,
+      ...(debouncedQuery.length > 0 ? { q: debouncedQuery } : {}),
+      ...(scoreRange !== "all" ? { scoreRange } : {}),
+    }),
+    [sort, debouncedQuery, scoreRange],
+  );
+
   const listAuditsKey = useMemo(
-    () => [...getListAuditsQueryKey(), "infinite", PAGE_SIZE] as const,
-    [],
+    () =>
+      [
+        ...getListAuditsQueryKey(filterParams),
+        "infinite",
+        PAGE_SIZE,
+      ] as const,
+    [filterParams],
   );
   const {
     data: auditsData,
@@ -300,7 +335,7 @@ export default function Dashboard() {
     queryKey: listAuditsKey,
     queryFn: ({ pageParam = 0, signal }) =>
       listAudits(
-        { limit: PAGE_SIZE, offset: pageParam as number },
+        { ...filterParams, limit: PAGE_SIZE, offset: pageParam as number },
         { signal },
       ),
     initialPageParam: 0,
@@ -309,6 +344,12 @@ export default function Dashboard() {
         ? undefined
         : allPages.reduce((sum, p) => sum + p.length, 0),
   });
+
+  const resetFilters = useCallback(() => {
+    setSearchInput("");
+    setSort("newest");
+    setScoreRange("all");
+  }, []);
   type InfiniteAuditData = { pages: Audit[][]; pageParams: unknown[] };
   const audits = useMemo<Audit[] | undefined>(
     () => (auditsData ? auditsData.pages.flat() : undefined),
@@ -655,6 +696,21 @@ export default function Dashboard() {
   const { data: summary, isLoading: summaryLoading } = useGetAuditSummary({
     query: { queryKey: getGetAuditSummaryQueryKey() }
   });
+  // Unfiltered "latest" lookup so the "Continue where you left off" card and
+  // brand-new-user detection don't disappear when filters are applied below.
+  const latestAuditsKey = useMemo(
+    () => getListAuditsQueryKey({ limit: 1 }),
+    [],
+  );
+  const { data: latestAuditList, isLoading: latestAuditLoading } =
+    useInfiniteQuery({
+      queryKey: [...latestAuditsKey, "latest-one"] as const,
+      queryFn: ({ signal }) => listAudits({ limit: 1 }, { signal }),
+      initialPageParam: 0,
+      getNextPageParam: () => undefined,
+      enabled: isAuthenticated,
+    });
+  const latestAuditFromQuery = latestAuditList?.pages?.[0]?.[0] ?? null;
   const { data: profiles, isLoading: profilesLoading } = useListProfiles({
     query: { enabled: isAuthenticated, queryKey: getListProfilesQueryKey() },
   });
@@ -665,12 +721,21 @@ export default function Dashboard() {
     query: { enabled: isAuthenticated, queryKey: getListInsightsQueryKey() },
   });
 
-  const hasRealAudits = !!(audits && audits.length > 0);
+  // "User has any audits" is independent of the active filter — derive from
+  // the unfiltered summary / latest lookup so applying a filter that returns
+  // no rows doesn't collapse the rest of the dashboard back into demo mode.
+  const hasRealAudits =
+    (summary?.totalAudits ?? 0) > 0 || !!latestAuditFromQuery;
+  const hasFilteredAudits = !!(audits && audits.length > 0);
   const hasProfiles = !!(profiles && profiles.length > 0);
   const hasMessages = !!(messageSessions && messageSessions.length > 0);
   const hasInsights = !!(insights && insights.length > 0);
   const accountDataLoading =
-    auditsLoading || profilesLoading || messagesLoading || insightsLoading;
+    auditsLoading ||
+    latestAuditLoading ||
+    profilesLoading ||
+    messagesLoading ||
+    insightsLoading;
   const isBrandNewUser =
     isAuthenticated &&
     !accountDataLoading &&
@@ -688,7 +753,9 @@ export default function Dashboard() {
   const gradeColor = latestScore >= 75 ? "hsl(142 55% 60%)" : latestScore >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
   const scoreDelta = (displaySummary.latestScore ?? 0) - (displaySummary.scoreHistory[0]?.score ?? 0);
   const nextAction = getNextBestAction(latestScore, hasRealAudits);
-  const latestRealAudit = hasRealAudits ? audits![0] : null;
+  const latestRealAudit = hasRealAudits
+    ? latestAuditFromQuery ?? (audits && audits[0]) ?? null
+    : null;
 
   return (
     <AppLayout>
@@ -1105,8 +1172,120 @@ export default function Dashboard() {
                 </Button>
               </div>
             </div>
+
+            {hasRealAudits && !selectionMode && (
+              <div className="mb-4 space-y-2.5" data-testid="audits-filters">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                  <Input
+                    type="search"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    placeholder="Search by name or bio"
+                    aria-label="Search audits"
+                    className="pl-9 pr-9 h-9 text-sm bg-white/3 border-white/10 rounded-full"
+                    data-testid="input-audits-search"
+                  />
+                  {searchInput.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => setSearchInput("")}
+                      aria-label="Clear search"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+                      data-testid="button-audits-search-clear"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  ) : null}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {(
+                    [
+                      { value: "newest", label: "Newest", icon: Clock },
+                      { value: "topScore", label: "Top score", icon: Trophy },
+                    ] as const
+                  ).map(({ value, label, icon: Icon }) => {
+                    const active = sort === value;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setSort(value)}
+                        className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border transition-colors ${
+                          active
+                            ? "bg-[hsl(268_52%_68%/0.18)] border-[hsl(268_52%_68%/0.5)] text-[hsl(268_52%_88%)]"
+                            : "bg-white/3 border-white/8 text-muted-foreground hover:text-foreground hover:bg-white/5"
+                        }`}
+                        aria-pressed={active}
+                        data-testid={`chip-sort-${value}`}
+                      >
+                        <Icon className="w-3 h-3" />
+                        {label}
+                      </button>
+                    );
+                  })}
+                  <span className="mx-1 self-center h-4 w-px bg-white/10" aria-hidden="true" />
+                  {(
+                    [
+                      { value: "all", label: "All", tone: null },
+                      { value: "high", label: "High 75+", tone: "hsl(142 55% 60%)" },
+                      { value: "medium", label: "Medium 55–74", tone: "hsl(43 65% 65%)" },
+                      { value: "low", label: "Low <55", tone: "hsl(348 55% 65%)" },
+                    ] as const
+                  ).map(({ value, label, tone }) => {
+                    const active = scoreRange === value;
+                    const activeStyle = active && tone
+                      ? {
+                          background: `${tone.replace(")", " / 0.18)")}`,
+                          borderColor: `${tone.replace(")", " / 0.5)")}`,
+                          color: tone,
+                        }
+                      : undefined;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setScoreRange(value)}
+                        className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border transition-colors ${
+                          active
+                            ? tone
+                              ? ""
+                              : "bg-[hsl(268_52%_68%/0.18)] border-[hsl(268_52%_68%/0.5)] text-[hsl(268_52%_88%)]"
+                            : "bg-white/3 border-white/8 text-muted-foreground hover:text-foreground hover:bg-white/5"
+                        }`}
+                        style={activeStyle}
+                        aria-pressed={active}
+                        data-testid={`chip-range-${value}`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {auditsLoading ? (
               <div className="space-y-3">{[1,2].map(i => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)}</div>
+            ) : hasRealAudits && !hasFilteredAudits && filtersActive ? (
+              <div className="text-center py-10" data-testid="audits-no-results">
+                <div className="w-14 h-14 rounded-full bg-white/5 mx-auto mb-3 flex items-center justify-center">
+                  <Search className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <p className="font-semibold text-foreground mb-1">No matches found</p>
+                <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto leading-relaxed">
+                  Nothing matches your search and filters. Try clearing them to see all your audits.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-full text-xs"
+                  onClick={resetFilters}
+                  data-testid="button-reset-audit-filters"
+                >
+                  Reset filters
+                </Button>
+              </div>
             ) : !hasRealAudits ? (
               <div className="text-center py-10" data-testid="audits-empty-state">
                 <div className="w-14 h-14 rounded-full bg-[hsl(268_52%_68%/0.1)] mx-auto mb-3 flex items-center justify-center">
