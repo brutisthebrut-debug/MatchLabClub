@@ -118,11 +118,13 @@ function ScoreRing({ score }: { score: number }) {
 }
 
 /* ─── Copy Button ─── */
+const COPY_FEEDBACK_DURATION_MS = 3000;
+
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
-      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION_MS); }}
       className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[hsl(268_52%_68%)] transition-colors flex-shrink-0"
       data-testid="button-copy-text"
     >
