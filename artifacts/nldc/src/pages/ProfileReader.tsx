@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, Eye, AlertCircle, RefreshCw, Copy, Check, Info } from "lucide-react";
+import { useAuth } from "@workspace/replit-auth-web";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -143,6 +144,7 @@ export default function ProfileReader() {
   const [context, setContext] = useState("");
   const [result, setResult] = useState<ReaderResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   function handleAnalyze() {
     if (!text.trim()) return;
@@ -150,8 +152,9 @@ export default function ProfileReader() {
     setTimeout(() => { setResult(analyzeProfile(text, context)); setLoading(false); }, 1000);
   }
 
+  const isBrandNewUser = isAuthenticated && !result;
   const show = result ?? DEMO;
-  const isDemo = !result;
+  const isDemo = !result && !isAuthenticated;
 
   return (
     <AppLayout>
@@ -198,7 +201,31 @@ export default function ProfileReader() {
             </motion.div>
           </div>
 
+          {isBrandNewUser && (
+            <motion.div
+              {...fadeUp(0.1)}
+              className="mb-6"
+              data-testid="profile-reader-empty-state"
+            >
+              <div className="relative rounded-3xl p-6 sm:p-8 text-center overflow-hidden shimmer"
+                style={{ background: "linear-gradient(135deg, hsl(268 52% 68% / 0.12), hsl(190 55% 60% / 0.08))" }}>
+                <div className="absolute inset-0 border border-[hsl(268_52%_68%/0.2)] rounded-3xl pointer-events-none" />
+                <div className="relative z-10">
+                  <div className="w-14 h-14 rounded-2xl bg-[hsl(268_52%_68%/0.15)] border border-[hsl(268_52%_68%/0.25)] mx-auto mb-4 flex items-center justify-center">
+                    <Eye className="w-6 h-6 text-[hsl(268_52%_78%)]" />
+                  </div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-[hsl(268_60%_82%)] mb-2">Welcome to Profile Reader</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Read your first profile</h2>
+                  <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
+                    Paste someone's bio above and we'll surface likely signals, fit clues, questions worth asking, and a suggested opener — without overreading.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           <AnimatePresence>
+            {!isBrandNewUser && (
             <motion.div {...fadeUp(0.1)} className={isDemo ? "opacity-60" : ""}>
               {isDemo && (
                 <div className="text-center mb-4">
@@ -276,6 +303,7 @@ export default function ProfileReader() {
                 </div>
               )}
             </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </div>
