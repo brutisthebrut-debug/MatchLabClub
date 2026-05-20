@@ -185,10 +185,7 @@ export default function Blueprint() {
 
   function tryParseBlueprint(raw: string): BlueprintResult | null {
     try {
-      const start = raw.indexOf("{");
-      const end = raw.lastIndexOf("}");
-      if (start === -1 || end <= start) return null;
-      const parsed = JSON.parse(raw.slice(start, end + 1)) as Record<string, unknown>;
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
       const out: Partial<BlueprintResult> = {};
       for (const k of BLUEPRINT_KEYS) {
         const v = parsed[k];
@@ -216,13 +213,12 @@ export default function Blueprint() {
             pattern ? `Repeating pattern: ${pattern}` : "",
             misread ? `What people misread: ${misread}` : "",
             want ? `What they want: ${want}` : "",
-            "",
-            "Return ONLY a single JSON object. No prose, no markdown.",
           ].filter(Boolean).join("\n"),
           context: {
             toolName: "Personal Blueprint",
             formValues: { selfDescription: text, pattern, misread, want },
           },
+          expectJson: true,
         },
       });
       if (ai.isFallback || !ai.output.trim()) {

@@ -175,10 +175,7 @@ export default function NextMessage() {
 
   function tryParseNextMessage(raw: string, deterministic: NextMessageResult): NextMessageResult | null {
     try {
-      const start = raw.indexOf("{");
-      const end = raw.lastIndexOf("}");
-      if (start === -1 || end <= start) return null;
-      const parsed = JSON.parse(raw.slice(start, end + 1)) as {
+      const parsed = JSON.parse(raw) as {
         options?: Array<{ style?: unknown; text?: unknown; when?: unknown }>;
         coachNote?: unknown;
       };
@@ -219,13 +216,12 @@ export default function NextMessage() {
             goal ? `User's goal: ${goal}` : "",
             context.trim() ? `Conversation context:\n${context}` : "",
             lastMsg.trim() ? `Their last message / user's last message: ${lastMsg}` : "",
-            "",
-            "Return ONLY the JSON object. No prose, no markdown.",
           ].filter(Boolean).join("\n"),
           context: {
             toolName: "Next Message",
             formValues: { name, goal, conversation: context, lastMessage: lastMsg },
           },
+          expectJson: true,
         },
       });
       if (ai.isFallback || !ai.output.trim()) {

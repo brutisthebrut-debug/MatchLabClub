@@ -460,7 +460,8 @@ export const EnhanceAiBody = zod.object({
   "note": zod.string().optional()
 })).optional(),
   "extras": zod.record(zod.string(), zod.unknown()).optional()
-}).optional()
+}).optional(),
+  "expectJson": zod.boolean().optional().describe('When true, asks the model to return a valid JSON object (response_format json_object). Use for structured tool outputs.')
 })
 
 export const EnhanceAiResponse = zod.object({

@@ -34,6 +34,7 @@ const EnhanceBody = z.object({
   toolName: z.string().min(1).max(80),
   prompt: z.string().min(1).max(4000),
   context: ContextSchema,
+  expectJson: z.boolean().optional(),
 });
 
 router.get("/ai/status", (_req, res) => {
@@ -83,7 +84,7 @@ router.post(
       res.status(400).json({ error: "toolName and prompt are required." });
       return;
     }
-    const { toolName, prompt, context } = parsed.data;
+    const { toolName, prompt, context, expectJson } = parsed.data;
     const ctx: AiContext = context ?? { toolName };
 
     const fallback = `Coaching note for ${toolName}: Be specific and genuine — the most effective messages and profiles are honest, not strategic. Focus on what makes this moment or person unique, and respond to the actual situation rather than a template. Authenticity almost always outperforms a perfectly crafted line.`;
@@ -100,6 +101,7 @@ router.post(
         context: { ...ctx, toolName },
         maxTokens: 600,
         temperature: 0.6,
+        expectJson,
       },
       fallback,
     );

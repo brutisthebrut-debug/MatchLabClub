@@ -19,4 +19,6 @@ export interface AiEnhanceInput {
      */
   prompt: string;
   context?: AiContextInput;
+  /** When true, asks the model to return a valid JSON object (response_format json_object). Use for structured tool outputs. */
+  expectJson?: boolean;
 }

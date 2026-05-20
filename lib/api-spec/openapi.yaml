@@ -1134,6 +1134,9 @@ components:
           maxLength: 4000
         context:
           $ref: "#/components/schemas/AiContextInput"
+        expectJson:
+          type: boolean
+          description: When true, asks the model to return a valid JSON object (response_format json_object). Use for structured tool outputs.
 
     AiTestInput:
       type: object
