@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, Wand2, Copy, Check, RefreshCw, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { useEnhanceAi } from "@workspace/api-client-react";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -177,13 +178,74 @@ export default function GlowUp() {
   const [bio, setBio] = useState("");
   const [goal, setGoal] = useState("");
   const [result, setResult] = useState<GlowVersion[] | null>(null);
-  const [loading, setLoading] = useState(false);
+  const enhance = useEnhanceAi();
+  const loading = enhance.isPending;
   const [filter, setFilter] = useState<string[]>([]);
 
-  function handleGenerate() {
+  function tryParseGlowUp(raw: string, deterministic: GlowVersion[]): GlowVersion[] | null {
+    try {
+      const start = raw.indexOf("[");
+      const end = raw.lastIndexOf("]");
+      if (start === -1 || end <= start) return null;
+      const parsed = JSON.parse(raw.slice(start, end + 1));
+      if (!Array.isArray(parsed)) return null;
+      const colorByStyle = new Map(deterministic.map(v => [v.style, { color: v.color, label: v.label, platform: v.platform }]));
+      const out: GlowVersion[] = [];
+      for (const item of parsed) {
+        if (!item || typeof item !== "object") continue;
+        const o = item as Record<string, unknown>;
+        const style = typeof o.style === "string" ? o.style.trim() : "";
+        const bioText = typeof o.bio === "string" ? o.bio.trim() : "";
+        const tip = typeof o.tip === "string" ? o.tip.trim() : "";
+        const meta = colorByStyle.get(style);
+        if (!meta || bioText.length < 60 || tip.length < 15) continue;
+        const label = typeof o.label === "string" && o.label.trim().length >= 3 ? o.label.trim() : meta.label;
+        const platform = typeof o.platform === "string" && o.platform.trim() ? o.platform.trim() : meta.platform;
+        out.push({ style, label, platform, bio: bioText, tip, color: meta.color });
+      }
+      if (out.length < Math.ceil(deterministic.length / 2)) return null;
+      const present = new Set(out.map(v => v.style));
+      for (const v of deterministic) if (!present.has(v.style)) out.push(v);
+      const order = new Map(deterministic.map((v, i) => [v.style, i]));
+      out.sort((a, b) => (order.get(a.style) ?? 99) - (order.get(b.style) ?? 99));
+      return out;
+    } catch {
+      return null;
+    }
+  }
+
+  async function handleGenerate() {
     if (!bio.trim()) return;
-    setLoading(true);
-    setTimeout(() => { setResult(generateGlowUp(bio, goal)); setLoading(false); }, 1100);
+    const deterministic = generateGlowUp(bio, goal);
+    try {
+      const ai = await enhance.mutateAsync({
+        data: {
+          toolName: "Profile Glow-Up Studio",
+          prompt: [
+            "Rewrite this dating profile bio into 10 versions, one per style. Return ONLY a single JSON array:",
+            '[{ "style": string, "label": string, "platform"?: string, "bio": string, "tip": string }, ...]',
+            "Use these exact style keys (one entry each): serious, playful, direct, queer, lessgeneric, hinge, tinder, grindr, sniffies, feeld.",
+            "bio: 2-5 sentences, in the voice of that style/platform.",
+            "tip: 1 short sentence explaining why this version works.",
+            "platform is required for hinge/tinder/grindr/sniffies/feeld.",
+            "",
+            `Original bio:\n${bio}`,
+            goal ? `Goal: ${goal}` : "",
+            "",
+            "Return ONLY the JSON array. No prose, no markdown.",
+          ].filter(Boolean).join("\n"),
+          context: { toolName: "Profile Glow-Up Studio", formValues: { bio, goal } },
+        },
+      });
+      if (ai.isFallback || !ai.output.trim()) {
+        setResult(deterministic);
+        return;
+      }
+      const parsed = tryParseGlowUp(ai.output, deterministic);
+      setResult(parsed ?? deterministic);
+    } catch {
+      setResult(deterministic);
+    }
   }
 
   const show = result ?? DEMO_VERSIONS;

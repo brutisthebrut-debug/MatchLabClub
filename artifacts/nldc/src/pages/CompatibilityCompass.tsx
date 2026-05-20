@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, Compass, RefreshCw, AlertCircle } from "lucide-react";
+import { useEnhanceAi } from "@workspace/api-client-react";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -170,16 +171,82 @@ export default function CompatibilityCompass() {
   const [patterns, setPatterns] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [result, setResult] = useState<CompassResult | null>(null);
-  const [loading, setLoading] = useState(false);
+  const enhance = useEnhanceAi();
+  const loading = enhance.isPending;
 
   function togglePattern(p: string) {
     setPatterns(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
   }
 
-  function handleAnalyze() {
+  function tryParseCompass(raw: string): CompassResult | null {
+    try {
+      const start = raw.indexOf("{");
+      const end = raw.lastIndexOf("}");
+      if (start === -1 || end <= start) return null;
+      const parsed = JSON.parse(raw.slice(start, end + 1)) as {
+        supportiveTraits?: unknown;
+        commonPull?: unknown;
+        cautionDynamics?: unknown;
+        bestDynamic?: unknown;
+        nonNegotiables?: unknown;
+        falseSpark?: unknown;
+      };
+      const asArr = (v: unknown, min: number, max: number, minLen: number): string[] | null => {
+        if (!Array.isArray(v)) return null;
+        const arr = v.filter((x): x is string => typeof x === "string" && x.trim().length >= minLen).map(s => s.trim());
+        if (arr.length < min) return null;
+        return arr.slice(0, max);
+      };
+      const asStr = (v: unknown, minLen: number): string | null =>
+        typeof v === "string" && v.trim().length >= minLen ? v.trim() : null;
+      const supportiveTraits = asArr(parsed.supportiveTraits, 2, 3, 15);
+      const cautionDynamics = asArr(parsed.cautionDynamics, 1, 3, 20);
+      const nonNegotiables = asArr(parsed.nonNegotiables, 2, 3, 15);
+      const commonPull = asStr(parsed.commonPull, 60);
+      const bestDynamic = asStr(parsed.bestDynamic, 60);
+      const falseSpark = asStr(parsed.falseSpark, 60);
+      if (!supportiveTraits || !cautionDynamics || !nonNegotiables || !commonPull || !bestDynamic || !falseSpark) return null;
+      return { supportiveTraits, commonPull, cautionDynamics, bestDynamic, nonNegotiables, falseSpark };
+    } catch {
+      return null;
+    }
+  }
+
+  async function handleAnalyze() {
     if (!ownStyle) return;
-    setLoading(true);
-    setTimeout(() => { setResult(analyzeCompass(ownStyle, patterns, notes)); setLoading(false); }, 1000);
+    const deterministic = analyzeCompass(ownStyle, patterns, notes);
+    try {
+      const ai = await enhance.mutateAsync({
+        data: {
+          toolName: "Compatibility Compass",
+          prompt: [
+            "Given this person's connection style and recurring dating patterns, return ONLY a single JSON object:",
+            '{ "supportiveTraits": string[], "commonPull": string, "cautionDynamics": string[], "bestDynamic": string, "nonNegotiables": string[], "falseSpark": string }',
+            "supportiveTraits: 2-3 specific traits to look for (each 1-2 sentences).",
+            "commonPull: 2-3 sentences naming their typical pull and its risk.",
+            "cautionDynamics: 1-3 dynamics to watch for (each 1-2 sentences).",
+            "bestDynamic: 2-3 sentences describing their best-supporting dynamic.",
+            "nonNegotiables: 2-3 specific non-negotiables (each 1-2 sentences).",
+            "falseSpark: 2-3 sentences naming the false-spark pattern.",
+            "",
+            `Connection style: ${ownStyle}`,
+            patterns.length ? `Recurring patterns: ${patterns.join("; ")}` : "Recurring patterns: none specified",
+            notes.trim() ? `Notes: ${notes}` : "",
+            "",
+            "Return ONLY the JSON object. No prose, no markdown.",
+          ].filter(Boolean).join("\n"),
+          context: { toolName: "Compatibility Compass", formValues: { ownStyle, patterns, notes } },
+        },
+      });
+      if (ai.isFallback || !ai.output.trim()) {
+        setResult(deterministic);
+        return;
+      }
+      const parsed = tryParseCompass(ai.output);
+      setResult(parsed ?? deterministic);
+    } catch {
+      setResult(deterministic);
+    }
   }
 
   const show = result ?? DEMO;

@@ -3,7 +3,8 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, RefreshCw, Info } from "lucide-react";
+import { Loader2, Sparkles, RefreshCw, Info } from "lucide-react";
+import { useEnhanceAi } from "@workspace/api-client-react";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -227,17 +228,98 @@ function computeStyle(answers: number[]): StyleKey {
   return best;
 }
 
+interface StyleOverride {
+  tagline?: string;
+  strengths?: string[];
+  activationPattern?: string;
+  whatHelps?: string;
+  nextExperiment?: string;
+}
+
 export default function ConnectionStyle() {
   useMeta("Connection Style Lens", "Six questions that reveal your connection pattern — how you attach, what activates your risk loop, and one experiment worth trying.");
   const [answers, setAnswers] = useState<number[]>(Array(QUESTIONS.length).fill(-1));
   const [result, setResult] = useState<StyleKey | null>(null);
+  const [override, setOverride] = useState<StyleOverride>({});
+  const enhance = useEnhanceAi();
+  const loading = enhance.isPending;
   const answered = answers.filter(a => a >= 0).length;
 
   function handleAnswer(qi: number, oi: number) {
     setAnswers(prev => { const n = [...prev]; n[qi] = oi; return n; });
   }
 
-  const style = result ? STYLES[result] : null;
+  function tryParseOverride(raw: string): StyleOverride | null {
+    try {
+      const start = raw.indexOf("{");
+      const end = raw.lastIndexOf("}");
+      if (start === -1 || end <= start) return null;
+      const parsed = JSON.parse(raw.slice(start, end + 1)) as Record<string, unknown>;
+      const asStr = (v: unknown, min: number) => (typeof v === "string" && v.trim().length >= min ? v.trim() : undefined);
+      const strengthsRaw = parsed.strengths;
+      const strengths = Array.isArray(strengthsRaw)
+        ? strengthsRaw.filter((x): x is string => typeof x === "string" && x.trim().length >= 8).map(s => s.trim()).slice(0, 4)
+        : undefined;
+      const out: StyleOverride = {
+        tagline: asStr(parsed.tagline, 30),
+        strengths: strengths && strengths.length >= 2 ? strengths : undefined,
+        activationPattern: asStr(parsed.activationPattern, 30),
+        whatHelps: asStr(parsed.whatHelps, 30),
+        nextExperiment: asStr(parsed.nextExperiment, 30),
+      };
+      const hasSomething = !!(out.tagline || out.strengths || out.activationPattern || out.whatHelps || out.nextExperiment);
+      return hasSomething ? out : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function handleSubmit() {
+    const styleKey = computeStyle(answers);
+    setResult(styleKey);
+    setOverride({});
+    const base = STYLES[styleKey];
+    const answerSummary = QUESTIONS.map((q, qi) => {
+      const ai = answers[qi];
+      return ai >= 0 ? `${q.q} → ${q.opts[ai].label}` : null;
+    }).filter(Boolean).join("\n");
+    try {
+      const ai = await enhance.mutateAsync({
+        data: {
+          toolName: "Connection Style Lens",
+          prompt: [
+            `The user's connection style was identified as "${base.name}".`,
+            "Personalize the readout based on their answers. Return ONLY a single JSON object:",
+            '{ "tagline": string, "strengths": string[], "activationPattern": string, "whatHelps": string, "nextExperiment": string }',
+            "tagline: 1-2 sentence summary of this pattern.",
+            "strengths: 2-4 short bullet points (each one short clause).",
+            "activationPattern: 2 sentences describing how the pattern activates.",
+            "whatHelps: 2 sentences of concrete guidance.",
+            "nextExperiment: 1-2 sentences of a small, doable experiment.",
+            "",
+            "Their answers:",
+            answerSummary,
+            "",
+            "Return ONLY the JSON object. No prose, no markdown.",
+          ].join("\n"),
+          context: { toolName: "Connection Style Lens", formValues: { styleKey, answers } },
+        },
+      });
+      if (ai.isFallback || !ai.output.trim()) return;
+      const parsed = tryParseOverride(ai.output);
+      if (parsed) setOverride(parsed);
+    } catch { /* silent fallback */ }
+  }
+
+  const baseStyle = result ? STYLES[result] : null;
+  const style = baseStyle ? {
+    ...baseStyle,
+    tagline: override.tagline ?? baseStyle.tagline,
+    strengths: override.strengths ?? baseStyle.strengths,
+    activationPattern: override.activationPattern ?? baseStyle.activationPattern,
+    whatHelps: override.whatHelps ?? baseStyle.whatHelps,
+    nextExperiment: override.nextExperiment ?? baseStyle.nextExperiment,
+  } : null;
 
   return (
     <AppLayout>
@@ -281,9 +363,9 @@ export default function ConnectionStyle() {
                 ))}
                 <div className="flex items-center justify-between pt-2">
                   <p className="text-xs text-muted-foreground">{answered} of {QUESTIONS.length} answered</p>
-                  <Button onClick={() => setResult(computeStyle(answers))} disabled={answered < QUESTIONS.length}
+                  <Button onClick={handleSubmit} disabled={answered < QUESTIONS.length || loading}
                     className="rounded-full px-8 h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-40">
-                    <Sparkles className="mr-2 h-4 w-4" />See My Style
+                    {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Reading your pattern…</> : <><Sparkles className="mr-2 h-4 w-4" />See My Style</>}
                   </Button>
                 </div>
               </motion.div>

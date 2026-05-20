@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Sparkles, BarChart2, AlertCircle, RefreshCw } from "lucide-react";
+import { Loader2, BarChart2, AlertCircle, RefreshCw } from "lucide-react";
+import { useEnhanceAi } from "@workspace/api-client-react";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -155,12 +156,59 @@ export default function StyleMap() {
   useMeta("Communication Style Map", "Paste a conversation and see meters for warmth, clarity, playfulness, pacing, directness, pressure, and more — plus a short practical readout.");
   const [text, setText] = useState("");
   const [result, setResult] = useState<StyleMapResult | null>(null);
-  const [loading, setLoading] = useState(false);
+  const enhance = useEnhanceAi();
+  const loading = enhance.isPending;
 
-  function handleAnalyze() {
+  function tryParseStyleMap(raw: string, deterministic: StyleMapResult): StyleMapResult | null {
+    try {
+      const start = raw.indexOf("{");
+      const end = raw.lastIndexOf("}");
+      if (start === -1 || end <= start) return null;
+      const parsed = JSON.parse(raw.slice(start, end + 1)) as {
+        readout?: unknown;
+        topStrength?: unknown;
+        growthEdge?: unknown;
+      };
+      const readout = typeof parsed.readout === "string" && parsed.readout.trim().length >= 30 ? parsed.readout.trim() : null;
+      const topStrength = typeof parsed.topStrength === "string" && parsed.topStrength.trim().length >= 10 ? parsed.topStrength.trim() : null;
+      const growthEdge = typeof parsed.growthEdge === "string" && parsed.growthEdge.trim().length >= 10 ? parsed.growthEdge.trim() : null;
+      if (!readout || !topStrength || !growthEdge) return null;
+      return { meters: deterministic.meters, readout, topStrength, growthEdge };
+    } catch {
+      return null;
+    }
+  }
+
+  async function handleAnalyze() {
     if (!text.trim()) return;
-    setLoading(true);
-    setTimeout(() => { setResult(analyzeStyle(text)); setLoading(false); }, 900);
+    const deterministic = analyzeStyle(text);
+    try {
+      const ai = await enhance.mutateAsync({
+        data: {
+          toolName: "Communication Style Map",
+          prompt: [
+            "Analyze the communication style in this conversation. Return ONLY a single JSON object:",
+            '{ "readout": string, "topStrength": string, "growthEdge": string }',
+            "readout: 2-3 sentence practical summary of the communication style.",
+            "topStrength: one specific strength (1-2 sentences).",
+            "growthEdge: one concrete adjustment to try (1-2 sentences).",
+            "",
+            `Conversation:\n${text}`,
+            "",
+            "Return ONLY the JSON object. No prose, no markdown.",
+          ].join("\n"),
+          context: { toolName: "Communication Style Map", formValues: { conversation: text } },
+        },
+      });
+      if (ai.isFallback || !ai.output.trim()) {
+        setResult(deterministic);
+        return;
+      }
+      const parsed = tryParseStyleMap(ai.output, deterministic);
+      setResult(parsed ?? deterministic);
+    } catch {
+      setResult(deterministic);
+    }
   }
 
   const show = result ?? DEMO;

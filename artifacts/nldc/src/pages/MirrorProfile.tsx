@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, ScanFace, AlertCircle, RefreshCw } from "lucide-react";
+import { useEnhanceAi } from "@workspace/api-client-react";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -153,12 +154,61 @@ export default function MirrorProfile() {
   const [bio, setBio] = useState("");
   const [want, setWant] = useState("");
   const [result, setResult] = useState<MirrorResult | null>(null);
-  const [loading, setLoading] = useState(false);
+  const enhance = useEnhanceAi();
+  const loading = enhance.isPending;
 
-  function handleAnalyze() {
+  const MIRROR_KEYS: (keyof MirrorResult)[] = [
+    "values", "protectiveHabits", "signalsShown", "understatedQualities",
+    "overcompensation", "likelyAudienceResponse", "missingInformation",
+    "emotionalImpression", "nextExperiment",
+  ];
+
+  function tryParseMirror(raw: string): MirrorResult | null {
+    try {
+      const start = raw.indexOf("{");
+      const end = raw.lastIndexOf("}");
+      if (start === -1 || end <= start) return null;
+      const parsed = JSON.parse(raw.slice(start, end + 1)) as Record<string, unknown>;
+      const out: Partial<MirrorResult> = {};
+      for (const k of MIRROR_KEYS) {
+        const v = parsed[k];
+        if (typeof v !== "string" || v.trim().length < 20) return null;
+        out[k] = v.trim();
+      }
+      return out as MirrorResult;
+    } catch {
+      return null;
+    }
+  }
+
+  async function handleAnalyze() {
     if (!bio.trim()) return;
-    setLoading(true);
-    setTimeout(() => { setResult(analyzeMirror(bio, want)); setLoading(false); }, 1100);
+    const deterministic = analyzeMirror(bio, want);
+    try {
+      const ai = await enhance.mutateAsync({
+        data: {
+          toolName: "Mirror Profile",
+          prompt: [
+            "Reflect back what this dating profile bio shows. Return ONLY a single JSON object with these exact string keys (each 2-4 sentences, specific, warm, never generic):",
+            "values, protectiveHabits, signalsShown, understatedQualities, overcompensation, likelyAudienceResponse, missingInformation, emotionalImpression, nextExperiment.",
+            "",
+            `Bio:\n${bio}`,
+            want ? `What they want it to communicate: ${want}` : "",
+            "",
+            "Return ONLY the JSON object. No prose, no markdown.",
+          ].filter(Boolean).join("\n"),
+          context: { toolName: "Mirror Profile", formValues: { bio, want } },
+        },
+      });
+      if (ai.isFallback || !ai.output.trim()) {
+        setResult(deterministic);
+        return;
+      }
+      const parsed = tryParseMirror(ai.output);
+      setResult(parsed ?? deterministic);
+    } catch {
+      setResult(deterministic);
+    }
   }
 
   const show = result ?? DEMO;

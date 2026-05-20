@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, RefreshCw, Copy, Check, AlertCircle, Heart } from "lucide-react";
+import { useEnhanceAi } from "@workspace/api-client-react";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -158,14 +159,96 @@ export default function Reflection() {
   const [wantNext, setWantNext] = useState("");
   const [notes, setNotes] = useState("");
   const [result, setResult] = useState<ReflectionResult | null>(null);
-  const [loading, setLoading] = useState(false);
+  const enhance = useEnhanceAi();
+  const loading = enhance.isPending;
 
   const canSubmit = before && during && mutual && afterward;
 
-  function handleAnalyze() {
+  function tryParseReflection(raw: string, deterministic: ReflectionResult): ReflectionResult | null {
+    try {
+      const start = raw.indexOf("{");
+      const end = raw.lastIndexOf("}");
+      if (start === -1 || end <= start) return null;
+      const parsed = JSON.parse(raw.slice(start, end + 1)) as {
+        positiveSigns?: unknown;
+        cautionSigns?: unknown;
+        patternShowing?: unknown;
+        recommendedNextStep?: unknown;
+        suggestedNote?: unknown;
+        recommendationNote?: unknown;
+      };
+      const asStrArr = (v: unknown, min: number, max: number): string[] | null => {
+        if (!Array.isArray(v)) return null;
+        const arr = v.filter((x): x is string => typeof x === "string" && x.trim().length >= 15).map(s => s.trim());
+        if (arr.length < min) return null;
+        return arr.slice(0, max);
+      };
+      const asStr = (v: unknown, minLen: number): string | null =>
+        typeof v === "string" && v.trim().length >= minLen ? v.trim() : null;
+      const positiveSigns = asStrArr(parsed.positiveSigns, 1, 4);
+      const cautionSigns = Array.isArray(parsed.cautionSigns)
+        ? parsed.cautionSigns.filter((x): x is string => typeof x === "string" && x.trim().length >= 15).map(s => s.trim()).slice(0, 3)
+        : null;
+      const patternShowing = asStr(parsed.patternShowing, 30);
+      const recommendedNextStep = asStr(parsed.recommendedNextStep, 30);
+      const suggestedNote = asStr(parsed.suggestedNote, 10);
+      const recommendationNote = asStr(parsed.recommendationNote, 20);
+      if (!positiveSigns || cautionSigns === null || !patternShowing || !recommendedNextStep || !suggestedNote || !recommendationNote) return null;
+      return {
+        positiveSigns,
+        cautionSigns,
+        patternShowing,
+        recommendedNextStep,
+        suggestedNote,
+        recommendation: deterministic.recommendation,
+        recommendationNote,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  async function handleAnalyze() {
     if (!canSubmit) return;
-    setLoading(true);
-    setTimeout(() => { setResult(analyzeReflection(before, during, mutual, afterward, wantNext, notes)); setLoading(false); }, 900);
+    const deterministic = analyzeReflection(before, during, mutual, afterward, wantNext, notes);
+    try {
+      const ai = await enhance.mutateAsync({
+        data: {
+          toolName: "Post-Meeting Reflection",
+          prompt: [
+            "Reflect on this dating interaction. Return ONLY a single JSON object:",
+            '{ "positiveSigns": string[], "cautionSigns": string[], "patternShowing": string, "recommendedNextStep": string, "suggestedNote": string, "recommendationNote": string }',
+            "positiveSigns: 2-4 specific observations (each 1-2 sentences).",
+            "cautionSigns: 0-3 specific observations worth noting (each 1-2 sentences).",
+            "patternShowing: 2-3 sentences naming the underlying pattern.",
+            "recommendedNextStep: 2-3 sentences of concrete next move.",
+            "suggestedNote: a copy-ready message (1-2 sentences) if they reach out.",
+            "recommendationNote: 1-2 sentences explaining the recommendation.",
+            "",
+            `Before the date: ${before}`,
+            `During: ${during}`,
+            `Mutual feel: ${mutual}`,
+            `Afterward: ${afterward}`,
+            wantNext ? `What they want next: ${wantNext}` : "",
+            notes.trim() ? `Notes: ${notes}` : "",
+            "",
+            "Return ONLY the JSON object. No prose, no markdown.",
+          ].filter(Boolean).join("\n"),
+          context: {
+            toolName: "Post-Meeting Reflection",
+            formValues: { before, during, mutual, afterward, wantNext, notes },
+          },
+        },
+      });
+      if (ai.isFallback || !ai.output.trim()) {
+        setResult(deterministic);
+        return;
+      }
+      const parsed = tryParseReflection(ai.output, deterministic);
+      setResult(parsed ?? deterministic);
+    } catch {
+      setResult(deterministic);
+    }
   }
 
   const show = result ?? DEMO;
