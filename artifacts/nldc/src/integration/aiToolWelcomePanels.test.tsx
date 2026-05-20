@@ -22,6 +22,29 @@ const generateReportMutateAsync = vi.fn(async () => ({
   rewrittenBio: "A rewritten test bio. With two sentences.",
 }));
 
+const createInsightMutateAsync = vi.fn(async () => ({ id: 1 }));
+const analyzeInsightMutateAsync = vi.fn(async () => ({
+  communicationPatterns: [],
+  attachmentStyle: "Secure",
+  strengths: ["Good listening"],
+  growthAreas: ["Ask for dates sooner"],
+  datingProfileTips: ["Be specific"],
+  summary: "Overall strong communicator.",
+}));
+
+const createSessionMutateAsync = vi.fn(async () => ({ id: 1 }));
+const coachMessageMutateAsync = vi.fn(async () => ({
+  analysis: "Good conversation so far.",
+  suggestedReplies: [
+    { style: "Playful", text: "Test reply", rationale: "Test reason" },
+    { style: "Direct", text: "Direct test", rationale: "Direct reason" },
+    { style: "Warm", text: "Warm test", rationale: "Warm reason" },
+  ],
+  tone: "Warm",
+  redFlags: [],
+  coachTip: "You're doing great.",
+}));
+
 vi.mock("@workspace/api-client-react", () => ({
   useEnhanceAi: () => ({ mutateAsync: enhanceMutateAsync, isPending: false }),
   useCreateAudit: () => ({ mutateAsync: createAuditMutateAsync, isPending: false }),
@@ -29,6 +52,25 @@ vi.mock("@workspace/api-client-react", () => ({
   getListAuditsQueryKey: () => ["list-audits"],
   useGetAiFallbackRate: () => ({ data: null, isLoading: false }),
   getGetAiFallbackRateQueryKey: () => ["ai-fallback-rate"],
+  // Insights
+  useListInsights: () => ({ data: [], isLoading: false }),
+  useCreateInsight: () => ({ mutateAsync: createInsightMutateAsync, isPending: false }),
+  useAnalyzeInsight: () => ({ mutateAsync: analyzeInsightMutateAsync, isPending: false }),
+  useGetInsightsRollup: () => ({ data: null }),
+  useDeleteInsight: () => ({ mutate: vi.fn(), isPending: false }),
+  getListInsightsQueryKey: () => ["list-insights"],
+  getGetInsightsRollupQueryKey: () => ["insights-rollup"],
+  // Coach / Lab sessions
+  useListMessageCoachingSessions: () => ({ data: [], isLoading: false }),
+  useCreateMessageCoachingSession: () => ({ mutateAsync: createSessionMutateAsync, isPending: false }),
+  useCoachMessage: () => ({ mutateAsync: coachMessageMutateAsync, isPending: false }),
+  getListMessageCoachingSessionsQueryKey: () => ["list-coaching-sessions"],
+  useGetCoachFollowUpStats: () => ({ data: null }),
+  getGetCoachFollowUpStatsQueryKey: () => ["coach-followup-stats"],
+  useGetCoachFollowUpTimeline: () => ({ data: null }),
+  getGetCoachFollowUpTimelineQueryKey: () => ["coach-followup-timeline"],
+  useRecordCoachFollowUp: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useExtractMessageScreenshot: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 vi.mock("@/components/layout/AppLayout", () => ({
@@ -55,6 +97,17 @@ vi.mock("@/lib/apiClient", () => ({
   captureLead: vi.fn(async () => ({})),
 }));
 
+vi.mock("@/hooks/use-toast", () => ({
+  useToast: () => ({ toast: vi.fn(() => ({ dismiss: vi.fn() })) }),
+}));
+
+vi.mock("@/lib/coachPrefs", () => ({
+  useCoachNudgePrefs: () => [{}, vi.fn()],
+  buildWebSnoozeChips: () => [],
+  buildTonightHourOptions: () => [],
+  buildTomorrowMorningHourOptions: () => [],
+}));
+
 // Auth mock is mutated per test to switch between anonymous / authenticated.
 const authState: { isAuthenticated: boolean } = { isAuthenticated: false };
 vi.mock("@workspace/replit-auth-web", () => ({
@@ -72,6 +125,15 @@ import PatternBreaker from "@/pages/PatternBreaker";
 import SignalCheck from "@/pages/SignalCheck";
 import Blueprint from "@/pages/Blueprint";
 import DatingWinsLog from "@/pages/DatingWinsLog";
+import CompatibilityCompass from "@/pages/CompatibilityCompass";
+import Archetype from "@/pages/Archetype";
+import Insights from "@/pages/Insights";
+import Lab from "@/pages/Lab";
+import Coach from "@/pages/Coach";
+import Reflection from "@/pages/Reflection";
+import StyleMap from "@/pages/StyleMap";
+import MirrorProfile from "@/pages/MirrorProfile";
+import GlowUp from "@/pages/GlowUp";
 
 // ---------------------------------------------------------------------------
 // Test lifecycle
@@ -85,6 +147,10 @@ beforeEach(() => {
   enhanceMutateAsync.mockClear();
   createAuditMutateAsync.mockClear();
   generateReportMutateAsync.mockClear();
+  createInsightMutateAsync.mockClear();
+  analyzeInsightMutateAsync.mockClear();
+  createSessionMutateAsync.mockClear();
+  coachMessageMutateAsync.mockClear();
   qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   localStorage.clear();
 });
@@ -195,6 +261,30 @@ const drivers: Driver[] = [
     },
   },
   {
+    // Second welcome panel on the same SignalCheck page — uses the WelcomePanel
+    // component with testId="signalcheck-empty-state" (distinct from the
+    // inline panel "signal-check-empty-state" covered above). Both are gated
+    // by the same isBrandNewUser condition, so runTool is identical.
+    name: "Signal Check (WelcomePanel variant)",
+    Page: SignalCheck,
+    emptyStateTestId: "signalcheck-empty-state",
+    anonymousDemoMatcher: /Your 3-Minute Signal Check/i,
+    runTool: async () => {
+      const bio = screen.getByTestId("textarea-signal-bio");
+      fireEvent.change(bio, {
+        target: { value: "I'm a curious, slightly bookish writer who loves long walks." },
+      });
+      const button = screen.getByTestId("button-run-signal-check");
+      fireEvent.click(button);
+      await waitFor(() => {
+        expect(createAuditMutateAsync).toHaveBeenCalled();
+      });
+      await waitFor(() => {
+        expect(generateReportMutateAsync).toHaveBeenCalled();
+      });
+    },
+  },
+  {
     // Gating variant: !result — panel shows for authenticated users who
     // haven't yet run the tool (result is null).
     name: "Blueprint",
@@ -238,6 +328,200 @@ const drivers: Driver[] = [
       });
       const saveBtn = screen.getByRole("button", { name: /Save win/i });
       fireEvent.click(saveBtn);
+    },
+  },
+  // -----------------------------------------------------------------------
+  // Newly covered pages
+  // -----------------------------------------------------------------------
+  {
+    name: "Compatibility Compass",
+    Page: CompatibilityCompass,
+    emptyStateTestId: "compass-empty-state",
+    // Anonymous users see the demo compass result.
+    anonymousDemoMatcher: /Example output — select your style above to get yours/i,
+    runTool: async () => {
+      // Select the first style pill ("Spark Chaser — …")
+      const stylePills = screen.getAllByRole("button", { name: /Spark Chaser/i });
+      fireEvent.click(stylePills[0]!);
+      const button = screen.getByRole("button", { name: /Find My Compass/i });
+      fireEvent.click(button);
+      // The mocked enhance returns isFallback:true, which falls back to the
+      // deterministic analyzeCompass output and sets result.
+      await waitFor(() => {
+        expect(enhanceMutateAsync).toHaveBeenCalled();
+      });
+    },
+  },
+  {
+    name: "Dating Archetype",
+    Page: Archetype,
+    emptyStateTestId: "archetype-empty-state",
+    // Anonymous users see the quiz form. Use the submit button text which is
+    // always rendered (disabled until all answers filled, but still present).
+    anonymousDemoMatcher: /Reveal My Archetype/i,
+    runTool: async () => {
+      // Answer all 6 questions by clicking one option per question.
+      // Q1: "When you first meet someone..."
+      fireEvent.click(screen.getByRole("button", { name: /Feel excited and lean in quickly/i }));
+      // Q2: "When someone you like pulls back..."
+      fireEvent.click(screen.getByRole("button", { name: /Feel anxious and reach out to check in/i }));
+      // Q3: "What you value most in early dating..."
+      fireEvent.click(screen.getByRole("button", { name: /The electric spark — you'll know it when you feel it/i }));
+      // Q4: "Your biggest challenge in dating..."
+      fireEvent.click(screen.getByRole("button", { name: /You fall fast and it doesn't usually work out/i }));
+      // Q5: "After a great first date..."
+      fireEvent.click(screen.getByRole("button", { name: /Text them that night or early the next morning/i }));
+      // Q6: "In a relationship that's going well..."
+      fireEvent.click(screen.getByRole("button", { name: /Dive deep — you're all in once you decide/i }));
+
+      const submitBtn = screen.getByRole("button", { name: /Reveal My Archetype/i });
+      fireEvent.click(submitBtn);
+      // computeArchetype runs synchronously — result is set immediately.
+    },
+  },
+  {
+    name: "Email Insights",
+    Page: Insights,
+    emptyStateTestId: "insights-empty-state",
+    // Anonymous users see the demo analysis results with the "Example analysis
+    // output" heading (shown when analysis === null and !isAuthenticated).
+    anonymousDemoMatcher: /Example analysis output/i,
+    runTool: async () => {
+      const contentArea = screen.getByTestId("textarea-message-history");
+      fireEvent.change(contentArea, {
+        target: { value: "Me: Hey! Love that you mentioned the Japan trip.\nAlex: Oh amazing! I did Tokyo." },
+      });
+      // Tick the consent checkbox
+      const consentLabel = screen.getByTestId("checkbox-consent");
+      fireEvent.click(consentLabel);
+      const analyzeBtn = screen.getByTestId("button-analyze-insights");
+      fireEvent.click(analyzeBtn);
+      await waitFor(() => {
+        expect(createInsightMutateAsync).toHaveBeenCalled();
+      });
+      await waitFor(() => {
+        expect(analyzeInsightMutateAsync).toHaveBeenCalled();
+      });
+    },
+  },
+  {
+    name: "Chemistry Lab",
+    Page: Lab,
+    emptyStateTestId: "lab-empty-state",
+    // Anonymous users see the demo lab results.
+    anonymousDemoMatcher: /Example output — paste your message above to get yours/i,
+    runTool: async () => {
+      const msgArea = screen.getByTestId("textarea-lab-message");
+      fireEvent.change(msgArea, {
+        target: { value: "Alex: I love that little ramen place on 5th\nMe: I've been meaning to try it" },
+      });
+      const runBtn = screen.getByTestId("button-run-lab");
+      fireEvent.click(runBtn);
+      await waitFor(() => {
+        expect(createSessionMutateAsync).toHaveBeenCalled();
+      });
+      await waitFor(() => {
+        expect(coachMessageMutateAsync).toHaveBeenCalled();
+      });
+    },
+  },
+  {
+    name: "Message Coach",
+    Page: Coach,
+    emptyStateTestId: "coach-empty-state",
+    // Anonymous users see the demo coaching banner.
+    anonymousDemoMatcher: /Example coaching output — fill in the form above to get yours/i,
+    runTool: async () => {
+      const lastMsgInput = screen.getByTestId("input-last-message");
+      fireEvent.change(lastMsgInput, {
+        target: { value: "Not yet but I've been meaning to" },
+      });
+      const coachBtn = screen.getByTestId("button-get-coaching");
+      fireEvent.click(coachBtn);
+      await waitFor(() => {
+        expect(createSessionMutateAsync).toHaveBeenCalled();
+      });
+      await waitFor(() => {
+        expect(coachMessageMutateAsync).toHaveBeenCalled();
+      });
+    },
+  },
+  {
+    name: "Post-Meeting Reflection",
+    Page: Reflection,
+    emptyStateTestId: "reflection-empty-state",
+    // Anonymous users see the demo reflection results.
+    anonymousDemoMatcher: /Example output — complete the form above to get yours/i,
+    runTool: async () => {
+      // Click one chip in each required group: before, during, mutual, afterward.
+      // FELT_BEFORE[0] = "Excited / hopeful"
+      fireEvent.click(screen.getByRole("button", { name: /Excited \/ hopeful/i }));
+      // DURING_FEEL[0] = "Like myself — relaxed and real"
+      fireEvent.click(screen.getByRole("button", { name: /Like myself — relaxed and real/i }));
+      // MUTUAL_FEEL[0] = "Yes — effort and interest felt balanced"
+      fireEvent.click(screen.getByRole("button", { name: /Yes — effort and interest felt balanced/i }));
+      // AFTERWARD[0] = "They reached out"
+      fireEvent.click(screen.getByRole("button", { name: /They reached out/i }));
+
+      const submitBtn = screen.getByRole("button", { name: /Get My Reflection/i });
+      fireEvent.click(submitBtn);
+      await waitFor(() => {
+        expect(enhanceMutateAsync).toHaveBeenCalled();
+      });
+    },
+  },
+  {
+    name: "Style Map",
+    Page: StyleMap,
+    emptyStateTestId: "stylemap-empty-state",
+    // Anonymous users see the demo style map results.
+    anonymousDemoMatcher: /Example output — paste your messages above to get yours/i,
+    runTool: async () => {
+      const conv = screen.getByPlaceholderText(/Paste the conversation thread here/i);
+      fireEvent.change(conv, {
+        target: { value: "Me: Hey! Love your profile.\nAlex: Thanks! I love hiking too.\nMe: Nice, me too! Where do you usually go?" },
+      });
+      const button = screen.getByRole("button", { name: /Map My Style/i });
+      fireEvent.click(button);
+      await waitFor(() => {
+        expect(enhanceMutateAsync).toHaveBeenCalled();
+      });
+    },
+  },
+  {
+    name: "Mirror Profile",
+    Page: MirrorProfile,
+    emptyStateTestId: "mirror-empty-state",
+    // Anonymous users see the demo mirror results.
+    anonymousDemoMatcher: /Example output — paste your bio above to get yours/i,
+    runTool: async () => {
+      const bioArea = screen.getByPlaceholderText(/Paste your current dating profile bio/i);
+      fireEvent.change(bioArea, {
+        target: { value: "I'm someone who loves honest conversations and long walks. Looking for something real." },
+      });
+      const button = screen.getByRole("button", { name: /Show Me My Mirror/i });
+      fireEvent.click(button);
+      await waitFor(() => {
+        expect(enhanceMutateAsync).toHaveBeenCalled();
+      });
+    },
+  },
+  {
+    name: "Glow Up",
+    Page: GlowUp,
+    emptyStateTestId: "glowup-empty-state",
+    // Anonymous users see the demo glow-up rewrites.
+    anonymousDemoMatcher: /Example rewrites — paste your bio above to get yours/i,
+    runTool: async () => {
+      const bioArea = screen.getByPlaceholderText(/Paste your current dating profile bio here/i);
+      fireEvent.change(bioArea, {
+        target: { value: "I like hiking, coffee, and honest conversations. Looking for someone real." },
+      });
+      const button = screen.getByRole("button", { name: /Glow Up My Profile/i });
+      fireEvent.click(button);
+      await waitFor(() => {
+        expect(enhanceMutateAsync).toHaveBeenCalled();
+      });
     },
   },
 ];
