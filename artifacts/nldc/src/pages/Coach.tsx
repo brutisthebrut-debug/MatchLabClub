@@ -477,7 +477,7 @@ export default function Coach() {
                 </div>
                 {followUpStats.totalPrompts === 0 ? (
                   <p className="text-xs text-muted-foreground leading-relaxed" data-testid="stats-empty-state">
-                    Answer the "did you send it?" prompts in the mobile app and we'll track how often your coached replies actually go out.
+                    Answer the "did you send it?" prompt after each coaching result and we'll track how often your coached replies actually go out.
                   </p>
                 ) : (
                   <>
