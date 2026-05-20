@@ -7,8 +7,9 @@ import {
   waitlistTable,
   messageCoachingSessionsTable,
   aiRequestMetricsTable,
+  aiRequestMetricsDailyTable,
 } from "@workspace/db";
-import { count, sql, desc } from "drizzle-orm";
+import { count, sql, desc, gte, asc } from "drizzle-orm";
 import {
   ALERT_WINDOW,
   ALERT_MIN_SAMPLE,
@@ -155,6 +156,52 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
       recentFirstTrySuccessRate: t.recent.firstTrySuccessRate,
     })),
   });
+});
+
+router.get("/founder/ai-metrics/trends", async (req, res): Promise<void> => {
+  const rawDays = Number(req.query.days);
+  const days = Number.isFinite(rawDays) && rawDays > 0 ? Math.min(Math.floor(rawDays), 365) : 90;
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const sinceDay = since.toISOString().slice(0, 10);
+
+  const rows = await db
+    .select({
+      day: aiRequestMetricsDailyTable.day,
+      toolName: aiRequestMetricsDailyTable.toolName,
+      total: aiRequestMetricsDailyTable.total,
+      firstTryOk: aiRequestMetricsDailyTable.firstTryOk,
+      retriedOk: aiRequestMetricsDailyTable.retriedOk,
+      fallbacks: aiRequestMetricsDailyTable.fallbacks,
+      validationFailures: aiRequestMetricsDailyTable.validationFailures,
+      avgAttempts: aiRequestMetricsDailyTable.avgAttempts,
+      avgDurationMs: aiRequestMetricsDailyTable.avgDurationMs,
+    })
+    .from(aiRequestMetricsDailyTable)
+    .where(gte(aiRequestMetricsDailyTable.day, sinceDay))
+    .orderBy(asc(aiRequestMetricsDailyTable.day), asc(aiRequestMetricsDailyTable.toolName));
+
+  const series = rows.map((r) => {
+    const total = Number(r.total);
+    const firstTryOk = Number(r.firstTryOk);
+    const retriedOk = Number(r.retriedOk);
+    const fallbacks = Number(r.fallbacks);
+    return {
+      day: typeof r.day === "string" ? r.day : new Date(r.day as unknown as string).toISOString().slice(0, 10),
+      toolName: r.toolName,
+      total,
+      firstTryOk,
+      retriedOk,
+      fallbacks,
+      validationFailures: Number(r.validationFailures),
+      firstTrySuccessRate: total > 0 ? firstTryOk / total : 0,
+      overallSuccessRate: total > 0 ? (firstTryOk + retriedOk) / total : 0,
+      fallbackRate: total > 0 ? fallbacks / total : 0,
+      avgAttempts: Number(r.avgAttempts),
+      avgDurationMs: Number(r.avgDurationMs),
+    };
+  });
+
+  res.json({ days, since: sinceDay, series });
 });
 
 export default router;
