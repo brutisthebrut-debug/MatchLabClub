@@ -206,6 +206,7 @@ const ACTION_GROUPS = [
       { icon: Brain,         label: "Pattern Board",     desc: "Recurring themes",                 href: "/progress/patterns"       },
       { icon: BarChart,      label: "Scorecard",         desc: "7 growth dimension meters",        href: "/progress/scorecard"      },
       { icon: Users,         label: "Companion",         desc: "Copy-ready situation guidance",    href: "/progress/companion"      },
+      { icon: RefreshCw,     label: "What Changed?",     desc: "Quick check-in on progress",       href: "/copilot/what-changed"    },
     ],
   },
   {
@@ -215,6 +216,7 @@ const ACTION_GROUPS = [
       { icon: Layers,        label: "Connection Center", desc: "Bring in context on your terms",   href: "/connections"     },
       { icon: Shield,        label: "Data Vault",        desc: "Preview, export, or delete",       href: "/vault"           },
       { icon: Settings,      label: "Integrations",      desc: "Manage connections",               href: "/integrations"    },
+      { icon: Star,          label: "Beta Feedback",     desc: "Help shape what gets built",       href: "/feedback"        },
     ],
   },
 ];

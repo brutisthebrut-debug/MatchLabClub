@@ -254,6 +254,9 @@ export default function Pricing() {
                       {tier.cta} <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
+                  {tier.price !== "$0" && (
+                    <p className="text-center text-[10px] text-muted-foreground/40 mt-2">30-day guarantee — we'll redo it or refund it</p>
+                  )}
                 </div>
               </motion.div>
             ))}

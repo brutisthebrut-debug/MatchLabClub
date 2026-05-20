@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, BarChart2, AlertCircle, RefreshCw } from "lucide-react";
+import { Loader2, BarChart2, AlertCircle, RefreshCw, Copy, Check } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { FallbackNotice } from "@/components/FallbackNotice";
@@ -16,6 +16,19 @@ const fadeUp = (delay = 0) => ({
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
 });
+
+function CopyBtn({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => { navigator.clipboard.writeText(text).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+      className="flex items-center gap-1 text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors flex-shrink-0"
+    >
+      {copied ? <Check className="w-3 h-3 text-[hsl(142_55%_60%)]" /> : <Copy className="w-3 h-3" />}
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
+}
 
 interface StyleMapResult {
   meters: { label: string; value: number; note: string; color: string }[];
@@ -299,17 +312,26 @@ export default function StyleMap() {
 
                 {/* Readout */}
                 <div className="glass border border-white/8 rounded-2xl p-6">
-                  <p className="font-semibold text-foreground text-sm mb-2">Practical Readout</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-semibold text-foreground text-sm">Practical Readout</p>
+                    <CopyBtn text={show.readout} />
+                  </div>
                   <p className="text-sm text-muted-foreground leading-relaxed">{show.readout}</p>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="rounded-2xl p-5 border border-[hsl(142_55%_60%/0.25)] bg-[hsl(142_55%_60%/0.07)]">
-                    <p className="font-semibold text-foreground text-sm mb-2">Top strength</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-semibold text-foreground text-sm">Top strength</p>
+                      <CopyBtn text={show.topStrength} />
+                    </div>
                     <p className="text-sm text-muted-foreground">{show.topStrength}</p>
                   </div>
                   <div className="rounded-2xl p-5 border border-[hsl(43_65%_65%/0.25)] bg-[hsl(43_65%_65%/0.07)]">
-                    <p className="font-semibold text-foreground text-sm mb-2">Growth edge</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-semibold text-foreground text-sm">Growth edge</p>
+                      <CopyBtn text={show.growthEdge} />
+                    </div>
                     <p className="text-sm text-muted-foreground">{show.growthEdge}</p>
                   </div>
                 </div>

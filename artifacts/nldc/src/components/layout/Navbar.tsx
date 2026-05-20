@@ -11,6 +11,7 @@ const YOUR_BLUEPRINT_PROFILE = [
   { name: "Before & After Gallery",href: "/gallery",        desc: "Sample rewrites across 8 real scenarios" },
   { name: "Mirror Profile",       href: "/mirror",         desc: "See yourself the way others might" },
   { name: "Profile Reader",       href: "/profile-reader", desc: "Decode someone else's profile" },
+  { name: "Photo Scan",           href: "/scan",           desc: "Screenshot → instant mini-audit" },
 ];
 
 const YOUR_BLUEPRINT_INSIGHT = [
@@ -41,12 +42,14 @@ const GROWTH_TRACKER = [
   { name: "Insights Roadmap",    href: "/progress/insights-roadmap",  desc: "What's being built — and your control" },
   { name: "Readiness Guide",     href: "/progress/readiness",         desc: "Goal-based readiness read" },
   { name: "Companion Workspace", href: "/progress/companion",         desc: "Copy-ready guidance for common situations" },
+  { name: "What Changed?",       href: "/copilot/what-changed",       desc: "Quick check-in on what's shifted" },
 ];
 
 const OFFERS = [
-  { name: "Pricing",          href: "/pricing",      desc: "Free · $97 · $197 — see what's included" },
-  { name: "Podcast Perks",    href: "/waitlist",     desc: "Listener discount + early access perks" },
-  { name: "Platform Vision",  href: "/roadmap",      desc: "What's live, in dev, and on the roadmap" },
+  { name: "Pricing",          href: "/pricing",        desc: "Free · $97 · $197 — see what's included" },
+  { name: "Podcast Perks",    href: "/waitlist",       desc: "Listener discount + early access perks" },
+  { name: "Platform Vision",  href: "/roadmap",        desc: "What's live, in dev, and on the roadmap" },
+  { name: "Sample Report",    href: "/sample-report",  desc: "See a real Dating Reset Report" },
 ];
 
 const SETTINGS_TRUST = [
@@ -57,6 +60,7 @@ const SETTINGS_TRUST = [
   { name: "User Control",       href: "/user-control", desc: "Approve, edit, export, delete" },
   { name: "Integrations",       href: "/integrations", desc: "Connected apps & privacy" },
   { name: "Privacy",            href: "/privacy",      desc: "How we handle data" },
+  { name: "Beta Feedback",      href: "/feedback",     desc: "Help shape what gets built next" },
 ];
 
 type DropdownId = "blueprint" | "messages" | "growth" | "offers" | null;
@@ -311,9 +315,10 @@ export function Navbar() {
           <Link href="/copilot/reply" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Help Me Reply</Link>
           <Link href="/copilot/profile" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Improve My Profile</Link>
           <Link href="/copilot/debrief" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Debrief What Happened</Link>
-          <Link href="/copilot/weekly-plan" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Weekly Growth Plan</Link>
-          <Link href="/copilot/prep"   onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Prepare for a Date</Link>
-          <Link href="/copilot/flirt"  onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Flirt Coach</Link>
+          <Link href="/copilot/weekly-plan"   onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Weekly Growth Plan</Link>
+          <Link href="/copilot/prep"         onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Prepare for a Date</Link>
+          <Link href="/copilot/flirt"        onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Flirt Coach</Link>
+          <Link href="/copilot/what-changed" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">What Changed?</Link>
           <div className="h-px bg-white/5 my-2" />
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1">Quizzes &amp; Gallery</p>
           <Link href="/quiz"     onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">Dating Signal Type Quiz</Link>

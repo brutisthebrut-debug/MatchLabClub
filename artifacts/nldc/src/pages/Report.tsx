@@ -228,6 +228,24 @@ const REPLY_STYLES: Record<string, { gradient: string; emoji: string; border: st
   "Graceful Exit": { gradient: "linear-gradient(135deg, hsl(228 25% 40%), hsl(232 28% 32%))", emoji: "🤍", border: "hsl(228 25% 50% / 0.25)" },
 };
 
+function ShareReportBtn() {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(window.location.href).catch(() => {});
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 bg-white/4 transition-colors"
+      data-testid="button-share-report"
+    >
+      {copied ? <Check className="w-3.5 h-3.5 text-[hsl(142_55%_60%)]" /> : <Copy className="w-3.5 h-3.5" />}
+      {copied ? "Copied!" : "Share"}
+    </button>
+  );
+}
+
 export default function Report() {
   const { id } = useParams<{ id: string }>();
   const auditId = parseInt(id ?? "0", 10);
@@ -454,15 +472,18 @@ export default function Report() {
                         </span>
                       ) : null}
                     </div>
-                    <button
-                      onClick={regenerate}
-                      disabled={regenerating || generating}
-                      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(268_52%_68%/0.3)] text-[hsl(268_60%_78%)] bg-[hsl(268_52%_68%/0.08)] hover:bg-[hsl(268_52%_68%/0.16)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      data-testid="button-regenerate-report"
-                    >
-                      <RefreshCw className={`w-3.5 h-3.5 ${regenerating ? "animate-spin" : ""}`} />
-                      {regenerating ? "Refreshing…" : isStaleEngine ? "Re-run with latest" : "Regenerate"}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <ShareReportBtn />
+                      <button
+                        onClick={regenerate}
+                        disabled={regenerating || generating}
+                        className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(268_52%_68%/0.3)] text-[hsl(268_60%_78%)] bg-[hsl(268_52%_68%/0.08)] hover:bg-[hsl(268_52%_68%/0.16)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        data-testid="button-regenerate-report"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${regenerating ? "animate-spin" : ""}`} />
+                        {regenerating ? "Refreshing…" : isStaleEngine ? "Re-run with latest" : "Regenerate"}
+                      </button>
+                    </div>
                   </div>
                 ) : null}
               </div>

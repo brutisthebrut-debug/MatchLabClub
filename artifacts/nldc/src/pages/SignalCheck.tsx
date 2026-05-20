@@ -346,7 +346,7 @@ export default function SignalCheck() {
                     <p className="text-xs text-muted-foreground mb-5 max-w-xs leading-relaxed">Your Signal Check is just the surface. The Full Dating Blueprint goes 6× deeper.</p>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold glow-pulse" data-testid="button-signal-full-audit">
-                        <Link href="/pricing">Get Full Audit <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                        <Link href="/start">Start My Full Audit <ArrowRight className="ml-2 h-4 w-4" /></Link>
                       </Button>
                       <Button asChild variant="ghost" className="rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5" data-testid="button-signal-waitlist">
                         <Link href="/waitlist">Join Waitlist — 40% off</Link>

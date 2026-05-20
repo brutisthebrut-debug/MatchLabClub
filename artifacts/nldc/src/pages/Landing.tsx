@@ -93,8 +93,16 @@ export default function Landing() {
               </Button>
             </motion.div>
 
+            {/* Sample report nudge */}
+            <motion.div className="flex justify-center mt-4" {...fadeUp(0.28)}>
+              <Link href="/sample-report" className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors flex items-center gap-1.5 group">
+                <span>See a sample Dating Reset Report</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </motion.div>
+
             {/* Social proof avatars */}
-            <motion.div className="flex items-center justify-center gap-3 mt-10" {...fadeUp(0.3)}>
+            <motion.div className="flex items-center justify-center gap-3 mt-6" {...fadeUp(0.3)}>
               <div className="flex -space-x-2.5">
                 {["A", "M", "J", "S", "R"].map((l, i) => (
                   <div

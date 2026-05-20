@@ -16,6 +16,7 @@ import {
   Loader2, Sparkles, Copy, Check, AlertTriangle,
   Lightbulb, Eye, TrendingUp, FlaskConical, ArrowRight
 } from "lucide-react";
+import { ConfidenceLabel, getConfidenceLevel } from "@/components/ToneBar";
 import { useMeta } from "@/hooks/useMeta";
 
 type CoachingResult = {
@@ -189,11 +190,15 @@ export default function Lab() {
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
               className={`space-y-5 ${isDemo ? "opacity-65" : ""}`} data-testid="section-lab-results">
 
-              {isDemo && (
+              {isDemo ? (
                 <div className="text-center py-1">
                   <span className="text-xs text-muted-foreground font-medium px-4 py-1.5 rounded-full bg-[hsl(232_28%_16%)] border border-white/8">
                     Example output — paste your message above to get yours
                   </span>
+                </div>
+              ) : (
+                <div className="flex justify-end">
+                  <ConfidenceLabel level={getConfidenceLevel(message.length + context.length, [matchName, goal].filter(Boolean).length)} />
                 </div>
               )}
 
