@@ -2,6 +2,8 @@ import { Router, type IRouter } from "express";
 import { z } from "zod";
 import { generate, getAiStatus, coachingPrompt, toolPrompt, type AiContext } from "../lib/aiService";
 import { requireFounder, rateLimit } from "../middlewares/founderAuth";
+import { db, aiRequestMetricsTable } from "@workspace/db";
+import { sql } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -40,6 +42,37 @@ const EnhanceBody = z.object({
 router.get("/ai/status", (_req, res) => {
   res.json(getAiStatus());
 });
+
+const FallbackRateQuery = z.object({
+  toolName: z.string().min(1).max(80),
+  windowSize: z.coerce.number().int().min(1).max(200).optional(),
+});
+
+router.get(
+  "/ai/fallback-rate",
+  rateLimit({ windowMs: 60_000, max: 60 }),
+  async (req, res): Promise<void> => {
+    const parsed = FallbackRateQuery.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid toolName or windowSize." });
+      return;
+    }
+    const { toolName } = parsed.data;
+    const windowSize = parsed.data.windowSize ?? 20;
+
+    const rows = await db
+      .select({ isFallback: aiRequestMetricsTable.isFallback })
+      .from(aiRequestMetricsTable)
+      .where(sql`${aiRequestMetricsTable.toolName} = ${toolName}`)
+      .orderBy(sql`${aiRequestMetricsTable.createdAt} desc`)
+      .limit(windowSize);
+
+    const total = rows.length;
+    const fallbacks = rows.filter((r) => r.isFallback === true).length;
+
+    res.json({ toolName, windowSize, total, fallbacks });
+  },
+);
 
 router.post(
   "/ai/test",

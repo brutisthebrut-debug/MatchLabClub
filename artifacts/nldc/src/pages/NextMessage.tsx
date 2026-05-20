@@ -11,6 +11,7 @@ import { useEnhanceAi } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { nextMessageSchema, parseAiJson } from "@/lib/aiSchemas";
 import { ToneBar, ConfidenceLabel, getConfidenceLevel } from "@/components/ToneBar";
+import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -252,6 +253,8 @@ export default function NextMessage() {
               <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Communication Tools</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Next Message</h1>
+            <FallbackRateBadge toolName="Next Message" className="mt-1" />
+
             <p className="text-muted-foreground mt-2">Give us context. Get seven copy-ready options — from safe to bold to clean exit. Pick the one that fits.</p>
           </motion.div>
 

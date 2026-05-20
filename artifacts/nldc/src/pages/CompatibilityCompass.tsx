@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, Compass, RefreshCw, AlertCircle } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { FallbackNotice } from "@/components/FallbackNotice";
+import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -269,6 +270,8 @@ export default function CompatibilityCompass() {
               <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Self-Insight</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Compatibility Compass</h1>
+            <FallbackRateBadge toolName="Compatibility Compass" className="mt-1" />
+
             <p className="text-muted-foreground mt-2 leading-relaxed">Tell us your connection style and the patterns that keep showing up. Get a read on what dynamics tend to support you — and what to watch for.<br /><span className="text-xs text-muted-foreground/60">Suggests rather than dictates. Based on what you share — not a clinical assessment.</span></p>
           </motion.div>
 

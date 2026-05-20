@@ -24,6 +24,7 @@ import type {
   AccountSummary,
   AiEnhanceInput,
   AiError,
+  AiFallbackRate,
   AiStatus,
   AiTestInput,
   AiTestResult,
@@ -57,6 +58,7 @@ import type {
   EmailMyDataExportResult,
   ExtractMessageScreenshot400,
   ExtractScreenshot400,
+  GetAiFallbackRateParams,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
   ListAuditsParams,
@@ -3580,6 +3582,96 @@ export const useEnhanceAi = <TError = ErrorType<AiError>,
       > => {
       return useMutation(getEnhanceAiMutationOptions(options));
     }
+
+export const getGetAiFallbackRateUrl = (params: GetAiFallbackRateParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/ai/fallback-rate?${stringifiedParams}` : `/api/ai/fallback-rate`
+}
+
+/**
+ * Returns the number of fallback (coach-written) answers out of the most
+recent `windowSize` AI requests for the given tool name. Public,
+unauthenticated — intended for a small "X of last N used the backup"
+transparency indicator on each AI tool page. Returns zeros when there
+is no data yet.
+
+ * @summary Get recent fallback rate for a single AI tool
+ */
+export const getAiFallbackRate = async (params: GetAiFallbackRateParams, options?: RequestInit): Promise<AiFallbackRate> => {
+
+  return customFetch<AiFallbackRate>(getGetAiFallbackRateUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAiFallbackRateQueryKey = (params?: GetAiFallbackRateParams,) => {
+    return [
+    `/api/ai/fallback-rate`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetAiFallbackRateQueryOptions = <TData = Awaited<ReturnType<typeof getAiFallbackRate>>, TError = ErrorType<AiError>>(params: GetAiFallbackRateParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAiFallbackRate>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAiFallbackRateQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiFallbackRate>>> = ({ signal }) => getAiFallbackRate(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAiFallbackRate>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAiFallbackRateQueryResult = NonNullable<Awaited<ReturnType<typeof getAiFallbackRate>>>
+export type GetAiFallbackRateQueryError = ErrorType<AiError>
+
+
+/**
+ * @summary Get recent fallback rate for a single AI tool
+ */
+
+export function useGetAiFallbackRate<TData = Awaited<ReturnType<typeof getAiFallbackRate>>, TError = ErrorType<AiError>>(
+ params: GetAiFallbackRateParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAiFallbackRate>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAiFallbackRateQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getTestAiUrl = (params?: TestAiParams,) => {
   const normalizedParams = new URLSearchParams();

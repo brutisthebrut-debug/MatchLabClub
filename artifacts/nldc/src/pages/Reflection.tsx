@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, RefreshCw, Copy, Check, AlertCircle, Heart } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { FallbackNotice } from "@/components/FallbackNotice";
+import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -285,6 +286,8 @@ export default function Reflection() {
               <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Meeting Reflection</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Post-Meeting Reflection</h1>
+            <FallbackRateBadge toolName="Post-Meeting Reflection" className="mt-1" />
+
             <p className="text-muted-foreground mt-2">Process how it felt, get a pattern read, and decide what's next — with a suggested message if you want one.</p>
           </motion.div>
 

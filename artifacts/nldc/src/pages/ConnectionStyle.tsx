@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, RefreshCw, Info } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { FallbackNotice } from "@/components/FallbackNotice";
+import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -392,6 +393,8 @@ export default function ConnectionStyle() {
               <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Self-Insight</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Connection Style Lens</h1>
+            <FallbackRateBadge toolName="Connection Style Lens" className="mt-1" />
+
             <p className="text-muted-foreground mt-2">Six questions that reveal the pattern beneath your dating behavior — how you connect, what your risk loop looks like, and what actually helps.</p>
           </motion.div>
 

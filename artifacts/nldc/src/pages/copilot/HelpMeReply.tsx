@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEnhanceAi } from "@workspace/api-client-react";
+import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 import { MessageSquare, Copy, Check, Loader2, Sparkles, RefreshCw, ArrowLeft, AlertCircle } from "lucide-react";
 
 const fadeUp = (delay = 0) => ({
@@ -173,6 +174,8 @@ export default function HelpMeReply() {
               <p className="text-sm font-medium text-[hsl(190_55%_72%)]">Wingman Studio</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Help Me Reply</h1>
+            <FallbackRateBadge toolName="Help Me Reply" className="mt-1" />
+
             <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
               Context in, copy-ready options out. Paste the thread, pick your tone and goal, get 5 replies with rationale.
             </p>

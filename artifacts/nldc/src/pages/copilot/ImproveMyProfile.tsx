@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEnhanceAi } from "@workspace/api-client-react";
+import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 import { Star, Copy, Check, Loader2, Sparkles, RefreshCw, ArrowLeft, AlertTriangle } from "lucide-react";
 
 const fadeUp = (delay = 0) => ({
@@ -153,6 +154,8 @@ export default function ImproveMyProfile() {
               <p className="text-sm font-medium text-[hsl(43_65%_75%)]">Wingman Studio</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Improve My Profile</h1>
+            <FallbackRateBadge toolName="Improve My Profile" className="mt-1" />
+
             <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">Paste your profile, pick your platform and tone — get a priority fix list and 3 copy-ready rewrites.</p>
           </motion.div>
 

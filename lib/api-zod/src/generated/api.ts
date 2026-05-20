@@ -1565,6 +1565,35 @@ export const EnhanceAiResponse = zod.object({
 
 
 /**
+ * Returns the number of fallback (coach-written) answers out of the most
+recent `windowSize` AI requests for the given tool name. Public,
+unauthenticated — intended for a small "X of last N used the backup"
+transparency indicator on each AI tool page. Returns zeros when there
+is no data yet.
+
+ * @summary Get recent fallback rate for a single AI tool
+ */
+export const getAiFallbackRateQueryToolNameMax = 80;
+
+export const getAiFallbackRateQueryWindowSizeDefault = 20;
+export const getAiFallbackRateQueryWindowSizeMax = 200;
+
+
+
+export const GetAiFallbackRateQueryParams = zod.object({
+  "toolName": zod.coerce.string().min(1).max(getAiFallbackRateQueryToolNameMax),
+  "windowSize": zod.coerce.number().min(1).max(getAiFallbackRateQueryWindowSizeMax).default(getAiFallbackRateQueryWindowSizeDefault).describe('How many recent requests to consider (1-200, defaults to 20).')
+})
+
+export const GetAiFallbackRateResponse = zod.object({
+  "toolName": zod.string(),
+  "windowSize": zod.number().describe('The cap on how many recent requests were considered.'),
+  "total": zod.number().describe('Number of recent requests actually counted (<= windowSize).'),
+  "fallbacks": zod.number().describe('Number of those requests that used the deterministic backup.')
+})
+
+
+/**
  * Safe diagnostic endpoint — runs a tiny generation request. Requires founder key. Falls back gracefully if AI is unavailable.
  * @summary Send a sample prompt through the server-side AI helper
  */

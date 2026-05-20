@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEnhanceAi } from "@workspace/api-client-react";
+import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 import { Flame, Copy, Check, Loader2, RefreshCw, ArrowLeft, Shield } from "lucide-react";
 
 const fadeUp = (delay = 0) => ({
@@ -179,6 +180,8 @@ export default function FlirtCoach() {
               <p className="text-sm font-medium text-[hsl(348_55%_75%)]">Wingman Studio</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Flirt Coach</h1>
+            <FallbackRateBadge toolName="Flirt Coach" className="mt-1" />
+
             <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">Draft messages for any moment — flirting, setting limits, asking for what you want, or leaving clean. All of it, no shame.</p>
           </motion.div>
 

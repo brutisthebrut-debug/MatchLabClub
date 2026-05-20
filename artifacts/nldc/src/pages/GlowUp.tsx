@@ -9,6 +9,7 @@ import { Loader2, Sparkles, Wand2, Copy, Check, RefreshCw, AlertCircle, ChevronD
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { ConfidenceLabel, getConfidenceLevel } from "@/components/ToneBar";
 import { FallbackNotice } from "@/components/FallbackNotice";
+import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -277,6 +278,8 @@ export default function GlowUp() {
               <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Profile Tools</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Profile Glow-Up Studio</h1>
+            <FallbackRateBadge toolName="Profile Glow-Up Studio" className="mt-1" />
+
             <p className="text-muted-foreground mt-2">Paste your current bio and get 10 versions — different styles, different platforms, all built from what actually works.</p>
           </motion.div>
 

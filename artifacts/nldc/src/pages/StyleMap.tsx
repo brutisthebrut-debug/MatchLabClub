@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, BarChart2, AlertCircle, RefreshCw } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { FallbackNotice } from "@/components/FallbackNotice";
+import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -231,6 +232,8 @@ export default function StyleMap() {
               <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Communication Tools</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Communication Style Map</h1>
+            <FallbackRateBadge toolName="Communication Style Map" className="mt-1" />
+
             <p className="text-muted-foreground mt-2">Paste a conversation, message thread, or anything you've written. Get a read on nine communication dimensions and a practical note on what to adjust.</p>
           </motion.div>
 

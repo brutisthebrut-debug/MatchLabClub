@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, ScanFace, AlertCircle, RefreshCw } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { FallbackNotice } from "@/components/FallbackNotice";
+import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -231,6 +232,8 @@ export default function MirrorProfile() {
               <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Self-Insight</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Mirror Profile</h1>
+            <FallbackRateBadge toolName="Mirror Profile" className="mt-1" />
+
             <p className="text-muted-foreground mt-2 leading-relaxed">Paste your bio or a short self-description. We'll reflect back what it shows — values, patterns, gaps, and the version of you that isn't fully visible yet.<br /><span className="text-xs text-muted-foreground/60">Based only on what you share. Practical coaching guidance — not clinical advice.</span></p>
           </motion.div>
 

@@ -715,6 +715,16 @@ export interface AiError {
   error: string;
 }
 
+export interface AiFallbackRate {
+  toolName: string;
+  /** The cap on how many recent requests were considered. */
+  windowSize: number;
+  /** Number of recent requests actually counted (<= windowSize). */
+  total: number;
+  /** Number of those requests that used the deterministic backup. */
+  fallbacks: number;
+}
+
 export type AiContextInputFormValues = { [key: string]: unknown };
 
 export type AiContextInputSavedResults = { [key: string]: unknown };
@@ -931,6 +941,20 @@ export type AuditFromScreenshot400 = {
 
 export type ExtractMessageScreenshot400 = {
   error?: string;
+};
+
+export type GetAiFallbackRateParams = {
+/**
+ * @minLength 1
+ * @maxLength 80
+ */
+toolName: string;
+/**
+ * How many recent requests to consider (1-200, defaults to 20).
+ * @minimum 1
+ * @maximum 200
+ */
+windowSize?: number;
 };
 
 export type TestAiParams = {

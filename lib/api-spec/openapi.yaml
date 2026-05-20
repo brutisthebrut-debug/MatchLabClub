@@ -1080,6 +1080,48 @@ paths:
               schema:
                 $ref: "#/components/schemas/AiError"
 
+  /ai/fallback-rate:
+    get:
+      operationId: getAiFallbackRate
+      tags: [ai]
+      summary: Get recent fallback rate for a single AI tool
+      description: |
+        Returns the number of fallback (coach-written) answers out of the most
+        recent `windowSize` AI requests for the given tool name. Public,
+        unauthenticated — intended for a small "X of last N used the backup"
+        transparency indicator on each AI tool page. Returns zeros when there
+        is no data yet.
+      parameters:
+        - name: toolName
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 80
+        - name: windowSize
+          in: query
+          required: false
+          description: How many recent requests to consider (1-200, defaults to 20).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 20
+      responses:
+        "200":
+          description: Recent fallback counts for the tool
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiFallbackRate"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiError"
+
   /ai/test:
     post:
       operationId: testAi
@@ -2080,6 +2122,22 @@ components:
       properties:
         error:
           type: string
+
+    AiFallbackRate:
+      type: object
+      required: [toolName, windowSize, total, fallbacks]
+      properties:
+        toolName:
+          type: string
+        windowSize:
+          type: integer
+          description: The cap on how many recent requests were considered.
+        total:
+          type: integer
+          description: Number of recent requests actually counted (<= windowSize).
+        fallbacks:
+          type: integer
+          description: Number of those requests that used the deterministic backup.
 
     AiContextInput:
       type: object
