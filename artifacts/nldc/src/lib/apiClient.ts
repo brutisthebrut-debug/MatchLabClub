@@ -310,3 +310,5 @@ export const getLeads = () =>
 
 export const getPurchaseInterestList = () =>
   get<PurchaseInterest[]>("/purchase-interest");
+
+export type OcrCorrectionField = OcrCorrectionFieldName;

@@ -8,11 +8,12 @@ import {
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
   type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
   type AiThresholdChange, type RollupHeartbeatResponse,
-  type OcrMismatchesResponse, type OcrMismatchesSort, type OcrMismatchesWindow
+  type OcrMismatchesResponse, type OcrMismatchesSort, type OcrMismatchesWindow,
+  type OcrCorrectionField
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
 import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
-import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download } from "lucide-react";
+import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
 
 type AiMode = "live" | "fallback" | "setup-needed";
@@ -1409,12 +1410,15 @@ const OCR_FIELD_LABELS: Record<string, string> = {
   prompts: "Prompts",
 };
 
+const OCR_FILTER_FIELDS: OcrCorrectionField[] = ["firstName", "age", "sourceApp", "bio", "prompts"];
+
 function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
   const [windowDays, setWindowDays] = useState<OcrMismatchesWindow>(30);
   const [sort, setSort] = useState<OcrMismatchesSort>("total");
   const [data, setData] = useState<OcrMismatchesResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<OcrCorrectionField | "all">("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -1429,8 +1433,12 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
     return () => { cancelled = true; };
   }, [windowDays, sort, refreshKey]);
 
+  const filteredRecent = data && filter !== "all"
+    ? data.recent.filter((r) => r.field === filter)
+    : data?.recent ?? [];
+
   return (
-    <div className="glass rounded-2xl p-6 space-y-4" data-testid="panel-ocr-mismatches">
+    <div className="glass rounded-2xl p-6 space-y-4" data-testid="ocr-mismatches-panel">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h2 className="font-semibold text-foreground">OCR Mismatches</h2>
@@ -1478,38 +1486,38 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
 
       {data && !loading && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="ocr-summary">
-            <div className="glass rounded-xl p-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="ocr-summary-cards">
+            <div className="glass rounded-xl p-3" data-testid="ocr-summary-total-screenshots">
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Screenshot audits</p>
               <p className="text-lg font-semibold text-foreground">{data.summary.totalScreenshotAudits}</p>
             </div>
-            <div className="glass rounded-xl p-3">
+            <div className="glass rounded-xl p-3" data-testid="ocr-summary-with-raw">
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">With raw OCR</p>
               <p className="text-lg font-semibold text-foreground">{data.summary.auditsWithRawOcr}</p>
             </div>
-            <div className="glass rounded-xl p-3">
+            <div className="glass rounded-xl p-3" data-testid="ocr-summary-with-corrections">
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">With corrections</p>
               <p className="text-lg font-semibold text-foreground">{data.summary.auditsWithCorrections}</p>
             </div>
-            <div className="glass rounded-xl p-3">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Sampled audits</p>
+            <div className="glass rounded-xl p-3" data-testid="ocr-summary-sample-size">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Sample size</p>
               <p className="text-lg font-semibold text-foreground">{data.summary.sampleSize}</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" data-testid="ocr-per-field">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" data-testid="ocr-per-field-cards">
             {data.perField.map((f) => (
               <div
                 key={f.field}
                 className="glass rounded-xl p-4 space-y-2"
-                data-testid={`ocr-field-${f.field}`}
+                data-testid={`ocr-field-card-${f.field}`}
               >
                 <div className="flex items-baseline justify-between gap-2">
                   <h3 className="text-sm font-semibold text-foreground">
                     {OCR_FIELD_LABELS[f.field] ?? f.field}
                   </h3>
                   <div className="flex items-baseline gap-2 text-[10px] uppercase tracking-widest text-muted-foreground/60">
-                    <span data-testid={`ocr-field-${f.field}-total`}>
+                    <span data-testid={`ocr-field-count-${f.field}`}>
                       {f.correctionsCount} total
                     </span>
                     <span data-testid={`ocr-field-${f.field}-top`}>
@@ -1533,23 +1541,80 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
             ))}
           </div>
 
-          {data.recent.length > 0 && (
-            <div className="space-y-2">
+          <div className="space-y-3" data-testid="ocr-recent-section">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
               <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                 Recent corrections
               </h3>
-              <TableShell
-                headers={["Audit", "Field", "Raw", "Corrected", "Date"]}
-                rows={data.recent.slice(0, 12).map((r) => [
-                  `#${r.auditId}`,
-                  OCR_FIELD_LABELS[r.field] ?? r.field,
-                  r.raw,
-                  r.corrected,
-                  fmtDate(r.createdAt),
-                ])}
-              />
+              <div className="flex flex-wrap gap-1.5" data-testid="ocr-filter-chips">
+                <button
+                  type="button"
+                  onClick={() => setFilter("all")}
+                  data-testid="ocr-filter-chip-all"
+                  className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border transition-colors ${
+                    filter === "all"
+                      ? "border-[hsl(268_52%_68%/0.5)] bg-[hsl(268_52%_68%/0.15)] text-[hsl(268_52%_78%)]"
+                      : "border-white/10 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  All ({data.recent.length})
+                </button>
+                {OCR_FILTER_FIELDS.map((field) => {
+                  const count = data.recent.filter((r) => r.field === field).length;
+                  return (
+                    <button
+                      key={field}
+                      type="button"
+                      onClick={() => setFilter(field)}
+                      data-testid={`ocr-filter-chip-${field}`}
+                      className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border transition-colors ${
+                        filter === field
+                          ? "border-[hsl(268_52%_68%/0.5)] bg-[hsl(268_52%_68%/0.15)] text-[hsl(268_52%_78%)]"
+                          : "border-white/10 text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {OCR_FIELD_LABELS[field] ?? field} ({count})
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          )}
+            <div data-testid="ocr-recent-row-count" className="text-xs text-muted-foreground/70">
+              Showing {filteredRecent.length} of {data.recent.length}
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm" data-testid="ocr-recent-table">
+                <thead>
+                  <tr className="text-left text-xs text-muted-foreground/60 border-b border-white/5">
+                    <th className="py-2 pr-3">Audit</th>
+                    <th className="py-2 pr-3">Field</th>
+                    <th className="py-2 pr-3">Raw</th>
+                    <th className="py-2 pr-3">Corrected</th>
+                    <th className="py-2 pr-3">Date</th>
+                  </tr>
+                </thead>
+                <tbody data-testid="ocr-recent-tbody">
+                  {filteredRecent.length === 0 ? (
+                    <tr data-testid="ocr-recent-empty">
+                      <td colSpan={5} className="py-4 text-center text-xs text-muted-foreground/60 italic">
+                        No diffs for this field.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRecent.map((r, i) => (
+                      <tr key={`${r.auditId}-${r.field}-${i}`} data-testid="ocr-recent-row" data-field={r.field} className="border-b border-white/5">
+                        <td className="py-2 pr-3 font-mono text-xs">#{r.auditId}</td>
+                        <td className="py-2 pr-3 text-xs">{OCR_FIELD_LABELS[r.field] ?? r.field}</td>
+                        <td className="py-2 pr-3 font-mono text-xs text-red-300/80 truncate max-w-[200px]">{r.raw}</td>
+                        <td className="py-2 pr-3 font-mono text-xs text-emerald-300/80 truncate max-w-[200px]">{r.corrected}</td>
+                        <td className="py-2 pr-3 text-xs text-muted-foreground/70">{fmtDate(r.createdAt)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </>
       )}
     </div>
@@ -1693,7 +1758,8 @@ function LockedView({ onSubmit }: { onSubmit: (key: string) => void }) {
   );
 }
 
-type Tab = "overview" | "leads" | "audits" | "purchases" | "waitlist" | "emails" | "testing";
+type Tab = "overview" | "leads" | "audits" | "purchases" | "waitlist" | "emails" | "testing" | "ocr-mismatches";
+
 
 function Dashboard() {
   const [tab, setTab] = useState<Tab>("overview");
@@ -1723,6 +1789,7 @@ function Dashboard() {
     { id: "waitlist",  label: `Waitlist (${waitlistStats?.totalCount ?? 0})`, icon: Users   },
     { id: "emails",    label: "Email Templates",                       icon: Mail           },
     { id: "testing",   label: "Testing Checklist",                     icon: ClipboardCheck },
+    { id: "ocr-mismatches", label: "OCR Mismatches",                   icon: ScanLine       },
   ];
 
   return (
@@ -1893,6 +1960,9 @@ function Dashboard() {
 
       {/* Email Templates */}
       {tab === "emails" && <EmailTemplatesPanel />}
+
+      {/* OCR Mismatches */}
+      {tab === "ocr-mismatches" && <OcrMismatchesPanel refreshKey={refreshKey} />}
 
       {/* Testing Checklist */}
       {tab === "testing" && <TestingChecklistPanel />}
