@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Smartphone, Copy, Check, Loader2, Download } from "lucide-react";
+import { Smartphone, Copy, Check, Loader2, Download, RefreshCw } from "lucide-react";
 import QRCode from "qrcode";
 import { useIssueAnonymousClaimHandoff } from "@workspace/api-client-react";
 import {
@@ -17,12 +17,19 @@ import { buildHandoffShareUrl } from "@/lib/handoffLink";
 interface IssuedLink {
   url: string;
   expiresAt: string;
+  /** True once this link has been shared at least once (copy or download). */
+  wasShared: boolean;
 }
 
 function formatExpiry(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "soon";
   return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function isExpired(iso: string): boolean {
+  const date = new Date(iso);
+  return !Number.isNaN(date.getTime()) && date.getTime() <= Date.now();
 }
 
 export function HandoffShareDialog() {
@@ -55,18 +62,12 @@ export function HandoffShareDialog() {
     };
   }, [issued]);
 
-  async function handleOpenChange(next: boolean): Promise<void> {
-    setOpen(next);
-    if (!next) {
-      setIssued(null);
-      setCopied(false);
-      return;
-    }
-    if (issued) return;
+  async function generateLink(): Promise<void> {
     try {
       const result = await issue.mutateAsync();
       const url = buildHandoffShareUrl(result.handoff);
-      setIssued({ url, expiresAt: result.expiresAt });
+      setIssued({ url, expiresAt: result.expiresAt, wasShared: false });
+      setCopied(false);
     } catch {
       toast({
         title: "Couldn't generate link",
@@ -78,6 +79,25 @@ export function HandoffShareDialog() {
     }
   }
 
+  async function handleOpenChange(next: boolean): Promise<void> {
+    setOpen(next);
+    if (!next) {
+      // Keep `issued` so re-opening shows the same link rather than silently
+      // minting a new token. The user must explicitly ask for a fresh one.
+      setCopied(false);
+      return;
+    }
+    // If there's no link yet, or the previous one has expired, generate one.
+    if (!issued || isExpired(issued.expiresAt)) {
+      await generateLink();
+    }
+  }
+
+  async function handleGenerateNew(): Promise<void> {
+    setIssued(null);
+    await generateLink();
+  }
+
   function handleDownload(): void {
     if (!qrDataUrl) return;
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 23);
@@ -85,6 +105,7 @@ export function HandoffShareDialog() {
     a.href = qrDataUrl;
     a.download = `handoff-qr-${timestamp}.png`;
     a.click();
+    setIssued((prev) => (prev ? { ...prev, wasShared: true } : prev));
   }
 
   async function handleCopy(): Promise<void> {
@@ -92,6 +113,7 @@ export function HandoffShareDialog() {
     try {
       await navigator.clipboard.writeText(issued.url);
       setCopied(true);
+      setIssued((prev) => (prev ? { ...prev, wasShared: true } : prev));
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
       toast({
@@ -103,6 +125,7 @@ export function HandoffShareDialog() {
   }
 
   const loading = issue.isPending && !issued;
+  const expired = issued ? isExpired(issued.expiresAt) : false;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -136,8 +159,17 @@ export function HandoffShareDialog() {
           </div>
         )}
 
-        {issued && (
+        {issued && !expired && (
           <div className="space-y-3">
+            {issued.wasShared && (
+              <p
+                className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-[11px] text-amber-800"
+                data-testid="handoff-already-shared-notice"
+              >
+                You already shared this link. Each link works only once — if
+                device C already used it, generate a fresh one below.
+              </p>
+            )}
             <div className="flex justify-center">
               <div
                 className="rounded-lg bg-white p-3"
@@ -203,6 +235,44 @@ export function HandoffShareDialog() {
               only on the next sign-in. Don't share it with anyone else — it
               gives access to your anonymous audit.
             </p>
+            {issued.wasShared && (
+              <Button
+                onClick={handleGenerateNew}
+                size="sm"
+                variant="ghost"
+                disabled={issue.isPending}
+                className="w-full text-muted-foreground"
+                data-testid="button-handoff-generate-new"
+              >
+                {issue.isPending ? (
+                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                )}
+                Generate a fresh link
+              </Button>
+            )}
+          </div>
+        )}
+
+        {issued && expired && (
+          <div className="space-y-3 text-center py-2">
+            <p className="text-sm text-muted-foreground" data-testid="handoff-expired-notice">
+              That link expired. Generate a new one to continue.
+            </p>
+            <Button
+              onClick={handleGenerateNew}
+              size="sm"
+              disabled={issue.isPending}
+              data-testid="button-handoff-generate-new"
+            >
+              {issue.isPending ? (
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+              )}
+              Generate a new link
+            </Button>
           </div>
         )}
       </DialogContent>

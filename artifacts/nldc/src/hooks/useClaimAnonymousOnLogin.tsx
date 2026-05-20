@@ -198,15 +198,15 @@ export function useClaimAnonymousOnLogin(): void {
             toast({
               title: "This link was already used",
               description:
-                "You've already claimed your audits on this device. Open your dashboard to pick up where you left off.",
-              duration: 10000,
+                "This hand-off link has already been redeemed. If your audits didn't arrive, ask the original device to generate a fresh link — or start a new audit here.",
+              duration: 12000,
               action: (
                 <ToastAction
-                  altText="Open dashboard"
-                  data-testid="button-handoff-already-used-dashboard"
-                  onClick={() => setLocation("/dashboard")}
+                  altText="Start a new audit"
+                  data-testid="button-handoff-already-used-start"
+                  onClick={() => setLocation("/start")}
                 >
-                  Open dashboard
+                  Start fresh
                 </ToastAction>
               ),
             });
