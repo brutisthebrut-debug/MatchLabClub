@@ -1,8 +1,10 @@
 import { Feather } from "@expo/vector-icons";
 import {
   getListAuditsQueryKey,
+  getListExpiringTrashedAuditsQueryKey,
   getListTrashedAuditsQueryKey,
   useEmptyTrash,
+  useListExpiringTrashedAudits,
   useListTrashedAudits,
   usePurgeAudit,
   useRestoreAllTrash,
@@ -12,6 +14,10 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import React from "react";
+import {
+  maybeScheduleTrashReminder,
+  resetTrashReminderSignature,
+} from "@/lib/auditTrashNotifications";
 import {
   ActivityIndicator,
   Alert,
@@ -58,10 +64,39 @@ export default function TrashScreen() {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, refetch, isRefetching } =
     useListTrashedAudits();
+  const { data: expiringData } = useListExpiringTrashedAudits();
   const restore = useRestoreAudit();
   const purge = usePurgeAudit();
   const emptyTrash = useEmptyTrash();
   const restoreAll = useRestoreAllTrash();
+
+  React.useEffect(() => {
+    if (!expiringData) return;
+    const ids = expiringData.audits.map((a) => a.id);
+    const earliest = expiringData.audits[0]?.deletedAt ?? null;
+    const retentionDays = expiringData.retentionDays;
+    const earliestDaysLeft = earliest
+      ? Math.max(
+          0,
+          retentionDays -
+            Math.floor(
+              (Date.now() - new Date(earliest).getTime()) /
+                (24 * 60 * 60 * 1000),
+            ),
+        )
+      : 0;
+    void maybeScheduleTrashReminder({
+      ids,
+      soonestDeletedAt: earliest,
+      earliestDaysLeft,
+    });
+  }, [expiringData]);
+
+  // After the user has actually opened the trash screen, allow the next
+  // batch of expiring audits to fire a fresh notification.
+  React.useEffect(() => {
+    void resetTrashReminderSignature();
+  }, []);
 
   const [purgeTarget, setPurgeTarget] = React.useState<Audit | null>(null);
   const [purgeConfirmText, setPurgeConfirmText] = React.useState("");
@@ -76,6 +111,9 @@ export default function TrashScreen() {
   const invalidate = React.useCallback(() => {
     void queryClient.invalidateQueries({
       queryKey: getListTrashedAuditsQueryKey(),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: getListExpiringTrashedAuditsQueryKey(),
     });
     void queryClient.invalidateQueries({ queryKey: getListAuditsQueryKey() });
     void queryClient.invalidateQueries({ queryKey: ["/audits/summary"] });
@@ -235,6 +273,64 @@ export default function TrashScreen() {
                 Empty trash
               </Text>
             </Pressable>
+          </View>
+        ) : null}
+
+        {expiringData && expiringData.audits.length > 0 ? (
+          <View
+            testID="banner-trash-expiring"
+            style={[
+              styles.warningBanner,
+              {
+                borderColor: colors.destructive ?? "#ef4444",
+                backgroundColor: `${colors.destructive ?? "#ef4444"}1f`,
+              },
+            ]}
+          >
+            <Feather
+              name="alert-triangle"
+              size={18}
+              color={colors.destructive ?? "#ef4444"}
+            />
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text
+                style={[
+                  styles.warningTitle,
+                  { color: colors.destructive ?? "#ef4444" },
+                ]}
+              >
+                {expiringData.audits.length === 1
+                  ? "1 audit is about to be deleted forever"
+                  : `${expiringData.audits.length} audits are about to be deleted forever`}
+              </Text>
+              <Text
+                style={[
+                  styles.warningBody,
+                  { color: colors.mutedForeground },
+                ]}
+              >
+                {(() => {
+                  const earliest = expiringData.audits[0]?.deletedAt;
+                  const left = earliest
+                    ? Math.max(
+                        0,
+                        expiringData.retentionDays -
+                          Math.floor(
+                            (Date.now() - new Date(earliest).getTime()) /
+                              (24 * 60 * 60 * 1000),
+                          ),
+                      )
+                    : 0;
+                  const when =
+                    left <= 0
+                      ? "today"
+                      : left === 1
+                        ? "tomorrow"
+                        : `in ${left} days`;
+                  return `${expiringData.audits.length === 1 ? "It" : "The earliest"} purges ${when}. Restore anything you want to keep.`;
+                })()}
+              </Text>
+            </View>
           </View>
         ) : null}
 
@@ -467,6 +563,16 @@ export default function TrashScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   intro: { fontSize: 14, lineHeight: 20, marginBottom: 4 },
+  warningBanner: {
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 14,
+    flexDirection: "row",
+    gap: 12,
+    alignItems: "flex-start",
+  },
+  warningTitle: { fontSize: 14, fontWeight: "700" },
+  warningBody: { fontSize: 13, lineHeight: 18 },
   center: { paddingVertical: 48, alignItems: "center" },
   empty: {
     borderWidth: 1,

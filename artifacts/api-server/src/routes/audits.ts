@@ -16,8 +16,10 @@ import {
   BulkDeleteAuditsResponse,
   EmptyTrashResponse,
   RestoreAllTrashResponse,
+  ListExpiringTrashedAuditsResponse,
 } from "@workspace/api-zod";
 import { generateAuditReport } from "../lib/aiEngine";
+import { getRetentionDays } from "../lib/auditTrashPurge";
 import {
   getAnonClaimToken,
   getOrCreateAnonClaimToken,
@@ -225,6 +227,44 @@ router.post("/audits", async (req, res): Promise<void> => {
     .returning();
 
   res.status(201).json(GetAuditResponse.parse(serializeAudit(audit)));
+});
+
+router.get("/audits/trash/expiring-soon", async (req, res): Promise<void> => {
+  const retentionDays = getRetentionDays();
+  const withinDaysRaw =
+    typeof req.query.withinDays === "string" ? req.query.withinDays : undefined;
+  const withinDays = parseIntInRange(withinDaysRaw, 1, 30, 3);
+
+  // Fetch every trashed audit the caller owns, then filter to those whose
+  // purge moment (deletedAt + retentionDays) is within the next `withinDays`.
+  // Trash sets are tiny per user (capped at the 30-day retention window), so
+  // in-process filtering is fine and keeps the query portable.
+  const trashed = await db
+    .select()
+    .from(auditsTable)
+    .where(and(ownerScope(req), isNotNull(auditsTable.deletedAt)) as SQL)
+    .orderBy(asc(auditsTable.deletedAt));
+
+  const now = Date.now();
+  const dayMs = 24 * 60 * 60 * 1000;
+  const earliestDeletedMs = now - retentionDays * dayMs;
+  const latestDeletedMs = now - (retentionDays - withinDays) * dayMs;
+  const expiring = trashed.filter((a) => {
+    if (!a.deletedAt) return false;
+    const t =
+      a.deletedAt instanceof Date
+        ? a.deletedAt.getTime()
+        : new Date(a.deletedAt).getTime();
+    return t >= earliestDeletedMs && t < latestDeletedMs;
+  });
+
+  res.json(
+    ListExpiringTrashedAuditsResponse.parse({
+      audits: expiring.map(serializeAudit),
+      retentionDays,
+      withinDays,
+    }),
+  );
 });
 
 router.get("/audits/trash", async (req, res): Promise<void> => {

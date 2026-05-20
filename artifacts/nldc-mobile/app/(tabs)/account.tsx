@@ -7,7 +7,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -20,6 +20,13 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+import {
+  DEFAULT_TRASH_REMINDER_PREFS,
+  loadTrashReminderPrefs,
+  saveTrashReminderPrefs,
+  type TrashReminderPrefs,
+} from "@/lib/auditTrashNotifications";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScrollView } from "react-native-gesture-handler";
 
@@ -75,6 +82,26 @@ export default function AccountScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const [trashPrefs, setTrashPrefs] = useState<TrashReminderPrefs>(
+    DEFAULT_TRASH_REMINDER_PREFS,
+  );
+  useEffect(() => {
+    let active = true;
+    void loadTrashReminderPrefs().then((p) => {
+      if (active) setTrashPrefs(p);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+  const onToggleTrashReminders = React.useCallback(
+    (next: boolean) => {
+      const updated: TrashReminderPrefs = { ...trashPrefs, enabled: next };
+      setTrashPrefs(updated);
+      void saveTrashReminderPrefs(updated);
+    },
+    [trashPrefs],
+  );
   const {
     user,
     isAuthenticated,
@@ -494,6 +521,39 @@ export default function AccountScreen() {
               </>
             )}
           </Pressable>
+        </View>
+
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.card, borderColor: colors.cardBorder },
+          ]}
+        >
+          <View style={styles.cardHeader}>
+            <View
+              style={[styles.iconBubble, { backgroundColor: `${colors.gold}22` }]}
+            >
+              <Feather name="bell" size={16} color={colors.gold} />
+            </View>
+            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+              Recently deleted reminders
+            </Text>
+            <View style={{ flex: 1 }} />
+            <Switch
+              testID="switch-trash-reminders"
+              value={trashPrefs.enabled}
+              onValueChange={onToggleTrashReminders}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={
+                Platform.OS === "android" ? colors.background : undefined
+              }
+            />
+          </View>
+          <Text style={[styles.cardBody, { color: colors.mutedForeground }]}>
+            {trashPrefs.enabled
+              ? "We'll send you a heads-up a few days before any trashed audit is permanently deleted, so you can restore it if you change your mind."
+              : "Off — we won't warn you before trashed audits are auto-deleted after 30 days."}
+          </Text>
         </View>
 
         <View

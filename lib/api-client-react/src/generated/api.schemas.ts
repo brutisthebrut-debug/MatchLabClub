@@ -825,6 +825,15 @@ export interface RestoreAllTrashResult {
   restoredIds: number[];
 }
 
+export interface ExpiringTrashedAudits {
+  /** Trashed audits within `withinDays` of permanent purge, earliest first. */
+  audits: Audit[];
+  /** Number of days an audit can stay in the trash before being permanently purged. */
+  retentionDays: number;
+  /** The lookahead window (in days) that was used to compute this list. */
+  withinDays: number;
+}
+
 export interface DeleteAuditResult {
   success: true;
   deletedId: number;
@@ -1003,6 +1012,15 @@ export const ListAuditsScoreRange = {
   medium: 'medium',
   high: 'high',
 } as const;
+
+export type ListExpiringTrashedAuditsParams = {
+/**
+ * Number of days of headroom to look ahead. Defaults to 3.
+ * @minimum 1
+ * @maximum 30
+ */
+withinDays?: number;
+};
 
 export type ExtractScreenshot400 = {
   error?: string;

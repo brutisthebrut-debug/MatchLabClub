@@ -58,12 +58,14 @@ import type {
   EmailMyDataExportResult,
   EmptyTrashResult,
   EngineMeta,
+  ExpiringTrashedAudits,
   ExtractMessageScreenshot400,
   ExtractScreenshot400,
   GetAiFallbackRateParams,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
   ListAuditsParams,
+  ListExpiringTrashedAuditsParams,
   LogoutSuccess,
   MessageCoachingInput,
   MessageCoachingResponse,
@@ -1875,6 +1877,98 @@ export function useListTrashedAudits<TData = Awaited<ReturnType<typeof listTrash
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListTrashedAuditsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListExpiringTrashedAuditsUrl = (params?: ListExpiringTrashedAuditsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/audits/trash/expiring-soon?${stringifiedParams}` : `/api/audits/trash/expiring-soon`
+}
+
+/**
+ * Returns soft-deleted audits owned by the caller that will be
+permanently purged within the next `withinDays` days (default 3,
+max 30). Used by clients to warn users — via push notification or
+an in-app banner — before their trash is auto-emptied. Audits are
+ordered by `deletedAt` ascending (earliest purge first). The
+`retentionDays` field exposes the server's purge window so clients
+can compute exact purge timestamps without hard-coding it.
+
+ * @summary List trashed audits that are within a few days of being permanently purged
+ */
+export const listExpiringTrashedAudits = async (params?: ListExpiringTrashedAuditsParams, options?: RequestInit): Promise<ExpiringTrashedAudits> => {
+
+  return customFetch<ExpiringTrashedAudits>(getListExpiringTrashedAuditsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListExpiringTrashedAuditsQueryKey = (params?: ListExpiringTrashedAuditsParams,) => {
+    return [
+    `/api/audits/trash/expiring-soon`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListExpiringTrashedAuditsQueryOptions = <TData = Awaited<ReturnType<typeof listExpiringTrashedAudits>>, TError = ErrorType<unknown>>(params?: ListExpiringTrashedAuditsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listExpiringTrashedAudits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListExpiringTrashedAuditsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listExpiringTrashedAudits>>> = ({ signal }) => listExpiringTrashedAudits(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listExpiringTrashedAudits>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListExpiringTrashedAuditsQueryResult = NonNullable<Awaited<ReturnType<typeof listExpiringTrashedAudits>>>
+export type ListExpiringTrashedAuditsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List trashed audits that are within a few days of being permanently purged
+ */
+
+export function useListExpiringTrashedAudits<TData = Awaited<ReturnType<typeof listExpiringTrashedAudits>>, TError = ErrorType<unknown>>(
+ params?: ListExpiringTrashedAuditsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listExpiringTrashedAudits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListExpiringTrashedAuditsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

@@ -619,6 +619,77 @@ describe("GET /api/audits/trash", () => {
   });
 });
 
+describe("GET /api/audits/trash/expiring-soon", () => {
+  async function backdateDeletedAt(auditId: number, daysAgo: number) {
+    const { dumpTable } = await import("../lib/testDb");
+    const rows = dumpTable("audits");
+    const row = rows.find((r) => r.id === auditId);
+    if (!row) throw new Error(`Audit ${auditId} not found in test db`);
+    row.deletedAt = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+  }
+
+  it("returns audits within 3 days of purge by default and skips fresh trash", async () => {
+    const freshlyDeletedId = await createAudit({ id: USER_ID });
+    const aboutToPurgeId = await createAudit({ id: USER_ID });
+    const activeId = await createAudit({ id: USER_ID });
+    testApp.setUser({ id: USER_ID });
+    await request(testApp.app).delete(`/api/audits/${freshlyDeletedId}`);
+    await request(testApp.app).delete(`/api/audits/${aboutToPurgeId}`);
+    // Backdate the "about to purge" audit to 28 days ago — inside the
+    // default 3-day warning window (retention 30 - 3 = 27 days threshold).
+    await backdateDeletedAt(aboutToPurgeId, 28);
+
+    const res = await request(testApp.app).get(
+      "/api/audits/trash/expiring-soon",
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.retentionDays).toBe(30);
+    expect(res.body.withinDays).toBe(3);
+    const ids = (res.body.audits as Array<{ id: number }>).map((a) => a.id);
+    expect(ids).toContain(aboutToPurgeId);
+    expect(ids).not.toContain(freshlyDeletedId);
+    expect(ids).not.toContain(activeId);
+  });
+
+  it("respects the withinDays query param", async () => {
+    const id = await createAudit({ id: USER_ID });
+    testApp.setUser({ id: USER_ID });
+    await request(testApp.app).delete(`/api/audits/${id}`);
+    await backdateDeletedAt(id, 22); // 8 days from purge
+
+    const tight = await request(testApp.app).get(
+      "/api/audits/trash/expiring-soon?withinDays=3",
+    );
+    expect(tight.body.audits.map((a: { id: number }) => a.id)).not.toContain(
+      id,
+    );
+
+    const wide = await request(testApp.app).get(
+      "/api/audits/trash/expiring-soon?withinDays=10",
+    );
+    expect(wide.status).toBe(200);
+    expect(wide.body.withinDays).toBe(10);
+    expect(wide.body.audits.map((a: { id: number }) => a.id)).toContain(id);
+  });
+
+  it("scopes the expiring list to the calling user", async () => {
+    const otherUserId = `other-${crypto.randomBytes(4).toString("hex")}`;
+    const theirsId = await createAudit({ id: otherUserId });
+    testApp.setUser({ id: otherUserId });
+    await request(testApp.app).delete(`/api/audits/${theirsId}`);
+    await backdateDeletedAt(theirsId, 28);
+
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).get(
+      "/api/audits/trash/expiring-soon",
+    );
+    expect(res.status).toBe(200);
+    expect(
+      (res.body.audits as Array<{ id: number }>).map((a) => a.id),
+    ).not.toContain(theirsId);
+  });
+});
+
 describe("POST /api/audits/:id/restore", () => {
   it("restores a soft-deleted audit and makes it visible again", async () => {
     const id = await createAudit({ id: USER_ID });

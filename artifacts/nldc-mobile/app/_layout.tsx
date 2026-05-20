@@ -32,6 +32,7 @@ import {
   setPendingCoachFollowUpPrompt,
   snoozeCoachReminder,
 } from "@/lib/coachNotifications";
+import { TRASH_NOTIFICATION_TYPE } from "@/lib/auditTrashNotifications";
 
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -80,11 +81,13 @@ function RootLayoutNav() {
       response: Notifications.NotificationResponse,
     ) {
       const data = response.notification.request.content.data;
-      if (
-        !data ||
-        typeof data !== "object" ||
-        (data as { type?: unknown }).type !== COACH_NOTIFICATION_TYPE
-      ) {
+      if (!data || typeof data !== "object") return;
+      const type = (data as { type?: unknown }).type;
+      if (type === TRASH_NOTIFICATION_TYPE) {
+        router.push("/trash");
+        return;
+      }
+      if (type !== COACH_NOTIFICATION_TYPE) {
         return;
       }
       const action = response.actionIdentifier;

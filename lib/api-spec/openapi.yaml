@@ -635,6 +635,37 @@ paths:
                 items:
                   $ref: "#/components/schemas/Audit"
 
+  /audits/trash/expiring-soon:
+    get:
+      operationId: listExpiringTrashedAudits
+      tags: [audits]
+      summary: List trashed audits that are within a few days of being permanently purged
+      description: |
+        Returns soft-deleted audits owned by the caller that will be
+        permanently purged within the next `withinDays` days (default 3,
+        max 30). Used by clients to warn users — via push notification or
+        an in-app banner — before their trash is auto-emptied. Audits are
+        ordered by `deletedAt` ascending (earliest purge first). The
+        `retentionDays` field exposes the server's purge window so clients
+        can compute exact purge timestamps without hard-coding it.
+      parameters:
+        - name: withinDays
+          in: query
+          required: false
+          description: Number of days of headroom to look ahead. Defaults to 3.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 30
+            default: 3
+      responses:
+        "200":
+          description: Trashed audits about to be purged.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpiringTrashedAudits"
+
   /audits/{id}/restore:
     post:
       operationId: restoreAudit
@@ -2445,6 +2476,22 @@ components:
           type: array
           items:
             type: integer
+
+    ExpiringTrashedAudits:
+      type: object
+      required: [audits, retentionDays, withinDays]
+      properties:
+        audits:
+          type: array
+          items:
+            $ref: "#/components/schemas/Audit"
+          description: Trashed audits within `withinDays` of permanent purge, earliest first.
+        retentionDays:
+          type: integer
+          description: Number of days an audit can stay in the trash before being permanently purged.
+        withinDays:
+          type: integer
+          description: The lookahead window (in days) that was used to compute this list.
 
     DeleteAuditResult:
       type: object
