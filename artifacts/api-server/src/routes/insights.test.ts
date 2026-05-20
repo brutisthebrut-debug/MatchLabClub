@@ -329,6 +329,101 @@ describe("GET /api/insights/rollup", () => {
     expect(() => GetInsightsRollupResponse.parse(res.body)).not.toThrow();
   });
 
+  it("folds two imports from the same source into one tile with averaged traits and correct signaturePattern", async () => {
+    // Import 1: warmth-heavy Hinge conversation (emotional words, no humor)
+    await createAndAnalyzeInsight(ROLLUP_USER_ID, {
+      sourceLabel: "Hinge export — warmth heavy",
+      pastedContent: HINGE_CONTENT,
+      sourceApp: "Hinge",
+      consentGiven: true,
+    });
+    // Import 2: humor-heavy Hinge conversation (humor words, no emotional)
+    await createAndAnalyzeInsight(ROLLUP_USER_ID, {
+      sourceLabel: "Hinge export — humor heavy",
+      pastedContent: IMESSAGE_CONTENT,
+      sourceApp: "Hinge",
+      consentGiven: true,
+    });
+
+    testApp.setUser({ id: ROLLUP_USER_ID });
+    const res = await request(testApp.app).get("/api/insights/rollup");
+    expect(res.status).toBe(200);
+
+    // Both imports share the same sourceApp so they must collapse into ONE tile
+    expect(res.body.sources).toHaveLength(1);
+    const tile = res.body.sources[0];
+    expect(tile.sourceApp).toBe("Hinge");
+    expect(tile.count).toBe(2);
+
+    // Traits must be the average of the two individual score vectors:
+    //   HINGE_CONTENT:   warmth=100, humor=0,   curiosity=0, verbosity=49
+    //   IMESSAGE_CONTENT: warmth=0,  humor=100, curiosity=0, verbosity=20
+    //   Average:          warmth=50, humor=50,  curiosity=0, verbosity=35
+    expect(tile.traits.warmth).toBe(50);
+    expect(tile.traits.humor).toBe(50);
+    expect(tile.traits.curiosity).toBe(0);
+    expect(tile.traits.verbosity).toBe(35);
+
+    // Both imports produce short messages (wordCount < 80) so each analysis emits
+    // "Concise messaging style" as its first pattern → count=2, wins the signaturePattern
+    expect(tile.signaturePattern).toBe("Concise messaging style");
+
+    // Only one source → no cross-source comparisons
+    expect(res.body.comparisons).toEqual([]);
+    expect(res.body.totalAnalyzed).toBe(2);
+  });
+
+  it("sorts sources by import count and fires correct comparisons when one source has more imports", async () => {
+    // Two Hinge imports (warmth-heavy + humor-heavy) → averaged traits
+    await createAndAnalyzeInsight(ROLLUP_USER_ID, {
+      sourceLabel: "Hinge export — warmth heavy",
+      pastedContent: HINGE_CONTENT,
+      sourceApp: "Hinge",
+      consentGiven: true,
+    });
+    await createAndAnalyzeInsight(ROLLUP_USER_ID, {
+      sourceLabel: "Hinge export — humor heavy",
+      pastedContent: IMESSAGE_CONTENT,
+      sourceApp: "Hinge",
+      consentGiven: true,
+    });
+    // One iMessage import (humor-heavy only) → un-averaged traits
+    await createAndAnalyzeInsight(ROLLUP_USER_ID, {
+      sourceLabel: "iMessage export",
+      pastedContent: IMESSAGE_CONTENT,
+      sourceApp: "iMessage",
+      consentGiven: true,
+    });
+
+    testApp.setUser({ id: ROLLUP_USER_ID });
+    const res = await request(testApp.app).get("/api/insights/rollup");
+    expect(res.status).toBe(200);
+
+    expect(res.body.totalAnalyzed).toBe(3);
+    // Two distinct sources
+    expect(res.body.sources).toHaveLength(2);
+
+    // Hinge (count=2) must sort before iMessage (count=1)
+    expect(res.body.sources[0].sourceApp).toBe("Hinge");
+    expect(res.body.sources[0].count).toBe(2);
+    expect(res.body.sources[1].sourceApp).toBe("iMessage");
+    expect(res.body.sources[1].count).toBe(1);
+
+    // Hinge averaged warmth=50; iMessage warmth=0 → delta=50 ≥ 15 → warmth comparison fires
+    const warmthCmp = res.body.comparisons.find((c: { trait: string }) => c.trait === "warmth");
+    expect(warmthCmp).toBeDefined();
+    expect(warmthCmp.leader).toBe("Hinge");
+    expect(warmthCmp.laggard).toBe("iMessage");
+    expect(warmthCmp.delta).toBe(50);
+
+    // iMessage humor=100; Hinge averaged humor=50 → delta=50 ≥ 15 → humor comparison fires
+    const humorCmp = res.body.comparisons.find((c: { trait: string }) => c.trait === "humor");
+    expect(humorCmp).toBeDefined();
+    expect(humorCmp.leader).toBe("iMessage");
+    expect(humorCmp.laggard).toBe("Hinge");
+    expect(humorCmp.delta).toBe(50);
+  });
+
   it("does not leak insights from a different user into the rollup", async () => {
     const otherUser = `other-rollup-${crypto.randomBytes(4).toString("hex")}`;
     await createAndAnalyzeInsight(otherUser, {
