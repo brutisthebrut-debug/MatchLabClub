@@ -6,13 +6,14 @@ import {
   PlusJakartaSans_800ExtraBold,
   useFonts,
 } from "@expo-google-fonts/plus-jakarta-sans";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { setBaseUrl } from "@workspace/api-client-react";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
+import { AuthProvider, getStoredAuthToken } from "@/lib/auth";
 import * as Notifications from "expo-notifications";
 import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 
 import {
   COACH_ACTION_DISMISS,
@@ -46,6 +47,8 @@ if (domain) {
   setBaseUrl(`https://${domain}`);
 }
 
+setAuthTokenGetter(() => getStoredAuthToken());
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -57,6 +60,11 @@ const queryClient = new QueryClient({
 
 function RootLayoutNav() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const handleAuthChange = useCallback(() => {
+    // Re-fetch every user-scoped query when the auth identity flips.
+    void queryClient.invalidateQueries();
+  }, [queryClient]);
 
   useEffect(() => {
     async function handleResponse(
@@ -126,17 +134,19 @@ function RootLayoutNav() {
   }, [router]);
 
   return (
-    <Stack
-      screenOptions={{
-        headerBackTitle: "Back",
-        headerStyle: { backgroundColor: "#0B0F1D" },
-        headerTintColor: "#ECEEF5",
-        contentStyle: { backgroundColor: "#0B0F1D" },
-      }}
-    >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="audit/[id]" options={{ title: "Mini-report" }} />
-    </Stack>
+    <AuthProvider onAuthChange={handleAuthChange}>
+      <Stack
+        screenOptions={{
+          headerBackTitle: "Back",
+          headerStyle: { backgroundColor: "#0B0F1D" },
+          headerTintColor: "#ECEEF5",
+          contentStyle: { backgroundColor: "#0B0F1D" },
+        }}
+      >
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="audit/[id]" options={{ title: "Mini-report" }} />
+      </Stack>
+    </AuthProvider>
   );
 }
 

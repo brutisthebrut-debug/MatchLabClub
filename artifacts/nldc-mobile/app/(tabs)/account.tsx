@@ -23,6 +23,7 @@ import { ScrollView } from "react-native-gesture-handler";
 
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { useColors } from "@/hooks/useColors";
+import { useAuth } from "@/lib/auth";
 
 type Banner = { kind: "success" | "error"; text: string } | null;
 
@@ -71,12 +72,43 @@ export default function AccountScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const {
+    user,
+    isAuthenticated,
+    isLoading: isAuthLoading,
+    isSigningIn,
+    error: authError,
+    login,
+    logout,
+  } = useAuth();
 
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [banner, setBanner] = useState<Banner>(null);
+
+  const fullName =
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    user?.email ||
+    "Signed in";
+
+  async function handleSignIn() {
+    setBanner(null);
+    await login();
+  }
+
+  async function handleSignOut() {
+    setBanner(null);
+    setIsSigningOut(true);
+    try {
+      await logout();
+      setBanner({ kind: "success", text: "You've been signed out." });
+    } finally {
+      setIsSigningOut(false);
+    }
+  }
 
   const topInset = Platform.OS === "web" ? Math.max(insets.top, 24) : insets.top;
   const bottomInset =
@@ -154,8 +186,166 @@ export default function AccountScreen() {
         <ScreenHeader
           eyebrow="Account"
           title="Your data, your call"
-          subtitle="Download everything we have about you, or permanently remove your account from any device."
+          subtitle="Sign in to manage your audits across devices, download everything we have about you, or permanently remove your account."
         />
+
+        {authError ? (
+          <View
+            testID="account-auth-error"
+            style={[
+              styles.banner,
+              {
+                backgroundColor: `${colors.destructive}22`,
+                borderColor: colors.destructive,
+              },
+            ]}
+          >
+            <Feather name="alert-circle" size={16} color={colors.destructive} />
+            <Text
+              style={[styles.bannerText, { color: colors.destructive }]}
+            >
+              {authError}
+            </Text>
+          </View>
+        ) : null}
+
+        {isAuthLoading ? (
+          <View
+            testID="account-auth-loading"
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.cardBorder,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingVertical: 28,
+              },
+            ]}
+          >
+            <ActivityIndicator color={colors.violet} />
+          </View>
+        ) : isAuthenticated ? (
+          <View
+            testID="account-identity-card"
+            style={[
+              styles.card,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+          >
+            <View style={styles.cardHeader}>
+              <View
+                style={[
+                  styles.iconBubble,
+                  { backgroundColor: `${colors.gold}22` },
+                ]}
+              >
+                <Feather name="user" size={16} color={colors.gold} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  testID="account-name"
+                  style={[styles.cardTitle, { color: colors.foreground }]}
+                  numberOfLines={1}
+                >
+                  {fullName}
+                </Text>
+                {user?.email ? (
+                  <Text
+                    testID="account-email"
+                    style={[
+                      styles.cardBody,
+                      { color: colors.mutedForeground, marginTop: 2 },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {user.email}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+            <Pressable
+              testID="button-account-signout"
+              disabled={isSigningOut || deleted}
+              onPress={() => {
+                void handleSignOut();
+              }}
+              style={({ pressed }) => [
+                styles.actionBtn,
+                {
+                  borderColor: colors.border,
+                  backgroundColor: colors.input,
+                  opacity: isSigningOut || deleted ? 0.5 : pressed ? 0.85 : 1,
+                },
+              ]}
+            >
+              {isSigningOut ? (
+                <ActivityIndicator color={colors.foreground} />
+              ) : (
+                <>
+                  <Feather name="log-out" size={15} color={colors.foreground} />
+                  <Text
+                    style={[styles.actionLabel, { color: colors.foreground }]}
+                  >
+                    Sign out
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          </View>
+        ) : (
+          <View
+            testID="account-signin-card"
+            style={[
+              styles.card,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+          >
+            <View style={styles.cardHeader}>
+              <View
+                style={[
+                  styles.iconBubble,
+                  { backgroundColor: `${colors.gold}22` },
+                ]}
+              >
+                <Feather name="log-in" size={16} color={colors.gold} />
+              </View>
+              <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+                Sign in to your account
+              </Text>
+            </View>
+            <Text style={[styles.cardBody, { color: colors.mutedForeground }]}>
+              Sign in to sync your audits, matches, and message coaching across
+              devices — and to download or delete your data from here.
+            </Text>
+            <Pressable
+              testID="button-account-signin"
+              disabled={isSigningIn}
+              onPress={() => {
+                void handleSignIn();
+              }}
+              style={({ pressed }) => [
+                styles.actionBtn,
+                {
+                  borderColor: colors.gold,
+                  backgroundColor: `${colors.gold}14`,
+                  opacity: isSigningIn ? 0.6 : pressed ? 0.85 : 1,
+                },
+              ]}
+            >
+              {isSigningIn ? (
+                <ActivityIndicator color={colors.gold} />
+              ) : (
+                <>
+                  <Feather name="log-in" size={15} color={colors.gold} />
+                  <Text style={[styles.actionLabel, { color: colors.gold }]}>
+                    Sign in
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          </View>
+        )}
 
         {banner ? (
           <View
