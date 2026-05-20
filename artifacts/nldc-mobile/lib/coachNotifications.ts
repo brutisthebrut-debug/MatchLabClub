@@ -5,9 +5,14 @@ import { Platform } from "react-native";
 const PERMISSION_ASKED_KEY = "nldc.coach.notifPermissionAsked";
 const SCHEDULED_ID_KEY = "nldc.coach.scheduledReminderId";
 const DRAFT_KEY = "nldc.coach.savedDraft";
+const SEND_STATS_KEY = "nldc.coach.sendThroughStats";
+const PENDING_PROMPT_KEY = "nldc.coach.pendingFollowUpPrompt";
 
 export const COACH_REMINDER_DELAY_SECONDS = 2 * 60 * 60;
 export const COACH_NOTIFICATION_TYPE = "coach-unsent-reply";
+export const COACH_NOTIFICATION_CATEGORY = "coach-unsent-reply-followup";
+export const COACH_ACTION_SENT = "coach-followup-sent";
+export const COACH_ACTION_NOT_SENT = "coach-followup-not-sent";
 
 export interface SavedCoachDraft {
   matchName: string;
@@ -17,7 +22,26 @@ export interface SavedCoachDraft {
   savedAt: number;
 }
 
+export type CoachFollowUpAnswer = "sent" | "not_sent";
+
+export interface CoachSendStats {
+  totalPrompts: number;
+  sentCount: number;
+  notSentCount: number;
+  lastAnsweredAt: number | null;
+  lastAnswer: CoachFollowUpAnswer | null;
+}
+
+const EMPTY_STATS: CoachSendStats = {
+  totalPrompts: 0,
+  sentCount: 0,
+  notSentCount: 0,
+  lastAnsweredAt: null,
+  lastAnswer: null,
+};
+
 let handlerConfigured = false;
+let categoryConfigured = false;
 
 export function configureNotificationHandler() {
   if (handlerConfigured) return;
@@ -30,6 +54,32 @@ export function configureNotificationHandler() {
       shouldSetBadge: false,
     }),
   });
+  void configureCoachNotificationCategory();
+}
+
+async function configureCoachNotificationCategory() {
+  if (categoryConfigured) return;
+  if (Platform.OS === "web") return;
+  categoryConfigured = true;
+  try {
+    await Notifications.setNotificationCategoryAsync(
+      COACH_NOTIFICATION_CATEGORY,
+      [
+        {
+          identifier: COACH_ACTION_SENT,
+          buttonTitle: "Sent it ✅",
+          options: { opensAppToForeground: false },
+        },
+        {
+          identifier: COACH_ACTION_NOT_SENT,
+          buttonTitle: "Still thinking 💭",
+          options: { opensAppToForeground: false },
+        },
+      ],
+    );
+  } catch {
+    // ignore — categories aren't supported everywhere
+  }
 }
 
 export async function ensureCoachNotificationPermission(): Promise<boolean> {
@@ -73,9 +123,10 @@ export async function scheduleCoachReminder(opts: {
   try {
     const id = await Notifications.scheduleNotificationAsync({
       content: {
-        title: "Still feeling that reply?",
-        body: `You drafted a reply to ${who} a couple of hours ago. Worth sending it?`,
+        title: "Did you send that reply?",
+        body: `You drafted a reply to ${who} a couple of hours ago — tap to let us know.`,
         data: { type: COACH_NOTIFICATION_TYPE },
+        categoryIdentifier: COACH_NOTIFICATION_CATEGORY,
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
@@ -113,5 +164,59 @@ export async function clearCoachDraft() {
     await AsyncStorage.removeItem(DRAFT_KEY);
   } catch {
     // ignore
+  }
+}
+
+export async function recordCoachFollowUp(answer: CoachFollowUpAnswer) {
+  try {
+    const current = await loadCoachSendStats();
+    const next: CoachSendStats = {
+      totalPrompts: current.totalPrompts + 1,
+      sentCount: current.sentCount + (answer === "sent" ? 1 : 0),
+      notSentCount: current.notSentCount + (answer === "not_sent" ? 1 : 0),
+      lastAnsweredAt: Date.now(),
+      lastAnswer: answer,
+    };
+    await AsyncStorage.setItem(SEND_STATS_KEY, JSON.stringify(next));
+    await clearCoachDraft();
+    await cancelCoachReminder();
+  } catch {
+    // ignore
+  }
+}
+
+export async function loadCoachSendStats(): Promise<CoachSendStats> {
+  try {
+    const raw = await AsyncStorage.getItem(SEND_STATS_KEY);
+    if (!raw) return { ...EMPTY_STATS };
+    const parsed = JSON.parse(raw) as Partial<CoachSendStats>;
+    return {
+      totalPrompts: parsed.totalPrompts ?? 0,
+      sentCount: parsed.sentCount ?? 0,
+      notSentCount: parsed.notSentCount ?? 0,
+      lastAnsweredAt: parsed.lastAnsweredAt ?? null,
+      lastAnswer: parsed.lastAnswer ?? null,
+    };
+  } catch {
+    return { ...EMPTY_STATS };
+  }
+}
+
+export async function setPendingCoachFollowUpPrompt() {
+  try {
+    await AsyncStorage.setItem(PENDING_PROMPT_KEY, "1");
+  } catch {
+    // ignore
+  }
+}
+
+export async function consumePendingCoachFollowUpPrompt(): Promise<boolean> {
+  try {
+    const v = await AsyncStorage.getItem(PENDING_PROMPT_KEY);
+    if (!v) return false;
+    await AsyncStorage.removeItem(PENDING_PROMPT_KEY);
+    return true;
+  } catch {
+    return false;
   }
 }

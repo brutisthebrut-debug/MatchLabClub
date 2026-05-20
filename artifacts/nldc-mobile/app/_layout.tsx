@@ -15,8 +15,12 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
 
 import {
+  COACH_ACTION_NOT_SENT,
+  COACH_ACTION_SENT,
   COACH_NOTIFICATION_TYPE,
   configureNotificationHandler,
+  recordCoachFollowUp,
+  setPendingCoachFollowUpPrompt,
 } from "@/lib/coachNotifications";
 
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -47,25 +51,39 @@ function RootLayoutNav() {
   const router = useRouter();
 
   useEffect(() => {
-    function handleData(data: unknown) {
+    async function handleResponse(
+      response: Notifications.NotificationResponse,
+    ) {
+      const data = response.notification.request.content.data;
       if (
-        data &&
-        typeof data === "object" &&
-        (data as { type?: unknown }).type === COACH_NOTIFICATION_TYPE
+        !data ||
+        typeof data !== "object" ||
+        (data as { type?: unknown }).type !== COACH_NOTIFICATION_TYPE
       ) {
-        router.push("/coach");
+        return;
       }
+      const action = response.actionIdentifier;
+      if (action === COACH_ACTION_SENT) {
+        await recordCoachFollowUp("sent");
+        return;
+      }
+      if (action === COACH_ACTION_NOT_SENT) {
+        await recordCoachFollowUp("not_sent");
+        return;
+      }
+      await setPendingCoachFollowUpPrompt();
+      router.push("/coach");
     }
 
     const subscription = Notifications.addNotificationResponseReceivedListener(
       (response) => {
-        handleData(response.notification.request.content.data);
+        void handleResponse(response);
       },
     );
 
     Notifications.getLastNotificationResponseAsync()
       .then((response) => {
-        if (response) handleData(response.notification.request.content.data);
+        if (response) void handleResponse(response);
       })
       .catch(() => {});
 

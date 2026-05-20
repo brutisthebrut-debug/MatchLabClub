@@ -21,11 +21,15 @@ import { useColors } from "@/hooks/useColors";
 import {
   cancelCoachReminder,
   clearCoachDraft,
+  consumePendingCoachFollowUpPrompt,
   ensureCoachNotificationPermission,
   loadCoachDraft,
+  recordCoachFollowUp,
   saveCoachDraft,
   scheduleCoachReminder,
 } from "@/lib/coachNotifications";
+import { useFocusEffect } from "expo-router";
+import { Pressable } from "react-native";
 
 interface Reply {
   style: string;
@@ -77,6 +81,35 @@ export default function CoachScreen() {
   const isPending = createSession.isPending || coach.isPending;
   const hasRequestedPermission = useRef(false);
   const hasRestoredDraft = useRef(false);
+  const [followUpPrompt, setFollowUpPrompt] = useState(false);
+  const [followUpAck, setFollowUpAck] = useState<null | "sent" | "not_sent">(
+    null,
+  );
+
+  useFocusEffect(
+    React.useCallback(() => {
+      let cancelled = false;
+      consumePendingCoachFollowUpPrompt().then((pending) => {
+        if (!cancelled && pending) {
+          setFollowUpAck(null);
+          setFollowUpPrompt(true);
+        }
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, []),
+  );
+
+  async function handleFollowUp(answer: "sent" | "not_sent") {
+    setFollowUpPrompt(false);
+    setFollowUpAck(answer);
+    await recordCoachFollowUp(answer);
+    setResults(null);
+    setMatchName("");
+    setContext("");
+    setLastMessage("");
+  }
 
   useEffect(() => {
     if (hasRestoredDraft.current) return;
@@ -168,6 +201,79 @@ export default function CoachScreen() {
           title="Reply that lands"
           subtitle="Paste what you've got. Get three replies in different tones — copy the one that sounds like you."
         />
+
+        {followUpPrompt ? (
+          <View
+            style={[
+              styles.followUpCard,
+              { backgroundColor: colors.card, borderColor: colors.violet },
+            ]}
+          >
+            <Text style={[styles.followUpTitle, { color: colors.foreground }]}>
+              Quick check — did you send that reply?
+            </Text>
+            <Text
+              style={[styles.followUpBody, { color: colors.mutedForeground }]}
+            >
+              Tap to let us know. We use this to track which coached replies
+              actually make it out the door.
+            </Text>
+            <View style={styles.followUpRow}>
+              <Pressable
+                onPress={() => handleFollowUp("sent")}
+                style={[
+                  styles.followUpBtn,
+                  {
+                    backgroundColor: colors.violet,
+                    borderColor: colors.violet,
+                  },
+                ]}
+              >
+                <Text style={[styles.followUpBtnText, { color: "#0B0F1D" }]}>
+                  Sent it ✅
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => handleFollowUp("not_sent")}
+                style={[
+                  styles.followUpBtn,
+                  {
+                    backgroundColor: "transparent",
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.followUpBtnText, { color: colors.foreground }]}
+                >
+                  Still thinking 💭
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
+
+        {followUpAck ? (
+          <View
+            style={[
+              styles.followUpAck,
+              { backgroundColor: `${colors.violet}1A`, borderColor: colors.violet },
+            ]}
+          >
+            <Feather
+              name={followUpAck === "sent" ? "check-circle" : "clock"}
+              size={14}
+              color={colors.violet}
+            />
+            <Text
+              style={[styles.followUpAckText, { color: colors.foreground }]}
+            >
+              {followUpAck === "sent"
+                ? "Logged — nice work. We'll factor this into your send-through rate."
+                : "No pressure. We'll remember this and won't nag again on this draft."}
+            </Text>
+          </View>
+        ) : null}
 
         <View
           style={[
@@ -363,4 +469,51 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   repliesList: { gap: 12 },
+  followUpCard: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 16,
+    gap: 10,
+  },
+  followUpTitle: {
+    fontSize: 16,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  followUpBody: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 19,
+  },
+  followUpRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 4,
+  },
+  followUpBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  followUpBtnText: {
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  followUpAck: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  followUpAckText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 18,
+  },
 });
