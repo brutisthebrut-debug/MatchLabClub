@@ -1,0 +1,19 @@
+Run a full quality, stability, and cohesion pass across the entire Next Level Dating Club app. Preserve all existing features, routes, visual style, launch infrastructure, founder dashboard, partner page, saved results, checkout-ready flows, AI/fallback logic, and mobile responsiveness. Do not remove features unless they are exact duplicates and consolidation improves clarity.
+
+Test and improve every major route, button, form, saved-result flow, founder dashboard tab, checkout placeholder, partner page, generated output area, progress workspace, dashboard section, and navigation item. Fix broken routes, non-working buttons, forms that do not save correctly, incomplete pages, weak empty states, confusing CTAs, duplicate or disconnected modules, mobile layout issues, horizontal overflow, loading-state gaps, friendly-error gaps, and any screens that feel unfinished.
+
+Make the app feel like one connected product instead of many separate tools. The dashboard should clearly tell users where to start, what to do next, what they have already completed, and how to return to saved work. Group navigation and dashboard actions into clear categories such as Start Here, Your Blueprint, Message Tools, Growth Tracker, Offers, and Settings/Trust. Add short explanatory copy where needed so users understand what each feature does and why it matters.
+
+Improve feature cohesion. Saved user inputs and saved results should be reused across relevant tools where possible. Generated guidance should feel consistent across modules. If a user has completed the quick check or profile review, other tools should reference that available context when possible. If no saved context exists, show helpful empty states that guide the user to start with the quick check or profile review.
+
+If live AI is configured, use it through the existing server-side AI/helper layer only and never expose secrets to the browser. If AI is not configured or fails, keep fallback mode working and show setup status only in the founder/demo area. Add graceful loading, success, fallback, and error states for generated content. Add copy buttons for generated text blocks where useful.
+
+Improve founder/admin visibility. The founder area should make it easy to review leads, quick-check submissions, purchase interest, saved results, demo users, and any AI/fallback status if available. Add clear labels and timestamps where useful. Keep the founder password/settings behavior intact.
+
+Improve conversion readiness without connecting live payments yet. Checkout-ready pages should be clear, polished, and honest about the next step. Purchase-interest fallback forms should work. Offer pages should explain what the user receives. Keep Profile Signal Audit, The Dating Reset, and Wingman membership easy to understand.
+
+Improve SEO and sharing basics where already present: page titles, meta descriptions, headings, partner route copy, and share-friendly messaging. Keep Shebangs.com as a tasteful secondary launch partner mention, not the main brand identity.
+
+Keep the product voice sweet, direct, conversational, supportive, honest, and practical. Keep trust language plain and clear: the app works from what users choose to share, user control matters, future integrations are opt-in, and private content should be handled carefully. Avoid clinical claims, manipulative advice, invasive language, pickup-artist framing, or anything that makes the app feel creepy.
+
+Keep the premium visual style consistent: deep dark-blue base, violet/plum gradients, champagne highlights, pearl text, rose accents, glass-card UI, polished meters/charts, refined spacing, smooth motion, and strong mobile-first layouts. Make the whole app feel stable, cohesive, attractive, and ready for real testing.
