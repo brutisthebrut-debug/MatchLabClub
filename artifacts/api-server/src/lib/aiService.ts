@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { z } from "zod";
 import { extractAndValidateJson, getAiToolSchema } from "@workspace/ai-schemas";
+import { db, aiRequestMetricsTable } from "@workspace/db";
 import { logger } from "./logger";
 
 export type AiMode = "live" | "fallback" | "setup-needed";
@@ -203,6 +204,15 @@ export async function generate(
   opts: GenerateOptions,
   fallbackOutput: string,
 ): Promise<GenerateResult<string>> {
+  const result = await generateInner(opts, fallbackOutput);
+  recordMetric(opts, result);
+  return result;
+}
+
+async function generateInner(
+  opts: GenerateOptions,
+  fallbackOutput: string,
+): Promise<GenerateResult<string>> {
   const start = Date.now();
   const client = getClient();
   const model = opts.model ?? DEFAULT_MODEL;
@@ -214,6 +224,7 @@ export async function generate(
       output: fallbackOutput,
       durationMs: Date.now() - start,
       model,
+      attempts: 0,
     };
   }
 
@@ -319,6 +330,27 @@ export async function generate(
     attempts: 2,
     error: "Structured output failed schema validation after retry",
   };
+}
+
+function recordMetric(opts: GenerateOptions, result: GenerateResult<string>): void {
+  const toolName = opts.context?.toolName ?? "unknown";
+  db.insert(aiRequestMetricsTable)
+    .values({
+      toolName,
+      mode: result.mode,
+      model: result.model ?? null,
+      attempts: result.attempts ?? 1,
+      validated: result.validated ?? null,
+      isFallback: result.isFallback,
+      durationMs: result.durationMs,
+      error: result.error ?? null,
+    })
+    .catch((err) => {
+      logger.warn(
+        { err: err instanceof Error ? err.message : String(err), toolName },
+        "Failed to record AI request metric",
+      );
+    });
 }
 
 /** Re-export so callers can construct ad-hoc schemas if needed. */

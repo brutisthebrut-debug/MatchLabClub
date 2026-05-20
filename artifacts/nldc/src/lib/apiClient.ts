@@ -73,6 +73,35 @@ export const capturePurchaseInterest = (data: PurchaseInterestInput) =>
 export const getFounderStats = () =>
   get<FounderStats>("/founder/stats");
 
+export interface AiToolMetric {
+  toolName: string;
+  total: number;
+  firstTryOk: number;
+  retriedOk: number;
+  fallbacks: number;
+  validationFailures: number;
+  firstTrySuccessRate: number;
+  overallSuccessRate: number;
+  avgAttempts: number;
+  avgDurationMs: number;
+}
+export interface AiMetricsResponse {
+  overall: {
+    total: number;
+    firstTryOk: number;
+    retriedOk: number;
+    fallbacks: number;
+    firstTrySuccessRate: number;
+    overallSuccessRate: number;
+    avgAttempts: number;
+    avgDurationMs: number;
+  };
+  perTool: AiToolMetric[];
+}
+
+export const getAiMetrics = () =>
+  get<AiMetricsResponse>("/founder/ai-metrics");
+
 export const getLeads = () =>
   get<Lead[]>("/leads");
 

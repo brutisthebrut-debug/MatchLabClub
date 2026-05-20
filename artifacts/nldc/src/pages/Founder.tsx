@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import {
-  getFounderStats, getLeads, getPurchaseInterestList,
-  type FounderStats, type Lead, type PurchaseInterest
+  getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
+  type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse
 } from "@/lib/apiClient";
 import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
 import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send } from "lucide-react";
@@ -179,6 +179,97 @@ function AiStatusPanel() {
           )}
           <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{result.output || "—"}</p>
         </div>
+      )}
+    </div>
+  );
+}
+
+function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
+  const [data, setData] = useState<AiMetricsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setErr(null);
+    getAiMetrics()
+      .then(setData)
+      .catch((e: unknown) => setErr(e instanceof Error ? e.message : "Failed to load"))
+      .finally(() => setLoading(false));
+  }, [refreshKey]);
+
+  const pct = (n: number) => `${Math.round(n * 100)}%`;
+  const overall = data?.overall;
+
+  return (
+    <div className="glass rounded-2xl p-6 space-y-5">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">AI Reliability</p>
+          <p className="text-base font-semibold text-foreground">First-try success and fallback rates</p>
+        </div>
+        {loading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground/60" />}
+      </div>
+
+      {err && (
+        <p className="text-xs text-red-400">Could not load AI metrics: {err}</p>
+      )}
+
+      {overall && overall.total === 0 && (
+        <p className="text-sm text-muted-foreground/70 italic">
+          No AI requests recorded yet. Run a tool or the safe AI test above to start collecting data.
+        </p>
+      )}
+
+      {overall && overall.total > 0 && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+              <p className="text-2xl font-bold text-foreground">{pct(overall.firstTrySuccessRate)}</p>
+              <p className="text-xs text-muted-foreground">First-try success</p>
+            </div>
+            <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+              <p className="text-2xl font-bold text-foreground">{pct(overall.overallSuccessRate)}</p>
+              <p className="text-xs text-muted-foreground">Overall success (incl. retry)</p>
+            </div>
+            <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+              <p className="text-2xl font-bold text-foreground">{overall.avgAttempts.toFixed(2)}</p>
+              <p className="text-xs text-muted-foreground">Avg attempts</p>
+            </div>
+            <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+              <p className="text-2xl font-bold text-foreground">{overall.fallbacks}</p>
+              <p className="text-xs text-muted-foreground">Fallback responses · {overall.total} total</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-white/8">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/8 bg-white/3">
+                  {["Tool", "Total", "1st-try ok", "Retried ok", "Fallbacks", "1st-try %", "Avg attempts", "Avg ms"].map((h) => (
+                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {data!.perTool.map((row) => (
+                  <tr key={row.toolName} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                    <td className="px-4 py-3 text-foreground/90 max-w-[260px] truncate">{row.toolName}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{row.total}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{row.firstTryOk}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{row.retriedOk}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{row.fallbacks}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{pct(row.firstTrySuccessRate)}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{row.avgAttempts.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{Math.round(row.avgDurationMs)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );
@@ -361,6 +452,7 @@ function Dashboard() {
       {tab === "overview" && (
         <div className="space-y-8">
           <AiStatusPanel />
+          <AiMetricsPanel refreshKey={refreshKey} />
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <StatCard label="Leads captured" value={stats?.leads ?? "—"} icon={Inbox} color="hsl(268 52% 68%)" />
             <StatCard label="Purchase interest" value={stats?.purchaseInterest ?? "—"} icon={ShoppingBag} color="hsl(348 55% 58%)" />
