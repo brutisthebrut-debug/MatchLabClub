@@ -96,6 +96,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="profiles"
+        options={{
+          title: "Profiles",
+          tabBarIcon: ({ color }) => (
+            <Feather name="bookmark" size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="account"
         options={{
           title: "Account",
