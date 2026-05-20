@@ -544,4 +544,66 @@ describe("Threshold change undo flow", () => {
       expect(editorOverrideSpan).toBeNull();
     });
   });
+
+  it("undoes a global threshold update: reverts server.global and logs the undo entry", async () => {
+    render(
+      <Wrap>
+        <Founder />
+      </Wrap>,
+    );
+
+    await openThresholdEditor();
+
+    // Locate the global Threshold % input via its label.
+    const thresholdLabel = screen.getByText("Threshold %");
+    const input = thresholdLabel.parentElement!.querySelector("input") as HTMLInputElement;
+    expect(input).toBeTruthy();
+    expect(input.value).toBe("70");
+
+    // Change the global threshold from 70% to 85%.
+    fireEvent.change(input, { target: { value: "85" } });
+    fireEvent.click(screen.getByRole("button", { name: /Save thresholds/i }));
+
+    // Wait for an "update" audit row for "(global)" showing the new 85% value.
+    let updateChangeId: number;
+    await waitFor(() => {
+      const log = getThresholdLogList();
+      const items = within(log).getAllByRole("listitem");
+      expect(items[0]!.textContent).toMatch(/update/i);
+      expect(items[0]!.textContent).toMatch(/\(global\)/);
+      expect(items[0]!.textContent).toMatch(/85%/);
+      updateChangeId = server.changes[0]!.id;
+    });
+
+    // Verify server state after save: global threshold is now 85%.
+    expect(server.global.firstTrySuccessRate).toBeCloseTo(0.85);
+
+    // Click the Undo button on the global update row.
+    const undoBtn = await screen.findByTestId(`undo-threshold-change-${updateChangeId!}`);
+    fireEvent.click(undoBtn);
+
+    // Assert: a new audit row appears at the top reflecting the undo (restores 70%).
+    await waitFor(() => {
+      const log = getThresholdLogList();
+      const items = within(log).getAllByRole("listitem");
+      // At least two rows: the undo entry and the original update.
+      expect(items.length).toBeGreaterThanOrEqual(2);
+      // The newest row is the undo — shows "(global)" and the restored 70%.
+      expect(items[0]!.textContent).toMatch(/\(global\)/);
+      expect(items[0]!.textContent).toMatch(/70%/);
+    });
+
+    // Assert: server.global has been reverted to the original 70%.
+    expect(server.global.firstTrySuccessRate).toBeCloseTo(0.7);
+
+    // Assert: the undo button for the original update row is now disabled.
+    expect((undoBtn as HTMLButtonElement).disabled).toBe(true);
+
+    // Assert: the global Threshold % input in the editor now reflects the reverted 70%.
+    await waitFor(() => {
+      const labelEl = screen.getByText("Threshold %");
+      const inp = labelEl.parentElement!.querySelector("input") as HTMLInputElement;
+      expect(inp.value).toBe("70");
+    });
+  });
 });
