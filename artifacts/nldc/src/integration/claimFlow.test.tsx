@@ -58,6 +58,24 @@ interface ServerState {
   lastClaimBody: Record<string, unknown> | null;
   redeemCalls: number;
   lastRedeemBody: Record<string, unknown> | null;
+  lastClaimResponse: {
+    claimed: {
+      audits: number;
+      profiles: number;
+      messages: number;
+      insights: number;
+      followUps: number;
+    };
+  } | null;
+  lastRedeemResponse: {
+    claimed: {
+      audits: number;
+      profiles: number;
+      messages: number;
+      insights: number;
+      followUps: number;
+    };
+  } | null;
   usedHandoffTokens: Set<string>;
 }
 
@@ -70,6 +88,8 @@ const server: ServerState = {
   lastClaimBody: null,
   redeemCalls: 0,
   lastRedeemBody: null,
+  lastClaimResponse: null,
+  lastRedeemResponse: null,
   usedHandoffTokens: new Set(),
 };
 
@@ -225,9 +245,17 @@ function installFetchMock(): void {
             claimedFollowUps += 1;
           }
         }
-        return jsonResponse(200, {
-          claimed: { audits: claimed, profiles: 0, messages: 0, insights: 0, followUps: claimedFollowUps },
-        });
+        const response = {
+          claimed: {
+            audits: claimed,
+            profiles: 0,
+            messages: 0,
+            insights: 0,
+            followUps: claimedFollowUps,
+          },
+        };
+        server.lastClaimResponse = response;
+        return jsonResponse(200, response);
       }
 
       // POST /api/claim-anonymous/handoff/issue — mint a signed token derived
@@ -299,7 +327,7 @@ function installFetchMock(): void {
             claimedFollowUps += 1;
           }
         }
-        return jsonResponse(200, {
+        const response = {
           claimed: {
             audits: claimed,
             profiles: 0,
@@ -307,7 +335,9 @@ function installFetchMock(): void {
             insights: 0,
             followUps: claimedFollowUps,
           },
-        });
+        };
+        server.lastRedeemResponse = response;
+        return jsonResponse(200, response);
       }
 
       return jsonResponse(404, { error: `unhandled ${method} ${url}` });
@@ -382,6 +412,8 @@ beforeEach(() => {
   server.lastClaimBody = null;
   server.redeemCalls = 0;
   server.lastRedeemBody = null;
+  server.lastClaimResponse = null;
+  server.lastRedeemResponse = null;
   server.usedHandoffTokens = new Set();
   // Default to a tagged anonymous browser; cross-device tests explicitly
   // clear this via `switchToFreshBrowser()` to model an untagged second device.
@@ -541,8 +573,95 @@ describe("Anonymous coach follow-up follows the user into their account", () => 
     // Ownership transferred on the server side.
     expect(server.followUps[0]!.userId).toBe("user-followups");
 
+    // Server response reports at least one follow-up was claimed.
+    expect(server.lastClaimResponse?.claimed.followUps).toBeGreaterThanOrEqual(1);
+    expect(server.lastClaimResponse?.claimed.followUps).toBe(1);
+
     // localStorage hand-off cleared after a successful claim.
     await waitFor(() => expect(hasAnyAnonymousIds()).toBe(false));
+  });
+
+  it("anon follow-up rides the cross-device hand-off redeem and is reassigned on device B", async () => {
+    // ===== DEVICE A — anonymous, records a follow-up =====
+    currentAnonToken = "anon-token-device-A";
+
+    let recordedId: number | undefined;
+    const deviceA = render(
+      <Wrap>
+        <AnonFollowUpRecorder onRecorded={(id) => (recordedId = id)} />
+      </Wrap>,
+    );
+
+    await waitFor(() => expect(recordedId).toBeDefined());
+    expect(server.followUps).toHaveLength(1);
+    expect(server.followUps[0]!.userId).toBeNull();
+    expect(server.followUps[0]!.anonToken).toBe("anon-token-device-A");
+    expect(readAnonymousIds().followUpIds).toEqual([recordedId!]);
+
+    // Device A mints a signed hand-off token and builds the share URL.
+    // buildHandoffShareUrl reads the anon ids from localStorage, so the
+    // recordedId is automatically embedded in the URL payload.
+    const issueRes = await fetch("/api/claim-anonymous/handoff/issue", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(issueRes.status).toBe(200);
+    const issueBody = (await issueRes.json()) as { handoff: string };
+
+    const shareUrl = buildHandoffShareUrl(issueBody.handoff);
+    expect(shareUrl).toContain("nldc_handoff=");
+
+    deviceA.unmount();
+
+    // ===== DEVICE B — fresh browser, opens the share URL =====
+    switchToFreshBrowser();
+    openUrlInActiveBrowser(shareUrl);
+
+    // Device B has no anon cookie and never recorded any anon rows.
+    expect(hasAnyAnonymousIds()).toBe(false);
+
+    act(() => {
+      authState = {
+        isAuthenticated: true,
+        isLoading: false,
+        user: { id: "user-device-B", email: null },
+      };
+    });
+
+    render(
+      <Wrap>
+        <ClaimOnly />
+      </Wrap>,
+    );
+
+    // Hand-off redeem was hit exactly once. Cookie-scoped claim must not
+    // fire — device B has no anon ids in localStorage.
+    await waitFor(() => expect(server.redeemCalls).toBe(1));
+    expect(server.claimCalls).toBe(0);
+
+    // Redeem payload carried the follow-up id from the URL.
+    expect(server.lastRedeemBody?.followUpIds).toEqual([recordedId!]);
+    expect(server.lastRedeemBody?.handoff).toBe(issueBody.handoff);
+
+    // Server response reports the follow-up was claimed.
+    expect(server.lastRedeemResponse?.claimed.followUps).toBeGreaterThanOrEqual(
+      1,
+    );
+    expect(server.lastRedeemResponse?.claimed.followUps).toBe(1);
+
+    // Ownership transferred on the server: the anon follow-up now belongs
+    // to device B's user, with the anon token cleared.
+    expect(server.followUps[0]!.userId).toBe("user-device-B");
+    expect(server.followUps[0]!.anonToken).toBeNull();
+
+    // The hand-off token was burned (single-use).
+    expect(server.usedHandoffTokens.has(issueBody.handoff)).toBe(true);
+
+    // Pending hand-off cleared from sessionStorage after a successful redeem.
+    await waitFor(() =>
+      expect(sessionStorage.getItem("nldc:pendingHandoff")).toBeNull(),
+    );
   });
 });
 
