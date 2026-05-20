@@ -238,6 +238,15 @@ vi.mock("@/lib/auth", () => ({
   }),
 }));
 
+vi.mock("expo-router", () => ({
+  Stack: { Screen: () => null },
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+}));
+
+vi.mock("@/components/HandoffQrCard", () => ({
+  HandoffQrCard: () => null,
+}));
+
 vi.mock("@/lib/autoRefreshPref", () => ({
   useAutoRefreshPref: () => ({
     enabled: true,

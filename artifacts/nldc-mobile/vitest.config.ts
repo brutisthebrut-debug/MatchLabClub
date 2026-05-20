@@ -10,6 +10,9 @@ export default defineConfig({
       "@": path.resolve(__dirname),
     },
   },
+  define: {
+    __DEV__: false,
+  },
   test: {
     include: ["lib/**/*.test.{ts,tsx}", "app/**/*.test.{ts,tsx}"],
     environment: "jsdom",
