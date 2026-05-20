@@ -971,6 +971,14 @@ export default function Dashboard() {
             <div className="flex items-center justify-between mb-5 gap-2 flex-wrap">
               <h2 className="font-semibold text-foreground text-sm">Recent Audits</h2>
               <div className="flex items-center gap-2">
+                <Link
+                  href="/trash"
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  data-testid="link-trash"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Recently deleted
+                </Link>
                 {hasRealAudits && !selectionMode && staleAudits.length > 0 ? (
                   <Button
                     type="button"

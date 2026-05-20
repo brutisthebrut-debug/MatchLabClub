@@ -68,6 +68,7 @@ import WhatChanged from "@/pages/WhatChanged";
 import Feedback from "@/pages/Feedback";
 import SampleReport from "@/pages/SampleReport";
 import Scan from "@/pages/Scan";
+import Trash from "@/pages/Trash";
 
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 
@@ -152,6 +153,7 @@ function Router() {
       <Route path="/feedback" component={Feedback} />
       <Route path="/sample-report" component={SampleReport} />
       <Route path="/scan" component={Scan} />
+      <Route path="/trash" component={Trash} />
       <Route component={NotFound} />
     </Switch>
   );
