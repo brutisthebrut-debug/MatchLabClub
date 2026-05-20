@@ -214,6 +214,8 @@ vi.mock("@/lib/apiClient", () => ({
   getOcrLearnedRules: vi.fn(async () => ({ rules: [] })),
   runOcrLearn: vi.fn(async () => ({ scannedAudits: 0, candidates: 0, persisted: 0 })),
   clearOcrLearnedRules: vi.fn(async () => {}),
+  getOcrMismatchesTrends: vi.fn(async () => ({ days: 30, since: "2026-04-20", series: [] })),
+  getBackgroundJobs: vi.fn(async () => ({ jobs: [] })),
 }));
 
 vi.mock("@workspace/api-client-react", () => ({

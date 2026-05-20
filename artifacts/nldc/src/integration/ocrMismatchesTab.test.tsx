@@ -126,6 +126,8 @@ vi.mock("@/lib/apiClient", async () => {
     getOcrLearnedRules: async () => ({ rules: [] }),
     runOcrLearn: async () => ({ scannedAudits: 0, candidates: 0, persisted: 0 }),
     clearOcrLearnedRules: async () => {},
+    getOcrMismatchesTrends: async () => ({ days: 30, since: "2026-04-20", series: [] }),
+    getBackgroundJobs: async () => ({ jobs: [] }),
   };
 });
 
