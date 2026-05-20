@@ -25,6 +25,28 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScoreRing } from "@/components/ScoreRing";
 import { useColors } from "@/hooks/useColors";
 
+const STALE_REPORT_DAYS = 30;
+
+function ageInDays(iso: string): number | null {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return Math.floor((Date.now() - d.getTime()) / (24 * 60 * 60 * 1000));
+}
+
+function formatStaleAge(iso: string): string {
+  const days = ageInDays(iso);
+  if (days === null) return "a while ago";
+  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
+  const months = Math.floor(days / 30);
+  if (months < 2) {
+    const weeks = Math.floor(days / 7);
+    return `${weeks} weeks ago`;
+  }
+  if (months < 12) return `${months} months ago`;
+  const years = Math.floor(months / 12);
+  return `${years} year${years === 1 ? "" : "s"} ago`;
+}
+
 function formatGeneratedAt(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "earlier";
@@ -204,6 +226,12 @@ export default function AuditDetailScreen() {
     !!currentEngineVersion &&
     storedEngineVersion !== currentEngineVersion;
 
+  const reportAgeDays = reportGeneratedAt ? ageInDays(reportGeneratedAt) : null;
+  const isStaleByAge =
+    !!reportGeneratedAt &&
+    reportAgeDays !== null &&
+    reportAgeDays >= STALE_REPORT_DAYS;
+
   const regenerate = () => {
     if (!valid || generate.isPending) return;
     setErrorMsg(null);
@@ -312,6 +340,62 @@ export default function AuditDetailScreen() {
             <Text style={[styles.errorText, { color: colors.destructive }]}>
               {errorMsg}
             </Text>
+          </View>
+        ) : null}
+
+        {audit && isStaleByAge && reportGeneratedAt ? (
+          <View
+            style={[
+              styles.staleBanner,
+              {
+                backgroundColor: `${colors.gold}14`,
+                borderColor: colors.gold,
+              },
+            ]}
+            testID="banner-stale-report"
+          >
+            <Feather
+              name="alert-circle"
+              size={16}
+              color={colors.gold}
+              style={styles.staleBannerIcon}
+            />
+            <View style={styles.staleBannerText}>
+              <Text
+                style={[styles.staleBannerTitle, { color: colors.foreground }]}
+                testID="text-stale-report-headline"
+              >
+                This report was generated {formatStaleAge(reportGeneratedAt)} — regenerate?
+              </Text>
+              <Text
+                style={[
+                  styles.staleBannerSubtitle,
+                  { color: colors.mutedForeground },
+                ]}
+              >
+                Profiles change fast. A fresh run reflects what's on your profile today.
+              </Text>
+            </View>
+            <Pressable
+              onPress={regenerate}
+              disabled={generate.isPending}
+              hitSlop={8}
+              style={({ pressed }) => [
+                styles.staleBannerButton,
+                {
+                  borderColor: colors.gold,
+                  backgroundColor: `${colors.gold}22`,
+                  opacity: generate.isPending ? 0.5 : pressed ? 0.7 : 1,
+                },
+              ]}
+              accessibilityLabel="Regenerate this stale mini-report"
+              testID="button-stale-report-regenerate"
+            >
+              <Feather name="refresh-cw" size={12} color={colors.gold} />
+              <Text style={[styles.staleBannerButtonText, { color: colors.gold }]}>
+                {generate.isPending ? "Refreshing…" : "Regenerate"}
+              </Text>
+            </Pressable>
           </View>
         ) : null}
 
@@ -755,6 +839,46 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     fontFamily: "PlusJakartaSans_500Medium",
+  },
+  staleBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  staleBannerIcon: {
+    marginTop: 2,
+  },
+  staleBannerText: {
+    flex: 1,
+    gap: 2,
+  },
+  staleBannerTitle: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_700Bold",
+    lineHeight: 17,
+  },
+  staleBannerSubtitle: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 15,
+  },
+  staleBannerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  staleBannerButtonText: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.3,
   },
   ringCard: {
     alignItems: "center",

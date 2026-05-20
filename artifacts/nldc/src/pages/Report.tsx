@@ -47,6 +47,28 @@ function formatGeneratedAt(iso: string): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
+const STALE_REPORT_DAYS = 30;
+
+function ageInDays(iso: string): number | null {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return Math.floor((Date.now() - d.getTime()) / (24 * 60 * 60 * 1000));
+}
+
+function formatStaleAge(iso: string): string {
+  const days = ageInDays(iso);
+  if (days === null) return "a while ago";
+  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
+  const months = Math.floor(days / 30);
+  if (months < 2) {
+    const weeks = Math.floor(days / 7);
+    return `${weeks} weeks ago`;
+  }
+  if (months < 12) return `${months} months ago`;
+  const years = Math.floor(months / 12);
+  return `${years} year${years === 1 ? "" : "s"} ago`;
+}
+
 /* ─── Score Ring ─── */
 function ScoreRing({ score }: { score: number }) {
   const radius = 54;
@@ -285,6 +307,15 @@ export default function Report() {
     !!currentEngineVersion &&
     storedEngineVersion !== currentEngineVersion;
 
+  const reportAgeDays = audit?.reportGeneratedAt
+    ? ageInDays(audit.reportGeneratedAt)
+    : null;
+  const isStaleByAge =
+    !!auditId &&
+    !!audit?.reportGeneratedAt &&
+    reportAgeDays !== null &&
+    reportAgeDays >= STALE_REPORT_DAYS;
+
   return (
     <AppLayout>
       <div className="min-h-screen mesh-bg py-10 px-4">
@@ -292,6 +323,34 @@ export default function Report() {
         <div className="orb orb-plum fixed w-[300px] h-[300px] bottom-40 -left-20 opacity-40 pointer-events-none" />
 
         <div className="max-w-3xl mx-auto relative z-10 space-y-5">
+
+          {/* ── Stale Report Banner ── */}
+          {isStaleByAge && audit?.reportGeneratedAt ? (
+            <motion.div
+              {...fadeUp(0)}
+              className="glass border border-[hsl(43_65%_55%/0.35)] rounded-2xl px-4 py-3 bg-[hsl(43_65%_55%/0.08)] flex items-center gap-3 flex-wrap"
+              data-testid="banner-stale-report"
+            >
+              <AlertCircle className="w-5 h-5 text-[hsl(43_75%_72%)] flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground" data-testid="text-stale-report-headline">
+                  This report was generated {formatStaleAge(audit.reportGeneratedAt)} — regenerate?
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Profiles change fast. A fresh run will reflect what's actually on your profile today.
+                </p>
+              </div>
+              <button
+                onClick={regenerate}
+                disabled={regenerating || generating}
+                className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-full border border-[hsl(43_65%_55%/0.5)] text-[hsl(43_75%_72%)] bg-[hsl(43_65%_55%/0.14)] hover:bg-[hsl(43_65%_55%/0.22)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                data-testid="button-stale-report-regenerate"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${regenerating ? "animate-spin" : ""}`} />
+                {regenerating ? "Refreshing…" : "Regenerate"}
+              </button>
+            </motion.div>
+          ) : null}
 
           {/* ── Score Header ── */}
           <motion.div {...fadeUp(0)} className="mirror-card rounded-3xl p-8 shimmer" data-testid="card-report-header">
