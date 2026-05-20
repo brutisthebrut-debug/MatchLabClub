@@ -133,10 +133,8 @@ vi.mock("@/lib/apiClient", async () => {
     clearOcrLearnedRules: async () => {},
     getAlertSettings: async () => ({ rebreachCooldownMinutes: 15 }),
     updateAlertSettings: async (_key: string, minutes: number) => ({ rebreachCooldownMinutes: minutes }),
-    getOcrPendingRules: async () => ({ rules: [] }),
     approveOcrRule: async () => {},
     rejectOcrRule: async () => {},
-    getOcrRuleReviewLog: async () => ({ log: [] }),
   };
 });
 

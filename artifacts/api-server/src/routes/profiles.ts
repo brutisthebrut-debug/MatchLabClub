@@ -123,7 +123,7 @@ router.delete("/profiles/:id", async (req, res): Promise<void> => {
 
   const [deleted] = await db
     .delete(profilesTable)
-    .where(and(eq(profilesTable.id, id), userScope(req.user?.id)))
+    .where(and(eq(profilesTable.id, id), userScope(req)))
     .returning();
 
   if (!deleted) {
