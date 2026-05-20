@@ -290,6 +290,16 @@ export async function listLearnedRules(): Promise<OcrLearnedRule[]> {
     .orderBy(desc(ocrLearnedRulesTable.occurrences), desc(ocrLearnedRulesTable.updatedAt));
 }
 
+export async function deleteLearnedRule(id: string): Promise<boolean> {
+  const result = await db
+    .delete(ocrLearnedRulesTable)
+    .where(sql`${ocrLearnedRulesTable.id} = ${id}`)
+    .returning({ id: ocrLearnedRulesTable.id });
+  if (result.length === 0) return false;
+  await refreshLearnedRulesCache();
+  return true;
+}
+
 export async function clearLearnedRules(): Promise<void> {
   await db.delete(ocrLearnedRulesTable).where(sql`true`);
   cache = EMPTY_LEARNED_RULES;

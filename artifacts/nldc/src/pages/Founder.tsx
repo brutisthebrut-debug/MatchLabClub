@@ -5,7 +5,7 @@ import {
   getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
   getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges, undoAiThresholdChange,
   getRollupHeartbeat, getOcrMismatches, getBackgroundJobs,
-  getOcrLearnedRules, runOcrLearn, clearOcrLearnedRules, getOcrMismatchesTrends,
+  getOcrLearnedRules, runOcrLearn, clearOcrLearnedRules, deleteOcrRule, getOcrMismatchesTrends,
   getAlertSettings, updateAlertSettings, resetAlertSettings,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
   type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
@@ -2114,6 +2114,7 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [lastRun, setLastRun] = useState<OcrLearnResult | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [reloadTick, setReloadTick] = useState(0);
@@ -2157,6 +2158,19 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
       setActionError(err instanceof Error ? err.message : "Failed to clear rules");
     } finally {
       setClearing(false);
+    }
+  };
+
+  const handleDeleteRule = async (id: string) => {
+    setDeletingIds((prev) => new Set(prev).add(id));
+    setActionError(null);
+    try {
+      await deleteOcrRule(FOUNDER_KEY, id);
+      setRules((prev) => prev ? prev.filter((r) => r.id !== id) : prev);
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Failed to delete rule");
+    } finally {
+      setDeletingIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
     }
   };
 
@@ -2235,30 +2249,44 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
                 {kind} <span className="text-muted-foreground/40">({grouped[kind].length})</span>
               </h3>
               <div className="space-y-1.5">
-                {grouped[kind].map((rule) => (
-                  <div
-                    key={rule.id}
-                    data-testid={`ocr-rule-${rule.id}`}
-                    className="glass rounded-xl px-3 py-2 flex items-center gap-3 flex-wrap text-xs"
-                  >
-                    <code className="font-mono text-foreground bg-white/5 px-2 py-0.5 rounded border border-white/10">
-                      {rule.pattern}
-                    </code>
-                    <span className="text-muted-foreground/50">→</span>
-                    <code className="font-mono text-foreground bg-white/5 px-2 py-0.5 rounded border border-white/10">
-                      {rule.replacement}
-                    </code>
-                    {rule.scope && (
-                      <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">
-                        scope: {rule.scope}
+                {grouped[kind].map((rule) => {
+                  const isDeleting = deletingIds.has(rule.id);
+                  return (
+                    <div
+                      key={rule.id}
+                      data-testid={`ocr-rule-${rule.id}`}
+                      className="glass rounded-xl px-3 py-2 flex items-center gap-3 flex-wrap text-xs"
+                    >
+                      <code className="font-mono text-foreground bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                        {rule.pattern}
+                      </code>
+                      <span className="text-muted-foreground/50">→</span>
+                      <code className="font-mono text-foreground bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                        {rule.replacement}
+                      </code>
+                      {rule.scope && (
+                        <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">
+                          scope: {rule.scope}
+                        </span>
+                      )}
+                      <span className="ml-auto flex items-center gap-3 text-[10px] text-muted-foreground/60">
+                        <span><strong className="text-foreground/80">{rule.occurrences}</strong> seen</span>
+                        <span>{fmtDate(rule.learnedAt)}</span>
+                        <button
+                          data-testid={`btn-ocr-rule-delete-${rule.id}`}
+                          onClick={() => handleDeleteRule(rule.id)}
+                          disabled={isDeleting || clearing}
+                          title="Delete this rule"
+                          className="p-0.5 rounded text-muted-foreground/40 hover:text-[hsl(348_55%_68%)] hover:bg-[hsl(348_55%_68%/0.1)] disabled:opacity-40 transition-colors"
+                        >
+                          {isDeleting
+                            ? <Loader2 className="w-3 h-3 animate-spin" />
+                            : <XCircle className="w-3 h-3" />}
+                        </button>
                       </span>
-                    )}
-                    <span className="ml-auto flex items-center gap-3 text-[10px] text-muted-foreground/60">
-                      <span><strong className="text-foreground/80">{rule.occurrences}</strong> seen</span>
-                      <span>{fmtDate(rule.learnedAt)}</span>
-                    </span>
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}

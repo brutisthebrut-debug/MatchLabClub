@@ -332,7 +332,7 @@ export const getOcrMismatches = (
 };
 
 export interface OcrLearnedRule {
-  id: number;
+  id: string;
   kind: string;
   pattern: string;
   replacement: string;
@@ -394,6 +394,17 @@ export const getOcrAuditDetail = (founderKey: string, auditId: number) =>
   get<OcrAuditDetail>(`/founder/ocr-mismatches/${auditId}`, {
     headers: { "x-founder-key": founderKey },
   });
+
+export const deleteOcrRule = async (founderKey: string, id: string): Promise<void> => {
+  const res = await fetch(`${BASE}/founder/ocr-rules/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: { "x-founder-key": founderKey },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`DELETE /founder/ocr-rules/:id failed (${res.status}): ${text}`);
+  }
+};
 
 export const clearOcrLearnedRules = async (founderKey: string): Promise<void> => {
   const res = await fetch(`${BASE}/founder/ocr-rules`, {

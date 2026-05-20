@@ -25,6 +25,7 @@ import {
   learnFromCorrections,
   listLearnedRules,
   clearLearnedRules,
+  deleteLearnedRule,
 } from "../lib/ocrLearning";
 import {
   getRollupHeartbeat,
@@ -699,6 +700,20 @@ router.post("/founder/ocr-learn", requireFounder, async (_req, res): Promise<voi
     candidates: result.candidates,
     persisted: result.persisted,
   });
+});
+
+router.delete("/founder/ocr-rules/:id", requireFounder, async (req, res): Promise<void> => {
+  const { id } = req.params;
+  if (!id || typeof id !== "string" || id.trim().length === 0) {
+    res.status(400).json({ error: "Missing rule id" });
+    return;
+  }
+  const deleted = await deleteLearnedRule(id.trim());
+  if (!deleted) {
+    res.status(404).json({ error: "Rule not found" });
+    return;
+  }
+  res.json({ ok: true });
 });
 
 router.delete("/founder/ocr-rules", requireFounder, async (_req, res): Promise<void> => {
