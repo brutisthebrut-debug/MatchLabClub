@@ -5,14 +5,15 @@ import {
   getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
   getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges, undoAiThresholdChange,
   getRollupHeartbeat, getOcrMismatches, getBackgroundJobs,
-  getOcrLearnedRules, runOcrLearn, clearOcrLearnedRules,
+  getOcrLearnedRules, runOcrLearn, clearOcrLearnedRules, getOcrMismatchesTrends,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
   type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
   type AiThresholdChange, type RollupHeartbeatResponse,
   type BackgroundJobStatus, type BackgroundJobsResponse,
   type OcrMismatchesResponse, type OcrMismatchesSort, type OcrMismatchesWindow,
   type OcrCorrectionField,
-  type OcrLearnedRule, type OcrLearnResult
+  type OcrLearnedRule, type OcrLearnResult,
+  type OcrMismatchesTrendsResponse,
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
 import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
@@ -1524,6 +1525,14 @@ const OCR_FIELD_LABELS: Record<string, string> = {
 
 const OCR_FILTER_FIELDS: OcrCorrectionField[] = ["firstName", "age", "sourceApp", "bio", "prompts"];
 
+const OCR_FIELD_COLORS: Record<string, string> = {
+  firstName: "hsl(268 52% 68%)",
+  age:        "hsl(142 55% 60%)",
+  sourceApp:  "hsl(43 65% 65%)",
+  bio:        "hsl(190 55% 60%)",
+  prompts:    "hsl(348 55% 65%)",
+};
+
 function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
   const [windowDays, setWindowDays] = useState<OcrMismatchesWindow>(30);
   const [sort, setSort] = useState<OcrMismatchesSort>("total");
@@ -1531,6 +1540,11 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<OcrCorrectionField | "all">("all");
+  const [trendData, setTrendData] = useState<OcrMismatchesTrendsResponse | null>(null);
+  const [trendLoading, setTrendLoading] = useState(true);
+  const [trendError, setTrendError] = useState<string | null>(null);
+
+  const trendDays = windowDays === null ? 90 : windowDays;
 
   useEffect(() => {
     let cancelled = false;
@@ -1544,6 +1558,19 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [windowDays, sort, refreshKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setTrendLoading(true);
+    setTrendError(null);
+    getOcrMismatchesTrends(FOUNDER_KEY, { days: trendDays })
+      .then((res) => { if (!cancelled) setTrendData(res); })
+      .catch((err: unknown) => {
+        if (!cancelled) setTrendError(err instanceof Error ? err.message : "Failed to load trends");
+      })
+      .finally(() => { if (!cancelled) setTrendLoading(false); });
+    return () => { cancelled = true; };
+  }, [trendDays, refreshKey]);
 
   const filteredRecent = data && filter !== "all"
     ? data.recent.filter((r) => r.field === filter)
@@ -1615,6 +1642,80 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Sample size</p>
               <p className="text-lg font-semibold text-foreground">{data.summary.sampleSize}</p>
             </div>
+          </div>
+
+          <div className="glass rounded-xl p-4 space-y-3" data-testid="ocr-trend-chart">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+              Corrections per day — last {trendDays} days
+            </h3>
+            {trendLoading && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="w-3 h-3 animate-spin" /> Loading trend…
+              </div>
+            )}
+            {trendError && !trendLoading && (
+              <p className="text-xs text-[hsl(348_55%_68%)]">{trendError}</p>
+            )}
+            {trendData && !trendLoading && (() => {
+              const hasAnyData = trendData.series.some((s) => s.total > 0);
+              if (!hasAnyData) {
+                return (
+                  <p className="text-xs text-muted-foreground/50 italic py-6 text-center" data-testid="ocr-trend-empty">
+                    No correction data in this window yet — the chart will populate as OCR mismatches are recorded.
+                  </p>
+                );
+              }
+              return (
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={trendData.series} margin={{ top: 4, right: 12, bottom: 4, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <XAxis
+                      dataKey="day"
+                      tickFormatter={fmtTrendDay}
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", opacity: 0.6 }}
+                      tickLine={false}
+                      axisLine={false}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", opacity: 0.6 }}
+                      tickLine={false}
+                      axisLine={false}
+                      width={24}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: "hsl(268 30% 12%)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: 8,
+                        fontSize: 11,
+                      }}
+                      labelFormatter={fmtTrendDay}
+                      formatter={(value: number, name: string) => [
+                        value,
+                        OCR_FIELD_LABELS[name] ?? name,
+                      ]}
+                    />
+                    <Legend
+                      wrapperStyle={{ fontSize: 10, opacity: 0.7 }}
+                      formatter={(name: string) => OCR_FIELD_LABELS[name] ?? name}
+                    />
+                    {OCR_FILTER_FIELDS.map((field) => (
+                      <Line
+                        key={field}
+                        type="monotone"
+                        dataKey={field}
+                        stroke={OCR_FIELD_COLORS[field]}
+                        strokeWidth={1.5}
+                        dot={false}
+                        activeDot={{ r: 3 }}
+                      />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
+              );
+            })()}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" data-testid="ocr-per-field-cards">

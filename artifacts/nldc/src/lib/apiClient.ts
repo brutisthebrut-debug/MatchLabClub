@@ -395,6 +395,35 @@ export const clearOcrLearnedRules = async (founderKey: string): Promise<void> =>
   }
 };
 
+export interface OcrMismatchTrendEntry {
+  day: string;
+  firstName: number;
+  age: number;
+  sourceApp: number;
+  bio: number;
+  prompts: number;
+  total: number;
+}
+
+export interface OcrMismatchesTrendsResponse {
+  days: number;
+  since: string;
+  series: OcrMismatchTrendEntry[];
+}
+
+export const getOcrMismatchesTrends = (
+  founderKey: string,
+  params: { days?: number } = {},
+) => {
+  const search = new URLSearchParams();
+  if (params.days) search.set("days", String(params.days));
+  const qs = search.toString();
+  return get<OcrMismatchesTrendsResponse>(
+    `/founder/ocr-mismatches/trends${qs ? `?${qs}` : ""}`,
+    { headers: { "x-founder-key": founderKey } },
+  );
+};
+
 export const getLeads = () =>
   get<Lead[]>("/leads");
 
