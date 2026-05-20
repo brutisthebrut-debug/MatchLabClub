@@ -10,7 +10,7 @@ import {
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
-import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle } from "lucide-react";
+import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
 
 type AiMode = "live" | "fallback" | "setup-needed";
@@ -896,6 +896,53 @@ function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
   })();
 
   const hasData = chartRows.length > 0 && toolNames.length > 0;
+  const canExport = !!data && data.series.length > 0;
+
+  const downloadCsv = () => {
+    if (!data) return;
+    const headers = [
+      "day",
+      "toolName",
+      "total",
+      "firstTryOk",
+      "retriedOk",
+      "fallbacks",
+      "validationFailures",
+      "firstTrySuccessRate",
+      "fallbackRate",
+      "avgAttempts",
+      "avgDurationMs",
+    ];
+    const esc = (v: string | number) => {
+      const s = String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = [...data.series]
+      .sort((a, b) => (a.day === b.day ? a.toolName.localeCompare(b.toolName) : a.day.localeCompare(b.day)))
+      .map((p) => [
+        p.day,
+        p.toolName,
+        p.total,
+        p.firstTryOk,
+        p.retriedOk,
+        p.fallbacks,
+        p.validationFailures,
+        p.firstTrySuccessRate.toFixed(4),
+        p.fallbackRate.toFixed(4),
+        p.avgAttempts.toFixed(3),
+        Math.round(p.avgDurationMs),
+      ].map(esc).join(","));
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ai-reliability-trends-${days}d.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="glass rounded-2xl p-6 space-y-5">
@@ -908,6 +955,17 @@ function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {loading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground/60" />}
+          <button
+            type="button"
+            onClick={downloadCsv}
+            disabled={!canExport}
+            title="Download daily per-tool reliability rollups as CSV"
+            data-testid="button-download-trends-csv"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Download CSV
+          </button>
           <div className="flex rounded-lg border border-white/10 overflow-hidden">
             {(["firstTrySuccessRate", "fallbackRate"] as TrendMetric[]).map((m) => (
               <button
