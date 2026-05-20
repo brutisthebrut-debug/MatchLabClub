@@ -1521,6 +1521,7 @@ const OCR_FIELD_LABELS: Record<string, string> = {
   sourceApp: "Source app",
   bio: "Bio",
   prompts: "Prompts",
+  total: "Total",
 };
 
 const OCR_FILTER_FIELDS: OcrCorrectionField[] = ["firstName", "age", "sourceApp", "bio", "prompts"];
@@ -1712,6 +1713,14 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
                         activeDot={{ r: 3 }}
                       />
                     ))}
+                    <Line
+                      type="monotone"
+                      dataKey="total"
+                      stroke="rgba(255,255,255,0.85)"
+                      strokeWidth={2.5}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               );
