@@ -49,6 +49,11 @@ import {
   loadSkippedAuditIds,
   saveSkippedAuditIds,
 } from "@/lib/skippedRefreshAudits";
+import {
+  clearAuditFilterPrefs,
+  loadAuditFilterPrefs,
+  saveAuditFilterPrefs,
+} from "@/lib/auditFilterPrefs";
 
 interface DemoMatch {
   id: number;
@@ -150,7 +155,27 @@ export default function MatchesScreen() {
   const [query, setQuery] = React.useState("");
   const [sort, setSort] = React.useState<SortOrder>("newest");
   const [range, setRange] = React.useState<ScoreRange>("all");
+  const [filterPrefsLoaded, setFilterPrefsLoaded] = React.useState(false);
   const debouncedQuery = useDebouncedValue(query.trim(), 250);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    void loadAuditFilterPrefs().then((prefs) => {
+      if (cancelled) return;
+      setQuery(prefs.query);
+      setSort(prefs.sort);
+      setRange(prefs.range);
+      setFilterPrefsLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (!filterPrefsLoaded) return;
+    void saveAuditFilterPrefs({ query: debouncedQuery, sort, range });
+  }, [filterPrefsLoaded, debouncedQuery, sort, range]);
 
   const PAGE_SIZE = 50;
   const filterParams = React.useMemo(
@@ -823,6 +848,7 @@ export default function MatchesScreen() {
                   setQuery("");
                   setSort("newest");
                   setRange("all");
+                  void clearAuditFilterPrefs();
                 }}
                 style={({ pressed }) => [
                   styles.resetBtn,
