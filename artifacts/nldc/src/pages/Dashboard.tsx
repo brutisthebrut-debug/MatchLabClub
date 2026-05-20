@@ -9,7 +9,9 @@ import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import {
   ArrowRight, FileText, MessageSquare, Mail, Settings,
   TrendingUp, AlertTriangle, Clock, Sparkles, Trophy, Eye,
-  ChevronRight, FlaskConical, Stethoscope, Zap
+  ChevronRight, FlaskConical, Stethoscope, Zap,
+  Wand2, ScanFace, BarChart2, Heart, Compass, BookOpen,
+  MessageCircle, User, Map
 } from "lucide-react";
 
 function ScoreRing({ score }: { score: number }) {
@@ -73,14 +75,24 @@ const HOW_YOU_COME_ACROSS = [
 ];
 
 const QUICK_ACTIONS = [
-  { icon: FileText,     label: "New Audit",          desc: "Reanalyze your profile",        href: "/start",        color: "hsl(268 52% 68%)" },
-  { icon: Zap,          label: "Signal Check",        desc: "3-minute quick read",           href: "/signal-check", color: "hsl(43 65% 65%)" },
-  { icon: FlaskConical, label: "Chemistry Lab",       desc: "Analyse a message",             href: "/lab",          color: "hsl(190 55% 60%)" },
-  { icon: MessageSquare,label: "Message Coach",       desc: "Get 5 reply options",           href: "/coach",        color: "hsl(285 45% 62%)" },
-  { icon: Stethoscope,  label: "Dating Diagnosis",    desc: "Find your pattern",             href: "/diagnosis",    color: "hsl(348 55% 65%)" },
-  { icon: Mail,         label: "Import Patterns",     desc: "Communication style analysis",  href: "/insights",     color: "hsl(142 55% 58%)" },
-  { icon: Settings,     label: "Integrations",        desc: "Manage connections",            href: "/integrations", color: "hsl(228 18% 55%)" },
-  { icon: Eye,          label: "Platform Vision",     desc: "See what's coming",             href: "/roadmap",      color: "hsl(43 65% 60%)" },
+  { icon: FileText,      label: "New Audit",             desc: "Reanalyze your profile",        href: "/start",                color: "hsl(268 52% 68%)" },
+  { icon: Zap,           label: "Signal Check",           desc: "3-minute quick read",           href: "/signal-check",         color: "hsl(43 65% 65%)"  },
+  { icon: FlaskConical,  label: "Chemistry Lab",          desc: "Analyse a message",             href: "/lab",                  color: "hsl(190 55% 60%)" },
+  { icon: MessageSquare, label: "Message Coach",          desc: "Get 5 reply options",           href: "/coach",                color: "hsl(285 45% 62%)" },
+  { icon: Stethoscope,   label: "Dating Diagnosis",       desc: "Find your pattern",             href: "/diagnosis",            color: "hsl(348 55% 65%)" },
+  { icon: Mail,          label: "Import Patterns",        desc: "Communication style analysis",  href: "/insights",             color: "hsl(142 55% 58%)" },
+  { icon: Wand2,         label: "Profile Glow-Up",        desc: "10 rewrites for any platform",  href: "/glow-up",              color: "hsl(268 52% 68%)" },
+  { icon: User,          label: "Profile Reader",         desc: "Decode someone's profile",      href: "/profile-reader",       color: "hsl(190 55% 60%)" },
+  { icon: MessageCircle, label: "Next Message",           desc: "7 copy-ready options",          href: "/next-message",         color: "hsl(285 45% 62%)" },
+  { icon: BarChart2,     label: "Style Map",              desc: "9 dimensions of your style",    href: "/style-map",            color: "hsl(43 65% 65%)"  },
+  { icon: BookOpen,      label: "Dating Blueprint",       desc: "Your personalized action plan", href: "/blueprint",            color: "hsl(142 55% 58%)" },
+  { icon: ScanFace,      label: "Mirror Profile",         desc: "See yourself as others do",     href: "/mirror",               color: "hsl(268 52% 68%)" },
+  { icon: Sparkles,      label: "Dating Archetype",       desc: "6-question shareable quiz",     href: "/archetype",            color: "hsl(43 65% 65%)"  },
+  { icon: Heart,         label: "Post-Meeting Reflect",   desc: "Pursue / pause / pass read",    href: "/reflection",           color: "hsl(348 55% 65%)" },
+  { icon: Eye,           label: "Connection Style",       desc: "Your attachment pattern",       href: "/connection-style",     color: "hsl(285 45% 65%)" },
+  { icon: Compass,       label: "Compat. Compass",        desc: "Dynamics that support you",     href: "/compatibility-compass",color: "hsl(142 55% 60%)" },
+  { icon: Settings,      label: "Integrations",           desc: "Manage connections",            href: "/integrations",         color: "hsl(228 18% 55%)" },
+  { icon: Map,           label: "Platform Vision",        desc: "See what's coming",             href: "/roadmap",              color: "hsl(43 65% 60%)"  },
 ];
 
 const fadeUp = (delay = 0) => ({

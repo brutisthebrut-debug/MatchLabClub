@@ -3,12 +3,25 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, Sparkles, ChevronDown, Map } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
-const TOOLS = [
-  { name: "Dating Diagnosis", href: "/diagnosis", desc: "Profile category + what to fix first" },
-  { name: "Message Lab", href: "/lab", desc: "Tone analysis + 4 styled reply options" },
-  { name: "3-Min Signal Check", href: "/signal-check", desc: "Free for podcast listeners — instant score" },
-  { name: "Message Coach", href: "/coach", desc: "Get coached replies for any conversation" },
-  { name: "Import Patterns", href: "/insights", desc: "Analyse communication style from history" },
+const TOOLS_PROFILE = [
+  { name: "Dating Diagnosis",     href: "/diagnosis",     desc: "Profile category + what to fix first" },
+  { name: "3-Min Signal Check",   href: "/signal-check",  desc: "Free for podcast listeners — instant score" },
+  { name: "Profile Glow-Up",      href: "/glow-up",       desc: "10 rewrites for any style or platform" },
+  { name: "Profile Reader",       href: "/profile-reader",desc: "Decode someone else's profile" },
+  { name: "Message Coach",        href: "/coach",         desc: "Get coached replies for any conversation" },
+  { name: "Message Lab",          href: "/lab",           desc: "Tone analysis + 4 styled reply options" },
+  { name: "Next Message",         href: "/next-message",  desc: "7 copy-ready options for any situation" },
+  { name: "Import Patterns",      href: "/insights",      desc: "Analyse communication style from history" },
+  { name: "Style Map",            href: "/style-map",     desc: "9 communication dimensions mapped" },
+];
+
+const TOOLS_INSIGHT = [
+  { name: "Dating Blueprint",      href: "/blueprint",           desc: "Your personalized dating action plan" },
+  { name: "Mirror Profile",        href: "/mirror",              desc: "See yourself the way others might" },
+  { name: "Dating Archetype",      href: "/archetype",           desc: "6-question quiz — shareable result" },
+  { name: "Connection Style Lens", href: "/connection-style",    desc: "Your attachment pattern + risk loop" },
+  { name: "Compatibility Compass", href: "/compatibility-compass",desc: "Dynamics that support vs. challenge you" },
+  { name: "Post-Meeting Reflect",  href: "/reflection",          desc: "Pursue / pause / pass read" },
 ];
 
 export function Navbar() {
@@ -65,19 +78,41 @@ export function Navbar() {
               Tools <ChevronDown className={`w-3.5 h-3.5 transition-transform ${toolsOpen ? "rotate-180" : ""}`} />
             </button>
             {toolsOpen && (
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-72 glass-strong rounded-2xl p-2 shadow-[0_20px_60px_rgb(0_0_0/0.5)] border border-[hsl(268_52%_68%/0.2)] animate-in fade-in-0 zoom-in-95">
-                {TOOLS.map(tool => (
-                  <Link
-                    key={tool.href}
-                    href={tool.href}
-                    onClick={() => setToolsOpen(false)}
-                    className="flex flex-col gap-0.5 px-4 py-3 rounded-xl hover:bg-white/5 transition-colors"
-                    data-testid={`link-tool-${tool.name.toLowerCase().replace(/ /g, "-")}`}
-                  >
-                    <span className="text-sm font-semibold text-foreground">{tool.name}</span>
-                    <span className="text-xs text-muted-foreground">{tool.desc}</span>
-                  </Link>
-                ))}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-[580px] glass-strong rounded-2xl p-3 shadow-[0_20px_60px_rgb(0_0_0/0.5)] border border-[hsl(268_52%_68%/0.2)] animate-in fade-in-0 zoom-in-95">
+                <div className="grid grid-cols-2 gap-x-2">
+                  {/* Profile & Messages column */}
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pt-1 pb-2">Profile &amp; Messages</p>
+                    {TOOLS_PROFILE.map(tool => (
+                      <Link
+                        key={tool.href}
+                        href={tool.href}
+                        onClick={() => setToolsOpen(false)}
+                        className="flex flex-col gap-0.5 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-colors"
+                        data-testid={`link-tool-${tool.name.toLowerCase().replace(/ /g, "-")}`}
+                      >
+                        <span className="text-xs font-semibold text-foreground leading-tight">{tool.name}</span>
+                        <span className="text-[11px] text-muted-foreground leading-tight">{tool.desc}</span>
+                      </Link>
+                    ))}
+                  </div>
+                  {/* Divider */}
+                  <div className="border-l border-white/5">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pt-1 pb-2">Self-Insight</p>
+                    {TOOLS_INSIGHT.map(tool => (
+                      <Link
+                        key={tool.href}
+                        href={tool.href}
+                        onClick={() => setToolsOpen(false)}
+                        className="flex flex-col gap-0.5 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-colors"
+                        data-testid={`link-tool-${tool.name.toLowerCase().replace(/ /g, "-")}`}
+                      >
+                        <span className="text-xs font-semibold text-foreground leading-tight">{tool.name}</span>
+                        <span className="text-[11px] text-muted-foreground leading-tight">{tool.desc}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -115,9 +150,14 @@ export function Navbar() {
 
       {/* Mobile Nav */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/5 bg-[hsl(232_38%_7%/0.98)] backdrop-blur-xl p-5 flex flex-col gap-2 animate-in slide-in-from-top-2">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/50 mb-1">Tools</p>
-          {TOOLS.map(tool => (
+        <div className="md:hidden border-t border-white/5 bg-[hsl(232_38%_7%/0.98)] backdrop-blur-xl p-5 flex flex-col gap-1.5 animate-in slide-in-from-top-2 max-h-[80vh] overflow-y-auto">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-1">Profile &amp; Messages</p>
+          {TOOLS_PROFILE.map(tool => (
+            <Link key={tool.href} href={tool.href} onClick={() => setMobileMenuOpen(false)} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">{tool.name}</Link>
+          ))}
+          <div className="h-px bg-white/5 my-2" />
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-1">Self-Insight</p>
+          {TOOLS_INSIGHT.map(tool => (
             <Link key={tool.href} href={tool.href} onClick={() => setMobileMenuOpen(false)} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">{tool.name}</Link>
           ))}
           <div className="h-px bg-white/5 my-2" />

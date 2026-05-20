@@ -23,6 +23,16 @@ import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import CheckoutCancel from "@/pages/CheckoutCancel";
 import Founder from "@/pages/Founder";
 import ShebangsPartner from "@/pages/ShebangsPartner";
+import Blueprint from "@/pages/Blueprint";
+import MirrorProfile from "@/pages/MirrorProfile";
+import Archetype from "@/pages/Archetype";
+import Reflection from "@/pages/Reflection";
+import ProfileReader from "@/pages/ProfileReader";
+import StyleMap from "@/pages/StyleMap";
+import NextMessage from "@/pages/NextMessage";
+import GlowUp from "@/pages/GlowUp";
+import ConnectionStyle from "@/pages/ConnectionStyle";
+import CompatibilityCompass from "@/pages/CompatibilityCompass";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +61,17 @@ function Router() {
       </Route>
       <Route path="/founder" component={Founder} />
       <Route path="/partners/shebangs" component={ShebangsPartner} />
+      {/* New coaching modules */}
+      <Route path="/blueprint" component={Blueprint} />
+      <Route path="/mirror" component={MirrorProfile} />
+      <Route path="/archetype" component={Archetype} />
+      <Route path="/reflection" component={Reflection} />
+      <Route path="/profile-reader" component={ProfileReader} />
+      <Route path="/style-map" component={StyleMap} />
+      <Route path="/next-message" component={NextMessage} />
+      <Route path="/glow-up" component={GlowUp} />
+      <Route path="/connection-style" component={ConnectionStyle} />
+      <Route path="/compatibility-compass" component={CompatibilityCompass} />
       <Route component={NotFound} />
     </Switch>
   );
