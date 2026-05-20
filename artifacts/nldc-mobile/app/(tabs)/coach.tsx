@@ -198,6 +198,9 @@ export default function CoachScreen() {
   const [followUpAck, setFollowUpAck] = useState<null | "sent" | "not_sent">(
     null,
   );
+  const [timelineActiveSeries, setTimelineActiveSeries] = useState<Set<string>>(
+    () => new Set(["sent", "not_sent", "snoozed", "dismissed"]),
+  );
 
   useFocusEffect(
     React.useCallback(() => {
@@ -687,40 +690,124 @@ export default function CoachScreen() {
                     ]}
                     testID="timeline-empty-state"
                   >
-                    A couple more weeks of follow-ups and your send-through
-                    trend will show up here.
+                    A couple more weeks of follow-ups and your trend will show
+                    up here.
                   </Text>
                 ) : (
                   <>
                     <View
-                      style={styles.timelineBars}
-                      testID="timeline-bars"
+                      style={styles.timelineChips}
+                      testID="timeline-series-chips"
                     >
-                      {followUpTimeline.buckets.map((b) => {
-                        const rate = b.sendThroughRate ?? 0;
-                        const hasData = b.total > 0;
-                        const heightPct = hasData
-                          ? Math.max(6, Math.round(rate * 100))
-                          : 0;
+                      {[
+                        { key: "sent", label: "Sent", color: colors.teal },
+                        { key: "not_sent", label: "Not sent", color: colors.gold },
+                        { key: "snoozed", label: "Snoozed", color: "#7B93D4" },
+                        { key: "dismissed", label: "Dismissed", color: colors.rose },
+                      ].map((s) => {
+                        const active = timelineActiveSeries.has(s.key);
                         return (
-                          <View key={b.weekStart} style={styles.timelineCol}>
-                            <View
+                          <Pressable
+                            key={s.key}
+                            style={[
+                              styles.timelineChip,
+                              {
+                                backgroundColor: active
+                                  ? `${s.color}26`
+                                  : "transparent",
+                                borderColor: active
+                                  ? s.color
+                                  : colors.cardBorder,
+                              },
+                            ]}
+                            onPress={() => {
+                              setTimelineActiveSeries((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(s.key)) {
+                                  if (next.size > 1) next.delete(s.key);
+                                } else {
+                                  next.add(s.key);
+                                }
+                                return next;
+                              });
+                            }}
+                            testID={`timeline-chip-${s.key}`}
+                          >
+                            <Text
                               style={[
-                                styles.timelineTrack,
-                                { backgroundColor: `${colors.teal}1F` },
+                                styles.timelineChipText,
+                                {
+                                  color: active
+                                    ? s.color
+                                    : colors.mutedForeground,
+                                },
                               ]}
                             >
-                              <View
-                                style={[
-                                  styles.timelineFill,
-                                  {
-                                    height: `${heightPct}%`,
-                                    backgroundColor: hasData
-                                      ? colors.teal
-                                      : "transparent",
-                                  },
-                                ]}
-                              />
+                              {s.label}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                    <View style={styles.timelineBars} testID="timeline-bars">
+                      {(() => {
+                        const seriesDefs = [
+                          { key: "sent", color: colors.teal },
+                          { key: "not_sent", color: colors.gold },
+                          { key: "snoozed", color: "#7B93D4" as string },
+                          { key: "dismissed", color: colors.rose },
+                        ];
+                        const activeDefs = seriesDefs.filter((s) =>
+                          timelineActiveSeries.has(s.key),
+                        );
+                        const getCount = (
+                          b: (typeof followUpTimeline.buckets)[number],
+                          key: string,
+                        ) => {
+                          if (key === "sent") return b.sentCount;
+                          if (key === "not_sent") return b.notSentCount;
+                          if (key === "snoozed") return b.snoozeCount;
+                          return b.dismissCount;
+                        };
+                        const maxCount = Math.max(
+                          1,
+                          ...followUpTimeline.buckets.flatMap((b) =>
+                            activeDefs.map((s) => getCount(b, s.key)),
+                          ),
+                        );
+                        return followUpTimeline.buckets.map((b) => (
+                          <View key={b.weekStart} style={styles.timelineCol}>
+                            <View style={styles.timelineBarGroup}>
+                              {activeDefs.map((s) => {
+                                const count = getCount(b, s.key);
+                                const heightPct = Math.round(
+                                  (count / maxCount) * 100,
+                                );
+                                return (
+                                  <View
+                                    key={s.key}
+                                    style={[
+                                      styles.timelineTrack,
+                                      {
+                                        backgroundColor: `${s.color}1F`,
+                                      },
+                                    ]}
+                                  >
+                                    <View
+                                      style={[
+                                        styles.timelineFill,
+                                        {
+                                          height: `${count > 0 ? Math.max(8, heightPct) : 0}%`,
+                                          backgroundColor:
+                                            count > 0
+                                              ? s.color
+                                              : "transparent",
+                                        },
+                                      ]}
+                                    />
+                                  </View>
+                                );
+                              })}
                             </View>
                             <Text
                               style={[
@@ -734,8 +821,8 @@ export default function CoachScreen() {
                               )}
                             </Text>
                           </View>
-                        );
-                      })}
+                        ));
+                      })()}
                     </View>
                     <Text
                       style={[
@@ -743,7 +830,7 @@ export default function CoachScreen() {
                         { color: colors.mutedForeground },
                       ]}
                     >
-                      Send-through rate by week (last 8 weeks)
+                      Weekly counts by outcome · last 8 weeks
                     </Text>
                   </>
                 )}
@@ -1939,10 +2026,25 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     gap: 8,
   },
+  timelineChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  timelineChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+  },
+  timelineChipText: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+  },
   timelineBars: {
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: 6,
+    gap: 4,
     height: 72,
   },
   timelineCol: {
@@ -1950,16 +2052,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
   },
-  timelineTrack: {
+  timelineBarGroup: {
     width: "100%",
     height: 56,
-    borderRadius: 4,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 2,
+  },
+  timelineTrack: {
+    flex: 1,
+    height: "100%",
+    borderRadius: 3,
     overflow: "hidden",
     justifyContent: "flex-end",
   },
   timelineFill: {
     width: "100%",
-    borderRadius: 4,
+    borderRadius: 3,
   },
   timelineTick: {
     fontSize: 9,

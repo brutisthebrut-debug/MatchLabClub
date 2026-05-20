@@ -14,6 +14,36 @@ const extractRef = vi.hoisted(() => ({
   },
 }));
 
+const timelineRef = vi.hoisted(() => ({
+  current: {
+    data: null as {
+      buckets: {
+        weekStart: string;
+        sentCount: number;
+        notSentCount: number;
+        snoozeCount: number;
+        dismissCount: number;
+        total: number;
+        sendThroughRate: number | null;
+      }[];
+    } | null,
+  },
+}));
+
+const statsRef = vi.hoisted(() => ({
+  current: {
+    data: null as {
+      totalPrompts: number;
+      sentCount: number;
+      notSentCount: number;
+      snoozeCount: number;
+      dismissCount: number;
+      lastAnswer: string | null;
+      lastAnsweredAt: string | null;
+    } | null,
+  },
+}));
+
 // ---------------------------------------------------------------------------
 // React Native mocks
 // ---------------------------------------------------------------------------
@@ -179,8 +209,8 @@ vi.mock("@workspace/api-client-react", () => ({
   useExtractMessageScreenshot: () => extractRef.current,
   useCoachMessage: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useCreateMessageCoachingSession: () => ({ mutateAsync: vi.fn(), isPending: false }),
-  useGetCoachFollowUpStats: () => ({ data: null }),
-  useGetCoachFollowUpTimeline: () => ({ data: null }),
+  useGetCoachFollowUpStats: () => ({ data: statsRef.current.data }),
+  useGetCoachFollowUpTimeline: () => ({ data: timelineRef.current.data }),
   getGetCoachFollowUpStatsQueryKey: () => ["coach-follow-up-stats"],
   getGetCoachFollowUpTimelineQueryKey: () => ["coach-follow-up-timeline"],
 }));
@@ -311,6 +341,56 @@ function resetExtractMock() {
   });
 }
 
+function resetTimelineMock() {
+  timelineRef.current.data = null;
+}
+
+function resetStatsMock() {
+  statsRef.current.data = null;
+}
+
+const STATS_WITH_SNOOZE_DISMISS = {
+  totalPrompts: 24,
+  sentCount: 12,
+  notSentCount: 3,
+  snoozeCount: 6,
+  dismissCount: 3,
+  lastAnswer: "sent",
+  lastAnsweredAt: "2026-05-19T10:00:00Z",
+};
+
+const TIMELINE_WITH_SNOOZE_DISMISS = {
+  buckets: [
+    {
+      weekStart: "2026-04-27",
+      sentCount: 3,
+      notSentCount: 1,
+      snoozeCount: 2,
+      dismissCount: 1,
+      total: 7,
+      sendThroughRate: 0.43,
+    },
+    {
+      weekStart: "2026-05-04",
+      sentCount: 5,
+      notSentCount: 2,
+      snoozeCount: 1,
+      dismissCount: 0,
+      total: 8,
+      sendThroughRate: 0.63,
+    },
+    {
+      weekStart: "2026-05-11",
+      sentCount: 4,
+      notSentCount: 0,
+      snoozeCount: 3,
+      dismissCount: 2,
+      total: 9,
+      sendThroughRate: 0.44,
+    },
+  ],
+};
+
 // ---------------------------------------------------------------------------
 // Test lifecycle
 // ---------------------------------------------------------------------------
@@ -318,6 +398,8 @@ function resetExtractMock() {
 beforeEach(() => {
   qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   resetExtractMock();
+  resetTimelineMock();
+  resetStatsMock();
 });
 
 afterEach(() => {
@@ -730,5 +812,132 @@ describe("Coach screenshot flow — error state", () => {
     await waitFor(() => {
       expect(screen.queryByTestId("text-coach-screenshot-error")).toBeNull();
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Timeline snooze/dismiss series chips
+// ---------------------------------------------------------------------------
+
+describe("Coach timeline — snooze and dismiss series chips", () => {
+  it("renders all four series chips when timeline has 2+ active weeks", async () => {
+    statsRef.current.data = STATS_WITH_SNOOZE_DISMISS;
+    timelineRef.current.data = TIMELINE_WITH_SNOOZE_DISMISS;
+
+    render(
+      <Wrap>
+        <CoachScreen />
+      </Wrap>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("timeline-series-chips")).toBeTruthy();
+    });
+
+    expect(screen.getByTestId("timeline-chip-sent")).toBeTruthy();
+    expect(screen.getByTestId("timeline-chip-not_sent")).toBeTruthy();
+    expect(screen.getByTestId("timeline-chip-snoozed")).toBeTruthy();
+    expect(screen.getByTestId("timeline-chip-dismissed")).toBeTruthy();
+  });
+
+  it("hides chips and bars when fewer than 2 weeks have data", async () => {
+    statsRef.current.data = STATS_WITH_SNOOZE_DISMISS;
+    timelineRef.current.data = {
+      buckets: [
+        {
+          weekStart: "2026-05-11",
+          sentCount: 4,
+          notSentCount: 1,
+          snoozeCount: 2,
+          dismissCount: 0,
+          total: 7,
+          sendThroughRate: 0.57,
+        },
+        {
+          weekStart: "2026-05-18",
+          sentCount: 0,
+          notSentCount: 0,
+          snoozeCount: 0,
+          dismissCount: 0,
+          total: 0,
+          sendThroughRate: null,
+        },
+      ],
+    };
+
+    render(
+      <Wrap>
+        <CoachScreen />
+      </Wrap>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("timeline-empty-state")).toBeTruthy();
+    });
+
+    expect(screen.queryByTestId("timeline-series-chips")).toBeNull();
+    expect(screen.queryByTestId("timeline-bars")).toBeNull();
+  });
+
+  it("toggling a chip off keeps the chart visible with remaining series", async () => {
+    statsRef.current.data = STATS_WITH_SNOOZE_DISMISS;
+    timelineRef.current.data = TIMELINE_WITH_SNOOZE_DISMISS;
+
+    render(
+      <Wrap>
+        <CoachScreen />
+      </Wrap>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("timeline-chip-snoozed")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByTestId("timeline-chip-snoozed"));
+
+    expect(screen.getByTestId("timeline-chip-snoozed")).toBeTruthy();
+    expect(screen.getByTestId("timeline-bars")).toBeTruthy();
+  });
+
+  it("does not allow deselecting the last active chip", async () => {
+    statsRef.current.data = STATS_WITH_SNOOZE_DISMISS;
+    timelineRef.current.data = TIMELINE_WITH_SNOOZE_DISMISS;
+
+    render(
+      <Wrap>
+        <CoachScreen />
+      </Wrap>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("timeline-series-chips")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByTestId("timeline-chip-sent"));
+    fireEvent.click(screen.getByTestId("timeline-chip-not_sent"));
+    fireEvent.click(screen.getByTestId("timeline-chip-snoozed"));
+    fireEvent.click(screen.getByTestId("timeline-chip-dismissed"));
+
+    expect(screen.getByTestId("timeline-bars")).toBeTruthy();
+  });
+
+  it("toggling a chip off then on restores all series bars", async () => {
+    statsRef.current.data = STATS_WITH_SNOOZE_DISMISS;
+    timelineRef.current.data = TIMELINE_WITH_SNOOZE_DISMISS;
+
+    render(
+      <Wrap>
+        <CoachScreen />
+      </Wrap>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("timeline-chip-dismissed")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByTestId("timeline-chip-dismissed"));
+    fireEvent.click(screen.getByTestId("timeline-chip-dismissed"));
+
+    expect(screen.getByTestId("timeline-bars")).toBeTruthy();
   });
 });
