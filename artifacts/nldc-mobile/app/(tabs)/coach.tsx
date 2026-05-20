@@ -10,7 +10,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Image,
   Platform,
@@ -66,6 +66,37 @@ interface Reply {
   rationale: string;
 }
 
+interface TaggedLine {
+  sender: "me" | "them" | null;
+  content: string;
+}
+
+function parseTaggedLines(text: string): TaggedLine[] {
+  return text
+    .split("\n")
+    .map((line) => {
+      const trimmed = line.trim();
+      if (/^me:\s*/i.test(trimmed)) {
+        return { sender: "me" as const, content: trimmed.replace(/^me:\s*/i, "") };
+      }
+      if (/^them:\s*/i.test(trimmed)) {
+        return { sender: "them" as const, content: trimmed.replace(/^them:\s*/i, "") };
+      }
+      return { sender: null, content: trimmed };
+    })
+    .filter((l) => l.content.length > 0);
+}
+
+function serializeTaggedLines(lines: TaggedLine[]): string {
+  return lines
+    .map((l) => {
+      if (l.sender === "me") return `Me: ${l.content}`;
+      if (l.sender === "them") return `Them: ${l.content}`;
+      return l.content;
+    })
+    .join("\n");
+}
+
 const SOURCE_APPS = ["Hinge", "Bumble", "Tinder"] as const;
 type SourceApp = (typeof SOURCE_APPS)[number];
 
@@ -118,6 +149,7 @@ export default function CoachScreen() {
   const [screenshotError, setScreenshotError] = useState<string | null>(null);
   const [results, setResults] = useState<Reply[] | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showLineTagger, setShowLineTagger] = useState(false);
   const [reminderPrefs, setReminderPrefs] = useState<CoachReminderPrefs>(
     DEFAULT_COACH_REMINDER_PREFS,
   );
@@ -332,6 +364,16 @@ export default function CoachScreen() {
         | undefined);
     return tint ? colors[tint] : colors.violet;
   };
+
+  function pullLastLine() {
+    const nonEmpty = context.split("\n").filter((l) => l.trim().length > 0);
+    if (nonEmpty.length < 1) return;
+    const last = nonEmpty[nonEmpty.length - 1];
+    const rest = nonEmpty.slice(0, nonEmpty.length - 1);
+    const stripped = last.trim().replace(/^(me|them):\s*/i, "");
+    setLastMessage(stripped);
+    setContext(rest.join("\n"));
+  }
 
   async function onSubmit() {
     setErrorMsg(null);
@@ -897,7 +939,10 @@ export default function CoachScreen() {
           <Field label="The conversation so far">
             <TextInput
               value={context}
-              onChangeText={setContext}
+              onChangeText={(t) => {
+                setContext(t);
+                if (showLineTagger) setShowLineTagger(false);
+              }}
               placeholder="Paste the last few messages — what was said, who said what."
               placeholderTextColor={colors.mutedForeground}
               multiline
@@ -911,6 +956,71 @@ export default function CoachScreen() {
                 },
               ]}
             />
+            {context.trim().length > 0 ? (
+              <View style={styles.ocrActions}>
+                {!showLineTagger ? (
+                  <Pressable
+                    onPress={pullLastLine}
+                    style={[
+                      styles.ocrActionBtn,
+                      {
+                        borderColor: colors.border,
+                        backgroundColor: colors.input,
+                      },
+                    ]}
+                    testID="button-coach-pull-last-line"
+                  >
+                    <Feather name="corner-right-down" size={13} color={colors.teal} />
+                    <Text
+                      style={[styles.ocrActionText, { color: colors.foreground }]}
+                    >
+                      Pull last line → Their message
+                    </Text>
+                  </Pressable>
+                ) : null}
+                <Pressable
+                  onPress={() => setShowLineTagger((v) => !v)}
+                  style={[
+                    styles.ocrActionBtn,
+                    {
+                      borderColor: showLineTagger ? colors.violet : colors.border,
+                      backgroundColor: showLineTagger
+                        ? `${colors.violet}18`
+                        : colors.input,
+                    },
+                  ]}
+                  testID="button-coach-label-speakers"
+                >
+                  <Feather
+                    name="users"
+                    size={13}
+                    color={showLineTagger ? colors.violet : colors.mutedForeground}
+                  />
+                  <Text
+                    style={[
+                      styles.ocrActionText,
+                      {
+                        color: showLineTagger
+                          ? colors.violet
+                          : colors.foreground,
+                      },
+                    ]}
+                  >
+                    Label who said what
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
+            {showLineTagger && context.trim().length > 0 ? (
+              <LineTaggerPanel
+                context={context}
+                onApply={(updated) => {
+                  setContext(updated);
+                  setShowLineTagger(false);
+                }}
+                onClose={() => setShowLineTagger(false)}
+              />
+            ) : null}
           </Field>
 
           <Field label="Their last message to you">
@@ -1106,6 +1216,176 @@ function Field({
     <View style={styles.field}>
       <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>{label}</Text>
       {children}
+    </View>
+  );
+}
+
+function LineTaggerPanel({
+  context,
+  onApply,
+  onClose,
+}: {
+  context: string;
+  onApply: (updated: string) => void;
+  onClose: () => void;
+}) {
+  const colors = useColors();
+  const [lines, setLines] = useState<TaggedLine[]>(() =>
+    parseTaggedLines(context),
+  );
+
+  const toggleSender = useCallback(
+    (index: number, next: "me" | "them") => {
+      setLines((prev) =>
+        prev.map((l, i) =>
+          i === index
+            ? { ...l, sender: l.sender === next ? null : next }
+            : l,
+        ),
+      );
+    },
+    [],
+  );
+
+  return (
+    <View
+      style={[
+        styles.taggerPanel,
+        { borderColor: colors.violet, backgroundColor: colors.card },
+      ]}
+      testID="panel-line-tagger"
+    >
+      <View style={styles.taggerHeader}>
+        <Feather name="users" size={13} color={colors.violet} />
+        <Text style={[styles.taggerTitle, { color: colors.violet }]}>
+          Label who said what
+        </Text>
+        <Text
+          style={[styles.taggerHint, { color: colors.mutedForeground }]}
+        >
+          Tap Me / Them to tag each line
+        </Text>
+      </View>
+
+      <View style={styles.taggerLines}>
+        {lines.map((line, i) => (
+          <View
+            key={i}
+            style={[
+              styles.taggerRow,
+              {
+                backgroundColor:
+                  line.sender === "me"
+                    ? `${colors.violet}14`
+                    : line.sender === "them"
+                      ? `${colors.teal}14`
+                      : colors.input,
+                borderColor:
+                  line.sender === "me"
+                    ? `${colors.violet}40`
+                    : line.sender === "them"
+                      ? `${colors.teal}40`
+                      : colors.border,
+              },
+            ]}
+          >
+            <View style={styles.taggerChips}>
+              <Pressable
+                onPress={() => toggleSender(i, "me")}
+                style={[
+                  styles.taggerChip,
+                  {
+                    backgroundColor:
+                      line.sender === "me"
+                        ? colors.violet
+                        : "transparent",
+                    borderColor:
+                      line.sender === "me" ? colors.violet : colors.border,
+                  },
+                ]}
+                testID={`button-tagger-me-${i}`}
+              >
+                <Text
+                  style={[
+                    styles.taggerChipText,
+                    {
+                      color:
+                        line.sender === "me"
+                          ? "#fff"
+                          : colors.mutedForeground,
+                    },
+                  ]}
+                >
+                  Me
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => toggleSender(i, "them")}
+                style={[
+                  styles.taggerChip,
+                  {
+                    backgroundColor:
+                      line.sender === "them"
+                        ? colors.teal
+                        : "transparent",
+                    borderColor:
+                      line.sender === "them" ? colors.teal : colors.border,
+                  },
+                ]}
+                testID={`button-tagger-them-${i}`}
+              >
+                <Text
+                  style={[
+                    styles.taggerChipText,
+                    {
+                      color:
+                        line.sender === "them"
+                          ? "#fff"
+                          : colors.mutedForeground,
+                    },
+                  ]}
+                >
+                  Them
+                </Text>
+              </Pressable>
+            </View>
+            <Text
+              style={[styles.taggerLineText, { color: colors.foreground }]}
+              numberOfLines={2}
+            >
+              {line.content}
+            </Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.taggerFooter}>
+        <Pressable
+          onPress={onClose}
+          style={[
+            styles.taggerBtn,
+            { borderColor: colors.border, backgroundColor: "transparent" },
+          ]}
+          testID="button-tagger-cancel"
+        >
+          <Text style={[styles.taggerBtnText, { color: colors.foreground }]}>
+            Cancel
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => onApply(serializeTaggedLines(lines))}
+          style={[
+            styles.taggerBtn,
+            { borderColor: colors.violet, backgroundColor: colors.violet },
+          ]}
+          testID="button-tagger-apply"
+        >
+          <Feather name="check" size={13} color="#fff" />
+          <Text style={[styles.taggerBtnText, { color: "#fff" }]}>
+            Apply labels
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -1703,5 +1983,99 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: "PlusJakartaSans_500Medium",
     marginLeft: "auto",
+  },
+  ocrActions: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+    marginTop: 6,
+  },
+  ocrActionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  ocrActionText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+  },
+  taggerPanel: {
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 12,
+    gap: 10,
+    marginTop: 6,
+  },
+  taggerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flexWrap: "wrap",
+  },
+  taggerTitle: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.4,
+  },
+  taggerHint: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_500Medium",
+    marginLeft: 2,
+  },
+  taggerLines: {
+    gap: 6,
+  },
+  taggerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 8,
+  },
+  taggerChips: {
+    flexDirection: "column",
+    gap: 4,
+  },
+  taggerChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    alignItems: "center",
+  },
+  taggerChipText: {
+    fontSize: 10,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.6,
+  },
+  taggerLineText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 18,
+  },
+  taggerFooter: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 2,
+  },
+  taggerBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 9,
+  },
+  taggerBtnText: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_700Bold",
   },
 });
