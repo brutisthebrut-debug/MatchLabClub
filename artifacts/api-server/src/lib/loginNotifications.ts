@@ -1,10 +1,13 @@
 import crypto from "crypto";
 import { and, eq, gte } from "drizzle-orm";
-import { db, loginNotificationsTable } from "@workspace/db";
+import { db, loginNotificationsTable, pushTokensTable } from "@workspace/db";
 import { sendMail } from "./mailer";
 import { logger } from "./logger";
 import { describeIpLocation } from "./geoLocation";
 import { describeUserAgent as describeUa } from "./userAgent";
+import { sendExpoPushNotifications } from "./expoPush";
+
+export const NEW_SIGN_IN_NOTIFICATION_TYPE = "new-sign-in";
 
 const THROTTLE_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -117,6 +120,59 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
     logger.error(
       { err, userId },
       "Failed to send new sign-in notification email",
+    );
+  }
+
+  await sendNewSignInPushNotification({ userId, device, displayLocation });
+}
+
+async function sendNewSignInPushNotification(opts: {
+  userId: string;
+  device: string;
+  displayLocation: string;
+}): Promise<void> {
+  const { userId, device, displayLocation } = opts;
+
+  let tokenRows: { token: string }[];
+  try {
+    tokenRows = await db
+      .select({ token: pushTokensTable.token })
+      .from(pushTokensTable)
+      .where(eq(pushTokensTable.userId, userId));
+  } catch (err) {
+    logger.error(
+      { err, userId },
+      "Failed to fetch push tokens for new sign-in notification",
+    );
+    return;
+  }
+
+  if (tokenRows.length === 0) return;
+
+  const { Expo } = (await import("expo-server-sdk")) as typeof import("expo-server-sdk");
+
+  const messages = tokenRows
+    .filter((r) => Expo.isExpoPushToken(r.token))
+    .map((r) => ({
+      to: r.token,
+      title: "New sign-in detected",
+      body: `${device} · ${displayLocation}`,
+      sound: "default" as const,
+      data: { type: NEW_SIGN_IN_NOTIFICATION_TYPE, screen: "/sessions" },
+    }));
+
+  if (messages.length === 0) return;
+
+  try {
+    await sendExpoPushNotifications(messages);
+    logger.info(
+      { userId, tokenCount: messages.length },
+      "Sent new sign-in push notification",
+    );
+  } catch (err) {
+    logger.error(
+      { err, userId },
+      "Failed to send new sign-in push notification",
     );
   }
 }

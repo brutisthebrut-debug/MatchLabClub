@@ -34,6 +34,8 @@ import {
 } from "@/lib/coachNotifications";
 import { TRASH_NOTIFICATION_TYPE } from "@/lib/auditTrashNotifications";
 
+export const NEW_SIGN_IN_NOTIFICATION_TYPE = "new-sign-in";
+
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -86,6 +88,10 @@ function RootLayoutNav() {
       const type = (data as { type?: unknown }).type;
       if (type === TRASH_NOTIFICATION_TYPE) {
         router.push("/trash");
+        return;
+      }
+      if (type === NEW_SIGN_IN_NOTIFICATION_TYPE) {
+        router.push("/sessions");
         return;
       }
       if (type !== COACH_NOTIFICATION_TYPE) {
