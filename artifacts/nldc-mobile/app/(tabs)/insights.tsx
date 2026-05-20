@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import {
   useAnalyzeInsight,
   useListInsights,
+  useGetInsightsRollup,
   getListInsightsQueryKey,
 } from "@workspace/api-client-react";
 import type { EmailInsight } from "@workspace/api-client-react";
@@ -133,6 +134,7 @@ export default function InsightsScreen() {
   const { data: insightHistory, isLoading: historyLoading } = useListInsights({
     query: { enabled: isAuthenticated, queryKey: listInsightsKey },
   });
+  const { data: rollup } = useGetInsightsRollup();
 
   const isLoading = createInsight.isPending || analyzeInsight.isPending;
 
@@ -433,6 +435,112 @@ export default function InsightsScreen() {
                 </Text>
               </View>
             )}
+          </View>
+        )}
+
+        {/* Cross-import rollup — shown when ≥2 platforms analyzed */}
+        {rollup && rollup.totalAnalyzed >= 2 && rollup.sources.length >= 2 && (
+          <View
+            style={[
+              styles.rollupCard,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+            testID="card-insights-rollup"
+          >
+            <View style={styles.cardRow}>
+              <Feather name="trending-up" size={15} color={colors.violet} />
+              <Text style={[styles.cardEyebrow, { color: colors.violet, marginBottom: 0 }]}>
+                Cross-import trends
+              </Text>
+            </View>
+            <Text style={[styles.rollupTitle, { color: colors.foreground }]}>
+              How your patterns shift between sources
+            </Text>
+            <Text style={[styles.rollupSubtitle, { color: colors.mutedForeground }]}>
+              Based on {rollup.totalAnalyzed} analyzed import{rollup.totalAnalyzed === 1 ? "" : "s"} across {rollup.sources.length} sources.
+            </Text>
+
+            {rollup.comparisons && rollup.comparisons.length > 0 && (
+              <View style={styles.rollupComparisons} testID="list-rollup-comparisons">
+                {rollup.comparisons.map((c: { trait: string; sentence: string }, i: number) => (
+                  <View key={`${c.trait}-${i}`} style={styles.rollupComparisonItem} testID={`rollup-comparison-${c.trait}`}>
+                    <View style={[styles.bullet, { backgroundColor: colors.violet, marginTop: 7 }]} />
+                    <Text style={[styles.bulletText, { color: colors.foreground }]}>{c.sentence}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <View style={styles.rollupSources}>
+              {rollup.sources.map((s: { sourceApp: string; count: number; signaturePattern: string; summary: string; traits: { warmth: number; curiosity: number; verbosity: number; humor: number } }) => (
+                <View
+                  key={s.sourceApp}
+                  style={[
+                    styles.rollupSourceCard,
+                    { backgroundColor: `${colors.violet}0A`, borderColor: `${colors.violet}25` },
+                  ]}
+                  testID={`rollup-source-${s.sourceApp.toLowerCase()}`}
+                >
+                  <View style={styles.rollupSourceHeader}>
+                    <View style={[styles.rollupSourceBadge, { backgroundColor: `${colors.violet}20`, borderColor: `${colors.violet}40` }]}>
+                      <Text style={[styles.rollupSourceBadgeText, { color: colors.violet }]}>
+                        {s.sourceApp}
+                      </Text>
+                    </View>
+                    <Text style={[styles.rollupSourceCount, { color: colors.mutedForeground }]}>
+                      {s.count} import{s.count === 1 ? "" : "s"}
+                    </Text>
+                  </View>
+                  <Text style={[styles.rollupSourcePattern, { color: colors.foreground }]} numberOfLines={2}>
+                    {s.signaturePattern}
+                  </Text>
+                  <Text style={[styles.rollupSourceSummary, { color: colors.mutedForeground }]} numberOfLines={3}>
+                    {s.summary}
+                  </Text>
+                  <View style={styles.rollupTraitBars}>
+                    {(["warmth", "curiosity", "verbosity", "humor"] as const).map((trait) => (
+                      <View key={trait} style={styles.rollupTraitCol}>
+                        <View style={[styles.rollupTraitTrack, { backgroundColor: `${colors.violet}18` }]}>
+                          <View
+                            style={[
+                              styles.rollupTraitFill,
+                              {
+                                backgroundColor: colors.violet,
+                                width: `${s.traits[trait]}%` as `${number}%`,
+                              },
+                            ]}
+                          />
+                        </View>
+                        <Text style={[styles.rollupTraitLabel, { color: colors.mutedForeground }]}>
+                          {trait}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Single-source nudge */}
+        {rollup && rollup.totalAnalyzed >= 1 && rollup.sources.length < 2 && isAuthenticated && (
+          <View
+            style={[
+              styles.rollupNudge,
+              { backgroundColor: `${colors.violet}0A`, borderColor: colors.cardBorder },
+            ]}
+            testID="card-insights-rollup-single"
+          >
+            <Feather name="trending-up" size={16} color={colors.mutedForeground} style={{ flexShrink: 0, marginTop: 1 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.rollupNudgeTitle, { color: colors.foreground }]}>
+                One source so far
+              </Text>
+              <Text style={[styles.rollupNudgeBody, { color: colors.mutedForeground }]}>
+                Import a conversation from a different platform (e.g. iMessage if you've analyzed Hinge) and we'll surface how your patterns shift across sources.
+              </Text>
+            </View>
           </View>
         )}
 
@@ -878,5 +986,114 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     textAlign: "center",
+  },
+  rollupCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    gap: 10,
+  },
+  rollupTitle: {
+    fontSize: 16,
+    fontFamily: "PlusJakartaSans_700Bold",
+    lineHeight: 22,
+  },
+  rollupSubtitle: {
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: -4,
+  },
+  rollupComparisons: {
+    gap: 6,
+  },
+  rollupComparisonItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  rollupSources: {
+    gap: 10,
+    marginTop: 2,
+  },
+  rollupSourceCard: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    gap: 6,
+  },
+  rollupSourceHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 2,
+  },
+  rollupSourceBadge: {
+    borderWidth: 1,
+    borderRadius: 100,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  rollupSourceBadgeText: {
+    fontSize: 10,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+  },
+  rollupSourceCount: {
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  rollupSourcePattern: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+    lineHeight: 19,
+  },
+  rollupSourceSummary: {
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  rollupTraitBars: {
+    flexDirection: "row",
+    gap: 6,
+    marginTop: 6,
+  },
+  rollupTraitCol: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+  },
+  rollupTraitTrack: {
+    width: "100%",
+    height: 4,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  rollupTraitFill: {
+    height: "100%",
+    borderRadius: 2,
+  },
+  rollupTraitLabel: {
+    fontSize: 9,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  rollupNudge: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 14,
+  },
+  rollupNudgeTitle: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+    lineHeight: 19,
+    marginBottom: 2,
+  },
+  rollupNudgeBody: {
+    fontSize: 12,
+    lineHeight: 18,
   },
 });
