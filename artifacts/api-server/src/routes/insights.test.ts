@@ -149,4 +149,67 @@ describe("POST /api/insights/:id/analyze", () => {
     const res = await request(testApp.app).post("/api/insights/abc/analyze").send({});
     expect(res.status).toBe(400);
   });
+
+  it("backfills sourceApp on the row when the engine detects one and the row didn't have it set", async () => {
+    testApp.setUser({ id: USER_ID });
+    const createRes = await request(testApp.app).post("/api/insights").send({
+      sourceLabel: "Hinge conversation export",
+      pastedContent:
+        "We matched on Hinge a few weeks back. Replies were short, mostly about her travel prompt. haha thanks for the chat.",
+      consentGiven: true,
+    });
+    expect(createRes.status).toBe(201);
+    const id: number = createRes.body.id;
+
+    const { dumpTable } = await import("../lib/testDb");
+    const beforeRow = dumpTable("email_insights").find((r) => r.id === id);
+    expect(beforeRow?.sourceApp ?? null).toBeNull();
+
+    const res = await request(testApp.app).post(`/api/insights/${id}/analyze`).send({});
+    expect(res.status).toBe(200);
+    expect(res.body.sourceApp).toBe("Hinge");
+
+    const afterRow = dumpTable("email_insights").find((r) => r.id === id);
+    expect(afterRow?.sourceApp).toBe("Hinge");
+    expect(afterRow?.status).toBe("complete");
+  });
+
+  it("does not overwrite an existing sourceApp on the row", async () => {
+    testApp.setUser({ id: USER_ID });
+    const createRes = await request(testApp.app).post("/api/insights").send({
+      sourceLabel: "exported chat",
+      pastedContent: "we matched on tinder and chatted",
+      sourceApp: "Bumble",
+      consentGiven: true,
+    });
+    expect(createRes.status).toBe(201);
+    const id: number = createRes.body.id;
+
+    const res = await request(testApp.app).post(`/api/insights/${id}/analyze`).send({});
+    expect(res.status).toBe(200);
+    expect(res.body.sourceApp).toBe("Bumble");
+
+    const { dumpTable } = await import("../lib/testDb");
+    const row = dumpTable("email_insights").find((r) => r.id === id);
+    expect(row?.sourceApp).toBe("Bumble");
+  });
+
+  it("leaves sourceApp null on the row when the engine cannot detect a source", async () => {
+    testApp.setUser({ id: USER_ID });
+    const createRes = await request(testApp.app).post("/api/insights").send({
+      sourceLabel: "untitled clipboard paste",
+      pastedContent: "just some generic chatter about weekend plans and coffee",
+      consentGiven: true,
+    });
+    expect(createRes.status).toBe(201);
+    const id: number = createRes.body.id;
+
+    const res = await request(testApp.app).post(`/api/insights/${id}/analyze`).send({});
+    expect(res.status).toBe(200);
+    expect(res.body.sourceApp).toBeNull();
+
+    const { dumpTable } = await import("../lib/testDb");
+    const row = dumpTable("email_insights").find((r) => r.id === id);
+    expect(row?.sourceApp ?? null).toBeNull();
+  });
 });
