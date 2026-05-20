@@ -609,6 +609,63 @@ router.delete("/founder/ocr-rules", requireFounder, async (_req, res): Promise<v
   res.json({ ok: true });
 });
 
+router.get("/founder/ocr-mismatches/:auditId", requireFounder, async (req, res): Promise<void> => {
+  const parsed = Number(req.params.auditId);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    res.status(400).json({ error: "Invalid auditId" });
+    return;
+  }
+
+  const [row] = await db
+    .select({
+      id: auditsTable.id,
+      firstName: auditsTable.firstName,
+      age: auditsTable.age,
+      gender: auditsTable.gender,
+      orientation: auditsTable.orientation,
+      datingGoal: auditsTable.datingGoal,
+      currentApps: auditsTable.currentApps,
+      sourceApp: auditsTable.sourceApp,
+      bio: auditsTable.bio,
+      prompts: auditsTable.prompts,
+      source: auditsTable.source,
+      status: auditsTable.status,
+      readinessScore: auditsTable.readinessScore,
+      rawOcrText: auditsTable.rawOcrText,
+      ocrCorrections: auditsTable.ocrCorrections,
+      createdAt: auditsTable.createdAt,
+    })
+    .from(auditsTable)
+    .where(eq(auditsTable.id, parsed))
+    .limit(1);
+
+  if (!row) {
+    res.status(404).json({ error: "Audit not found" });
+    return;
+  }
+
+  res.json({
+    id: row.id,
+    createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
+    source: row.source,
+    status: row.status,
+    readinessScore: row.readinessScore ?? null,
+    rawOcrText: row.rawOcrText ?? null,
+    ocrCorrections: (row.ocrCorrections ?? null) as OcrCorrectionsRecord | null,
+    profile: {
+      firstName: row.firstName,
+      age: row.age,
+      gender: row.gender,
+      orientation: row.orientation ?? null,
+      datingGoal: row.datingGoal,
+      currentApps: row.currentApps,
+      sourceApp: row.sourceApp ?? null,
+      bio: row.bio,
+      prompts: row.prompts ?? null,
+    },
+  });
+});
+
 router.get("/founder/ai-thresholds", requireFounder, async (_req, res): Promise<void> => {
   const { global, perTool } = await loadThresholds();
   res.json({

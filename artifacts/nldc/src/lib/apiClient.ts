@@ -358,6 +358,32 @@ export const runOcrLearn = async (founderKey: string): Promise<OcrLearnResult> =
   return res.json();
 };
 
+export interface OcrAuditDetail {
+  id: number;
+  createdAt: string;
+  source: string;
+  status: string;
+  readinessScore: number | null;
+  rawOcrText: string | null;
+  ocrCorrections: Partial<Record<OcrCorrectionFieldName, { raw: unknown; corrected: unknown }>> | null;
+  profile: {
+    firstName: string;
+    age: number;
+    gender: string;
+    orientation: string | null;
+    datingGoal: string;
+    currentApps: string[];
+    sourceApp: string | null;
+    bio: string;
+    prompts: string | null;
+  };
+}
+
+export const getOcrAuditDetail = (founderKey: string, auditId: number) =>
+  get<OcrAuditDetail>(`/founder/ocr-mismatches/${auditId}`, {
+    headers: { "x-founder-key": founderKey },
+  });
+
 export const clearOcrLearnedRules = async (founderKey: string): Promise<void> => {
   const res = await fetch(`${BASE}/founder/ocr-rules`, {
     method: "DELETE",

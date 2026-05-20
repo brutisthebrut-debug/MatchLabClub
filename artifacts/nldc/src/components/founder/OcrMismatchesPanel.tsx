@@ -5,6 +5,7 @@ import {
   type OcrMismatchesResponse,
   type OcrCorrectionFieldName,
 } from "@/lib/apiClient";
+import { OcrAuditDetailDrawer } from "./OcrAuditDetailDrawer";
 
 const FIELD_LABELS: Record<OcrCorrectionFieldName, string> = {
   firstName: "First name",
@@ -24,6 +25,7 @@ export function OcrMismatchesPanel({
   const [data, setData] = useState<OcrMismatchesResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [selectedAuditId, setSelectedAuditId] = useState<number | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -37,6 +39,12 @@ export function OcrMismatchesPanel({
   }, [refreshKey]);
 
   return (
+    <>
+    <OcrAuditDetailDrawer
+      auditId={selectedAuditId}
+      founderKey={founderKey}
+      onClose={() => setSelectedAuditId(null)}
+    />
     <div
       className="glass rounded-2xl p-6 space-y-4"
       data-testid="ocr-mismatches-panel"
@@ -156,8 +164,17 @@ export function OcrMismatchesPanel({
                 {data.recent.map((r, i) => (
                   <li
                     key={`${r.auditId}-${r.field}-${i}`}
-                    className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs flex items-center justify-between gap-3"
+                    className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs flex items-center justify-between gap-3 cursor-pointer hover:bg-white/10 hover:border-white/20 transition-colors"
                     data-testid={`ocr-recent-row-${i}`}
+                    onClick={() => setSelectedAuditId(r.auditId)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelectedAuditId(r.auditId);
+                      }
+                    }}
                   >
                     <span className="text-muted-foreground/70 shrink-0">
                       #{r.auditId} · {FIELD_LABELS[r.field]}
@@ -173,6 +190,7 @@ export function OcrMismatchesPanel({
         </>
       )}
     </div>
+    </>
   );
 }
 
