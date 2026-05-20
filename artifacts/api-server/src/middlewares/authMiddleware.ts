@@ -1,12 +1,16 @@
 import * as oidc from "openid-client";
 import { type Request, type Response, type NextFunction } from "express";
 import type { AuthUser } from "@workspace/api-zod";
+import { db, sessionsTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 import {
   clearSession,
   getOidcConfig,
   getSessionId,
   getSession,
   updateSession,
+  touchSession,
+  shouldTouchSession,
   type SessionData,
 } from "../lib/auth";
 
@@ -83,5 +87,20 @@ export async function authMiddleware(
   }
 
   req.user = refreshed.user;
+
+  // Best-effort: bump last-seen so the user can see fresh activity on their
+  // sessions list. Throttled to once per minute to avoid hammering the DB.
+  try {
+    const [row] = await db
+      .select({ lastSeenAt: sessionsTable.lastSeenAt })
+      .from(sessionsTable)
+      .where(eq(sessionsTable.sid, sid));
+    if (row && shouldTouchSession(row.lastSeenAt)) {
+      await touchSession(sid);
+    }
+  } catch {
+    // Activity tracking is non-critical — never block the request.
+  }
+
   next();
 }

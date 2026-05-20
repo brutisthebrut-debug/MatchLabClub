@@ -39,6 +39,7 @@ import {
   Send,
   Trash2,
   Loader2,
+  Smartphone,
 } from "lucide-react";
 
 function Initials({ name }: { name: string }) {
@@ -263,6 +264,11 @@ export default function Account() {
               <div className="flex flex-wrap items-center gap-3">
                 <Button asChild variant="outline" className="rounded-full text-sm font-medium">
                   <Link href="/user-control" data-testid="link-account-data">Manage your data</Link>
+                </Button>
+                <Button asChild variant="outline" className="rounded-full text-sm font-medium">
+                  <Link href="/account/sessions" data-testid="link-account-sessions">
+                    <Smartphone className="w-4 h-4 mr-2" /> Devices & sign-ins
+                  </Link>
                 </Button>
                 <Button asChild variant="ghost" className="rounded-full text-sm font-medium text-muted-foreground hover:text-foreground">
                   <Link href="/privacy">Privacy policy</Link>

@@ -57,6 +57,7 @@ import PrepareForDate from "@/pages/copilot/PrepareForDate";
 import FounderDemoJourney from "@/pages/copilot/FounderDemoJourney";
 import FlirtCoach from "@/pages/copilot/FlirtCoach";
 import Account from "@/pages/Account";
+import Sessions from "@/pages/Sessions";
 import Quiz from "@/pages/Quiz";
 import Gallery from "@/pages/Gallery";
 import ConnectionCenter from "@/pages/ConnectionCenter";
@@ -140,6 +141,7 @@ function Router() {
       <Route path="/copilot/demo" component={FounderDemoJourney} />
       <Route path="/copilot/flirt" component={FlirtCoach} />
       <Route path="/account" component={Account} />
+      <Route path="/account/sessions" component={Sessions} />
       <Route path="/quiz" component={Quiz} />
       <Route path="/gallery" component={Gallery} />
       <Route path="/connections" component={ConnectionCenter} />

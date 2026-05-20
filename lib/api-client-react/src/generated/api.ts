@@ -69,8 +69,10 @@ import type {
   MessageCoachingSession,
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
+  MySessionsResponse,
   ProfileRewrite,
   RedeemAnonymousClaimHandoffInput,
+  RevokeSessionsResult,
   ScreenshotAuditInput,
   ScreenshotAuditReport,
   ScreenshotExtractInput,
@@ -1106,6 +1108,237 @@ export function useDownloadEmailedExport<TData = Awaited<ReturnType<typeof downl
 
 
 
+
+export const getListMySessionsUrl = () => {
+
+
+
+
+  return `/api/account/sessions`
+}
+
+/**
+ * Returns every non-expired session belonging to the authenticated user,
+with rough device/browser, IP, and last-active timestamps so the user
+can recognize each one. The caller's current session is flagged with
+`current: true`. Useful for a "Devices & sessions" account page.
+
+ * @summary List all active sign-ins for the current user
+ */
+export const listMySessions = async ( options?: RequestInit): Promise<MySessionsResponse> => {
+
+  return customFetch<MySessionsResponse>(getListMySessionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMySessionsQueryKey = () => {
+    return [
+    `/api/account/sessions`
+    ] as const;
+    }
+
+
+export const getListMySessionsQueryOptions = <TData = Awaited<ReturnType<typeof listMySessions>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMySessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMySessionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMySessions>>> = ({ signal }) => listMySessions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMySessions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMySessionsQueryResult = NonNullable<Awaited<ReturnType<typeof listMySessions>>>
+export type ListMySessionsQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary List all active sign-ins for the current user
+ */
+
+export function useListMySessions<TData = Awaited<ReturnType<typeof listMySessions>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMySessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMySessionsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getRevokeOtherSessionsUrl = () => {
+
+
+
+
+  return `/api/account/sessions`
+}
+
+/**
+ * Deletes every active session for the authenticated user other than
+the session making this request. The caller stays signed in. Use this
+to sign out every other device after a suspicious sign-in.
+
+ * @summary Revoke every session for the current user EXCEPT the caller's own
+ */
+export const revokeOtherSessions = async ( options?: RequestInit): Promise<RevokeSessionsResult> => {
+
+  return customFetch<RevokeSessionsResult>(getRevokeOtherSessionsUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getRevokeOtherSessionsMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeOtherSessions>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof revokeOtherSessions>>, TError,void, TContext> => {
+
+const mutationKey = ['revokeOtherSessions'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokeOtherSessions>>, void> = () => {
+
+
+          return  revokeOtherSessions(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RevokeOtherSessionsMutationResult = NonNullable<Awaited<ReturnType<typeof revokeOtherSessions>>>
+
+    export type RevokeOtherSessionsMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Revoke every session for the current user EXCEPT the caller's own
+ */
+export const useRevokeOtherSessions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeOtherSessions>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof revokeOtherSessions>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRevokeOtherSessionsMutationOptions(options));
+    }
+
+export const getRevokeOneSessionUrl = (sid: string,) => {
+
+
+
+
+  return `/api/account/sessions/${sid}`
+}
+
+/**
+ * Deletes one specific session, identified by its session id, as long
+as it belongs to the authenticated user. Revoked sessions stop
+working on the next request. Revoking the caller's own session is
+allowed and effectively signs them out.
+
+ * @summary Revoke a single session owned by the current user
+ */
+export const revokeOneSession = async (sid: string, options?: RequestInit): Promise<RevokeSessionsResult> => {
+
+  return customFetch<RevokeSessionsResult>(getRevokeOneSessionUrl(sid),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getRevokeOneSessionMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeOneSession>>, TError,{sid: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof revokeOneSession>>, TError,{sid: string}, TContext> => {
+
+const mutationKey = ['revokeOneSession'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokeOneSession>>, {sid: string}> = (props) => {
+          const {sid} = props ?? {};
+
+          return  revokeOneSession(sid,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RevokeOneSessionMutationResult = NonNullable<Awaited<ReturnType<typeof revokeOneSession>>>
+
+    export type RevokeOneSessionMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Revoke a single session owned by the current user
+ */
+export const useRevokeOneSession = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeOneSession>>, TError,{sid: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof revokeOneSession>>,
+        TError,
+        {sid: string},
+        TContext
+      > => {
+      return useMutation(getRevokeOneSessionMutationOptions(options));
+    }
 
 export const getDeleteMyAccountUrl = () => {
 

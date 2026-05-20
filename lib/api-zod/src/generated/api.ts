@@ -512,6 +512,72 @@ export const DownloadEmailedExportResponse = zod.object({
 
 
 /**
+ * Returns every non-expired session belonging to the authenticated user,
+with rough device/browser, IP, and last-active timestamps so the user
+can recognize each one. The caller's current session is flagged with
+`current: true`. Useful for a "Devices & sessions" account page.
+
+ * @summary List all active sign-ins for the current user
+ */
+export const ListMySessionsHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const ListMySessionsResponse = zod.object({
+  "sessions": zod.array(zod.object({
+  "sid": zod.string().describe('Opaque session id. Use it as the path parameter to revoke this session.'),
+  "createdAt": zod.string().describe('ISO timestamp of when the session was created.'),
+  "lastSeenAt": zod.string().describe('ISO timestamp of the most recent request seen on this session.'),
+  "expiresAt": zod.string().optional().describe('ISO timestamp after which this session is automatically invalid.'),
+  "userAgent": zod.string().nullish().describe('Raw user-agent string captured at sign-in. May be null for older sessions.'),
+  "deviceLabel": zod.string().nullish().describe('A friendly summary of the browser and OS, e.g. \"Chrome on macOS\".'),
+  "ip": zod.string().nullish().describe('IP address captured at sign-in. May be null for older sessions.'),
+  "channel": zod.union([zod.literal('web'),zod.literal('mobile'),zod.literal(null)]).nullish().describe('Which app the user signed in from.'),
+  "current": zod.boolean().describe('True if this is the session making the request.')
+}))
+})
+
+
+/**
+ * Deletes every active session for the authenticated user other than
+the session making this request. The caller stays signed in. Use this
+to sign out every other device after a suspicious sign-in.
+
+ * @summary Revoke every session for the current user EXCEPT the caller's own
+ */
+export const RevokeOtherSessionsHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const RevokeOtherSessionsResponse = zod.object({
+  "success": zod.boolean(),
+  "revoked": zod.number().describe('Number of sessions actually deleted.')
+})
+
+
+/**
+ * Deletes one specific session, identified by its session id, as long
+as it belongs to the authenticated user. Revoked sessions stop
+working on the next request. Revoking the caller's own session is
+allowed and effectively signs them out.
+
+ * @summary Revoke a single session owned by the current user
+ */
+export const RevokeOneSessionParams = zod.object({
+  "sid": zod.coerce.string()
+})
+
+export const RevokeOneSessionHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const RevokeOneSessionResponse = zod.object({
+  "success": zod.boolean(),
+  "revoked": zod.number().describe('Number of sessions actually deleted.')
+})
+
+
+/**
  * Permanently removes the authenticated user along with every audit,
 dating profile, message coaching session, and email insight tied to
 that user. Also clears every active session for the user and the

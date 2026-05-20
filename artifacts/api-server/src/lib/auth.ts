@@ -28,14 +28,46 @@ export async function getOidcConfig(): Promise<client.Configuration> {
   return oidcConfig;
 }
 
-export async function createSession(data: SessionData): Promise<string> {
+export interface SessionMetadata {
+  userAgent?: string | null;
+  ip?: string | null;
+  channel?: "web" | "mobile";
+}
+
+export async function createSession(
+  data: SessionData,
+  metadata: SessionMetadata = {},
+): Promise<string> {
   const sid = crypto.randomBytes(32).toString("hex");
+  const now = new Date();
   await db.insert(sessionsTable).values({
     sid,
     sess: data as unknown as Record<string, unknown>,
-    expire: new Date(Date.now() + SESSION_TTL),
+    expire: new Date(now.getTime() + SESSION_TTL),
+    userId: data.user.id,
+    createdAt: now,
+    lastSeenAt: now,
+    userAgent: metadata.userAgent ?? null,
+    ip: metadata.ip ?? null,
+    channel: metadata.channel ?? null,
   });
   return sid;
+}
+
+const LAST_SEEN_THROTTLE_MS = 60 * 1000;
+
+export async function touchSession(sid: string): Promise<void> {
+  await db
+    .update(sessionsTable)
+    .set({ lastSeenAt: new Date() })
+    .where(eq(sessionsTable.sid, sid));
+}
+
+export function shouldTouchSession(
+  lastSeenAt: Date | null | undefined,
+): boolean {
+  if (!lastSeenAt) return true;
+  return Date.now() - lastSeenAt.getTime() > LAST_SEEN_THROTTLE_MS;
 }
 
 export async function getSession(sid: string): Promise<SessionData | null> {

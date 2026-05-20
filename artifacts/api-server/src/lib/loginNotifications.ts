@@ -4,6 +4,7 @@ import { db, loginNotificationsTable } from "@workspace/db";
 import { sendMail } from "./mailer";
 import { logger } from "./logger";
 import { describeIpLocation } from "./geoLocation";
+import { describeUserAgent as describeUa } from "./userAgent";
 
 const THROTTLE_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -15,21 +16,7 @@ function fingerprint(ip: string, userAgent: string): string {
 }
 
 function describeUserAgent(ua: string): string {
-  if (!ua) return "an unknown browser";
-  const lower = ua.toLowerCase();
-  let browser = "Browser";
-  if (lower.includes("firefox/")) browser = "Firefox";
-  else if (lower.includes("edg/")) browser = "Edge";
-  else if (lower.includes("chrome/")) browser = "Chrome";
-  else if (lower.includes("safari/")) browser = "Safari";
-  let os = "Unknown OS";
-  if (lower.includes("windows")) os = "Windows";
-  else if (lower.includes("mac os x") || lower.includes("macintosh"))
-    os = "macOS";
-  else if (lower.includes("iphone") || lower.includes("ipad")) os = "iOS";
-  else if (lower.includes("android")) os = "Android";
-  else if (lower.includes("linux")) os = "Linux";
-  return `${browser} on ${os}`;
+  return describeUa(ua) ?? "an unknown browser";
 }
 
 export interface NotifyLoginInput {

@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { Router, type IRouter, type Request } from "express";
-import { and, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gt, isNull, ne, sql } from "drizzle-orm";
 import {
   db,
   usersTable,
@@ -16,8 +16,12 @@ import {
   DeleteMyAccountResponse,
   GetAccountSummaryResponse,
   EmailMyDataExportResponse,
+  ListMySessionsResponse,
+  RevokeOtherSessionsResponse,
+  RevokeOneSessionResponse,
 } from "@workspace/api-zod";
 import { clearSession, getSessionId, SESSION_COOKIE } from "../lib/auth";
+import { describeUserAgent } from "../lib/userAgent";
 import { sendMail } from "../lib/mailer";
 import { originFor, sendExpiredLink } from "../lib/expiredLinkPage";
 
@@ -47,6 +51,131 @@ function sendExpiredExport(req: Request, res: import("express").Response): void 
     jsonStatus: 404,
   });
 }
+
+router.get("/account/sessions", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const userId = req.user.id;
+  const callerSid = getSessionId(req);
+
+  const now = new Date();
+  const rows = await db
+    .select({
+      sid: sessionsTable.sid,
+      createdAt: sessionsTable.createdAt,
+      lastSeenAt: sessionsTable.lastSeenAt,
+      expire: sessionsTable.expire,
+      userAgent: sessionsTable.userAgent,
+      ip: sessionsTable.ip,
+      channel: sessionsTable.channel,
+    })
+    .from(sessionsTable)
+    .where(
+      and(
+        eq(sessionsTable.userId, userId),
+        gt(sessionsTable.expire, now),
+      ),
+    )
+    .orderBy(desc(sessionsTable.lastSeenAt));
+
+  res.json(
+    ListMySessionsResponse.parse({
+      sessions: rows.map((r) => ({
+        sid: r.sid,
+        createdAt: toIso(r.createdAt),
+        lastSeenAt: toIso(r.lastSeenAt),
+        expiresAt: toIso(r.expire),
+        userAgent: r.userAgent,
+        deviceLabel: describeUserAgent(r.userAgent),
+        ip: r.ip,
+        channel:
+          r.channel === "web" || r.channel === "mobile" ? r.channel : null,
+        current: r.sid === callerSid,
+      })),
+    }),
+  );
+});
+
+router.delete("/account/sessions", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const userId = req.user.id;
+  const callerSid = getSessionId(req);
+
+  const deleted = await db
+    .delete(sessionsTable)
+    .where(
+      and(
+        eq(sessionsTable.userId, userId),
+        callerSid
+          ? ne(sessionsTable.sid, callerSid)
+          : sql`true`,
+      ),
+    )
+    .returning({ sid: sessionsTable.sid });
+
+  req.log.info(
+    { userId, revoked: deleted.length },
+    "Revoked other sessions for user",
+  );
+
+  res.json(
+    RevokeOtherSessionsResponse.parse({
+      success: true,
+      revoked: deleted.length,
+    }),
+  );
+});
+
+router.delete("/account/sessions/:sid", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const userId = req.user.id;
+  const targetSid = req.params["sid"];
+  if (typeof targetSid !== "string" || targetSid.length === 0) {
+    res.status(404).json({ error: "Session not found" });
+    return;
+  }
+
+  const deleted = await db
+    .delete(sessionsTable)
+    .where(
+      and(
+        eq(sessionsTable.sid, targetSid),
+        eq(sessionsTable.userId, userId),
+      ),
+    )
+    .returning({ sid: sessionsTable.sid });
+
+  if (deleted.length === 0) {
+    res.status(404).json({ error: "Session not found" });
+    return;
+  }
+
+  // If the user revoked their own session, also clear the cookie so the
+  // next request looks signed-out instead of waiting for the next round-trip.
+  if (targetSid === getSessionId(req)) {
+    res.clearCookie(SESSION_COOKIE, { path: "/" });
+  }
+
+  req.log.info(
+    { userId, targetSid },
+    "Revoked a single session for user",
+  );
+
+  res.json(
+    RevokeOneSessionResponse.parse({
+      success: true,
+      revoked: deleted.length,
+    }),
+  );
+});
 
 router.get("/account/summary", async (req, res): Promise<void> => {
   if (!req.user?.id) {

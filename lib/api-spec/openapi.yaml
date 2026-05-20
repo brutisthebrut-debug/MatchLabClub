@@ -356,6 +356,95 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /account/sessions:
+    get:
+      tags: [Auth]
+      operationId: listMySessions
+      summary: List all active sign-ins for the current user
+      description: |
+        Returns every non-expired session belonging to the authenticated user,
+        with rough device/browser, IP, and last-active timestamps so the user
+        can recognize each one. The caller's current session is flagged with
+        `current: true`. Useful for a "Devices & sessions" account page.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: List of active sessions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MySessionsResponse'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+    delete:
+      tags: [Auth]
+      operationId: revokeOtherSessions
+      summary: Revoke every session for the current user EXCEPT the caller's own
+      description: |
+        Deletes every active session for the authenticated user other than
+        the session making this request. The caller stays signed in. Use this
+        to sign out every other device after a suspicious sign-in.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Count of sessions revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevokeSessionsResult'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /account/sessions/{sid}:
+    delete:
+      tags: [Auth]
+      operationId: revokeOneSession
+      summary: Revoke a single session owned by the current user
+      description: |
+        Deletes one specific session, identified by its session id, as long
+        as it belongs to the authenticated user. Revoked sessions stop
+        working on the next request. Revoking the caller's own session is
+        allowed and effectively signs them out.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: sid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevokeSessionsResult'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Session does not exist or is not owned by the caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /account:
     delete:
       tags: [Auth]
@@ -2320,6 +2409,59 @@ components:
           type: string
           format: email
           description: Email address the export link was sent to.
+
+    MySession:
+      type: object
+      required: [sid, createdAt, lastSeenAt, current]
+      properties:
+        sid:
+          type: string
+          description: Opaque session id. Use it as the path parameter to revoke this session.
+        createdAt:
+          type: string
+          description: ISO timestamp of when the session was created.
+        lastSeenAt:
+          type: string
+          description: ISO timestamp of the most recent request seen on this session.
+        expiresAt:
+          type: string
+          description: ISO timestamp after which this session is automatically invalid.
+        userAgent:
+          type: [string, 'null']
+          description: Raw user-agent string captured at sign-in. May be null for older sessions.
+        deviceLabel:
+          type: [string, 'null']
+          description: A friendly summary of the browser and OS, e.g. "Chrome on macOS".
+        ip:
+          type: [string, 'null']
+          description: IP address captured at sign-in. May be null for older sessions.
+        channel:
+          type: [string, 'null']
+          enum: [web, mobile, null]
+          description: Which app the user signed in from.
+        current:
+          type: boolean
+          description: True if this is the session making the request.
+
+    MySessionsResponse:
+      type: object
+      required: [sessions]
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/MySession'
+
+    RevokeSessionsResult:
+      type: object
+      required: [success, revoked]
+      properties:
+        success:
+          type: boolean
+          const: true
+        revoked:
+          type: integer
+          description: Number of sessions actually deleted.
 
     DeleteMyAccountResult:
       type: object

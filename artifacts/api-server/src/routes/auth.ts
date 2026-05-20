@@ -183,7 +183,13 @@ router.get("/callback", async (req: Request, res: Response) => {
     expires_at: tokens.expiresIn() ? now + tokens.expiresIn()! : claims.exp,
   };
 
-  const sid = await createSession(sessionData);
+  const userAgent = (req.headers["user-agent"] as string) || "";
+  const ip = extractClientIp(req.headers as Record<string, unknown>, req.ip);
+  const sid = await createSession(sessionData, {
+    userAgent,
+    ip,
+    channel: "web",
+  });
   setSessionCookie(res, sid);
 
   try {
@@ -191,8 +197,8 @@ router.get("/callback", async (req: Request, res: Response) => {
       userId: dbUser.id,
       email: dbUser.email,
       firstName: dbUser.firstName,
-      ip: extractClientIp(req.headers as Record<string, unknown>, req.ip),
-      userAgent: (req.headers["user-agent"] as string) || "",
+      ip,
+      userAgent,
       channel: "web",
     });
   } catch (err) {
@@ -267,15 +273,21 @@ router.post(
         expires_at: tokens.expiresIn() ? now + tokens.expiresIn()! : claims.exp,
       };
 
-      const sid = await createSession(sessionData);
+      const userAgent = (req.headers["user-agent"] as string) || "";
+      const ip = extractClientIp(req.headers as Record<string, unknown>, req.ip);
+      const sid = await createSession(sessionData, {
+        userAgent,
+        ip,
+        channel: "mobile",
+      });
 
       try {
         await notifySignInIfNew({
           userId: dbUser.id,
           email: dbUser.email,
           firstName: dbUser.firstName,
-          ip: extractClientIp(req.headers as Record<string, unknown>, req.ip),
-          userAgent: (req.headers["user-agent"] as string) || "",
+          ip,
+          userAgent,
           channel: "mobile",
         });
       } catch (err) {

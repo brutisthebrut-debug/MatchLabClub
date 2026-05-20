@@ -828,6 +828,61 @@ export interface EmailMyDataExportResult {
   sentTo: string;
 }
 
+/**
+ * Which app the user signed in from.
+ * @nullable
+ */
+export type MySessionChannel = typeof MySessionChannel[keyof typeof MySessionChannel] | null;
+
+
+export const MySessionChannel = {
+  web: 'web',
+  mobile: 'mobile',
+} as const;
+
+export interface MySession {
+  /** Opaque session id. Use it as the path parameter to revoke this session. */
+  sid: string;
+  /** ISO timestamp of when the session was created. */
+  createdAt: string;
+  /** ISO timestamp of the most recent request seen on this session. */
+  lastSeenAt: string;
+  /** ISO timestamp after which this session is automatically invalid. */
+  expiresAt?: string;
+  /**
+     * Raw user-agent string captured at sign-in. May be null for older sessions.
+     * @nullable
+     */
+  userAgent?: string | null;
+  /**
+     * A friendly summary of the browser and OS, e.g. "Chrome on macOS".
+     * @nullable
+     */
+  deviceLabel?: string | null;
+  /**
+     * IP address captured at sign-in. May be null for older sessions.
+     * @nullable
+     */
+  ip?: string | null;
+  /**
+     * Which app the user signed in from.
+     * @nullable
+     */
+  channel?: MySessionChannel;
+  /** True if this is the session making the request. */
+  current: boolean;
+}
+
+export interface MySessionsResponse {
+  sessions: MySession[];
+}
+
+export interface RevokeSessionsResult {
+  success: true;
+  /** Number of sessions actually deleted. */
+  revoked: number;
+}
+
 export type DeleteMyAccountResultDeleted = {
   audits: number;
   profiles: number;
