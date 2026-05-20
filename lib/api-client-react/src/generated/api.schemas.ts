@@ -584,6 +584,20 @@ export interface AccountExport {
   insights: EmailInsight[];
 }
 
+export interface BulkDeleteAuditsInput {
+  /**
+     * List of audit ids to delete. Ids the caller does not own are silently skipped.
+     * @minItems 1
+     * @maxItems 200
+     */
+  ids: number[];
+}
+
+export interface BulkDeleteAuditsResult {
+  success: true;
+  deletedIds: number[];
+}
+
 export interface DeleteAuditResult {
   success: true;
   deletedId: number;

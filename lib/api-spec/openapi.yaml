@@ -523,6 +523,32 @@ paths:
         "404":
           description: Not found
 
+  /audits/bulk-delete:
+    post:
+      operationId: bulkDeleteAudits
+      tags: [audits]
+      summary: Delete multiple audits owned by the current session in one request
+      description: |
+        Deletes a list of audits in a single round-trip. Only audits owned by
+        the caller (matched by userId for authenticated requests, or anonymous
+        session for guests) are deleted; ids that don't match are silently
+        skipped. The response lists the ids that were actually deleted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkDeleteAuditsInput"
+      responses:
+        "200":
+          description: Audits deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkDeleteAuditsResult"
+        "400":
+          description: Invalid request body
+
   /audits/{id}/generate:
     post:
       operationId: generateAuditReport
@@ -1810,6 +1836,30 @@ components:
           type: [string, 'null']
         createdAt:
           type: string
+
+    BulkDeleteAuditsInput:
+      type: object
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            type: integer
+          description: List of audit ids to delete. Ids the caller does not own are silently skipped.
+
+    BulkDeleteAuditsResult:
+      type: object
+      required: [success, deletedIds]
+      properties:
+        success:
+          type: boolean
+          const: true
+        deletedIds:
+          type: array
+          items:
+            type: integer
 
     DeleteAuditResult:
       type: object

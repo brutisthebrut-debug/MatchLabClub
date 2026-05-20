@@ -36,6 +36,8 @@ import type {
   AuthErrorEnvelope,
   AuthUserEnvelope,
   BeginBrowserLoginParams,
+  BulkDeleteAuditsInput,
+  BulkDeleteAuditsResult,
   ClaimAnonymousInput,
   ClaimAnonymousResult,
   CoachFollowUpInput,
@@ -1555,6 +1557,82 @@ export const useDeleteAudit = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteAuditMutationOptions(options));
+    }
+
+export const getBulkDeleteAuditsUrl = () => {
+
+
+
+
+  return `/api/audits/bulk-delete`
+}
+
+/**
+ * Deletes a list of audits in a single round-trip. Only audits owned by
+the caller (matched by userId for authenticated requests, or anonymous
+session for guests) are deleted; ids that don't match are silently
+skipped. The response lists the ids that were actually deleted.
+
+ * @summary Delete multiple audits owned by the current session in one request
+ */
+export const bulkDeleteAudits = async (bulkDeleteAuditsInput: BulkDeleteAuditsInput, options?: RequestInit): Promise<BulkDeleteAuditsResult> => {
+
+  return customFetch<BulkDeleteAuditsResult>(getBulkDeleteAuditsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      bulkDeleteAuditsInput,)
+  }
+);}
+
+
+
+
+export const getBulkDeleteAuditsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkDeleteAudits>>, TError,{data: BodyType<BulkDeleteAuditsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bulkDeleteAudits>>, TError,{data: BodyType<BulkDeleteAuditsInput>}, TContext> => {
+
+const mutationKey = ['bulkDeleteAudits'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bulkDeleteAudits>>, {data: BodyType<BulkDeleteAuditsInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bulkDeleteAudits(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BulkDeleteAuditsMutationResult = NonNullable<Awaited<ReturnType<typeof bulkDeleteAudits>>>
+    export type BulkDeleteAuditsMutationBody = BodyType<BulkDeleteAuditsInput>
+    export type BulkDeleteAuditsMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete multiple audits owned by the current session in one request
+ */
+export const useBulkDeleteAudits = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkDeleteAudits>>, TError,{data: BodyType<BulkDeleteAuditsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof bulkDeleteAudits>>,
+        TError,
+        {data: BodyType<BulkDeleteAuditsInput>},
+        TContext
+      > => {
+      return useMutation(getBulkDeleteAuditsMutationOptions(options));
     }
 
 export const getGenerateAuditReportUrl = (id: number,) => {

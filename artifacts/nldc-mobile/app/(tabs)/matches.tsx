@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import {
   getListAuditsQueryKey,
+  useBulkDeleteAudits,
   useDeleteAudit,
   useListAudits,
   type Audit,
@@ -208,7 +209,87 @@ export default function MatchesScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const bulkDeleteAudits = useBulkDeleteAudits({
+    mutation: {
+      onMutate: async ({ data }) => {
+        await queryClient.cancelQueries({ queryKey: listKey });
+        const previous = queryClient.getQueryData<Audit[]>(listKey);
+        const ids = new Set(data.ids);
+        if (previous) {
+          queryClient.setQueryData<Audit[]>(
+            listKey,
+            previous.filter((a) => !ids.has(a.id)),
+          );
+        }
+        return { previous };
+      },
+      onError: (_err, _vars, ctx) => {
+        if (ctx?.previous) {
+          queryClient.setQueryData(listKey, ctx.previous);
+        }
+        if (Platform.OS !== "web") {
+          Alert.alert("Couldn't delete", "Something went wrong. Try again.");
+        }
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: listKey });
+      },
+    },
+  });
+
+  const [selectedIds, setSelectedIds] = React.useState<Set<number>>(
+    () => new Set(),
+  );
+  const selectionMode = selectedIds.size > 0;
+
   const openSwipeRef = useRef<Swipeable | null>(null);
+
+  const toggleSelected = React.useCallback((id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const clearSelection = React.useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const enterSelection = React.useCallback((id: number) => {
+    if (openSwipeRef.current) {
+      openSwipeRef.current.close();
+      openSwipeRef.current = null;
+    }
+    setSelectedIds((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
+
+  const askBulkDelete = () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    const message =
+      ids.length === 1
+        ? "Remove 1 match? This can't be undone."
+        : `Remove ${ids.length} matches? This can't be undone.`;
+    const run = () => {
+      bulkDeleteAudits.mutate({ data: { ids } });
+      clearSelection();
+    };
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined" && window.confirm(message)) run();
+      return;
+    }
+    Alert.alert("Delete matches?", message, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: run },
+    ]);
+  };
 
   const askDelete = (audit: Audit) => {
     const message = `Remove ${audit.firstName} from your matches?`;
@@ -447,51 +528,121 @@ export default function MatchesScreen() {
         ) : null}
 
         {!showDemo && audits.length > 0 ? (
-          <View style={styles.list}>
-            {audits.map((audit) => {
-              let swipeRef: Swipeable | null = null;
-              return (
-                <Swipeable
-                  key={audit.id}
-                  ref={(r) => {
-                    swipeRef = r;
-                  }}
-                  friction={2}
-                  rightThreshold={40}
-                  overshootRight={false}
-                  onSwipeableWillOpen={() => {
-                    if (openSwipeRef.current && openSwipeRef.current !== swipeRef) {
-                      openSwipeRef.current.close();
-                    }
-                    openSwipeRef.current = swipeRef;
-                  }}
-                  renderRightActions={() => (
-                    <RectButton
-                      style={[
-                        styles.deleteAction,
-                        { backgroundColor: colors.destructive },
-                      ]}
-                      onPress={() => {
-                        swipeRef?.close();
-                        askDelete(audit);
-                      }}
-                    >
-                      <Feather name="trash-2" size={18} color="#fff" />
-                      <Text style={styles.deleteActionText}>Delete</Text>
-                    </RectButton>
-                  )}
+          <>
+            {selectionMode ? (
+              <View
+                style={[
+                  styles.selectionBar,
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: colors.cardBorder,
+                  },
+                ]}
+              >
+                <Pressable
+                  onPress={clearSelection}
+                  hitSlop={8}
+                  accessibilityLabel="Cancel selection"
+                  style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
                 >
-                  <MatchRow
-                    firstName={audit.firstName}
-                    readinessScore={audit.readinessScore ?? null}
-                    bio={audit.bio}
-                    createdAt={audit.createdAt}
-                    onPress={() => router.push(`/audit/${audit.id}` as never)}
-                  />
-                </Swipeable>
-              );
-            })}
-          </View>
+                  <Feather name="x" size={18} color={colors.foreground} />
+                </Pressable>
+                <Text
+                  style={[styles.selectionCount, { color: colors.foreground }]}
+                >
+                  {selectedIds.size} selected
+                </Text>
+                <Pressable
+                  onPress={askBulkDelete}
+                  accessibilityLabel="Delete selected matches"
+                  style={({ pressed }) => [
+                    styles.selectionDelete,
+                    {
+                      backgroundColor: colors.destructive,
+                      opacity: pressed ? 0.7 : 1,
+                    },
+                  ]}
+                >
+                  <Feather name="trash-2" size={14} color="#fff" />
+                  <Text style={styles.selectionDeleteText}>Delete</Text>
+                </Pressable>
+              </View>
+            ) : null}
+            <View style={styles.list}>
+              {audits.map((audit) => {
+                const isSelected = selectedIds.has(audit.id);
+                const onRowPress = () => {
+                  if (selectionMode) {
+                    toggleSelected(audit.id);
+                  } else {
+                    router.push(`/audit/${audit.id}` as never);
+                  }
+                };
+                const onRowLongPress = () => enterSelection(audit.id);
+
+                if (selectionMode) {
+                  return (
+                    <MatchRow
+                      key={audit.id}
+                      firstName={audit.firstName}
+                      readinessScore={audit.readinessScore ?? null}
+                      bio={audit.bio}
+                      createdAt={audit.createdAt}
+                      onPress={onRowPress}
+                      onLongPress={onRowLongPress}
+                      selected={isSelected}
+                    />
+                  );
+                }
+
+                let swipeRef: Swipeable | null = null;
+                return (
+                  <Swipeable
+                    key={audit.id}
+                    ref={(r) => {
+                      swipeRef = r;
+                    }}
+                    friction={2}
+                    rightThreshold={40}
+                    overshootRight={false}
+                    onSwipeableWillOpen={() => {
+                      if (
+                        openSwipeRef.current &&
+                        openSwipeRef.current !== swipeRef
+                      ) {
+                        openSwipeRef.current.close();
+                      }
+                      openSwipeRef.current = swipeRef;
+                    }}
+                    renderRightActions={() => (
+                      <RectButton
+                        style={[
+                          styles.deleteAction,
+                          { backgroundColor: colors.destructive },
+                        ]}
+                        onPress={() => {
+                          swipeRef?.close();
+                          askDelete(audit);
+                        }}
+                      >
+                        <Feather name="trash-2" size={18} color="#fff" />
+                        <Text style={styles.deleteActionText}>Delete</Text>
+                      </RectButton>
+                    )}
+                  >
+                    <MatchRow
+                      firstName={audit.firstName}
+                      readinessScore={audit.readinessScore ?? null}
+                      bio={audit.bio}
+                      createdAt={audit.createdAt}
+                      onPress={onRowPress}
+                      onLongPress={onRowLongPress}
+                    />
+                  </Swipeable>
+                );
+              })}
+            </View>
+          </>
         ) : null}
       </ScrollView>
 
@@ -637,14 +788,18 @@ function MatchRow({
   bio,
   createdAt,
   onPress,
+  onLongPress,
   disabled,
+  selected,
 }: {
   firstName: string;
   readinessScore: number | null;
   bio: string;
   createdAt: string;
   onPress?: () => void;
+  onLongPress?: () => void;
   disabled?: boolean;
+  selected?: boolean;
 }) {
   const colors = useColors();
   const thumbnail = bio.trim().slice(0, 110);
@@ -653,16 +808,35 @@ function MatchRow({
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={300}
       disabled={disabled}
+      accessibilityRole={selected !== undefined ? "checkbox" : "button"}
+      accessibilityState={
+        selected !== undefined ? { checked: selected } : undefined
+      }
       style={({ pressed }) => [
         styles.row,
         {
           backgroundColor: colors.card,
-          borderColor: colors.cardBorder,
+          borderColor: selected ? colors.primary : colors.cardBorder,
+          borderWidth: selected ? 2 : 1,
           opacity: disabled ? 0.85 : pressed ? 0.7 : 1,
         },
       ]}
     >
+      {selected !== undefined ? (
+        <View
+          style={[
+            styles.checkbox,
+            selected
+              ? { backgroundColor: colors.primary, borderColor: colors.primary }
+              : { backgroundColor: "transparent", borderColor: colors.cardBorder },
+          ]}
+        >
+          {selected ? <Feather name="check" size={14} color="#fff" /> : null}
+        </View>
+      ) : null}
       <View style={[styles.scoreBubble, { borderColor: ring }]}>
         <Text style={[styles.scoreText, { color: ring }]}>
           {readinessScore ?? "—"}
@@ -687,7 +861,7 @@ function MatchRow({
           {thumbnail || "No bio text extracted."}
         </Text>
       </View>
-      {!disabled ? (
+      {!disabled && selected === undefined ? (
         <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
       ) : null}
     </Pressable>
@@ -822,6 +996,41 @@ const styles = StyleSheet.create({
     fontFamily: "PlusJakartaSans_600SemiBold",
   },
   list: { gap: 10 },
+  selectionBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  selectionCount: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  selectionDelete: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  selectionDeleteText: {
+    color: "#fff",
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",

@@ -36,6 +36,8 @@ export * from './authorizationSessionHeaderParameter';
 export * from './authUser';
 export * from './authUserEnvelope';
 export * from './beginBrowserLoginParams';
+export * from './bulkDeleteAuditsInput';
+export * from './bulkDeleteAuditsResult';
 export * from './claimAnonymousInput';
 export * from './claimAnonymousResult';
 export * from './claimAnonymousResultClaimed';

@@ -602,6 +602,28 @@ export const DeleteAuditResponse = zod.object({
 
 
 /**
+ * Deletes a list of audits in a single round-trip. Only audits owned by
+the caller (matched by userId for authenticated requests, or anonymous
+session for guests) are deleted; ids that don't match are silently
+skipped. The response lists the ids that were actually deleted.
+
+ * @summary Delete multiple audits owned by the current session in one request
+ */
+export const bulkDeleteAuditsBodyIdsMax = 200;
+
+
+
+export const BulkDeleteAuditsBody = zod.object({
+  "ids": zod.array(zod.number()).min(1).max(bulkDeleteAuditsBodyIdsMax).describe('List of audit ids to delete. Ids the caller does not own are silently skipped.')
+})
+
+export const BulkDeleteAuditsResponse = zod.object({
+  "success": zod.boolean(),
+  "deletedIds": zod.array(zod.number())
+})
+
+
+/**
  * @summary Generate AI profile audit report for an audit
  */
 export const GenerateAuditReportParams = zod.object({

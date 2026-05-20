@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, asc, desc, eq, gte, ilike, isNull, isNotNull, lt, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, isNull, isNotNull, lt, or, sql, type SQL } from "drizzle-orm";
 import { db, auditsTable } from "@workspace/db";
 import {
   CreateAuditBody,
@@ -12,6 +12,8 @@ import {
   DeleteAuditResponse,
   ExtractScreenshotBody,
   ExtractScreenshotResponse,
+  BulkDeleteAuditsBody,
+  BulkDeleteAuditsResponse,
 } from "@workspace/api-zod";
 import { generateAuditReport } from "../lib/aiEngine";
 import {
@@ -240,6 +242,29 @@ router.delete("/audits/:id", async (req, res): Promise<void> => {
   await db.delete(auditsTable).where(eq(auditsTable.id, id));
 
   res.json(DeleteAuditResponse.parse({ success: true, deletedId: id }));
+});
+
+router.post("/audits/bulk-delete", async (req, res): Promise<void> => {
+  const parsed = BulkDeleteAuditsBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const uniqueIds = Array.from(new Set(parsed.data.ids));
+  const owned = await db
+    .select({ id: auditsTable.id })
+    .from(auditsTable)
+    .where(and(inArray(auditsTable.id, uniqueIds), ownerScope(req)));
+
+  const deletableIds = owned.map((row) => row.id);
+  if (deletableIds.length > 0) {
+    await db.delete(auditsTable).where(inArray(auditsTable.id, deletableIds));
+  }
+
+  res.json(
+    BulkDeleteAuditsResponse.parse({ success: true, deletedIds: deletableIds }),
+  );
 });
 
 router.post("/audits/:id/generate", async (req, res): Promise<void> => {
