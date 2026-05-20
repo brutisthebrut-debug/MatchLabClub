@@ -138,6 +138,10 @@ router.get("/audits", async (req, res): Promise<void> => {
       ? or(
           ilike(auditsTable.firstName, `%${escapeLike(qRaw)}%`),
           ilike(auditsTable.bio, `%${escapeLike(qRaw)}%`),
+          sql`${auditsTable.firstName} % ${qRaw}`,
+          sql`${auditsTable.bio} % ${qRaw}`,
+          sql`word_similarity(${qRaw}, ${auditsTable.firstName}) > 0.5`,
+          sql`word_similarity(${qRaw}, ${auditsTable.bio}) > 0.5`,
         )
       : undefined;
 
@@ -171,10 +175,20 @@ router.get("/audits", async (req, res): Promise<void> => {
     ),
   ) as SQL;
 
-  const orderBy =
+  const baseOrderBy =
     sortParam === "topScore"
       ? [desc(auditsTable.readinessScore), desc(auditsTable.createdAt)]
       : [desc(auditsTable.createdAt)];
+  const orderBy: (SQL | ReturnType<typeof desc>)[] =
+    qRaw.length > 0
+      ? [
+          desc(sql`GREATEST(
+            similarity(${auditsTable.firstName}, ${qRaw}),
+            word_similarity(${qRaw}, COALESCE(${auditsTable.bio}, ''))
+          )`),
+          ...baseOrderBy,
+        ]
+      : baseOrderBy;
 
   const audits = await db
     .select()
