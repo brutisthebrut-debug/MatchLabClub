@@ -1,4 +1,4 @@
-import { eq, lt, sql } from "drizzle-orm";
+import { and, eq, inArray, lt, sql } from "drizzle-orm";
 import {
   db,
   aiRequestMetricsTable,
@@ -53,8 +53,22 @@ function toDayString(d: Date): string {
  *
  * Returns the number of (tool_name, day) rollup rows written.
  * Throws on failure so callers can decide whether it is safe to prune.
+ *
+ * Pass `toolNames` to restrict the rollup to a specific set of tools.
+ * Production callers omit it (all tools); tests pass their unique names
+ * so parallel workers do not observe each other's rows.
  */
-export async function rollupAiMetricsForDay(day: Date): Promise<number> {
+export async function rollupAiMetricsForDay(
+  day: Date,
+  options?: { toolNames?: readonly string[] },
+): Promise<number> {
+  const { toolNames } = options ?? {};
+  const toolFilter =
+    toolNames && toolNames.length > 0
+      ? sql.raw(
+          ` and tool_name in (${toolNames.map((n) => `'${n.replace(/'/g, "''")}'`).join(",")})`,
+        )
+      : sql``;
   const dayStr = toDayString(day);
   const result = await db.execute<{ tool_name: string }>(sql`
     insert into ai_request_metrics_daily (
@@ -74,6 +88,7 @@ export async function rollupAiMetricsForDay(day: Date): Promise<number> {
     from ai_request_metrics
     where (created_at at time zone 'UTC') >= (${dayStr}::date at time zone 'UTC')
       and (created_at at time zone 'UTC') < ((${dayStr}::date + interval '1 day') at time zone 'UTC')
+      ${toolFilter}
     group by tool_name
     on conflict (day, tool_name) do update set
       total = excluded.total,
@@ -101,13 +116,26 @@ export async function rollupAiMetricsForDay(day: Date): Promise<number> {
  *
  * Throws on failure — pruning must be skipped if rollup did not complete,
  * otherwise old raw rows would be deleted without their history captured.
+ *
+ * Pass `toolNames` to restrict the rollup to a specific set of tools (same
+ * semantics as `rollupAiMetricsForDay`). Production callers omit it.
  */
-export async function rollupOldAiMetrics(): Promise<number> {
+export async function rollupOldAiMetrics(options?: {
+  toolNames?: readonly string[];
+}): Promise<number> {
+  const { toolNames } = options ?? {};
+  const toolFilter =
+    toolNames && toolNames.length > 0
+      ? sql.raw(
+          ` where tool_name in (${toolNames.map((n) => `'${n.replace(/'/g, "''")}'`).join(",")})`,
+        )
+      : sql``;
   const rows = await db.execute<{ min_day: string | null; today: string }>(sql`
     select
       to_char(min(created_at) at time zone 'UTC', 'YYYY-MM-DD') as min_day,
       to_char(now() at time zone 'UTC', 'YYYY-MM-DD') as today
     from ai_request_metrics
+    ${toolFilter}
   `);
   const first = rows.rows?.[0];
   if (!first || !first.min_day) return 0;
@@ -119,17 +147,35 @@ export async function rollupOldAiMetrics(): Promise<number> {
     d.getTime() < today.getTime();
     d.setUTCDate(d.getUTCDate() + 1)
   ) {
-    total += await rollupAiMetricsForDay(new Date(d));
+    total += await rollupAiMetricsForDay(new Date(d), options);
   }
   return total;
 }
 
-export async function pruneOldAiMetrics(retentionDays: number = getRetentionDays()): Promise<number> {
+/**
+ * Delete raw rows older than `retentionDays` from `ai_request_metrics`.
+ *
+ * Pass `toolNames` to restrict deletion to a specific set of tools.
+ * Production callers omit it; tests pass their unique names so they never
+ * prune rows belonging to other parallel workers.
+ */
+export async function pruneOldAiMetrics(
+  retentionDays: number = getRetentionDays(),
+  options?: { toolNames?: readonly string[] },
+): Promise<number> {
+  const { toolNames } = options ?? {};
   const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+  const condition =
+    toolNames && toolNames.length > 0
+      ? and(
+          lt(aiRequestMetricsTable.createdAt, cutoff),
+          inArray(aiRequestMetricsTable.toolName, [...toolNames]),
+        )
+      : lt(aiRequestMetricsTable.createdAt, cutoff);
   try {
     const result = await db
       .delete(aiRequestMetricsTable)
-      .where(lt(aiRequestMetricsTable.createdAt, cutoff))
+      .where(condition)
       .returning({ id: aiRequestMetricsTable.id });
     const deleted = result.length;
     if (deleted > 0) {
@@ -157,15 +203,20 @@ export async function pruneOldAiMetrics(retentionDays: number = getRetentionDays
  * Roll up first, then prune. Fail-closed: if the rollup step throws, we
  * skip pruning entirely so raw rows are never deleted without their
  * history being captured in ai_request_metrics_daily.
+ *
+ * Pass `toolNames` to restrict both rollup and prune to specific tools.
+ * Production callers omit it; tests pass their unique names.
  */
-export async function rollupThenPruneAiMetrics(): Promise<{
+export async function rollupThenPruneAiMetrics(options?: {
+  toolNames?: readonly string[];
+}): Promise<{
   rolledUp: number;
   pruned: number;
   skippedPrune: boolean;
 }> {
   let rolledUp: number;
   try {
-    rolledUp = await rollupOldAiMetrics();
+    rolledUp = await rollupOldAiMetrics(options);
   } catch (err) {
     logger.error(
       { err: err instanceof Error ? err.message : String(err) },
@@ -173,7 +224,7 @@ export async function rollupThenPruneAiMetrics(): Promise<{
     );
     return { rolledUp: 0, pruned: 0, skippedPrune: true };
   }
-  const pruned = await pruneOldAiMetrics();
+  const pruned = await pruneOldAiMetrics(getRetentionDays(), options);
   await recordJobHeartbeat(AI_METRICS_ROLLUP_JOB);
   return { rolledUp, pruned, skippedPrune: false };
 }

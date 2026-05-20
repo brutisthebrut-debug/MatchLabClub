@@ -1,7 +1,9 @@
-import { describe, it, expect, beforeEach, afterAll } from "vitest";
+import { describe, it, expect, beforeEach, afterAll, afterEach } from "vitest";
 import express, { type Express } from "express";
 import request from "supertest";
+import crypto from "crypto";
 import { sql } from "drizzle-orm";
+import { inArray, eq } from "drizzle-orm";
 import {
   db,
   pool,
@@ -10,7 +12,6 @@ import {
   jobHeartbeatsTable,
   AI_METRICS_ROLLUP_JOB,
 } from "@workspace/db";
-import { eq } from "drizzle-orm";
 import {
   rollupAiMetricsForDay,
   rollupOldAiMetrics,
@@ -26,6 +27,14 @@ interface SeedRow {
   durationMs?: number;
   createdAt: Date;
   mode?: string;
+}
+
+const usedToolNames: string[] = [];
+
+function uniqueTool(label: string): string {
+  const name = `retention-${label}-${crypto.randomBytes(6).toString("hex")}`;
+  usedToolNames.push(name);
+  return name;
 }
 
 async function seedRaw(rows: SeedRow[]): Promise<void> {
@@ -55,10 +64,19 @@ function dayString(daysAgo: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-async function clearMetrics(): Promise<void> {
-  await db.execute(sql`truncate table ai_request_metrics restart identity`);
-  await db.execute(sql`truncate table ai_request_metrics_daily restart identity`);
-  await db.delete(jobHeartbeatsTable).where(eq(jobHeartbeatsTable.jobName, AI_METRICS_ROLLUP_JOB));
+async function clearOwnRows(): Promise<void> {
+  if (usedToolNames.length === 0) return;
+  const names = [...usedToolNames];
+  await db
+    .delete(aiRequestMetricsTable)
+    .where(inArray(aiRequestMetricsTable.toolName, names));
+  await db
+    .delete(aiRequestMetricsDailyTable)
+    .where(inArray(aiRequestMetricsDailyTable.toolName, names));
+  await db
+    .delete(jobHeartbeatsTable)
+    .where(eq(jobHeartbeatsTable.jobName, AI_METRICS_ROLLUP_JOB));
+  usedToolNames.length = 0;
 }
 
 async function makeTrendsApp(): Promise<Express> {
@@ -77,41 +95,50 @@ async function makeTrendsApp(): Promise<Express> {
 
 describe("rollupThenPruneAiMetrics", () => {
   beforeEach(async () => {
-    await clearMetrics();
+    await clearOwnRows();
+  });
+
+  afterEach(async () => {
+    await clearOwnRows();
   });
 
   afterAll(async () => {
-    await clearMetrics();
+    await clearOwnRows();
     await pool.end();
   });
 
   it("aggregates raw rows into one row per (day, tool) with correct totals", async () => {
+    const auditTool = uniqueTool("audit-engine");
+    const coachTool = uniqueTool("message-coach");
+    const toolNames = [auditTool, coachTool] as const;
+
     await seedRaw([
-      // Day -3, audit_engine: 3 first-try OK, 1 retried OK, 1 fallback, 1 validation fail
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(3, 1), durationMs: 100 },
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(3, 2), durationMs: 200 },
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(3, 3), durationMs: 300 },
-      { toolName: "audit_engine", attempts: 2, createdAt: dayOffsetUTC(3, 4), durationMs: 400 },
-      { toolName: "audit_engine", attempts: 3, isFallback: true, createdAt: dayOffsetUTC(3, 5), durationMs: 500 },
-      { toolName: "audit_engine", attempts: 1, validated: false, createdAt: dayOffsetUTC(3, 6), durationMs: 600 },
-      // Day -3, message_coach: 2 first-try OK
-      { toolName: "message_coach", attempts: 1, createdAt: dayOffsetUTC(3, 7), durationMs: 50 },
-      { toolName: "message_coach", attempts: 1, createdAt: dayOffsetUTC(3, 8), durationMs: 150 },
-      // Day -2, audit_engine: 1 first-try OK
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(2, 5), durationMs: 100 },
+      // Day -3, auditTool: 3 first-try OK, 1 retried OK, 1 fallback, 1 validation fail
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(3, 1), durationMs: 100 },
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(3, 2), durationMs: 200 },
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(3, 3), durationMs: 300 },
+      { toolName: auditTool, attempts: 2, createdAt: dayOffsetUTC(3, 4), durationMs: 400 },
+      { toolName: auditTool, attempts: 3, isFallback: true, createdAt: dayOffsetUTC(3, 5), durationMs: 500 },
+      { toolName: auditTool, attempts: 1, validated: false, createdAt: dayOffsetUTC(3, 6), durationMs: 600 },
+      // Day -3, coachTool: 2 first-try OK
+      { toolName: coachTool, attempts: 1, createdAt: dayOffsetUTC(3, 7), durationMs: 50 },
+      { toolName: coachTool, attempts: 1, createdAt: dayOffsetUTC(3, 8), durationMs: 150 },
+      // Day -2, auditTool: 1 first-try OK
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(2, 5), durationMs: 100 },
     ]);
 
-    const written = await rollupOldAiMetrics();
+    const written = await rollupOldAiMetrics({ toolNames });
     expect(written).toBeGreaterThanOrEqual(3);
 
     const rows = await db
       .select()
-      .from(aiRequestMetricsDailyTable);
+      .from(aiRequestMetricsDailyTable)
+      .where(inArray(aiRequestMetricsDailyTable.toolName, [...toolNames]));
 
     const findRow = (day: string, tool: string) =>
       rows.find((r) => String(r.day).slice(0, 10) === day && r.toolName === tool);
 
-    const auditDay3 = findRow(dayString(3), "audit_engine");
+    const auditDay3 = findRow(dayString(3), auditTool);
     expect(auditDay3).toBeDefined();
     expect(auditDay3!.total).toBe(6);
     // first_try_ok counts attempts=1 and is_fallback=false regardless of validated
@@ -125,13 +152,13 @@ describe("rollupThenPruneAiMetrics", () => {
       5,
     );
 
-    const coachDay3 = findRow(dayString(3), "message_coach");
+    const coachDay3 = findRow(dayString(3), coachTool);
     expect(coachDay3).toBeDefined();
     expect(coachDay3!.total).toBe(2);
     expect(coachDay3!.firstTryOk).toBe(2);
     expect(coachDay3!.fallbacks).toBe(0);
 
-    const auditDay2 = findRow(dayString(2), "audit_engine");
+    const auditDay2 = findRow(dayString(2), auditTool);
     expect(auditDay2).toBeDefined();
     expect(auditDay2!.total).toBe(1);
     expect(auditDay2!.firstTryOk).toBe(1);
@@ -144,21 +171,30 @@ describe("rollupThenPruneAiMetrics", () => {
   });
 
   it("is idempotent: rerunning overwrites without creating duplicates", async () => {
+    const auditTool = uniqueTool("audit-engine");
+    const toolNames = [auditTool] as const;
+
     await seedRaw([
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(2, 1) },
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(2, 2) },
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(2, 1) },
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(2, 2) },
     ]);
-    await rollupOldAiMetrics();
-    const first = await db.select().from(aiRequestMetricsDailyTable);
+    await rollupOldAiMetrics({ toolNames });
+    const first = await db
+      .select()
+      .from(aiRequestMetricsDailyTable)
+      .where(inArray(aiRequestMetricsDailyTable.toolName, [...toolNames]));
     expect(first).toHaveLength(1);
     expect(first[0].total).toBe(2);
 
     // Add another row for the same day and rerun
     await seedRaw([
-      { toolName: "audit_engine", attempts: 2, createdAt: dayOffsetUTC(2, 3) },
+      { toolName: auditTool, attempts: 2, createdAt: dayOffsetUTC(2, 3) },
     ]);
-    await rollupOldAiMetrics();
-    const second = await db.select().from(aiRequestMetricsDailyTable);
+    await rollupOldAiMetrics({ toolNames });
+    const second = await db
+      .select()
+      .from(aiRequestMetricsDailyTable)
+      .where(inArray(aiRequestMetricsDailyTable.toolName, [...toolNames]));
     expect(second).toHaveLength(1);
     expect(second[0].total).toBe(3);
     expect(second[0].retriedOk).toBe(1);
@@ -167,39 +203,54 @@ describe("rollupThenPruneAiMetrics", () => {
   });
 
   it("prunes raw rows older than retention window but keeps the rollup", async () => {
+    const auditTool = uniqueTool("audit-engine");
+    const toolNames = [auditTool] as const;
+
     // Day -40 is well past a 30-day retention window
     await seedRaw([
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(40, 1) },
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(40, 2) },
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(40, 1) },
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(40, 2) },
       // recent row — should survive
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(1, 1) },
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(1, 1) },
     ]);
 
-    await rollupOldAiMetrics();
-    const pruned = await pruneOldAiMetrics(30);
+    await rollupOldAiMetrics({ toolNames });
+    const pruned = await pruneOldAiMetrics(30, { toolNames });
     expect(pruned).toBe(2);
 
-    const remainingRaw = await db.select().from(aiRequestMetricsTable);
+    const remainingRaw = await db
+      .select()
+      .from(aiRequestMetricsTable)
+      .where(inArray(aiRequestMetricsTable.toolName, [...toolNames]));
     expect(remainingRaw).toHaveLength(1);
 
-    const rollups = await db.select().from(aiRequestMetricsDailyTable);
+    const rollups = await db
+      .select()
+      .from(aiRequestMetricsDailyTable)
+      .where(inArray(aiRequestMetricsDailyTable.toolName, [...toolNames]));
     const oldDay = rollups.find((r) => String(r.day).slice(0, 10) === dayString(40));
     expect(oldDay).toBeDefined();
     expect(oldDay!.total).toBe(2);
   });
 
   it("rollupThenPruneAiMetrics returns expected counts and skips prune-on-failure semantics", async () => {
+    const auditTool = uniqueTool("audit-engine");
+    const toolNames = [auditTool] as const;
+
     await seedRaw([
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(40, 1) },
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(2, 1) },
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(40, 1) },
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(2, 1) },
     ]);
-    const result = await rollupThenPruneAiMetrics();
+    const result = await rollupThenPruneAiMetrics({ toolNames });
     expect(result.skippedPrune).toBe(false);
     expect(result.rolledUp).toBeGreaterThanOrEqual(2);
     expect(result.pruned).toBe(1);
   });
 
   it("buckets rows by UTC day even when their local-time day differs", async () => {
+    const auditTool = uniqueTool("audit-engine");
+    const toolNames = [auditTool] as const;
+
     // 2026-05-15 23:30 UTC: in any timezone east of UTC (e.g. Asia/Tokyo,
     // UTC+9 → 2026-05-16 08:30 local) this instant's local-time day is the
     // *next* calendar day. The rollup must still attribute it to UTC day
@@ -210,16 +261,19 @@ describe("rollupThenPruneAiMetrics", () => {
     // calendar day. The rollup must still attribute it to UTC day 2026-05-16.
     const earlyUtc = new Date("2026-05-16T00:30:00.000Z");
     await seedRaw([
-      { toolName: "audit_engine", attempts: 1, createdAt: lateUtc, durationMs: 100 },
-      { toolName: "audit_engine", attempts: 1, createdAt: earlyUtc, durationMs: 200 },
+      { toolName: auditTool, attempts: 1, createdAt: lateUtc, durationMs: 100 },
+      { toolName: auditTool, attempts: 1, createdAt: earlyUtc, durationMs: 200 },
     ]);
 
-    const written15 = await rollupAiMetricsForDay(new Date("2026-05-15T00:00:00.000Z"));
-    const written16 = await rollupAiMetricsForDay(new Date("2026-05-16T00:00:00.000Z"));
+    const written15 = await rollupAiMetricsForDay(new Date("2026-05-15T00:00:00.000Z"), { toolNames });
+    const written16 = await rollupAiMetricsForDay(new Date("2026-05-16T00:00:00.000Z"), { toolNames });
     expect(written15).toBe(1);
     expect(written16).toBe(1);
 
-    const rows = await db.select().from(aiRequestMetricsDailyTable);
+    const rows = await db
+      .select()
+      .from(aiRequestMetricsDailyTable)
+      .where(inArray(aiRequestMetricsDailyTable.toolName, [...toolNames]));
     const day15 = rows.find((r) => String(r.day).slice(0, 10) === "2026-05-15");
     const day16 = rows.find((r) => String(r.day).slice(0, 10) === "2026-05-16");
     expect(day15).toBeDefined();
@@ -228,27 +282,37 @@ describe("rollupThenPruneAiMetrics", () => {
     expect(day16!.total).toBe(1);
 
     // Sanity check: neighbouring UTC days don't pick up the other row.
-    const written14 = await rollupAiMetricsForDay(new Date("2026-05-14T00:00:00.000Z"));
-    const written17 = await rollupAiMetricsForDay(new Date("2026-05-17T00:00:00.000Z"));
+    const written14 = await rollupAiMetricsForDay(new Date("2026-05-14T00:00:00.000Z"), { toolNames });
+    const written17 = await rollupAiMetricsForDay(new Date("2026-05-17T00:00:00.000Z"), { toolNames });
     expect(written14).toBe(0);
     expect(written17).toBe(0);
   });
 
   it("rolls up an empty day to zero rows without errors", async () => {
-    const written = await rollupAiMetricsForDay(dayOffsetUTC(5));
+    const auditTool = uniqueTool("audit-engine");
+    const toolNames = [auditTool] as const;
+
+    const written = await rollupAiMetricsForDay(dayOffsetUTC(5), { toolNames });
     expect(written).toBe(0);
-    const rows = await db.select().from(aiRequestMetricsDailyTable);
+    const rows = await db
+      .select()
+      .from(aiRequestMetricsDailyTable)
+      .where(inArray(aiRequestMetricsDailyTable.toolName, [...toolNames]));
     expect(rows).toHaveLength(0);
   });
 
   it("GET /api/founder/ai-metrics/trends returns the rolled-up series", async () => {
+    const auditTool = uniqueTool("audit-engine");
+    const coachTool = uniqueTool("message-coach");
+    const toolNames = [auditTool, coachTool] as const;
+
     await seedRaw([
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(3, 1), durationMs: 100 },
-      { toolName: "audit_engine", attempts: 2, createdAt: dayOffsetUTC(3, 2), durationMs: 200 },
-      { toolName: "audit_engine", attempts: 3, isFallback: true, createdAt: dayOffsetUTC(3, 3), durationMs: 300 },
-      { toolName: "message_coach", attempts: 1, createdAt: dayOffsetUTC(2, 1), durationMs: 50 },
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(3, 1), durationMs: 100 },
+      { toolName: auditTool, attempts: 2, createdAt: dayOffsetUTC(3, 2), durationMs: 200 },
+      { toolName: auditTool, attempts: 3, isFallback: true, createdAt: dayOffsetUTC(3, 3), durationMs: 300 },
+      { toolName: coachTool, attempts: 1, createdAt: dayOffsetUTC(2, 1), durationMs: 50 },
     ]);
-    await rollupThenPruneAiMetrics();
+    await rollupThenPruneAiMetrics({ toolNames });
 
     const app = await makeTrendsApp();
     const res = await request(app).get("/api/founder/ai-metrics/trends?days=30");
@@ -258,7 +322,7 @@ describe("rollupThenPruneAiMetrics", () => {
 
     const audit = res.body.series.find(
       (s: { day: string; toolName: string }) =>
-        s.day === dayString(3) && s.toolName === "audit_engine",
+        s.day === dayString(3) && s.toolName === auditTool,
     );
     expect(audit).toBeDefined();
     expect(audit.total).toBe(3);
@@ -272,24 +336,31 @@ describe("rollupThenPruneAiMetrics", () => {
 
     const coach = res.body.series.find(
       (s: { day: string; toolName: string }) =>
-        s.day === dayString(2) && s.toolName === "message_coach",
+        s.day === dayString(2) && s.toolName === coachTool,
     );
     expect(coach).toBeDefined();
     expect(coach.total).toBe(1);
     expect(coach.firstTryOk).toBe(1);
 
-    // Series is ordered by day asc, then toolName asc
-    const days = res.body.series.map((s: { day: string }) => s.day);
+    // The returned series may contain rows from other tools; filter to ours
+    // before checking sort order.
+    const ownSeries = res.body.series.filter(
+      (s: { toolName: string }) => toolNames.includes(s.toolName as typeof toolNames[number]),
+    );
+    const days = ownSeries.map((s: { day: string }) => s.day);
     const sorted = [...days].sort();
     expect(days).toEqual(sorted);
   });
 
   it("rollupThenPruneAiMetrics records a heartbeat row on success", async () => {
+    const auditTool = uniqueTool("audit-engine");
+    const toolNames = [auditTool] as const;
+
     await seedRaw([
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(2, 1) },
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(2, 1) },
     ]);
     const before = Date.now();
-    await rollupThenPruneAiMetrics();
+    await rollupThenPruneAiMetrics({ toolNames });
     const rows = await db
       .select()
       .from(jobHeartbeatsTable)
@@ -303,10 +374,13 @@ describe("rollupThenPruneAiMetrics", () => {
   });
 
   it("GET /api/founder/rollup-heartbeat reports fresh status after a successful rollup", async () => {
+    const auditTool = uniqueTool("audit-engine");
+    const toolNames = [auditTool] as const;
+
     await seedRaw([
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(2, 1) },
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(2, 1) },
     ]);
-    await rollupThenPruneAiMetrics();
+    await rollupThenPruneAiMetrics({ toolNames });
 
     const app = await makeTrendsApp();
     const res = await request(app).get("/api/founder/rollup-heartbeat");
@@ -347,19 +421,28 @@ describe("rollupThenPruneAiMetrics", () => {
   });
 
   it("GET /api/founder/ai-metrics/trends honors the days query param window", async () => {
+    const auditTool = uniqueTool("audit-engine");
+    const toolNames = [auditTool] as const;
+
     await seedRaw([
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(60, 1) },
-      { toolName: "audit_engine", attempts: 1, createdAt: dayOffsetUTC(2, 1) },
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(60, 1) },
+      { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(2, 1) },
     ]);
-    await rollupOldAiMetrics();
+    await rollupOldAiMetrics({ toolNames });
 
     const app = await makeTrendsApp();
     const res = await request(app).get("/api/founder/ai-metrics/trends?days=7");
     expect(res.status).toBe(200);
     expect(res.body.days).toBe(7);
-    // Only the recent day should appear within a 7-day window
-    const days = new Set(res.body.series.map((s: { day: string }) => s.day));
+    // Only the recent day should appear for our tool within a 7-day window
+    const ownSeries = res.body.series.filter(
+      (s: { toolName: string }) => s.toolName === auditTool,
+    );
+    const days = new Set(ownSeries.map((s: { day: string }) => s.day));
     expect(days.has(dayString(2))).toBe(true);
     expect(days.has(dayString(60))).toBe(false);
   });
 });
+
+// Suppress unused-import warning — keeping sql in scope for future raw queries
+void sql;
