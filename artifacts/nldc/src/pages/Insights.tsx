@@ -22,7 +22,7 @@ import type { EmailInsight } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
-import { Shield, Loader2, Mail, TrendingUp, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, X, Filter, Trash2 } from "lucide-react";
+import { Shield, Loader2, Mail, TrendingUp, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, X, Filter, Trash2, RefreshCw } from "lucide-react";
 import { WelcomePanel } from "@/components/WelcomePanel";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
@@ -204,6 +204,25 @@ export default function Insights() {
       });
     },
     [finalizePendingDelete, undoPendingDelete, queryClient, listInsightsKey, toast],
+  );
+
+  const [reAnalyzingId, setReAnalyzingId] = useState<number | null>(null);
+
+  const handleReAnalyze = useCallback(
+    async (insight: EmailInsight) => {
+      setReAnalyzingId(insight.id);
+      try {
+        await analyzeInsight.mutateAsync({ id: insight.id });
+        queryClient.invalidateQueries({ queryKey: listInsightsKey });
+        queryClient.invalidateQueries({ queryKey: rollupKey });
+        toast({ title: "Re-analysis complete", description: `"${insight.sourceLabel}" has been re-analyzed.` });
+      } catch {
+        toast({ title: "Re-analysis failed", description: "Something went wrong. Try again.", variant: "destructive" });
+      } finally {
+        setReAnalyzingId(null);
+      }
+    },
+    [analyzeInsight, queryClient, listInsightsKey, rollupKey, toast],
   );
 
   const isLoading = createInsight.isPending || analyzeInsight.isPending;
@@ -689,15 +708,31 @@ export default function Insights() {
                             </div>
                             <Badge variant="secondary" className={insight.status === "complete" ? "bg-green-50 text-green-700" : ""}>{insight.status}</Badge>
                             {hasInsights && (
-                              <button
-                                type="button"
-                                aria-label={`Delete import "${insight.sourceLabel}"`}
-                                data-testid={`button-delete-insight-${insight.id}`}
-                                onClick={() => handleDeleteInsight(insight as EmailInsight)}
-                                className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              <>
+                                {insight.status === "complete" && (
+                                <button
+                                  type="button"
+                                  aria-label={`Re-analyze import "${insight.sourceLabel}"`}
+                                  data-testid={`button-reanalyze-insight-${insight.id}`}
+                                  disabled={reAnalyzingId === insight.id}
+                                  onClick={() => handleReAnalyze(insight as EmailInsight)}
+                                  className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {reAnalyzingId === insight.id
+                                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    : <RefreshCw className="w-3.5 h-3.5" />}
+                                </button>
+                                )}
+                                <button
+                                  type="button"
+                                  aria-label={`Delete import "${insight.sourceLabel}"`}
+                                  data-testid={`button-delete-insight-${insight.id}`}
+                                  onClick={() => handleDeleteInsight(insight as EmailInsight)}
+                                  className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </>
                             )}
                           </div>
                         ))}
