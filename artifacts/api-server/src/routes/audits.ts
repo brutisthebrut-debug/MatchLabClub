@@ -214,16 +214,21 @@ router.get("/audits", async (req, res): Promise<void> => {
 
   const qRaw = typeof req.query.q === "string" ? req.query.q.trim() : "";
   const qFilter =
-    qRaw.length > 0
-      ? or(
-          ilike(auditsTable.firstName, `%${escapeLike(qRaw)}%`),
-          ilike(auditsTable.bio, `%${escapeLike(qRaw)}%`),
-          sql`${auditsTable.firstName} % ${qRaw}`,
-          sql`${auditsTable.bio} % ${qRaw}`,
-          sql`word_similarity(${qRaw}, ${auditsTable.firstName}) > 0.5`,
-          sql`word_similarity(${qRaw}, ${auditsTable.bio}) > 0.5`,
-        )
-      : undefined;
+    qRaw.length === 0
+      ? undefined
+      : qRaw.length <= 2
+        ? or(
+            ilike(auditsTable.firstName, `%${escapeLike(qRaw)}%`),
+            ilike(auditsTable.bio, `%${escapeLike(qRaw)}%`),
+          )
+        : or(
+            ilike(auditsTable.firstName, `%${escapeLike(qRaw)}%`),
+            ilike(auditsTable.bio, `%${escapeLike(qRaw)}%`),
+            sql`${auditsTable.firstName} % ${qRaw}`,
+            sql`${auditsTable.bio} % ${qRaw}`,
+            sql`word_similarity(${qRaw}, ${auditsTable.firstName}) > 0.5`,
+            sql`word_similarity(${qRaw}, ${auditsTable.bio}) > 0.5`,
+          );
 
   const scoreRangeParam =
     typeof req.query.scoreRange === "string" ? req.query.scoreRange : undefined;

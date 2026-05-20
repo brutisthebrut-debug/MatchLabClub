@@ -177,6 +177,40 @@ describe("GET /api/audits — typo-tolerant search (pg_trgm)", () => {
     expect(byName.names[0]).toBe("Marcus");
   });
 
+  it("single- and two-character queries behave as exact substring search (no fuzzy fan-out)", async () => {
+    // "Niko" and its bio contain zero occurrences of the letters 'a'/'A' or
+    // the bigram "al"/"Al", so it must never surface for those short queries.
+    await seed([
+      { firstName: "Al", bio: "Short two-letter first name." },
+      { firstName: "Alexander", bio: "Longer first name with the prefix." },
+      { firstName: "Niko", bio: "Crossfit every morning." },
+    ]);
+
+    // Single-character query "A": ILIKE `%A%` (case-insensitive) matches "Al"
+    // and "Alexander" by firstName. "Niko" / "Crossfit every morning." contain
+    // no 'a', so they must not appear — even if pg_trgm would fuzzily match
+    // a single-bigram query against short strings.
+    const single = await search("A");
+    expect(single.status).toBe(200);
+    expect(single.names).toContain("Al");
+    expect(single.names).toContain("Alexander");
+    expect(single.names).not.toContain("Niko");
+
+    // Two-character query "Al": exact substring of "Al" and "Alexander";
+    // absent from "Niko" and its bio — must not appear.
+    const twoChar = await search("Al");
+    expect(twoChar.status).toBe(200);
+    expect(twoChar.names).toContain("Al");
+    expect(twoChar.names).toContain("Alexander");
+    expect(twoChar.names).not.toContain("Niko");
+
+    // Sanity-check: a two-character query that matches nothing must return
+    // an empty list, not a fuzzy fan-out of semi-related rows.
+    const noMatch = await search("Zz");
+    expect(noMatch.status).toBe(200);
+    expect(noMatch.names).toHaveLength(0);
+  });
+
   it("orders results by best-match-first when multiple audits could match", async () => {
     // Three audits with first names that differ in how close they are to
     // the query "Jonathan":
