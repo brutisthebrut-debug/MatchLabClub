@@ -35,6 +35,16 @@ vi.mock("@/components/layout/AppLayout", () => ({
   AppLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
+// Stub AnimatePresence so that mode="wait" doesn't block children from
+// mounting while exit animations are pending (those never complete in jsdom).
+vi.mock("framer-motion", async () => {
+  const actual = await vi.importActual<typeof import("framer-motion")>("framer-motion");
+  return {
+    ...actual,
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  };
+});
+
 vi.mock("@/hooks/useMeta", () => ({ useMeta: () => {} }));
 
 vi.mock("@/lib/anonymousIds", () => ({
@@ -60,6 +70,8 @@ import ProfileReader from "@/pages/ProfileReader";
 import NextMessage from "@/pages/NextMessage";
 import PatternBreaker from "@/pages/PatternBreaker";
 import SignalCheck from "@/pages/SignalCheck";
+import Blueprint from "@/pages/Blueprint";
+import DatingWinsLog from "@/pages/DatingWinsLog";
 
 // ---------------------------------------------------------------------------
 // Test lifecycle
@@ -180,6 +192,52 @@ const drivers: Driver[] = [
       await waitFor(() => {
         expect(generateReportMutateAsync).toHaveBeenCalled();
       });
+    },
+  },
+  {
+    // Gating variant: !result — panel shows for authenticated users who
+    // haven't yet run the tool (result is null).
+    name: "Blueprint",
+    Page: Blueprint,
+    emptyStateTestId: "blueprint-empty-state",
+    // Anonymous users see the demo blueprint (isDemo = !result = true when
+    // result is null). The watermark text below the results is the marker.
+    anonymousDemoMatcher: /Example blueprint — fill in the form above to get yours/i,
+    runTool: async () => {
+      const textarea = screen.getByPlaceholderText(/Be as honest or vague as you like/i);
+      fireEvent.change(textarea, {
+        target: { value: "I'm curious, empathetic, and tend to think before I speak." },
+      });
+      const button = screen.getByRole("button", { name: /Build My Blueprint/i });
+      fireEvent.click(button);
+      // The mocked enhance returns isFallback:true, which falls back to the
+      // deterministic local output and sets result — clearing the panel.
+      await waitFor(() => {
+        expect(enhanceMutateAsync).toHaveBeenCalled();
+      });
+    },
+  },
+  {
+    // Gating variant: isDemo (localStorage-backed) — panel shows for
+    // authenticated users whose localStorage has no stored wins.
+    name: "Dating Wins Log",
+    Page: DatingWinsLog,
+    emptyStateTestId: "wins-empty-state",
+    // Anonymous users also have isDemo=true (no wins in localStorage) but
+    // isBrandNewUser is false because they're not authenticated. They see
+    // the demo wins list with its "sample wins" label.
+    anonymousDemoMatcher: /Sample wins — your log starts the moment you add one/i,
+    runTool: async () => {
+      const logBtn = screen.getByRole("button", { name: /Log a win/i });
+      fireEvent.click(logBtn);
+      // AnimatePresence is mocked to render children synchronously, so the
+      // form is immediately in the DOM after the click triggers setShowForm(true).
+      const textarea = await screen.findByPlaceholderText(/You hit send/i);
+      fireEvent.change(textarea, {
+        target: { value: "Sent the message I'd been overthinking for two days." },
+      });
+      const saveBtn = screen.getByRole("button", { name: /Save win/i });
+      fireEvent.click(saveBtn);
     },
   },
 ];
