@@ -1,11 +1,39 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@workspace/replit-auth-web";
-import { useListAudits, getListAuditsQueryKey } from "@workspace/api-client-react";
-import { LogIn, LogOut, Mail, User as UserIcon, FileText, ArrowRight, Shield } from "lucide-react";
+import {
+  useListAudits,
+  getListAuditsQueryKey,
+  exportMyData,
+  useDeleteMyAccount,
+} from "@workspace/api-client-react";
+import {
+  LogIn,
+  LogOut,
+  Mail,
+  User as UserIcon,
+  FileText,
+  ArrowRight,
+  Shield,
+  Download,
+  Trash2,
+  Loader2,
+} from "lucide-react";
 
 function Initials({ name }: { name: string }) {
   const parts = name.trim().split(/\s+/).slice(0, 2);
@@ -24,12 +52,65 @@ export default function Account() {
   );
 
   const { user, isAuthenticated, isLoading, login, logout } = useAuth();
+  const { toast } = useToast();
   const auditsQuery = useListAudits({
     query: { queryKey: getListAuditsQueryKey(), enabled: isAuthenticated },
   });
 
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const deleteAccount = useDeleteMyAccount();
+
   const auditCount = auditsQuery.data?.length ?? 0;
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Friend";
+
+  const handleDownload = async () => {
+    setIsExporting(true);
+    try {
+      const data = await exportMyData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `nldc-data-export-${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({
+        title: "Download started",
+        description: "Your data export downloaded as JSON.",
+      });
+    } catch (err) {
+      toast({
+        title: "Couldn't export your data",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteAccount.mutateAsync();
+      toast({
+        title: "Account deleted",
+        description: "Your account and all associated data have been removed.",
+      });
+      setConfirmDeleteOpen(false);
+      logout();
+    } catch (err) {
+      toast({
+        title: "Couldn't delete your account",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <AppLayout>
@@ -162,8 +243,80 @@ export default function Account() {
                 </Button>
               </div>
             </div>
+
+            {/* Data ownership */}
+            <div className="glass rounded-2xl p-6 md:p-8 space-y-4">
+              <div>
+                <h3 className="font-serif text-lg font-bold text-foreground">Your data</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Download everything we have about you, or permanently remove your account and all associated audits, messages, and insights.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  onClick={handleDownload}
+                  disabled={isExporting}
+                  variant="outline"
+                  className="rounded-full text-sm font-medium"
+                  data-testid="button-account-download-data"
+                >
+                  {isExporting ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4 mr-2" />
+                  )}
+                  Download my data
+                </Button>
+                <Button
+                  onClick={() => setConfirmDeleteOpen(true)}
+                  variant="outline"
+                  className="rounded-full text-sm font-medium ml-auto border-[hsl(348_55%_65%/0.4)] text-[hsl(348_55%_78%)] hover:bg-[hsl(348_55%_65%/0.08)] hover:text-[hsl(348_55%_82%)]"
+                  data-testid="button-account-delete"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" /> Delete my account
+                </Button>
+              </div>
+            </div>
           </div>
         )}
+
+        <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+          <AlertDialogContent data-testid="dialog-confirm-delete-account">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Permanently delete your account?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This removes your profile, every audit you've run, your saved
+                dating profiles, message coaching sessions, and email insights.
+                You'll be signed out immediately. This can't be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                disabled={deleteAccount.isPending}
+                data-testid="button-account-delete-cancel"
+              >
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  void handleConfirmDelete();
+                }}
+                disabled={deleteAccount.isPending}
+                className="bg-[hsl(348_55%_55%)] text-white hover:bg-[hsl(348_55%_48%)]"
+                data-testid="button-account-delete-confirm"
+              >
+                {deleteAccount.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Deleting…
+                  </>
+                ) : (
+                  "Yes, delete everything"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppLayout>
   );

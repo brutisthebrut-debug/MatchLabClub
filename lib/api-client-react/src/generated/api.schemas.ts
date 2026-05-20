@@ -439,6 +439,41 @@ export interface AiTestInput {
   context?: AiContextInput;
 }
 
+export interface AccountExportUser {
+  id: string;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  firstName: string | null;
+  /** @nullable */
+  lastName: string | null;
+  /** @nullable */
+  profileImageUrl: string | null;
+  createdAt: string;
+}
+
+export interface AccountExport {
+  /** ISO timestamp of when the export was generated. */
+  exportedAt: string;
+  user: AccountExportUser;
+  audits: Audit[];
+  profiles: DatingProfile[];
+  messages: MessageCoachingSession[];
+  insights: EmailInsight[];
+}
+
+export type DeleteMyAccountResultDeleted = {
+  audits: number;
+  profiles: number;
+  messages: number;
+  insights: number;
+};
+
+export interface DeleteMyAccountResult {
+  success: true;
+  deleted: DeleteMyAccountResultDeleted;
+}
+
 export type AiTestResultMode = typeof AiTestResultMode[keyof typeof AiTestResultMode];
 
 

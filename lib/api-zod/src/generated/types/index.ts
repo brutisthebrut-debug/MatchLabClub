@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './accountExport';
+export * from './accountExportUser';
 export * from './actionPlanItem';
 export * from './aiContextInput';
 export * from './aiContextInputExtras';
@@ -38,6 +40,8 @@ export * from './communicationPattern';
 export * from './datingProfile';
 export * from './datingProfileInput';
 export * from './datingProfileUpdate';
+export * from './deleteMyAccountResult';
+export * from './deleteMyAccountResultDeleted';
 export * from './emailInsight';
 export * from './emailInsightAnalysis';
 export * from './emailInsightInput';

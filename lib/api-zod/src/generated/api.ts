@@ -116,6 +116,98 @@ export const ClaimAnonymousDataResponse = zod.object({
 
 
 /**
+ * Returns a single JSON document containing the authenticated user's
+profile record plus every audit, dating profile, message coaching
+session, and email insight tied to that user. Intended to power a
+"Download my data" button on the account page.
+
+ * @summary Download all of the signed-in user's data as JSON
+ */
+export const ExportMyDataHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const ExportMyDataResponse = zod.object({
+  "exportedAt": zod.string().describe('ISO timestamp of when the export was generated.'),
+  "user": zod.object({
+  "id": zod.string(),
+  "email": zod.string().email().nullable(),
+  "firstName": zod.string().nullable(),
+  "lastName": zod.string().nullable(),
+  "profileImageUrl": zod.string().nullable(),
+  "createdAt": zod.string()
+}),
+  "audits": zod.array(zod.object({
+  "id": zod.number(),
+  "firstName": zod.string(),
+  "age": zod.number(),
+  "gender": zod.string(),
+  "orientation": zod.string().optional(),
+  "datingGoal": zod.string(),
+  "currentApps": zod.array(zod.string()),
+  "bio": zod.string(),
+  "prompts": zod.string().nullish(),
+  "recentMessageSample": zod.string().nullish(),
+  "photoCount": zod.number().nullish(),
+  "relationshipHistory": zod.string().nullish(),
+  "biggestChallenge": zod.string().nullish(),
+  "status": zod.enum(['pending', 'generating', 'complete', 'error']),
+  "readinessScore": zod.number().nullish(),
+  "createdAt": zod.string()
+})),
+  "profiles": zod.array(zod.object({
+  "id": zod.number(),
+  "platform": zod.string(),
+  "bio": zod.string(),
+  "prompts": zod.string().nullish(),
+  "photoCount": zod.number().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})),
+  "messages": zod.array(zod.object({
+  "id": zod.number(),
+  "matchName": zod.string(),
+  "conversationContext": zod.string(),
+  "yourLastMessage": zod.string(),
+  "goal": zod.string().nullish(),
+  "status": zod.enum(['pending', 'complete']),
+  "createdAt": zod.string()
+})),
+  "insights": zod.array(zod.object({
+  "id": zod.number(),
+  "sourceLabel": zod.string(),
+  "pastedContent": zod.string(),
+  "consentGiven": zod.boolean().optional(),
+  "status": zod.enum(['pending', 'analyzing', 'complete', 'error']),
+  "createdAt": zod.string()
+}))
+})
+
+
+/**
+ * Permanently removes the authenticated user along with every audit,
+dating profile, message coaching session, and email insight tied to
+that user. Also clears every active session for the user and the
+browser session cookie, effectively signing them out.
+
+ * @summary Permanently delete the signed-in user's account and all data
+ */
+export const DeleteMyAccountHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const DeleteMyAccountResponse = zod.object({
+  "success": zod.boolean(),
+  "deleted": zod.object({
+  "audits": zod.number(),
+  "profiles": zod.number(),
+  "messages": zod.number(),
+  "insights": zod.number()
+})
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */

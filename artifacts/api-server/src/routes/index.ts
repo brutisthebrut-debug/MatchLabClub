@@ -11,6 +11,7 @@ import purchaseInterestRouter from "./purchaseInterest";
 import founderRouter from "./founder";
 import aiRouter from "./ai";
 import claimRouter from "./claim";
+import accountRouter from "./account";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(purchaseInterestRouter);
 router.use(founderRouter);
 router.use(aiRouter);
 router.use(claimRouter);
+router.use(accountRouter);
 
 export default router;
