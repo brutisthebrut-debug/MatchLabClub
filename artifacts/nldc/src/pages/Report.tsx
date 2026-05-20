@@ -1,5 +1,5 @@
 import { useParams, Link } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
@@ -160,21 +160,31 @@ export default function Report() {
   const [report, setReport] = useState<typeof DEMO_REPORT | null>(null);
   const [generating, setGenerating] = useState(false);
 
-  async function fetchReport() {
-    if (auditId && !generating) {
-      setGenerating(true);
-      try {
-        const result = await generateReport.mutateAsync({ id: auditId });
-        setReport(result as typeof DEMO_REPORT);
-      } catch {
-        setReport(DEMO_REPORT);
-      } finally {
-        setGenerating(false);
-      }
-    }
-  }
+  const storedReport = audit?.report ?? null;
 
-  if (!report && !generating && auditId) fetchReport();
+  useEffect(() => {
+    if (!storedReport || report) return;
+    setReport(storedReport as unknown as typeof DEMO_REPORT);
+  }, [storedReport, report]);
+
+  useEffect(() => {
+    if (!auditId || report || generating) return;
+    if (!audit) return;
+    if (audit.report) return;
+    setGenerating(true);
+    generateReport
+      .mutateAsync({ id: auditId })
+      .then((result) => {
+        setReport(result as typeof DEMO_REPORT);
+      })
+      .catch(() => {
+        setReport(DEMO_REPORT);
+      })
+      .finally(() => {
+        setGenerating(false);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auditId, audit]);
 
   const r = report ?? (auditId ? null : DEMO_REPORT) ?? DEMO_REPORT;
   const grade = r.readinessScore >= 85 ? "A" : r.readinessScore >= 72 ? "B" : r.readinessScore >= 58 ? "C" : r.readinessScore >= 42 ? "D" : "F";
