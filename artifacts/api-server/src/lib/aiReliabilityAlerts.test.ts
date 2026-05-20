@@ -105,7 +105,7 @@ describe("checkAiReliabilityAlerts", () => {
     // 20 samples, only 5 first-try ok → 25% rate, well below 70% threshold
     await seedMetrics(toolName, { total: 20, firstTryOk: 5 });
 
-    const result = await checkAiReliabilityAlerts();
+    const result = await checkAiReliabilityAlerts({ toolNames: [toolName] });
 
     expect(result.breached).toContain(toolName);
     expect(result.cleared).not.toContain(toolName);
@@ -132,14 +132,14 @@ describe("checkAiReliabilityAlerts", () => {
     const toolName = uniqueTool("still-degraded");
     await seedMetrics(toolName, { total: 20, firstTryOk: 5 });
 
-    const first = await checkAiReliabilityAlerts();
+    const first = await checkAiReliabilityAlerts({ toolNames: [toolName] });
     expect(first.breached).toContain(toolName);
     expect(sendMailMock).toHaveBeenCalledTimes(1);
 
     sendMailMock.mockClear();
 
     // Second run, still degraded — no new email, no new transition reported.
-    const second = await checkAiReliabilityAlerts();
+    const second = await checkAiReliabilityAlerts({ toolNames: [toolName] });
     expect(second.breached).not.toContain(toolName);
     expect(second.cleared).not.toContain(toolName);
     expect(sendMailMock).not.toHaveBeenCalled();
@@ -155,7 +155,7 @@ describe("checkAiReliabilityAlerts", () => {
     const toolName = uniqueTool("recovery");
     // Start with a breach.
     await seedMetrics(toolName, { total: 20, firstTryOk: 5 });
-    await checkAiReliabilityAlerts();
+    await checkAiReliabilityAlerts({ toolNames: [toolName] });
     expect(sendMailMock).toHaveBeenCalledTimes(1);
     sendMailMock.mockClear();
 
@@ -163,7 +163,7 @@ describe("checkAiReliabilityAlerts", () => {
     // dominated by good rows and the rate goes back above threshold.
     await seedMetrics(toolName, { total: ALERT_WINDOW, firstTryOk: ALERT_WINDOW });
 
-    const result = await checkAiReliabilityAlerts();
+    const result = await checkAiReliabilityAlerts({ toolNames: [toolName] });
     expect(result.cleared).toContain(toolName);
     expect(result.breached).not.toContain(toolName);
     expect(sendMailMock).toHaveBeenCalledTimes(1);
@@ -186,7 +186,7 @@ describe("checkAiReliabilityAlerts", () => {
 
       // 1. Initial breach.
       await seedMetrics(toolName, { total: 20, firstTryOk: 5 });
-      const first = await checkAiReliabilityAlerts();
+      const first = await checkAiReliabilityAlerts({ toolNames: [toolName] });
       expect(first.breached).toContain(toolName);
       expect(sendMailMock).toHaveBeenCalledTimes(1);
       sendMailMock.mockClear();
@@ -196,14 +196,18 @@ describe("checkAiReliabilityAlerts", () => {
         total: ALERT_WINDOW,
         firstTryOk: ALERT_WINDOW,
       });
-      const recovered = await checkAiReliabilityAlerts();
+      const recovered = await checkAiReliabilityAlerts({
+        toolNames: [toolName],
+      });
       expect(recovered.cleared).toContain(toolName);
       expect(sendMailMock).toHaveBeenCalledTimes(1);
       sendMailMock.mockClear();
 
       // 3. Immediately re-breach by piling on more bad rows.
       await seedMetrics(toolName, { total: ALERT_WINDOW, firstTryOk: 0 });
-      const rebreach = await checkAiReliabilityAlerts();
+      const rebreach = await checkAiReliabilityAlerts({
+        toolNames: [toolName],
+      });
       expect(rebreach.breached).not.toContain(toolName);
       expect(sendMailMock).not.toHaveBeenCalled();
 
@@ -227,18 +231,20 @@ describe("checkAiReliabilityAlerts", () => {
       const toolName = uniqueTool("rebreach-after-cooldown");
 
       await seedMetrics(toolName, { total: 20, firstTryOk: 5 });
-      await checkAiReliabilityAlerts();
+      await checkAiReliabilityAlerts({ toolNames: [toolName] });
       sendMailMock.mockClear();
 
       await seedMetrics(toolName, {
         total: ALERT_WINDOW,
         firstTryOk: ALERT_WINDOW,
       });
-      await checkAiReliabilityAlerts();
+      await checkAiReliabilityAlerts({ toolNames: [toolName] });
       sendMailMock.mockClear();
 
       await seedMetrics(toolName, { total: ALERT_WINDOW, firstTryOk: 0 });
-      const rebreach = await checkAiReliabilityAlerts();
+      const rebreach = await checkAiReliabilityAlerts({
+        toolNames: [toolName],
+      });
       expect(rebreach.breached).toContain(toolName);
       expect(sendMailMock).toHaveBeenCalledTimes(1);
     } finally {
@@ -252,7 +258,7 @@ describe("checkAiReliabilityAlerts", () => {
 
     sendMailMock.mockRejectedValueOnce(new Error("smtp down"));
 
-    const first = await checkAiReliabilityAlerts();
+    const first = await checkAiReliabilityAlerts({ toolNames: [toolName] });
     expect(first.breached).not.toContain(toolName);
     expect(sendMailMock).toHaveBeenCalledTimes(1);
 
@@ -266,7 +272,7 @@ describe("checkAiReliabilityAlerts", () => {
     expect(states[0]?.lastSendFailureMessage).toBe("smtp down");
 
     sendMailMock.mockRejectedValueOnce(new Error("smtp still down"));
-    await checkAiReliabilityAlerts();
+    await checkAiReliabilityAlerts({ toolNames: [toolName] });
 
     states = await db
       .select()
@@ -280,7 +286,7 @@ describe("checkAiReliabilityAlerts", () => {
       delivered: true,
       transport: "log" as const,
     });
-    const third = await checkAiReliabilityAlerts();
+    const third = await checkAiReliabilityAlerts({ toolNames: [toolName] });
     expect(third.breached).toContain(toolName);
 
     states = await db
@@ -302,7 +308,7 @@ describe("checkAiReliabilityAlerts", () => {
     const threshold = DEFAULT_SEND_FAILURE_ALERT_THRESHOLD;
     for (let i = 0; i < threshold; i++) {
       sendMailMock.mockRejectedValueOnce(new Error(`smtp fail ${i + 1}`));
-      await checkAiReliabilityAlerts();
+      await checkAiReliabilityAlerts({ toolNames: [toolName] });
     }
 
     const states = await db
@@ -335,7 +341,7 @@ describe("checkAiReliabilityAlerts", () => {
     const lowTotal = ALERT_MIN_SAMPLE - 1;
     await seedMetrics(toolName, { total: lowTotal, firstTryOk: 0 });
 
-    const result = await checkAiReliabilityAlerts();
+    const result = await checkAiReliabilityAlerts({ toolNames: [toolName] });
 
     expect(result.breached).not.toContain(toolName);
     expect(result.cleared).not.toContain(toolName);

@@ -64,9 +64,15 @@ export interface AlertCheckResult {
   cleared: string[];
 }
 
-async function fetchRecentByTool(): Promise<
-  Map<string, { total: number; firstTryOk: number }>
-> {
+async function fetchRecentByTool(
+  toolNames?: readonly string[],
+): Promise<Map<string, { total: number; firstTryOk: number }>> {
+  const filter =
+    toolNames && toolNames.length > 0
+      ? sql`where tool_name in ${sql.raw(
+          `(${toolNames.map((n) => `'${n.replace(/'/g, "''")}'`).join(",")})`,
+        )}`
+      : sql``;
   const result = await db.execute<RecentRow>(sql`
     select
       tool_name,
@@ -79,6 +85,7 @@ async function fetchRecentByTool(): Promise<
         is_fallback,
         row_number() over (partition by tool_name order by created_at desc) as rn
       from ai_request_metrics
+      ${filter}
     ) t
     where rn <= ${ALERT_WINDOW}
     group by tool_name
@@ -247,9 +254,16 @@ async function resetSendFailureCounter(toolName: string): Promise<void> {
     .where(eq(aiToolAlertStateTable.toolName, toolName));
 }
 
-export async function checkAiReliabilityAlerts(): Promise<AlertCheckResult> {
-  const recent = await fetchRecentByTool();
-  const states = await db.select().from(aiToolAlertStateTable);
+export async function checkAiReliabilityAlerts(
+  options: { toolNames?: readonly string[] } = {},
+): Promise<AlertCheckResult> {
+  const { toolNames } = options;
+  const recent = await fetchRecentByTool(toolNames);
+  const allStates = await db.select().from(aiToolAlertStateTable);
+  const states =
+    toolNames && toolNames.length > 0
+      ? allStates.filter((s) => toolNames.includes(s.toolName))
+      : allStates;
   const stateByTool = new Map(states.map((s) => [s.toolName, s]));
 
   const breached: string[] = [];
