@@ -1,0 +1,21 @@
+Run a full end-to-end QA and UX readiness pass for the existing app. Preserve all current features, pages, routes, design system, founder dashboard, pricing/proof pages, feedback page, sample report, Copilot workflows, Connection Center, Vault, Gallery, Quiz, partner route, and mobile responsiveness. Do not remove modules and do not perform a full redesign yet.
+
+Verify all linked routes render and are reachable from navigation, dashboard cards, footer, pricing, partner page, founder area, and tool hubs. Fix broken links, dead buttons, bad imports, blank screens, unreachable pages, stale hardcoded links, confusing back paths, and any obvious routing issues.
+
+Test the main first-user path and make small clarity fixes: landing page to Start Here, free quiz or signal check, result, lead capture, dashboard, sample report or pricing, purchase-interest form, and founder visibility. The user should always know the next best step. If dashboard choices feel overwhelming, improve ordering, labels, and grouping without removing tools.
+
+Test the partner visitor path: partner page to free quiz or signal check, lead capture, sample report or offer page, and founder visibility. Keep partner copy tasteful and secondary to the main brand.
+
+Test core tools with sample data and improve weak empty states, unclear CTAs, and obvious UX gaps. Focus on the main report tools, message tools, growth tools, proof/gallery pages, feedback page, connection/vault pages, and pricing pages.
+
+Polish founder workflow where needed. The founder area should make it easy to see source, stage, status, follow-up action, feedback, and relevant templates. Keep security behavior intact and never expose secrets.
+
+Check generated-output UX. Confirm loading, fallback, friendly error, copy buttons, tone controls, and confidence labels work where present. If live AI is unavailable, fallback output should remain useful and never blank.
+
+Run a mobile QA pass around narrow phone widths. Fix horizontal overflow, cramped grids, unreadable cards, awkward dropdowns, hard-to-tap controls, clipped text, and bad spacing. Prioritize phone usability.
+
+Create or update a founder-only Design Revamp Brief listing the pages and components that most need the next visual polish pass. Group notes by Critical, Important, and Nice-to-have. Include homepage, dashboard, navigation, report pages, tool hubs, pricing, founder area, mobile nav, trust/settings pages, and sample report.
+
+Improve small copy issues where obvious: clarify Start Here, free versus paid paths, sample/fake content, beta status, user-control/trust promise, and offer CTAs. Keep the voice warm, direct, inclusive, practical, and premium.
+
+Verify business-readiness basics: sample report CTA, pricing explanation, beta offer, feedback form, founder templates, FAQ/trust copy, and testing checklist. Run typecheck/build verification if available, screenshot key pages, commit/checkpoint with a clear summary, and report what was tested, fixed, and still needs manual testing.
