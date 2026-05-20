@@ -214,6 +214,9 @@ export default function AuditDetailScreen() {
   const [viewingVersionId, setViewingVersionId] = useState<number | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [showPrevious, setShowPrevious] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareIds, setCompareIds] = useState<number[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
 
   const storedReport = auditQuery.data?.report ?? null;
 
@@ -875,37 +878,138 @@ export default function AuditDetailScreen() {
             ]}
             testID="card-regeneration-history"
           >
-            <Pressable
-              onPress={() => setHistoryOpen((o) => !o)}
-              style={({ pressed }) => [
-                styles.historyHeader,
-                { opacity: pressed ? 0.7 : 1 },
-              ]}
-              accessibilityLabel="Toggle regeneration history"
-              accessibilityState={{ expanded: historyOpen }}
-              testID="button-toggle-history"
-            >
-              <Feather name="clock" size={16} color={colors.violet} />
-              <View style={styles.historyHeaderText}>
-                <Text style={[styles.historyTitle, { color: colors.foreground }]}>
-                  Regeneration history
-                </Text>
-                <Text
-                  style={[
-                    styles.historySubtitle,
-                    { color: colors.mutedForeground },
+            <View style={styles.historyHeader}>
+              <Pressable
+                onPress={() => setHistoryOpen((o) => !o)}
+                style={({ pressed }) => [
+                  styles.historyHeaderPressable,
+                  { opacity: pressed ? 0.7 : 1 },
+                ]}
+                accessibilityLabel="Toggle regeneration history"
+                accessibilityState={{ expanded: historyOpen }}
+                testID="button-toggle-history"
+              >
+                <Feather name="clock" size={16} color={colors.violet} />
+                <View style={styles.historyHeaderText}>
+                  <Text style={[styles.historyTitle, { color: colors.foreground }]}>
+                    Regeneration history
+                  </Text>
+                  <Text
+                    style={[
+                      styles.historySubtitle,
+                      { color: colors.mutedForeground },
+                    ]}
+                  >
+                    {versions.length} versions on file
+                    {compareMode ? " — pick 2 to compare" : " — tap any to view"}
+                  </Text>
+                </View>
+                <Feather
+                  name={historyOpen ? "chevron-up" : "chevron-down"}
+                  size={16}
+                  color={colors.mutedForeground}
+                />
+              </Pressable>
+              {versions.length >= 2 ? (
+                <Pressable
+                  onPress={() => {
+                    setCompareMode((m) => !m);
+                    setCompareIds([]);
+                    if (!historyOpen) setHistoryOpen(true);
+                  }}
+                  hitSlop={8}
+                  style={({ pressed }) => [
+                    styles.compareModeButton,
+                    {
+                      borderColor: compareMode ? colors.violet : colors.cardBorder,
+                      backgroundColor: compareMode
+                        ? `${colors.violet}22`
+                        : "transparent",
+                      opacity: pressed ? 0.7 : 1,
+                    },
                   ]}
+                  accessibilityLabel="Toggle compare mode"
+                  testID="button-toggle-compare-mode"
                 >
-                  {versions.length} versions on file — tap any to view it.
-                </Text>
-              </View>
-              <Feather
-                name={historyOpen ? "chevron-up" : "chevron-down"}
-                size={16}
-                color={colors.mutedForeground}
-              />
-            </Pressable>
+                  <Feather
+                    name="git-merge"
+                    size={12}
+                    color={compareMode ? colors.violet : colors.mutedForeground}
+                  />
+                  <Text
+                    style={[
+                      styles.compareModeText,
+                      {
+                        color: compareMode
+                          ? colors.violet
+                          : colors.mutedForeground,
+                      },
+                    ]}
+                  >
+                    Compare
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
             {historyOpen ? (
+              <>
+                {compareMode && compareIds.length === 2 ? (
+                  <View
+                    style={[
+                      styles.compareReadyBar,
+                      {
+                        borderTopColor: colors.cardBorder,
+                        backgroundColor: `${colors.violet}10`,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.compareReadyText,
+                        { color: colors.mutedForeground },
+                      ]}
+                    >
+                      2 versions selected
+                    </Text>
+                    <Pressable
+                      onPress={() => setCompareOpen(true)}
+                      hitSlop={8}
+                      style={({ pressed }) => [
+                        styles.compareGoButton,
+                        {
+                          backgroundColor: colors.violet,
+                          opacity: pressed ? 0.8 : 1,
+                        },
+                      ]}
+                      accessibilityLabel="Compare selected versions"
+                      testID="button-open-compare"
+                    >
+                      <Feather name="git-merge" size={12} color="white" />
+                      <Text style={styles.compareGoText}>Compare</Text>
+                    </Pressable>
+                  </View>
+                ) : compareMode ? (
+                  <View
+                    style={[
+                      styles.compareHintBar,
+                      {
+                        borderTopColor: colors.cardBorder,
+                        backgroundColor: `${colors.violet}08`,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.compareHintText,
+                        { color: colors.mutedForeground },
+                      ]}
+                    >
+                      {compareIds.length === 0
+                        ? "Tap 2 versions to compare"
+                        : "Tap 1 more version"}
+                    </Text>
+                  </View>
+                ) : null}
               <View
                 style={[styles.historyList, { borderTopColor: colors.cardBorder }]}
                 testID="list-versions"
@@ -913,8 +1017,10 @@ export default function AuditDetailScreen() {
                 {versions.map((v, idx) => {
                   const isLatest = idx === 0;
                   const isActive =
-                    (viewingVersionId == null && isLatest) ||
-                    viewingVersionId === v.id;
+                    !compareMode &&
+                    ((viewingVersionId == null && isLatest) ||
+                    viewingVersionId === v.id);
+                  const isSelected = compareMode && compareIds.includes(v.id);
                   const cs = v.changeSummary as
                     | ChangeSummary
                     | null
@@ -930,14 +1036,25 @@ export default function AuditDetailScreen() {
                   return (
                     <Pressable
                       key={v.id}
-                      onPress={() =>
-                        isLatest ? viewLatest() : viewVersion(v.id)
-                      }
+                      onPress={() => {
+                        if (compareMode) {
+                          setCompareIds((prev) => {
+                            if (prev.includes(v.id))
+                              return prev.filter((x) => x !== v.id);
+                            if (prev.length >= 2) return prev;
+                            return [...prev, v.id];
+                          });
+                        } else {
+                          isLatest ? viewLatest() : viewVersion(v.id);
+                        }
+                      }}
                       style={({ pressed }) => [
                         styles.versionRow,
                         {
                           borderTopColor: colors.cardBorder,
-                          backgroundColor: isActive
+                          backgroundColor: isSelected
+                            ? `${colors.violet}18`
+                            : isActive
                             ? `${colors.violet}10`
                             : pressed
                             ? `${colors.mutedForeground}10`
@@ -1036,15 +1153,26 @@ export default function AuditDetailScreen() {
                           {summaryLine}
                         </Text>
                       </View>
-                      <Feather
-                        name="chevron-right"
-                        size={14}
-                        color={colors.mutedForeground}
-                      />
+                      {compareMode ? (
+                        <Feather
+                          name={isSelected ? "check-square" : "square"}
+                          size={18}
+                          color={
+                            isSelected ? colors.violet : colors.mutedForeground
+                          }
+                        />
+                      ) : (
+                        <Feather
+                          name="chevron-right"
+                          size={14}
+                          color={colors.mutedForeground}
+                        />
+                      )}
                     </Pressable>
                   );
                 })}
               </View>
+            </>
             ) : null}
           </View>
         ) : null}
@@ -1192,6 +1320,328 @@ export default function AuditDetailScreen() {
           </ScrollView>
         </View>
       </Modal>
+
+      {/* ── Compare versions modal ── */}
+      {(() => {
+        if (!compareOpen || compareIds.length !== 2) return null;
+        const idA = compareIds[0]!;
+        const idB = compareIds[1]!;
+        const vA = versions.find((v: VersionEntry) => v.id === idA) ?? null;
+        const vB = versions.find((v: VersionEntry) => v.id === idB) ?? null;
+        if (!vA || !vB) return null;
+        const [olderV, newerV] =
+          new Date(vA.generatedAt) <= new Date(vB.generatedAt)
+            ? [vA, vB]
+            : [vB, vA];
+        return (
+          <CompareVersionsModal
+            visible={compareOpen}
+            onClose={() => setCompareOpen(false)}
+            versionA={olderV}
+            versionB={newerV}
+            topInset={topInset}
+            bottomInset={bottomInset}
+          />
+        );
+      })()}
+    </View>
+  );
+}
+
+function CompareVersionsModal({
+  visible,
+  onClose,
+  versionA,
+  versionB,
+  topInset,
+  bottomInset,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  versionA: VersionEntry;
+  versionB: VersionEntry;
+  topInset: number;
+  bottomInset: number;
+}) {
+  const colors = useColors();
+  const repA = versionA.report as ReportShape | undefined;
+  const repB = versionB.report as ReportShape | undefined;
+
+  const scoreA = versionA.readinessScore;
+  const scoreB = versionB.readinessScore;
+  const scoreDelta = scoreB - scoreA;
+
+  const strengthsDiff = computeDiff(repA?.strengths ?? [], repB?.strengths ?? []);
+  const risksDiff = computeDiff(repA?.risks ?? [], repB?.risks ?? []);
+  const bioA = repA?.rewrittenBio ?? null;
+  const bioB = repB?.rewrittenBio ?? null;
+
+  const scoreColorA =
+    scoreA >= 75 ? colors.success : scoreA >= 55 ? colors.gold : colors.rose;
+  const scoreColorB =
+    scoreB >= 75 ? colors.success : scoreB >= 55 ? colors.gold : colors.rose;
+  const deltaTint =
+    scoreDelta > 0 ? colors.success : scoreDelta < 0 ? colors.rose : colors.mutedForeground;
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+      transparent={false}
+    >
+      <View style={[styles.root, { backgroundColor: colors.background }]}>
+        <View
+          style={[
+            styles.modalHeader,
+            {
+              paddingTop: Platform.OS === "web" ? 16 : topInset,
+              borderBottomColor: colors.cardBorder,
+            },
+          ]}
+        >
+          <View style={styles.modalHeaderText}>
+            <Text style={[styles.modalTitle, { color: colors.foreground }]}>
+              Version comparison
+            </Text>
+            <Text
+              style={[styles.modalSubtitle, { color: colors.mutedForeground }]}
+            >
+              {formatGeneratedAt(versionA.generatedAt)} → {formatGeneratedAt(versionB.generatedAt)}
+            </Text>
+          </View>
+          <Pressable
+            onPress={onClose}
+            hitSlop={12}
+            accessibilityLabel="Close comparison"
+            testID="button-close-compare"
+            style={({ pressed }) => [
+              styles.modalClose,
+              { opacity: pressed ? 0.6 : 1 },
+            ]}
+          >
+            <Feather name="x" size={22} color={colors.foreground} />
+          </Pressable>
+        </View>
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: bottomInset, paddingTop: 12 },
+          ]}
+          testID="compare-version-content"
+        >
+          {/* Score section */}
+          <View
+            style={[
+              styles.compareSection,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+            testID="compare-score-section"
+          >
+            <Text style={[styles.compareSectionTitle, { color: colors.mutedForeground }]}>
+              SIGNAL SCORE
+            </Text>
+            <View style={styles.compareScoreRow}>
+              <View style={styles.compareScoreCol} testID="compare-score-a">
+                <Text
+                  style={[
+                    styles.compareSectionSubLabel,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  {formatGeneratedAt(versionA.generatedAt)}
+                </Text>
+                <Text style={[styles.compareScoreNum, { color: scoreColorA }]}>
+                  {scoreA}
+                </Text>
+              </View>
+              <Feather name="arrow-right" size={18} color={colors.mutedForeground} />
+              <View style={styles.compareScoreCol} testID="compare-score-b">
+                <Text
+                  style={[
+                    styles.compareSectionSubLabel,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  {formatGeneratedAt(versionB.generatedAt)}
+                </Text>
+                <Text style={[styles.compareScoreNum, { color: scoreColorB }]}>
+                  {scoreB}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.versionPill,
+                  {
+                    backgroundColor: `${deltaTint}22`,
+                    borderColor: deltaTint,
+                    marginLeft: "auto",
+                  },
+                ]}
+                testID="compare-score-delta"
+              >
+                {scoreDelta !== 0 ? (
+                  <Feather
+                    name={scoreDelta > 0 ? "arrow-up" : "arrow-down"}
+                    size={10}
+                    color={deltaTint}
+                  />
+                ) : null}
+                <Text style={[styles.versionPillText, { color: deltaTint }]}>
+                  {scoreDelta === 0
+                    ? "No change"
+                    : `${scoreDelta > 0 ? "+" : ""}${scoreDelta} pts`}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Strengths diff */}
+          <View
+            style={[
+              styles.compareSection,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+            testID="compare-strengths-section"
+          >
+            <Text style={[styles.compareSectionTitle, { color: colors.violet }]}>
+              STRENGTHS
+            </Text>
+            {strengthsDiff.length > 0 ? (
+              strengthsDiff.map((item, i) => (
+                <CompareDiffItem key={`cs-${i}`} item={item} />
+              ))
+            ) : (
+              <Text style={[styles.body, { color: colors.mutedForeground }]}>
+                No strength data for these versions.
+              </Text>
+            )}
+          </View>
+
+          {/* Risks diff */}
+          <View
+            style={[
+              styles.compareSection,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+            testID="compare-risks-section"
+          >
+            <Text style={[styles.compareSectionTitle, { color: colors.gold }]}>
+              RISKS
+            </Text>
+            {risksDiff.length > 0 ? (
+              risksDiff.map((item, i) => (
+                <CompareDiffItem key={`cr-${i}`} item={item} />
+              ))
+            ) : (
+              <Text style={[styles.body, { color: colors.mutedForeground }]}>
+                No risk data for these versions.
+              </Text>
+            )}
+          </View>
+
+          {/* Bio */}
+          {(bioA || bioB) ? (
+            <>
+              <View
+                style={[
+                  styles.compareSection,
+                  { backgroundColor: colors.card, borderColor: colors.cardBorder },
+                ]}
+                testID="compare-bio-section"
+              >
+                <Text
+                  style={[
+                    styles.compareSectionTitle,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  REWRITTEN BIO — {formatGeneratedAt(versionA.generatedAt).toUpperCase()}
+                </Text>
+                <Text style={[styles.body, { color: colors.mutedForeground }]} testID="compare-bio-a">
+                  {bioA ?? "No bio data"}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.compareSection,
+                  {
+                    backgroundColor: `${colors.violet}08`,
+                    borderColor: colors.violet,
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.compareSectionTitle, { color: colors.violet }]}
+                >
+                  REWRITTEN BIO — {formatGeneratedAt(versionB.generatedAt).toUpperCase()}
+                </Text>
+                <Text style={[styles.body, { color: colors.foreground }]} testID="compare-bio-b">
+                  {bioB ?? "No bio data"}
+                </Text>
+              </View>
+            </>
+          ) : null}
+
+          {/* Legend */}
+          <View style={styles.compareLegend}>
+            <View style={styles.compareLegendItem}>
+              <Feather name="plus" size={12} color={colors.success} />
+              <Text style={[styles.compareLegendText, { color: colors.mutedForeground }]}>Added</Text>
+            </View>
+            <View style={styles.compareLegendItem}>
+              <Feather name="minus" size={12} color={colors.rose} />
+              <Text style={[styles.compareLegendText, { color: colors.mutedForeground }]}>Removed</Text>
+            </View>
+            <View style={styles.compareLegendItem}>
+              <Text style={{ color: colors.mutedForeground, opacity: 0.4 }}>·</Text>
+              <Text style={[styles.compareLegendText, { color: colors.mutedForeground }]}>Unchanged</Text>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}
+
+type DiffItem = { text: string; status: "added" | "removed" | "kept" };
+
+function computeDiff(a: string[], b: string[]): DiffItem[] {
+  const setA = new Set(a);
+  const setB = new Set(b);
+  const all = Array.from(new Set([...a, ...b]));
+  return all.map((text) => {
+    if (setA.has(text) && setB.has(text)) return { text, status: "kept" as const };
+    if (!setA.has(text) && setB.has(text)) return { text, status: "added" as const };
+    return { text, status: "removed" as const };
+  });
+}
+
+function CompareDiffItem({ item }: { item: DiffItem }) {
+  const colors = useColors();
+  if (item.status === "added") {
+    return (
+      <View style={styles.changeLine} testID="diff-item-added">
+        <Feather name="plus" size={12} color={colors.success} style={styles.changeIcon} />
+        <Text style={[styles.compareItemText, { color: colors.success }]}>{item.text}</Text>
+      </View>
+    );
+  }
+  if (item.status === "removed") {
+    return (
+      <View style={styles.changeLine} testID="diff-item-removed">
+        <Feather name="minus" size={12} color={colors.rose} style={styles.changeIcon} />
+        <Text style={[styles.compareItemText, styles.strikethrough, { color: colors.mutedForeground }]}>
+          {item.text}
+        </Text>
+      </View>
+    );
+  }
+  return (
+    <View style={styles.changeLine} testID="diff-item-kept">
+      <Text style={[styles.changeIcon, { color: colors.mutedForeground, opacity: 0.3 }]}>·</Text>
+      <Text style={[styles.compareItemText, { color: colors.mutedForeground }]}>{item.text}</Text>
     </View>
   );
 }
@@ -1814,6 +2264,11 @@ const styles = StyleSheet.create({
   historyHeader: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  historyHeaderPressable: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -1826,6 +2281,111 @@ const styles = StyleSheet.create({
   historySubtitle: {
     fontSize: 11,
     fontFamily: "PlusJakartaSans_500Medium",
+  },
+  compareModeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginRight: 10,
+  },
+  compareModeText: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.3,
+  },
+  compareReadyBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  compareReadyText: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  compareGoButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  compareGoText: {
+    color: "white",
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.3,
+  },
+  compareHintBar: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderTopWidth: 1,
+  },
+  compareHintText: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  compareSection: {
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 14,
+    gap: 8,
+  },
+  compareSectionTitle: {
+    fontSize: 10,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.7,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  compareSectionSubLabel: {
+    fontSize: 10,
+    fontFamily: "PlusJakartaSans_500Medium",
+    marginBottom: 2,
+  },
+  compareScoreRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+  compareScoreCol: {
+    alignItems: "center",
+    gap: 2,
+  },
+  compareScoreNum: {
+    fontSize: 36,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  compareLegend: {
+    flexDirection: "row",
+    gap: 14,
+    flexWrap: "wrap",
+    paddingTop: 4,
+  },
+  compareLegendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  compareLegendText: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  compareItemText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 18,
   },
   historyList: { borderTopWidth: 1 },
   versionRow: {

@@ -12,8 +12,9 @@ import {
   CheckCircle, XCircle, AlertCircle, ArrowRight, Copy, Check,
   Trophy, Calendar, Eye, Sparkles, MessageSquare, Camera,
   TrendingUp, Lightbulb, Heart, Zap, RefreshCw, Plus, Minus, ArrowUp, ArrowDown,
-  History, ChevronDown, ChevronUp
+  History, ChevronDown, ChevronUp, GitCompare, CheckSquare, Square
 } from "lucide-react";
+import { CompareVersionsDialog } from "@/components/CompareVersionsDialog";
 
 type ChangeSummary = {
   scoreDelta: number;
@@ -266,6 +267,9 @@ export default function Report() {
   const [viewingVersionId, setViewingVersionId] = useState<number | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [showPrevious, setShowPrevious] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareIds, setCompareIds] = useState<number[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
 
   const versionsQuery = useListAuditReportVersions(auditId, {
     query: { enabled: !!auditId, queryKey: getListAuditReportVersionsQueryKey(auditId) },
@@ -523,97 +527,165 @@ export default function Report() {
               className="glass border border-white/8 rounded-3xl"
               data-testid="card-regeneration-history"
             >
-              <button
-                type="button"
-                onClick={() => setHistoryOpen((o) => !o)}
-                className="w-full flex items-center gap-2.5 p-5 text-left"
-                data-testid="button-toggle-history"
-                aria-expanded={historyOpen}
-              >
-                <History className="w-5 h-5 text-[hsl(268_52%_72%)]" />
-                <div className="flex-1">
-                  <h2 className="text-base font-bold text-foreground">Regeneration history</h2>
-                  <p className="text-xs text-muted-foreground">
-                    {versions.length} version{versions.length === 1 ? "" : "s"} on file — tap any to view it.
-                  </p>
-                </div>
-                {historyOpen ? (
-                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                )}
-              </button>
+              <div className="flex items-center gap-2.5 p-5">
+                <button
+                  type="button"
+                  onClick={() => setHistoryOpen((o) => !o)}
+                  className="flex items-center gap-2.5 flex-1 text-left"
+                  data-testid="button-toggle-history"
+                  aria-expanded={historyOpen}
+                >
+                  <History className="w-5 h-5 text-[hsl(268_52%_72%)]" />
+                  <div className="flex-1">
+                    <h2 className="text-base font-bold text-foreground">Regeneration history</h2>
+                    <p className="text-xs text-muted-foreground">
+                      {versions.length} version{versions.length === 1 ? "" : "s"} on file
+                      {compareMode ? " — pick 2 to compare" : " — tap any to view it"}
+                    </p>
+                  </div>
+                  {historyOpen ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  )}
+                </button>
+                {versions.length >= 2 ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCompareMode((m) => !m);
+                      setCompareIds([]);
+                      if (!historyOpen) setHistoryOpen(true);
+                    }}
+                    className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors flex-shrink-0 ${
+                      compareMode
+                        ? "border-[hsl(268_52%_68%/0.5)] text-[hsl(268_60%_78%)] bg-[hsl(268_52%_68%/0.18)]"
+                        : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 bg-white/4"
+                    }`}
+                    data-testid="button-toggle-compare-mode"
+                  >
+                    <GitCompare className="w-3.5 h-3.5" />
+                    Compare
+                  </button>
+                ) : null}
+              </div>
               {historyOpen ? (
-                <ol className="border-t border-white/8 divide-y divide-white/8" data-testid="list-versions">
-                  {versions.map((v, idx) => {
-                    const isLatest = idx === 0;
-                    const isActive =
-                      (viewingVersionId == null && isLatest) || viewingVersionId === v.id;
-                    const cs = v.changeSummary as ChangeSummary | null | undefined;
-                    const delta = cs?.scoreDelta ?? null;
-                    return (
-                      <li key={v.id} data-testid={`version-row-${v.id}`}>
-                        <button
-                          type="button"
-                          onClick={() => (isLatest ? viewLatest() : viewVersion(v.id))}
-                          className={`w-full flex items-start gap-3 p-4 text-left hover:bg-white/5 transition-colors ${
-                            isActive ? "bg-[hsl(268_52%_68%/0.06)]" : ""
-                          }`}
-                          data-testid={`button-view-version-${v.id}`}
-                        >
-                          <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 tabular-nums"
-                            style={{
-                              background:
-                                v.readinessScore >= 75
-                                  ? "hsl(142 55% 60% / 0.18)"
-                                  : v.readinessScore >= 55
-                                  ? "hsl(43 65% 65% / 0.18)"
-                                  : "hsl(348 55% 65% / 0.18)",
-                              color:
-                                v.readinessScore >= 75
-                                  ? "hsl(142 55% 70%)"
-                                  : v.readinessScore >= 55
-                                  ? "hsl(43 75% 72%)"
-                                  : "hsl(348 55% 75%)",
+                <>
+                  {compareMode && compareIds.length === 2 ? (
+                    <div className="border-t border-white/8 px-4 py-3 flex items-center justify-between gap-3 flex-wrap bg-[hsl(268_52%_68%/0.06)]">
+                      <p className="text-xs text-muted-foreground">
+                        2 versions selected — ready to compare
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setCompareOpen(true)}
+                        className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] text-white border-0 hover:opacity-90 transition-opacity"
+                        data-testid="button-open-compare"
+                      >
+                        <GitCompare className="w-3.5 h-3.5" />
+                        Compare these versions
+                      </button>
+                    </div>
+                  ) : compareMode ? (
+                    <div className="border-t border-white/8 px-4 py-2.5 bg-[hsl(268_52%_68%/0.04)]">
+                      <p className="text-xs text-muted-foreground">
+                        {compareIds.length === 0
+                          ? "Select 2 versions to compare"
+                          : "Select 1 more version"}
+                      </p>
+                    </div>
+                  ) : null}
+                  <ol className="border-t border-white/8 divide-y divide-white/8" data-testid="list-versions">
+                    {versions.map((v, idx) => {
+                      const isLatest = idx === 0;
+                      const isActive =
+                        !compareMode && ((viewingVersionId == null && isLatest) || viewingVersionId === v.id);
+                      const isSelected = compareMode && compareIds.includes(v.id);
+                      const cs = v.changeSummary as ChangeSummary | null | undefined;
+                      const delta = cs?.scoreDelta ?? null;
+                      return (
+                        <li key={v.id} data-testid={`version-row-${v.id}`}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (compareMode) {
+                                setCompareIds((prev) => {
+                                  if (prev.includes(v.id)) return prev.filter((x) => x !== v.id);
+                                  if (prev.length >= 2) return prev;
+                                  return [...prev, v.id];
+                                });
+                              } else {
+                                isLatest ? viewLatest() : viewVersion(v.id);
+                              }
                             }}
+                            className={`w-full flex items-start gap-3 p-4 text-left hover:bg-white/5 transition-colors ${
+                              isActive ? "bg-[hsl(268_52%_68%/0.06)]" : ""
+                            } ${isSelected ? "bg-[hsl(268_52%_68%/0.1)]" : ""}`}
+                            data-testid={`button-view-version-${v.id}`}
                           >
-                            {v.readinessScore}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="text-sm font-semibold text-foreground" data-testid={`text-version-time-${v.id}`}>
-                                {formatGeneratedAt(v.generatedAt)}
-                              </p>
-                              {isLatest ? (
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(142_55%_60%/0.14)] text-[hsl(142_55%_70%)] border border-[hsl(142_55%_60%/0.3)]">
-                                  Latest
-                                </span>
-                              ) : null}
-                              {delta !== null && delta !== 0 ? (
-                                <span
-                                  className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                    delta > 0
-                                      ? "bg-[hsl(142_55%_60%/0.15)] text-[hsl(142_55%_70%)] border border-[hsl(142_55%_60%/0.3)]"
-                                      : "bg-[hsl(348_55%_65%/0.15)] text-[hsl(348_55%_75%)] border border-[hsl(348_55%_65%/0.3)]"
-                                  }`}
-                                  data-testid={`badge-version-delta-${v.id}`}
-                                >
-                                  {delta > 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                                  {delta > 0 ? "+" : ""}{delta}
-                                </span>
-                              ) : null}
+                            {compareMode ? (
+                              <div className="w-5 h-5 flex-shrink-0 mt-2.5 text-[hsl(268_52%_72%)]">
+                                {isSelected
+                                  ? <CheckSquare className="w-5 h-5" />
+                                  : <Square className="w-5 h-5 text-muted-foreground" />}
+                              </div>
+                            ) : null}
+                            <div
+                              className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 tabular-nums"
+                              style={{
+                                background:
+                                  v.readinessScore >= 75
+                                    ? "hsl(142 55% 60% / 0.18)"
+                                    : v.readinessScore >= 55
+                                    ? "hsl(43 65% 65% / 0.18)"
+                                    : "hsl(348 55% 65% / 0.18)",
+                                color:
+                                  v.readinessScore >= 75
+                                    ? "hsl(142 55% 70%)"
+                                    : v.readinessScore >= 55
+                                    ? "hsl(43 75% 72%)"
+                                    : "hsl(348 55% 75%)",
+                              }}
+                            >
+                              {v.readinessScore}
                             </div>
-                            <p className="text-xs text-muted-foreground mt-0.5" data-testid={`text-version-summary-${v.id}`}>
-                              {summarizeVersion(v, idx, versions.length)}
-                            </p>
-                          </div>
-                          <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-2" />
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ol>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-sm font-semibold text-foreground" data-testid={`text-version-time-${v.id}`}>
+                                  {formatGeneratedAt(v.generatedAt)}
+                                </p>
+                                {isLatest ? (
+                                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(142_55%_60%/0.14)] text-[hsl(142_55%_70%)] border border-[hsl(142_55%_60%/0.3)]">
+                                    Latest
+                                  </span>
+                                ) : null}
+                                {delta !== null && delta !== 0 ? (
+                                  <span
+                                    className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                      delta > 0
+                                        ? "bg-[hsl(142_55%_60%/0.15)] text-[hsl(142_55%_70%)] border border-[hsl(142_55%_60%/0.3)]"
+                                        : "bg-[hsl(348_55%_65%/0.15)] text-[hsl(348_55%_75%)] border border-[hsl(348_55%_65%/0.3)]"
+                                    }`}
+                                    data-testid={`badge-version-delta-${v.id}`}
+                                  >
+                                    {delta > 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                                    {delta > 0 ? "+" : ""}{delta}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5" data-testid={`text-version-summary-${v.id}`}>
+                                {summarizeVersion(v, idx, versions.length)}
+                              </p>
+                            </div>
+                            {!compareMode ? (
+                              <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-2" />
+                            ) : null}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </>
               ) : null}
             </motion.div>
           ) : null}
@@ -1032,6 +1104,27 @@ export default function Report() {
           </motion.div>
         </div>
       </div>
+
+      {/* ── Compare versions dialog ── */}
+      {compareOpen && compareIds.length === 2 ? (() => {
+        const idA = compareIds[0]!;
+        const idB = compareIds[1]!;
+        const vA = versions.find((v: VersionEntry) => v.id === idA) ?? null;
+        const vB = versions.find((v: VersionEntry) => v.id === idB) ?? null;
+        const [olderV, newerV] = vA && vB
+          ? new Date(vA.generatedAt) <= new Date(vB.generatedAt)
+            ? [vA, vB]
+            : [vB, vA]
+          : [vA, vB];
+        return (
+          <CompareVersionsDialog
+            open={compareOpen}
+            onOpenChange={setCompareOpen}
+            versionA={olderV}
+            versionB={newerV}
+          />
+        );
+      })() : null}
 
       <Dialog open={showPrevious} onOpenChange={setShowPrevious}>
         <DialogContent
