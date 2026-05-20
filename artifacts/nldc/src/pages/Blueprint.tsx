@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, MapPin, RefreshCw, AlertCircle, Copy, Check } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
+import { blueprintSchema, parseAiJson, type BlueprintOutput } from "@/lib/aiSchemas";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -31,15 +32,7 @@ const WANTS = [
   "Still figuring it out",
 ];
 
-interface BlueprintResult {
-  firstImpression: string;
-  repeatingPattern: string;
-  communicationStyle: string;
-  attractionPattern: string;
-  comfortNeeds: string;
-  riskLoop: string;
-  growthEdge: string;
-}
+type BlueprintResult = BlueprintOutput;
 
 function analyzeBlueprint(text: string, pattern: string, misread: string, want: string): BlueprintResult {
   const lower = text.toLowerCase();
@@ -173,31 +166,6 @@ export default function Blueprint() {
   const enhance = useEnhanceAi();
   const loading = enhance.isPending;
 
-  const BLUEPRINT_KEYS: (keyof BlueprintResult)[] = [
-    "firstImpression",
-    "repeatingPattern",
-    "communicationStyle",
-    "attractionPattern",
-    "comfortNeeds",
-    "riskLoop",
-    "growthEdge",
-  ];
-
-  function tryParseBlueprint(raw: string): BlueprintResult | null {
-    try {
-      const parsed = JSON.parse(raw) as Record<string, unknown>;
-      const out: Partial<BlueprintResult> = {};
-      for (const k of BLUEPRINT_KEYS) {
-        const v = parsed[k];
-        if (typeof v !== "string" || v.trim().length < 20) return null;
-        out[k] = v.trim();
-      }
-      return out as BlueprintResult;
-    } catch {
-      return null;
-    }
-  }
-
   async function handleAnalyze() {
     if (!text.trim()) return;
     const deterministic = analyzeBlueprint(text, pattern, misread, want);
@@ -225,7 +193,7 @@ export default function Blueprint() {
         setResult(deterministic);
         return;
       }
-      const parsed = tryParseBlueprint(ai.output);
+      const parsed = parseAiJson(blueprintSchema, ai.output);
       setResult(parsed ?? deterministic);
     } catch {
       setResult(deterministic);

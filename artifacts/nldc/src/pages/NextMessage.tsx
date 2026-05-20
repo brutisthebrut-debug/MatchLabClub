@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, MessageCircle, Copy, Check, RefreshCw, AlertCircle } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
+import { nextMessageSchema, parseAiJson } from "@/lib/aiSchemas";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -174,28 +175,20 @@ export default function NextMessage() {
   const loading = enhance.isPending;
 
   function tryParseNextMessage(raw: string, deterministic: NextMessageResult): NextMessageResult | null {
-    try {
-      const parsed = JSON.parse(raw) as {
-        options?: Array<{ style?: unknown; text?: unknown; when?: unknown }>;
-        coachNote?: unknown;
+    const parsed = parseAiJson(nextMessageSchema, raw);
+    if (!parsed) return null;
+    const palette = deterministic.options;
+    const options: MessageOption[] = parsed.options.map((o, i) => {
+      const fallback = palette[i] ?? palette[0];
+      return {
+        style: o.style,
+        text: o.text,
+        when: o.when || fallback.when,
+        color: fallback.color,
+        bg: fallback.bg,
       };
-      if (!Array.isArray(parsed.options) || parsed.options.length < 3) return null;
-      const palette = deterministic.options;
-      const options: MessageOption[] = parsed.options.slice(0, 7).map((o, i) => {
-        const style = typeof o.style === "string" && o.style.trim() ? o.style.trim() : palette[i]?.style ?? "Option";
-        const text = typeof o.text === "string" ? o.text.trim() : "";
-        const when = typeof o.when === "string" && o.when.trim() ? o.when.trim() : palette[i]?.when ?? "";
-        if (!text) throw new Error("missing text");
-        const fallback = palette[i] ?? palette[0];
-        return { style, text, when, color: fallback.color, bg: fallback.bg };
-      });
-      const coachNote = typeof parsed.coachNote === "string" && parsed.coachNote.trim()
-        ? parsed.coachNote.trim()
-        : deterministic.coachNote;
-      return { options, coachNote };
-    } catch {
-      return null;
-    }
+    });
+    return { options, coachNote: parsed.coachNote };
   }
 
   async function handleGenerate() {
