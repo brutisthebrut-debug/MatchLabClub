@@ -104,6 +104,7 @@ function Router() {
       </Route>
       <Route path="/founder" component={Founder} />
       <Route path="/partners/shebangs" component={ShebangsPartner} />
+      <Route path="/partner" component={ShebangsPartner} />
       {/* New coaching modules */}
       <Route path="/blueprint" component={Blueprint} />
       <Route path="/mirror" component={MirrorProfile} />

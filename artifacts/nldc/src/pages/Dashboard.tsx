@@ -838,6 +838,15 @@ export default function Dashboard() {
 
           {/* Signal Score + History */}
           {!isBrandNewUser && (<>
+          {showDemo && (
+            <motion.div {...fadeUp(0.06)} className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-white/3 border border-white/8 mb-4">
+              <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                <span className="w-1.5 h-1.5 rounded-full bg-[hsl(43_65%_65%)] inline-block flex-shrink-0" />
+                <span>You're looking at <strong className="text-foreground/70">sample data</strong> — your real score appears after your first Signal Audit.</span>
+              </div>
+              <Link href="/signal-check" className="text-xs font-semibold text-[hsl(268_52%_68%)] hover:text-[hsl(268_52%_78%)] transition-colors whitespace-nowrap flex-shrink-0">Get my score →</Link>
+            </motion.div>
+          )}
           <div className="grid md:grid-cols-3 gap-5 mb-5">
             {/* Score Card */}
             <motion.div {...fadeUp(0.07)}
@@ -863,7 +872,10 @@ export default function Dashboard() {
             <motion.div {...fadeUp(0.1)} className="glass border border-white/8 rounded-3xl p-5 md:col-span-2">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="font-semibold text-foreground text-sm">Score History</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-foreground text-sm">Score History</p>
+                    {showDemo && <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-muted-foreground/50">Sample</span>}
+                  </div>
                   <p className="text-xs text-muted-foreground mt-0.5">Your progress over time</p>
                 </div>
                 {scoreDelta > 0 && (
