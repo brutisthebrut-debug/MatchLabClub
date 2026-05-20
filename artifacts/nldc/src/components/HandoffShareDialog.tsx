@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Smartphone, Copy, Check, Loader2 } from "lucide-react";
+import QRCode from "qrcode";
 import { useIssueAnonymousClaimHandoff } from "@workspace/api-client-react";
 import {
   Dialog,
@@ -28,7 +29,31 @@ export function HandoffShareDialog() {
   const [open, setOpen] = useState(false);
   const [issued, setIssued] = useState<IssuedLink | null>(null);
   const [copied, setCopied] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const issue = useIssueAnonymousClaimHandoff();
+
+  useEffect(() => {
+    if (!issued) {
+      setQrDataUrl(null);
+      return;
+    }
+    let cancelled = false;
+    QRCode.toDataURL(issued.url, {
+      errorCorrectionLevel: "M",
+      margin: 1,
+      width: 192,
+      color: { dark: "#0f172a", light: "#ffffff" },
+    })
+      .then((url) => {
+        if (!cancelled) setQrDataUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrDataUrl(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [issued]);
 
   async function handleOpenChange(next: boolean): Promise<void> {
     setOpen(next);
@@ -104,6 +129,30 @@ export function HandoffShareDialog() {
 
         {issued && (
           <div className="space-y-3">
+            <div className="flex justify-center">
+              <div
+                className="rounded-lg bg-white p-3"
+                data-testid="handoff-qr"
+                aria-label="QR code for the continue-on-another-device link"
+              >
+                {qrDataUrl ? (
+                  <img
+                    src={qrDataUrl}
+                    alt="QR code"
+                    width={192}
+                    height={192}
+                    className="block h-48 w-48"
+                  />
+                ) : (
+                  <div className="flex h-48 w-48 items-center justify-center text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  </div>
+                )}
+              </div>
+            </div>
+            <p className="text-center text-[11px] text-muted-foreground">
+              Point your phone camera at the code, or copy the link below.
+            </p>
             <div
               className="rounded-lg border border-white/10 bg-background/60 p-3 break-all text-xs font-mono"
               data-testid="handoff-url"
