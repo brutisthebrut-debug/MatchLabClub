@@ -206,14 +206,20 @@ export async function pruneOldAiMetrics(
  *
  * Pass `toolNames` to restrict both rollup and prune to specific tools.
  * Production callers omit it; tests pass their unique names.
+ *
+ * Pass `jobName` to write the heartbeat under a different key.
+ * Production callers omit it (uses `AI_METRICS_ROLLUP_JOB`); tests pass a
+ * unique per-test key so parallel workers never share the same heartbeat row.
  */
 export async function rollupThenPruneAiMetrics(options?: {
   toolNames?: readonly string[];
+  jobName?: string;
 }): Promise<{
   rolledUp: number;
   pruned: number;
   skippedPrune: boolean;
 }> {
+  const heartbeatJobName = options?.jobName ?? AI_METRICS_ROLLUP_JOB;
   let rolledUp: number;
   try {
     rolledUp = await rollupOldAiMetrics(options);
@@ -225,7 +231,7 @@ export async function rollupThenPruneAiMetrics(options?: {
     return { rolledUp: 0, pruned: 0, skippedPrune: true };
   }
   const pruned = await pruneOldAiMetrics(getRetentionDays(), options);
-  await recordJobHeartbeat(AI_METRICS_ROLLUP_JOB);
+  await recordJobHeartbeat(heartbeatJobName);
   return { rolledUp, pruned, skippedPrune: false };
 }
 

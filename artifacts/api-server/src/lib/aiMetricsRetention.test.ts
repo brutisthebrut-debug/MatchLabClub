@@ -30,10 +30,17 @@ interface SeedRow {
 }
 
 const usedToolNames: string[] = [];
+const usedHeartbeatJobNames: string[] = [];
 
 function uniqueTool(label: string): string {
   const name = `retention-${label}-${crypto.randomBytes(6).toString("hex")}`;
   usedToolNames.push(name);
+  return name;
+}
+
+function uniqueHeartbeatJob(label: string): string {
+  const name = `test-rollup-${label}-${crypto.randomBytes(6).toString("hex")}`;
+  usedHeartbeatJobNames.push(name);
   return name;
 }
 
@@ -65,18 +72,23 @@ function dayString(daysAgo: number): string {
 }
 
 async function clearOwnRows(): Promise<void> {
-  if (usedToolNames.length === 0) return;
-  const names = [...usedToolNames];
-  await db
-    .delete(aiRequestMetricsTable)
-    .where(inArray(aiRequestMetricsTable.toolName, names));
-  await db
-    .delete(aiRequestMetricsDailyTable)
-    .where(inArray(aiRequestMetricsDailyTable.toolName, names));
+  const toolNames = [...usedToolNames];
+  const heartbeatJobNames = [...usedHeartbeatJobNames, AI_METRICS_ROLLUP_JOB];
+
+  if (toolNames.length > 0) {
+    await db
+      .delete(aiRequestMetricsTable)
+      .where(inArray(aiRequestMetricsTable.toolName, toolNames));
+    await db
+      .delete(aiRequestMetricsDailyTable)
+      .where(inArray(aiRequestMetricsDailyTable.toolName, toolNames));
+  }
   await db
     .delete(jobHeartbeatsTable)
-    .where(eq(jobHeartbeatsTable.jobName, AI_METRICS_ROLLUP_JOB));
+    .where(inArray(jobHeartbeatsTable.jobName, heartbeatJobNames));
+
   usedToolNames.length = 0;
+  usedHeartbeatJobNames.length = 0;
 }
 
 async function makeTrendsApp(): Promise<Express> {
@@ -236,12 +248,13 @@ describe("rollupThenPruneAiMetrics", () => {
   it("rollupThenPruneAiMetrics returns expected counts and skips prune-on-failure semantics", async () => {
     const auditTool = uniqueTool("audit-engine");
     const toolNames = [auditTool] as const;
+    const jobName = uniqueHeartbeatJob("counts");
 
     await seedRaw([
       { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(40, 1) },
       { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(2, 1) },
     ]);
-    const result = await rollupThenPruneAiMetrics({ toolNames });
+    const result = await rollupThenPruneAiMetrics({ toolNames, jobName });
     expect(result.skippedPrune).toBe(false);
     expect(result.rolledUp).toBeGreaterThanOrEqual(2);
     expect(result.pruned).toBe(1);
@@ -305,6 +318,7 @@ describe("rollupThenPruneAiMetrics", () => {
     const auditTool = uniqueTool("audit-engine");
     const coachTool = uniqueTool("message-coach");
     const toolNames = [auditTool, coachTool] as const;
+    const jobName = uniqueHeartbeatJob("trends");
 
     await seedRaw([
       { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(3, 1), durationMs: 100 },
@@ -312,7 +326,7 @@ describe("rollupThenPruneAiMetrics", () => {
       { toolName: auditTool, attempts: 3, isFallback: true, createdAt: dayOffsetUTC(3, 3), durationMs: 300 },
       { toolName: coachTool, attempts: 1, createdAt: dayOffsetUTC(2, 1), durationMs: 50 },
     ]);
-    await rollupThenPruneAiMetrics({ toolNames });
+    await rollupThenPruneAiMetrics({ toolNames, jobName });
 
     const app = await makeTrendsApp();
     const res = await request(app).get("/api/founder/ai-metrics/trends?days=30").set("x-founder-key", "nldc2024");
@@ -355,16 +369,17 @@ describe("rollupThenPruneAiMetrics", () => {
   it("rollupThenPruneAiMetrics records a heartbeat row on success", async () => {
     const auditTool = uniqueTool("audit-engine");
     const toolNames = [auditTool] as const;
+    const jobName = uniqueHeartbeatJob("heartbeat");
 
     await seedRaw([
       { toolName: auditTool, attempts: 1, createdAt: dayOffsetUTC(2, 1) },
     ]);
     const before = Date.now();
-    await rollupThenPruneAiMetrics({ toolNames });
+    await rollupThenPruneAiMetrics({ toolNames, jobName });
     const rows = await db
       .select()
       .from(jobHeartbeatsTable)
-      .where(eq(jobHeartbeatsTable.jobName, AI_METRICS_ROLLUP_JOB));
+      .where(eq(jobHeartbeatsTable.jobName, jobName));
     expect(rows).toHaveLength(1);
     const ts = rows[0].lastSuccessAt instanceof Date
       ? rows[0].lastSuccessAt.getTime()
