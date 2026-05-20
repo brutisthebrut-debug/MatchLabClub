@@ -205,6 +205,30 @@ export const updateAiThresholds = (founderKey: string, body: AiThresholdsUpdate)
     return res.json() as Promise<{ global: AiThresholdConfig; perTool: AiPerToolThreshold[] }>;
   });
 
+export interface AiThresholdChange {
+  id: number;
+  toolName: string;
+  action: string;
+  oldWindowSize: number | null;
+  oldMinSample: number | null;
+  oldFirstTrySuccessRate: number | null;
+  newWindowSize: number | null;
+  newMinSample: number | null;
+  newFirstTrySuccessRate: number | null;
+  createdAt: string;
+}
+export interface AiThresholdChangesResponse {
+  changes: AiThresholdChange[];
+}
+
+export const getAiThresholdChanges = (founderKey: string, limit = 10) =>
+  fetch(`${BASE}/founder/ai-threshold-changes?limit=${encodeURIComponent(String(limit))}`, {
+    headers: { "x-founder-key": founderKey },
+  }).then(async (res) => {
+    if (!res.ok) throw new Error(`GET /founder/ai-threshold-changes failed (${res.status})`);
+    return res.json() as Promise<AiThresholdChangesResponse>;
+  });
+
 export const getLeads = () =>
   get<Lead[]>("/leads");
 

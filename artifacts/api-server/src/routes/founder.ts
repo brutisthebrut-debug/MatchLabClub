@@ -9,6 +9,7 @@ import {
   aiRequestMetricsTable,
   aiRequestMetricsDailyTable,
   aiAlertThresholdsTable,
+  aiAlertThresholdChangesTable,
   AI_ALERT_GLOBAL_KEY,
 } from "@workspace/db";
 import { count, sql, desc, gte, asc, eq, isNotNull } from "drizzle-orm";
@@ -473,6 +474,31 @@ const putThresholdsSchema = z.object({
   removeToolNames: z.array(z.string().min(1).max(200)).optional(),
 });
 
+router.get("/founder/ai-threshold-changes", requireFounder, async (req, res): Promise<void> => {
+  const rawLimit = Number(req.query.limit);
+  const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(Math.floor(rawLimit), 100) : 10;
+  const rows = await db
+    .select()
+    .from(aiAlertThresholdChangesTable)
+    .orderBy(desc(aiAlertThresholdChangesTable.createdAt))
+    .limit(limit);
+  res.json({
+    changes: rows.map((r) => ({
+      id: r.id,
+      toolName: r.toolName,
+      action: r.action,
+      oldWindowSize: r.oldWindowSize,
+      oldMinSample: r.oldMinSample,
+      oldFirstTrySuccessRate: r.oldThreshold,
+      newWindowSize: r.newWindowSize,
+      newMinSample: r.newMinSample,
+      newFirstTrySuccessRate: r.newThreshold,
+      createdAt:
+        r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+    })),
+  });
+});
+
 router.put("/founder/ai-thresholds", requireFounder, async (req, res): Promise<void> => {
   const parsed = putThresholdsSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -481,56 +507,131 @@ router.put("/founder/ai-thresholds", requireFounder, async (req, res): Promise<v
   }
   const { global, perTool, resetGlobal, removeToolNames } = parsed.data;
 
+  const before = await loadThresholds();
+  const beforeFor = (name: string): ThresholdConfig | undefined => {
+    if (name === AI_ALERT_GLOBAL_KEY) return before.global;
+    return before.perTool.get(name);
+  };
+  const changeRows: Array<typeof aiAlertThresholdChangesTable.$inferInsert> = [];
+  const sameCfg = (a: ThresholdConfig, b: ThresholdConfig) =>
+    a.windowSize === b.windowSize && a.minSample === b.minSample && a.threshold === b.threshold;
+
   if (resetGlobal) {
+    const prev = beforeFor(AI_ALERT_GLOBAL_KEY);
     await db.delete(aiAlertThresholdsTable).where(eq(aiAlertThresholdsTable.toolName, AI_ALERT_GLOBAL_KEY));
+    if (prev) {
+      changeRows.push({
+        toolName: AI_ALERT_GLOBAL_KEY,
+        action: "reset",
+        oldWindowSize: prev.windowSize,
+        oldMinSample: prev.minSample,
+        oldThreshold: prev.threshold,
+        newWindowSize: null,
+        newMinSample: null,
+        newThreshold: null,
+      });
+    }
   } else if (global) {
+    const prev = beforeFor(AI_ALERT_GLOBAL_KEY);
+    const next: ThresholdConfig = {
+      windowSize: global.windowSize,
+      minSample: global.minSample,
+      threshold: global.firstTrySuccessRate,
+    };
     await db
       .insert(aiAlertThresholdsTable)
       .values({
         toolName: AI_ALERT_GLOBAL_KEY,
-        windowSize: global.windowSize,
-        minSample: global.minSample,
-        threshold: global.firstTrySuccessRate,
+        windowSize: next.windowSize,
+        minSample: next.minSample,
+        threshold: next.threshold,
       })
       .onConflictDoUpdate({
         target: aiAlertThresholdsTable.toolName,
         set: {
-          windowSize: global.windowSize,
-          minSample: global.minSample,
-          threshold: global.firstTrySuccessRate,
+          windowSize: next.windowSize,
+          minSample: next.minSample,
+          threshold: next.threshold,
           updatedAt: new Date(),
         },
       });
+    if (!prev || !sameCfg(prev, next)) {
+      changeRows.push({
+        toolName: AI_ALERT_GLOBAL_KEY,
+        action: prev ? "update" : "create",
+        oldWindowSize: prev?.windowSize ?? null,
+        oldMinSample: prev?.minSample ?? null,
+        oldThreshold: prev?.threshold ?? null,
+        newWindowSize: next.windowSize,
+        newMinSample: next.minSample,
+        newThreshold: next.threshold,
+      });
+    }
   }
 
   if (removeToolNames && removeToolNames.length > 0) {
     for (const name of removeToolNames) {
       if (name === AI_ALERT_GLOBAL_KEY) continue;
+      const prev = beforeFor(name);
       await db.delete(aiAlertThresholdsTable).where(eq(aiAlertThresholdsTable.toolName, name));
+      if (prev) {
+        changeRows.push({
+          toolName: name,
+          action: "remove",
+          oldWindowSize: prev.windowSize,
+          oldMinSample: prev.minSample,
+          oldThreshold: prev.threshold,
+          newWindowSize: null,
+          newMinSample: null,
+          newThreshold: null,
+        });
+      }
     }
   }
 
   if (perTool && perTool.length > 0) {
     for (const t of perTool) {
       if (t.toolName === AI_ALERT_GLOBAL_KEY) continue;
+      const prev = beforeFor(t.toolName);
+      const next: ThresholdConfig = {
+        windowSize: t.windowSize,
+        minSample: t.minSample,
+        threshold: t.firstTrySuccessRate,
+      };
       await db
         .insert(aiAlertThresholdsTable)
         .values({
           toolName: t.toolName,
-          windowSize: t.windowSize,
-          minSample: t.minSample,
-          threshold: t.firstTrySuccessRate,
+          windowSize: next.windowSize,
+          minSample: next.minSample,
+          threshold: next.threshold,
         })
         .onConflictDoUpdate({
           target: aiAlertThresholdsTable.toolName,
           set: {
-            windowSize: t.windowSize,
-            minSample: t.minSample,
-            threshold: t.firstTrySuccessRate,
+            windowSize: next.windowSize,
+            minSample: next.minSample,
+            threshold: next.threshold,
             updatedAt: new Date(),
           },
         });
+      if (!prev || !sameCfg(prev, next)) {
+        changeRows.push({
+          toolName: t.toolName,
+          action: prev ? "update" : "create",
+          oldWindowSize: prev?.windowSize ?? null,
+          oldMinSample: prev?.minSample ?? null,
+          oldThreshold: prev?.threshold ?? null,
+          newWindowSize: next.windowSize,
+          newMinSample: next.minSample,
+          newThreshold: next.threshold,
+        });
+      }
     }
+  }
+
+  if (changeRows.length > 0) {
+    await db.insert(aiAlertThresholdChangesTable).values(changeRows);
   }
 
   const { global: g, perTool: pt } = await loadThresholds();

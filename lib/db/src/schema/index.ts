@@ -9,6 +9,7 @@ export * from "./purchase_interest";
 export * from "./ai_metrics";
 export * from "./ai_tool_alert_state";
 export * from "./ai_alert_thresholds";
+export * from "./ai_alert_threshold_changes";
 export * from "./dataExportTokens";
 export * from "./handoffTokenRedemptions";
 export * from "./loginNotifications";

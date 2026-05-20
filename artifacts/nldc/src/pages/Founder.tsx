@@ -3,9 +3,10 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import {
   getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
-  getAiThresholds, updateAiThresholds, getAiMetricsTrends,
+  getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
-  type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse
+  type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
+  type AiThresholdChange
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
@@ -502,6 +503,108 @@ function AlertThresholdEditor({
   );
 }
 
+function formatRelativeTime(iso: string): string {
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return iso;
+  const diff = Date.now() - t;
+  if (diff < 0) return "just now";
+  const sec = Math.floor(diff / 1000);
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.floor(hr / 24);
+  if (day < 30) return `${day}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+function ThresholdChangeLog({ refreshKey }: { refreshKey: number }) {
+  const [changes, setChanges] = useState<AiThresholdChange[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setErr(null);
+    getAiThresholdChanges(FOUNDER_KEY, 10)
+      .then((r) => setChanges(r.changes))
+      .catch((e: unknown) => setErr(e instanceof Error ? e.message : "Failed to load"))
+      .finally(() => setLoading(false));
+  }, [refreshKey]);
+
+  const fmtCfg = (
+    w: number | null,
+    m: number | null,
+    r: number | null,
+  ): string => {
+    if (w === null && m === null && r === null) return "—";
+    const pct = r === null ? "—" : `${Math.round(r * 100)}%`;
+    return `${w ?? "—"} / ${m ?? "—"} / ${pct}`;
+  };
+
+  const actionColor = (a: string) => {
+    if (a === "remove" || a === "reset") return "hsl(348 55% 70%)";
+    if (a === "create") return "hsl(142 55% 65%)";
+    return "hsl(43 65% 70%)";
+  };
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/3 p-4 space-y-3 mt-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+          Recent threshold changes
+        </p>
+        {loading && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground/60" />}
+      </div>
+      {err && <p className="text-xs text-red-400">{err}</p>}
+      {!loading && !err && changes && changes.length === 0 && (
+        <p className="text-xs text-muted-foreground/60 italic">
+          No changes recorded yet — saved threshold edits will show up here.
+        </p>
+      )}
+      {changes && changes.length > 0 && (
+        <ul className="space-y-2">
+          {changes.map((c) => (
+            <li
+              key={c.id}
+              className="text-xs text-foreground/85 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-b border-white/5 pb-2 last:border-0 last:pb-0"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <span
+                  className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md border"
+                  style={{
+                    color: actionColor(c.action),
+                    borderColor: `${actionColor(c.action)}55`,
+                    background: `${actionColor(c.action)}14`,
+                  }}
+                >
+                  {c.action}
+                </span>
+                <span className="font-mono text-foreground/80 truncate" title={c.toolName}>
+                  {c.toolName === "__global__" ? "(global)" : c.toolName}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-muted-foreground/80 font-mono shrink-0">
+                <span title="window / min samples / threshold">
+                  {fmtCfg(c.oldWindowSize, c.oldMinSample, c.oldFirstTrySuccessRate)}
+                </span>
+                <span aria-hidden>→</span>
+                <span>
+                  {fmtCfg(c.newWindowSize, c.newMinSample, c.newFirstTrySuccessRate)}
+                </span>
+                <span className="text-muted-foreground/60 ml-2" title={c.createdAt}>
+                  {formatRelativeTime(c.createdAt)}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
   const [data, setData] = useState<AiMetricsResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -674,6 +777,8 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
           </div>
         </>
       )}
+
+      <ThresholdChangeLog refreshKey={bump + refreshKey} />
     </div>
   );
 }
