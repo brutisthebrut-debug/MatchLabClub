@@ -14,6 +14,11 @@ export interface MessageCoachingSession {
   yourLastMessage: string;
   /** @nullable */
   goal?: string | null;
+  /**
+     * Dating app the conversation came from (e.g. "Hinge", "Bumble", "Tinder").
+     * @nullable
+     */
+  sourceApp?: string | null;
   status: MessageCoachingSessionStatus;
   createdAt: string;
 }

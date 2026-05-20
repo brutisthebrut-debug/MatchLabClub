@@ -256,6 +256,7 @@ export const ExportMyDataResponse = zod.object({
   "conversationContext": zod.string(),
   "yourLastMessage": zod.string(),
   "goal": zod.string().nullish(),
+  "sourceApp": zod.string().nullish().describe('Dating app the conversation came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\").'),
   "status": zod.enum(['pending', 'complete']),
   "createdAt": zod.string()
 })),
@@ -393,6 +394,7 @@ export const DownloadEmailedExportResponse = zod.object({
   "conversationContext": zod.string(),
   "yourLastMessage": zod.string(),
   "goal": zod.string().nullish(),
+  "sourceApp": zod.string().nullish().describe('Dating app the conversation came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\").'),
   "status": zod.enum(['pending', 'complete']),
   "createdAt": zod.string()
 })),
@@ -854,6 +856,7 @@ export const ListMessageCoachingSessionsResponseItem = zod.object({
   "conversationContext": zod.string(),
   "yourLastMessage": zod.string(),
   "goal": zod.string().nullish(),
+  "sourceApp": zod.string().nullish().describe('Dating app the conversation came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\").'),
   "status": zod.enum(['pending', 'complete']),
   "createdAt": zod.string()
 })
@@ -867,7 +870,8 @@ export const CreateMessageCoachingSessionBody = zod.object({
   "matchName": zod.string(),
   "conversationContext": zod.string(),
   "yourLastMessage": zod.string(),
-  "goal": zod.string().nullish()
+  "goal": zod.string().nullish(),
+  "sourceApp": zod.string().nullish().describe('Dating app the conversation came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\"). Used to tune coach output.')
 })
 
 

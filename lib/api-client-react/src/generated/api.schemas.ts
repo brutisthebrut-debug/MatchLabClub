@@ -340,6 +340,11 @@ export interface MessageCoachingInput {
   yourLastMessage: string;
   /** @nullable */
   goal?: string | null;
+  /**
+     * Dating app the conversation came from (e.g. "Hinge", "Bumble", "Tinder"). Used to tune coach output.
+     * @nullable
+     */
+  sourceApp?: string | null;
 }
 
 export type MessageCoachingSessionStatus = typeof MessageCoachingSessionStatus[keyof typeof MessageCoachingSessionStatus];
@@ -357,6 +362,11 @@ export interface MessageCoachingSession {
   yourLastMessage: string;
   /** @nullable */
   goal?: string | null;
+  /**
+     * Dating app the conversation came from (e.g. "Hinge", "Bumble", "Tinder").
+     * @nullable
+     */
+  sourceApp?: string | null;
   status: MessageCoachingSessionStatus;
   createdAt: string;
 }

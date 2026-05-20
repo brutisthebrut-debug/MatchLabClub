@@ -1516,6 +1516,9 @@ components:
           type: string
         goal:
           type: ["string", "null"]
+        sourceApp:
+          type: ["string", "null"]
+          description: Dating app the conversation came from (e.g. "Hinge", "Bumble", "Tinder"). Used to tune coach output.
 
     MessageCoachingSession:
       type: object
@@ -1531,6 +1534,9 @@ components:
           type: string
         goal:
           type: ["string", "null"]
+        sourceApp:
+          type: ["string", "null"]
+          description: Dating app the conversation came from (e.g. "Hinge", "Bumble", "Tinder").
         status:
           type: string
           enum: [pending, complete]

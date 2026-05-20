@@ -10,6 +10,7 @@ export const messageCoachingSessionsTable = pgTable("message_coaching_sessions",
   conversationContext: text("conversation_context").notNull(),
   yourLastMessage: text("your_last_message").notNull(),
   goal: text("goal"),
+  sourceApp: text("source_app"),
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

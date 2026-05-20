@@ -78,6 +78,7 @@ router.post("/messages/:id/coach", async (req, res): Promise<void> => {
     conversationContext: session.conversationContext,
     yourLastMessage: session.yourLastMessage,
     goal: session.goal,
+    sourceApp: session.sourceApp,
   });
 
   await db.update(messageCoachingSessionsTable)

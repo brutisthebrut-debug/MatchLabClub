@@ -18,6 +18,16 @@ import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Clock, ArrowRight, Sparkles, Send } from "lucide-react";
 
 const GOALS = ["Get a date", "Keep it going", "Recover from awkward", "Re-engage after ghosting"];
+const SOURCE_APPS = ["Hinge", "Bumble", "Tinder"] as const;
+type SourceApp = (typeof SOURCE_APPS)[number];
+
+function detectAppFromText(text: string): SourceApp | null {
+  const t = text.toLowerCase();
+  if (/\bhinge\b/.test(t)) return "Hinge";
+  if (/\bbumble\b/.test(t)) return "Bumble";
+  if (/\btinder\b/.test(t)) return "Tinder";
+  return null;
+}
 
 type CoachingResult = {
   analysis: string;
@@ -45,6 +55,7 @@ const DEMO_SESSION = {
   conversationContext: "conversation context",
   yourLastMessage: "Not yet but I've been meaning to",
   goal: "get a date",
+  sourceApp: "Hinge",
   status: "complete" as const,
   createdAt: new Date(Date.now() - 86400000).toISOString(),
 };
@@ -81,7 +92,10 @@ export default function Coach() {
   const [context, setContext] = useState("");
   const [lastMessage, setLastMessage] = useState("");
   const [goal, setGoal] = useState("");
+  const [sourceApp, setSourceApp] = useState<SourceApp | "">("");
   const [result, setResult] = useState<CoachingResult | null>(null);
+  const [resultApp, setResultApp] = useState<SourceApp | null>(null);
+  const detectedApp = sourceApp || detectAppFromText(`${context}\n${lastMessage}`) || "";
   const queryClient = useQueryClient();
 
   const { isAuthenticated } = useAuth();
@@ -96,16 +110,20 @@ export default function Coach() {
   const isBrandNewUser = isAuthenticated && !sessionsLoading && !hasSessions && !result;
 
   async function handleCoach() {
+    const appForRequest =
+      sourceApp || detectAppFromText(`${context}\n${lastMessage}`) || null;
     try {
       const session = await createSession.mutateAsync({
-        data: { matchName: matchName || "My match", conversationContext: context, yourLastMessage: lastMessage, goal: goal || null },
+        data: { matchName: matchName || "My match", conversationContext: context, yourLastMessage: lastMessage, goal: goal || null, sourceApp: appForRequest },
       });
       rememberAnonymousId("messageSessions", session.id);
       const coaching = await coachMessage.mutateAsync({ id: session.id });
       setResult(coaching as CoachingResult);
+      setResultApp(appForRequest);
       queryClient.invalidateQueries({ queryKey: getListMessageCoachingSessionsQueryKey() });
     } catch {
       setResult(DEMO_RESULT);
+      setResultApp(appForRequest);
     }
   }
 
@@ -178,6 +196,29 @@ export default function Coach() {
                       </button>
                     ))}
                   </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">
+                  Source app
+                  {!sourceApp && detectedApp ? (
+                    <span className="ml-2 normal-case tracking-normal text-[10px] text-muted-foreground" data-testid="text-source-app-detected">
+                      detected: {detectedApp}
+                    </span>
+                  ) : null}
+                </Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {SOURCE_APPS.map(a => (
+                    <button
+                      key={a}
+                      type="button"
+                      data-testid={`button-source-app-${a.toLowerCase()}`}
+                      onClick={() => setSourceApp(prev => prev === a ? "" : a)}
+                      className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${sourceApp === a ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}
+                    >
+                      {a}
+                    </button>
+                  ))}
                 </div>
               </div>
               <div className="space-y-2">
@@ -282,7 +323,17 @@ export default function Coach() {
               <div className="space-y-3">
                 {displaySessions.slice().reverse().slice(0, 5).map((s) => (
                   <div key={s.id} className="p-3 rounded-xl border border-white/8 bg-[hsl(232_28%_14%/0.5)]" data-testid={`card-session-${s.id}`}>
-                    <p className="font-semibold text-sm text-foreground">{s.matchName}</p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="font-semibold text-sm text-foreground">{s.matchName}</p>
+                      {s.sourceApp ? (
+                        <span
+                          className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.12)] text-[hsl(268_60%_78%)] border border-[hsl(268_52%_68%/0.3)]"
+                          data-testid={`badge-session-${s.id}-app`}
+                        >
+                          {s.sourceApp}
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="text-xs text-muted-foreground mt-0.5 truncate">{s.yourLastMessage}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <Clock className="w-3 h-3 text-muted-foreground" />
@@ -315,7 +366,17 @@ export default function Coach() {
 
                 {/* Analysis */}
                 <div className="glass border border-white/8 rounded-3xl p-7">
-                  <h2 className="text-lg font-bold text-foreground mb-3">Conversation Analysis</h2>
+                  <div className="flex items-center gap-2 flex-wrap mb-3">
+                    <h2 className="text-lg font-bold text-foreground">Conversation Analysis</h2>
+                    {(result ? resultApp : (DEMO_SESSION.sourceApp as SourceApp)) ? (
+                      <span
+                        className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.12)] text-[hsl(268_60%_78%)] border border-[hsl(268_52%_68%/0.3)]"
+                        data-testid="badge-source-app"
+                      >
+                        {result ? resultApp : DEMO_SESSION.sourceApp}
+                      </span>
+                    ) : null}
+                  </div>
                   <p className="text-muted-foreground leading-relaxed text-sm" data-testid="text-coaching-analysis">{showResult.analysis}</p>
                   <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(232_28%_16%)] border border-white/8 text-sm font-medium text-foreground">
                     <span className="w-2 h-2 rounded-full bg-[hsl(268_52%_68%)]" />

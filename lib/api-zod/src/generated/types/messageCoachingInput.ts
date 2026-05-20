@@ -12,4 +12,9 @@ export interface MessageCoachingInput {
   yourLastMessage: string;
   /** @nullable */
   goal?: string | null;
+  /**
+     * Dating app the conversation came from (e.g. "Hinge", "Bumble", "Tinder"). Used to tune coach output.
+     * @nullable
+     */
+  sourceApp?: string | null;
 }

@@ -297,65 +297,127 @@ export function generateAuditReport(params: {
   };
 }
 
+function detectAppFromText(text: string): KnownApp | null {
+  const t = text.toLowerCase();
+  if (/\bhinge\b/.test(t)) return "Hinge";
+  if (/\bbumble\b/.test(t)) return "Bumble";
+  if (/\btinder\b/.test(t)) return "Tinder";
+  return null;
+}
+
+function appCoachTone(app: KnownApp | null, base: string): string {
+  switch (app) {
+    case "Hinge":
+      return `${base} Hinge conversations reward referencing something specific from their prompts — it signals you actually read the profile.`;
+    case "Bumble":
+      return `${base} On Bumble the 24-hour clock matters — don't let momentum die between sessions, but don't overreact to a slow reply either.`;
+    case "Tinder":
+      return `${base} Tinder conversations get stale fast — move toward concrete plans within the first dozen messages or the thread dies.`;
+    default:
+      return base;
+  }
+}
+
+function appCoachRedFlags(app: KnownApp | null): string[] {
+  switch (app) {
+    case "Hinge":
+      return ["On Hinge, ignoring the prompt they liked is a missed hook — anchor your next reply to it"];
+    case "Bumble":
+      return ["On Bumble, letting a women-message-first thread go cold past 24 hours often resets the dynamic entirely"];
+    case "Tinder":
+      return ["On Tinder, staying in the chat past two days without suggesting plans usually kills the match"];
+    default:
+      return [];
+  }
+}
+
+function appCoachTip(app: KnownApp | null, goal: string, name: string): string {
+  const baseDate =
+    "a warm-up, not an interview — but they also end with plans, not just good vibes. After 5-7 messages of solid rapport, it's time to ask. The cost of asking is almost always lower than people think.";
+  const baseKeep =
+    "tennis — both people bringing something to every exchange. Make sure you're returning with energy, not just keeping it alive.";
+  const base = `The best conversations feel like ${goal === "get a date" ? baseDate : baseKeep}`;
+  switch (app) {
+    case "Hinge":
+      return `${base} With ${name} on Hinge, tie your date suggestion back to whatever prompt or photo you originally liked — it makes the ask feel earned, not random.`;
+    case "Bumble":
+      return `${base} On Bumble, ${name} expects you to bring some energy back quickly — concise, specific replies outperform long thoughtful essays here.`;
+    case "Tinder":
+      return `${base} On Tinder, ${name} is talking to a lot of people — a confident, low-friction plan ("drinks Thursday, I'll pick the spot") usually beats an open-ended "what do you like to do?"`;
+    default:
+      return base;
+  }
+}
+
 export function generateMessageCoaching(params: {
   matchName: string;
   conversationContext: string;
   yourLastMessage: string;
   goal?: string | null;
+  sourceApp?: string | null;
 }): MessageCoachingOutput {
   const goal = params.goal || "keep the conversation going";
   const isShortMessage = params.yourLastMessage.length < 30;
   const isQuestion = params.yourLastMessage.includes("?");
+  const name = params.matchName?.trim() || "your match";
+  const app =
+    normalizeApp(params.sourceApp) ??
+    detectAppFromText(`${params.conversationContext}\n${params.yourLastMessage}`);
+  const appPhrase = app ? ` on ${app}` : "";
+
+  const baseTone =
+    params.conversationContext.toLowerCase().includes("haha") ||
+    params.conversationContext.toLowerCase().includes("lol")
+      ? "Light and playful — this is working. Don't overthink it, just keep the energy up and steer toward a date."
+      : "Measured and thoughtful. There's mutual interest here but neither person has broken the surface yet. Someone needs to go first — let it be you.";
+
+  const baseRedFlags =
+    isShortMessage && !isQuestion
+      ? [
+          "One-word or very short replies slow momentum and signal low investment",
+          "Lack of a question puts 100% of the conversational burden on them",
+        ]
+      : params.yourLastMessage.toLowerCase().includes("haha") && params.yourLastMessage.length < 20
+      ? [
+          "'Haha' as a standalone response signals you read it but had nothing to add — it deflates energy",
+          "Reactive messages (laughing at what they said without building on it) stall conversations",
+        ]
+      : [];
 
   return {
-    analysis: `This conversation with ${params.matchName} has ${params.conversationContext.length > 200 ? "solid momentum — there's genuine back-and-forth happening" : "potential, but it needs a boost"}. Your last message ${isShortMessage ? "is a bit brief — it doesn't give them much to work with and puts the conversational weight entirely on them" : "shows effort, which is good"}. ${isQuestion ? "Asking a question is smart, but make sure it's specific enough that there's no 'safe' one-word answer" : "Consider adding a question or prompt to make it easy for them to respond"}. The goal of ${goal} is achievable — here's how to get there.`,
+    analysis: `This conversation with ${name}${appPhrase} has ${params.conversationContext.length > 200 ? "solid momentum — there's genuine back-and-forth happening" : "potential, but it needs a boost"}. Your last message ${isShortMessage ? "is a bit brief — it doesn't give them much to work with and puts the conversational weight entirely on them" : "shows effort, which is good"}. ${isQuestion ? "Asking a question is smart, but make sure it's specific enough that there's no 'safe' one-word answer" : "Consider adding a question or prompt to make it easy for them to respond"}. The goal of ${goal} is achievable — here's how to get there.`,
     suggestedReplies: [
       {
         style: "Playful",
-        text: `Okay but real question — ${params.matchName === "Alex" ? "Alex" : params.matchName}, what's your actual unpopular opinion? I'm collecting them.`,
+        text: `Okay but real question — ${name}, what's your actual unpopular opinion? I'm collecting them.`,
         rationale:
           "Creates an easy, low-stakes reply opportunity. Playful challenge generates more response than a sincere question.",
       },
       {
         style: "Direct",
-        text: `I'd rather show you than keep describing it. Are you free this week?`,
-        rationale: `If the goal is to get a date, asking directly after establishing rapport converts at 3x the rate of waiting. ${params.matchName} will respect the directness.`,
+        text: `I'd rather show you than keep describing it. Are you free this week, ${name}?`,
+        rationale: `If the goal is to get a date, asking directly after establishing rapport converts at 3x the rate of waiting. ${name} will respect the directness${app ? ` — and${appPhrase} that kind of clarity is rare` : ""}.`,
       },
       {
         style: "Warm",
-        text: `That's actually one of the more interesting things anyone's said to me on here. What's behind that?`,
+        text: `That's actually one of the more interesting things anyone's said to me${appPhrase ? appPhrase : " on here"}, ${name}. What's behind that?`,
         rationale:
           "Validates their contribution while opening a deeper thread. Use this if the conversation has been surface-level and you want to go somewhere real.",
       },
       {
         style: "Date Ask",
-        text: `I'd genuinely love to meet you. Want to grab coffee or a drink this week? I'll pick somewhere good.`,
-        rationale: `After solid rapport, asking directly converts far better than hinting. Moving to real life is the whole point — the cost of asking is almost always lower than people think.`,
+        text: `${name}, I'd genuinely love to meet you. Want to grab coffee or a drink this week? I'll pick somewhere good.`,
+        rationale: `After solid rapport, asking directly converts far better than hinting${appPhrase ? ` — and${appPhrase}, plans-first messages beat more chat almost every time` : ""}. Moving to real life is the whole point — the cost of asking is almost always lower than people think.`,
       },
       {
         style: "Graceful Exit",
-        text: `It's been genuinely nice chatting. I think we might be in different places right now, but I'm really glad we connected.`,
+        text: `${name}, it's been genuinely nice chatting. I think we might be in different places right now, but I'm really glad we connected.`,
         rationale: `Sometimes the kindest move is a clear, warm close. This ends things with dignity for both people — no ambiguity, no hard feelings, no bridge burned.`,
       },
     ],
-    tone:
-      params.conversationContext.toLowerCase().includes("haha") ||
-      params.conversationContext.toLowerCase().includes("lol")
-        ? "Light and playful — this is working. Don't overthink it, just keep the energy up and steer toward a date."
-        : "Measured and thoughtful. There's mutual interest here but neither person has broken the surface yet. Someone needs to go first — let it be you.",
-    redFlags:
-      isShortMessage && !isQuestion
-        ? [
-            "One-word or very short replies slow momentum and signal low investment",
-            "Lack of a question puts 100% of the conversational burden on them",
-          ]
-        : params.yourLastMessage.toLowerCase().includes("haha") && params.yourLastMessage.length < 20
-        ? [
-            "'Haha' as a standalone response signals you read it but had nothing to add — it deflates energy",
-            "Reactive messages (laughing at what they said without building on it) stall conversations",
-          ]
-        : [],
-    coachTip: `The best conversations feel like ${goal === "get a date" ? "a warm-up, not an interview — but they also end with plans, not just good vibes. After 5-7 messages of solid rapport, it's time to ask. The cost of asking is almost always lower than people think." : "tennis — both people bringing something to every exchange. Make sure you're returning with energy, not just keeping it alive."}`,
+    tone: appCoachTone(app, baseTone),
+    redFlags: [...baseRedFlags, ...appCoachRedFlags(app)],
+    coachTip: appCoachTip(app, goal, name),
   };
 }
 
