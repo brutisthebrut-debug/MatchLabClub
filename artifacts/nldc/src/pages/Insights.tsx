@@ -14,6 +14,7 @@ import {
   getListInsightsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { Shield, Loader2, Mail, TrendingUp, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp } from "lucide-react";
 
 type Analysis = {
@@ -82,6 +83,7 @@ export default function Insights() {
       const insight = await createInsight.mutateAsync({
         data: { sourceLabel: sourceLabel || "My messages", pastedContent: content, consentGiven: consent },
       });
+      rememberAnonymousId("insights", insight.id);
       const result = await analyzeInsight.mutateAsync({ id: insight.id });
       setAnalysis(result as Analysis);
       queryClient.invalidateQueries({ queryKey: getListInsightsQueryKey() });

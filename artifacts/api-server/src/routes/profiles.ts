@@ -9,6 +9,7 @@ import {
   UpdateProfileResponse,
   RewriteProfileBioResponse,
 } from "@workspace/api-zod";
+import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
 
 const router: IRouter = Router();
 
@@ -35,9 +36,13 @@ router.post("/profiles", async (req, res): Promise<void> => {
     return;
   }
 
+  const anonymousClaimToken = req.user?.id
+    ? null
+    : getOrCreateAnonClaimToken(req, res);
+
   const [profile] = await db
     .insert(profilesTable)
-    .values({ ...parsed.data, userId: req.user?.id ?? null })
+    .values({ ...parsed.data, userId: req.user?.id ?? null, anonymousClaimToken })
     .returning();
   res.status(201).json(GetProfileResponse.parse({
     ...profile,

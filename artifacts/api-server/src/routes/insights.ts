@@ -7,6 +7,7 @@ import {
   AnalyzeInsightResponse,
 } from "@workspace/api-zod";
 import { generateEmailInsightAnalysis } from "../lib/aiEngine";
+import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
 
 const router: IRouter = Router();
 
@@ -33,9 +34,18 @@ router.post("/insights", async (req, res): Promise<void> => {
     return;
   }
 
+  const anonymousClaimToken = req.user?.id
+    ? null
+    : getOrCreateAnonClaimToken(req, res);
+
   const [insight] = await db
     .insert(emailInsightsTable)
-    .values({ ...parsed.data, status: "pending", userId: req.user?.id ?? null })
+    .values({
+      ...parsed.data,
+      status: "pending",
+      userId: req.user?.id ?? null,
+      anonymousClaimToken,
+    })
     .returning();
 
   res.status(201).json({

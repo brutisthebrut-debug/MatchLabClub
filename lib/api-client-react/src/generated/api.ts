@@ -32,6 +32,8 @@ import type {
   AuthErrorEnvelope,
   AuthUserEnvelope,
   BeginBrowserLoginParams,
+  ClaimAnonymousInput,
+  ClaimAnonymousResult,
   DatingProfile,
   DatingProfileInput,
   DatingProfileUpdate,
@@ -526,6 +528,81 @@ export const useLogoutMobileSession = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getLogoutMobileSessionMutationOptions(options));
+    }
+
+export const getClaimAnonymousDataUrl = () => {
+
+
+
+
+  return `/api/claim-anonymous`
+}
+
+/**
+ * Reassigns rows with `userId IS NULL` whose IDs are passed in the body to the
+currently authenticated user. Only the IDs the client owns (tracked in
+localStorage) are eligible. Requires an authenticated session.
+
+ * @summary Claim audits, profiles, message sessions, and insights created anonymously in this browser
+ */
+export const claimAnonymousData = async (claimAnonymousInput: ClaimAnonymousInput, options?: RequestInit): Promise<ClaimAnonymousResult> => {
+
+  return customFetch<ClaimAnonymousResult>(getClaimAnonymousDataUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      claimAnonymousInput,)
+  }
+);}
+
+
+
+
+export const getClaimAnonymousDataMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimAnonymousData>>, TError,{data: BodyType<ClaimAnonymousInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof claimAnonymousData>>, TError,{data: BodyType<ClaimAnonymousInput>}, TContext> => {
+
+const mutationKey = ['claimAnonymousData'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof claimAnonymousData>>, {data: BodyType<ClaimAnonymousInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  claimAnonymousData(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClaimAnonymousDataMutationResult = NonNullable<Awaited<ReturnType<typeof claimAnonymousData>>>
+    export type ClaimAnonymousDataMutationBody = BodyType<ClaimAnonymousInput>
+    export type ClaimAnonymousDataMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Claim audits, profiles, message sessions, and insights created anonymously in this browser
+ */
+export const useClaimAnonymousData = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimAnonymousData>>, TError,{data: BodyType<ClaimAnonymousInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof claimAnonymousData>>,
+        TError,
+        {data: BodyType<ClaimAnonymousInput>},
+        TContext
+      > => {
+      return useMutation(getClaimAnonymousDataMutationOptions(options));
     }
 
 export const getHealthCheckUrl = () => {

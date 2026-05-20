@@ -10,6 +10,7 @@ import {
   getListMessageCoachingSessionsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { rememberAnonymousId } from "@/lib/anonymousIds";
 import {
   Loader2, Sparkles, Copy, Check, AlertTriangle,
   Lightbulb, Eye, TrendingUp, FlaskConical, ArrowRight
@@ -86,6 +87,7 @@ export default function Lab() {
       const session = await createSession.mutateAsync({
         data: { matchName: matchName.trim() || "My match", conversationContext: context.trim(), yourLastMessage: message.trim(), goal: goal || null },
       });
+      rememberAnonymousId("messageSessions", session.id);
       const coaching = await coachMessage.mutateAsync({ id: session.id });
       setResult(coaching as CoachingResult);
       queryClient.invalidateQueries({ queryKey: getListMessageCoachingSessionsQueryKey() });

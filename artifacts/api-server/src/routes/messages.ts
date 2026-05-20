@@ -7,6 +7,7 @@ import {
   CoachMessageResponse,
 } from "@workspace/api-zod";
 import { generateMessageCoaching } from "../lib/aiEngine";
+import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
 
 const router: IRouter = Router();
 
@@ -35,9 +36,18 @@ router.post("/messages", async (req, res): Promise<void> => {
     return;
   }
 
+  const anonymousClaimToken = req.user?.id
+    ? null
+    : getOrCreateAnonClaimToken(req, res);
+
   const [session] = await db
     .insert(messageCoachingSessionsTable)
-    .values({ ...parsed.data, status: "pending", userId: req.user?.id ?? null })
+    .values({
+      ...parsed.data,
+      status: "pending",
+      userId: req.user?.id ?? null,
+      anonymousClaimToken,
+    })
     .returning();
 
   res.status(201).json({

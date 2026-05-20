@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCreateAudit, useGenerateAuditReport, getListAuditsQueryKey } from "@workspace/api-client-react";
+import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Loader2, Headphones, ArrowRight, Lock, CheckCircle, Sparkles, TrendingUp, Mail } from "lucide-react";
@@ -139,6 +140,7 @@ export default function SignalCheck() {
           relationshipHistory: null,
         },
       });
+      rememberAnonymousId("audits", audit.id);
       const report = await generateReport.mutateAsync({ id: audit.id }) as {
         readinessScore: number;
         risks: string[];

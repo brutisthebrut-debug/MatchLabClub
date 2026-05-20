@@ -47,6 +47,24 @@ export interface AuthErrorEnvelope {
   error: string;
 }
 
+export interface ClaimAnonymousInput {
+  auditIds?: number[];
+  profileIds?: number[];
+  messageSessionIds?: number[];
+  insightIds?: number[];
+}
+
+export type ClaimAnonymousResultClaimed = {
+  audits: number;
+  profiles: number;
+  messages: number;
+  insights: number;
+};
+
+export interface ClaimAnonymousResult {
+  claimed: ClaimAnonymousResultClaimed;
+}
+
 export interface HealthStatus {
   status: string;
 }

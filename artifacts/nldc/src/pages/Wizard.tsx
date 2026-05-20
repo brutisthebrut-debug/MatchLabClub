@@ -13,6 +13,7 @@ import { ArrowRight, ArrowLeft, Loader2, CheckCircle, Sparkles } from "lucide-re
 import { useCreateAudit, useGenerateAuditReport } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListAuditsQueryKey } from "@workspace/api-client-react";
+import { rememberAnonymousId } from "@/lib/anonymousIds";
 
 const APPS = ["Hinge", "Bumble", "Tinder", "Coffee Meets Bagel", "The League", "Feeld", "OkCupid", "Other"];
 const GOALS = [
@@ -114,6 +115,7 @@ export default function Wizard() {
         },
       });
 
+      rememberAnonymousId("audits", audit.id);
       await generateReport.mutateAsync({ id: audit.id });
       queryClient.invalidateQueries({ queryKey: getListAuditsQueryKey() });
       clearInterval(tipInterval);

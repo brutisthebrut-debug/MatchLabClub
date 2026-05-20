@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 export const auditsTable = pgTable("audits", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id"),
+  anonymousClaimToken: varchar("anonymous_claim_token"),
   firstName: text("first_name").notNull(),
   age: integer("age").notNull(),
   gender: text("gender").notNull(),

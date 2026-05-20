@@ -88,6 +88,34 @@ export const LogoutMobileSessionResponse = zod.object({
 
 
 /**
+ * Reassigns rows with `userId IS NULL` whose IDs are passed in the body to the
+currently authenticated user. Only the IDs the client owns (tracked in
+localStorage) are eligible. Requires an authenticated session.
+
+ * @summary Claim audits, profiles, message sessions, and insights created anonymously in this browser
+ */
+export const ClaimAnonymousDataHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const ClaimAnonymousDataBody = zod.object({
+  "auditIds": zod.array(zod.number()).optional(),
+  "profileIds": zod.array(zod.number()).optional(),
+  "messageSessionIds": zod.array(zod.number()).optional(),
+  "insightIds": zod.array(zod.number()).optional()
+})
+
+export const ClaimAnonymousDataResponse = zod.object({
+  "claimed": zod.object({
+  "audits": zod.number(),
+  "profiles": zod.number(),
+  "messages": zod.number(),
+  "insights": zod.number()
+})
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */

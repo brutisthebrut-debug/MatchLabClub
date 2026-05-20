@@ -10,6 +10,7 @@ import leadsRouter from "./leads";
 import purchaseInterestRouter from "./purchaseInterest";
 import founderRouter from "./founder";
 import aiRouter from "./ai";
+import claimRouter from "./claim";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(leadsRouter);
 router.use(purchaseInterestRouter);
 router.use(founderRouter);
 router.use(aiRouter);
+router.use(claimRouter);
 
 export default router;

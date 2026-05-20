@@ -56,7 +56,14 @@ import WeeklyGrowthPlan from "@/pages/copilot/WeeklyGrowthPlan";
 import PrepareForDate from "@/pages/copilot/PrepareForDate";
 import FounderDemoJourney from "@/pages/copilot/FounderDemoJourney";
 
+import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
+
 const queryClient = new QueryClient();
+
+function ClaimAnonymousGate() {
+  useClaimAnonymousOnLogin();
+  return null;
+}
 
 function Router() {
   return (
@@ -128,6 +135,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <ClaimAnonymousGate />
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <Router />
         </WouterRouter>

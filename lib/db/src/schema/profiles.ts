@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 export const profilesTable = pgTable("dating_profiles", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id"),
+  anonymousClaimToken: varchar("anonymous_claim_token"),
   platform: text("platform").notNull(),
   bio: text("bio").notNull(),
   prompts: text("prompts"),

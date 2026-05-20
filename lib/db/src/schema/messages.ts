@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 export const messageCoachingSessionsTable = pgTable("message_coaching_sessions", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id"),
+  anonymousClaimToken: varchar("anonymous_claim_token"),
   matchName: text("match_name").notNull(),
   conversationContext: text("conversation_context").notNull(),
   yourLastMessage: text("your_last_message").notNull(),

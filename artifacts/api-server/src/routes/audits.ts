@@ -9,6 +9,7 @@ import {
   GetAuditSummaryResponse,
 } from "@workspace/api-zod";
 import { generateAuditReport } from "../lib/aiEngine";
+import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
 
 const router: IRouter = Router();
 
@@ -72,9 +73,18 @@ router.post("/audits", async (req, res): Promise<void> => {
     return;
   }
 
+  const anonymousClaimToken = req.user?.id
+    ? null
+    : getOrCreateAnonClaimToken(req, res);
+
   const [audit] = await db
     .insert(auditsTable)
-    .values({ ...parsed.data, status: "pending", userId: req.user?.id ?? null })
+    .values({
+      ...parsed.data,
+      status: "pending",
+      userId: req.user?.id ?? null,
+      anonymousClaimToken,
+    })
     .returning();
 
   res.status(201).json(GetAuditResponse.parse({

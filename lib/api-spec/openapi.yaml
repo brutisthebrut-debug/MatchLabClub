@@ -140,6 +140,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/LogoutSuccess'
 
+  /claim-anonymous:
+    post:
+      tags: [Auth]
+      operationId: claimAnonymousData
+      summary: Claim audits, profiles, message sessions, and insights created anonymously in this browser
+      description: |
+        Reassigns rows with `userId IS NULL` whose IDs are passed in the body to the
+        currently authenticated user. Only the IDs the client owns (tracked in
+        localStorage) are eligible. Requires an authenticated session.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimAnonymousInput'
+      responses:
+        '200':
+          description: Counts of rows successfully claimed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimAnonymousResult'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /healthz:
     get:
       operationId: healthCheck
@@ -638,6 +670,41 @@ components:
       properties:
         error:
           type: string
+    ClaimAnonymousInput:
+      type: object
+      properties:
+        auditIds:
+          type: array
+          items:
+            type: integer
+        profileIds:
+          type: array
+          items:
+            type: integer
+        messageSessionIds:
+          type: array
+          items:
+            type: integer
+        insightIds:
+          type: array
+          items:
+            type: integer
+    ClaimAnonymousResult:
+      type: object
+      required: [claimed]
+      properties:
+        claimed:
+          type: object
+          required: [audits, profiles, messages, insights]
+          properties:
+            audits:
+              type: integer
+            profiles:
+              type: integer
+            messages:
+              type: integer
+            insights:
+              type: integer
     HealthStatus:
       type: object
       properties:

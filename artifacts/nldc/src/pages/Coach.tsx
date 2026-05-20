@@ -12,6 +12,7 @@ import {
   useCoachMessage, getListMessageCoachingSessionsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Clock, ArrowRight, Sparkles } from "lucide-react";
 
 const GOALS = ["Get a date", "Keep it going", "Recover from awkward", "Re-engage after ghosting"];
@@ -91,6 +92,7 @@ export default function Coach() {
       const session = await createSession.mutateAsync({
         data: { matchName: matchName || "My match", conversationContext: context, yourLastMessage: lastMessage, goal: goal || null },
       });
+      rememberAnonymousId("messageSessions", session.id);
       const coaching = await coachMessage.mutateAsync({ id: session.id });
       setResult(coaching as CoachingResult);
       queryClient.invalidateQueries({ queryKey: getListMessageCoachingSessionsQueryKey() });

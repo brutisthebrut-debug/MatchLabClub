@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 export const emailInsightsTable = pgTable("email_insights", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id"),
+  anonymousClaimToken: varchar("anonymous_claim_token"),
   sourceLabel: text("source_label").notNull(),
   pastedContent: text("pasted_content").notNull(),
   consentGiven: boolean("consent_given").default(false),
