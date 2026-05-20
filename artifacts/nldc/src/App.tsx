@@ -55,7 +55,12 @@ import DebriefWhatHappened from "@/pages/copilot/DebriefWhatHappened";
 import WeeklyGrowthPlan from "@/pages/copilot/WeeklyGrowthPlan";
 import PrepareForDate from "@/pages/copilot/PrepareForDate";
 import FounderDemoJourney from "@/pages/copilot/FounderDemoJourney";
+import FlirtCoach from "@/pages/copilot/FlirtCoach";
 import Account from "@/pages/Account";
+import Quiz from "@/pages/Quiz";
+import Gallery from "@/pages/Gallery";
+import ConnectionCenter from "@/pages/ConnectionCenter";
+import DataVault from "@/pages/DataVault";
 
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 
@@ -127,7 +132,12 @@ function Router() {
       <Route path="/copilot/weekly-plan" component={WeeklyGrowthPlan} />
       <Route path="/copilot/prep" component={PrepareForDate} />
       <Route path="/copilot/demo" component={FounderDemoJourney} />
+      <Route path="/copilot/flirt" component={FlirtCoach} />
       <Route path="/account" component={Account} />
+      <Route path="/quiz" component={Quiz} />
+      <Route path="/gallery" component={Gallery} />
+      <Route path="/connections" component={ConnectionCenter} />
+      <Route path="/vault" component={DataVault} />
       <Route component={NotFound} />
     </Switch>
   );

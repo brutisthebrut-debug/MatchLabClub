@@ -70,6 +70,15 @@ const WORKFLOWS = [
     desc: "Mindset, questions to ask, boundaries to know, follow-up plan",
   },
   {
+    icon: Heart,
+    title: "Flirt Coach",
+    tagline: "Draft messages for any moment — flirting, consent, boundaries, exits",
+    steps: 2,
+    color: "hsl(348 55% 65%)",
+    href: "/copilot/flirt",
+    desc: "Sex-positive, non-manipulative options for flirting, date asks, setting limits, or exiting clean",
+  },
+  {
     icon: Compass,
     title: "Founder Demo Journey",
     tagline: "Show the product to collaborators or early users",

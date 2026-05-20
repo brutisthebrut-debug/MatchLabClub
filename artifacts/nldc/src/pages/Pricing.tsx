@@ -71,14 +71,14 @@ const TIERS = [
     walkaway: ["A profile rewritten to actually sound like you", "Your 7-day action plan", "10 message coaching credits + Chemistry Lab access"],
   },
   {
-    name: "Monthly Coaching",
+    name: "Wingman Membership",
     price: "$197",
     promoPrice: "$118",
     period: "per month",
     popular: false,
     badge: "Podcast Listener Deal",
     desc: "Everything in The Dating Reset — plus a real human coach in your corner, every week.",
-    cta: "Start My Coaching",
+    cta: "Join the Wingman Club",
     href: "/waitlist",
     accentColor: "hsl(43 65% 65%)",
     icon: Heart,
@@ -134,7 +134,7 @@ export default function Pricing() {
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <Headphones className="w-5 h-5 text-[hsl(43_65%_68%)]" />
               <span className="font-semibold text-foreground">Podcast listener deal:</span>
-              <span className="text-muted-foreground">40% off Monthly Coaching for life. Use code</span>
+              <span className="text-muted-foreground">40% off Wingman Membership for life. Use code</span>
               <code className="px-2.5 py-1 rounded-lg bg-[hsl(43_65%_62%/0.15)] text-[hsl(43_65%_72%)] font-bold text-sm border border-[hsl(43_65%_62%/0.3)]">PODCAST40</code>
               <span className="text-xs text-muted-foreground px-2.5 py-1 rounded-full bg-[hsl(348_55%_65%/0.15)] border border-[hsl(348_55%_65%/0.2)] text-[hsl(348_55%_72%)] font-medium">Expires soon</span>
             </div>
@@ -170,7 +170,7 @@ export default function Pricing() {
           </motion.div>
 
           {/* Pricing Cards */}
-          <div className="grid md:grid-cols-3 gap-5 mb-20">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-14">
             {TIERS.map((tier, i) => (
               <motion.div key={tier.name} {...fadeUp(0.12 + i * 0.07)}
                 className="relative flex flex-col"
@@ -258,6 +258,53 @@ export default function Pricing() {
               </motion.div>
             ))}
           </div>
+
+          {/* Founder-Reviewed Beta Offer */}
+          <motion.div {...fadeUp(0.3)}
+            className="max-w-3xl mx-auto mb-16 rounded-3xl p-7 relative overflow-hidden"
+            style={{ background: "linear-gradient(135deg, hsl(268 52% 20% / 0.6), hsl(43 65% 20% / 0.3))", border: "1px solid hsl(268 52% 68% / 0.25)", boxShadow: "0 0 60px hsl(268 52% 68% / 0.08)" }}
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10 pointer-events-none"
+              style={{ background: "radial-gradient(circle, hsl(43 65% 65%), transparent)", transform: "translate(30%, -30%)" }} />
+            <div className="relative z-10">
+              <div className="flex items-start gap-4 flex-col sm:flex-row">
+                <div className="w-12 h-12 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl"
+                  style={{ background: "hsl(43 65% 65% / 0.15)", border: "1px solid hsl(43 65% 65% / 0.25)" }}>
+                  🔬
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 flex-wrap mb-2">
+                    <p className="text-xs font-bold uppercase tracking-widest text-[hsl(43_65%_72%)]">Beta Offer</p>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-[hsl(348_55%_65%/0.3)] text-[hsl(348_55%_65%)] bg-[hsl(348_55%_65%/0.1)]">Limited spots</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">Founder-Reviewed Dating Reset</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                    Early beta users get the full $97 Dating Reset — plus a personal note from the founder reviewing your results and suggesting one specific next move. Not a template. An actual read of your situation.
+                  </p>
+                  <div className="grid sm:grid-cols-3 gap-3 mb-5">
+                    {[
+                      { label: "What you get", value: "Full Dating Reset + founder personal review note" },
+                      { label: "Turnaround", value: "Within 48 hours of your audit completing" },
+                      { label: "Why limited", value: "Founder does every review personally — keeping it to 20 spots" },
+                    ].map(item => (
+                      <div key={item.label} className="rounded-xl bg-white/4 border border-white/8 p-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 mb-1">{item.label}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <Link href="/checkout/dating-reset"
+                      className="px-5 py-2.5 rounded-full text-sm font-semibold border-0 text-white"
+                      style={{ background: "linear-gradient(135deg, hsl(43 65% 55%), hsl(268 52% 58%))", boxShadow: "0 4px 20px hsl(43 65% 55% / 0.3)" }}>
+                      Claim a Founder-Reviewed Spot →
+                    </Link>
+                    <p className="text-xs text-muted-foreground/50">Same price as the Dating Reset — $97 one-time</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
 
           {/* FAQ */}
           <motion.div {...fadeUp(0.35)} className="max-w-2xl mx-auto">

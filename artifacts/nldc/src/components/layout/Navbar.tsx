@@ -5,19 +5,21 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@workspace/replit-auth-web";
 
 const YOUR_BLUEPRINT_PROFILE = [
-  { name: "Dating Diagnosis",   href: "/diagnosis",      desc: "Your category + what to fix first" },
-  { name: "3-Min Signal Check", href: "/signal-check",   desc: "Instant score — great starting point" },
-  { name: "Profile Glow-Up",    href: "/glow-up",        desc: "10 rewrites for any style or platform" },
-  { name: "Mirror Profile",     href: "/mirror",         desc: "See yourself the way others might" },
-  { name: "Profile Reader",     href: "/profile-reader", desc: "Decode someone else's profile" },
+  { name: "Dating Diagnosis",     href: "/diagnosis",      desc: "Your category + what to fix first" },
+  { name: "3-Min Signal Check",   href: "/signal-check",   desc: "Instant score — great starting point" },
+  { name: "Profile Glow-Up",      href: "/glow-up",        desc: "10 rewrites for any style or platform" },
+  { name: "Before & After Gallery",href: "/gallery",        desc: "Sample rewrites across 8 real scenarios" },
+  { name: "Mirror Profile",       href: "/mirror",         desc: "See yourself the way others might" },
+  { name: "Profile Reader",       href: "/profile-reader", desc: "Decode someone else's profile" },
 ];
 
 const YOUR_BLUEPRINT_INSIGHT = [
-  { name: "Dating Blueprint",      href: "/blueprint",            desc: "Your personalized dating action plan" },
-  { name: "Dating Archetype",      href: "/archetype",            desc: "6-question quiz — shareable result" },
-  { name: "Connection Style",      href: "/connection-style",     desc: "Your attachment pattern + risk loop" },
-  { name: "Compatibility Compass", href: "/compatibility-compass",desc: "Dynamics that support vs. challenge you" },
-  { name: "Post-Meeting Reflect",  href: "/reflection",           desc: "Pursue / pause / pass read" },
+  { name: "Dating Signal Type Quiz",href: "/quiz",                 desc: "8 questions → your dating archetype" },
+  { name: "Dating Blueprint",       href: "/blueprint",            desc: "Your personalized dating action plan" },
+  { name: "Dating Archetype",       href: "/archetype",            desc: "6-question quiz — shareable result" },
+  { name: "Connection Style",       href: "/connection-style",     desc: "Your attachment pattern + risk loop" },
+  { name: "Compatibility Compass",  href: "/compatibility-compass",desc: "Dynamics that support vs. challenge you" },
+  { name: "Post-Meeting Reflect",   href: "/reflection",           desc: "Pursue / pause / pass read" },
 ];
 
 const MESSAGE_TOOLS = [
@@ -48,12 +50,13 @@ const OFFERS = [
 ];
 
 const SETTINGS_TRUST = [
-  { name: "Wellness Center",    href: "/wellness",           desc: "8 dimensions of your readiness" },
-  { name: "Life Context",       href: "/life-context",       desc: "Approved insights, one view" },
-  { name: "User Control",       href: "/user-control",       desc: "Approve, edit, export, delete" },
-  { name: "Future Connections", href: "/future-connections", desc: "Sources we'd consider next" },
-  { name: "Integrations",       href: "/integrations",       desc: "Connected apps & privacy" },
-  { name: "Privacy",            href: "/privacy",            desc: "How we handle data" },
+  { name: "Wellness Center",    href: "/wellness",     desc: "8 dimensions of your readiness" },
+  { name: "Connection Center",  href: "/connections",  desc: "Bring in context — on your terms" },
+  { name: "Personal Data Vault",href: "/vault",        desc: "Preview, export, or delete your data" },
+  { name: "Life Context",       href: "/life-context", desc: "Approved insights, one view" },
+  { name: "User Control",       href: "/user-control", desc: "Approve, edit, export, delete" },
+  { name: "Integrations",       href: "/integrations", desc: "Connected apps & privacy" },
+  { name: "Privacy",            href: "/privacy",      desc: "How we handle data" },
 ];
 
 type DropdownId = "blueprint" | "messages" | "growth" | "offers" | null;
@@ -309,7 +312,16 @@ export function Navbar() {
           <Link href="/copilot/profile" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Improve My Profile</Link>
           <Link href="/copilot/debrief" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Debrief What Happened</Link>
           <Link href="/copilot/weekly-plan" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Weekly Growth Plan</Link>
-          <Link href="/copilot/prep" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Prepare for a Date</Link>
+          <Link href="/copilot/prep"   onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Prepare for a Date</Link>
+          <Link href="/copilot/flirt"  onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Flirt Coach</Link>
+          <div className="h-px bg-white/5 my-2" />
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1">Quizzes &amp; Gallery</p>
+          <Link href="/quiz"     onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">Dating Signal Type Quiz</Link>
+          <Link href="/gallery"  onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">Before &amp; After Gallery</Link>
+          <div className="h-px bg-white/5 my-2" />
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1">Data &amp; Privacy</p>
+          <Link href="/connections" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">Connection Center</Link>
+          <Link href="/vault"       onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">Personal Data Vault</Link>
           <div className="h-px bg-white/5 my-2" />
           <Link href="/dashboard" onClick={closeAll} className="text-sm font-medium text-muted-foreground hover:text-foreground py-1.5">Dashboard</Link>
           {isLoading ? null : isAuthenticated ? (

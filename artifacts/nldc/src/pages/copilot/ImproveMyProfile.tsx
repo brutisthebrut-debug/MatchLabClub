@@ -16,7 +16,7 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
 });
 
-const PLATFORMS = ["Hinge", "Bumble", "Tinder", "The League", "Thursday", "Other"];
+const PLATFORMS = ["Hinge", "Bumble", "Tinder", "Feeld", "Grindr", "HER", "Lex", "Sniffies", "The League", "Thursday", "Other"];
 const TONES     = ["Warm & genuine", "Witty & playful", "Confident & direct", "Thoughtful & reflective", "Easy-going"];
 const GOALS_P   = ["More matches", "Better conversations", "Finding something serious", "Meeting higher-quality people", "Standing out on a crowded platform"];
 
