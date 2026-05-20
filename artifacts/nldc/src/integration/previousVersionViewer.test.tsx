@@ -125,6 +125,25 @@ const NEW_CURRENT_REPORT = {
   engineVersion: "v1",
 };
 
+const RICH_CURRENT_REPORT = {
+  ...NEW_CURRENT_REPORT,
+  rewrittenPrompts: [
+    {
+      original: "The way to win me over is...",
+      rewritten: "CURRENT_PROMPT_REWRITE_0: latest prompt rewrite.",
+      tip: "A current tip.",
+    },
+  ],
+  actionPlan: [
+    {
+      priority: 1,
+      title: "CURRENT_ACTION_TITLE_0",
+      description: "Current action description.",
+      timeframe: "This week",
+    },
+  ],
+};
+
 const TWO_DAYS_AGO = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
 const ONE_HOUR_AGO = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
@@ -423,5 +442,108 @@ describe("Previous-version viewer — web Report page", () => {
     for (const btn of copyBtns) {
       expect(btn.textContent).toMatch(/^copy$/i);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Main report page copy buttons (outside the previous-version dialog)
+// ---------------------------------------------------------------------------
+
+describe("Main report page — copy buttons", () => {
+  function makeRichAudit() {
+    return {
+      id: 42,
+      firstName: "Alex",
+      age: 28,
+      gender: "m",
+      orientation: "straight",
+      datingGoal: "find a relationship",
+      currentApps: ["Hinge"],
+      bio: "Current bio",
+      status: "complete",
+      source: "manual",
+      readinessScore: 72,
+      report: RICH_CURRENT_REPORT,
+      reportGeneratedAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+      previousReport: null,
+      previousReportGeneratedAt: null,
+      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+  }
+
+  beforeEach(() => {
+    auditDataRef.current = makeRichAudit();
+  });
+
+  function renderReport() {
+    render(
+      <Wrap>
+        <Report />
+      </Wrap>,
+    );
+  }
+
+  it("clicking the bio rewrite copy button on the main page shows 'Copied' feedback", async () => {
+    renderReport();
+
+    // Wait for the report to load (bio text is rendered).
+    const bioText = await screen.findByTestId("text-rewritten-bio");
+    expect(bioText.textContent).toContain("CURRENT_REWRITTEN_BIO");
+
+    // The CopyButton for the bio sits in the same parent container as text-rewritten-bio.
+    // Since no dialog is open, all button-copy-text elements are on the main page.
+    const copyBtns = screen.getAllByTestId("button-copy-text");
+    const bioCopyBtn = copyBtns[0];
+
+    expect(bioCopyBtn.textContent).toMatch(/^copy$/i);
+
+    fireEvent.click(bioCopyBtn);
+
+    await waitFor(() => {
+      expect(bioCopyBtn.textContent).toMatch(/copied/i);
+    });
+
+    expect(clipboardWriteSpy).toHaveBeenCalledWith(RICH_CURRENT_REPORT.rewrittenBio);
+  });
+
+  it("clicking a prompt rewrite copy button on the main page shows 'Copied' feedback", async () => {
+    renderReport();
+
+    // Wait for the prompt card to appear.
+    const promptCard = await screen.findByTestId("card-prompt-rewrite-0");
+    const promptCopyBtn = within(promptCard).getByTestId("button-copy-text");
+
+    expect(promptCopyBtn.textContent).toMatch(/^copy$/i);
+
+    fireEvent.click(promptCopyBtn);
+
+    await waitFor(() => {
+      expect(promptCopyBtn.textContent).toMatch(/copied/i);
+    });
+
+    expect(clipboardWriteSpy).toHaveBeenCalledWith(
+      RICH_CURRENT_REPORT.rewrittenPrompts[0].rewritten,
+    );
+  });
+
+  it("clicking an action-plan copy button on the main page shows 'Copied' feedback", async () => {
+    renderReport();
+
+    // Wait for the action card to appear.
+    const actionCard = await screen.findByTestId("card-action-item-0");
+    const actionCopyBtn = within(actionCard).getByTestId("button-copy-text");
+
+    expect(actionCopyBtn.textContent).toMatch(/^copy$/i);
+
+    fireEvent.click(actionCopyBtn);
+
+    await waitFor(() => {
+      expect(actionCopyBtn.textContent).toMatch(/copied/i);
+    });
+
+    const item = RICH_CURRENT_REPORT.actionPlan[0];
+    expect(clipboardWriteSpy).toHaveBeenCalledWith(
+      `${item.title}: ${item.description}`,
+    );
   });
 });
