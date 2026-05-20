@@ -54,6 +54,68 @@ function gradeFromScore(score: number): string {
   return "F";
 }
 
+type KnownApp = "Hinge" | "Bumble" | "Tinder";
+
+function normalizeApp(raw?: string | null): KnownApp | null {
+  if (!raw) return null;
+  const t = raw.trim().toLowerCase();
+  if (t === "hinge") return "Hinge";
+  if (t === "bumble") return "Bumble";
+  if (t === "tinder") return "Tinder";
+  return null;
+}
+
+function appBioFlavor(app: KnownApp | null, name: string): string {
+  switch (app) {
+    case "Hinge":
+      return `On Hinge specifically, the prompts do most of the heavy lifting — so ${name}'s bio doesn't need to carry the whole personality on its own, but it does need to set a clear tone the prompts can build on.`;
+    case "Bumble":
+      return `Bumble readers skim bios fast — and women see hundreds a week. ${name}'s opening line has to earn the second sentence; without a sharp hook the rest of the profile never gets read.`;
+    case "Tinder":
+      return `Tinder bios are read in the half-second between photo swipes, so ${name} needs one punchy, specific line up top — not a paragraph. Density beats depth here.`;
+    default:
+      return "";
+  }
+}
+
+function appPromptTips(app: KnownApp | null): { tip: string; rewriteHint: string } {
+  switch (app) {
+    case "Hinge":
+      return {
+        tip: "Hinge weights prompts heavily in recommendations — make each one a distinct, responsive hook, not three variations of the same vibe.",
+        rewriteHint: "Hinge favors specificity. Pick one weird, true detail per prompt — that's what gets likes attached.",
+      };
+    case "Bumble":
+      return {
+        tip: "On Bumble, prompts (and the question prompt at the top) are conversation seeds — leave an opening for her to send the first message.",
+        rewriteHint: "Bumble women open conversations — give them something obvious and easy to react to, not abstract values statements.",
+      };
+    case "Tinder":
+      return {
+        tip: "Tinder doesn't have prompts the way Hinge does — fold these answers into a tight 2-line bio with a clear hook and an implicit question.",
+        rewriteHint: "Tinder reads in seconds. Use prompt rewrites as raw material for a short, specific bio rather than a full prompt section.",
+      };
+    default:
+      return {
+        tip: "Specificity beats sincerity every time. Readers fill in the blanks with their own version of you.",
+        rewriteHint: "",
+      };
+  }
+}
+
+function appPhotoFlavor(app: KnownApp | null): string | null {
+  switch (app) {
+    case "Hinge":
+      return "Hinge surfaces individual photos with likes — every single photo needs to stand on its own, since matches may comment on just one.";
+    case "Bumble":
+      return "Bumble shows the lead photo at a larger crop than other apps — a slightly tighter framing on your face usually outperforms a wide shot here.";
+    case "Tinder":
+      return "Tinder is photo-first and swipe-fast. The lead photo isn't 'a' factor — it's almost the entire decision. Treat it accordingly.";
+    default:
+      return null;
+  }
+}
+
 export function generateAuditReport(params: {
   firstName: string;
   bio: string;
@@ -62,14 +124,22 @@ export function generateAuditReport(params: {
   currentApps: string[];
   biggestChallenge?: string | null;
   recentMessageSample?: string | null;
+  sourceApp?: string | null;
 }): AuditReportOutput {
   const score = scoreFromBio(params.bio, params.datingGoal, params.currentApps);
   const grade = gradeFromScore(score);
+  const app =
+    normalizeApp(params.sourceApp) ??
+    normalizeApp(params.currentApps[0]) ??
+    null;
+  const appLabel = app ?? params.currentApps[0] ?? "dating apps";
+  const name = params.firstName?.trim() || "your match";
 
+  const appFlavor = appBioFlavor(app, name);
   const bioAudits = [
-    `${params.firstName}'s bio has genuine personality but is underselling the depth beneath the surface. The opening line doesn't create immediate intrigue — it reads like a summary rather than a hook. Several phrases are common on ${params.currentApps[0] || "dating apps"} to the point of being invisible: "love to travel," "big on authenticity," and "looking for my person" appear in roughly 1 in 3 profiles. The bio doesn't answer the only question that matters: why would someone who has options choose you specifically? There's potential here — it just needs a sharper lens.`,
-    `The current bio tries to cover too much ground and ends up owning none of it. Rather than creating a vivid, specific picture of who ${params.firstName} is on their best Tuesday, it lists attributes that could apply to thousands of people. The tone is earnest — which is a strength — but earnest without specific detail reads as generic. The real ${params.firstName} is more interesting than this bio suggests. We need to surface that.`,
-    `There's a buried lede here. The most compelling detail in this bio appears in sentence four — that's where the reader's attention should land first. The profile structure is inverted: it starts with abstractions (values, personality descriptors) and saves the specifics for the end, when many readers have already moved on. Dating profiles reward novelty and specificity in the first eight words.`,
+    `${name}'s bio has genuine personality but is underselling the depth beneath the surface. The opening line doesn't create immediate intrigue — it reads like a summary rather than a hook. Several phrases are common on ${appLabel} to the point of being invisible: "love to travel," "big on authenticity," and "looking for my person" appear in roughly 1 in 3 profiles. The bio doesn't answer the only question that matters: why would someone who has options choose ${name} specifically? There's potential here — it just needs a sharper lens.${appFlavor ? " " + appFlavor : ""}`,
+    `${name}'s current bio tries to cover too much ground and ends up owning none of it. Rather than creating a vivid, specific picture of who ${name} is on their best Tuesday, it lists attributes that could apply to thousands of people. The tone is earnest — which is a strength — but earnest without specific detail reads as generic. The real ${name} is more interesting than this bio suggests. We need to surface that.${appFlavor ? " " + appFlavor : ""}`,
+    `There's a buried lede in ${name}'s profile. The most compelling detail appears in sentence four — that's where the reader's attention should land first. The profile structure is inverted: it starts with abstractions (values, personality descriptors) and saves the specifics for the end, when many readers have already moved on. ${appLabel} profiles reward novelty and specificity in the first eight words.${appFlavor ? " " + appFlavor : ""}`,
   ];
 
   const rewrittenBios = [
@@ -78,19 +148,20 @@ export function generateAuditReport(params: {
     `The facts: I'm someone who shows up, follows through, and genuinely enjoys other people — which, it turns out, is rarer than it should be. I'll plan the date, bring the energy, and remember what you told me three conversations ago. I'm ${params.currentApps.includes("Hinge") ? "on Hinge" : "on here"} because I'm actually trying, not just bored. If you're the same, we should probably talk.`,
   ];
 
+  const promptTips = appPromptTips(app);
   const promptRewrites = params.prompts
     ? [
         {
           original: params.prompts.split("\n")[0] || "The way to win me over is...",
           rewritten:
             "Remembering the weird specific thing I mentioned once. That's it. That's the whole thing.",
-          tip: "Specificity beats sincerity every time. Readers fill in the blanks with their own version of you.",
+          tip: promptTips.tip,
         },
         {
           original: params.prompts.split("\n")[1] || "I'm looking for...",
           rewritten:
             "Someone who laughs before the punchline lands. We'll get along immediately.",
-          tip: "Prompts are conversation starters — end with something they can respond to.",
+          tip: promptTips.rewriteHint || "Prompts are conversation starters — end with something they can respond to.",
         },
         {
           original: params.prompts.split("\n")[2] || "A green flag I look for...",
@@ -102,8 +173,12 @@ export function generateAuditReport(params: {
     : [
         {
           original: "(No prompts provided)",
-          rewritten: "I'll show you rather than tell you — first message gets a real response.",
-          tip: "Add 2-3 prompts to dramatically increase your match-to-conversation conversion rate.",
+          rewritten: app === "Tinder"
+            ? "I'll show you rather than tell you — first message gets a real response. (Tinder: keep this as the bio, no prompts needed.)"
+            : "I'll show you rather than tell you — first message gets a real response.",
+          tip: app === "Tinder"
+            ? "Tinder doesn't surface prompts the way Hinge does — a single sharp bio line does more work."
+            : `Add 2-3 prompts to dramatically increase ${name}'s match-to-conversation conversion rate on ${appLabel}.`,
         },
       ];
 
@@ -140,6 +215,15 @@ export function generateAuditReport(params: {
       advice:
         "At least 3 of your photos should be taken in natural daylight. Avoid heavy filters — they read as insecure. Phone cameras in good light beat DSLR cameras in bad light.",
     },
+    ...(appPhotoFlavor(app)
+      ? [
+          {
+            category: `${app} platform fit`,
+            status: "needs_work" as const,
+            advice: appPhotoFlavor(app) as string,
+          },
+        ]
+      : []),
   ];
 
   const actionPlanItems = [

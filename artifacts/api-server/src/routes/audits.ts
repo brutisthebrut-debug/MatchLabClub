@@ -192,6 +192,7 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
     currentApps: audit.currentApps,
     biggestChallenge: audit.biggestChallenge,
     recentMessageSample: audit.recentMessageSample,
+    sourceApp: audit.sourceApp,
   });
 
   const fullReport = { auditId: id, ...report };
@@ -261,6 +262,7 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
     prompts: promptsText,
     datingGoal,
     currentApps: [sourceApp],
+    sourceApp,
   });
 
   const fullReport = { auditId: audit.id, ...report };

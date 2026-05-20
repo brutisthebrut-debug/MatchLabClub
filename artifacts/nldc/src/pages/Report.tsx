@@ -221,9 +221,19 @@ export default function Report() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
               <ScoreRing score={r.readinessScore} />
               <div className="flex-1">
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                  {audit?.firstName ?? "Your"} · Profile Signal Audit
-                </p>
+                <div className="flex items-center gap-2 flex-wrap mb-2">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                    {audit?.firstName ?? "Your"} · Profile Signal Audit
+                  </p>
+                  {audit?.sourceApp ? (
+                    <span
+                      className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.12)] text-[hsl(268_60%_78%)] border border-[hsl(268_52%_68%/0.3)]"
+                      data-testid="badge-source-app"
+                    >
+                      {audit.sourceApp}
+                    </span>
+                  ) : null}
+                </div>
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-5xl font-bold" style={{ color: scoreColor }} data-testid="report-grade">{grade}</span>
                   <div>
