@@ -114,11 +114,16 @@ router.get("/insights/rollup", async (req, res): Promise<void> => {
 
   const sources = Array.from(groups.entries())
     .map(([sourceApp, g]) => {
+      // Guard against division-by-zero: if a group somehow has count=0 (e.g.
+      // via a race or bad migration), dividing would produce NaN/Infinity and
+      // silently corrupt the response.  Clamping to 1 keeps the math safe and
+      // makes any such data anomaly visible through the count field instead.
+      const safeCount = Math.max(1, g.count);
       const traits: Record<TraitKey, number> = {
-        warmth: Math.round(g.traits.warmth / g.count),
-        curiosity: Math.round(g.traits.curiosity / g.count),
-        verbosity: Math.round(g.traits.verbosity / g.count),
-        humor: Math.round(g.traits.humor / g.count),
+        warmth: Math.round(g.traits.warmth / safeCount),
+        curiosity: Math.round(g.traits.curiosity / safeCount),
+        verbosity: Math.round(g.traits.verbosity / safeCount),
+        humor: Math.round(g.traits.humor / safeCount),
       };
       const topStyle = Array.from(g.attachmentStyles.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
       const topPattern = Array.from(g.patterns.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
