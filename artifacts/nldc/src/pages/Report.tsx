@@ -1,6 +1,7 @@
 import { useParams, Link } from "wouter";
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
@@ -149,6 +150,7 @@ const REPLY_STYLES: Record<string, { gradient: string; emoji: string; border: st
 export default function Report() {
   const { id } = useParams<{ id: string }>();
   const auditId = parseInt(id ?? "0", 10);
+  useMeta("Signal Report", "Your full audit — Signal Score, bio critique, AI rewrite, prompt rewrites, photo checklist, and 7-day action plan.");
 
   const { data: audit, isLoading: auditLoading } = useGetAudit(auditId, {
     query: { enabled: !!auditId, queryKey: getGetAuditQueryKey(auditId) }

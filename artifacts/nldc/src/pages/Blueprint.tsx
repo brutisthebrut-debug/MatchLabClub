@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Sparkles, MapPin, RefreshCw, AlertCircle } from "lucide-react";
+import { Loader2, Sparkles, MapPin, RefreshCw, AlertCircle, Copy, Check } from "lucide-react";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -140,6 +140,20 @@ const SECTIONS = [
   { key: "growthEdge",         title: "Growth Edge",           color: "hsl(43 65% 65%)",   desc: "One concrete shift that would change your results" },
 ];
 
+function CopyBtn({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+      className="flex items-center gap-1.5 text-xs transition-colors flex-shrink-0"
+      style={{ color: copied ? "hsl(142 55% 60%)" : undefined }}
+      title="Copy to clipboard"
+    >
+      {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground/50" />}
+    </button>
+  );
+}
+
 export default function Blueprint() {
   useMeta("Personal Blueprint", "A coaching lens on your first impression, dating patterns, communication style, and growth edge — based only on what you choose to share.");
   const [text, setText] = useState("");
@@ -176,7 +190,7 @@ export default function Blueprint() {
           </motion.div>
 
           {/* Form */}
-          <motion.div {...fadeUp(0.05)} className="glass border border-white/8 rounded-3xl p-7 space-y-6 mb-6">
+          <motion.div {...fadeUp(0.05)} className="glass border border-white/8 rounded-3xl p-6 sm:p-7 space-y-6 mb-6">
             <div className="space-y-2">
               <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">How would you describe yourself to someone who's never met you?</Label>
               <Textarea
@@ -236,11 +250,14 @@ export default function Blueprint() {
               )}
               <div className="space-y-4">
                 {SECTIONS.map((s, i) => (
-                  <motion.div key={s.key} {...fadeUp(0.05 * i)} className="glass border border-white/8 rounded-2xl p-6">
+                  <motion.div key={s.key} {...fadeUp(0.05 * i)} className="glass border border-white/8 rounded-2xl p-5 sm:p-6">
                     <div className="flex items-start gap-3 mb-3">
                       <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ background: s.color }} />
-                      <div>
-                        <p className="font-semibold text-foreground text-sm">{s.title}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-semibold text-foreground text-sm">{s.title}</p>
+                          <CopyBtn text={show[s.key as keyof BlueprintResult]} />
+                        </div>
                         <p className="text-xs text-muted-foreground/60">{s.desc}</p>
                       </div>
                     </div>

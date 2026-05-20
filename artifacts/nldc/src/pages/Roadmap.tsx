@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
@@ -167,6 +168,7 @@ const MOAT_POINTS = [
 ];
 
 export default function Roadmap() {
+  useMeta("Platform Vision", "See everything that's live, in development, and on the roadmap for Next Level Dating Club. Privacy-first. No AI key required.");
   return (
     <AppLayout>
       <div className="min-h-screen mesh-bg">

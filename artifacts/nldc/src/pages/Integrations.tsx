@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
@@ -233,6 +234,7 @@ const fadeUp = (delay = 0) => ({
 });
 
 export default function Integrations() {
+  useMeta("Integrations", "Manage your connected apps and privacy controls — Gmail, Calendar, screenshot upload, and more. Always consent-first.");
   return (
     <AppLayout>
       <div className="min-h-screen mesh-bg py-10 px-4">
