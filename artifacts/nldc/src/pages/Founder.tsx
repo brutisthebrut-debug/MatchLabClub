@@ -1779,8 +1779,18 @@ const OCR_FIELD_COLORS: Record<string, string> = {
 };
 
 function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
-  const [windowDays, setWindowDays] = useState<OcrMismatchesWindow>(30);
-  const [sort, setSort] = useState<OcrMismatchesSort>("total");
+  const [windowDays, setWindowDays] = useState<OcrMismatchesWindow>(() => {
+    const saved = localStorage.getItem("ocr-windowDays");
+    if (saved === "7")   return 7   as OcrMismatchesWindow;
+    if (saved === "90")  return 90  as OcrMismatchesWindow;
+    if (saved === "all") return null as OcrMismatchesWindow;
+    return 30 as OcrMismatchesWindow;
+  });
+  const [sort, setSort] = useState<OcrMismatchesSort>(() => {
+    const saved = localStorage.getItem("ocr-sort");
+    if (saved === "top") return "top" as OcrMismatchesSort;
+    return "total" as OcrMismatchesSort;
+  });
   const [data, setData] = useState<OcrMismatchesResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1796,6 +1806,16 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
   const handleSetGroupBy = (value: "day" | "week") => {
     localStorage.setItem("ocr-trend-groupBy", value);
     setGroupBy(value);
+  };
+
+  const handleSetWindowDays = (value: OcrMismatchesWindow) => {
+    localStorage.setItem("ocr-windowDays", value === null ? "all" : String(value));
+    setWindowDays(value);
+  };
+
+  const handleSetSort = (value: OcrMismatchesSort) => {
+    localStorage.setItem("ocr-sort", value);
+    setSort(value);
   };
 
   const trendDays = windowDays === null ? 90 : windowDays;
@@ -1886,7 +1906,7 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
             value={windowDays === null ? "all" : String(windowDays)}
             onChange={(e) => {
               const v = e.target.value;
-              setWindowDays(v === "all" ? null : (Number(v) as OcrMismatchesWindow));
+              handleSetWindowDays(v === "all" ? null : (Number(v) as OcrMismatchesWindow));
             }}
             className="text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-transparent text-foreground hover:border-white/20"
           >
@@ -1899,7 +1919,7 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
           <select
             data-testid="select-ocr-sort"
             value={sort}
-            onChange={(e) => setSort(e.target.value as OcrMismatchesSort)}
+            onChange={(e) => handleSetSort(e.target.value as OcrMismatchesSort)}
             className="text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-transparent text-foreground hover:border-white/20"
           >
             {OCR_SORT_OPTIONS.map((o) => (
