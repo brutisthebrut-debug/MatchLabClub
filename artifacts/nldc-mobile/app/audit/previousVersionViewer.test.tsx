@@ -20,7 +20,7 @@ const auditDataRef: {
   isLoading: boolean;
 } = { current: null, isLoading: false };
 
-const generateMutateAsync = vi.fn(async () => NEW_CURRENT_REPORT);
+const generateMutateAsync = vi.fn(async (_args: { id: number }) => NEW_CURRENT_REPORT);
 
 // ---------------------------------------------------------------------------
 // React Native mocks — must be registered before the screen is imported.

@@ -13,9 +13,9 @@ const {
   mockHasSwept,
   mockMarkSwept,
 } = vi.hoisted(() => ({
-  mockLoadAutoRefreshPref: vi.fn<[], boolean>(() => false),
-  mockHasSwept: vi.fn<[], boolean>(() => false),
-  mockMarkSwept: vi.fn<[], void>(),
+  mockLoadAutoRefreshPref: vi.fn<() => boolean>(() => false),
+  mockHasSwept: vi.fn<() => boolean>(() => false),
+  mockMarkSwept: vi.fn<() => void>(),
 }));
 
 // ---------------------------------------------------------------------------
