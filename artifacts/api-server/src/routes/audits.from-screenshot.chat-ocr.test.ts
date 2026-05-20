@@ -19,7 +19,7 @@ const ENABLED = process.env.RUN_OCR_E2E === "1";
 
 describe.skipIf(!ENABLED)("extractChatFromScreenshot (real OCR)", () => {
   it(
-    "detects sourceApp and returns conversation text with UI noise stripped",
+    "Tinder: detects sourceApp and returns conversation text with UI noise stripped",
     async () => {
       const pngPath = resolve(
         __dirname,
@@ -45,6 +45,66 @@ describe.skipIf(!ENABLED)("extractChatFromScreenshot (real OCR)", () => {
       expect(result.conversationText).not.toMatch(/\b\d{1,2}:\d{2}\s*(am|pm)?\b/i);
       expect(result.conversationText).not.toMatch(/\bdelivered\b/i);
       expect(result.conversationText).not.toMatch(/^Send$/im);
+      expect(result.conversationText).not.toMatch(/^Today$/im);
+    },
+    120_000,
+  );
+
+  it(
+    "Bumble: detects sourceApp and strips Bumble-specific UI noise",
+    async () => {
+      const pngPath = resolve(
+        __dirname,
+        "__fixtures__/screenshots/bumble-chat-sample.png",
+      );
+      const imageBase64 = readFileSync(pngPath).toString("base64");
+
+      const result = await extractChatFromScreenshot(imageBase64);
+
+      expect(result.rawText.length).toBeGreaterThan(0);
+
+      // Source app should be detected from the "Bumble" header text.
+      expect(result.sourceApp).toBe("Bumble");
+
+      // Core conversation lines must be present.
+      const text = result.conversationText.toLowerCase();
+      expect(text).toMatch(/brunch|profile|great/);
+
+      // Bumble-specific UI noise must be stripped.
+      expect(result.conversationText).not.toMatch(/^Send a compliment$/im);
+      expect(result.conversationText).not.toMatch(/\b\d{1,2}:\d{2}\s*(am|pm)?\b/i);
+      expect(result.conversationText).not.toMatch(/\bdelivered\b/i);
+      expect(result.conversationText).not.toMatch(/^Send$/im);
+      expect(result.conversationText).not.toMatch(/^Today$/im);
+    },
+    120_000,
+  );
+
+  it(
+    "Hinge: detects sourceApp and strips Hinge-specific UI noise",
+    async () => {
+      const pngPath = resolve(
+        __dirname,
+        "__fixtures__/screenshots/hinge-chat-sample.png",
+      );
+      const imageBase64 = readFileSync(pngPath).toString("base64");
+
+      const result = await extractChatFromScreenshot(imageBase64);
+
+      expect(result.rawText.length).toBeGreaterThan(0);
+
+      // Source app should be detected from the "Hinge" header text.
+      expect(result.sourceApp).toBe("Hinge");
+
+      // Core conversation lines must be present.
+      const text = result.conversationText.toLowerCase();
+      expect(text).toMatch(/golden retriever|hike|dog/);
+
+      // Hinge-specific UI noise must be stripped.
+      expect(result.conversationText).not.toMatch(/^Send Like$/im);
+      expect(result.conversationText).not.toMatch(/^Reply$/im);
+      expect(result.conversationText).not.toMatch(/\b\d{1,2}:\d{2}\s*(am|pm)?\b/i);
+      expect(result.conversationText).not.toMatch(/\bdelivered\b/i);
       expect(result.conversationText).not.toMatch(/^Today$/im);
     },
     120_000,

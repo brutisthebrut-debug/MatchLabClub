@@ -87,3 +87,53 @@ magick -size 600x500 xc:white -font DejaVu-Sans -pointsize 22 -fill black \
   -annotate +20+455 "Send" \
   tinder-chat-sample.png
 ```
+
+---
+
+## bumble-chat-sample.png
+
+Used by `audits.from-screenshot.chat-ocr.test.ts` — exercises the Bumble chat
+OCR path. Asserts sourceApp detection (Bumble) and that Bumble-specific noise
+("Send a compliment") is stripped from `conversationText`.
+
+Regenerate with ImageMagick:
+
+```
+magick -size 600x520 xc:white -font DejaVu-Sans -pointsize 22 -fill black \
+  -annotate +20+40  "Bumble" \
+  -annotate +20+90  "Hey! Loved your profile!" \
+  -annotate +20+135 "2:30 PM" \
+  -annotate +20+180 "Thank you! Your photos are great too." \
+  -annotate +20+225 "Would you want to grab brunch sometime?" \
+  -annotate +20+270 "Today" \
+  -annotate +20+315 "Yes, I know a perfect place downtown!" \
+  -annotate +20+360 "Delivered" \
+  -annotate +20+405 "Send a compliment" \
+  -annotate +20+455 "Send" \
+  bumble-chat-sample.png
+```
+
+---
+
+## hinge-chat-sample.png
+
+Used by `audits.from-screenshot.chat-ocr.test.ts` — exercises the Hinge chat
+OCR path. Asserts sourceApp detection (Hinge) and that Hinge-specific noise
+("Send Like", "Reply") is stripped from `conversationText`.
+
+Regenerate with ImageMagick:
+
+```
+magick -size 600x520 xc:white -font DejaVu-Sans -pointsize 22 -fill black \
+  -annotate +20+40  "Hinge" \
+  -annotate +20+90  "Your dog is so cute, what breed?" \
+  -annotate +20+135 "4:15 PM" \
+  -annotate +20+180 "Ha, thanks! She is a golden retriever." \
+  -annotate +20+225 "Would love to take her for a hike together." \
+  -annotate +20+270 "Today" \
+  -annotate +20+315 "That sounds like a perfect first date!" \
+  -annotate +20+360 "Delivered" \
+  -annotate +20+405 "Send Like" \
+  -annotate +20+455 "Reply" \
+  hinge-chat-sample.png
+```
