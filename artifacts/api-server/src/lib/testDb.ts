@@ -309,10 +309,11 @@ class InsertChain extends AsyncChain<Row[]> {
   }
 }
 
-class UpdateChain extends AsyncChain<void> {
+class UpdateChain extends AsyncChain<Row[]> {
   private tableName: string;
   private setObj: Row | null = null;
   private filters: Pred[] = [];
+  private returningSpec: Record<string, ColumnRef> | true | null = null;
   constructor(tableName: string) {
     super();
     this.tableName = tableName;
@@ -325,13 +326,31 @@ class UpdateChain extends AsyncChain<void> {
     if (typeof pred === "function") this.filters.push(pred);
     return this;
   }
-  protected execute(): void {
+  returning(spec?: Record<string, ColumnRef>): this {
+    this.returningSpec = spec ?? true;
+    return this;
+  }
+  protected execute(): Row[] {
     const store = ensureStore(this.tableName);
+    const updated: Row[] = [];
     for (const row of store.rows) {
       if (this.filters.every((p) => p(row))) {
         Object.assign(row, this.setObj ?? {});
+        updated.push(row);
       }
     }
+    if (this.returningSpec === null || this.returningSpec === true) {
+      return updated;
+    }
+    return updated.map((row) => {
+      const projected: Row = {};
+      for (const [outKey, ref] of Object.entries(
+        this.returningSpec as Record<string, ColumnRef>,
+      )) {
+        projected[outKey] = row[ref.__col];
+      }
+      return projected;
+    });
   }
 }
 
