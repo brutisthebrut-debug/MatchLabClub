@@ -24,6 +24,10 @@ args = "test-claim-api"
 task = "workflow.run"
 args = "test-claim-client"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "test-mobile-auth"
+
 [[workflows.workflow]]
 name = "test-claim-api"
 author = "agent"
@@ -45,6 +49,17 @@ args = "pnpm --filter @workspace/nldc run test"
 
 [workflows.workflow.metadata]
 isValidation = true
+
+[[workflows.workflow]]
+name = "test-mobile-auth"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm --filter @workspace/nldc-mobile run test"
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [agent]
 stack = "PNPM_WORKSPACE"
