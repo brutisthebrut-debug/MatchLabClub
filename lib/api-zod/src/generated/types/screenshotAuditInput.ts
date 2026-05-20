@@ -5,6 +5,7 @@
  * Next Level Dating Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { ScreenshotAuditInputRawExtracted } from './screenshotAuditInputRawExtracted';
 
 /**
  * Either provide `imageBase64` (server will OCR) or provide `bio` (and
@@ -45,4 +46,20 @@ export interface ScreenshotAuditInput {
   bio?: string | null;
   /** Corrected prompts. Only used when `bio` is provided. */
   prompts?: string[];
+  /**
+     * Raw OCR text from the prior /audits/extract-screenshot call. When
+  present alongside corrected fields, the server stores it next to the
+  audit so the OCR-vs-correction diff can be inspected later.
+
+     * @nullable
+     */
+  rawOcrText?: string | null;
+  /**
+     * The parser's original guesses from the prior extract-screenshot call.
+  When the corrected values differ, the diff is recorded against the
+  audit for parser-improvement analysis.
+
+     * @nullable
+     */
+  rawExtracted?: ScreenshotAuditInputRawExtracted;
 }

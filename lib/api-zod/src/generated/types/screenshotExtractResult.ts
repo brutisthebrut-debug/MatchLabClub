@@ -5,6 +5,7 @@
  * Next Level Dating Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { ScreenshotExtractResultLowConfidenceFieldsItem } from './screenshotExtractResultLowConfidenceFieldsItem';
 
 export interface ScreenshotExtractResult {
   /** @nullable */
@@ -16,4 +17,8 @@ export interface ScreenshotExtractResult {
   bio: string;
   prompts: string[];
   rawOcrText: string;
+  /** Fields the parser is least sure about. The review UI should highlight
+  these so the user double-checks them before submitting.
+   */
+  lowConfidenceFields: ScreenshotExtractResultLowConfidenceFieldsItem[];
 }

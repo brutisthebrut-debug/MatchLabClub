@@ -20,7 +20,8 @@ import {
   getAnonClaimToken,
   getOrCreateAnonClaimToken,
 } from "../lib/anonClaimToken";
-import { extractProfileFromScreenshot } from "../lib/ocr";
+import { extractProfileFromScreenshot, detectLowConfidenceFields } from "../lib/ocr";
+import type { OcrCorrectionsRecord, OcrCorrectionEntry } from "@workspace/db";
 import type { Request } from "express";
 
 const router: IRouter = Router();
@@ -331,6 +332,14 @@ router.post("/audits/extract-screenshot", async (req, res): Promise<void> => {
     return;
   }
 
+  const lowConfidenceFields = detectLowConfidenceFields({
+    firstName: extracted.firstName,
+    age: extracted.age,
+    sourceApp: extracted.sourceApp,
+    bio: extracted.bio,
+    prompts: extracted.prompts,
+  });
+
   res.json(
     ExtractScreenshotResponse.parse({
       firstName: extracted.firstName,
@@ -339,9 +348,24 @@ router.post("/audits/extract-screenshot", async (req, res): Promise<void> => {
       bio: extracted.bio || extracted.rawText,
       prompts: extracted.prompts,
       rawOcrText: extracted.rawText,
+      lowConfidenceFields,
     }),
   );
 });
+
+function normalizeForCompare(v: unknown): string {
+  if (v === null || v === undefined) return "";
+  if (Array.isArray(v)) return v.map((s) => String(s).trim()).filter(Boolean).join("\n");
+  return String(v).trim();
+}
+
+function diffField(
+  raw: OcrCorrectionEntry["raw"],
+  corrected: OcrCorrectionEntry["corrected"],
+): OcrCorrectionEntry | null {
+  if (normalizeForCompare(raw) === normalizeForCompare(corrected)) return null;
+  return { raw, corrected };
+}
 
 router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
   const parsed = AuditFromScreenshotBody.safeParse(req.body);
@@ -359,6 +383,8 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
   let bioText: string;
   let prompts: string[];
   let rawText: string;
+  let ocrCorrections: OcrCorrectionsRecord | null = null;
+  let storedRawOcrText: string | null = null;
 
   if (hasCorrectedFields) {
     firstName = parsed.data.firstName?.trim() || "Match";
@@ -369,6 +395,27 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
       .map((p) => p.trim())
       .filter((p) => p.length > 0);
     rawText = bioText + (prompts.length ? "\n" + prompts.join("\n") : "");
+
+    const clientRawOcr = parsed.data.rawOcrText?.trim();
+    if (clientRawOcr) storedRawOcrText = clientRawOcr;
+
+    const rawExtracted = parsed.data.rawExtracted ?? null;
+    if (rawExtracted) {
+      const corrections: OcrCorrectionsRecord = {};
+      const fn = diffField(rawExtracted.firstName ?? null, firstName);
+      if (fn) corrections.firstName = fn;
+      const ag = diffField(rawExtracted.age ?? null, age);
+      if (ag) corrections.age = ag;
+      const sa = diffField(rawExtracted.sourceApp ?? null, sourceApp);
+      if (sa) corrections.sourceApp = sa;
+      const bi = diffField(rawExtracted.bio ?? null, bioText);
+      if (bi) corrections.bio = bi;
+      const pr = diffField(rawExtracted.prompts ?? [], prompts);
+      if (pr) corrections.prompts = pr;
+      if (Object.keys(corrections).length > 0) {
+        ocrCorrections = corrections;
+      }
+    }
   } else {
     if (!parsed.data.imageBase64) {
       res.status(400).json({ error: "Provide either imageBase64 or bio." });
@@ -395,6 +442,7 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
     bioText = extracted.bio || extracted.rawText;
     prompts = extracted.prompts;
     rawText = extracted.rawText;
+    storedRawOcrText = extracted.rawText;
   }
 
   const datingGoal = parsed.data.datingGoal?.trim() || "find a relationship";
@@ -420,6 +468,8 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
       source: "screenshot",
       userId: req.user?.id ?? null,
       anonymousClaimToken,
+      rawOcrText: storedRawOcrText,
+      ocrCorrections,
     })
     .returning();
 

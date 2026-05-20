@@ -24,8 +24,24 @@ export const auditsTable = pgTable("audits", {
   readinessScore: integer("readiness_score"),
   report: jsonb("report").$type<Record<string, unknown>>(),
   reportGeneratedAt: timestamp("report_generated_at"),
+  rawOcrText: text("raw_ocr_text"),
+  ocrCorrections: jsonb("ocr_corrections").$type<OcrCorrectionsRecord>(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+export type OcrCorrectionField =
+  | "firstName"
+  | "age"
+  | "sourceApp"
+  | "bio"
+  | "prompts";
+
+export type OcrCorrectionEntry = {
+  raw: string | number | string[] | null;
+  corrected: string | number | string[] | null;
+};
+
+export type OcrCorrectionsRecord = Partial<Record<OcrCorrectionField, OcrCorrectionEntry>>;
 
 export const insertAuditSchema = createInsertSchema(auditsTable).omit({ id: true, createdAt: true, status: true, readinessScore: true, userId: true, report: true });
 export type InsertAudit = z.infer<typeof insertAuditSchema>;

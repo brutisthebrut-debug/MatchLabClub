@@ -1372,7 +1372,7 @@ components:
 
     ScreenshotExtractResult:
       type: object
-      required: [bio, prompts, rawOcrText]
+      required: [bio, prompts, rawOcrText, lowConfidenceFields]
       properties:
         firstName:
           type: ["string", "null"]
@@ -1388,6 +1388,14 @@ components:
             type: string
         rawOcrText:
           type: string
+        lowConfidenceFields:
+          type: array
+          description: |
+            Fields the parser is least sure about. The review UI should highlight
+            these so the user double-checks them before submitting.
+          items:
+            type: string
+            enum: [firstName, age, sourceApp, bio, prompts]
 
     ScreenshotAuditInput:
       type: object
@@ -1421,6 +1429,31 @@ components:
           items:
             type: string
           description: Corrected prompts. Only used when `bio` is provided.
+        rawOcrText:
+          type: ["string", "null"]
+          description: |
+            Raw OCR text from the prior /audits/extract-screenshot call. When
+            present alongside corrected fields, the server stores it next to the
+            audit so the OCR-vs-correction diff can be inspected later.
+        rawExtracted:
+          type: ["object", "null"]
+          description: |
+            The parser's original guesses from the prior extract-screenshot call.
+            When the corrected values differ, the diff is recorded against the
+            audit for parser-improvement analysis.
+          properties:
+            firstName:
+              type: ["string", "null"]
+            age:
+              type: ["integer", "null"]
+            sourceApp:
+              type: ["string", "null"]
+            bio:
+              type: ["string", "null"]
+            prompts:
+              type: array
+              items:
+                type: string
 
     ScreenshotAuditReport:
       type: object

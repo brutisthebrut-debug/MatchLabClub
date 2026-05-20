@@ -683,7 +683,8 @@ export const ExtractScreenshotResponse = zod.object({
   "sourceApp": zod.string().nullish(),
   "bio": zod.string(),
   "prompts": zod.array(zod.string()),
-  "rawOcrText": zod.string()
+  "rawOcrText": zod.string(),
+  "lowConfidenceFields": zod.array(zod.enum(['firstName', 'age', 'sourceApp', 'bio', 'prompts'])).describe('Fields the parser is least sure about. The review UI should highlight\nthese so the user double-checks them before submitting.\n')
 })
 
 
@@ -703,7 +704,15 @@ export const AuditFromScreenshotBody = zod.object({
   "datingGoal": zod.string().nullish(),
   "sourceApp": zod.string().nullish().describe('Which dating app the screenshot was taken from (e.g. \"Hinge\").'),
   "bio": zod.string().nullish().describe('Corrected bio text. When present, OCR is skipped.'),
-  "prompts": zod.array(zod.string()).optional().describe('Corrected prompts. Only used when `bio` is provided.')
+  "prompts": zod.array(zod.string()).optional().describe('Corrected prompts. Only used when `bio` is provided.'),
+  "rawOcrText": zod.string().nullish().describe('Raw OCR text from the prior \/audits\/extract-screenshot call. When\npresent alongside corrected fields, the server stores it next to the\naudit so the OCR-vs-correction diff can be inspected later.\n'),
+  "rawExtracted": zod.object({
+  "firstName": zod.string().nullish(),
+  "age": zod.number().nullish(),
+  "sourceApp": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "prompts": zod.array(zod.string()).optional()
+}).nullish().describe('The parser\'s original guesses from the prior extract-screenshot call.\nWhen the corrected values differ, the diff is recorded against the\naudit for parser-improvement analysis.\n')
 }).describe('Either provide `imageBase64` (server will OCR) or provide `bio` (and\noptionally `prompts`) from a prior \/audits\/extract-screenshot call so the\nuser could correct OCR mistakes. When `bio` is provided, OCR is skipped.\n')
 
 export const AuditFromScreenshotResponse = zod.object({

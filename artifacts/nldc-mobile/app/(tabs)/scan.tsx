@@ -34,6 +34,15 @@ interface ExtractedDraft {
   sourceApp: string;
   bio: string;
   prompts: string[];
+  raw: {
+    firstName: string | null;
+    age: number | null;
+    sourceApp: string | null;
+    bio: string;
+    prompts: string[];
+  };
+  rawOcrText: string;
+  lowConfidenceFields: string[];
 }
 
 interface ScanResult {
@@ -146,6 +155,15 @@ export default function ScanScreen() {
         sourceApp: res.sourceApp ?? "",
         bio: res.bio ?? "",
         prompts: res.prompts ?? [],
+        raw: {
+          firstName: res.firstName ?? null,
+          age: res.age ?? null,
+          sourceApp: res.sourceApp ?? null,
+          bio: res.bio ?? "",
+          prompts: res.prompts ?? [],
+        },
+        rawOcrText: res.rawOcrText ?? "",
+        lowConfidenceFields: res.lowConfidenceFields ?? [],
       });
     } catch (err) {
       const message =
@@ -168,6 +186,14 @@ export default function ScanScreen() {
           firstName: draft.firstName.trim() || null,
           age: Number.isFinite(parsedAge) ? parsedAge : null,
           sourceApp: draft.sourceApp.trim() || null,
+          rawOcrText: draft.rawOcrText || null,
+          rawExtracted: {
+            firstName: draft.raw.firstName,
+            age: draft.raw.age,
+            sourceApp: draft.raw.sourceApp,
+            bio: draft.raw.bio,
+            prompts: draft.raw.prompts,
+          },
         },
       });
       setResult({
@@ -337,6 +363,11 @@ export default function ScanScreen() {
             <Text style={[styles.draftSubtitle, { color: colors.mutedForeground }]}>
               Fix anything that looks wrong, then we'll audit the corrected text.
             </Text>
+            {draft.lowConfidenceFields.length > 0 ? (
+              <Text style={[styles.draftSubtitle, { color: colors.gold }]}>
+                Double-check: {draft.lowConfidenceFields.join(", ")}
+              </Text>
+            ) : null}
 
             <View style={styles.fieldRow}>
               <Field

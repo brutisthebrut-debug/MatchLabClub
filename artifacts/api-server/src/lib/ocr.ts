@@ -4,6 +4,24 @@ import { parseProfileText, type SourceApp } from "./profileParser";
 
 export { parseProfileText, type SourceApp, type ParsedProfile } from "./profileParser";
 
+import type { ParsedProfile } from "./profileParser";
+
+export type OcrFieldName = "firstName" | "age" | "sourceApp" | "bio" | "prompts";
+
+/**
+ * Flag fields that the parser is least confident about so the review UI can
+ * highlight them as "double-check this". Heuristic, not authoritative.
+ */
+export function detectLowConfidenceFields(parsed: ParsedProfile): OcrFieldName[] {
+  const flags: OcrFieldName[] = [];
+  if (!parsed.firstName) flags.push("firstName");
+  if (parsed.age === null) flags.push("age");
+  if (!parsed.sourceApp) flags.push("sourceApp");
+  if (!parsed.bio || parsed.bio.length < 20) flags.push("bio");
+  if (parsed.prompts.length === 0) flags.push("prompts");
+  return flags;
+}
+
 let workerPromise: Promise<Worker> | null = null;
 
 async function getWorker(): Promise<Worker> {
