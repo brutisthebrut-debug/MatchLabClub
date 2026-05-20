@@ -48,4 +48,13 @@ export interface Audit {
      */
   reportGeneratedAt?: string | null;
   createdAt: string;
+  /**
+     * ISO timestamp when the audit was soft-deleted. Null for active
+  audits. Soft-deleted audits are filtered out of regular list
+  endpoints and only appear under `/audits/trash`; they are auto-
+  purged after 30 days.
+
+     * @nullable
+     */
+  deletedAt?: string | null;
 }

@@ -38,11 +38,37 @@ function ownerScope(req: Request): SQL {
   return sql`false`;
 }
 
+/**
+ * Owner scope restricted to audits that have not been soft-deleted.
+ * Used by every "active list" surface (list, summary, get-by-id, generate, ...)
+ * so users only ever see audits they haven't moved to the trash.
+ */
+function activeOwnerScope(req: Request): SQL {
+  return and(ownerScope(req), isNull(auditsTable.deletedAt)) as SQL;
+}
+
+function serializeAudit(a: typeof auditsTable.$inferSelect) {
+  return {
+    ...a,
+    report: a.report ?? null,
+    reportGeneratedAt:
+      a.reportGeneratedAt instanceof Date
+        ? a.reportGeneratedAt.toISOString()
+        : a.reportGeneratedAt ?? null,
+    createdAt:
+      a.createdAt instanceof Date ? a.createdAt.toISOString() : String(a.createdAt),
+    deletedAt:
+      a.deletedAt instanceof Date
+        ? a.deletedAt.toISOString()
+        : a.deletedAt ?? null,
+  };
+}
+
 router.get("/audits/summary", async (req, res): Promise<void> => {
   const audits = await db
     .select()
     .from(auditsTable)
-    .where(ownerScope(req))
+    .where(activeOwnerScope(req))
     .orderBy(auditsTable.createdAt);
 
   const completed = audits.filter((a) => a.readinessScore !== null);
@@ -133,7 +159,7 @@ router.get("/audits", async (req, res): Promise<void> => {
   const offset = parseIntInRange(req.query.offset, 0, Number.MAX_SAFE_INTEGER, 0);
 
   const where = and(
-    ownerScope(req),
+    activeOwnerScope(req),
     ...[sourceFilter, qFilter, scoreFilter].filter(
       (f): f is SQL => f !== undefined,
     ),
@@ -152,15 +178,7 @@ router.get("/audits", async (req, res): Promise<void> => {
     .limit(limit)
     .offset(offset);
 
-  res.json(ListAuditsResponse.parse(audits.map((a) => ({
-    ...a,
-    report: a.report ?? null,
-    reportGeneratedAt:
-      a.reportGeneratedAt instanceof Date
-        ? a.reportGeneratedAt.toISOString()
-        : a.reportGeneratedAt ?? null,
-    createdAt: a.createdAt instanceof Date ? a.createdAt.toISOString() : String(a.createdAt),
-  }))));
+  res.json(ListAuditsResponse.parse(audits.map(serializeAudit)));
 });
 
 router.post("/audits", async (req, res): Promise<void> => {
@@ -184,15 +202,19 @@ router.post("/audits", async (req, res): Promise<void> => {
     })
     .returning();
 
-  res.status(201).json(GetAuditResponse.parse({
-    ...audit,
-    report: audit.report ?? null,
-    reportGeneratedAt:
-      audit.reportGeneratedAt instanceof Date
-        ? audit.reportGeneratedAt.toISOString()
-        : audit.reportGeneratedAt ?? null,
-    createdAt: audit.createdAt instanceof Date ? audit.createdAt.toISOString() : String(audit.createdAt),
-  }));
+  res.status(201).json(GetAuditResponse.parse(serializeAudit(audit)));
+});
+
+router.get("/audits/trash", async (req, res): Promise<void> => {
+  const audits = await db
+    .select()
+    .from(auditsTable)
+    .where(
+      and(ownerScope(req), isNotNull(auditsTable.deletedAt)) as SQL,
+    )
+    .orderBy(desc(auditsTable.deletedAt));
+
+  res.json(ListAuditsResponse.parse(audits.map(serializeAudit)));
 });
 
 router.get("/audits/:id", async (req, res): Promise<void> => {
@@ -206,21 +228,13 @@ router.get("/audits/:id", async (req, res): Promise<void> => {
   const [audit] = await db
     .select()
     .from(auditsTable)
-    .where(and(eq(auditsTable.id, id), ownerScope(req)));
+    .where(and(eq(auditsTable.id, id), activeOwnerScope(req)));
   if (!audit) {
     res.status(404).json({ error: "Audit not found" });
     return;
   }
 
-  res.json(GetAuditResponse.parse({
-    ...audit,
-    report: audit.report ?? null,
-    reportGeneratedAt:
-      audit.reportGeneratedAt instanceof Date
-        ? audit.reportGeneratedAt.toISOString()
-        : audit.reportGeneratedAt ?? null,
-    createdAt: audit.createdAt instanceof Date ? audit.createdAt.toISOString() : String(audit.createdAt),
-  }));
+  res.json(GetAuditResponse.parse(serializeAudit(audit)));
 });
 
 router.delete("/audits/:id", async (req, res): Promise<void> => {
@@ -234,7 +248,71 @@ router.delete("/audits/:id", async (req, res): Promise<void> => {
   const [audit] = await db
     .select()
     .from(auditsTable)
-    .where(and(eq(auditsTable.id, id), ownerScope(req)));
+    .where(and(eq(auditsTable.id, id), activeOwnerScope(req)));
+  if (!audit) {
+    res.status(404).json({ error: "Audit not found" });
+    return;
+  }
+
+  await db
+    .update(auditsTable)
+    .set({ deletedAt: new Date() })
+    .where(eq(auditsTable.id, id));
+
+  res.json(DeleteAuditResponse.parse({ success: true, deletedId: id }));
+});
+
+router.post("/audits/:id/restore", async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+
+  const [audit] = await db
+    .select()
+    .from(auditsTable)
+    .where(
+      and(
+        eq(auditsTable.id, id),
+        ownerScope(req),
+        isNotNull(auditsTable.deletedAt),
+      ) as SQL,
+    );
+  if (!audit) {
+    res.status(404).json({ error: "Audit not found" });
+    return;
+  }
+
+  await db
+    .update(auditsTable)
+    .set({ deletedAt: null })
+    .where(eq(auditsTable.id, id));
+
+  res.json(
+    GetAuditResponse.parse(serializeAudit({ ...audit, deletedAt: null })),
+  );
+});
+
+router.delete("/audits/:id/purge", async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+
+  const [audit] = await db
+    .select()
+    .from(auditsTable)
+    .where(
+      and(
+        eq(auditsTable.id, id),
+        ownerScope(req),
+        isNotNull(auditsTable.deletedAt),
+      ) as SQL,
+    );
   if (!audit) {
     res.status(404).json({ error: "Audit not found" });
     return;
@@ -256,11 +334,20 @@ router.post("/audits/bulk-delete", async (req, res): Promise<void> => {
   const owned = await db
     .select({ id: auditsTable.id })
     .from(auditsTable)
-    .where(and(inArray(auditsTable.id, uniqueIds), ownerScope(req)));
+    .where(
+      and(
+        inArray(auditsTable.id, uniqueIds),
+        ownerScope(req),
+        isNull(auditsTable.deletedAt),
+      ) as SQL,
+    );
 
   const deletableIds = owned.map((row) => row.id);
   if (deletableIds.length > 0) {
-    await db.delete(auditsTable).where(inArray(auditsTable.id, deletableIds));
+    await db
+      .update(auditsTable)
+      .set({ deletedAt: new Date() })
+      .where(inArray(auditsTable.id, deletableIds));
   }
 
   res.json(
@@ -279,7 +366,7 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
   const [audit] = await db
     .select()
     .from(auditsTable)
-    .where(and(eq(auditsTable.id, id), ownerScope(req)));
+    .where(and(eq(auditsTable.id, id), activeOwnerScope(req)));
   if (!audit) {
     res.status(404).json({ error: "Audit not found" });
     return;

@@ -1493,12 +1493,15 @@ export const getDeleteAuditUrl = (id: number,) => {
 }
 
 /**
- * Permanently deletes a single audit. Only the audit owner (matched by
-userId for authenticated requests, or anonymous session for guests) can
-delete it. Returns 404 if the audit does not exist or is not owned by
-the caller.
+ * Moves a single audit to the trash by setting its `deletedAt` timestamp.
+The audit is hidden from the regular list/summary endpoints but can
+still be retrieved or restored via `/audits/trash` and
+`/audits/{id}/restore`. Soft-deleted audits are auto-purged after
+30 days. Only the audit owner (matched by userId for authenticated
+requests, or anonymous session for guests) can delete it. Returns 404
+if the audit does not exist or is not owned by the caller.
 
- * @summary Delete an audit owned by the current session
+ * @summary Soft-delete an audit owned by the current session
  */
 export const deleteAudit = async (id: number, options?: RequestInit): Promise<DeleteAuditResult> => {
 
@@ -1546,7 +1549,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteAuditMutationError = ErrorType<void>
 
     /**
- * @summary Delete an audit owned by the current session
+ * @summary Soft-delete an audit owned by the current session
  */
 export const useDeleteAudit = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAudit>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -1559,6 +1562,239 @@ export const useDeleteAudit = <TError = ErrorType<void>,
       return useMutation(getDeleteAuditMutationOptions(options));
     }
 
+export const getListTrashedAuditsUrl = () => {
+
+
+
+
+  return `/api/audits/trash`
+}
+
+/**
+ * Returns audits the caller has soft-deleted (set `deletedAt`) but which
+have not yet been auto-purged (rows older than 30 days are removed by
+a background job). Use this to power a "Recently deleted" view that
+lets users restore or permanently remove individual audits.
+
+ * @summary List soft-deleted audits owned by the current session
+ */
+export const listTrashedAudits = async ( options?: RequestInit): Promise<Audit[]> => {
+
+  return customFetch<Audit[]>(getListTrashedAuditsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTrashedAuditsQueryKey = () => {
+    return [
+    `/api/audits/trash`
+    ] as const;
+    }
+
+
+export const getListTrashedAuditsQueryOptions = <TData = Awaited<ReturnType<typeof listTrashedAudits>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrashedAudits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTrashedAuditsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTrashedAudits>>> = ({ signal }) => listTrashedAudits({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTrashedAudits>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTrashedAuditsQueryResult = NonNullable<Awaited<ReturnType<typeof listTrashedAudits>>>
+export type ListTrashedAuditsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List soft-deleted audits owned by the current session
+ */
+
+export function useListTrashedAudits<TData = Awaited<ReturnType<typeof listTrashedAudits>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrashedAudits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTrashedAuditsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getRestoreAuditUrl = (id: number,) => {
+
+
+
+
+  return `/api/audits/${id}/restore`
+}
+
+/**
+ * Clears the audit's `deletedAt` timestamp so it reappears in the
+regular list. Only the audit owner can restore it. Returns 404 if
+the audit does not exist, is not owned by the caller, or has already
+been hard-purged.
+
+ * @summary Restore a previously soft-deleted audit
+ */
+export const restoreAudit = async (id: number, options?: RequestInit): Promise<Audit> => {
+
+  return customFetch<Audit>(getRestoreAuditUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRestoreAuditMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreAudit>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restoreAudit>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['restoreAudit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreAudit>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  restoreAudit(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreAuditMutationResult = NonNullable<Awaited<ReturnType<typeof restoreAudit>>>
+
+    export type RestoreAuditMutationError = ErrorType<void>
+
+    /**
+ * @summary Restore a previously soft-deleted audit
+ */
+export const useRestoreAudit = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreAudit>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restoreAudit>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getRestoreAuditMutationOptions(options));
+    }
+
+export const getPurgeAuditUrl = (id: number,) => {
+
+
+
+
+  return `/api/audits/${id}/purge`
+}
+
+/**
+ * Hard-deletes a single audit from the trash. Only audits whose
+`deletedAt` is already set can be purged via this endpoint — use the
+regular DELETE `/audits/{id}` first to move an active audit to the
+trash. Returns 404 if the audit does not exist, is not owned by the
+caller, or has not been soft-deleted.
+
+ * @summary Permanently delete a soft-deleted audit
+ */
+export const purgeAudit = async (id: number, options?: RequestInit): Promise<DeleteAuditResult> => {
+
+  return customFetch<DeleteAuditResult>(getPurgeAuditUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getPurgeAuditMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purgeAudit>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof purgeAudit>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['purgeAudit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof purgeAudit>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  purgeAudit(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PurgeAuditMutationResult = NonNullable<Awaited<ReturnType<typeof purgeAudit>>>
+
+    export type PurgeAuditMutationError = ErrorType<void>
+
+    /**
+ * @summary Permanently delete a soft-deleted audit
+ */
+export const usePurgeAudit = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purgeAudit>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof purgeAudit>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getPurgeAuditMutationOptions(options));
+    }
+
 export const getBulkDeleteAuditsUrl = () => {
 
 
@@ -1568,12 +1804,14 @@ export const getBulkDeleteAuditsUrl = () => {
 }
 
 /**
- * Deletes a list of audits in a single round-trip. Only audits owned by
-the caller (matched by userId for authenticated requests, or anonymous
-session for guests) are deleted; ids that don't match are silently
-skipped. The response lists the ids that were actually deleted.
+ * Moves a list of audits to the trash in a single round-trip by setting
+their `deletedAt` timestamps. Only audits owned by the caller
+(matched by userId for authenticated requests, or anonymous session
+for guests) are affected; ids that don't match or are already
+soft-deleted are silently skipped. The response lists the ids that
+were actually soft-deleted.
 
- * @summary Delete multiple audits owned by the current session in one request
+ * @summary Soft-delete multiple audits owned by the current session in one request
  */
 export const bulkDeleteAudits = async (bulkDeleteAuditsInput: BulkDeleteAuditsInput, options?: RequestInit): Promise<BulkDeleteAuditsResult> => {
 
@@ -1622,7 +1860,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type BulkDeleteAuditsMutationError = ErrorType<void>
 
     /**
- * @summary Delete multiple audits owned by the current session in one request
+ * @summary Soft-delete multiple audits owned by the current session in one request
  */
 export const useBulkDeleteAudits = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkDeleteAudits>>, TError,{data: BodyType<BulkDeleteAuditsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}

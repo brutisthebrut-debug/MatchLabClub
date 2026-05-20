@@ -240,7 +240,8 @@ export const ExportMyDataResponse = zod.object({
   "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
 })),
   "profiles": zod.array(zod.object({
   "id": zod.number(),
@@ -379,7 +380,8 @@ export const DownloadEmailedExportResponse = zod.object({
   "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
 })),
   "profiles": zod.array(zod.object({
   "id": zod.number(),
@@ -511,7 +513,8 @@ export const ListAuditsResponseItem = zod.object({
   "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
 })
 export const ListAuditsResponse = zod.array(ListAuditsResponseItem)
 
@@ -589,17 +592,21 @@ export const GetAuditResponse = zod.object({
   "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
 })
 
 
 /**
- * Permanently deletes a single audit. Only the audit owner (matched by
-userId for authenticated requests, or anonymous session for guests) can
-delete it. Returns 404 if the audit does not exist or is not owned by
-the caller.
+ * Moves a single audit to the trash by setting its `deletedAt` timestamp.
+The audit is hidden from the regular list/summary endpoints but can
+still be retrieved or restored via `/audits/trash` and
+`/audits/{id}/restore`. Soft-deleted audits are auto-purged after
+30 days. Only the audit owner (matched by userId for authenticated
+requests, or anonymous session for guests) can delete it. Returns 404
+if the audit does not exist or is not owned by the caller.
 
- * @summary Delete an audit owned by the current session
+ * @summary Soft-delete an audit owned by the current session
  */
 export const DeleteAuditParams = zod.object({
   "id": zod.coerce.number()
@@ -612,12 +619,156 @@ export const DeleteAuditResponse = zod.object({
 
 
 /**
- * Deletes a list of audits in a single round-trip. Only audits owned by
-the caller (matched by userId for authenticated requests, or anonymous
-session for guests) are deleted; ids that don't match are silently
-skipped. The response lists the ids that were actually deleted.
+ * Returns audits the caller has soft-deleted (set `deletedAt`) but which
+have not yet been auto-purged (rows older than 30 days are removed by
+a background job). Use this to power a "Recently deleted" view that
+lets users restore or permanently remove individual audits.
 
- * @summary Delete multiple audits owned by the current session in one request
+ * @summary List soft-deleted audits owned by the current session
+ */
+export const ListTrashedAuditsResponseItem = zod.object({
+  "id": zod.number(),
+  "firstName": zod.string(),
+  "age": zod.number(),
+  "gender": zod.string(),
+  "orientation": zod.string().optional(),
+  "datingGoal": zod.string(),
+  "currentApps": zod.array(zod.string()),
+  "bio": zod.string(),
+  "prompts": zod.string().nullish(),
+  "recentMessageSample": zod.string().nullish(),
+  "photoCount": zod.number().nullish(),
+  "relationshipHistory": zod.string().nullish(),
+  "biggestChallenge": zod.string().nullish(),
+  "sourceApp": zod.string().nullish().describe('Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.'),
+  "status": zod.enum(['pending', 'generating', 'complete', 'error']),
+  "source": zod.enum(['manual', 'screenshot']),
+  "readinessScore": zod.number().nullish(),
+  "report": zod.union([zod.object({
+  "auditId": zod.number(),
+  "readinessScore": zod.number(),
+  "overallGrade": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "risks": zod.array(zod.string()),
+  "bioAudit": zod.string(),
+  "rewrittenBio": zod.string(),
+  "rewrittenPrompts": zod.array(zod.object({
+  "original": zod.string(),
+  "rewritten": zod.string(),
+  "tip": zod.string()
+})),
+  "photoGuidance": zod.array(zod.object({
+  "category": zod.string(),
+  "status": zod.enum(['good', 'needs_work', 'missing']),
+  "advice": zod.string()
+})),
+  "actionPlan": zod.array(zod.object({
+  "priority": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "timeframe": zod.string()
+})),
+  "messagingStyle": zod.string(),
+  "coachingCta": zod.string()
+}),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
+  "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
+  "createdAt": zod.string(),
+  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
+})
+export const ListTrashedAuditsResponse = zod.array(ListTrashedAuditsResponseItem)
+
+
+/**
+ * Clears the audit's `deletedAt` timestamp so it reappears in the
+regular list. Only the audit owner can restore it. Returns 404 if
+the audit does not exist, is not owned by the caller, or has already
+been hard-purged.
+
+ * @summary Restore a previously soft-deleted audit
+ */
+export const RestoreAuditParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const RestoreAuditResponse = zod.object({
+  "id": zod.number(),
+  "firstName": zod.string(),
+  "age": zod.number(),
+  "gender": zod.string(),
+  "orientation": zod.string().optional(),
+  "datingGoal": zod.string(),
+  "currentApps": zod.array(zod.string()),
+  "bio": zod.string(),
+  "prompts": zod.string().nullish(),
+  "recentMessageSample": zod.string().nullish(),
+  "photoCount": zod.number().nullish(),
+  "relationshipHistory": zod.string().nullish(),
+  "biggestChallenge": zod.string().nullish(),
+  "sourceApp": zod.string().nullish().describe('Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.'),
+  "status": zod.enum(['pending', 'generating', 'complete', 'error']),
+  "source": zod.enum(['manual', 'screenshot']),
+  "readinessScore": zod.number().nullish(),
+  "report": zod.union([zod.object({
+  "auditId": zod.number(),
+  "readinessScore": zod.number(),
+  "overallGrade": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "risks": zod.array(zod.string()),
+  "bioAudit": zod.string(),
+  "rewrittenBio": zod.string(),
+  "rewrittenPrompts": zod.array(zod.object({
+  "original": zod.string(),
+  "rewritten": zod.string(),
+  "tip": zod.string()
+})),
+  "photoGuidance": zod.array(zod.object({
+  "category": zod.string(),
+  "status": zod.enum(['good', 'needs_work', 'missing']),
+  "advice": zod.string()
+})),
+  "actionPlan": zod.array(zod.object({
+  "priority": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "timeframe": zod.string()
+})),
+  "messagingStyle": zod.string(),
+  "coachingCta": zod.string()
+}),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
+  "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
+  "createdAt": zod.string(),
+  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
+})
+
+
+/**
+ * Hard-deletes a single audit from the trash. Only audits whose
+`deletedAt` is already set can be purged via this endpoint — use the
+regular DELETE `/audits/{id}` first to move an active audit to the
+trash. Returns 404 if the audit does not exist, is not owned by the
+caller, or has not been soft-deleted.
+
+ * @summary Permanently delete a soft-deleted audit
+ */
+export const PurgeAuditParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const PurgeAuditResponse = zod.object({
+  "success": zod.boolean(),
+  "deletedId": zod.number()
+})
+
+
+/**
+ * Moves a list of audits to the trash in a single round-trip by setting
+their `deletedAt` timestamps. Only audits owned by the caller
+(matched by userId for authenticated requests, or anonymous session
+for guests) are affected; ids that don't match or are already
+soft-deleted are silently skipped. The response lists the ids that
+were actually soft-deleted.
+
+ * @summary Soft-delete multiple audits owned by the current session in one request
  */
 export const bulkDeleteAuditsBodyIdsMax = 200;
 

@@ -392,6 +392,31 @@ export default function MatchesScreen() {
           subtitle="Every screenshot you audit lands here. Tap one to re-open its mini-report."
         />
 
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open recently deleted matches"
+          onPress={() => router.push("/trash" as never)}
+          style={({ pressed }) => [
+            styles.trashLink,
+            {
+              borderColor: colors.cardBorder,
+              backgroundColor: colors.card,
+              opacity: pressed ? 0.7 : 1,
+            },
+          ]}
+        >
+          <Feather name="trash-2" size={14} color={colors.mutedForeground} />
+          <Text style={[styles.trashLinkText, { color: colors.foreground }]}>
+            Recently deleted
+          </Text>
+          <Feather
+            name="chevron-right"
+            size={14}
+            color={colors.mutedForeground}
+            style={{ marginLeft: "auto" }}
+          />
+        </Pressable>
+
         {!showDemo ? (
           <View style={styles.controls}>
             <View
@@ -937,6 +962,17 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { paddingHorizontal: 20, gap: 14 },
   controls: { gap: 10 },
+  trashLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: 12,
+  },
+  trashLinkText: { fontSize: 14, fontWeight: "600" },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",

@@ -496,7 +496,7 @@ describe("GET /api/audits filters and pagination", () => {
 });
 
 describe("DELETE /api/audits/:id", () => {
-  it("deletes only audits owned by the caller", async () => {
+  it("soft-deletes audits owned by the caller and hides them from the list", async () => {
     const id = await createAudit({ id: USER_ID });
     testApp.setUser({ id: USER_ID });
     const res = await request(testApp.app).delete(`/api/audits/${id}`);
@@ -505,7 +505,16 @@ describe("DELETE /api/audits/:id", () => {
     expect(res.body.deletedId).toBe(id);
 
     const { dumpTable } = await import("../lib/testDb");
-    expect(dumpTable("audits").find((r) => r.id === id)).toBeUndefined();
+    const row = dumpTable("audits").find((r) => r.id === id);
+    expect(row).toBeDefined();
+    expect(row?.deletedAt).toBeInstanceOf(Date);
+
+    const list = await request(testApp.app).get("/api/audits");
+    expect(list.status).toBe(200);
+    expect(list.body.map((a: { id: number }) => a.id)).not.toContain(id);
+
+    const get = await request(testApp.app).get(`/api/audits/${id}`);
+    expect(get.status).toBe(404);
   });
 
   it("returns 404 when trying to delete someone else's audit", async () => {
@@ -517,6 +526,106 @@ describe("DELETE /api/audits/:id", () => {
 
     const { dumpTable } = await import("../lib/testDb");
     expect(dumpTable("audits").find((r) => r.id === theirsId)).toBeDefined();
+  });
+
+  it("returns 404 when soft-deleting an already-deleted audit", async () => {
+    const id = await createAudit({ id: USER_ID });
+    testApp.setUser({ id: USER_ID });
+    await request(testApp.app).delete(`/api/audits/${id}`);
+    const res = await request(testApp.app).delete(`/api/audits/${id}`);
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("GET /api/audits/trash", () => {
+  it("lists soft-deleted audits and excludes active ones", async () => {
+    const activeId = await createAudit({ id: USER_ID });
+    const deletedId = await createAudit({ id: USER_ID });
+    testApp.setUser({ id: USER_ID });
+    await request(testApp.app).delete(`/api/audits/${deletedId}`);
+
+    const res = await request(testApp.app).get("/api/audits/trash");
+    expect(res.status).toBe(200);
+    expect(() => ListAuditsResponse.parse(res.body)).not.toThrow();
+    const ids = res.body.map((a: { id: number }) => a.id);
+    expect(ids).toContain(deletedId);
+    expect(ids).not.toContain(activeId);
+    expect(res.body[0].deletedAt).not.toBeNull();
+  });
+
+  it("scopes trash to the calling user", async () => {
+    const otherUserId = `other-${crypto.randomBytes(4).toString("hex")}`;
+    const theirsId = await createAudit({ id: otherUserId });
+    testApp.setUser({ id: otherUserId });
+    await request(testApp.app).delete(`/api/audits/${theirsId}`);
+
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).get("/api/audits/trash");
+    expect(res.status).toBe(200);
+    expect(res.body.map((a: { id: number }) => a.id)).not.toContain(theirsId);
+  });
+});
+
+describe("POST /api/audits/:id/restore", () => {
+  it("restores a soft-deleted audit and makes it visible again", async () => {
+    const id = await createAudit({ id: USER_ID });
+    testApp.setUser({ id: USER_ID });
+    await request(testApp.app).delete(`/api/audits/${id}`);
+
+    const res = await request(testApp.app).post(`/api/audits/${id}/restore`);
+    expect(res.status).toBe(200);
+    expect(() => GetAuditResponse.parse(res.body)).not.toThrow();
+    expect(res.body.id).toBe(id);
+    expect(res.body.deletedAt).toBeNull();
+
+    const list = await request(testApp.app).get("/api/audits");
+    expect(list.body.map((a: { id: number }) => a.id)).toContain(id);
+  });
+
+  it("returns 404 when restoring an audit that isn't in the trash", async () => {
+    const id = await createAudit({ id: USER_ID });
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).post(`/api/audits/${id}/restore`);
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 404 when restoring someone else's deleted audit", async () => {
+    const otherUserId = `other-${crypto.randomBytes(4).toString("hex")}`;
+    const theirsId = await createAudit({ id: otherUserId });
+    testApp.setUser({ id: otherUserId });
+    await request(testApp.app).delete(`/api/audits/${theirsId}`);
+
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).post(
+      `/api/audits/${theirsId}/restore`,
+    );
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("DELETE /api/audits/:id/purge", () => {
+  it("hard-deletes audits already in the trash", async () => {
+    const id = await createAudit({ id: USER_ID });
+    testApp.setUser({ id: USER_ID });
+    await request(testApp.app).delete(`/api/audits/${id}`);
+
+    const res = await request(testApp.app).delete(
+      `/api/audits/${id}/purge`,
+    );
+    expect(res.status).toBe(200);
+    expect(() => DeleteAuditResponse.parse(res.body)).not.toThrow();
+
+    const { dumpTable } = await import("../lib/testDb");
+    expect(dumpTable("audits").find((r) => r.id === id)).toBeUndefined();
+  });
+
+  it("returns 404 when purging an audit that hasn't been soft-deleted", async () => {
+    const id = await createAudit({ id: USER_ID });
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).delete(
+      `/api/audits/${id}/purge`,
+    );
+    expect(res.status).toBe(404);
   });
 });
 

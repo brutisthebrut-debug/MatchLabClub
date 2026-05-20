@@ -145,6 +145,7 @@ function RootLayoutNav() {
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="audit/[id]" options={{ title: "Mini-report" }} />
+        <Stack.Screen name="trash" options={{ title: "Recently deleted" }} />
       </Stack>
     </AuthProvider>
   );

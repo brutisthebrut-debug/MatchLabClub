@@ -4,6 +4,7 @@ import { startAiMetricsRetentionJob } from "./lib/aiMetricsRetention";
 import { startDataExportTokenCleanupJob } from "./lib/dataExportTokenCleanup";
 import { startHandoffRedemptionCleanupJob } from "./lib/handoffRedemptionCleanup";
 import { startAiReliabilityAlertsJob } from "./lib/aiReliabilityAlerts";
+import { startAuditTrashPurgeJob } from "./lib/auditTrashPurge";
 
 const rawPort = process.env["PORT"];
 
@@ -30,4 +31,5 @@ app.listen(port, (err) => {
   startDataExportTokenCleanupJob();
   startHandoffRedemptionCleanupJob();
   startAiReliabilityAlertsJob();
+  startAuditTrashPurgeJob();
 });

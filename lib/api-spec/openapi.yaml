@@ -499,12 +499,15 @@ paths:
     delete:
       operationId: deleteAudit
       tags: [audits]
-      summary: Delete an audit owned by the current session
+      summary: Soft-delete an audit owned by the current session
       description: |
-        Permanently deletes a single audit. Only the audit owner (matched by
-        userId for authenticated requests, or anonymous session for guests) can
-        delete it. Returns 404 if the audit does not exist or is not owned by
-        the caller.
+        Moves a single audit to the trash by setting its `deletedAt` timestamp.
+        The audit is hidden from the regular list/summary endpoints but can
+        still be retrieved or restored via `/audits/trash` and
+        `/audits/{id}/restore`. Soft-deleted audits are auto-purged after
+        30 days. Only the audit owner (matched by userId for authenticated
+        requests, or anonymous session for guests) can delete it. Returns 404
+        if the audit does not exist or is not owned by the caller.
       parameters:
         - name: id
           in: path
@@ -523,16 +526,95 @@ paths:
         "404":
           description: Not found
 
+  /audits/trash:
+    get:
+      operationId: listTrashedAudits
+      tags: [audits]
+      summary: List soft-deleted audits owned by the current session
+      description: |
+        Returns audits the caller has soft-deleted (set `deletedAt`) but which
+        have not yet been auto-purged (rows older than 30 days are removed by
+        a background job). Use this to power a "Recently deleted" view that
+        lets users restore or permanently remove individual audits.
+      responses:
+        "200":
+          description: List of soft-deleted audits, newest deletion first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Audit"
+
+  /audits/{id}/restore:
+    post:
+      operationId: restoreAudit
+      tags: [audits]
+      summary: Restore a previously soft-deleted audit
+      description: |
+        Clears the audit's `deletedAt` timestamp so it reappears in the
+        regular list. Only the audit owner can restore it. Returns 404 if
+        the audit does not exist, is not owned by the caller, or has already
+        been hard-purged.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Restored audit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Audit"
+        "400":
+          description: Invalid id
+        "404":
+          description: Not found
+
+  /audits/{id}/purge:
+    delete:
+      operationId: purgeAudit
+      tags: [audits]
+      summary: Permanently delete a soft-deleted audit
+      description: |
+        Hard-deletes a single audit from the trash. Only audits whose
+        `deletedAt` is already set can be purged via this endpoint — use the
+        regular DELETE `/audits/{id}` first to move an active audit to the
+        trash. Returns 404 if the audit does not exist, is not owned by the
+        caller, or has not been soft-deleted.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Audit permanently deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteAuditResult"
+        "400":
+          description: Invalid id
+        "404":
+          description: Not found
+
   /audits/bulk-delete:
     post:
       operationId: bulkDeleteAudits
       tags: [audits]
-      summary: Delete multiple audits owned by the current session in one request
+      summary: Soft-delete multiple audits owned by the current session in one request
       description: |
-        Deletes a list of audits in a single round-trip. Only audits owned by
-        the caller (matched by userId for authenticated requests, or anonymous
-        session for guests) are deleted; ids that don't match are silently
-        skipped. The response lists the ids that were actually deleted.
+        Moves a list of audits to the trash in a single round-trip by setting
+        their `deletedAt` timestamps. Only audits owned by the caller
+        (matched by userId for authenticated requests, or anonymous session
+        for guests) are affected; ids that don't match or are already
+        soft-deleted are silently skipped. The response lists the ids that
+        were actually soft-deleted.
       requestBody:
         required: true
         content:
@@ -1252,6 +1334,13 @@ components:
           description: ISO timestamp the stored report was generated. Null if no report has been generated yet.
         createdAt:
           type: string
+        deletedAt:
+          type: ["string", "null"]
+          description: |
+            ISO timestamp when the audit was soft-deleted. Null for active
+            audits. Soft-deleted audits are filtered out of regular list
+            endpoints and only appear under `/audits/trash`; they are auto-
+            purged after 30 days.
 
     AuditReport:
       type: object

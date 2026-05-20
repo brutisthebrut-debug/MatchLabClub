@@ -44,6 +44,7 @@ export const auditsTable = pgTable(
     rawOcrText: text("raw_ocr_text"),
     ocrCorrections: jsonb("ocr_corrections").$type<OcrCorrectionsRecord>(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    deletedAt: timestamp("deleted_at"),
   },
   (table) => [
     index("IDX_audits_first_name_trgm").using("gin", sql`${table.firstName} gin_trgm_ops`),

@@ -61,6 +61,10 @@ const stores: Record<string, Store> = {
       source: "manual",
       readinessScore: null,
       report: null,
+      reportGeneratedAt: null,
+      rawOcrText: null,
+      ocrCorrections: null,
+      deletedAt: null,
     },
   },
   message_coaching_sessions: {
