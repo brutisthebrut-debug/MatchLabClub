@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useAutoRefreshPref } from "@/lib/autoRefreshPref";
 import { useTrashReminderPref } from "@/lib/trashReminderPref";
+import { useCopyDurationPref, type CopyDuration, COPY_DURATION_LABELS } from "@/lib/copyDurationPref";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,6 +84,7 @@ export default function Account() {
   const emailExport = useEmailMyDataExport();
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useAutoRefreshPref();
   const [trashRemindersEnabled, setTrashRemindersEnabled] = useTrashReminderPref();
+  const [copyDuration, setCopyDuration] = useCopyDurationPref();
 
   const auditCount = auditsQuery.data?.length ?? 0;
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Friend";
@@ -296,6 +298,35 @@ export default function Account() {
                 <p className="text-sm text-muted-foreground mt-1">
                   Choose how your saved audits behave between visits.
                 </p>
+              </div>
+              <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-[hsl(232_38%_15%)] border border-white/5">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">Copy confirmation duration</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                    How long the "Copied" checkmark stays visible after you copy text on a report.
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0" data-testid="copy-duration-selector">
+                  {(["short", "default", "long"] as CopyDuration[]).map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => {
+                        setCopyDuration(opt);
+                        toast({ title: `Copy confirmation: ${COPY_DURATION_LABELS[opt]}` });
+                      }}
+                      data-testid={`copy-duration-${opt}`}
+                      aria-pressed={copyDuration === opt}
+                      className={[
+                        "px-2.5 py-1 rounded-lg text-xs font-medium transition-colors capitalize",
+                        copyDuration === opt
+                          ? "bg-[hsl(268_52%_58%)] text-white"
+                          : "text-muted-foreground hover:text-foreground hover:bg-white/[0.06]",
+                      ].join(" ")}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-[hsl(232_38%_15%)] border border-white/5">
                 <div className="flex-1 min-w-0">

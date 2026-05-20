@@ -1,5 +1,6 @@
 import { useParams, Link } from "wouter";
 import { useState, useEffect } from "react";
+import { useCopyDurationPref, COPY_DURATION_MS } from "@/lib/copyDurationPref";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -118,13 +119,12 @@ function ScoreRing({ score }: { score: number }) {
 }
 
 /* ─── Copy Button ─── */
-const COPY_FEEDBACK_DURATION_MS = 3000;
-
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
+  const [copyDuration] = useCopyDurationPref();
   return (
     <button
-      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION_MS); }}
+      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), COPY_DURATION_MS[copyDuration]); }}
       className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[hsl(268_52%_68%)] transition-colors flex-shrink-0"
       data-testid="button-copy-text"
     >
