@@ -8,13 +8,12 @@ import {
   messageCoachingSessionsTable,
   aiRequestMetricsTable,
   aiRequestMetricsDailyTable,
+  aiAlertThresholdsTable,
+  AI_ALERT_GLOBAL_KEY,
 } from "@workspace/db";
-import { count, sql, desc, gte, asc, isNotNull } from "drizzle-orm";
-import {
-  ALERT_WINDOW,
-  ALERT_MIN_SAMPLE,
-  ALERT_THRESHOLD,
-} from "../lib/aiReliabilityAlerts";
+import { count, sql, desc, gte, asc, eq, isNotNull } from "drizzle-orm";
+import { z } from "zod/v4";
+import { requireFounder } from "../middlewares/founderAuth";
 import type { OcrCorrectionsRecord, OcrCorrectionField } from "@workspace/db";
 
 const router: IRouter = Router();
@@ -35,7 +34,45 @@ router.get("/founder/stats", async (req, res): Promise<void> => {
   });
 });
 
+const DEFAULT_ALERT_WINDOW = 50;
+const DEFAULT_ALERT_MIN_SAMPLE = 10;
+const DEFAULT_ALERT_THRESHOLD = 0.7;
+
+interface ThresholdConfig {
+  windowSize: number;
+  minSample: number;
+  threshold: number;
+}
+
+async function loadThresholds(): Promise<{
+  global: ThresholdConfig;
+  perTool: Map<string, ThresholdConfig>;
+}> {
+  const rows = await db.select().from(aiAlertThresholdsTable);
+  let global: ThresholdConfig = {
+    windowSize: DEFAULT_ALERT_WINDOW,
+    minSample: DEFAULT_ALERT_MIN_SAMPLE,
+    threshold: DEFAULT_ALERT_THRESHOLD,
+  };
+  const perTool = new Map<string, ThresholdConfig>();
+  for (const r of rows) {
+    const cfg: ThresholdConfig = {
+      windowSize: r.windowSize,
+      minSample: r.minSample,
+      threshold: r.threshold,
+    };
+    if (r.toolName === AI_ALERT_GLOBAL_KEY) {
+      global = cfg;
+    } else {
+      perTool.set(r.toolName, cfg);
+    }
+  }
+  return { global, perTool };
+}
+
 router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
+  const { global: globalCfg, perTool: perToolCfg } = await loadThresholds();
+
   const perTool = await db
     .select({
       toolName: aiRequestMetricsTable.toolName,
@@ -55,17 +92,22 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
     .groupBy(aiRequestMetricsTable.toolName)
     .orderBy(desc(count()));
 
+  // Recent-window stats are computed per-tool because the window size can
+  // differ across tools. We compute a max window across all tools once,
+  // then filter per-tool downstream.
+  const maxWindow = Math.max(
+    globalCfg.windowSize,
+    ...Array.from(perToolCfg.values()).map((c) => c.windowSize),
+    1,
+  );
+
   const recentRows = await db.execute<{
     tool_name: string;
-    recent_total: string | number;
-    recent_first_try_ok: string | number;
-    recent_fallbacks: string | number;
+    rn: string | number;
+    attempts: number;
+    is_fallback: boolean;
   }>(sql`
-    select
-      tool_name,
-      count(*) as recent_total,
-      sum(case when attempts = 1 and is_fallback = false then 1 else 0 end) as recent_first_try_ok,
-      sum(case when is_fallback = true then 1 else 0 end) as recent_fallbacks
+    select tool_name, attempts, is_fallback, rn
     from (
       select
         tool_name,
@@ -74,17 +116,23 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
         row_number() over (partition by tool_name order by created_at desc) as rn
       from ai_request_metrics
     ) t
-    where rn <= ${ALERT_WINDOW}
-    group by tool_name
+    where rn <= ${maxWindow}
+    order by tool_name, rn
   `);
 
-  const recentByTool = new Map<string, { total: number; firstTryOk: number; fallbacks: number }>();
+  const recentByTool = new Map<string, Array<{ rn: number; attempts: number; isFallback: boolean }>>();
   for (const r of recentRows.rows ?? []) {
-    recentByTool.set(r.tool_name, {
-      total: Number(r.recent_total ?? 0),
-      firstTryOk: Number(r.recent_first_try_ok ?? 0),
-      fallbacks: Number(r.recent_fallbacks ?? 0),
+    const arr = recentByTool.get(r.tool_name) ?? [];
+    arr.push({
+      rn: Number(r.rn),
+      attempts: Number(r.attempts),
+      isFallback: Boolean(r.is_fallback),
     });
+    recentByTool.set(r.tool_name, arr);
+  }
+  // Defensive: ensure ordered by rn ascending (most-recent first) regardless of driver behavior.
+  for (const arr of recentByTool.values()) {
+    arr.sort((a, b) => a.rn - b.rn);
   }
 
   const [totals] = await db
@@ -108,10 +156,14 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
     const fallbacks24h = Number(row.fallbacks24h ?? 0);
     const total7d = Number(row.total7d ?? 0);
     const fallbacks7d = Number(row.fallbacks7d ?? 0);
-    const recent = recentByTool.get(row.toolName) ?? { total: 0, firstTryOk: 0, fallbacks: 0 };
-    const recentRate = recent.total > 0 ? recent.firstTryOk / recent.total : 0;
-    const alert =
-      recent.total >= ALERT_MIN_SAMPLE && recentRate < ALERT_THRESHOLD;
+    const cfg = perToolCfg.get(row.toolName) ?? globalCfg;
+    const all = recentByTool.get(row.toolName) ?? [];
+    const sliced = all.slice(0, cfg.windowSize);
+    const recentTotal = sliced.length;
+    const recentFirstTryOk = sliced.filter((r) => r.attempts === 1 && !r.isFallback).length;
+    const recentFallbacks = sliced.filter((r) => r.isFallback).length;
+    const recentRate = recentTotal > 0 ? recentFirstTryOk / recentTotal : 0;
+    const alert = recentTotal >= cfg.minSample && recentRate < cfg.threshold;
     return {
       toolName: row.toolName,
       total,
@@ -124,10 +176,10 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
       avgAttempts: Number(row.avgAttempts ?? 0),
       avgDurationMs: Number(row.avgDurationMs ?? 0),
       recent: {
-        windowSize: ALERT_WINDOW,
-        total: recent.total,
-        firstTryOk: recent.firstTryOk,
-        fallbacks: recent.fallbacks,
+        windowSize: cfg.windowSize,
+        total: recentTotal,
+        firstTryOk: recentFirstTryOk,
+        fallbacks: recentFallbacks,
         firstTrySuccessRate: recentRate,
       },
       last24h: {
@@ -139,6 +191,12 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
         total: total7d,
         fallbacks: fallbacks7d,
         fallbackRate: total7d > 0 ? fallbacks7d / total7d : 0,
+      },
+      effectiveThreshold: {
+        windowSize: cfg.windowSize,
+        minSample: cfg.minSample,
+        firstTrySuccessRate: cfg.threshold,
+        isOverride: perToolCfg.has(row.toolName),
       },
       alert,
     };
@@ -165,10 +223,16 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
     },
     perTool: perToolNorm,
     alertThreshold: {
-      windowSize: ALERT_WINDOW,
-      minSample: ALERT_MIN_SAMPLE,
-      firstTrySuccessRate: ALERT_THRESHOLD,
+      windowSize: globalCfg.windowSize,
+      minSample: globalCfg.minSample,
+      firstTrySuccessRate: globalCfg.threshold,
     },
+    perToolOverrides: Array.from(perToolCfg.entries()).map(([toolName, c]) => ({
+      toolName,
+      windowSize: c.windowSize,
+      minSample: c.minSample,
+      firstTrySuccessRate: c.threshold,
+    })),
     alerts: alerts.map((t) => ({
       toolName: t.toolName,
       recentTotal: t.recent.total,
@@ -320,6 +384,123 @@ router.get("/founder/ocr-mismatches", async (_req, res): Promise<void> => {
     },
     perField,
     recent,
+  });
+});
+
+router.get("/founder/ai-thresholds", requireFounder, async (_req, res): Promise<void> => {
+  const { global, perTool } = await loadThresholds();
+  res.json({
+    global: {
+      windowSize: global.windowSize,
+      minSample: global.minSample,
+      firstTrySuccessRate: global.threshold,
+    },
+    perTool: Array.from(perTool.entries()).map(([toolName, c]) => ({
+      toolName,
+      windowSize: c.windowSize,
+      minSample: c.minSample,
+      firstTrySuccessRate: c.threshold,
+    })),
+    defaults: {
+      windowSize: DEFAULT_ALERT_WINDOW,
+      minSample: DEFAULT_ALERT_MIN_SAMPLE,
+      firstTrySuccessRate: DEFAULT_ALERT_THRESHOLD,
+    },
+  });
+});
+
+const thresholdShape = z.object({
+  windowSize: z.number().int().min(1).max(10000),
+  minSample: z.number().int().min(1).max(10000),
+  firstTrySuccessRate: z.number().min(0).max(1),
+});
+
+const putThresholdsSchema = z.object({
+  global: thresholdShape.optional(),
+  perTool: z
+    .array(
+      thresholdShape.extend({
+        toolName: z.string().min(1).max(200),
+      }),
+    )
+    .optional(),
+  resetGlobal: z.boolean().optional(),
+  removeToolNames: z.array(z.string().min(1).max(200)).optional(),
+});
+
+router.put("/founder/ai-thresholds", requireFounder, async (req, res): Promise<void> => {
+  const parsed = putThresholdsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid threshold payload.", details: parsed.error.format() });
+    return;
+  }
+  const { global, perTool, resetGlobal, removeToolNames } = parsed.data;
+
+  if (resetGlobal) {
+    await db.delete(aiAlertThresholdsTable).where(eq(aiAlertThresholdsTable.toolName, AI_ALERT_GLOBAL_KEY));
+  } else if (global) {
+    await db
+      .insert(aiAlertThresholdsTable)
+      .values({
+        toolName: AI_ALERT_GLOBAL_KEY,
+        windowSize: global.windowSize,
+        minSample: global.minSample,
+        threshold: global.firstTrySuccessRate,
+      })
+      .onConflictDoUpdate({
+        target: aiAlertThresholdsTable.toolName,
+        set: {
+          windowSize: global.windowSize,
+          minSample: global.minSample,
+          threshold: global.firstTrySuccessRate,
+          updatedAt: new Date(),
+        },
+      });
+  }
+
+  if (removeToolNames && removeToolNames.length > 0) {
+    for (const name of removeToolNames) {
+      if (name === AI_ALERT_GLOBAL_KEY) continue;
+      await db.delete(aiAlertThresholdsTable).where(eq(aiAlertThresholdsTable.toolName, name));
+    }
+  }
+
+  if (perTool && perTool.length > 0) {
+    for (const t of perTool) {
+      if (t.toolName === AI_ALERT_GLOBAL_KEY) continue;
+      await db
+        .insert(aiAlertThresholdsTable)
+        .values({
+          toolName: t.toolName,
+          windowSize: t.windowSize,
+          minSample: t.minSample,
+          threshold: t.firstTrySuccessRate,
+        })
+        .onConflictDoUpdate({
+          target: aiAlertThresholdsTable.toolName,
+          set: {
+            windowSize: t.windowSize,
+            minSample: t.minSample,
+            threshold: t.firstTrySuccessRate,
+            updatedAt: new Date(),
+          },
+        });
+    }
+  }
+
+  const { global: g, perTool: pt } = await loadThresholds();
+  res.json({
+    global: {
+      windowSize: g.windowSize,
+      minSample: g.minSample,
+      firstTrySuccessRate: g.threshold,
+    },
+    perTool: Array.from(pt.entries()).map(([toolName, c]) => ({
+      toolName,
+      windowSize: c.windowSize,
+      minSample: c.minSample,
+      firstTrySuccessRate: c.threshold,
+    })),
   });
 });
 

@@ -3,7 +3,9 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import {
   getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
-  type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse
+  getAiThresholds, updateAiThresholds,
+  type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
+  type AiThresholdsResponse, type AiPerToolThreshold
 } from "@/lib/apiClient";
 import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
 import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle } from "lucide-react";
@@ -184,10 +186,326 @@ function AiStatusPanel() {
   );
 }
 
+function AlertThresholdEditor({
+  data,
+  onSaved,
+}: {
+  data: AiMetricsResponse;
+  onSaved: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [thresholds, setThresholds] = useState<AiThresholdsResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const [globalWindow, setGlobalWindow] = useState(50);
+  const [globalMin, setGlobalMin] = useState(10);
+  const [globalRate, setGlobalRate] = useState(70);
+
+  const [overrides, setOverrides] = useState<AiPerToolThreshold[]>([]);
+  const [newTool, setNewTool] = useState<string>("");
+
+  const load = async () => {
+    setLoading(true);
+    setErr(null);
+    try {
+      const t = await getAiThresholds(FOUNDER_KEY);
+      setThresholds(t);
+      setGlobalWindow(t.global.windowSize);
+      setGlobalMin(t.global.minSample);
+      setGlobalRate(Math.round(t.global.firstTrySuccessRate * 100));
+      setOverrides(t.perTool);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to load");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open && !thresholds) void load();
+  }, [open]);
+
+  const knownTools = data.perTool.map((t) => t.toolName);
+  const availableForOverride = knownTools.filter(
+    (n) => !overrides.some((o) => o.toolName === n),
+  );
+
+  const setOverrideField = (
+    toolName: string,
+    field: "windowSize" | "minSample" | "firstTrySuccessRate",
+    value: number,
+  ) => {
+    setOverrides((prev) =>
+      prev.map((o) =>
+        o.toolName === toolName ? { ...o, [field]: value } : o,
+      ),
+    );
+  };
+
+  const addOverride = () => {
+    if (!newTool) return;
+    setOverrides((prev) => [
+      ...prev,
+      {
+        toolName: newTool,
+        windowSize: globalWindow,
+        minSample: globalMin,
+        firstTrySuccessRate: globalRate / 100,
+      },
+    ]);
+    setNewTool("");
+  };
+
+  const removeOverride = (toolName: string) => {
+    setOverrides((prev) => prev.filter((o) => o.toolName !== toolName));
+  };
+
+  const save = async () => {
+    setSaving(true);
+    setErr(null);
+    try {
+      const originalNames = new Set(thresholds?.perTool.map((t) => t.toolName) ?? []);
+      const currentNames = new Set(overrides.map((o) => o.toolName));
+      const removeToolNames = Array.from(originalNames).filter((n) => !currentNames.has(n));
+      await updateAiThresholds(FOUNDER_KEY, {
+        global: {
+          windowSize: globalWindow,
+          minSample: globalMin,
+          firstTrySuccessRate: globalRate / 100,
+        },
+        perTool: overrides,
+        removeToolNames,
+      });
+      await load();
+      onSaved();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const resetToDefaults = async () => {
+    setSaving(true);
+    setErr(null);
+    try {
+      const removeToolNames = (thresholds?.perTool ?? []).map((t) => t.toolName);
+      await updateAiThresholds(FOUNDER_KEY, {
+        resetGlobal: true,
+        removeToolNames,
+      });
+      await load();
+      onSaved();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to reset");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="text-xs font-semibold text-muted-foreground/80 hover:text-foreground transition-colors px-3 py-1.5 rounded-lg border border-white/10 bg-white/5"
+      >
+        Tune alert thresholds
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/3 p-4 space-y-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-foreground">Alert thresholds</p>
+        <button
+          onClick={() => setOpen(false)}
+          className="text-xs text-muted-foreground/70 hover:text-foreground"
+        >
+          Close
+        </button>
+      </div>
+
+      {loading && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
+          <Loader2 className="w-3 h-3 animate-spin" /> Loading…
+        </div>
+      )}
+
+      {err && <p className="text-xs text-red-400">{err}</p>}
+
+      {!loading && (
+        <>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
+              Global defaults
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              <label className="block">
+                <span className="text-[10px] text-muted-foreground/70">Window</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={10000}
+                  value={globalWindow}
+                  onChange={(e) => setGlobalWindow(Math.max(1, Number(e.target.value) || 1))}
+                  className="w-full mt-1 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-foreground outline-none focus:border-[hsl(268_52%_68%/0.5)]"
+                />
+              </label>
+              <label className="block">
+                <span className="text-[10px] text-muted-foreground/70">Min samples</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={10000}
+                  value={globalMin}
+                  onChange={(e) => setGlobalMin(Math.max(1, Number(e.target.value) || 1))}
+                  className="w-full mt-1 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-foreground outline-none focus:border-[hsl(268_52%_68%/0.5)]"
+                />
+              </label>
+              <label className="block">
+                <span className="text-[10px] text-muted-foreground/70">Threshold %</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={globalRate}
+                  onChange={(e) => setGlobalRate(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
+                  className="w-full mt-1 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-foreground outline-none focus:border-[hsl(268_52%_68%/0.5)]"
+                />
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
+              Per-tool overrides
+            </p>
+            {overrides.length === 0 && (
+              <p className="text-xs text-muted-foreground/60 italic mb-2">
+                No overrides — every tool uses the global defaults.
+              </p>
+            )}
+            <div className="space-y-2">
+              {overrides.map((o) => (
+                <div
+                  key={o.toolName}
+                  className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 items-center"
+                >
+                  <span
+                    className="text-xs text-foreground/85 truncate"
+                    title={o.toolName}
+                  >
+                    {o.toolName}
+                  </span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={10000}
+                    value={o.windowSize}
+                    onChange={(e) =>
+                      setOverrideField(o.toolName, "windowSize", Math.max(1, Number(e.target.value) || 1))
+                    }
+                    title="Window"
+                    className="w-20 px-2 py-1 rounded-md bg-white/5 border border-white/10 text-xs text-foreground outline-none"
+                  />
+                  <input
+                    type="number"
+                    min={1}
+                    max={10000}
+                    value={o.minSample}
+                    onChange={(e) =>
+                      setOverrideField(o.toolName, "minSample", Math.max(1, Number(e.target.value) || 1))
+                    }
+                    title="Min samples"
+                    className="w-20 px-2 py-1 rounded-md bg-white/5 border border-white/10 text-xs text-foreground outline-none"
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={Math.round(o.firstTrySuccessRate * 100)}
+                    onChange={(e) =>
+                      setOverrideField(
+                        o.toolName,
+                        "firstTrySuccessRate",
+                        Math.max(0, Math.min(100, Number(e.target.value) || 0)) / 100,
+                      )
+                    }
+                    title="Threshold %"
+                    className="w-20 px-2 py-1 rounded-md bg-white/5 border border-white/10 text-xs text-foreground outline-none"
+                  />
+                  <button
+                    onClick={() => removeOverride(o.toolName)}
+                    className="text-xs text-muted-foreground/60 hover:text-red-400 px-2"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {availableForOverride.length > 0 && (
+              <div className="flex items-center gap-2 mt-3">
+                <select
+                  value={newTool}
+                  onChange={(e) => setNewTool(e.target.value)}
+                  className="flex-1 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-foreground outline-none"
+                >
+                  <option value="">Add override for…</option>
+                  {availableForOverride.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={addOverride}
+                  disabled={!newTool}
+                  className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-foreground hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Add
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 pt-2 border-t border-white/8">
+            <button
+              onClick={save}
+              disabled={saving}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {saving && <Loader2 className="w-3 h-3 animate-spin" />}
+              Save thresholds
+            </button>
+            <button
+              onClick={resetToDefaults}
+              disabled={saving}
+              className="text-xs text-muted-foreground/70 hover:text-foreground px-3 py-2 rounded-lg border border-white/10"
+            >
+              Reset to defaults
+            </button>
+            {thresholds && (
+              <span className="text-[10px] text-muted-foreground/50 ml-auto">
+                Defaults: {thresholds.defaults.windowSize} / {thresholds.defaults.minSample} /{" "}
+                {Math.round(thresholds.defaults.firstTrySuccessRate * 100)}%
+              </span>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
   const [data, setData] = useState<AiMetricsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [bump, setBump] = useState(0);
 
   useEffect(() => {
     setLoading(true);
@@ -196,7 +514,7 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
       .then(setData)
       .catch((e: unknown) => setErr(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false));
-  }, [refreshKey]);
+  }, [refreshKey, bump]);
 
   const pct = (n: number) => `${Math.round(n * 100)}%`;
   const overall = data?.overall;
@@ -208,7 +526,10 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
           <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">AI Reliability</p>
           <p className="text-base font-semibold text-foreground">First-try success and fallback rates</p>
         </div>
-        {loading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground/60" />}
+        <div className="flex items-center gap-2">
+          {loading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground/60" />}
+          {data && <AlertThresholdEditor data={data} onSaved={() => setBump((x) => x + 1)} />}
+        </div>
       </div>
 
       {err && (
@@ -279,7 +600,7 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/8 bg-white/3">
-                  {["Tool", "Total", "1st-try ok", "Retried ok", "Fallbacks", "1st-try %", "Fallback 24h", "Fallback 7d", "Recent 50", "Avg attempts", "Avg ms"].map((h) => (
+                  {["Tool", "Total", "1st-try ok", "Retried ok", "Fallbacks", "1st-try %", "Fallback 24h", "Fallback 7d", "Recent window", "Avg attempts", "Avg ms"].map((h) => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
                       {h}
                     </th>

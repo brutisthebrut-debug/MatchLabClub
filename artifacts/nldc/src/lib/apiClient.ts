@@ -101,7 +101,26 @@ export interface AiToolMetric {
     fallbacks: number;
     fallbackRate: number;
   };
+  effectiveThreshold: {
+    windowSize: number;
+    minSample: number;
+    firstTrySuccessRate: number;
+    isOverride: boolean;
+  };
   alert: boolean;
+}
+export interface AiThresholdConfig {
+  windowSize: number;
+  minSample: number;
+  firstTrySuccessRate: number;
+}
+export interface AiPerToolThreshold extends AiThresholdConfig {
+  toolName: string;
+}
+export interface AiThresholdsResponse {
+  global: AiThresholdConfig;
+  perTool: AiPerToolThreshold[];
+  defaults: AiThresholdConfig;
 }
 export interface AiMetricsResponse {
   overall: {
@@ -120,11 +139,43 @@ export interface AiMetricsResponse {
     minSample: number;
     firstTrySuccessRate: number;
   };
+  perToolOverrides: AiPerToolThreshold[];
   alerts: { toolName: string; recentTotal: number; recentFirstTrySuccessRate: number }[];
 }
 
 export const getAiMetrics = () =>
   get<AiMetricsResponse>("/founder/ai-metrics");
+
+export const getAiThresholds = (founderKey: string) =>
+  fetch(`${BASE}/founder/ai-thresholds`, {
+    headers: { "x-founder-key": founderKey },
+  }).then(async (res) => {
+    if (!res.ok) throw new Error(`GET /founder/ai-thresholds failed (${res.status})`);
+    return res.json() as Promise<AiThresholdsResponse>;
+  });
+
+export interface AiThresholdsUpdate {
+  global?: AiThresholdConfig;
+  perTool?: AiPerToolThreshold[];
+  resetGlobal?: boolean;
+  removeToolNames?: string[];
+}
+
+export const updateAiThresholds = (founderKey: string, body: AiThresholdsUpdate) =>
+  fetch(`${BASE}/founder/ai-thresholds`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "x-founder-key": founderKey,
+    },
+    body: JSON.stringify(body),
+  }).then(async (res) => {
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`PUT /founder/ai-thresholds failed (${res.status}): ${text}`);
+    }
+    return res.json() as Promise<{ global: AiThresholdConfig; perTool: AiPerToolThreshold[] }>;
+  });
 
 export const getLeads = () =>
   get<Lead[]>("/leads");
