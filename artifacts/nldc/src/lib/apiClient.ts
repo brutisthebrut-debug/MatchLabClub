@@ -305,6 +305,55 @@ export const getOcrMismatches = (
   );
 };
 
+export interface OcrLearnedRule {
+  id: number;
+  kind: string;
+  pattern: string;
+  replacement: string;
+  scope: string | null;
+  occurrences: number;
+  learnedAt: string;
+  updatedAt: string;
+}
+
+export interface OcrLearnedRulesResponse {
+  rules: OcrLearnedRule[];
+}
+
+export interface OcrLearnResult {
+  scannedAudits: number;
+  candidates: number;
+  persisted: number;
+}
+
+export const getOcrLearnedRules = (founderKey: string) =>
+  get<OcrLearnedRulesResponse>("/founder/ocr-rules", {
+    headers: { "x-founder-key": founderKey },
+  });
+
+export const runOcrLearn = async (founderKey: string): Promise<OcrLearnResult> => {
+  const res = await fetch(`${BASE}/founder/ocr-learn`, {
+    method: "POST",
+    headers: { "x-founder-key": founderKey },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`POST /founder/ocr-learn failed (${res.status}): ${text}`);
+  }
+  return res.json();
+};
+
+export const clearOcrLearnedRules = async (founderKey: string): Promise<void> => {
+  const res = await fetch(`${BASE}/founder/ocr-rules`, {
+    method: "DELETE",
+    headers: { "x-founder-key": founderKey },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`DELETE /founder/ocr-rules failed (${res.status}): ${text}`);
+  }
+};
+
 export const getLeads = () =>
   get<Lead[]>("/leads");
 

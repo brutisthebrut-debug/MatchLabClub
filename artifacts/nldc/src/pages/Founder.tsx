@@ -5,11 +5,13 @@ import {
   getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
   getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges, undoAiThresholdChange,
   getRollupHeartbeat, getOcrMismatches,
+  getOcrLearnedRules, runOcrLearn, clearOcrLearnedRules,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
   type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
   type AiThresholdChange, type RollupHeartbeatResponse,
   type OcrMismatchesResponse, type OcrMismatchesSort, type OcrMismatchesWindow,
-  type OcrCorrectionField
+  type OcrCorrectionField,
+  type OcrLearnedRule, type OcrLearnResult
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
 import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
@@ -1621,6 +1623,166 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
   );
 }
 
+function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
+  const [rules, setRules] = useState<OcrLearnedRule[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [running, setRunning] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [lastRun, setLastRun] = useState<OcrLearnResult | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [reloadTick, setReloadTick] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    getOcrLearnedRules(FOUNDER_KEY)
+      .then((res) => { if (!cancelled) setRules(res.rules); })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load");
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [refreshKey, reloadTick]);
+
+  const handleRun = async () => {
+    setRunning(true);
+    setActionError(null);
+    try {
+      const result = await runOcrLearn(FOUNDER_KEY);
+      setLastRun(result);
+      setReloadTick((t) => t + 1);
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Failed to run learning");
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const handleClear = async () => {
+    if (!window.confirm("Clear all learned OCR rules? This cannot be undone.")) return;
+    setClearing(true);
+    setActionError(null);
+    try {
+      await clearOcrLearnedRules(FOUNDER_KEY);
+      setLastRun(null);
+      setReloadTick((t) => t + 1);
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Failed to clear rules");
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  const grouped: Record<string, OcrLearnedRule[]> = {};
+  for (const rule of rules ?? []) {
+    if (!grouped[rule.kind]) grouped[rule.kind] = [];
+    grouped[rule.kind].push(rule);
+  }
+  const kinds = Object.keys(grouped).sort();
+
+  return (
+    <div className="glass rounded-2xl p-6 space-y-4" data-testid="panel-ocr-rules">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h2 className="font-semibold text-foreground">Learned OCR Rules</h2>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">
+            Patterns the parser has learned from founder corrections. Run learning to mine new rules from recent audits.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            data-testid="btn-ocr-learn-run"
+            onClick={handleRun}
+            disabled={running || clearing}
+            className="text-xs px-3 py-1.5 rounded-lg border border-[hsl(268_52%_68%/0.3)] bg-[hsl(268_52%_68%/0.15)] text-[hsl(268_52%_78%)] hover:bg-[hsl(268_52%_68%/0.25)] disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {running ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+            Run learning now
+          </button>
+          <button
+            data-testid="btn-ocr-rules-clear"
+            onClick={handleClear}
+            disabled={running || clearing || (rules?.length ?? 0) === 0}
+            className="text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-transparent text-muted-foreground hover:border-[hsl(348_55%_68%/0.4)] hover:text-[hsl(348_55%_78%)] disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {clearing ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+            Clear all rules
+          </button>
+        </div>
+      </div>
+
+      {lastRun && (
+        <div
+          data-testid="ocr-learn-result"
+          className="text-xs rounded-xl border border-[hsl(142_55%_50%/0.25)] bg-[hsl(142_55%_50%/0.08)] px-3 py-2 text-foreground/80 flex flex-wrap gap-4"
+        >
+          <span><strong className="text-foreground">{lastRun.scannedAudits}</strong> audits scanned</span>
+          <span><strong className="text-foreground">{lastRun.candidates}</strong> candidates</span>
+          <span><strong className="text-foreground">{lastRun.persisted}</strong> persisted</span>
+        </div>
+      )}
+      {actionError && (
+        <p className="text-xs text-[hsl(348_55%_68%)]" data-testid="ocr-rules-action-error">{actionError}</p>
+      )}
+
+      {loading && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
+        </div>
+      )}
+      {error && !loading && (
+        <p className="text-xs text-[hsl(348_55%_68%)]">Could not load OCR rules: {error}</p>
+      )}
+
+      {rules && !loading && rules.length === 0 && (
+        <p className="text-xs text-muted-foreground/60 italic py-4" data-testid="ocr-rules-empty">
+          No learned rules yet. Run learning to mine patterns from founder corrections.
+        </p>
+      )}
+
+      {rules && !loading && rules.length > 0 && (
+        <div className="space-y-4" data-testid="ocr-rules-list">
+          {kinds.map((kind) => (
+            <div key={kind} className="space-y-2" data-testid={`ocr-rules-group-${kind}`}>
+              <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground/60">
+                {kind} <span className="text-muted-foreground/40">({grouped[kind].length})</span>
+              </h3>
+              <div className="space-y-1.5">
+                {grouped[kind].map((rule) => (
+                  <div
+                    key={rule.id}
+                    data-testid={`ocr-rule-${rule.id}`}
+                    className="glass rounded-xl px-3 py-2 flex items-center gap-3 flex-wrap text-xs"
+                  >
+                    <code className="font-mono text-foreground bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                      {rule.pattern}
+                    </code>
+                    <span className="text-muted-foreground/50">→</span>
+                    <code className="font-mono text-foreground bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                      {rule.replacement}
+                    </code>
+                    {rule.scope && (
+                      <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">
+                        scope: {rule.scope}
+                      </span>
+                    )}
+                    <span className="ml-auto flex items-center gap-3 text-[10px] text-muted-foreground/60">
+                      <span><strong className="text-foreground/80">{rule.occurrences}</strong> seen</span>
+                      <span>{fmtDate(rule.learnedAt)}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function fmtDate(iso: string) {
   try {
     return new Date(iso).toLocaleDateString("en-US", {
@@ -1834,7 +1996,7 @@ function Dashboard() {
           <OcrMismatchesPanel refreshKey={refreshKey} />
           <AiMetricsPanel refreshKey={refreshKey} />
           <AiReliabilityTrendsPanel refreshKey={refreshKey} />
-          <OcrMismatchesPanel refreshKey={refreshKey} />
+          <OcrRulesPanel refreshKey={refreshKey} />
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <StatCard label="Leads captured" value={stats?.leads ?? "—"} icon={Inbox} color="hsl(268 52% 68%)" />
             <StatCard label="Purchase interest" value={stats?.purchaseInterest ?? "—"} icon={ShoppingBag} color="hsl(348 55% 58%)" />
