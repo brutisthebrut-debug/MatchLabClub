@@ -311,12 +311,28 @@ function installFetchMock(): void {
             claimedFollowUps += 1;
           }
         }
+        const insightIds: number[] = Array.isArray(body.insightIds)
+          ? body.insightIds
+          : [];
+        let claimedInsights = 0;
+        for (const row of server.insights) {
+          if (
+            insightIds.includes(row.insight.id) &&
+            row.userId === null &&
+            row.anonToken !== null &&
+            row.anonToken === currentAnonToken
+          ) {
+            row.userId = authState.user!.id;
+            row.anonToken = null;
+            claimedInsights += 1;
+          }
+        }
         const response = {
           claimed: {
             audits: claimed,
             profiles: 0,
             messages: 0,
-            insights: 0,
+            insights: claimedInsights,
             followUps: claimedFollowUps,
           },
         };
@@ -1195,6 +1211,67 @@ describe("Cross-device hand-off claim flow", () => {
 // when there are no anonymous insight IDs the redeem call still succeeds and
 // sends an empty insightIds array (no regression for users without insights).
 // ---------------------------------------------------------------------------
+
+describe("Anonymous Email Insight follows the user into their account on the same device", () => {
+  it("anon-created insight id is persisted, sent on cookie-scoped claim, and reassigned", async () => {
+    let createdInsightId: number | undefined;
+
+    // 1) Anonymous visitor creates an insight on the default tagged browser.
+    const anon = render(
+      <Wrap>
+        <AnonInsightCreator onCreated={(id) => (createdInsightId = id)} />
+      </Wrap>,
+    );
+
+    await waitFor(() => expect(createdInsightId).toBeDefined());
+    expect(server.insights).toHaveLength(1);
+    expect(server.insights[0]!.userId).toBeNull();
+    expect(server.insights[0]!.anonToken).toBe("anon-default-browser");
+    expect(readAnonymousIds().insightIds).toEqual([createdInsightId!]);
+    expect(hasAnyAnonymousIds()).toBe(true);
+
+    anon.unmount();
+
+    // 2) The user signs in on the SAME browser (anon cookie still present).
+    act(() => {
+      authState = {
+        isAuthenticated: true,
+        isLoading: false,
+        user: { id: "user-same-device-insights", email: null },
+      };
+    });
+
+    // 3) Mount the insight list — useClaimAnonymousOnLogin fires the
+    //    cookie-scoped claim, then useListInsights refetches.
+    render(
+      <Wrap>
+        <InsightList />
+      </Wrap>,
+    );
+
+    // The previously-anonymous insight appears in the signed-in list.
+    await waitFor(() => {
+      expect(screen.getByTestId(`insight-${createdInsightId}`)).toBeTruthy();
+    });
+
+    // Cookie-scoped claim was hit exactly once; cross-device redeem must not fire.
+    expect(server.claimCalls).toBe(1);
+    expect(server.redeemCalls).toBe(0);
+
+    // Claim payload carried the persisted insight id.
+    expect(server.lastClaimBody?.insightIds).toEqual([createdInsightId!]);
+
+    // Server response reports the insight was claimed.
+    expect(server.lastClaimResponse?.claimed.insights).toBe(1);
+
+    // Ownership transferred on the server side.
+    expect(server.insights[0]!.userId).toBe("user-same-device-insights");
+    expect(server.insights[0]!.anonToken).toBeNull();
+
+    // localStorage hand-off cleared after a successful claim.
+    await waitFor(() => expect(hasAnyAnonymousIds()).toBe(false));
+  });
+});
 
 describe("Anonymous Email Insight follows the user into their account via cross-device hand-off", () => {
   it("device A's anonymous insight appears on device B after the hand-off link is redeemed", async () => {
