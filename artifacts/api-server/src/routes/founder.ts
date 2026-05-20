@@ -13,7 +13,7 @@ import {
   AI_ALERT_GLOBAL_KEY,
   coachFollowUpsTable,
 } from "@workspace/db";
-import { count, sql, desc, gte, asc, eq, isNotNull } from "drizzle-orm";
+import { and, count, sql, desc, gte, asc, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod/v4";
 import { requireFounder } from "../middlewares/founderAuth";
 import type { OcrCorrectionsRecord, OcrCorrectionField } from "@workspace/db";
@@ -384,25 +384,50 @@ function truncate(s: string, max: number): string {
   return s.length > max ? s.slice(0, max - 1) + "…" : s;
 }
 
-router.get("/founder/ocr-mismatches", async (_req, res): Promise<void> => {
-  const [totals] = await db
+const OCR_WINDOW_DAYS = new Set([7, 30, 90]);
+type OcrSortMode = "total" | "top";
+
+router.get("/founder/ocr-mismatches", async (req, res): Promise<void> => {
+  const rawWindow = typeof req.query.window === "string" ? req.query.window : "";
+  const parsedWindow = Number(rawWindow);
+  const windowDays =
+    Number.isFinite(parsedWindow) && OCR_WINDOW_DAYS.has(parsedWindow)
+      ? parsedWindow
+      : null;
+  const since = windowDays
+    ? new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000)
+    : null;
+  const rawSort = typeof req.query.sort === "string" ? req.query.sort : "";
+  const sortMode: OcrSortMode = rawSort === "top" ? "top" : "total";
+
+  const totalsWhere = since ? gte(auditsTable.createdAt, since) : undefined;
+  const totalsQuery = db
     .select({
       totalScreenshotAudits: sql<number>`sum(case when ${auditsTable.source} = 'screenshot' then 1 else 0 end)`,
       auditsWithRawOcr: sql<number>`sum(case when ${auditsTable.rawOcrText} is not null then 1 else 0 end)`,
       auditsWithCorrections: sql<number>`sum(case when ${auditsTable.ocrCorrections} is not null then 1 else 0 end)`,
     })
     .from(auditsTable);
+  const [totals] = totalsWhere
+    ? await totalsQuery.where(totalsWhere)
+    : await totalsQuery;
 
-  const rows = await db
+  const rowsWhere = since
+    ? and(isNotNull(auditsTable.ocrCorrections), gte(auditsTable.createdAt, since))
+    : isNotNull(auditsTable.ocrCorrections);
+  const rowsQuery = db
     .select({
       id: auditsTable.id,
       ocrCorrections: auditsTable.ocrCorrections,
       createdAt: auditsTable.createdAt,
     })
     .from(auditsTable)
-    .where(isNotNull(auditsTable.ocrCorrections))
-    .orderBy(desc(auditsTable.createdAt))
-    .limit(500);
+    .where(rowsWhere)
+    .orderBy(desc(auditsTable.createdAt));
+  // When no time window is specified, keep the legacy 500-audit cap for
+  // backward compatibility. When a window is selected, aggregate over every
+  // corrected audit inside that window so per-field counts are accurate.
+  const rows = since ? await rowsQuery : await rowsQuery.limit(500);
 
   const fieldCounts: Record<OcrCorrectionField, number> = {
     firstName: 0,
@@ -457,8 +482,23 @@ router.get("/founder/ocr-mismatches", async (_req, res): Promise<void> => {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([example, n]) => ({ example, count: n }));
-    return { field, correctionsCount: fieldCounts[field], topDiffs: diffs };
-  }).sort((a, b) => b.correctionsCount - a.correctionsCount);
+    const topDiffCount = diffs.length > 0 ? diffs[0].count : 0;
+    return {
+      field,
+      correctionsCount: fieldCounts[field],
+      topDiffCount,
+      topDiffs: diffs,
+    };
+  }).sort((a, b) => {
+    if (sortMode === "top") {
+      if (b.topDiffCount !== a.topDiffCount) return b.topDiffCount - a.topDiffCount;
+      return b.correctionsCount - a.correctionsCount;
+    }
+    if (b.correctionsCount !== a.correctionsCount) {
+      return b.correctionsCount - a.correctionsCount;
+    }
+    return b.topDiffCount - a.topDiffCount;
+  });
 
   res.json({
     summary: {
@@ -466,6 +506,9 @@ router.get("/founder/ocr-mismatches", async (_req, res): Promise<void> => {
       auditsWithRawOcr: Number(totals?.auditsWithRawOcr ?? 0),
       auditsWithCorrections: Number(totals?.auditsWithCorrections ?? 0),
       sampleSize: rows.length,
+      windowDays,
+      since: since ? since.toISOString() : null,
+      sort: sortMode,
     },
     perField,
     recent,

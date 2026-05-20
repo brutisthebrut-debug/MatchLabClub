@@ -4,10 +4,11 @@ import { useMeta } from "@/hooks/useMeta";
 import {
   getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
   getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges,
-  getRollupHeartbeat,
+  getRollupHeartbeat, getOcrMismatches,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
   type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
-  type AiThresholdChange, type RollupHeartbeatResponse
+  type AiThresholdChange, type RollupHeartbeatResponse,
+  type OcrMismatchesResponse, type OcrMismatchesSort, type OcrMismatchesWindow
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
 import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
@@ -1340,6 +1341,173 @@ function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
   );
 }
 
+const OCR_WINDOW_OPTIONS: { value: OcrMismatchesWindow; label: string }[] = [
+  { value: 7,    label: "Last 7 days"  },
+  { value: 30,   label: "Last 30 days" },
+  { value: 90,   label: "Last 90 days" },
+  { value: null, label: "All time"     },
+];
+
+const OCR_SORT_OPTIONS: { value: OcrMismatchesSort; label: string }[] = [
+  { value: "total", label: "By total volume" },
+  { value: "top",   label: "By top single diff" },
+];
+
+const OCR_FIELD_LABELS: Record<string, string> = {
+  firstName: "First name",
+  age: "Age",
+  sourceApp: "Source app",
+  bio: "Bio",
+  prompts: "Prompts",
+};
+
+function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
+  const [windowDays, setWindowDays] = useState<OcrMismatchesWindow>(30);
+  const [sort, setSort] = useState<OcrMismatchesSort>("total");
+  const [data, setData] = useState<OcrMismatchesResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    getOcrMismatches({ window: windowDays ?? undefined, sort })
+      .then((res) => { if (!cancelled) setData(res); })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load");
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [windowDays, sort, refreshKey]);
+
+  return (
+    <div className="glass rounded-2xl p-6 space-y-4" data-testid="panel-ocr-mismatches">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h2 className="font-semibold text-foreground">OCR Mismatches</h2>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">
+            Where the screenshot parser most often needs correcting. Use this to prioritize OCR rule work.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <select
+            data-testid="select-ocr-window"
+            value={windowDays === null ? "all" : String(windowDays)}
+            onChange={(e) => {
+              const v = e.target.value;
+              setWindowDays(v === "all" ? null : (Number(v) as OcrMismatchesWindow));
+            }}
+            className="text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-transparent text-foreground hover:border-white/20"
+          >
+            {OCR_WINDOW_OPTIONS.map((o) => (
+              <option key={String(o.value)} value={o.value === null ? "all" : String(o.value)}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          <select
+            data-testid="select-ocr-sort"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as OcrMismatchesSort)}
+            className="text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-transparent text-foreground hover:border-white/20"
+          >
+            {OCR_SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {loading && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
+        </div>
+      )}
+      {error && !loading && (
+        <p className="text-xs text-[hsl(348_55%_68%)]">Could not load OCR mismatches: {error}</p>
+      )}
+
+      {data && !loading && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="ocr-summary">
+            <div className="glass rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Screenshot audits</p>
+              <p className="text-lg font-semibold text-foreground">{data.summary.totalScreenshotAudits}</p>
+            </div>
+            <div className="glass rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">With raw OCR</p>
+              <p className="text-lg font-semibold text-foreground">{data.summary.auditsWithRawOcr}</p>
+            </div>
+            <div className="glass rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">With corrections</p>
+              <p className="text-lg font-semibold text-foreground">{data.summary.auditsWithCorrections}</p>
+            </div>
+            <div className="glass rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Sampled audits</p>
+              <p className="text-lg font-semibold text-foreground">{data.summary.sampleSize}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" data-testid="ocr-per-field">
+            {data.perField.map((f) => (
+              <div
+                key={f.field}
+                className="glass rounded-xl p-4 space-y-2"
+                data-testid={`ocr-field-${f.field}`}
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    {OCR_FIELD_LABELS[f.field] ?? f.field}
+                  </h3>
+                  <div className="flex items-baseline gap-2 text-[10px] uppercase tracking-widest text-muted-foreground/60">
+                    <span data-testid={`ocr-field-${f.field}-total`}>
+                      {f.correctionsCount} total
+                    </span>
+                    <span data-testid={`ocr-field-${f.field}-top`}>
+                      top {f.topDiffCount}
+                    </span>
+                  </div>
+                </div>
+                {f.topDiffs.length === 0 ? (
+                  <p className="text-xs text-muted-foreground/50 italic">No corrections in window.</p>
+                ) : (
+                  <ul className="space-y-1">
+                    {f.topDiffs.slice(0, 5).map((d, i) => (
+                      <li key={i} className="text-xs text-muted-foreground flex items-center justify-between gap-2">
+                        <span className="font-mono truncate">{d.example}</span>
+                        <span className="text-[10px] text-muted-foreground/60 shrink-0">×{d.count}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {data.recent.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
+                Recent corrections
+              </h3>
+              <TableShell
+                headers={["Audit", "Field", "Raw", "Corrected", "Date"]}
+                rows={data.recent.slice(0, 12).map((r) => [
+                  `#${r.auditId}`,
+                  OCR_FIELD_LABELS[r.field] ?? r.field,
+                  r.raw,
+                  r.corrected,
+                  fmtDate(r.createdAt),
+                ])}
+              />
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 function fmtDate(iso: string) {
   try {
     return new Date(iso).toLocaleDateString("en-US", {
@@ -1550,6 +1718,7 @@ function Dashboard() {
           <RollupHeartbeatPanel refreshKey={refreshKey} />
           <AiMetricsPanel refreshKey={refreshKey} />
           <AiReliabilityTrendsPanel refreshKey={refreshKey} />
+          <OcrMismatchesPanel refreshKey={refreshKey} />
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <StatCard label="Leads captured" value={stats?.leads ?? "—"} icon={Inbox} color="hsl(268 52% 68%)" />
             <StatCard label="Purchase interest" value={stats?.purchaseInterest ?? "—"} icon={ShoppingBag} color="hsl(348 55% 58%)" />

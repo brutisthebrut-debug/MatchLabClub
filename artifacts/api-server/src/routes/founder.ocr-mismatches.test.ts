@@ -236,4 +236,68 @@ describe("GET /api/founder/ocr-mismatches", () => {
       ),
     ).toBe(false);
   });
+
+  it("applies the window filter to summary, perField, and recent", async () => {
+    // Backdate the rileyDup audit far enough that a 7-day window excludes it.
+    const longAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+    await db
+      .update(auditsTable)
+      .set({ createdAt: longAgo })
+      .where(inArray(auditsTable.id, [ids.rileyDupId]));
+
+    const res7 = await request(app).get(
+      "/api/founder/ocr-mismatches?window=7",
+    );
+    expect(res7.status).toBe(200);
+    expect(res7.body.summary.windowDays).toBe(7);
+    expect(typeof res7.body.summary.since).toBe("string");
+
+    // rileyDup is now outside the 7-day window, so it must not appear in recent.
+    const recent7 = res7.body.recent as Array<{ auditId: number }>;
+    expect(recent7.some((r) => r.auditId === ids.rileyDupId)).toBe(false);
+    // The other two seeded corrected audits are within 7 days.
+    expect(recent7.some((r) => r.auditId === ids.rileyId)).toBe(true);
+    expect(recent7.some((r) => r.auditId === ids.emmaId)).toBe(true);
+
+    // With a 90-day window, the backdated rileyDup audit comes back.
+    const res90 = await request(app).get(
+      "/api/founder/ocr-mismatches?window=90",
+    );
+    expect(res90.body.summary.windowDays).toBe(90);
+    const recent90 = res90.body.recent as Array<{ auditId: number }>;
+    expect(recent90.some((r) => r.auditId === ids.rileyDupId)).toBe(true);
+
+    // An invalid window value falls back to the default (no time filter).
+    const resBad = await request(app).get(
+      "/api/founder/ocr-mismatches?window=42",
+    );
+    expect(resBad.body.summary.windowDays).toBeNull();
+  });
+
+  it("supports sort=top to rank perField by the single top diff", async () => {
+    const resTotal = await request(app).get(
+      "/api/founder/ocr-mismatches?sort=total",
+    );
+    expect(resTotal.body.summary.sort).toBe("total");
+    // perField sorted by correctionsCount desc.
+    const totals = resTotal.body.perField as Array<{
+      correctionsCount: number;
+    }>;
+    for (let i = 0; i < totals.length - 1; i++) {
+      expect(totals[i].correctionsCount).toBeGreaterThanOrEqual(
+        totals[i + 1].correctionsCount,
+      );
+    }
+
+    const resTop = await request(app).get(
+      "/api/founder/ocr-mismatches?sort=top",
+    );
+    expect(resTop.body.summary.sort).toBe("top");
+    const tops = resTop.body.perField as Array<{ topDiffCount: number }>;
+    for (let i = 0; i < tops.length - 1; i++) {
+      expect(tops[i].topDiffCount).toBeGreaterThanOrEqual(
+        tops[i + 1].topDiffCount,
+      );
+    }
+  });
 });

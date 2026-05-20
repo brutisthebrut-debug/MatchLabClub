@@ -241,6 +241,49 @@ export const getAiThresholdChanges = (founderKey: string, limit = 10) =>
     return res.json() as Promise<AiThresholdChangesResponse>;
   });
 
+export type OcrCorrectionFieldName = "firstName" | "age" | "sourceApp" | "bio" | "prompts";
+export type OcrMismatchesWindow = 7 | 30 | 90 | null;
+export type OcrMismatchesSort = "total" | "top";
+
+export interface OcrPerFieldEntry {
+  field: OcrCorrectionFieldName;
+  correctionsCount: number;
+  topDiffCount: number;
+  topDiffs: { example: string; count: number }[];
+}
+export interface OcrRecentEntry {
+  auditId: number;
+  field: OcrCorrectionFieldName;
+  raw: string;
+  corrected: string;
+  createdAt: string;
+}
+export interface OcrMismatchesResponse {
+  summary: {
+    totalScreenshotAudits: number;
+    auditsWithRawOcr: number;
+    auditsWithCorrections: number;
+    sampleSize: number;
+    windowDays: number | null;
+    since: string | null;
+    sort: OcrMismatchesSort;
+  };
+  perField: OcrPerFieldEntry[];
+  recent: OcrRecentEntry[];
+}
+
+export const getOcrMismatches = (
+  params: { window?: OcrMismatchesWindow; sort?: OcrMismatchesSort } = {},
+) => {
+  const search = new URLSearchParams();
+  if (params.window) search.set("window", String(params.window));
+  if (params.sort) search.set("sort", params.sort);
+  const qs = search.toString();
+  return get<OcrMismatchesResponse>(
+    `/founder/ocr-mismatches${qs ? `?${qs}` : ""}`,
+  );
+};
+
 export const getLeads = () =>
   get<Lead[]>("/leads");
 
