@@ -23,6 +23,7 @@ import {
   useDeleteMyAccount,
   useGetAccountSummary,
   getGetAccountSummaryQueryKey,
+  useEmailMyDataExport,
 } from "@workspace/api-client-react";
 import {
   LogIn,
@@ -33,6 +34,7 @@ import {
   ArrowRight,
   Shield,
   Download,
+  Send,
   Trash2,
   Loader2,
 } from "lucide-react";
@@ -56,7 +58,7 @@ export default function Account() {
   const { user, isAuthenticated, isLoading, login, logout } = useAuth();
   const { toast } = useToast();
   const auditsQuery = useListAudits(undefined, {
-    query: { queryKey: getListAuditsQueryKey() },
+    query: { queryKey: getListAuditsQueryKey(), enabled: isAuthenticated },
   });
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -68,6 +70,7 @@ export default function Account() {
       enabled: isAuthenticated && confirmDeleteOpen,
     },
   });
+  const emailExport = useEmailMyDataExport();
 
   const auditCount = auditsQuery.data?.length ?? 0;
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Friend";
@@ -99,6 +102,22 @@ export default function Account() {
       });
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleEmailExport = async () => {
+    try {
+      const result = await emailExport.mutateAsync();
+      toast({
+        title: "Export email sent",
+        description: `We sent a single-use download link to ${result.sentTo}. It expires soon.`,
+      });
+    } catch (err) {
+      toast({
+        title: "Couldn't email your export",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -274,6 +293,25 @@ export default function Account() {
                     <Download className="w-4 h-4 mr-2" />
                   )}
                   Download my data
+                </Button>
+                <Button
+                  onClick={handleEmailExport}
+                  disabled={emailExport.isPending || !user?.email}
+                  variant="outline"
+                  className="rounded-full text-sm font-medium"
+                  data-testid="button-account-email-data"
+                  title={
+                    !user?.email
+                      ? "Add an email to your account to use this option"
+                      : undefined
+                  }
+                >
+                  {emailExport.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4 mr-2" />
+                  )}
+                  Email me a copy
                 </Button>
                 <Button
                   onClick={() => setConfirmDeleteOpen(true)}

@@ -528,6 +528,14 @@ export interface DeleteAuditResult {
   deletedId: number;
 }
 
+export interface EmailMyDataExportResult {
+  success: true;
+  /** ISO timestamp after which the emailed link is no longer valid. */
+  expiresAt: string;
+  /** Email address the export link was sent to. */
+  sentTo: string;
+}
+
 export type DeleteMyAccountResultDeleted = {
   audits: number;
   profiles: number;

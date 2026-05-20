@@ -225,6 +225,69 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /account/export/email:
+    post:
+      tags: [Auth]
+      operationId: emailMyDataExport
+      summary: Email the signed-in user a single-use link to download their data
+      description: |
+        Creates a short-lived, single-use token that the user can use to
+        download the same JSON returned by `/account/export`, and emails a
+        link containing that token to the user's account email address. The
+        link expires after a short window and can only be used once.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Export email was queued for delivery.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailMyDataExportResult'
+        '400':
+          description: User has no email on file.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /account/export/download/{token}:
+    get:
+      tags: [Auth]
+      operationId: downloadEmailedExport
+      summary: Download an emailed data export using a single-use token
+      description: |
+        Validates the token created by `/account/export/email`, marks it as
+        used, and returns the same JSON document as `/account/export` for the
+        user the token belongs to. Tokens are single-use and expire shortly
+        after being created.
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Full export of the user's data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountExport'
+        '404':
+          description: Token is invalid, expired, or already used.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /account:
     delete:
       tags: [Auth]
@@ -1535,6 +1598,21 @@ components:
           const: true
         deletedId:
           type: integer
+
+    EmailMyDataExportResult:
+      type: object
+      required: [success, expiresAt, sentTo]
+      properties:
+        success:
+          type: boolean
+          const: true
+        expiresAt:
+          type: string
+          description: ISO timestamp after which the emailed link is no longer valid.
+        sentTo:
+          type: string
+          format: email
+          description: Email address the export link was sent to.
 
     DeleteMyAccountResult:
       type: object

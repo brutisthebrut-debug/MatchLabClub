@@ -47,6 +47,7 @@ import type {
   EmailInsight,
   EmailInsightAnalysis,
   EmailInsightInput,
+  EmailMyDataExportResult,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
   ListAuditsParams,
@@ -766,6 +767,163 @@ export function useGetAccountSummary<TData = Awaited<ReturnType<typeof getAccoun
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetAccountSummaryQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getEmailMyDataExportUrl = () => {
+
+
+
+
+  return `/api/account/export/email`
+}
+
+/**
+ * Creates a short-lived, single-use token that the user can use to
+download the same JSON returned by `/account/export`, and emails a
+link containing that token to the user's account email address. The
+link expires after a short window and can only be used once.
+
+ * @summary Email the signed-in user a single-use link to download their data
+ */
+export const emailMyDataExport = async ( options?: RequestInit): Promise<EmailMyDataExportResult> => {
+
+  return customFetch<EmailMyDataExportResult>(getEmailMyDataExportUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getEmailMyDataExportMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof emailMyDataExport>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof emailMyDataExport>>, TError,void, TContext> => {
+
+const mutationKey = ['emailMyDataExport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof emailMyDataExport>>, void> = () => {
+
+
+          return  emailMyDataExport(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EmailMyDataExportMutationResult = NonNullable<Awaited<ReturnType<typeof emailMyDataExport>>>
+
+    export type EmailMyDataExportMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Email the signed-in user a single-use link to download their data
+ */
+export const useEmailMyDataExport = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof emailMyDataExport>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof emailMyDataExport>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getEmailMyDataExportMutationOptions(options));
+    }
+
+export const getDownloadEmailedExportUrl = (token: string,) => {
+
+
+
+
+  return `/api/account/export/download/${token}`
+}
+
+/**
+ * Validates the token created by `/account/export/email`, marks it as
+used, and returns the same JSON document as `/account/export` for the
+user the token belongs to. Tokens are single-use and expire shortly
+after being created.
+
+ * @summary Download an emailed data export using a single-use token
+ */
+export const downloadEmailedExport = async (token: string, options?: RequestInit): Promise<AccountExport> => {
+
+  return customFetch<AccountExport>(getDownloadEmailedExportUrl(token),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadEmailedExportQueryKey = (token: string,) => {
+    return [
+    `/api/account/export/download/${token}`
+    ] as const;
+    }
+
+
+export const getDownloadEmailedExportQueryOptions = <TData = Awaited<ReturnType<typeof downloadEmailedExport>>, TError = ErrorType<AuthErrorEnvelope>>(token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadEmailedExport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadEmailedExportQueryKey(token);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadEmailedExport>>> = ({ signal }) => downloadEmailedExport(token, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(token), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadEmailedExport>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type DownloadEmailedExportQueryResult = NonNullable<Awaited<ReturnType<typeof downloadEmailedExport>>>
+export type DownloadEmailedExportQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Download an emailed data export using a single-use token
+ */
+
+export function useDownloadEmailedExport<TData = Awaited<ReturnType<typeof downloadEmailedExport>>, TError = ErrorType<AuthErrorEnvelope>>(
+ token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadEmailedExport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getDownloadEmailedExportQueryOptions(token,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

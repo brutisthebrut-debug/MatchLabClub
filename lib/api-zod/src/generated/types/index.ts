@@ -53,6 +53,7 @@ export * from './emailInsight';
 export * from './emailInsightAnalysis';
 export * from './emailInsightInput';
 export * from './emailInsightStatus';
+export * from './emailMyDataExportResult';
 export * from './handleBrowserLoginCallbackParams';
 export * from './healthStatus';
 export * from './listAuditsParams';

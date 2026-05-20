@@ -233,6 +233,123 @@ export const GetAccountSummaryResponse = zod.object({
 
 
 /**
+ * Creates a short-lived, single-use token that the user can use to
+download the same JSON returned by `/account/export`, and emails a
+link containing that token to the user's account email address. The
+link expires after a short window and can only be used once.
+
+ * @summary Email the signed-in user a single-use link to download their data
+ */
+export const EmailMyDataExportHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const EmailMyDataExportResponse = zod.object({
+  "success": zod.boolean(),
+  "expiresAt": zod.string().describe('ISO timestamp after which the emailed link is no longer valid.'),
+  "sentTo": zod.string().email().describe('Email address the export link was sent to.')
+})
+
+
+/**
+ * Validates the token created by `/account/export/email`, marks it as
+used, and returns the same JSON document as `/account/export` for the
+user the token belongs to. Tokens are single-use and expire shortly
+after being created.
+
+ * @summary Download an emailed data export using a single-use token
+ */
+export const DownloadEmailedExportParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const DownloadEmailedExportResponse = zod.object({
+  "exportedAt": zod.string().describe('ISO timestamp of when the export was generated.'),
+  "user": zod.object({
+  "id": zod.string(),
+  "email": zod.string().email().nullable(),
+  "firstName": zod.string().nullable(),
+  "lastName": zod.string().nullable(),
+  "profileImageUrl": zod.string().nullable(),
+  "createdAt": zod.string()
+}),
+  "audits": zod.array(zod.object({
+  "id": zod.number(),
+  "firstName": zod.string(),
+  "age": zod.number(),
+  "gender": zod.string(),
+  "orientation": zod.string().optional(),
+  "datingGoal": zod.string(),
+  "currentApps": zod.array(zod.string()),
+  "bio": zod.string(),
+  "prompts": zod.string().nullish(),
+  "recentMessageSample": zod.string().nullish(),
+  "photoCount": zod.number().nullish(),
+  "relationshipHistory": zod.string().nullish(),
+  "biggestChallenge": zod.string().nullish(),
+  "sourceApp": zod.string().nullish().describe('Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.'),
+  "status": zod.enum(['pending', 'generating', 'complete', 'error']),
+  "source": zod.enum(['manual', 'screenshot']),
+  "readinessScore": zod.number().nullish(),
+  "report": zod.union([zod.object({
+  "auditId": zod.number(),
+  "readinessScore": zod.number(),
+  "overallGrade": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "risks": zod.array(zod.string()),
+  "bioAudit": zod.string(),
+  "rewrittenBio": zod.string(),
+  "rewrittenPrompts": zod.array(zod.object({
+  "original": zod.string(),
+  "rewritten": zod.string(),
+  "tip": zod.string()
+})),
+  "photoGuidance": zod.array(zod.object({
+  "category": zod.string(),
+  "status": zod.enum(['good', 'needs_work', 'missing']),
+  "advice": zod.string()
+})),
+  "actionPlan": zod.array(zod.object({
+  "priority": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "timeframe": zod.string()
+})),
+  "messagingStyle": zod.string(),
+  "coachingCta": zod.string()
+}),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
+  "createdAt": zod.string()
+})),
+  "profiles": zod.array(zod.object({
+  "id": zod.number(),
+  "platform": zod.string(),
+  "bio": zod.string(),
+  "prompts": zod.string().nullish(),
+  "photoCount": zod.number().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})),
+  "messages": zod.array(zod.object({
+  "id": zod.number(),
+  "matchName": zod.string(),
+  "conversationContext": zod.string(),
+  "yourLastMessage": zod.string(),
+  "goal": zod.string().nullish(),
+  "status": zod.enum(['pending', 'complete']),
+  "createdAt": zod.string()
+})),
+  "insights": zod.array(zod.object({
+  "id": zod.number(),
+  "sourceLabel": zod.string(),
+  "pastedContent": zod.string(),
+  "consentGiven": zod.boolean().optional(),
+  "status": zod.enum(['pending', 'analyzing', 'complete', 'error']),
+  "createdAt": zod.string()
+}))
+})
+
+
+/**
  * Permanently removes the authenticated user along with every audit,
 dating profile, message coaching session, and email insight tied to
 that user. Also clears every active session for the user and the
