@@ -9,7 +9,7 @@ import {
   type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
   type AiThresholdChange, type RollupHeartbeatResponse
 } from "@/lib/apiClient";
-import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
+import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
 import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
 import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
@@ -946,6 +946,7 @@ function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
   const [data, setData] = useState<AiMetricsTrendsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [focusedTool, setFocusedTool] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -958,10 +959,19 @@ function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
     return () => { cancelled = true; };
   }, [days, refreshKey]);
 
-  const { chartRows, toolNames } = (() => {
-    if (!data) return { chartRows: [] as Array<Record<string, number | string>>, toolNames: [] as string[] };
+  const { chartRows, toolNames, focusedRows, focusedTotals } = (() => {
+    if (!data) {
+      return {
+        chartRows: [] as Array<Record<string, number | string>>,
+        toolNames: [] as string[],
+        focusedRows: [] as Array<Record<string, number | string>>,
+        focusedTotals: { total: 0, firstTryOk: 0, fallbacks: 0, validationFailures: 0 },
+      };
+    }
     const byDay = new Map<string, Record<string, number | string>>();
     const toolTotals = new Map<string, number>();
+    const focusedByDay = new Map<string, Record<string, number | string>>();
+    const totals = { total: 0, firstTryOk: 0, fallbacks: 0, validationFailures: 0 };
     for (const p of data.series) {
       toolTotals.set(p.toolName, (toolTotals.get(p.toolName) ?? 0) + p.total);
       let row = byDay.get(p.day);
@@ -971,15 +981,47 @@ function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
       }
       const value = metric === "firstTrySuccessRate" ? p.firstTrySuccessRate : p.fallbackRate;
       row[p.toolName] = Math.round(value * 1000) / 10;
+      if (focusedTool && p.toolName === focusedTool) {
+        focusedByDay.set(p.day, {
+          day: p.day,
+          firstTryPct: Math.round(p.firstTrySuccessRate * 1000) / 10,
+          fallbackPct: Math.round(p.fallbackRate * 1000) / 10,
+          total: p.total,
+        });
+        totals.total += p.total;
+        totals.firstTryOk += p.firstTryOk;
+        totals.fallbacks += p.fallbacks;
+        totals.validationFailures += p.validationFailures;
+      }
     }
     const tools = [...toolTotals.entries()]
       .sort((a, b) => b[1] - a[1])
       .map(([name]) => name);
     const rows = [...byDay.values()].sort((a, b) => String(a.day).localeCompare(String(b.day)));
-    return { chartRows: rows, toolNames: tools };
+    const fRows = [...focusedByDay.values()].sort((a, b) => String(a.day).localeCompare(String(b.day)));
+    return { chartRows: rows, toolNames: tools, focusedRows: fRows, focusedTotals: totals };
   })();
 
+  // If the focused tool drops out of the available list (e.g. days window changes),
+  // clear the focus.
+  useEffect(() => {
+    if (focusedTool && data && !toolNames.includes(focusedTool)) {
+      setFocusedTool(null);
+    }
+  }, [focusedTool, data, toolNames]);
+
   const hasData = chartRows.length > 0 && toolNames.length > 0;
+  const isFocused = focusedTool !== null && toolNames.includes(focusedTool);
+  const hasFocusData = isFocused && focusedRows.length > 0;
+  const focusedColor = isFocused
+    ? TREND_COLORS[Math.max(0, toolNames.indexOf(focusedTool!)) % TREND_COLORS.length]
+    : TREND_COLORS[0];
+  const focusFirstTryPct = focusedTotals.total > 0
+    ? Math.round((focusedTotals.firstTryOk / focusedTotals.total) * 1000) / 10
+    : 0;
+  const focusFallbackPct = focusedTotals.total > 0
+    ? Math.round((focusedTotals.fallbacks / focusedTotals.total) * 1000) / 10
+    : 0;
   const canExport = !!data && data.series.length > 0;
 
   const downloadCsv = () => {
@@ -1001,7 +1043,10 @@ function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
       const s = String(v);
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
-    const rows = [...data.series]
+    const rowsToExport = focusedTool && isFocused
+      ? data.series.filter((p) => p.toolName === focusedTool)
+      : data.series;
+    const rows = [...rowsToExport]
       .sort((a, b) => (a.day === b.day ? a.toolName.localeCompare(b.toolName) : a.day.localeCompare(b.day)))
       .map((p) => [
         p.day,
@@ -1021,7 +1066,10 @@ function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `ai-reliability-trends-${days}d.csv`;
+    const suffix = focusedTool && isFocused
+      ? `-${focusedTool.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`
+      : "";
+    a.download = `ai-reliability-trends-${days}d${suffix}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1034,7 +1082,9 @@ function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
         <div>
           <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">AI Reliability Trends</p>
           <p className="text-base font-semibold text-foreground">
-            {metric === "firstTrySuccessRate" ? "First-try success rate" : "Fallback rate"} per tool over time
+            {isFocused
+              ? `Focused on ${focusedTool}`
+              : `${metric === "firstTrySuccessRate" ? "First-try success rate" : "Fallback rate"} per tool over time`}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -1050,22 +1100,35 @@ function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
             <Download className="w-3.5 h-3.5" />
             Download CSV
           </button>
-          <div className="flex rounded-lg border border-white/10 overflow-hidden">
-            {(["firstTrySuccessRate", "fallbackRate"] as TrendMetric[]).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMetric(m)}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                  metric === m
-                    ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_52%_78%)]"
-                    : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-                }`}
-              >
-                {m === "firstTrySuccessRate" ? "First-try %" : "Fallback %"}
-              </button>
+          <select
+            value={focusedTool ?? ""}
+            onChange={(e) => setFocusedTool(e.target.value === "" ? null : e.target.value)}
+            data-testid="select-trend-focus-tool"
+            className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-medium text-foreground outline-none focus:border-[hsl(268_52%_68%/0.5)] max-w-[180px]"
+          >
+            <option value="">All tools</option>
+            {toolNames.map((name) => (
+              <option key={name} value={name}>{name}</option>
             ))}
-          </div>
+          </select>
+          {!isFocused && (
+            <div className="flex rounded-lg border border-white/10 overflow-hidden">
+              {(["firstTrySuccessRate", "fallbackRate"] as TrendMetric[]).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMetric(m)}
+                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                    metric === m
+                      ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_52%_78%)]"
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                  }`}
+                >
+                  {m === "firstTrySuccessRate" ? "First-try %" : "Fallback %"}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="flex rounded-lg border border-white/10 overflow-hidden">
             {TREND_DAY_OPTIONS.map((d) => (
               <button
@@ -1093,7 +1156,37 @@ function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
         </p>
       )}
 
-      {hasData && (
+      {isFocused && hasFocusData && (
+        <div
+          className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+          data-testid="trend-focus-summary"
+        >
+          <div className="rounded-lg border border-white/10 bg-white/3 p-3">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">First-try %</p>
+            <p className="text-lg font-semibold text-foreground">{focusFirstTryPct.toFixed(1)}%</p>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-white/3 p-3">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Fallback %</p>
+            <p className="text-lg font-semibold text-foreground">{focusFallbackPct.toFixed(1)}%</p>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-white/3 p-3">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Requests</p>
+            <p className="text-lg font-semibold text-foreground">{focusedTotals.total.toLocaleString()}</p>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-white/3 p-3">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">Validation fails</p>
+            <p className="text-lg font-semibold text-foreground">{focusedTotals.validationFailures.toLocaleString()}</p>
+          </div>
+        </div>
+      )}
+
+      {isFocused && !hasFocusData && !loading && !err && (
+        <p className="text-sm text-muted-foreground/70 italic">
+          No daily metrics for {focusedTool} in the last {days} days.
+        </p>
+      )}
+
+      {!isFocused && hasData && (
         <div className="w-full" style={{ height: 320 }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartRows} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
@@ -1125,7 +1218,18 @@ function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
                   name,
                 ]}
               />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend
+                wrapperStyle={{ fontSize: 11, cursor: "pointer" }}
+                onClick={(entry) => {
+                  const e = entry as { dataKey?: unknown; value?: unknown };
+                  const name = typeof e?.dataKey === "string"
+                    ? e.dataKey
+                    : typeof e?.value === "string"
+                      ? e.value
+                      : null;
+                  if (name && toolNames.includes(name)) setFocusedTool(name);
+                }}
+              />
               {toolNames.map((name, i) => (
                 <Line
                   key={name}
@@ -1141,6 +1245,96 @@ function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
             </LineChart>
           </ResponsiveContainer>
         </div>
+      )}
+
+      {isFocused && hasFocusData && (
+        <div className="w-full" style={{ height: 320 }} data-testid="trend-focus-chart">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={focusedRows} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.4)" />
+              <XAxis
+                dataKey="day"
+                tickFormatter={fmtTrendDay}
+                stroke="hsl(var(--muted-foreground) / 0.7)"
+                fontSize={11}
+                minTickGap={24}
+              />
+              <YAxis
+                yAxisId="pct"
+                domain={[0, 100]}
+                tickFormatter={(v) => `${v}%`}
+                stroke="hsl(var(--muted-foreground) / 0.7)"
+                fontSize={11}
+                width={40}
+              />
+              <YAxis
+                yAxisId="vol"
+                orientation="right"
+                allowDecimals={false}
+                stroke="hsl(var(--muted-foreground) / 0.7)"
+                fontSize={11}
+                width={40}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: "hsl(var(--background))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+                labelFormatter={(label) => fmtTrendDay(String(label))}
+                formatter={(value: number | string, name) => {
+                  if (name === "Requests") {
+                    return [typeof value === "number" ? value.toLocaleString() : value, name];
+                  }
+                  return [typeof value === "number" ? `${value.toFixed(1)}%` : value, name];
+                }}
+              />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Bar
+                yAxisId="vol"
+                dataKey="total"
+                name="Requests"
+                fill="hsl(var(--muted-foreground) / 0.25)"
+                isAnimationActive={false}
+              />
+              <Line
+                yAxisId="pct"
+                type="monotone"
+                dataKey="firstTryPct"
+                name="First-try %"
+                stroke={focusedColor}
+                strokeWidth={2}
+                dot={false}
+                connectNulls
+                isAnimationActive={false}
+              />
+              <Line
+                yAxisId="pct"
+                type="monotone"
+                dataKey="fallbackPct"
+                name="Fallback %"
+                stroke="hsl(348 55% 65%)"
+                strokeWidth={2}
+                strokeDasharray="4 3"
+                dot={false}
+                connectNulls
+                isAnimationActive={false}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {isFocused && (
+        <button
+          type="button"
+          onClick={() => setFocusedTool(null)}
+          data-testid="button-trend-clear-focus"
+          className="text-xs font-semibold text-muted-foreground/80 hover:text-foreground transition-colors px-3 py-1.5 rounded-lg border border-white/10 bg-white/5"
+        >
+          ← Back to all tools
+        </button>
       )}
     </div>
   );
