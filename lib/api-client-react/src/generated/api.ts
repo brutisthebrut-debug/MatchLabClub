@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AiEnhanceInput,
   AiError,
   AiStatus,
   AiTestInput,
@@ -1535,6 +1536,78 @@ export function useGetAiStatus<TData = Awaited<ReturnType<typeof getAiStatus>>, 
 
 
 
+
+export const getEnhanceAiUrl = () => {
+
+
+
+
+  return `/api/ai/enhance`
+}
+
+/**
+ * Public endpoint used by client tools (Blueprint, NextMessage, etc.) to enhance deterministic output with live AI when an API key is configured. Falls back silently to an empty output if AI is unavailable.
+ * @summary Run a tool-specific AI generation with graceful fallback
+ */
+export const enhanceAi = async (aiEnhanceInput: AiEnhanceInput, options?: RequestInit): Promise<AiTestResult> => {
+
+  return customFetch<AiTestResult>(getEnhanceAiUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      aiEnhanceInput,)
+  }
+);}
+
+
+
+
+export const getEnhanceAiMutationOptions = <TError = ErrorType<AiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enhanceAi>>, TError,{data: BodyType<AiEnhanceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof enhanceAi>>, TError,{data: BodyType<AiEnhanceInput>}, TContext> => {
+
+const mutationKey = ['enhanceAi'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof enhanceAi>>, {data: BodyType<AiEnhanceInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  enhanceAi(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EnhanceAiMutationResult = NonNullable<Awaited<ReturnType<typeof enhanceAi>>>
+    export type EnhanceAiMutationBody = BodyType<AiEnhanceInput>
+    export type EnhanceAiMutationError = ErrorType<AiError>
+
+    /**
+ * @summary Run a tool-specific AI generation with graceful fallback
+ */
+export const useEnhanceAi = <TError = ErrorType<AiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enhanceAi>>, TError,{data: BodyType<AiEnhanceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof enhanceAi>>,
+        TError,
+        {data: BodyType<AiEnhanceInput>},
+        TContext
+      > => {
+      return useMutation(getEnhanceAiMutationOptions(options));
+    }
 
 export const getTestAiUrl = (params?: TestAiParams,) => {
   const normalizedParams = new URLSearchParams();

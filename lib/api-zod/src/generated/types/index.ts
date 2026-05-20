@@ -12,6 +12,7 @@ export * from './aiContextInputExtras';
 export * from './aiContextInputFormValues';
 export * from './aiContextInputProgressEntriesItem';
 export * from './aiContextInputSavedResults';
+export * from './aiEnhanceInput';
 export * from './aiError';
 export * from './aiStatus';
 export * from './aiStatusMode';

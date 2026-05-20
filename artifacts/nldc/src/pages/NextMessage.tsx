@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, MessageCircle, Copy, Check, RefreshCw, AlertCircle } from "lucide-react";
+import { useEnhanceAi } from "@workspace/api-client-react";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -169,34 +170,73 @@ export default function NextMessage() {
   const [name, setName] = useState("");
   const [goal, setGoal] = useState("");
   const [result, setResult] = useState<NextMessageResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [aiCoachNote, setAiCoachNote] = useState<string | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
+  const enhance = useEnhanceAi();
+  const loading = enhance.isPending;
 
-  function handleGenerate() {
+  function tryParseNextMessage(raw: string, deterministic: NextMessageResult): NextMessageResult | null {
+    try {
+      const start = raw.indexOf("{");
+      const end = raw.lastIndexOf("}");
+      if (start === -1 || end <= start) return null;
+      const parsed = JSON.parse(raw.slice(start, end + 1)) as {
+        options?: Array<{ style?: unknown; text?: unknown; when?: unknown }>;
+        coachNote?: unknown;
+      };
+      if (!Array.isArray(parsed.options) || parsed.options.length < 3) return null;
+      const palette = deterministic.options;
+      const options: MessageOption[] = parsed.options.slice(0, 7).map((o, i) => {
+        const style = typeof o.style === "string" && o.style.trim() ? o.style.trim() : palette[i]?.style ?? "Option";
+        const text = typeof o.text === "string" ? o.text.trim() : "";
+        const when = typeof o.when === "string" && o.when.trim() ? o.when.trim() : palette[i]?.when ?? "";
+        if (!text) throw new Error("missing text");
+        const fallback = palette[i] ?? palette[0];
+        return { style, text, when, color: fallback.color, bg: fallback.bg };
+      });
+      const coachNote = typeof parsed.coachNote === "string" && parsed.coachNote.trim()
+        ? parsed.coachNote.trim()
+        : deterministic.coachNote;
+      return { options, coachNote };
+    } catch {
+      return null;
+    }
+  }
+
+  async function handleGenerate() {
     if (!context.trim() && !lastMsg.trim()) return;
-    setLoading(true);
-    setAiCoachNote(null);
-    setTimeout(async () => {
-      const det = generateMessages(context, lastMsg, name, goal);
-      setResult(det);
-      setLoading(false);
-
-      setAiLoading(true);
-      try {
-        const parts = [context.trim() && `Conversation: ${context}`, lastMsg.trim() && `Last message sent: ${lastMsg}`, name.trim() && `Their name: ${name}`, goal && `Goal: ${goal}`].filter(Boolean).join("\n");
-        const res = await fetch("/api/ai/enhance", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ toolName: "Next Message", prompt: parts }),
-        });
-        if (res.ok) {
-          const data = await res.json() as { output: string; isFallback: boolean };
-          if (data.output && !data.isFallback) setAiCoachNote(data.output);
-        }
-      } catch { /* silent — deterministic note shown as fallback */ }
-      setAiLoading(false);
-    }, 800);
+    const deterministic = generateMessages(context, lastMsg, name, goal);
+    try {
+      const ai = await enhance.mutateAsync({
+        data: {
+          toolName: "Next Message",
+          prompt: [
+            "Generate 7 reply options for the user's dating conversation as JSON.",
+            "Shape: { options: [{ style: string, text: string, when: string }], coachNote: string }.",
+            "Use these 7 style labels in order: Safe, Warm, Playful, Bold, Direct, Invitation, Clean Exit.",
+            "Each text should be a copy-ready single message (1-3 sentences). 'when' is a one-line note on when to use it.",
+            "coachNote is one short paragraph of practical advice for this specific conversation.",
+            "",
+            name ? `Their name: ${name}` : "",
+            goal ? `User's goal: ${goal}` : "",
+            context.trim() ? `Conversation context:\n${context}` : "",
+            lastMsg.trim() ? `Their last message / user's last message: ${lastMsg}` : "",
+            "",
+            "Return ONLY the JSON object. No prose, no markdown.",
+          ].filter(Boolean).join("\n"),
+          context: {
+            toolName: "Next Message",
+            formValues: { name, goal, conversation: context, lastMessage: lastMsg },
+          },
+        },
+      });
+      if (ai.isFallback || !ai.output.trim()) {
+        setResult(deterministic);
+        return;
+      }
+      const parsed = tryParseNextMessage(ai.output, deterministic);
+      setResult(parsed ?? deterministic);
+    } catch {
+      setResult(deterministic);
+    }
   }
 
   const show = result ?? DEMO;
@@ -286,14 +326,8 @@ export default function NextMessage() {
                 ))}
               </div>
               <motion.div {...fadeUp(0.3)} className="mt-4 rounded-2xl border border-[hsl(268_52%_68%/0.2)] bg-[hsl(268_52%_68%/0.06)] px-5 py-4">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(268_52%_68%)]">Coach Note</p>
-                  {aiLoading && <Loader2 className="w-3 h-3 animate-spin text-[hsl(268_52%_68%)]" />}
-                  {aiCoachNote && !aiLoading && <span className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_52%_78%)]">AI</span>}
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {aiCoachNote ?? show.coachNote}
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(268_52%_68%)] mb-1.5">Coach Note</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{show.coachNote}</p>
               </motion.div>
               {result && (
                 <div className="mt-5 flex justify-center">

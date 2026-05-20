@@ -360,6 +360,38 @@ paths:
               schema:
                 $ref: "#/components/schemas/AiStatus"
 
+  /ai/enhance:
+    post:
+      operationId: enhanceAi
+      tags: [ai]
+      summary: Run a tool-specific AI generation with graceful fallback
+      description: Public endpoint used by client tools (Blueprint, NextMessage, etc.) to enhance deterministic output with live AI when an API key is configured. Falls back silently to an empty output if AI is unavailable.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiEnhanceInput"
+      responses:
+        "200":
+          description: AI enhancement result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiTestResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiError"
+        "429":
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiError"
+
   /ai/test:
     post:
       operationId: testAi
@@ -892,6 +924,21 @@ components:
         extras:
           type: object
           additionalProperties: true
+
+    AiEnhanceInput:
+      type: object
+      required: [toolName, prompt]
+      properties:
+        toolName:
+          type: string
+          minLength: 1
+          maxLength: 80
+        prompt:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        context:
+          $ref: "#/components/schemas/AiContextInput"
 
     AiTestInput:
       type: object

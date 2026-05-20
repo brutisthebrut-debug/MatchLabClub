@@ -358,6 +358,43 @@ export const GetAiStatusResponse = zod.object({
 
 
 /**
+ * Public endpoint used by client tools (Blueprint, NextMessage, etc.) to enhance deterministic output with live AI when an API key is configured. Falls back silently to an empty output if AI is unavailable.
+ * @summary Run a tool-specific AI generation with graceful fallback
+ */
+export const enhanceAiBodyToolNameMax = 80;
+
+export const enhanceAiBodyPromptMax = 4000;
+
+
+
+export const EnhanceAiBody = zod.object({
+  "toolName": zod.string().min(1).max(enhanceAiBodyToolNameMax),
+  "prompt": zod.string().min(1).max(enhanceAiBodyPromptMax),
+  "context": zod.object({
+  "toolName": zod.string().optional(),
+  "formValues": zod.record(zod.string(), zod.unknown()).optional(),
+  "savedResults": zod.record(zod.string(), zod.unknown()).optional(),
+  "goals": zod.array(zod.string()).optional(),
+  "progressEntries": zod.array(zod.object({
+  "date": zod.string().optional(),
+  "tag": zod.string().optional(),
+  "note": zod.string().optional()
+})).optional(),
+  "extras": zod.record(zod.string(), zod.unknown()).optional()
+}).optional()
+})
+
+export const EnhanceAiResponse = zod.object({
+  "mode": zod.enum(['live', 'fallback', 'setup-needed']),
+  "isFallback": zod.boolean(),
+  "output": zod.string(),
+  "durationMs": zod.number(),
+  "error": zod.string().optional(),
+  "model": zod.string().optional()
+})
+
+
+/**
  * Safe diagnostic endpoint — runs a tiny generation request. Requires founder key. Falls back gracefully if AI is unavailable.
  * @summary Send a sample prompt through the server-side AI helper
  */

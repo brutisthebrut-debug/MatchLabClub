@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, MapPin, RefreshCw, AlertCircle, Copy, Check } from "lucide-react";
+import { useEnhanceAi } from "@workspace/api-client-react";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -169,33 +170,70 @@ export default function Blueprint() {
   const [misread, setMisread] = useState("");
   const [want, setWant] = useState("");
   const [result, setResult] = useState<BlueprintResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [aiEdge, setAiEdge] = useState<string | null>(null);
-  const [aiEdgeLoading, setAiEdgeLoading] = useState(false);
+  const enhance = useEnhanceAi();
+  const loading = enhance.isPending;
 
-  function handleAnalyze() {
+  const BLUEPRINT_KEYS: (keyof BlueprintResult)[] = [
+    "firstImpression",
+    "repeatingPattern",
+    "communicationStyle",
+    "attractionPattern",
+    "comfortNeeds",
+    "riskLoop",
+    "growthEdge",
+  ];
+
+  function tryParseBlueprint(raw: string): BlueprintResult | null {
+    try {
+      const start = raw.indexOf("{");
+      const end = raw.lastIndexOf("}");
+      if (start === -1 || end <= start) return null;
+      const parsed = JSON.parse(raw.slice(start, end + 1)) as Record<string, unknown>;
+      const out: Partial<BlueprintResult> = {};
+      for (const k of BLUEPRINT_KEYS) {
+        const v = parsed[k];
+        if (typeof v !== "string" || v.trim().length < 20) return null;
+        out[k] = v.trim();
+      }
+      return out as BlueprintResult;
+    } catch {
+      return null;
+    }
+  }
+
+  async function handleAnalyze() {
     if (!text.trim()) return;
-    setLoading(true);
-    setAiEdge(null);
-    setTimeout(async () => {
-      setResult(analyzeBlueprint(text, pattern, misread, want));
-      setLoading(false);
-
-      setAiEdgeLoading(true);
-      try {
-        const prompt = [`About me: ${text}`, pattern && `Pattern: ${pattern}`, misread && `Misread as: ${misread}`, want && `Looking for: ${want}`].filter(Boolean).join("\n");
-        const res = await fetch("/api/ai/enhance", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ toolName: "Dating Blueprint", prompt }),
-        });
-        if (res.ok) {
-          const data = await res.json() as { output: string; isFallback: boolean };
-          if (data.output && !data.isFallback) setAiEdge(data.output);
-        }
-      } catch { /* silent — deterministic result shown */ }
-      setAiEdgeLoading(false);
-    }, 1200);
+    const deterministic = analyzeBlueprint(text, pattern, misread, want);
+    try {
+      const ai = await enhance.mutateAsync({
+        data: {
+          toolName: "Personal Blueprint",
+          prompt: [
+            "Generate a personal dating blueprint as JSON with exactly these string keys (each 2-4 sentences, warm, specific, never generic):",
+            "firstImpression, repeatingPattern, communicationStyle, attractionPattern, comfortNeeds, riskLoop, growthEdge.",
+            "",
+            `Self-description: ${text}`,
+            pattern ? `Repeating pattern: ${pattern}` : "",
+            misread ? `What people misread: ${misread}` : "",
+            want ? `What they want: ${want}` : "",
+            "",
+            "Return ONLY a single JSON object. No prose, no markdown.",
+          ].filter(Boolean).join("\n"),
+          context: {
+            toolName: "Personal Blueprint",
+            formValues: { selfDescription: text, pattern, misread, want },
+          },
+        },
+      });
+      if (ai.isFallback || !ai.output.trim()) {
+        setResult(deterministic);
+        return;
+      }
+      const parsed = tryParseBlueprint(ai.output);
+      setResult(parsed ?? deterministic);
+    } catch {
+      setResult(deterministic);
+    }
   }
 
   const show = result ?? DEMO_RESULT;
@@ -291,19 +329,9 @@ export default function Blueprint() {
                   </motion.div>
                 ))}
               </div>
-              {(aiEdge || aiEdgeLoading) && (
-                <motion.div {...fadeUp(0.35)} className="mt-4 rounded-2xl border border-[hsl(268_52%_68%/0.2)] bg-[hsl(268_52%_68%/0.06)] px-5 py-4">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(268_52%_68%)]">Coaching Lens</p>
-                    {aiEdgeLoading && <Loader2 className="w-3 h-3 animate-spin text-[hsl(268_52%_68%)]" />}
-                    {aiEdge && !aiEdgeLoading && <span className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_52%_78%)]">AI</span>}
-                  </div>
-                  {aiEdge && <p className="text-sm text-muted-foreground leading-relaxed">{aiEdge}</p>}
-                </motion.div>
-              )}
               {result && (
                 <div className="mt-5 flex justify-center">
-                  <button onClick={() => { setResult(null); setText(""); setPattern(""); setMisread(""); setWant(""); setAiEdge(null); }}
+                  <button onClick={() => { setResult(null); setText(""); setPattern(""); setMisread(""); setWant(""); }}
                     className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
                     <RefreshCw className="w-3.5 h-3.5" />Start over
                   </button>

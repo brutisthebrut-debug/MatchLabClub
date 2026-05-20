@@ -327,6 +327,20 @@ export interface AiContextInput {
   extras?: AiContextInputExtras;
 }
 
+export interface AiEnhanceInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  toolName: string;
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  prompt: string;
+  context?: AiContextInput;
+}
+
 export interface AiTestInput {
   /**
      * @minLength 1
