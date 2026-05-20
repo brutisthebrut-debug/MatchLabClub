@@ -7,10 +7,11 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Platform,
   Pressable,
   RefreshControl,
@@ -122,21 +123,7 @@ export default function MatchesScreen() {
   const listKey = getListAuditsQueryKey(listParams);
   const deleteAudit = useDeleteAudit({
     mutation: {
-      onMutate: async ({ id }) => {
-        await queryClient.cancelQueries({ queryKey: listKey });
-        const previous = queryClient.getQueryData<Audit[]>(listKey);
-        if (previous) {
-          queryClient.setQueryData<Audit[]>(
-            listKey,
-            previous.filter((a) => a.id !== id),
-          );
-        }
-        return { previous };
-      },
-      onError: (_err, _vars, ctx) => {
-        if (ctx?.previous) {
-          queryClient.setQueryData(listKey, ctx.previous);
-        }
+      onError: (_err, _vars, _ctx) => {
         if (Platform.OS !== "web") {
           Alert.alert("Couldn't delete", "Something went wrong. Try again.");
         }
@@ -147,11 +134,85 @@ export default function MatchesScreen() {
     },
   });
 
+  const [pendingDelete, setPendingDelete] = React.useState<{
+    audit: Audit;
+    expiresAt: number;
+  } | null>(null);
+  const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingAuditRef = useRef<Audit | null>(null);
+  const UNDO_WINDOW_MS = 5000;
+
+  const removeFromCache = (id: number) => {
+    const previous = queryClient.getQueryData<Audit[]>(listKey);
+    if (previous) {
+      queryClient.setQueryData<Audit[]>(
+        listKey,
+        previous.filter((a) => a.id !== id),
+      );
+    }
+  };
+
+  const restoreToCache = (audit: Audit) => {
+    const previous = queryClient.getQueryData<Audit[]>(listKey) ?? [];
+    if (previous.some((a) => a.id === audit.id)) return;
+    queryClient.setQueryData<Audit[]>(listKey, [...previous, audit]);
+  };
+
+  const finalizePendingDelete = React.useCallback(() => {
+    const audit = pendingAuditRef.current;
+    if (!audit) return;
+    pendingAuditRef.current = null;
+    if (pendingTimerRef.current) {
+      clearTimeout(pendingTimerRef.current);
+      pendingTimerRef.current = null;
+    }
+    setPendingDelete(null);
+    deleteAudit.mutate({ id: audit.id });
+  }, [deleteAudit]);
+
+  const undoPendingDelete = () => {
+    const audit = pendingAuditRef.current;
+    if (!audit) return;
+    pendingAuditRef.current = null;
+    if (pendingTimerRef.current) {
+      clearTimeout(pendingTimerRef.current);
+      pendingTimerRef.current = null;
+    }
+    restoreToCache(audit);
+    setPendingDelete(null);
+  };
+
+  const beginUndoableDelete = (audit: Audit) => {
+    if (pendingAuditRef.current) {
+      finalizePendingDelete();
+    }
+    pendingAuditRef.current = audit;
+    removeFromCache(audit.id);
+    setPendingDelete({ audit, expiresAt: Date.now() + UNDO_WINDOW_MS });
+    pendingTimerRef.current = setTimeout(() => {
+      finalizePendingDelete();
+    }, UNDO_WINDOW_MS);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pendingTimerRef.current) {
+        clearTimeout(pendingTimerRef.current);
+        pendingTimerRef.current = null;
+      }
+      if (pendingAuditRef.current) {
+        deleteAudit.mutate({ id: pendingAuditRef.current.id });
+        pendingAuditRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const openSwipeRef = useRef<Swipeable | null>(null);
 
-  const askDelete = (id: number, name: string) => {
-    const message = `Remove ${name} from your matches? This can't be undone.`;
-    const run = () => deleteAudit.mutate({ id });
+  const askDelete = (audit: Audit) => {
+    const message = `Remove ${audit.firstName} from your matches?`;
+    const run = () => beginUndoableDelete(audit);
     if (Platform.OS === "web") {
       if (typeof window !== "undefined" && window.confirm(message)) run();
       return;
@@ -412,7 +473,7 @@ export default function MatchesScreen() {
                       ]}
                       onPress={() => {
                         swipeRef?.close();
-                        askDelete(audit.id, audit.firstName);
+                        askDelete(audit);
                       }}
                     >
                       <Feather name="trash-2" size={18} color="#fff" />
@@ -433,7 +494,97 @@ export default function MatchesScreen() {
           </View>
         ) : null}
       </ScrollView>
+
+      {pendingDelete ? (
+        <UndoToast
+          key={pendingDelete.audit.id}
+          name={pendingDelete.audit.firstName}
+          durationMs={UNDO_WINDOW_MS}
+          bottomOffset={bottomInset - 60}
+          onUndo={undoPendingDelete}
+        />
+      ) : null}
     </View>
+  );
+}
+
+function UndoToast({
+  name,
+  durationMs,
+  bottomOffset,
+  onUndo,
+}: {
+  name: string;
+  durationMs: number;
+  bottomOffset: number;
+  onUndo: () => void;
+}) {
+  const colors = useColors();
+  const progress = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: 1,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(progress, {
+      toValue: 0,
+      duration: durationMs,
+      useNativeDriver: false,
+    }).start();
+  }, [durationMs, opacity, progress]);
+
+  const barWidth = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0%", "100%"],
+  });
+
+  return (
+    <Animated.View
+      pointerEvents="box-none"
+      style={[styles.toastWrap, { bottom: Math.max(bottomOffset, 16), opacity }]}
+      accessibilityLiveRegion="polite"
+    >
+      <View
+        style={[
+          styles.toast,
+          { backgroundColor: colors.foreground, borderColor: colors.cardBorder },
+        ]}
+      >
+        <Feather name="trash-2" size={14} color={colors.background} />
+        <Text
+          style={[styles.toastText, { color: colors.background }]}
+          numberOfLines={1}
+        >
+          Removed {name}
+        </Text>
+        <Pressable
+          onPress={onUndo}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={`Undo removing ${name}`}
+          style={({ pressed }) => [
+            styles.toastUndo,
+            {
+              borderColor: colors.background,
+              opacity: pressed ? 0.6 : 1,
+            },
+          ]}
+        >
+          <Text style={[styles.toastUndoText, { color: colors.background }]}>
+            Undo
+          </Text>
+        </Pressable>
+        <Animated.View
+          style={[
+            styles.toastProgress,
+            { backgroundColor: colors.primary, width: barWidth },
+          ]}
+        />
+      </View>
+    </Animated.View>
   );
 }
 
@@ -724,5 +875,49 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 12,
     fontFamily: "PlusJakartaSans_700Bold",
+  },
+  toastWrap: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    alignItems: "stretch",
+  },
+  toast: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  toastText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+  },
+  toastUndo: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  toastUndoText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+  },
+  toastProgress: {
+    position: "absolute",
+    left: 0,
+    bottom: 0,
+    height: 2,
   },
 });
