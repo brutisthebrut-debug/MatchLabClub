@@ -8,7 +8,8 @@
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "update-geoip": "node node_modules/geoip-lite/scripts/updatedb.js license_key=$MAXMIND_LICENSE_KEY"
   },
   "dependencies": {
     "@workspace/ai-schemas": "workspace:*",

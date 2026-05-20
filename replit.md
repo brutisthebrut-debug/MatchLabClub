@@ -13,6 +13,22 @@ AI-powered dating profile and messaging coaching web app that audits profiles, r
 - Required env: `DATABASE_URL` — Postgres connection string
 - Optional env: `AI_RELIABILITY_REBREACH_COOLDOWN_MINUTES` — min healthy minutes after a "recovered" email before another breach email may fire for the same tool (default 15)
 
+### Refreshing GeoIP data
+
+Sign-in notification emails include approximate location via the bundled `geoip-lite` MaxMind GeoLite2 dataset. The dataset ships with the package and should be refreshed **monthly** to keep IP-to-location mappings accurate as IP ranges are reassigned over time.
+
+**How to refresh:**
+
+1. Get a free MaxMind license key at https://www.maxmind.com/en/geolite2/signup
+2. Set it as an environment variable: `MAXMIND_LICENSE_KEY=your_key_here`
+3. Run the updater from the repo root:
+   ```
+   MAXMIND_LICENSE_KEY=your_key pnpm --filter @workspace/api-server run update-geoip
+   ```
+4. Restart the API server so it picks up the new data files.
+
+The updater fetches current GeoLite2 CSV files directly from MaxMind, converts them to geoip-lite's binary format, and writes them into `artifacts/api-server/node_modules/geoip-lite/data/`. No runtime behavior or email format changes — only the location lookups become fresher.
+
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
