@@ -117,13 +117,53 @@ async function buildExportPayload(userId: string) {
   });
 }
 
+async function sendExportReceiptEmail(
+  to: string,
+  firstName: string | null | undefined,
+  method: "direct download" | "emailed link",
+): Promise<void> {
+  const name = firstName?.trim() || "there";
+  const when = new Date().toUTCString();
+  const text = [
+    `Hi ${name},`,
+    "",
+    `This is a receipt confirming that a copy of your Next Level Dating Club data was just exported (${method}).`,
+    `When: ${when}`,
+    "",
+    "If you made this request, no action is needed.",
+    "If you didn't, please sign in and change your password — someone else may",
+    "have access to your account.",
+    "",
+    "— Next Level Dating Club",
+  ].join("\n");
+  const html = `<!doctype html>
+<html>
+  <body style="font-family: -apple-system, Segoe UI, sans-serif; line-height: 1.6; color: #222;">
+    <p>Hi ${name},</p>
+    <p>This is a receipt confirming that a copy of your <strong>Next Level Dating Club</strong> data was just exported (${method}).</p>
+    <p style="font-size: 13px; color: #666;"><strong>When:</strong> ${when}</p>
+    <p>If you made this request, no action is needed.</p>
+    <p style="font-size: 13px; color: #666;">
+      If you didn't, please sign in and change your password — someone else may have access to your account.
+    </p>
+  </body>
+</html>`;
+  await sendMail({
+    to,
+    subject: "Your Next Level Dating Club data was exported",
+    text,
+    html,
+  });
+}
+
 router.get("/account/export", async (req, res): Promise<void> => {
   if (!req.user?.id) {
     res.status(401).json({ error: "Not authenticated" });
     return;
   }
 
-  const payload = await buildExportPayload(req.user.id);
+  const userId = req.user.id;
+  const payload = await buildExportPayload(userId);
   if (!payload) {
     res.status(401).json({ error: "Not authenticated" });
     return;
@@ -133,6 +173,19 @@ router.get("/account/export", async (req, res): Promise<void> => {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
   res.send(JSON.stringify(payload, null, 2));
+
+  // Best-effort export receipt email — don't fail the download if it errors.
+  if (payload.user.email) {
+    try {
+      await sendExportReceiptEmail(
+        payload.user.email,
+        payload.user.firstName,
+        "direct download",
+      );
+    } catch (err) {
+      req.log.error({ err, userId }, "Failed to send export receipt email");
+    }
+  }
 });
 
 router.post("/account/export/email", async (req, res): Promise<void> => {
@@ -291,6 +344,21 @@ router.get(
       `attachment; filename="${filename}"`,
     );
     res.send(JSON.stringify(payload, null, 2));
+
+    if (payload.user.email) {
+      try {
+        await sendExportReceiptEmail(
+          payload.user.email,
+          payload.user.firstName,
+          "emailed link",
+        );
+      } catch (err) {
+        req.log.error(
+          { err, userId: row.userId },
+          "Failed to send export receipt email",
+        );
+      }
+    }
   },
 );
 
@@ -301,6 +369,17 @@ router.delete("/account", async (req, res): Promise<void> => {
   }
 
   const userId = req.user.id;
+
+  // Fetch the user's email/name BEFORE we delete the row so we can send a
+  // confirmation receipt after the deletion completes.
+  const preDeleteUser = await db
+    .select({
+      email: usersTable.email,
+      firstName: usersTable.firstName,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId));
+  const recipient = preDeleteUser[0];
 
   const [audits, profiles, messages, insights] = await Promise.all([
     db
@@ -348,6 +427,63 @@ router.delete("/account", async (req, res): Promise<void> => {
     },
     "Deleted user account and associated data",
   );
+
+  if (recipient?.email) {
+    const name = recipient.firstName?.trim() || "there";
+    const when = new Date().toUTCString();
+    const text = [
+      `Hi ${name},`,
+      "",
+      "This is a confirmation that your Next Level Dating Club account has been deleted.",
+      `When: ${when}`,
+      "",
+      "Here's a summary of what was permanently removed:",
+      `  • ${audits.length} audit${audits.length === 1 ? "" : "s"}`,
+      `  • ${profiles.length} saved profile${profiles.length === 1 ? "" : "s"}`,
+      `  • ${messages.length} message coaching session${messages.length === 1 ? "" : "s"}`,
+      `  • ${insights.length} email insight report${insights.length === 1 ? "" : "s"}`,
+      "  • Your sign-in sessions and account record",
+      "",
+      "If you didn't request this, please reply to this email right away —",
+      "someone else may have had access to your account.",
+      "",
+      "Thanks for giving us a try.",
+      "— Next Level Dating Club",
+    ].join("\n");
+    const html = `<!doctype html>
+<html>
+  <body style="font-family: -apple-system, Segoe UI, sans-serif; line-height: 1.6; color: #222;">
+    <p>Hi ${name},</p>
+    <p>This is a confirmation that your <strong>Next Level Dating Club</strong> account has been deleted.</p>
+    <p style="font-size: 13px; color: #666;"><strong>When:</strong> ${when}</p>
+    <p>Here's a summary of what was permanently removed:</p>
+    <ul>
+      <li>${audits.length} audit${audits.length === 1 ? "" : "s"}</li>
+      <li>${profiles.length} saved profile${profiles.length === 1 ? "" : "s"}</li>
+      <li>${messages.length} message coaching session${messages.length === 1 ? "" : "s"}</li>
+      <li>${insights.length} email insight report${insights.length === 1 ? "" : "s"}</li>
+      <li>Your sign-in sessions and account record</li>
+    </ul>
+    <p style="font-size: 13px; color: #666;">
+      If you didn't request this, please reply to this email right away — someone else may have had access to your account.
+    </p>
+    <p>Thanks for giving us a try.<br/>— Next Level Dating Club</p>
+  </body>
+</html>`;
+    try {
+      await sendMail({
+        to: recipient.email,
+        subject: "Your Next Level Dating Club account has been deleted",
+        text,
+        html,
+      });
+    } catch (err) {
+      req.log.error(
+        { err, userId },
+        "Failed to send account deletion confirmation email",
+      );
+    }
+  }
 
   res.json(
     DeleteMyAccountResponse.parse({
