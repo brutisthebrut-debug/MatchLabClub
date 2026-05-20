@@ -37,26 +37,55 @@ export type SnoozeMode =
   | { kind: "duration"; seconds: number }
   | { kind: SnoozeTimeOfDayKind };
 
-export const COACH_TONIGHT_HOUR = 20;
-export const COACH_TOMORROW_MORNING_HOUR = 9;
+export const DEFAULT_COACH_TONIGHT_HOUR = 20;
+export const DEFAULT_COACH_TOMORROW_MORNING_HOUR = 9;
+
+export const COACH_TONIGHT_HOUR_MIN = 17;
+export const COACH_TONIGHT_HOUR_MAX = 23;
+export const COACH_TOMORROW_MORNING_HOUR_MIN = 5;
+export const COACH_TOMORROW_MORNING_HOUR_MAX = 11;
+
+export function formatHourLabel(hour: number): string {
+  const h = ((Math.round(hour) % 24) + 24) % 24;
+  if (h === 0) return "12am";
+  if (h === 12) return "12pm";
+  if (h < 12) return `${h}am`;
+  return `${h - 12}pm`;
+}
+
+function clampHour(raw: unknown, fallback: number, min: number, max: number): number {
+  const n = typeof raw === "number" && Number.isFinite(raw) ? Math.round(raw) : fallback;
+  if (n < min) return min;
+  if (n > max) return max;
+  return n;
+}
 
 export type SnoozeOption =
   | { kind: "duration"; label: string; seconds: number }
   | { kind: SnoozeTimeOfDayKind; label: string };
 
-export const COACH_SNOOZE_SHORT_OPTIONS: SnoozeOption[] = [
-  { kind: "duration", label: "30 min", seconds: 30 * 60 },
-  { kind: "duration", label: "1 hr", seconds: 60 * 60 },
-  { kind: "duration", label: "2 hr", seconds: 2 * 60 * 60 },
-  { kind: "tonight", label: "Tonight (8pm)" },
-];
+export function buildCoachSnoozeShortOptions(tonightHour: number): SnoozeOption[] {
+  return [
+    { kind: "duration", label: "30 min", seconds: 30 * 60 },
+    { kind: "duration", label: "1 hr", seconds: 60 * 60 },
+    { kind: "duration", label: "2 hr", seconds: 2 * 60 * 60 },
+    { kind: "tonight", label: `Tonight (${formatHourLabel(tonightHour)})` },
+  ];
+}
 
-export const COACH_SNOOZE_LONG_OPTIONS: SnoozeOption[] = [
-  { kind: "duration", label: "3 hr", seconds: 3 * 60 * 60 },
-  { kind: "duration", label: "6 hr", seconds: 6 * 60 * 60 },
-  { kind: "duration", label: "12 hr", seconds: 12 * 60 * 60 },
-  { kind: "tomorrowMorning", label: "Tomorrow morning (9am)" },
-];
+export function buildCoachSnoozeLongOptions(
+  tomorrowMorningHour: number,
+): SnoozeOption[] {
+  return [
+    { kind: "duration", label: "3 hr", seconds: 3 * 60 * 60 },
+    { kind: "duration", label: "6 hr", seconds: 6 * 60 * 60 },
+    { kind: "duration", label: "12 hr", seconds: 12 * 60 * 60 },
+    {
+      kind: "tomorrowMorning",
+      label: `Tomorrow morning (${formatHourLabel(tomorrowMorningHour)})`,
+    },
+  ];
+}
 
 export const COACH_SNOOZE_CUSTOM_MIN_SECONDS = 5 * 60;
 export const COACH_SNOOZE_CUSTOM_MAX_SECONDS = 24 * 60 * 60;
@@ -66,6 +95,8 @@ export interface CoachReminderPrefs {
   delaySeconds: number;
   snoozeShort: SnoozeMode;
   snoozeLong: SnoozeMode;
+  tonightHour: number;
+  tomorrowMorningHour: number;
 }
 
 export const DEFAULT_COACH_REMINDER_PREFS: CoachReminderPrefs = {
@@ -73,6 +104,8 @@ export const DEFAULT_COACH_REMINDER_PREFS: CoachReminderPrefs = {
   delaySeconds: COACH_REMINDER_DELAY_SECONDS,
   snoozeShort: { kind: "duration", seconds: COACH_SNOOZE_1H_SECONDS },
   snoozeLong: { kind: "duration", seconds: COACH_SNOOZE_3H_SECONDS },
+  tonightHour: DEFAULT_COACH_TONIGHT_HOUR,
+  tomorrowMorningHour: DEFAULT_COACH_TOMORROW_MORNING_HOUR,
 };
 
 function clampSnoozeSeconds(seconds: number, fallback: number): number {
@@ -118,27 +151,38 @@ export function formatSnoozeDuration(seconds: number): string {
 
 export function computeSnoozeDelaySeconds(
   mode: SnoozeMode,
+  hours: { tonightHour: number; tomorrowMorningHour: number } = {
+    tonightHour: DEFAULT_COACH_TONIGHT_HOUR,
+    tomorrowMorningHour: DEFAULT_COACH_TOMORROW_MORNING_HOUR,
+  },
   now: Date = new Date(),
 ): number {
   if (mode.kind === "duration") return mode.seconds;
   const target = new Date(now);
   if (mode.kind === "tonight") {
-    target.setHours(COACH_TONIGHT_HOUR, 0, 0, 0);
+    target.setHours(hours.tonightHour, 0, 0, 0);
     if (target.getTime() <= now.getTime()) {
       target.setDate(target.getDate() + 1);
     }
   } else {
     target.setDate(target.getDate() + 1);
-    target.setHours(COACH_TOMORROW_MORNING_HOUR, 0, 0, 0);
+    target.setHours(hours.tomorrowMorningHour, 0, 0, 0);
   }
   return Math.max(60, Math.round((target.getTime() - now.getTime()) / 1000));
 }
 
-export function snoozeModeActionLabel(mode: SnoozeMode): string {
+export function snoozeModeActionLabel(
+  mode: SnoozeMode,
+  hours: { tonightHour: number; tomorrowMorningHour: number } = {
+    tonightHour: DEFAULT_COACH_TONIGHT_HOUR,
+    tomorrowMorningHour: DEFAULT_COACH_TOMORROW_MORNING_HOUR,
+  },
+): string {
   if (mode.kind === "duration")
     return `Remind me in ${formatSnoozeDuration(mode.seconds)}`;
-  if (mode.kind === "tonight") return "Remind me tonight";
-  return "Remind me tomorrow morning";
+  if (mode.kind === "tonight")
+    return `Remind me tonight (${formatHourLabel(hours.tonightHour)})`;
+  return `Remind me tomorrow morning (${formatHourLabel(hours.tomorrowMorningHour)})`;
 }
 
 export function snoozeModesEqual(a: SnoozeMode, b: SnoozeOption): boolean {
@@ -195,7 +239,26 @@ export async function loadCoachReminderPrefs(): Promise<CoachReminderPrefs> {
             ),
           }
         : DEFAULT_COACH_REMINDER_PREFS.snoozeLong;
-    return { enabled, delaySeconds, snoozeShort, snoozeLong };
+    const tonightHour = clampHour(
+      parsed.tonightHour,
+      DEFAULT_COACH_TONIGHT_HOUR,
+      COACH_TONIGHT_HOUR_MIN,
+      COACH_TONIGHT_HOUR_MAX,
+    );
+    const tomorrowMorningHour = clampHour(
+      parsed.tomorrowMorningHour,
+      DEFAULT_COACH_TOMORROW_MORNING_HOUR,
+      COACH_TOMORROW_MORNING_HOUR_MIN,
+      COACH_TOMORROW_MORNING_HOUR_MAX,
+    );
+    return {
+      enabled,
+      delaySeconds,
+      snoozeShort,
+      snoozeLong,
+      tonightHour,
+      tomorrowMorningHour,
+    };
   } catch {
     return { ...DEFAULT_COACH_REMINDER_PREFS };
   }
@@ -261,6 +324,10 @@ export async function applyCoachNotificationCategory(
 ) {
   if (Platform.OS === "web") return;
   const current = prefs ?? (await loadCoachReminderPrefs());
+  const hours = {
+    tonightHour: current.tonightHour,
+    tomorrowMorningHour: current.tomorrowMorningHour,
+  };
   try {
     await Notifications.setNotificationCategoryAsync(
       COACH_NOTIFICATION_CATEGORY,
@@ -277,12 +344,12 @@ export async function applyCoachNotificationCategory(
         },
         {
           identifier: COACH_ACTION_SNOOZE_1H,
-          buttonTitle: snoozeModeActionLabel(current.snoozeShort),
+          buttonTitle: snoozeModeActionLabel(current.snoozeShort, hours),
           options: { opensAppToForeground: false },
         },
         {
           identifier: COACH_ACTION_SNOOZE_3H,
-          buttonTitle: snoozeModeActionLabel(current.snoozeLong),
+          buttonTitle: snoozeModeActionLabel(current.snoozeLong, hours),
           options: { opensAppToForeground: false },
         },
         {
@@ -379,7 +446,10 @@ export async function snoozeCoachReminder(opts: {
   }
   const delaySeconds =
     opts.mode !== undefined
-      ? computeSnoozeDelaySeconds(opts.mode)
+      ? computeSnoozeDelaySeconds(opts.mode, {
+          tonightHour: prefs.tonightHour,
+          tomorrowMorningHour: prefs.tomorrowMorningHour,
+        })
       : (opts.delaySeconds ?? COACH_SNOOZE_1H_SECONDS);
   return scheduleCoachReminder({
     matchName,

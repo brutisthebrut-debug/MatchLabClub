@@ -26,17 +26,22 @@ import { useColors } from "@/hooks/useColors";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { useAuth } from "@/lib/auth";
 import {
+  buildCoachSnoozeLongOptions,
+  buildCoachSnoozeShortOptions,
   cancelCoachReminder,
   clearCoachDraft,
   COACH_REMINDER_DELAY_OPTIONS,
   COACH_SNOOZE_CUSTOM_MAX_SECONDS,
   COACH_SNOOZE_CUSTOM_MIN_SECONDS,
-  COACH_SNOOZE_LONG_OPTIONS,
-  COACH_SNOOZE_SHORT_OPTIONS,
+  COACH_TOMORROW_MORNING_HOUR_MAX,
+  COACH_TOMORROW_MORNING_HOUR_MIN,
+  COACH_TONIGHT_HOUR_MAX,
+  COACH_TONIGHT_HOUR_MIN,
   type CoachReminderPrefs,
   consumePendingCoachFollowUpPrompt,
   DEFAULT_COACH_REMINDER_PREFS,
   ensureCoachNotificationPermission,
+  formatHourLabel,
   loadCoachDraft,
   loadCoachReminderPrefs,
   recordCoachFollowUp,
@@ -192,6 +197,36 @@ export default function CoachScreen() {
       snoozeLong: mode,
     });
   }
+
+  async function onPickTonightHour(hour: number) {
+    const clamped = Math.max(
+      COACH_TONIGHT_HOUR_MIN,
+      Math.min(COACH_TONIGHT_HOUR_MAX, hour),
+    );
+    if (clamped === reminderPrefs.tonightHour) return;
+    await updateReminderPrefs({ ...reminderPrefs, tonightHour: clamped });
+  }
+
+  async function onPickTomorrowMorningHour(hour: number) {
+    const clamped = Math.max(
+      COACH_TOMORROW_MORNING_HOUR_MIN,
+      Math.min(COACH_TOMORROW_MORNING_HOUR_MAX, hour),
+    );
+    if (clamped === reminderPrefs.tomorrowMorningHour) return;
+    await updateReminderPrefs({
+      ...reminderPrefs,
+      tomorrowMorningHour: clamped,
+    });
+  }
+
+  const snoozeShortOptions = useMemo(
+    () => buildCoachSnoozeShortOptions(reminderPrefs.tonightHour),
+    [reminderPrefs.tonightHour],
+  );
+  const snoozeLongOptions = useMemo(
+    () => buildCoachSnoozeLongOptions(reminderPrefs.tomorrowMorningHour),
+    [reminderPrefs.tomorrowMorningHour],
+  );
 
   async function handleReplyCopied() {
     await cancelCoachReminder();
@@ -645,17 +680,35 @@ export default function CoachScreen() {
 
           <SnoozeDurationPicker
             label="Short snooze"
-            options={COACH_SNOOZE_SHORT_OPTIONS}
+            options={snoozeShortOptions}
             value={reminderPrefs.snoozeShort}
             onChange={onPickSnoozeShort}
             disabled={!reminderPrefs.enabled}
           />
+          <HourPicker
+            label={`"Tonight" target`}
+            hour={reminderPrefs.tonightHour}
+            min={COACH_TONIGHT_HOUR_MIN}
+            max={COACH_TONIGHT_HOUR_MAX}
+            onChange={onPickTonightHour}
+            disabled={!reminderPrefs.enabled}
+            testID="picker-tonight-hour"
+          />
           <SnoozeDurationPicker
             label="Long snooze"
-            options={COACH_SNOOZE_LONG_OPTIONS}
+            options={snoozeLongOptions}
             value={reminderPrefs.snoozeLong}
             onChange={onPickSnoozeLong}
             disabled={!reminderPrefs.enabled}
+          />
+          <HourPicker
+            label={`"Tomorrow morning" target`}
+            hour={reminderPrefs.tomorrowMorningHour}
+            min={COACH_TOMORROW_MORNING_HOUR_MIN}
+            max={COACH_TOMORROW_MORNING_HOUR_MAX}
+            onChange={onPickTomorrowMorningHour}
+            disabled={!reminderPrefs.enabled}
+            testID="picker-tomorrow-morning-hour"
           />
         </View>
 
@@ -704,6 +757,91 @@ function Field({
     <View style={styles.field}>
       <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>{label}</Text>
       {children}
+    </View>
+  );
+}
+
+function HourPicker({
+  label,
+  hour,
+  min,
+  max,
+  onChange,
+  disabled,
+  testID,
+}: {
+  label: string;
+  hour: number;
+  min: number;
+  max: number;
+  onChange: (hour: number) => void;
+  disabled: boolean;
+  testID?: string;
+}) {
+  const colors = useColors();
+  const canDecrement = !disabled && hour > min;
+  const canIncrement = !disabled && hour < max;
+  return (
+    <View style={styles.pickerBlock} testID={testID}>
+      <Text style={[styles.pickerLabel, { color: colors.mutedForeground }]}>
+        {label}
+      </Text>
+      <View style={styles.hourRow}>
+        <Pressable
+          onPress={() => canDecrement && onChange(hour - 1)}
+          disabled={!canDecrement}
+          accessibilityLabel="Earlier hour"
+          testID={testID ? `${testID}-decrement` : undefined}
+          style={[
+            styles.hourStep,
+            {
+              borderColor: colors.border,
+              backgroundColor: colors.input,
+              opacity: canDecrement ? 1 : 0.45,
+            },
+          ]}
+        >
+          <Feather name="minus" size={16} color={colors.foreground} />
+        </Pressable>
+        <View
+          style={[
+            styles.hourValue,
+            {
+              borderColor: colors.primary,
+              backgroundColor: `${colors.primary}22`,
+              opacity: disabled ? 0.45 : 1,
+            },
+          ]}
+        >
+          <Text
+            style={[styles.hourValueText, { color: colors.primary }]}
+            testID={testID ? `${testID}-value` : undefined}
+          >
+            {formatHourLabel(hour)}
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => canIncrement && onChange(hour + 1)}
+          disabled={!canIncrement}
+          accessibilityLabel="Later hour"
+          testID={testID ? `${testID}-increment` : undefined}
+          style={[
+            styles.hourStep,
+            {
+              borderColor: colors.border,
+              backgroundColor: colors.input,
+              opacity: canIncrement ? 1 : 0.45,
+            },
+          ]}
+        >
+          <Feather name="plus" size={16} color={colors.foreground} />
+        </Pressable>
+        <Text
+          style={[styles.hourRange, { color: colors.mutedForeground }]}
+        >
+          {formatHourLabel(min)}–{formatHourLabel(max)}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -1092,5 +1230,35 @@ const styles = StyleSheet.create({
   customSuffix: {
     fontSize: 12,
     fontFamily: "PlusJakartaSans_500Medium",
+  },
+  hourRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  hourStep: {
+    width: 36,
+    height: 36,
+    borderRadius: 999,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  hourValue: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    minWidth: 76,
+    alignItems: "center",
+  },
+  hourValueText: {
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  hourRange: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_500Medium",
+    marginLeft: "auto",
   },
 });
