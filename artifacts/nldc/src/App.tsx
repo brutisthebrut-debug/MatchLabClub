@@ -55,6 +55,7 @@ import DebriefWhatHappened from "@/pages/copilot/DebriefWhatHappened";
 import WeeklyGrowthPlan from "@/pages/copilot/WeeklyGrowthPlan";
 import PrepareForDate from "@/pages/copilot/PrepareForDate";
 import FounderDemoJourney from "@/pages/copilot/FounderDemoJourney";
+import Account from "@/pages/Account";
 
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 
@@ -126,6 +127,7 @@ function Router() {
       <Route path="/copilot/weekly-plan" component={WeeklyGrowthPlan} />
       <Route path="/copilot/prep" component={PrepareForDate} />
       <Route path="/copilot/demo" component={FounderDemoJourney} />
+      <Route path="/account" component={Account} />
       <Route component={NotFound} />
     </Switch>
   );

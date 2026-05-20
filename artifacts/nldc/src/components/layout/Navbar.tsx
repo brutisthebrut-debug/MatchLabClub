@@ -232,16 +232,15 @@ export function Navbar() {
           </Link>
 
           {isLoading ? null : isAuthenticated ? (
-            <button
-              type="button"
-              onClick={() => { closeAll(); logout(); }}
-              className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors text-muted-foreground hover:text-foreground hover:bg-white/4"
-              data-testid="button-logout"
+            <Link
+              href="/account"
+              onClick={closeAll}
+              className={`flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${location === "/account" ? "text-[hsl(268_52%_78%)] bg-white/5" : "text-muted-foreground hover:text-foreground hover:bg-white/4"}`}
+              data-testid="link-account"
             >
               <UserIcon className="w-3.5 h-3.5" />
               <span className="max-w-[120px] truncate">{user?.firstName || user?.email || "Account"}</span>
-              <LogOut className="w-3.5 h-3.5 opacity-60" />
-            </button>
+            </Link>
           ) : (
             <button
               type="button"
