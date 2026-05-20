@@ -561,6 +561,38 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageCoachingResponse"
 
+  /coach/follow-ups:
+    post:
+      operationId: recordCoachFollowUp
+      tags: [messages]
+      summary: Record whether the user sent a coached reply
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CoachFollowUpInput"
+      responses:
+        "200":
+          description: Updated send-through stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoachFollowUpStats"
+
+  /coach/follow-ups/stats:
+    get:
+      operationId: getCoachFollowUpStats
+      tags: [messages]
+      summary: Get aggregate send-through stats for the current account
+      responses:
+        "200":
+          description: Send-through stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoachFollowUpStats"
+
   /insights:
     get:
       operationId: listInsights
@@ -1204,6 +1236,32 @@ components:
             type: string
         coachTip:
           type: string
+
+    CoachFollowUpInput:
+      type: object
+      required: [answer]
+      properties:
+        answer:
+          type: string
+          enum: [sent, not_sent]
+        sessionId:
+          type: ["integer", "null"]
+
+    CoachFollowUpStats:
+      type: object
+      required: [totalPrompts, sentCount, notSentCount, lastAnsweredAt, lastAnswer]
+      properties:
+        totalPrompts:
+          type: integer
+        sentCount:
+          type: integer
+        notSentCount:
+          type: integer
+        lastAnsweredAt:
+          type: ["string", "null"]
+        lastAnswer:
+          type: ["string", "null"]
+          enum: [sent, not_sent, null]
 
     SuggestedReply:
       type: object

@@ -37,6 +37,8 @@ import type {
   BeginBrowserLoginParams,
   ClaimAnonymousInput,
   ClaimAnonymousResult,
+  CoachFollowUpInput,
+  CoachFollowUpStats,
   DatingProfile,
   DatingProfileInput,
   DatingProfileUpdate,
@@ -2043,6 +2045,154 @@ export const useCoachMessage = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getCoachMessageMutationOptions(options));
     }
+
+export const getRecordCoachFollowUpUrl = () => {
+
+
+
+
+  return `/api/coach/follow-ups`
+}
+
+/**
+ * @summary Record whether the user sent a coached reply
+ */
+export const recordCoachFollowUp = async (coachFollowUpInput: CoachFollowUpInput, options?: RequestInit): Promise<CoachFollowUpStats> => {
+
+  return customFetch<CoachFollowUpStats>(getRecordCoachFollowUpUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      coachFollowUpInput,)
+  }
+);}
+
+
+
+
+export const getRecordCoachFollowUpMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordCoachFollowUp>>, TError,{data: BodyType<CoachFollowUpInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordCoachFollowUp>>, TError,{data: BodyType<CoachFollowUpInput>}, TContext> => {
+
+const mutationKey = ['recordCoachFollowUp'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordCoachFollowUp>>, {data: BodyType<CoachFollowUpInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  recordCoachFollowUp(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordCoachFollowUpMutationResult = NonNullable<Awaited<ReturnType<typeof recordCoachFollowUp>>>
+    export type RecordCoachFollowUpMutationBody = BodyType<CoachFollowUpInput>
+    export type RecordCoachFollowUpMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Record whether the user sent a coached reply
+ */
+export const useRecordCoachFollowUp = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordCoachFollowUp>>, TError,{data: BodyType<CoachFollowUpInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recordCoachFollowUp>>,
+        TError,
+        {data: BodyType<CoachFollowUpInput>},
+        TContext
+      > => {
+      return useMutation(getRecordCoachFollowUpMutationOptions(options));
+    }
+
+export const getGetCoachFollowUpStatsUrl = () => {
+
+
+
+
+  return `/api/coach/follow-ups/stats`
+}
+
+/**
+ * @summary Get aggregate send-through stats for the current account
+ */
+export const getCoachFollowUpStats = async ( options?: RequestInit): Promise<CoachFollowUpStats> => {
+
+  return customFetch<CoachFollowUpStats>(getGetCoachFollowUpStatsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCoachFollowUpStatsQueryKey = () => {
+    return [
+    `/api/coach/follow-ups/stats`
+    ] as const;
+    }
+
+
+export const getGetCoachFollowUpStatsQueryOptions = <TData = Awaited<ReturnType<typeof getCoachFollowUpStats>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCoachFollowUpStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCoachFollowUpStatsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCoachFollowUpStats>>> = ({ signal }) => getCoachFollowUpStats({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCoachFollowUpStats>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCoachFollowUpStatsQueryResult = NonNullable<Awaited<ReturnType<typeof getCoachFollowUpStats>>>
+export type GetCoachFollowUpStatsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get aggregate send-through stats for the current account
+ */
+
+export function useGetCoachFollowUpStats<TData = Awaited<ReturnType<typeof getCoachFollowUpStats>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCoachFollowUpStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCoachFollowUpStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getListInsightsUrl = () => {
 

@@ -12,6 +12,7 @@ import founderRouter from "./founder";
 import aiRouter from "./ai";
 import claimRouter from "./claim";
 import accountRouter from "./account";
+import coachFollowUpsRouter from "./coachFollowUps";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(founderRouter);
 router.use(aiRouter);
 router.use(claimRouter);
 router.use(accountRouter);
+router.use(coachFollowUpsRouter);
 
 export default router;

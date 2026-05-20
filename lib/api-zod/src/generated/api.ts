@@ -654,6 +654,35 @@ export const CoachMessageResponse = zod.object({
 
 
 /**
+ * @summary Record whether the user sent a coached reply
+ */
+export const RecordCoachFollowUpBody = zod.object({
+  "answer": zod.enum(['sent', 'not_sent']),
+  "sessionId": zod.number().nullish()
+})
+
+export const RecordCoachFollowUpResponse = zod.object({
+  "totalPrompts": zod.number(),
+  "sentCount": zod.number(),
+  "notSentCount": zod.number(),
+  "lastAnsweredAt": zod.string().nullable(),
+  "lastAnswer": zod.union([zod.literal('sent'),zod.literal('not_sent'),zod.literal(null)]).nullable()
+})
+
+
+/**
+ * @summary Get aggregate send-through stats for the current account
+ */
+export const GetCoachFollowUpStatsResponse = zod.object({
+  "totalPrompts": zod.number(),
+  "sentCount": zod.number(),
+  "notSentCount": zod.number(),
+  "lastAnsweredAt": zod.string().nullable(),
+  "lastAnswer": zod.union([zod.literal('sent'),zod.literal('not_sent'),zod.literal(null)]).nullable()
+})
+
+
+/**
  * @summary List email insight imports
  */
 export const ListInsightsResponseItem = zod.object({

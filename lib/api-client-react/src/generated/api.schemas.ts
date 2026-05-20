@@ -312,6 +312,41 @@ export interface MessageCoachingResponse {
   coachTip: string;
 }
 
+export type CoachFollowUpInputAnswer = typeof CoachFollowUpInputAnswer[keyof typeof CoachFollowUpInputAnswer];
+
+
+export const CoachFollowUpInputAnswer = {
+  sent: 'sent',
+  not_sent: 'not_sent',
+} as const;
+
+export interface CoachFollowUpInput {
+  answer: CoachFollowUpInputAnswer;
+  /** @nullable */
+  sessionId?: number | null;
+}
+
+/**
+ * @nullable
+ */
+export type CoachFollowUpStatsLastAnswer = typeof CoachFollowUpStatsLastAnswer[keyof typeof CoachFollowUpStatsLastAnswer] | null;
+
+
+export const CoachFollowUpStatsLastAnswer = {
+  sent: 'sent',
+  not_sent: 'not_sent',
+} as const;
+
+export interface CoachFollowUpStats {
+  totalPrompts: number;
+  sentCount: number;
+  notSentCount: number;
+  /** @nullable */
+  lastAnsweredAt: string | null;
+  /** @nullable */
+  lastAnswer: CoachFollowUpStatsLastAnswer;
+}
+
 export interface EmailInsightInput {
   pastedContent: string;
   sourceLabel: string;

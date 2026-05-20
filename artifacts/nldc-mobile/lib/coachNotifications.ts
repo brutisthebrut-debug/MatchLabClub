@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { recordCoachFollowUp as apiRecordCoachFollowUp } from "@workspace/api-client-react";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
@@ -261,7 +262,10 @@ export async function clearCoachDraft() {
   }
 }
 
-export async function recordCoachFollowUp(answer: CoachFollowUpAnswer) {
+export async function recordCoachFollowUp(
+  answer: CoachFollowUpAnswer,
+  opts?: { sessionId?: number | null },
+) {
   try {
     const current = await loadCoachSendStats();
     const next: CoachSendStats = {
@@ -276,6 +280,15 @@ export async function recordCoachFollowUp(answer: CoachFollowUpAnswer) {
     await cancelCoachReminder();
   } catch {
     // ignore
+  }
+
+  try {
+    await apiRecordCoachFollowUp({
+      answer,
+      sessionId: opts?.sessionId ?? null,
+    });
+  } catch {
+    // Offline / unauthenticated — local AsyncStorage copy is enough for now.
   }
 }
 
