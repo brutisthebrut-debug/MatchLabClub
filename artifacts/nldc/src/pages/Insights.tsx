@@ -14,6 +14,7 @@ import {
   getListInsightsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { Shield, Loader2, Mail, TrendingUp, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp } from "lucide-react";
 
@@ -72,11 +73,14 @@ export default function Insights() {
   const [expandedPattern, setExpandedPattern] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
-  const { data: insights } = useListInsights();
+  const { isAuthenticated } = useAuth();
+  const { data: insights, isLoading: insightsLoading } = useListInsights();
   const createInsight = useCreateInsight();
   const analyzeInsight = useAnalyzeInsight();
 
   const isLoading = createInsight.isPending || analyzeInsight.isPending;
+  const hasInsights = !!(insights && insights.length > 0);
+  const isBrandNewUser = isAuthenticated && !insightsLoading && !hasInsights && !analysis;
 
   async function handleAnalyze() {
     try {
@@ -92,7 +96,7 @@ export default function Insights() {
     }
   }
 
-  const displayInsights = insights?.length ? insights : [DEMO_INSIGHT];
+  const displayInsights = hasInsights ? insights! : (isAuthenticated ? [] : [DEMO_INSIGHT]);
 
   const attachmentColor = (style: string) => {
     if (style.toLowerCase().includes("secure")) return "bg-green-50 text-green-700 border-green-200";
@@ -113,6 +117,25 @@ export default function Insights() {
             <h1 className="text-3xl font-serif font-bold text-foreground">Email Insight Import</h1>
             <p className="text-muted-foreground mt-2 max-w-xl">Paste exported message history and we'll identify your communication patterns, attachment style, and profile coaching tips.</p>
           </motion.div>
+
+          {isBrandNewUser && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}
+              className="mb-6"
+              data-testid="insights-empty-state"
+            >
+              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
+                  <Mail className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to Email Insights</p>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Analyze your first conversation</h2>
+                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
+                  Paste any message history below and we'll surface your communication patterns, attachment style, and the profile tweaks most likely to lift your results.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           {/* Privacy Notice */}
           <motion.div
@@ -177,7 +200,7 @@ export default function Insights() {
 
           {/* Results */}
           <AnimatePresence>
-            {(analysis !== null || true) && (
+            {(analysis !== null || !isAuthenticated) && (
               <motion.div
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}

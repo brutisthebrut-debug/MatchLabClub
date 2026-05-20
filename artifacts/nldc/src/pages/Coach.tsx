@@ -12,6 +12,7 @@ import {
   useCoachMessage, getListMessageCoachingSessionsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Clock, ArrowRight, Sparkles } from "lucide-react";
 
@@ -82,10 +83,13 @@ export default function Coach() {
   const [result, setResult] = useState<CoachingResult | null>(null);
   const queryClient = useQueryClient();
 
-  const { data: sessions } = useListMessageCoachingSessions();
+  const { isAuthenticated } = useAuth();
+  const { data: sessions, isLoading: sessionsLoading } = useListMessageCoachingSessions();
   const createSession = useCreateMessageCoachingSession();
   const coachMessage = useCoachMessage();
   const isLoading = createSession.isPending || coachMessage.isPending;
+  const hasSessions = !!(sessions && sessions.length > 0);
+  const isBrandNewUser = isAuthenticated && !sessionsLoading && !hasSessions && !result;
 
   async function handleCoach() {
     try {
@@ -101,8 +105,8 @@ export default function Coach() {
     }
   }
 
-  const displaySessions = sessions?.length ? sessions : [DEMO_SESSION];
-  const showResult = result ?? ((!isLoading) ? DEMO_RESULT : null);
+  const displaySessions = hasSessions ? sessions! : (isAuthenticated ? [] : [DEMO_SESSION]);
+  const showResult = result ?? ((!isLoading && !isAuthenticated) ? DEMO_RESULT : null);
 
   return (
     <AppLayout>
@@ -115,6 +119,29 @@ export default function Coach() {
             <h1 className="text-3xl font-bold text-foreground">Message Coach</h1>
             <p className="text-muted-foreground mt-2">Paste a conversation, get 3 expertly-crafted reply options — each with coaching rationale.</p>
           </motion.div>
+
+          {isBrandNewUser && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}
+              className="mb-6"
+              data-testid="coach-empty-state"
+            >
+              <div className="relative rounded-3xl p-6 sm:p-8 text-center overflow-hidden shimmer"
+                style={{ background: "linear-gradient(135deg, hsl(268 52% 68% / 0.12), hsl(285 45% 60% / 0.08))" }}>
+                <div className="absolute inset-0 border border-[hsl(268_52%_68%/0.2)] rounded-3xl pointer-events-none" />
+                <div className="relative z-10">
+                  <div className="w-14 h-14 rounded-2xl bg-[hsl(285_45%_62%/0.15)] border border-[hsl(285_45%_62%/0.25)] mx-auto mb-4 flex items-center justify-center">
+                    <MessageSquare className="w-6 h-6 text-[hsl(285_52%_78%)]" />
+                  </div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-[hsl(285_60%_82%)] mb-2">Welcome to Message Coach</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Coach your first message</h2>
+                  <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
+                    Paste any dating app conversation below and we'll deliver three calibrated reply options — Playful, Direct, and Warm — each with the rationale a real coach would give.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           <div className="grid md:grid-cols-3 gap-5">
             {/* Form */}
@@ -186,6 +213,11 @@ export default function Coach() {
               className="glass border border-white/8 rounded-3xl p-5"
             >
               <p className="font-semibold text-foreground text-sm mb-4 uppercase tracking-wider text-xs text-muted-foreground">Recent Sessions</p>
+              {displaySessions.length === 0 ? (
+                <p className="text-xs text-muted-foreground leading-relaxed" data-testid="sessions-empty-state">
+                  Your coached conversations will appear here once you analyze your first one.
+                </p>
+              ) : (
               <div className="space-y-3">
                 {displaySessions.slice().reverse().slice(0, 5).map((s) => (
                   <div key={s.id} className="p-3 rounded-xl border border-white/8 bg-[hsl(232_28%_14%/0.5)]" data-testid={`card-session-${s.id}`}>
@@ -199,6 +231,7 @@ export default function Coach() {
                   </div>
                 ))}
               </div>
+              )}
             </motion.div>
           </div>
 
