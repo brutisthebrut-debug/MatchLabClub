@@ -30,7 +30,7 @@ test.beforeAll(async () => {
         (CURRENT_DATE - INTERVAL '1 day')::date,
         $2, 30, 28, 1, 1, 0, 1.1, 210.0
       )
-    ON CONFLICT ON CONSTRAINT ai_request_metrics_daily_day_tool_idx DO NOTHING
+    ON CONFLICT (day, tool_name) DO NOTHING
     RETURNING id
   `, [TOOL_NAME, SECONDARY_TOOL_NAME]);
 
@@ -88,6 +88,70 @@ test("AI Reliability drill-in: selector, summary tiles, focused chart, and back 
   await expect(summaryTiles).not.toBeVisible();
   await expect(focusChart).not.toBeVisible();
   await expect(focusSelect).toHaveValue("");
+});
+
+test("AI Reliability trends: metric toggle switches displayed metric label", async ({ page }) => {
+  // ── 1. Sign in ───────────────────────────────────────────────────────────
+  await page.goto("/founder");
+
+  const keyInput = page.locator('input[type="password"]');
+  await expect(keyInput).toBeVisible();
+  await keyInput.fill(FOUNDER_KEY);
+  await page.locator('button:has-text("Unlock Dashboard")').click();
+
+  // ── 2. Wait for the panel to appear and data to load ─────────────────────
+  const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
+  await expect(focusSelect).toBeVisible({ timeout: 20_000 });
+  await focusSelect.scrollIntoViewIfNeeded();
+  await expect(focusSelect.locator(`option[value="${SECONDARY_TOOL_NAME}"]`)).toBeAttached({ timeout: 20_000 });
+
+  // ── 3. Confirm the default metric label shows "First-try success rate" ────
+  const panelSubtitle = page.locator('p:has-text("First-try success rate per tool over time")');
+  await expect(panelSubtitle).toBeVisible();
+
+  // ── 4. Click the "Fallback %" toggle button ──────────────────────────────
+  // The toggle group is only rendered when no tool is focused.
+  const fallbackToggle = page.locator('button', { hasText: "Fallback %" });
+  await expect(fallbackToggle).toBeVisible();
+  await fallbackToggle.click();
+
+  // ── 5. The subtitle should now read "Fallback rate per tool over time" ────
+  await expect(page.locator('p:has-text("Fallback rate per tool over time")')).toBeVisible();
+  await expect(panelSubtitle).not.toBeVisible();
+
+  // ── 6. Clicking "First-try %" restores the original label ─────────────────
+  const firstTryToggle = page.locator('button', { hasText: "First-try %" });
+  await firstTryToggle.click();
+  await expect(panelSubtitle).toBeVisible();
+});
+
+test("AI Reliability trends: Download CSV button is enabled once data loads and produces a correctly-named file", async ({ page }) => {
+  // ── 1. Sign in ───────────────────────────────────────────────────────────
+  await page.goto("/founder");
+
+  const keyInput = page.locator('input[type="password"]');
+  await expect(keyInput).toBeVisible();
+  await keyInput.fill(FOUNDER_KEY);
+  await page.locator('button:has-text("Unlock Dashboard")').click();
+
+  // ── 2. Wait for panel and data ────────────────────────────────────────────
+  const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
+  await expect(focusSelect).toBeVisible({ timeout: 20_000 });
+  await focusSelect.scrollIntoViewIfNeeded();
+  await expect(focusSelect.locator(`option[value="${SECONDARY_TOOL_NAME}"]`)).toBeAttached({ timeout: 20_000 });
+
+  // ── 3. "Download CSV" button should be enabled now that data is present ───
+  const downloadBtn = page.locator('[data-testid="button-download-trends-csv"]');
+  await expect(downloadBtn).toBeEnabled({ timeout: 10_000 });
+
+  // ── 4. Click and assert the downloaded filename matches the expected pattern
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    downloadBtn.click(),
+  ]);
+
+  // Default window is 90d and no tool is focused → ai-reliability-trends-90d.csv
+  expect(download.suggestedFilename()).toMatch(/^ai-reliability-trends-90d\.csv$/);
 });
 
 test("AI Reliability drill-in: focus clears automatically when tool has no data in the active window", async ({ page }) => {
