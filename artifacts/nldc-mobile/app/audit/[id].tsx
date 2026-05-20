@@ -619,6 +619,7 @@ export default function AuditDetailScreen() {
                 What changed since last run
               </Text>
               <View
+                testID="badge-score-delta"
                 style={[
                   styles.changeDeltaBadge,
                   {
@@ -678,7 +679,7 @@ export default function AuditDetailScreen() {
               {report.changeSummary.newScore}
             </Text>
             {report.changeSummary.addedStrengths.length > 0 ? (
-              <View style={styles.changeGroup}>
+              <View testID="list-added-strengths" style={styles.changeGroup}>
                 <Text style={[styles.changeGroupTitle, { color: colors.success }]}>
                   New strengths
                 </Text>
@@ -693,7 +694,7 @@ export default function AuditDetailScreen() {
               </View>
             ) : null}
             {report.changeSummary.removedStrengths.length > 0 ? (
-              <View style={styles.changeGroup}>
+              <View testID="list-removed-strengths" style={styles.changeGroup}>
                 <Text
                   style={[
                     styles.changeGroupTitle,
@@ -714,7 +715,7 @@ export default function AuditDetailScreen() {
               </View>
             ) : null}
             {report.changeSummary.addedRisks.length > 0 ? (
-              <View style={styles.changeGroup}>
+              <View testID="list-added-risks" style={styles.changeGroup}>
                 <Text style={[styles.changeGroupTitle, { color: colors.rose }]}>
                   New risks
                 </Text>
@@ -729,7 +730,7 @@ export default function AuditDetailScreen() {
               </View>
             ) : null}
             {report.changeSummary.removedRisks.length > 0 ? (
-              <View style={styles.changeGroup}>
+              <View testID="list-removed-risks" style={styles.changeGroup}>
                 <Text
                   style={[
                     styles.changeGroupTitle,
