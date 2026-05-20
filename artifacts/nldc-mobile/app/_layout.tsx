@@ -15,12 +15,19 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
 
 import {
+  COACH_ACTION_DISMISS,
   COACH_ACTION_NOT_SENT,
   COACH_ACTION_SENT,
+  COACH_ACTION_SNOOZE_1H,
+  COACH_ACTION_SNOOZE_3H,
   COACH_NOTIFICATION_TYPE,
+  COACH_SNOOZE_1H_SECONDS,
+  COACH_SNOOZE_3H_SECONDS,
+  cancelCoachReminder,
   configureNotificationHandler,
   recordCoachFollowUp,
   setPendingCoachFollowUpPrompt,
+  snoozeCoachReminder,
 } from "@/lib/coachNotifications";
 
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -63,12 +70,34 @@ function RootLayoutNav() {
         return;
       }
       const action = response.actionIdentifier;
+      const matchName =
+        typeof (data as { matchName?: unknown }).matchName === "string"
+          ? ((data as { matchName?: string }).matchName as string)
+          : undefined;
       if (action === COACH_ACTION_SENT) {
         await recordCoachFollowUp("sent");
         return;
       }
       if (action === COACH_ACTION_NOT_SENT) {
         await recordCoachFollowUp("not_sent");
+        return;
+      }
+      if (action === COACH_ACTION_SNOOZE_1H) {
+        await snoozeCoachReminder({
+          matchName,
+          delaySeconds: COACH_SNOOZE_1H_SECONDS,
+        });
+        return;
+      }
+      if (action === COACH_ACTION_SNOOZE_3H) {
+        await snoozeCoachReminder({
+          matchName,
+          delaySeconds: COACH_SNOOZE_3H_SECONDS,
+        });
+        return;
+      }
+      if (action === COACH_ACTION_DISMISS) {
+        await cancelCoachReminder();
         return;
       }
       await setPendingCoachFollowUpPrompt();

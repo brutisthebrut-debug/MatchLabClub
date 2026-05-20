@@ -14,6 +14,12 @@ export const COACH_NOTIFICATION_TYPE = "coach-unsent-reply";
 export const COACH_NOTIFICATION_CATEGORY = "coach-unsent-reply-followup";
 export const COACH_ACTION_SENT = "coach-followup-sent";
 export const COACH_ACTION_NOT_SENT = "coach-followup-not-sent";
+export const COACH_ACTION_SNOOZE_1H = "coach-followup-snooze-1h";
+export const COACH_ACTION_SNOOZE_3H = "coach-followup-snooze-3h";
+export const COACH_ACTION_DISMISS = "coach-followup-dismiss";
+
+export const COACH_SNOOZE_1H_SECONDS = 60 * 60;
+export const COACH_SNOOZE_3H_SECONDS = 3 * 60 * 60;
 
 export const COACH_REMINDER_DELAY_OPTIONS: Array<{
   label: string;
@@ -122,6 +128,21 @@ async function configureCoachNotificationCategory() {
           buttonTitle: "Still thinking 💭",
           options: { opensAppToForeground: false },
         },
+        {
+          identifier: COACH_ACTION_SNOOZE_1H,
+          buttonTitle: "Remind me in 1 hr",
+          options: { opensAppToForeground: false },
+        },
+        {
+          identifier: COACH_ACTION_SNOOZE_3H,
+          buttonTitle: "Remind me in 3 hr",
+          options: { opensAppToForeground: false },
+        },
+        {
+          identifier: COACH_ACTION_DISMISS,
+          buttonTitle: "Dismiss",
+          options: { opensAppToForeground: false, isDestructive: true },
+        },
       ],
     );
   } catch {
@@ -177,7 +198,7 @@ export async function scheduleCoachReminder(opts: {
       content: {
         title: "Did you send that reply?",
         body: `You drafted a reply to ${who} a couple of hours ago — tap to let us know.`,
-        data: { type: COACH_NOTIFICATION_TYPE },
+        data: { type: COACH_NOTIFICATION_TYPE, matchName: who },
         categoryIdentifier: COACH_NOTIFICATION_CATEGORY,
       },
       trigger: {
@@ -191,6 +212,27 @@ export async function scheduleCoachReminder(opts: {
   } catch {
     return null;
   }
+}
+
+export async function snoozeCoachReminder(opts: {
+  matchName?: string;
+  delaySeconds: number;
+}): Promise<string | null> {
+  if (Platform.OS === "web") return null;
+  const prefs = await loadCoachReminderPrefs();
+  if (!prefs.enabled) {
+    await cancelCoachReminder();
+    return null;
+  }
+  let matchName = opts.matchName?.trim();
+  if (!matchName) {
+    const draft = await loadCoachDraft();
+    matchName = draft?.matchName?.trim() || "your match";
+  }
+  return scheduleCoachReminder({
+    matchName,
+    delaySeconds: opts.delaySeconds,
+  });
 }
 
 export async function saveCoachDraft(draft: SavedCoachDraft) {
