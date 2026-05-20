@@ -7,6 +7,7 @@ import {
   fireEvent,
   act,
   cleanup,
+  within,
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -26,6 +27,15 @@ const generateMutateAsync = vi.fn(async () => NEW_CURRENT_REPORT);
 // jsdom has no native bridge, so we replace every RN primitive with a
 // lightweight DOM element that preserves testID / children / onPress.
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// expo-clipboard mock — factory must not reference hoisted variables.
+// We access the spy via the mocked module import below.
+// ---------------------------------------------------------------------------
+
+vi.mock("expo-clipboard", () => ({
+  setStringAsync: vi.fn(async (_text: string) => {}),
+}));
 
 vi.mock("react-native", () => {
   const rn = {
@@ -204,7 +214,8 @@ vi.mock("@workspace/api-client-react", () => ({
   getListAuditsQueryKey: () => ["audits"],
 }));
 
-// Import the screen AFTER all mocks are registered.
+// Import mocked modules AFTER all vi.mock() calls are registered.
+import * as Clipboard from "expo-clipboard";
 import AuditDetailScreen from "@/app/audit/[id]";
 
 // ---------------------------------------------------------------------------
@@ -292,12 +303,14 @@ beforeEach(() => {
   auditDataRef.isLoading = false;
   generateMutateAsync.mockReset();
   generateMutateAsync.mockResolvedValue(NEW_CURRENT_REPORT);
+  vi.mocked(Clipboard.setStringAsync).mockClear();
   qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 });
 
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  vi.useRealTimers();
 });
 
 function Wrap({ children }: { children: React.ReactNode }) {
@@ -435,6 +448,124 @@ describe("Previous-version viewer — mobile audit detail screen", () => {
 
     // The main audit ring (current report) should still be visible.
     expect(screen.getByTestId("score-ring")).toBeTruthy();
+  });
+
+  it("copy buttons are present in the previous-version modal for bio, prompt, and action plan", async () => {
+    auditDataRef.current = makeAudit({ withPrevious: true });
+
+    render(
+      <Wrap>
+        <AuditDetailScreen />
+      </Wrap>,
+    );
+
+    fireEvent.click(await screen.findByTestId("button-view-previous-version"));
+    const container = await screen.findByTestId("previous-version-content");
+    const scope = within(container);
+
+    // There should be at least 3 copy buttons: bio rewrite, prompt rewrite, action plan.
+    const copyBtns = scope.getAllByRole("button", { name: "Copy to clipboard" });
+    expect(copyBtns.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("pressing the bio rewrite copy button calls Clipboard.setStringAsync with the bio text", async () => {
+    auditDataRef.current = makeAudit({ withPrevious: true });
+
+    render(
+      <Wrap>
+        <AuditDetailScreen />
+      </Wrap>,
+    );
+
+    fireEvent.click(await screen.findByTestId("button-view-previous-version"));
+    const container = await screen.findByTestId("previous-version-content");
+    await within(container).findByTestId("text-previous-rewritten-bio");
+
+    // The first copy button inside the modal is the bio rewrite button.
+    const copyBtns = within(container).getAllByRole("button", { name: "Copy to clipboard" });
+    await act(async () => {
+      fireEvent.click(copyBtns[0]);
+    });
+
+    expect(vi.mocked(Clipboard.setStringAsync)).toHaveBeenCalledWith(
+      PREVIOUS_REPORT.rewrittenBio,
+    );
+  });
+
+  it("pressing a prompt rewrite copy button calls Clipboard.setStringAsync with the rewritten text", async () => {
+    auditDataRef.current = makeAudit({ withPrevious: true });
+
+    render(
+      <Wrap>
+        <AuditDetailScreen />
+      </Wrap>,
+    );
+
+    fireEvent.click(await screen.findByTestId("button-view-previous-version"));
+    const container = await screen.findByTestId("previous-version-content");
+    await within(container).findByTestId("prev-prompt-0");
+
+    const copyBtns = within(container).getAllByRole("button", { name: "Copy to clipboard" });
+    // The prompt rewrite copy button is the second one inside the modal.
+    await act(async () => {
+      fireEvent.click(copyBtns[1]);
+    });
+
+    expect(vi.mocked(Clipboard.setStringAsync)).toHaveBeenCalledWith(
+      PREVIOUS_REPORT.rewrittenPrompts[0].rewritten,
+    );
+  });
+
+  it("pressing an action plan copy button calls Clipboard.setStringAsync with title + description", async () => {
+    auditDataRef.current = makeAudit({ withPrevious: true });
+
+    render(
+      <Wrap>
+        <AuditDetailScreen />
+      </Wrap>,
+    );
+
+    fireEvent.click(await screen.findByTestId("button-view-previous-version"));
+    const container = await screen.findByTestId("previous-version-content");
+    await within(container).findByTestId("prev-action-0");
+
+    const copyBtns = within(container).getAllByRole("button", { name: "Copy to clipboard" });
+    // The action plan copy button is the third one inside the modal.
+    await act(async () => {
+      fireEvent.click(copyBtns[2]);
+    });
+
+    const expected = `${PREVIOUS_REPORT.actionPlan[0].title}: ${PREVIOUS_REPORT.actionPlan[0].description}`;
+    expect(vi.mocked(Clipboard.setStringAsync)).toHaveBeenCalledWith(expected);
+  });
+
+  it("copy button shows 'Copied' feedback after press", async () => {
+    auditDataRef.current = makeAudit({ withPrevious: true });
+
+    render(
+      <Wrap>
+        <AuditDetailScreen />
+      </Wrap>,
+    );
+
+    fireEvent.click(await screen.findByTestId("button-view-previous-version"));
+    const container = await screen.findByTestId("previous-version-content");
+    await within(container).findByTestId("text-previous-rewritten-bio");
+
+    const copyBtns = within(container).getAllByRole("button", { name: "Copy to clipboard" });
+    await act(async () => {
+      fireEvent.click(copyBtns[0]);
+    });
+
+    // After pressing, the button text switches to "Copied".
+    await waitFor(() => {
+      expect(within(container).getAllByText("Copied").length).toBeGreaterThanOrEqual(1);
+    });
+
+    // Clipboard was called with the bio text.
+    expect(vi.mocked(Clipboard.setStringAsync)).toHaveBeenCalledWith(
+      PREVIOUS_REPORT.rewrittenBio,
+    );
   });
 
   it("after regeneration the previous-version button becomes visible", async () => {
