@@ -216,16 +216,50 @@ export interface AuditSummary {
   topRisks: string[];
 }
 
-export interface ScreenshotAuditInput {
+export interface ScreenshotExtractInput {
   /** Base64-encoded screenshot of a dating profile. May include a data URL
   prefix (e.g. "data:image/jpeg;base64,..."); the server strips it.
    */
   imageBase64: string;
+}
+
+export interface ScreenshotExtractResult {
+  /** @nullable */
+  firstName?: string | null;
+  /** @nullable */
+  age?: number | null;
+  /** @nullable */
+  sourceApp?: string | null;
+  bio: string;
+  prompts: string[];
+  rawOcrText: string;
+}
+
+/**
+ * Either provide `imageBase64` (server will OCR) or provide `bio` (and
+optionally `prompts`) from a prior /audits/extract-screenshot call so the
+user could correct OCR mistakes. When `bio` is provided, OCR is skipped.
+
+ */
+export interface ScreenshotAuditInput {
+  /**
+     * Base64-encoded screenshot of a dating profile. May include a data URL
+  prefix (e.g. "data:image/jpeg;base64,..."); the server strips it.
+  Omit when supplying corrected text directly.
+
+     * @nullable
+     */
+  imageBase64?: string | null;
   /**
      * Optional name (e.g. the match's first name pulled from the profile).
      * @nullable
      */
   firstName?: string | null;
+  /**
+     * Optional age, used when supplying corrected fields.
+     * @nullable
+     */
+  age?: number | null;
   /** @nullable */
   datingGoal?: string | null;
   /**
@@ -233,6 +267,13 @@ export interface ScreenshotAuditInput {
      * @nullable
      */
   sourceApp?: string | null;
+  /**
+     * Corrected bio text. When present, OCR is skipped.
+     * @nullable
+     */
+  bio?: string | null;
+  /** Corrected prompts. Only used when `bio` is provided. */
+  prompts?: string[];
 }
 
 export interface ScreenshotAuditReport {
@@ -653,6 +694,10 @@ export const ListAuditsScoreRange = {
   medium: 'medium',
   high: 'high',
 } as const;
+
+export type ExtractScreenshot400 = {
+  error?: string;
+};
 
 export type AuditFromScreenshot400 = {
   error?: string;

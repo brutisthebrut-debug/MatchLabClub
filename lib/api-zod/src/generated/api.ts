@@ -634,19 +634,45 @@ export const GenerateAuditReportResponse = zod.object({
 
 
 /**
- * Accepts a base64-encoded screenshot of a dating profile (typically taken from
-the user's phone). The server runs OCR to extract bio and prompt text and then
-feeds the result through the standard audit engine, returning a generated
-mini-report alongside the persisted audit id.
+ * Accepts a base64-encoded screenshot of a dating profile and returns the
+OCR-extracted firstName, age, sourceApp, bio and prompts. No audit is
+persisted — the client should let the user correct any mistakes and then
+call /audits/from-screenshot with the corrected values.
 
- * @summary OCR a profile screenshot and run an audit on the extracted text
+ * @summary OCR a profile screenshot and return extracted fields for review
+ */
+export const ExtractScreenshotBody = zod.object({
+  "imageBase64": zod.string().describe('Base64-encoded screenshot of a dating profile. May include a data URL\nprefix (e.g. \"data:image\/jpeg;base64,...\"); the server strips it.\n')
+})
+
+export const ExtractScreenshotResponse = zod.object({
+  "firstName": zod.string().nullish(),
+  "age": zod.number().nullish(),
+  "sourceApp": zod.string().nullish(),
+  "bio": zod.string(),
+  "prompts": zod.array(zod.string()),
+  "rawOcrText": zod.string()
+})
+
+
+/**
+ * Accepts either a base64-encoded screenshot or the corrected fields the user
+confirmed from a prior /audits/extract-screenshot call. When `bio` (and
+optionally `prompts`) are provided, OCR is skipped and the audit runs on
+the supplied values directly. The corrected values are what gets persisted
+to the audit record.
+
+ * @summary Run an audit on profile text from a screenshot (optionally corrected)
  */
 export const AuditFromScreenshotBody = zod.object({
-  "imageBase64": zod.string().describe('Base64-encoded screenshot of a dating profile. May include a data URL\nprefix (e.g. \"data:image\/jpeg;base64,...\"); the server strips it.\n'),
+  "imageBase64": zod.string().nullish().describe('Base64-encoded screenshot of a dating profile. May include a data URL\nprefix (e.g. \"data:image\/jpeg;base64,...\"); the server strips it.\nOmit when supplying corrected text directly.\n'),
   "firstName": zod.string().nullish().describe('Optional name (e.g. the match\'s first name pulled from the profile).'),
+  "age": zod.number().nullish().describe('Optional age, used when supplying corrected fields.'),
   "datingGoal": zod.string().nullish(),
-  "sourceApp": zod.string().nullish().describe('Which dating app the screenshot was taken from (e.g. \"Hinge\").')
-})
+  "sourceApp": zod.string().nullish().describe('Which dating app the screenshot was taken from (e.g. \"Hinge\").'),
+  "bio": zod.string().nullish().describe('Corrected bio text. When present, OCR is skipped.'),
+  "prompts": zod.array(zod.string()).optional().describe('Corrected prompts. Only used when `bio` is provided.')
+}).describe('Either provide `imageBase64` (server will OCR) or provide `bio` (and\noptionally `prompts`) from a prior \/audits\/extract-screenshot call so the\nuser could correct OCR mistakes. When `bio` is provided, OCR is skipped.\n')
 
 export const AuditFromScreenshotResponse = zod.object({
   "auditId": zod.number(),

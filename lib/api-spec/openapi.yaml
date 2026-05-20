@@ -542,16 +542,50 @@ paths:
               schema:
                 $ref: "#/components/schemas/AuditReport"
 
+  /audits/extract-screenshot:
+    post:
+      operationId: extractScreenshot
+      tags: [audits]
+      summary: OCR a profile screenshot and return extracted fields for review
+      description: |
+        Accepts a base64-encoded screenshot of a dating profile and returns the
+        OCR-extracted firstName, age, sourceApp, bio and prompts. No audit is
+        persisted — the client should let the user correct any mistakes and then
+        call /audits/from-screenshot with the corrected values.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScreenshotExtractInput"
+      responses:
+        "200":
+          description: Extracted profile fields from the screenshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScreenshotExtractResult"
+        "400":
+          description: Invalid image or no readable text found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
   /audits/from-screenshot:
     post:
       operationId: auditFromScreenshot
       tags: [audits]
-      summary: OCR a profile screenshot and run an audit on the extracted text
+      summary: Run an audit on profile text from a screenshot (optionally corrected)
       description: |
-        Accepts a base64-encoded screenshot of a dating profile (typically taken from
-        the user's phone). The server runs OCR to extract bio and prompt text and then
-        feeds the result through the standard audit engine, returning a generated
-        mini-report alongside the persisted audit id.
+        Accepts either a base64-encoded screenshot or the corrected fields the user
+        confirmed from a prior /audits/extract-screenshot call. When `bio` (and
+        optionally `prompts`) are provided, OCR is skipped and the audit runs on
+        the supplied values directly. The corrected values are what gets persisted
+        to the audit record.
       requestBody:
         required: true
         content:
@@ -1287,7 +1321,7 @@ components:
         score:
           type: integer
 
-    ScreenshotAuditInput:
+    ScreenshotExtractInput:
       type: object
       required: [imageBase64]
       properties:
@@ -1296,14 +1330,58 @@ components:
           description: |
             Base64-encoded screenshot of a dating profile. May include a data URL
             prefix (e.g. "data:image/jpeg;base64,..."); the server strips it.
+
+    ScreenshotExtractResult:
+      type: object
+      required: [bio, prompts, rawOcrText]
+      properties:
+        firstName:
+          type: ["string", "null"]
+        age:
+          type: ["integer", "null"]
+        sourceApp:
+          type: ["string", "null"]
+        bio:
+          type: string
+        prompts:
+          type: array
+          items:
+            type: string
+        rawOcrText:
+          type: string
+
+    ScreenshotAuditInput:
+      type: object
+      description: |
+        Either provide `imageBase64` (server will OCR) or provide `bio` (and
+        optionally `prompts`) from a prior /audits/extract-screenshot call so the
+        user could correct OCR mistakes. When `bio` is provided, OCR is skipped.
+      properties:
+        imageBase64:
+          type: ["string", "null"]
+          description: |
+            Base64-encoded screenshot of a dating profile. May include a data URL
+            prefix (e.g. "data:image/jpeg;base64,..."); the server strips it.
+            Omit when supplying corrected text directly.
         firstName:
           type: ["string", "null"]
           description: Optional name (e.g. the match's first name pulled from the profile).
+        age:
+          type: ["integer", "null"]
+          description: Optional age, used when supplying corrected fields.
         datingGoal:
           type: ["string", "null"]
         sourceApp:
           type: ["string", "null"]
           description: Which dating app the screenshot was taken from (e.g. "Hinge").
+        bio:
+          type: ["string", "null"]
+          description: Corrected bio text. When present, OCR is skipped.
+        prompts:
+          type: array
+          items:
+            type: string
+          description: Corrected prompts. Only used when `bio` is provided.
 
     ScreenshotAuditReport:
       type: object

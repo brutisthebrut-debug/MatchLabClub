@@ -10,6 +10,8 @@ import {
   AuditFromScreenshotBody,
   AuditFromScreenshotResponse,
   DeleteAuditResponse,
+  ExtractScreenshotBody,
+  ExtractScreenshotResponse,
 } from "@workspace/api-zod";
 import { generateAuditReport } from "../lib/aiEngine";
 import {
@@ -266,8 +268,8 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
   res.json(GenerateAuditReportResponse.parse(fullReport));
 });
 
-router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
-  const parsed = AuditFromScreenshotBody.safeParse(req.body);
+router.post("/audits/extract-screenshot", async (req, res): Promise<void> => {
+  const parsed = ExtractScreenshotBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
@@ -287,14 +289,74 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
     return;
   }
 
-  const firstName =
-    parsed.data.firstName?.trim() || extracted.firstName || "Match";
-  const age = extracted.age ?? 30;
-  const datingGoal = parsed.data.datingGoal?.trim() || "find a relationship";
-  const sourceApp =
-    parsed.data.sourceApp?.trim() || extracted.sourceApp || "Hinge";
+  res.json(
+    ExtractScreenshotResponse.parse({
+      firstName: extracted.firstName,
+      age: extracted.age,
+      sourceApp: extracted.sourceApp,
+      bio: extracted.bio || extracted.rawText,
+      prompts: extracted.prompts,
+      rawOcrText: extracted.rawText,
+    }),
+  );
+});
 
-  const promptsText = extracted.prompts.length ? extracted.prompts.join("\n") : null;
+router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
+  const parsed = AuditFromScreenshotBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const correctedBio = parsed.data.bio?.trim();
+  const hasCorrectedFields = !!correctedBio;
+
+  let firstName: string;
+  let age: number;
+  let sourceApp: string;
+  let bioText: string;
+  let prompts: string[];
+  let rawText: string;
+
+  if (hasCorrectedFields) {
+    firstName = parsed.data.firstName?.trim() || "Match";
+    age = parsed.data.age ?? 30;
+    sourceApp = parsed.data.sourceApp?.trim() || "Hinge";
+    bioText = correctedBio!;
+    prompts = (parsed.data.prompts ?? [])
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
+    rawText = bioText + (prompts.length ? "\n" + prompts.join("\n") : "");
+  } else {
+    if (!parsed.data.imageBase64) {
+      res.status(400).json({ error: "Provide either imageBase64 or bio." });
+      return;
+    }
+
+    let extracted: Awaited<ReturnType<typeof extractProfileFromScreenshot>>;
+    try {
+      extracted = await extractProfileFromScreenshot(parsed.data.imageBase64);
+    } catch (err) {
+      req.log.error({ err }, "OCR failed");
+      res.status(400).json({ error: "Couldn't read text from that screenshot. Try a clearer image." });
+      return;
+    }
+
+    if (!extracted.bio && extracted.prompts.length === 0) {
+      res.status(400).json({ error: "No readable profile text found in the screenshot." });
+      return;
+    }
+
+    firstName = parsed.data.firstName?.trim() || extracted.firstName || "Match";
+    age = parsed.data.age ?? extracted.age ?? 30;
+    sourceApp = parsed.data.sourceApp?.trim() || extracted.sourceApp || "Hinge";
+    bioText = extracted.bio || extracted.rawText;
+    prompts = extracted.prompts;
+    rawText = extracted.rawText;
+  }
+
+  const datingGoal = parsed.data.datingGoal?.trim() || "find a relationship";
+  const promptsText = prompts.length ? prompts.join("\n") : null;
 
   const anonymousClaimToken = req.user?.id
     ? null
@@ -309,7 +371,7 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
       orientation: "unspecified",
       datingGoal,
       currentApps: [sourceApp],
-      bio: extracted.bio || extracted.rawText,
+      bio: bioText,
       prompts: promptsText,
       sourceApp,
       status: "generating",
@@ -321,7 +383,7 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
 
   const report = generateAuditReport({
     firstName,
-    bio: extracted.bio || extracted.rawText,
+    bio: bioText,
     prompts: promptsText,
     datingGoal,
     currentApps: [sourceApp],
@@ -337,9 +399,9 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
   res.json(
     AuditFromScreenshotResponse.parse({
       auditId: audit.id,
-      extractedBio: extracted.bio,
-      extractedPrompts: extracted.prompts,
-      rawOcrText: extracted.rawText,
+      extractedBio: bioText,
+      extractedPrompts: prompts,
+      rawOcrText: rawText,
       report: fullReport,
     }),
   );

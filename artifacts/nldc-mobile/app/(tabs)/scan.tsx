@@ -1,5 +1,8 @@
 import { Feather } from "@expo/vector-icons";
-import { useAuditFromScreenshot } from "@workspace/api-client-react";
+import {
+  useAuditFromScreenshot,
+  useExtractScreenshot,
+} from "@workspace/api-client-react";
 import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import {
@@ -10,6 +13,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -22,6 +26,14 @@ import { useColors } from "@/hooks/useColors";
 interface PickedImage {
   uri: string;
   base64: string;
+}
+
+interface ExtractedDraft {
+  firstName: string;
+  age: string;
+  sourceApp: string;
+  bio: string;
+  prompts: string[];
 }
 
 interface ScanResult {
@@ -73,8 +85,10 @@ export default function ScanScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [picked, setPicked] = useState<PickedImage | null>(null);
+  const [draft, setDraft] = useState<ExtractedDraft | null>(null);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const extract = useExtractScreenshot();
   const scan = useAuditFromScreenshot();
 
   const topInset = Platform.OS === "web" ? Math.max(insets.top, 24) : insets.top;
@@ -95,6 +109,7 @@ export default function ScanScreen() {
     });
     if (!res.canceled && res.assets[0]?.base64) {
       setPicked({ uri: res.assets[0].uri, base64: res.assets[0].base64 });
+      setDraft(null);
       setResult(null);
     }
   }
@@ -113,16 +128,47 @@ export default function ScanScreen() {
     });
     if (!res.canceled && res.assets[0]?.base64) {
       setPicked({ uri: res.assets[0].uri, base64: res.assets[0].base64 });
+      setDraft(null);
       setResult(null);
     }
   }
 
-  async function runAudit() {
+  async function extractFromImage() {
     if (!picked) return;
     setErrorMsg(null);
     try {
-      const res = await scan.mutateAsync({
+      const res = await extract.mutateAsync({
         data: { imageBase64: picked.base64 },
+      });
+      setDraft({
+        firstName: res.firstName ?? "",
+        age: res.age != null ? String(res.age) : "",
+        sourceApp: res.sourceApp ?? "",
+        bio: res.bio ?? "",
+        prompts: res.prompts ?? [],
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Couldn't read that screenshot. Try a clearer photo.";
+      setErrorMsg(message);
+    }
+  }
+
+  async function runAudit() {
+    if (!draft) return;
+    setErrorMsg(null);
+    const parsedAge = parseInt(draft.age, 10);
+    try {
+      const res = await scan.mutateAsync({
+        data: {
+          bio: draft.bio,
+          prompts: draft.prompts.map((p) => p.trim()).filter((p) => p.length > 0),
+          firstName: draft.firstName.trim() || null,
+          age: Number.isFinite(parsedAge) ? parsedAge : null,
+          sourceApp: draft.sourceApp.trim() || null,
+        },
       });
       setResult({
         auditId: res.auditId,
@@ -148,8 +194,33 @@ export default function ScanScreen() {
     }
   }
 
+  function updateDraft(patch: Partial<ExtractedDraft>) {
+    setDraft((d) => (d ? { ...d, ...patch } : d));
+  }
+
+  function updatePrompt(index: number, value: string) {
+    setDraft((d) => {
+      if (!d) return d;
+      const next = [...d.prompts];
+      next[index] = value;
+      return { ...d, prompts: next };
+    });
+  }
+
+  function addPrompt() {
+    setDraft((d) => (d ? { ...d, prompts: [...d.prompts, ""] } : d));
+  }
+
+  function removePrompt(index: number) {
+    setDraft((d) => {
+      if (!d) return d;
+      return { ...d, prompts: d.prompts.filter((_, i) => i !== index) };
+    });
+  }
+
   function reset() {
     setPicked(null);
+    setDraft(null);
     setResult(null);
     setErrorMsg(null);
   }
@@ -233,21 +304,127 @@ export default function ScanScreen() {
             </View>
           ) : null}
 
-          {picked ? (
+          {picked && !draft ? (
             <PrimaryButton
-              label={scan.isPending ? "Reading screenshot…" : "Audit this profile"}
-              onPress={runAudit}
-              loading={scan.isPending}
-              icon="zap"
+              label={extract.isPending ? "Reading screenshot…" : "Read this screenshot"}
+              onPress={extractFromImage}
+              loading={extract.isPending}
+              icon="eye"
             />
-          ) : (
+          ) : null}
+          {!picked ? (
             <Text style={[styles.hint, { color: colors.mutedForeground }]}>
               Works best on Hinge, Bumble or Tinder screenshots where the bio and
               prompts are visible. Text is processed on our server — the image is
               not stored.
             </Text>
-          )}
+          ) : null}
         </View>
+
+        {draft ? (
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+          >
+            <View style={styles.draftHeader}>
+              <Feather name="edit-3" size={16} color={colors.violet} />
+              <Text style={[styles.draftTitle, { color: colors.foreground }]}>
+                We read this from your screenshot
+              </Text>
+            </View>
+            <Text style={[styles.draftSubtitle, { color: colors.mutedForeground }]}>
+              Fix anything that looks wrong, then we'll audit the corrected text.
+            </Text>
+
+            <View style={styles.fieldRow}>
+              <Field
+                label="First name"
+                value={draft.firstName}
+                onChangeText={(t) => updateDraft({ firstName: t })}
+                placeholder="Match"
+              />
+              <Field
+                label="Age"
+                value={draft.age}
+                onChangeText={(t) => updateDraft({ age: t.replace(/[^0-9]/g, "") })}
+                placeholder="—"
+                keyboardType="number-pad"
+                style={styles.ageField}
+              />
+            </View>
+
+            <Field
+              label="App"
+              value={draft.sourceApp}
+              onChangeText={(t) => updateDraft({ sourceApp: t })}
+              placeholder="Hinge"
+            />
+
+            <Field
+              label="Bio"
+              value={draft.bio}
+              onChangeText={(t) => updateDraft({ bio: t })}
+              placeholder="Their bio text…"
+              multiline
+            />
+
+            <View style={styles.promptsBlock}>
+              <View style={styles.promptsHeader}>
+                <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>
+                  Prompts
+                </Text>
+                <Pressable onPress={addPrompt} style={styles.addPromptBtn}>
+                  <Feather name="plus" size={12} color={colors.violet} />
+                  <Text style={[styles.addPromptText, { color: colors.violet }]}>
+                    Add
+                  </Text>
+                </Pressable>
+              </View>
+              {draft.prompts.length === 0 ? (
+                <Text style={[styles.hint, { color: colors.mutedForeground }]}>
+                  No prompts detected. Tap Add to enter one.
+                </Text>
+              ) : (
+                draft.prompts.map((p, i) => (
+                  <View key={`prompt-${i}`} style={styles.promptEditRow}>
+                    <TextInput
+                      value={p}
+                      onChangeText={(t) => updatePrompt(i, t)}
+                      placeholder="Prompt text…"
+                      placeholderTextColor={`${colors.mutedForeground}99`}
+                      multiline
+                      style={[
+                        styles.input,
+                        styles.promptInput,
+                        {
+                          backgroundColor: colors.input,
+                          borderColor: colors.border,
+                          color: colors.foreground,
+                        },
+                      ]}
+                    />
+                    <Pressable
+                      onPress={() => removePrompt(i)}
+                      style={styles.removePromptBtn}
+                      hitSlop={8}
+                    >
+                      <Feather name="x" size={14} color={colors.mutedForeground} />
+                    </Pressable>
+                  </View>
+                ))
+              )}
+            </View>
+
+            <PrimaryButton
+              label={scan.isPending ? "Running audit…" : "Looks right — audit it"}
+              onPress={runAudit}
+              loading={scan.isPending}
+              icon="zap"
+            />
+          </View>
+        ) : null}
 
         {scan.isPending ? (
           <View
@@ -398,6 +575,50 @@ function Section({
   );
 }
 
+function Field({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  multiline,
+  keyboardType,
+  style,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  placeholder?: string;
+  multiline?: boolean;
+  keyboardType?: React.ComponentProps<typeof TextInput>["keyboardType"];
+  style?: React.ComponentProps<typeof View>["style"];
+}) {
+  const colors = useColors();
+  return (
+    <View style={[styles.field, style]}>
+      <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>
+        {label}
+      </Text>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={`${colors.mutedForeground}99`}
+        multiline={multiline}
+        keyboardType={keyboardType}
+        style={[
+          styles.input,
+          multiline ? styles.inputMultiline : null,
+          {
+            backgroundColor: colors.input,
+            borderColor: colors.border,
+            color: colors.foreground,
+          },
+        ]}
+      />
+    </View>
+  );
+}
+
 function Bullet({ color, text }: { color: string; text: string }) {
   const colors = useColors();
   return (
@@ -461,6 +682,83 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     fontFamily: "PlusJakartaSans_500Medium",
+  },
+  draftHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  draftTitle: {
+    fontSize: 15,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  draftSubtitle: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  fieldRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  field: {
+    flex: 1,
+    gap: 6,
+  },
+  ageField: {
+    flexGrow: 0,
+    flexBasis: 90,
+  },
+  fieldLabel: {
+    fontSize: 11,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  inputMultiline: {
+    minHeight: 90,
+    textAlignVertical: "top",
+  },
+  promptsBlock: {
+    gap: 8,
+  },
+  promptsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  addPromptBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  addPromptText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  promptEditRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+  },
+  promptInput: {
+    flex: 1,
+    minHeight: 60,
+    textAlignVertical: "top",
+  },
+  removePromptBtn: {
+    paddingTop: 12,
+    paddingHorizontal: 4,
   },
   errorBanner: {
     flexDirection: "row",

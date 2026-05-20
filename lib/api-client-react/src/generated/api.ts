@@ -49,6 +49,7 @@ import type {
   EmailInsightAnalysis,
   EmailInsightInput,
   EmailMyDataExportResult,
+  ExtractScreenshot400,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
   ListAuditsParams,
@@ -62,6 +63,8 @@ import type {
   RedeemAnonymousClaimHandoffInput,
   ScreenshotAuditInput,
   ScreenshotAuditReport,
+  ScreenshotExtractInput,
+  ScreenshotExtractResult,
   TestAiParams,
   WaitlistEntry,
   WaitlistInput,
@@ -1624,6 +1627,82 @@ export const useGenerateAuditReport = <TError = ErrorType<unknown>,
       return useMutation(getGenerateAuditReportMutationOptions(options));
     }
 
+export const getExtractScreenshotUrl = () => {
+
+
+
+
+  return `/api/audits/extract-screenshot`
+}
+
+/**
+ * Accepts a base64-encoded screenshot of a dating profile and returns the
+OCR-extracted firstName, age, sourceApp, bio and prompts. No audit is
+persisted — the client should let the user correct any mistakes and then
+call /audits/from-screenshot with the corrected values.
+
+ * @summary OCR a profile screenshot and return extracted fields for review
+ */
+export const extractScreenshot = async (screenshotExtractInput: ScreenshotExtractInput, options?: RequestInit): Promise<ScreenshotExtractResult> => {
+
+  return customFetch<ScreenshotExtractResult>(getExtractScreenshotUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      screenshotExtractInput,)
+  }
+);}
+
+
+
+
+export const getExtractScreenshotMutationOptions = <TError = ErrorType<ExtractScreenshot400>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof extractScreenshot>>, TError,{data: BodyType<ScreenshotExtractInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof extractScreenshot>>, TError,{data: BodyType<ScreenshotExtractInput>}, TContext> => {
+
+const mutationKey = ['extractScreenshot'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof extractScreenshot>>, {data: BodyType<ScreenshotExtractInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  extractScreenshot(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ExtractScreenshotMutationResult = NonNullable<Awaited<ReturnType<typeof extractScreenshot>>>
+    export type ExtractScreenshotMutationBody = BodyType<ScreenshotExtractInput>
+    export type ExtractScreenshotMutationError = ErrorType<ExtractScreenshot400>
+
+    /**
+ * @summary OCR a profile screenshot and return extracted fields for review
+ */
+export const useExtractScreenshot = <TError = ErrorType<ExtractScreenshot400>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof extractScreenshot>>, TError,{data: BodyType<ScreenshotExtractInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof extractScreenshot>>,
+        TError,
+        {data: BodyType<ScreenshotExtractInput>},
+        TContext
+      > => {
+      return useMutation(getExtractScreenshotMutationOptions(options));
+    }
+
 export const getAuditFromScreenshotUrl = () => {
 
 
@@ -1633,12 +1712,13 @@ export const getAuditFromScreenshotUrl = () => {
 }
 
 /**
- * Accepts a base64-encoded screenshot of a dating profile (typically taken from
-the user's phone). The server runs OCR to extract bio and prompt text and then
-feeds the result through the standard audit engine, returning a generated
-mini-report alongside the persisted audit id.
+ * Accepts either a base64-encoded screenshot or the corrected fields the user
+confirmed from a prior /audits/extract-screenshot call. When `bio` (and
+optionally `prompts`) are provided, OCR is skipped and the audit runs on
+the supplied values directly. The corrected values are what gets persisted
+to the audit record.
 
- * @summary OCR a profile screenshot and run an audit on the extracted text
+ * @summary Run an audit on profile text from a screenshot (optionally corrected)
  */
 export const auditFromScreenshot = async (screenshotAuditInput: ScreenshotAuditInput, options?: RequestInit): Promise<ScreenshotAuditReport> => {
 
@@ -1687,7 +1767,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AuditFromScreenshotMutationError = ErrorType<AuditFromScreenshot400>
 
     /**
- * @summary OCR a profile screenshot and run an audit on the extracted text
+ * @summary Run an audit on profile text from a screenshot (optionally corrected)
  */
 export const useAuditFromScreenshot = <TError = ErrorType<AuditFromScreenshot400>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof auditFromScreenshot>>, TError,{data: BodyType<ScreenshotAuditInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
