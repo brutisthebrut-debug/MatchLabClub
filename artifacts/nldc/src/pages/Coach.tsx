@@ -22,7 +22,13 @@ import { BarChart, Bar, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recha
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
-import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Clock, ArrowRight, Sparkles, Send, Upload, X, AlertCircle, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Clock, ArrowRight, Sparkles, Send, Upload, X, AlertCircle, TrendingUp, TrendingDown, Minus, Moon, Sunrise } from "lucide-react";
+import {
+  useCoachNudgePrefs,
+  buildWebSnoozeChips,
+  buildTonightHourOptions,
+  buildTomorrowMorningHourOptions,
+} from "@/lib/coachPrefs";
 
 const GOALS = ["Get a date", "Keep it going", "Recover from awkward", "Re-engage after ghosting"];
 const SOURCE_APPS = ["Hinge", "Bumble", "Tinder"] as const;
@@ -131,6 +137,11 @@ export default function Coach() {
   const [resultApp, setResultApp] = useState<SourceApp | null>(null);
   const [resultSessionId, setResultSessionId] = useState<number | null>(null);
   const [followUpAnswer, setFollowUpAnswer] = useState<CoachFollowUpInputAnswer | null>(null);
+  const [snoozeExpanded, setSnoozeExpanded] = useState(false);
+  const [nudgePrefs, updateNudgePrefs] = useCoachNudgePrefs();
+  const snoozeChips = buildWebSnoozeChips(nudgePrefs);
+  const tonightHourOptions = buildTonightHourOptions();
+  const tomorrowMorningHourOptions = buildTomorrowMorningHourOptions();
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [screenshotError, setScreenshotError] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -224,6 +235,7 @@ export default function Coach() {
       setResultApp(appForRequest);
       setResultSessionId(session.id);
       setFollowUpAnswer(null);
+      setSnoozeExpanded(false);
       queryClient.invalidateQueries({ queryKey: getListMessageCoachingSessionsQueryKey() });
     } catch {
       setResult(DEMO_RESULT);
@@ -694,6 +706,63 @@ export default function Coach() {
               </div>
               )}
             </motion.div>
+
+            {/* Nudge hour settings */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+              className="glass border border-white/8 rounded-3xl p-5"
+              data-testid="card-nudge-settings"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <Moon className="w-4 h-4 text-[hsl(268_52%_68%)]" />
+                <p className="font-semibold text-foreground text-xs uppercase tracking-wider">Nudge hours</p>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                When you snooze a follow-up, the "Tonight" and "Tomorrow morning" times reflect these.
+              </p>
+              <div className="space-y-2">
+                <label className="flex items-center justify-between gap-2 text-xs text-muted-foreground" data-testid="label-tonight-hour">
+                  <span className="flex items-center gap-1.5">
+                    <Moon className="w-3 h-3" />
+                    Tonight
+                  </span>
+                  <select
+                    value={nudgePrefs.tonightHour}
+                    onChange={(e) =>
+                      updateNudgePrefs({ ...nudgePrefs, tonightHour: Number(e.target.value) })
+                    }
+                    className="bg-[hsl(232_28%_14%)] border border-white/10 rounded-md px-2 py-1 text-xs text-foreground"
+                    data-testid="select-tonight-hour"
+                  >
+                    {tonightHourOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex items-center justify-between gap-2 text-xs text-muted-foreground" data-testid="label-tomorrow-morning-hour">
+                  <span className="flex items-center gap-1.5">
+                    <Sunrise className="w-3 h-3" />
+                    Tomorrow morning
+                  </span>
+                  <select
+                    value={nudgePrefs.tomorrowMorningHour}
+                    onChange={(e) =>
+                      updateNudgePrefs({ ...nudgePrefs, tomorrowMorningHour: Number(e.target.value) })
+                    }
+                    className="bg-[hsl(232_28%_14%)] border border-white/10 rounded-md px-2 py-1 text-xs text-foreground"
+                    data-testid="select-tomorrow-morning-hour"
+                  >
+                    {tomorrowMorningHourOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </motion.div>
             </div>
           </div>
 
@@ -792,6 +861,81 @@ export default function Coach() {
                       >
                         Thanks — we'll fold this into your send-through stats.
                       </p>
+                    ) : snoozeExpanded ? (
+                      <>
+                        <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                          When should we remind you to follow up?
+                        </p>
+                        <div className="flex flex-wrap gap-2 mb-4" data-testid="snooze-options">
+                          {snoozeChips.map((chip) => (
+                            <button
+                              key={chip.kind === "duration" ? `dur-${chip.seconds}` : chip.kind}
+                              type="button"
+                              disabled={recordFollowUp.isPending}
+                              onClick={() => void handleFollowUp("snoozed")}
+                              data-testid={`button-snooze-${chip.kind === "duration" ? `${chip.seconds}s` : chip.kind}`}
+                              className="px-3 py-1.5 rounded-full border border-white/10 text-xs font-medium text-muted-foreground hover:border-white/20 hover:text-foreground transition-all disabled:opacity-50 flex items-center gap-1"
+                            >
+                              {chip.kind === "tonight" && <Moon className="w-3 h-3" />}
+                              {chip.kind === "tomorrowMorning" && <Sunrise className="w-3 h-3" />}
+                              {chip.label}
+                              {chip.sublabel && (
+                                <span className="opacity-60">{chip.sublabel}</span>
+                              )}
+                            </button>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={() => setSnoozeExpanded(false)}
+                            className="px-3 py-1.5 rounded-full border border-white/10 text-xs font-medium text-muted-foreground hover:border-white/20 hover:text-foreground transition-all"
+                            data-testid="button-snooze-back"
+                          >
+                            ← Back
+                          </button>
+                        </div>
+                        {/* Nudge hour pickers inline when snooze is expanded */}
+                        <div className="border-t border-white/8 pt-3 mt-1 space-y-2" data-testid="nudge-hour-pickers">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Customize nudge hours</p>
+                          <div className="flex flex-wrap gap-4">
+                            <label className="flex items-center gap-2 text-xs text-muted-foreground" data-testid="label-tonight-hour">
+                              <Moon className="w-3 h-3 flex-shrink-0" />
+                              Tonight
+                              <select
+                                value={nudgePrefs.tonightHour}
+                                onChange={(e) =>
+                                  updateNudgePrefs({ ...nudgePrefs, tonightHour: Number(e.target.value) })
+                                }
+                                className="ml-1 bg-[hsl(232_28%_14%)] border border-white/10 rounded-md px-2 py-0.5 text-xs text-foreground"
+                                data-testid="select-tonight-hour"
+                              >
+                                {tonightHourOptions.map((opt) => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="flex items-center gap-2 text-xs text-muted-foreground" data-testid="label-tomorrow-morning-hour">
+                              <Sunrise className="w-3 h-3 flex-shrink-0" />
+                              Morning
+                              <select
+                                value={nudgePrefs.tomorrowMorningHour}
+                                onChange={(e) =>
+                                  updateNudgePrefs({ ...nudgePrefs, tomorrowMorningHour: Number(e.target.value) })
+                                }
+                                className="ml-1 bg-[hsl(232_28%_14%)] border border-white/10 rounded-md px-2 py-0.5 text-xs text-foreground"
+                                data-testid="select-tomorrow-morning-hour"
+                              >
+                                {tomorrowMorningHourOptions.map((opt) => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          </div>
+                        </div>
+                      </>
                     ) : (
                       <>
                         <p className="text-xs text-muted-foreground leading-relaxed mb-4">
@@ -801,8 +945,6 @@ export default function Coach() {
                           {([
                             { value: "sent", label: "I sent it" },
                             { value: "not_sent", label: "Didn't send" },
-                            { value: "snoozed", label: "Snoozed" },
-                            { value: "dismissed", label: "Dismiss" },
                           ] as const).map((opt) => (
                             <button
                               key={opt.value}
@@ -815,6 +957,25 @@ export default function Coach() {
                               {opt.label}
                             </button>
                           ))}
+                          <button
+                            type="button"
+                            disabled={recordFollowUp.isPending}
+                            onClick={() => setSnoozeExpanded(true)}
+                            data-testid="button-follow-up-snoozed"
+                            className="px-3 py-1.5 rounded-full border border-white/10 text-xs font-medium text-muted-foreground hover:border-white/20 hover:text-foreground transition-all disabled:opacity-50 flex items-center gap-1"
+                          >
+                            <Moon className="w-3 h-3" />
+                            Snooze
+                          </button>
+                          <button
+                            type="button"
+                            disabled={recordFollowUp.isPending}
+                            onClick={() => void handleFollowUp("dismissed")}
+                            data-testid="button-follow-up-dismissed"
+                            className="px-3 py-1.5 rounded-full border border-white/10 text-xs font-medium text-muted-foreground hover:border-white/20 hover:text-foreground transition-all disabled:opacity-50"
+                          >
+                            Dismiss
+                          </button>
                         </div>
                       </>
                     )}
