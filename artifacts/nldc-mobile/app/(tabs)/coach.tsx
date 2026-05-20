@@ -1,8 +1,11 @@
 import { Feather } from "@expo/vector-icons";
 import {
+  getGetCoachFollowUpStatsQueryKey,
   useCoachMessage,
   useCreateMessageCoachingSession,
+  useGetCoachFollowUpStats,
 } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Platform,
@@ -97,6 +100,14 @@ export default function CoachScreen() {
   const createSession = useCreateMessageCoachingSession();
   const coach = useCoachMessage();
   const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+  const followUpStatsQueryKey = useMemo(
+    () => getGetCoachFollowUpStatsQueryKey(),
+    [],
+  );
+  const { data: followUpStats } = useGetCoachFollowUpStats({
+    query: { queryKey: followUpStatsQueryKey, enabled: isAuthenticated },
+  });
 
   const isPending = createSession.isPending || coach.isPending;
   const hasRequestedPermission = useRef(false);
@@ -125,6 +136,7 @@ export default function CoachScreen() {
     setFollowUpPrompt(false);
     setFollowUpAck(answer);
     await recordCoachFollowUp(answer);
+    queryClient.invalidateQueries({ queryKey: followUpStatsQueryKey });
     setResults(null);
     setMatchName("");
     setContext("");
@@ -307,6 +319,149 @@ export default function CoachScreen() {
                 </Text>
               </Pressable>
             </View>
+          </View>
+        ) : null}
+
+        {followUpStats ? (
+          <View
+            style={[
+              styles.statsCard,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+            testID="card-send-through-stats"
+          >
+            <View style={styles.statsHeader}>
+              <Feather name="send" size={14} color={colors.teal} />
+              <Text style={[styles.statsEyebrow, { color: colors.mutedForeground }]}>
+                Send-through
+              </Text>
+            </View>
+            {followUpStats.totalPrompts === 0 ? (
+              <Text
+                style={[styles.statsEmpty, { color: colors.mutedForeground }]}
+                testID="stats-empty-state"
+              >
+                Tap “Sent it” or “Still thinking” on the prompts above and
+                we'll track how often your coached replies actually go out.
+              </Text>
+            ) : (
+              <>
+                <View style={styles.statsRow}>
+                  <View style={styles.statsCell}>
+                    <Text
+                      style={[styles.statsValue, { color: colors.foreground }]}
+                      testID="stats-total-prompts"
+                    >
+                      {followUpStats.totalPrompts}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.statsLabel,
+                        { color: colors.mutedForeground },
+                      ]}
+                    >
+                      Prompts
+                    </Text>
+                  </View>
+                  <View style={styles.statsCell}>
+                    <Text
+                      style={[styles.statsValue, { color: colors.teal }]}
+                      testID="stats-sent-count"
+                    >
+                      {followUpStats.sentCount}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.statsLabel,
+                        { color: colors.mutedForeground },
+                      ]}
+                    >
+                      Sent
+                    </Text>
+                  </View>
+                  <View style={styles.statsCell}>
+                    <Text
+                      style={[
+                        styles.statsValue,
+                        { color: colors.mutedForeground },
+                      ]}
+                      testID="stats-not-sent-count"
+                    >
+                      {followUpStats.notSentCount}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.statsLabel,
+                        { color: colors.mutedForeground },
+                      ]}
+                    >
+                      Skipped
+                    </Text>
+                  </View>
+                </View>
+                {followUpStats.lastAnswer && followUpStats.lastAnsweredAt ? (
+                  <View
+                    style={[
+                      styles.statsLastRow,
+                      { borderTopColor: colors.cardBorder },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.statsLabel,
+                        { color: colors.mutedForeground },
+                      ]}
+                    >
+                      Last answer
+                    </Text>
+                    <View style={styles.statsLastInner}>
+                      <View
+                        style={[
+                          styles.statsBadge,
+                          {
+                            backgroundColor:
+                              followUpStats.lastAnswer === "sent"
+                                ? `${colors.teal}26`
+                                : `${colors.mutedForeground}26`,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.statsBadgeText,
+                            {
+                              color:
+                                followUpStats.lastAnswer === "sent"
+                                  ? colors.teal
+                                  : colors.foreground,
+                            },
+                          ]}
+                          testID="stats-last-answer"
+                        >
+                          {followUpStats.lastAnswer === "sent"
+                            ? "Sent"
+                            : "Not sent"}
+                        </Text>
+                      </View>
+                      <Text
+                        style={[
+                          styles.statsLastDate,
+                          { color: colors.mutedForeground },
+                        ]}
+                        testID="stats-last-answered-at"
+                      >
+                        {new Date(
+                          followUpStats.lastAnsweredAt,
+                        ).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
+              </>
+            )}
           </View>
         ) : null}
 
@@ -803,6 +958,70 @@ const styles = StyleSheet.create({
   followUpBtnText: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans_700Bold",
+  },
+  statsCard: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 16,
+    gap: 12,
+  },
+  statsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  statsEyebrow: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+  },
+  statsEmpty: {
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 19,
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  statsCell: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+  },
+  statsValue: {
+    fontSize: 22,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  statsLabel: {
+    fontSize: 10,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+  },
+  statsLastRow: {
+    borderTopWidth: 1,
+    paddingTop: 10,
+    gap: 6,
+  },
+  statsLastInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  statsBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
+  statsBadgeText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  statsLastDate: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
   },
   followUpAck: {
     flexDirection: "row",
