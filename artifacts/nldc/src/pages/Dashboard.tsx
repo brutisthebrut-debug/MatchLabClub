@@ -46,6 +46,12 @@ import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { HandoffShareDialog } from "@/components/HandoffShareDialog";
 import { hasAnyAnonymousIds } from "@/lib/anonymousIds";
 import {
+  AUTO_REFRESH_BATCH_SIZE,
+  hasSwept,
+  loadAutoRefreshPref,
+  markSwept,
+} from "@/lib/autoRefreshPref";
+import {
   ArrowRight, FileText, MessageSquare, Mail, Settings,
   TrendingUp, AlertTriangle, Clock, Sparkles, Trophy, Eye,
   ChevronRight, FlaskConical, Stethoscope, Zap,
@@ -399,6 +405,50 @@ export default function Dashboard() {
       variant: failed === staleAudits.length ? "destructive" : undefined,
     });
   }, [refreshState.inProgress, staleAudits, queryClient, listAuditsKey, toast]);
+
+  // Background auto-refresh: when the user has opted in, quietly regenerate a
+  // small batch of the oldest stale reports once per session so the list view
+  // shows the latest analysis without per-card clicks. Failures are swallowed.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (auditsLoading) return;
+    if (refreshState.inProgress) return;
+    if (hasSwept()) return;
+    if (!loadAutoRefreshPref()) return;
+    if (staleAudits.length === 0) return;
+    markSwept();
+    const batch = staleAudits.slice(0, AUTO_REFRESH_BATCH_SIZE);
+    let cancelled = false;
+    (async () => {
+      for (const audit of batch) {
+        if (cancelled) return;
+        try {
+          await generateAuditReport(audit.id);
+        } catch {
+          // swallow — background refresh must never block the UI
+        }
+      }
+      if (cancelled) return;
+      try {
+        await queryClient.invalidateQueries({ queryKey: listAuditsKey });
+        await queryClient.invalidateQueries({
+          queryKey: getGetAuditSummaryQueryKey(),
+        });
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isAuthenticated,
+    auditsLoading,
+    refreshState.inProgress,
+    staleAudits,
+    queryClient,
+    listAuditsKey,
+  ]);
 
   const deleteAudit = useDeleteAudit({
     mutation: {

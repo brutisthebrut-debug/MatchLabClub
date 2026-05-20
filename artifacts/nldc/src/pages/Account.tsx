@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { useAutoRefreshPref } from "@/lib/autoRefreshPref";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -78,6 +80,7 @@ export default function Account() {
     },
   });
   const emailExport = useEmailMyDataExport();
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useAutoRefreshPref();
 
   const auditCount = auditsQuery.data?.length ?? 0;
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Friend";
@@ -281,6 +284,43 @@ export default function Account() {
                 >
                   <LogOut className="w-4 h-4 mr-2" /> Sign out
                 </Button>
+              </div>
+            </div>
+
+            {/* Report preferences */}
+            <div className="glass rounded-2xl p-6 md:p-8 space-y-4">
+              <div>
+                <h3 className="font-serif text-lg font-bold text-foreground">Report preferences</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Choose how your saved audits behave between visits.
+                </p>
+              </div>
+              <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-[hsl(232_38%_15%)] border border-white/5">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">Keep my reports up to date</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                    When on, we'll quietly regenerate a few of your oldest saved
+                    reports in the background each time you open the app — so
+                    your list shows the latest analysis without per-card clicks.
+                    Failures are silent and never block the UI.
+                  </p>
+                </div>
+                <Switch
+                  checked={autoRefreshEnabled}
+                  onCheckedChange={(v) => {
+                    setAutoRefreshEnabled(v);
+                    toast({
+                      title: v
+                        ? "Background refresh on"
+                        : "Background refresh off",
+                      description: v
+                        ? "We'll quietly refresh a few stale reports each session."
+                        : "Stale reports will stay as-is until you refresh them.",
+                    });
+                  }}
+                  data-testid="switch-auto-refresh-reports"
+                  aria-label="Keep my reports up to date"
+                />
               </div>
             </div>
 

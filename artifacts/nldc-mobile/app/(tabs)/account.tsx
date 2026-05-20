@@ -15,6 +15,7 @@ import {
   Platform,
   Pressable,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
@@ -25,6 +26,7 @@ import { ScrollView } from "react-native-gesture-handler";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/lib/auth";
+import { useAutoRefreshPref } from "@/lib/autoRefreshPref";
 
 type Banner = { kind: "success" | "error"; text: string } | null;
 
@@ -90,6 +92,7 @@ export default function AccountScreen() {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleted, setDeleted] = useState(false);
   const [banner, setBanner] = useState<Banner>(null);
+  const autoRefresh = useAutoRefreshPref();
 
   const DELETE_CONFIRM_PHRASE = "delete";
   const isDeleteConfirmed =
@@ -395,6 +398,54 @@ export default function AccountScreen() {
         ) : null}
 
         <View
+          testID="account-auto-refresh-card"
+          style={[
+            styles.card,
+            { backgroundColor: colors.card, borderColor: colors.cardBorder },
+          ]}
+        >
+          <View style={styles.cardHeader}>
+            <View
+              style={[styles.iconBubble, { backgroundColor: `${colors.gold}22` }]}
+            >
+              <Feather name="refresh-cw" size={16} color={colors.gold} />
+            </View>
+            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+              Keep my reports up to date
+            </Text>
+          </View>
+          <View style={styles.autoRefreshRow}>
+            <Text
+              style={[
+                styles.cardBody,
+                { color: colors.mutedForeground, flex: 1, marginRight: 12 },
+              ]}
+            >
+              When on, we'll quietly regenerate a few of your oldest saved
+              reports in the background each time you open the app. Failures
+              are silent and never block the UI.
+            </Text>
+            <Switch
+              testID="switch-auto-refresh-reports"
+              accessibilityLabel="Keep my reports up to date"
+              value={autoRefresh.enabled}
+              disabled={!autoRefresh.loaded}
+              onValueChange={(v) => {
+                void autoRefresh.setEnabled(v);
+                setBanner({
+                  kind: "success",
+                  text: v
+                    ? "We'll quietly refresh a few stale reports each session."
+                    : "Stale reports will stay as-is until you refresh them.",
+                });
+              }}
+              trackColor={{ false: colors.border, true: colors.gold }}
+              thumbColor={Platform.OS === "android" ? colors.background : undefined}
+            />
+          </View>
+        </View>
+
+        <View
           style={[
             styles.card,
             { backgroundColor: colors.card, borderColor: colors.cardBorder },
@@ -666,6 +717,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   cardHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
+  autoRefreshRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   iconBubble: {
     width: 30,
     height: 30,

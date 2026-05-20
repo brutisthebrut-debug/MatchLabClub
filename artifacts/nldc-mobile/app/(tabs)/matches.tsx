@@ -38,6 +38,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { useColors } from "@/hooks/useColors";
+import {
+  AUTO_REFRESH_BATCH_SIZE,
+  hasSwept as hasAutoRefreshSwept,
+  loadAutoRefreshPref,
+  markSwept as markAutoRefreshSwept,
+} from "@/lib/autoRefreshPref";
 
 interface DemoMatch {
   id: number;
@@ -449,6 +455,44 @@ export default function MatchesScreen() {
       Alert.alert("Reports refreshed", msg);
     }
   }, [refreshState.inProgress, staleAudits, queryClient, listKey]);
+
+  // Background auto-refresh: when the user has opted in, quietly regenerate a
+  // small batch of the oldest stale reports once per session. Failures never
+  // bubble up to the UI.
+  React.useEffect(() => {
+    if (isLoading) return;
+    if (refreshState.inProgress) return;
+    if (hasAutoRefreshSwept()) return;
+    if (staleAudits.length === 0) return;
+    let cancelled = false;
+    void (async () => {
+      const enabled = await loadAutoRefreshPref();
+      if (cancelled || !enabled) return;
+      if (hasAutoRefreshSwept()) return;
+      markAutoRefreshSwept();
+      const batch = staleAudits.slice(0, AUTO_REFRESH_BATCH_SIZE);
+      for (const audit of batch) {
+        if (cancelled) return;
+        try {
+          await generateAuditReport(audit.id);
+        } catch {
+          // swallow — background refresh must never block the UI
+        }
+      }
+      if (cancelled) return;
+      try {
+        await queryClient.invalidateQueries({ queryKey: listKey });
+        await queryClient.invalidateQueries({
+          queryKey: getGetAuditSummaryQueryKey(),
+        });
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoading, refreshState.inProgress, staleAudits, queryClient, listKey]);
 
   const onScroll = React.useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
