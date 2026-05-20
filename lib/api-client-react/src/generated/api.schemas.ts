@@ -815,6 +815,16 @@ export interface BulkDeleteAuditsResult {
   deletedIds: number[];
 }
 
+export interface EmptyTrashResult {
+  success: true;
+  purgedIds: number[];
+}
+
+export interface RestoreAllTrashResult {
+  success: true;
+  restoredIds: number[];
+}
+
 export interface DeleteAuditResult {
   success: true;
   deletedId: number;

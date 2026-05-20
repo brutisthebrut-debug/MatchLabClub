@@ -2,8 +2,10 @@ import { Feather } from "@expo/vector-icons";
 import {
   getListAuditsQueryKey,
   getListTrashedAuditsQueryKey,
+  useEmptyTrash,
   useListTrashedAudits,
   usePurgeAudit,
+  useRestoreAllTrash,
   useRestoreAudit,
   type Audit,
 } from "@workspace/api-client-react";
@@ -58,6 +60,8 @@ export default function TrashScreen() {
     useListTrashedAudits();
   const restore = useRestoreAudit();
   const purge = usePurgeAudit();
+  const emptyTrash = useEmptyTrash();
+  const restoreAll = useRestoreAllTrash();
 
   const [purgeTarget, setPurgeTarget] = React.useState<Audit | null>(null);
   const [purgeConfirmText, setPurgeConfirmText] = React.useState("");
@@ -115,6 +119,41 @@ export default function TrashScreen() {
   }, [purge, purgeTarget, invalidate, closePurgeConfirm]);
 
   const audits = (data ?? []) as Audit[];
+  const hasItems = audits.length > 0;
+  const bulkBusy = emptyTrash.isPending || restoreAll.isPending;
+
+  const handleEmptyTrash = React.useCallback(() => {
+    if (audits.length === 0) return;
+    Alert.alert(
+      "Empty trash?",
+      `Permanently delete ${audits.length} item${audits.length === 1 ? "" : "s"}? This cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Empty trash",
+          style: "destructive",
+          onPress: () =>
+            emptyTrash.mutate(undefined, {
+              onSuccess: () => invalidate(),
+              onError: () =>
+                Alert.alert(
+                  "Couldn't empty trash",
+                  "Please try again in a moment.",
+                ),
+            }),
+        },
+      ],
+    );
+  }, [audits.length, emptyTrash, invalidate]);
+
+  const handleRestoreAll = React.useCallback(() => {
+    if (audits.length === 0) return;
+    restoreAll.mutate(undefined, {
+      onSuccess: () => invalidate(),
+      onError: () =>
+        Alert.alert("Couldn't restore", "Please try again in a moment."),
+    });
+  }, [audits.length, restoreAll, invalidate]);
 
   const purgeTargetName = purgeTarget?.firstName ?? "This match";
   const isPurging =
@@ -142,6 +181,62 @@ export default function TrashScreen() {
           Items in the trash are kept for 30 days, then permanently deleted.
           Restore one to bring it back to your matches.
         </Text>
+
+        {hasItems ? (
+          <View style={styles.bulkRow}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Restore all items in the trash"
+              onPress={handleRestoreAll}
+              disabled={bulkBusy}
+              style={({ pressed }) => [
+                styles.bulkBtn,
+                {
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
+                  opacity: bulkBusy || pressed ? 0.7 : 1,
+                },
+              ]}
+            >
+              <Feather
+                name="rotate-ccw"
+                size={14}
+                color={colors.foreground}
+              />
+              <Text style={{ color: colors.foreground, fontWeight: "600" }}>
+                Restore all
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Empty trash"
+              onPress={handleEmptyTrash}
+              disabled={bulkBusy}
+              style={({ pressed }) => [
+                styles.bulkBtn,
+                {
+                  borderColor: colors.destructive ?? "#ef4444",
+                  backgroundColor: "transparent",
+                  opacity: bulkBusy || pressed ? 0.7 : 1,
+                },
+              ]}
+            >
+              <Feather
+                name="trash-2"
+                size={14}
+                color={colors.destructive ?? "#ef4444"}
+              />
+              <Text
+                style={{
+                  color: colors.destructive ?? "#ef4444",
+                  fontWeight: "600",
+                }}
+              >
+                Empty trash
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         {isLoading ? (
           <View style={styles.center}>
@@ -391,6 +486,16 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   cardTitle: { fontSize: 15, fontWeight: "700" },
+  bulkRow: { flexDirection: "row", gap: 8, marginBottom: 4 },
+  bulkBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
   actionBtn: {
     flexDirection: "row",
     alignItems: "center",

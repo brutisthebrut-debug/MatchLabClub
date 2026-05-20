@@ -1119,6 +1119,35 @@ export const PurgeAuditResponse = zod.object({
 
 
 /**
+ * Hard-deletes every audit in the caller's trash (i.e. every audit
+owned by them whose `deletedAt` is set) in a single request. Only
+audits owned by the caller (matched by userId for authenticated
+requests, or anonymous session for guests) are affected. Active
+(non-trashed) audits are never touched. The response lists the ids
+that were actually purged.
+
+ * @summary Permanently delete every soft-deleted audit owned by the caller
+ */
+export const EmptyTrashResponse = zod.object({
+  "success": zod.boolean(),
+  "purgedIds": zod.array(zod.number())
+})
+
+
+/**
+ * Clears `deletedAt` on every audit in the caller's trash so they
+reappear in the active list. Only audits owned by the caller are
+affected. The response lists the ids that were actually restored.
+
+ * @summary Restore every soft-deleted audit owned by the caller
+ */
+export const RestoreAllTrashResponse = zod.object({
+  "success": zod.boolean(),
+  "restoredIds": zod.array(zod.number())
+})
+
+
+/**
  * Moves a list of audits to the trash in a single round-trip by setting
 their `deletedAt` timestamps. Only audits owned by the caller
 (matched by userId for authenticated requests, or anonymous session

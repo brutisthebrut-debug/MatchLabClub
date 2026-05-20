@@ -692,6 +692,43 @@ paths:
         "404":
           description: Not found
 
+  /audits/trash/empty:
+    post:
+      operationId: emptyTrash
+      tags: [audits]
+      summary: Permanently delete every soft-deleted audit owned by the caller
+      description: |
+        Hard-deletes every audit in the caller's trash (i.e. every audit
+        owned by them whose `deletedAt` is set) in a single request. Only
+        audits owned by the caller (matched by userId for authenticated
+        requests, or anonymous session for guests) are affected. Active
+        (non-trashed) audits are never touched. The response lists the ids
+        that were actually purged.
+      responses:
+        "200":
+          description: Trash emptied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyTrashResult"
+
+  /audits/trash/restore-all:
+    post:
+      operationId: restoreAllTrash
+      tags: [audits]
+      summary: Restore every soft-deleted audit owned by the caller
+      description: |
+        Clears `deletedAt` on every audit in the caller's trash so they
+        reappear in the active list. Only audits owned by the caller are
+        affected. The response lists the ids that were actually restored.
+      responses:
+        "200":
+          description: Trash restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestoreAllTrashResult"
+
   /audits/bulk-delete:
     post:
       operationId: bulkDeleteAudits
@@ -2381,6 +2418,30 @@ components:
           type: boolean
           const: true
         deletedIds:
+          type: array
+          items:
+            type: integer
+
+    EmptyTrashResult:
+      type: object
+      required: [success, purgedIds]
+      properties:
+        success:
+          type: boolean
+          const: true
+        purgedIds:
+          type: array
+          items:
+            type: integer
+
+    RestoreAllTrashResult:
+      type: object
+      required: [success, restoredIds]
+      properties:
+        success:
+          type: boolean
+          const: true
+        restoredIds:
           type: array
           items:
             type: integer

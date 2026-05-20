@@ -56,6 +56,7 @@ import type {
   EmailInsightAnalysis,
   EmailInsightInput,
   EmailMyDataExportResult,
+  EmptyTrashResult,
   EngineMeta,
   ExtractMessageScreenshot400,
   ExtractScreenshot400,
@@ -72,6 +73,7 @@ import type {
   MySessionsResponse,
   ProfileRewrite,
   RedeemAnonymousClaimHandoffInput,
+  RestoreAllTrashResult,
   RevokeSessionsResult,
   ScreenshotAuditInput,
   ScreenshotAuditReport,
@@ -2034,6 +2036,157 @@ export const usePurgeAudit = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getPurgeAuditMutationOptions(options));
+    }
+
+export const getEmptyTrashUrl = () => {
+
+
+
+
+  return `/api/audits/trash/empty`
+}
+
+/**
+ * Hard-deletes every audit in the caller's trash (i.e. every audit
+owned by them whose `deletedAt` is set) in a single request. Only
+audits owned by the caller (matched by userId for authenticated
+requests, or anonymous session for guests) are affected. Active
+(non-trashed) audits are never touched. The response lists the ids
+that were actually purged.
+
+ * @summary Permanently delete every soft-deleted audit owned by the caller
+ */
+export const emptyTrash = async ( options?: RequestInit): Promise<EmptyTrashResult> => {
+
+  return customFetch<EmptyTrashResult>(getEmptyTrashUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getEmptyTrashMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof emptyTrash>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof emptyTrash>>, TError,void, TContext> => {
+
+const mutationKey = ['emptyTrash'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof emptyTrash>>, void> = () => {
+
+
+          return  emptyTrash(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EmptyTrashMutationResult = NonNullable<Awaited<ReturnType<typeof emptyTrash>>>
+
+    export type EmptyTrashMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Permanently delete every soft-deleted audit owned by the caller
+ */
+export const useEmptyTrash = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof emptyTrash>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof emptyTrash>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getEmptyTrashMutationOptions(options));
+    }
+
+export const getRestoreAllTrashUrl = () => {
+
+
+
+
+  return `/api/audits/trash/restore-all`
+}
+
+/**
+ * Clears `deletedAt` on every audit in the caller's trash so they
+reappear in the active list. Only audits owned by the caller are
+affected. The response lists the ids that were actually restored.
+
+ * @summary Restore every soft-deleted audit owned by the caller
+ */
+export const restoreAllTrash = async ( options?: RequestInit): Promise<RestoreAllTrashResult> => {
+
+  return customFetch<RestoreAllTrashResult>(getRestoreAllTrashUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRestoreAllTrashMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreAllTrash>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restoreAllTrash>>, TError,void, TContext> => {
+
+const mutationKey = ['restoreAllTrash'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreAllTrash>>, void> = () => {
+
+
+          return  restoreAllTrash(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreAllTrashMutationResult = NonNullable<Awaited<ReturnType<typeof restoreAllTrash>>>
+
+    export type RestoreAllTrashMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Restore every soft-deleted audit owned by the caller
+ */
+export const useRestoreAllTrash = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreAllTrash>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restoreAllTrash>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRestoreAllTrashMutationOptions(options));
     }
 
 export const getBulkDeleteAuditsUrl = () => {

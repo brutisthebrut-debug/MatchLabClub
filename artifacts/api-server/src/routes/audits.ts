@@ -14,6 +14,8 @@ import {
   ExtractScreenshotResponse,
   BulkDeleteAuditsBody,
   BulkDeleteAuditsResponse,
+  EmptyTrashResponse,
+  RestoreAllTrashResponse,
 } from "@workspace/api-zod";
 import { generateAuditReport } from "../lib/aiEngine";
 import {
@@ -235,6 +237,53 @@ router.get("/audits/trash", async (req, res): Promise<void> => {
     .orderBy(desc(auditsTable.deletedAt));
 
   res.json(ListAuditsResponse.parse(audits.map(serializeAudit)));
+});
+
+router.post("/audits/trash/empty", async (req, res): Promise<void> => {
+  const trashedScope = and(
+    ownerScope(req),
+    isNotNull(auditsTable.deletedAt),
+  ) as SQL;
+
+  const owned = await db
+    .select({ id: auditsTable.id })
+    .from(auditsTable)
+    .where(trashedScope);
+
+  const purgedIds = owned.map((row) => row.id);
+  if (purgedIds.length > 0) {
+    await db
+      .delete(auditsTable)
+      .where(
+        and(inArray(auditsTable.id, purgedIds), trashedScope) as SQL,
+      );
+  }
+
+  res.json(EmptyTrashResponse.parse({ success: true, purgedIds }));
+});
+
+router.post("/audits/trash/restore-all", async (req, res): Promise<void> => {
+  const trashedScope = and(
+    ownerScope(req),
+    isNotNull(auditsTable.deletedAt),
+  ) as SQL;
+
+  const owned = await db
+    .select({ id: auditsTable.id })
+    .from(auditsTable)
+    .where(trashedScope);
+
+  const restoredIds = owned.map((row) => row.id);
+  if (restoredIds.length > 0) {
+    await db
+      .update(auditsTable)
+      .set({ deletedAt: null })
+      .where(
+        and(inArray(auditsTable.id, restoredIds), trashedScope) as SQL,
+      );
+  }
+
+  res.json(RestoreAllTrashResponse.parse({ success: true, restoredIds }));
 });
 
 router.get("/audits/:id", async (req, res): Promise<void> => {

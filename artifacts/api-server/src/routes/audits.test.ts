@@ -36,6 +36,8 @@ import {
   GetAuditSummaryResponse,
   DeleteAuditResponse,
   BulkDeleteAuditsResponse,
+  EmptyTrashResponse,
+  RestoreAllTrashResponse,
 } from "@workspace/api-zod";
 import type { AuthUser } from "@workspace/api-zod";
 
@@ -677,6 +679,153 @@ describe("DELETE /api/audits/:id/purge", () => {
       `/api/audits/${id}/purge`,
     );
     expect(res.status).toBe(404);
+  });
+});
+
+describe("POST /api/audits/trash/empty", () => {
+  it("hard-deletes every trashed audit owned by the caller", async () => {
+    const t1 = await createAudit({ id: USER_ID });
+    const t2 = await createAudit({ id: USER_ID });
+    const active = await createAudit({ id: USER_ID });
+    testApp.setUser({ id: USER_ID });
+    await request(testApp.app).delete(`/api/audits/${t1}`);
+    await request(testApp.app).delete(`/api/audits/${t2}`);
+
+    const res = await request(testApp.app).post("/api/audits/trash/empty");
+    expect(res.status).toBe(200);
+    expect(() => EmptyTrashResponse.parse(res.body)).not.toThrow();
+    expect(res.body.success).toBe(true);
+    expect([...res.body.purgedIds].sort()).toEqual([t1, t2].sort());
+
+    const { dumpTable } = await import("../lib/testDb");
+    const remaining = dumpTable("audits").map((r) => r.id);
+    expect(remaining).not.toContain(t1);
+    expect(remaining).not.toContain(t2);
+    expect(remaining).toContain(active);
+  });
+
+  it("only purges the caller's trashed audits", async () => {
+    const otherUserId = `other-${crypto.randomBytes(4).toString("hex")}`;
+    const mine = await createAudit({ id: USER_ID });
+    const theirs = await createAudit({ id: otherUserId });
+
+    testApp.setUser({ id: USER_ID });
+    await request(testApp.app).delete(`/api/audits/${mine}`);
+    testApp.setUser({ id: otherUserId });
+    await request(testApp.app).delete(`/api/audits/${theirs}`);
+
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).post("/api/audits/trash/empty");
+    expect(res.status).toBe(200);
+    expect(res.body.purgedIds).toEqual([mine]);
+
+    const { dumpTable } = await import("../lib/testDb");
+    const remaining = dumpTable("audits").map((r) => r.id);
+    expect(remaining).not.toContain(mine);
+    expect(remaining).toContain(theirs);
+  });
+
+  it("returns an empty list when the trash is already empty", async () => {
+    await createAudit({ id: USER_ID });
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).post("/api/audits/trash/empty");
+    expect(res.status).toBe(200);
+    expect(res.body.purgedIds).toEqual([]);
+  });
+
+  it("scopes by anon_claim cookie for anonymous callers", async () => {
+    testApp.setUser(null);
+    const createA = await request(testApp.app).post("/api/audits").send(VALID_BODY);
+    const cookieA = (Array.isArray(createA.headers["set-cookie"])
+      ? createA.headers["set-cookie"]
+      : [createA.headers["set-cookie"] ?? ""]) as string[];
+    const anonCookieA = cookieA
+      .map((c) => c.split(";")[0])
+      .find((c) => c.startsWith("anon_claim=")) as string;
+    const aId = createA.body.id as number;
+
+    const createB = await request(testApp.app).post("/api/audits").send(VALID_BODY);
+    const cookieB = (Array.isArray(createB.headers["set-cookie"])
+      ? createB.headers["set-cookie"]
+      : [createB.headers["set-cookie"] ?? ""]) as string[];
+    const anonCookieB = cookieB
+      .map((c) => c.split(";")[0])
+      .find((c) => c.startsWith("anon_claim=")) as string;
+    const bId = createB.body.id as number;
+
+    await request(testApp.app)
+      .delete(`/api/audits/${aId}`)
+      .set("Cookie", anonCookieA);
+    await request(testApp.app)
+      .delete(`/api/audits/${bId}`)
+      .set("Cookie", anonCookieB);
+
+    const res = await request(testApp.app)
+      .post("/api/audits/trash/empty")
+      .set("Cookie", anonCookieA);
+    expect(res.status).toBe(200);
+    expect(res.body.purgedIds).toEqual([aId]);
+
+    const { dumpTable } = await import("../lib/testDb");
+    const remaining = dumpTable("audits").map((r) => r.id);
+    expect(remaining).not.toContain(aId);
+    expect(remaining).toContain(bId);
+  });
+});
+
+describe("POST /api/audits/trash/restore-all", () => {
+  it("restores every trashed audit owned by the caller", async () => {
+    const t1 = await createAudit({ id: USER_ID });
+    const t2 = await createAudit({ id: USER_ID });
+    testApp.setUser({ id: USER_ID });
+    await request(testApp.app).delete(`/api/audits/${t1}`);
+    await request(testApp.app).delete(`/api/audits/${t2}`);
+
+    const res = await request(testApp.app).post(
+      "/api/audits/trash/restore-all",
+    );
+    expect(res.status).toBe(200);
+    expect(() => RestoreAllTrashResponse.parse(res.body)).not.toThrow();
+    expect([...res.body.restoredIds].sort()).toEqual([t1, t2].sort());
+
+    const list = await request(testApp.app).get("/api/audits");
+    const ids = list.body.map((a: { id: number }) => a.id);
+    expect(ids).toContain(t1);
+    expect(ids).toContain(t2);
+
+    const trash = await request(testApp.app).get("/api/audits/trash");
+    expect(trash.body).toEqual([]);
+  });
+
+  it("only restores the caller's trashed audits", async () => {
+    const otherUserId = `other-${crypto.randomBytes(4).toString("hex")}`;
+    const mine = await createAudit({ id: USER_ID });
+    const theirs = await createAudit({ id: otherUserId });
+    testApp.setUser({ id: USER_ID });
+    await request(testApp.app).delete(`/api/audits/${mine}`);
+    testApp.setUser({ id: otherUserId });
+    await request(testApp.app).delete(`/api/audits/${theirs}`);
+
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).post(
+      "/api/audits/trash/restore-all",
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.restoredIds).toEqual([mine]);
+
+    testApp.setUser({ id: otherUserId });
+    const theirTrash = await request(testApp.app).get("/api/audits/trash");
+    expect(theirTrash.body.map((a: { id: number }) => a.id)).toContain(theirs);
+  });
+
+  it("returns an empty list when the trash is already empty", async () => {
+    await createAudit({ id: USER_ID });
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).post(
+      "/api/audits/trash/restore-all",
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.restoredIds).toEqual([]);
   });
 });
 
