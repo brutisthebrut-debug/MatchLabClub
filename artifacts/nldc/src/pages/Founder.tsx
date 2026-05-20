@@ -14,6 +14,7 @@ import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianG
 import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
 import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
+import { OcrMismatchesPanel } from "@/components/founder/OcrMismatchesPanel";
 
 type AiMode = "live" | "fallback" | "setup-needed";
 interface AiStatusData {
@@ -1716,6 +1717,7 @@ function Dashboard() {
         <div className="space-y-8">
           <AiStatusPanel />
           <RollupHeartbeatPanel refreshKey={refreshKey} />
+          <OcrMismatchesPanel refreshKey={refreshKey} />
           <AiMetricsPanel refreshKey={refreshKey} />
           <AiReliabilityTrendsPanel refreshKey={refreshKey} />
           <OcrMismatchesPanel refreshKey={refreshKey} />
