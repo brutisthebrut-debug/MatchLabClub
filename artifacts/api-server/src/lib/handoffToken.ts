@@ -20,9 +20,10 @@ import crypto from "crypto";
  *  - Carries no DB ids, only the anonymous claim token; redemption still goes
  *    through the same token-scoped UPDATE used by the cookie path, so it can
  *    only touch rows tagged with the same anonymous token.
- *  - Single-use in practice: a successful claim nulls out the anonymous token
- *    on the affected rows, so replaying the handoff after redemption finds
- *    nothing to claim.
+ *  - Single-use server-side: every issued token carries a random `jti` and
+ *    the redeem route records seen `jti`s in `handoff_token_redemptions`, so
+ *    a leaked token literally cannot be redeemed twice — even if the original
+ *    browser kept creating new anonymous rows under the same anon token.
  */
 
 export const HANDOFF_DEFAULT_TTL_MS = 15 * 60 * 1000;
@@ -56,11 +57,19 @@ function b64urlDecode(s: string): Buffer {
 interface HandoffPayload {
   t: string;
   exp: number;
+  jti: string;
 }
 
 export interface IssuedHandoff {
   token: string;
   expiresAt: string;
+  jti: string;
+}
+
+export interface VerifiedHandoff {
+  anonToken: string;
+  jti: string;
+  expiresAt: Date;
 }
 
 export function signHandoffToken(
@@ -71,7 +80,8 @@ export function signHandoffToken(
     throw new Error("Invalid anonymous claim token");
   }
   const exp = Date.now() + ttlMs;
-  const payload: HandoffPayload = { t: anonToken, exp };
+  const jti = crypto.randomBytes(16).toString("hex");
+  const payload: HandoffPayload = { t: anonToken, exp, jti };
   const body = b64url(Buffer.from(JSON.stringify(payload), "utf8"));
   const sig = b64url(
     crypto.createHmac("sha256", getSigningSecret()).update(body).digest(),
@@ -79,10 +89,11 @@ export function signHandoffToken(
   return {
     token: `${body}.${sig}`,
     expiresAt: new Date(exp).toISOString(),
+    jti,
   };
 }
 
-export function verifyHandoffToken(token: unknown): string | null {
+export function verifyHandoffToken(token: unknown): VerifiedHandoff | null {
   if (typeof token !== "string" || token.length === 0 || token.length > 4096) {
     return null;
   }
@@ -107,11 +118,17 @@ export function verifyHandoffToken(token: unknown): string | null {
   if (
     !payload ||
     typeof payload.t !== "string" ||
-    typeof payload.exp !== "number"
+    typeof payload.exp !== "number" ||
+    typeof payload.jti !== "string"
   ) {
     return null;
   }
   if (!/^[a-f0-9]{32,128}$/.test(payload.t)) return null;
+  if (!/^[a-f0-9]{16,128}$/.test(payload.jti)) return null;
   if (payload.exp < Date.now()) return null;
-  return payload.t;
+  return {
+    anonToken: payload.t,
+    jti: payload.jti,
+    expiresAt: new Date(payload.exp),
+  };
 }

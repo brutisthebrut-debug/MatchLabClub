@@ -7,6 +7,7 @@ import {
   messageCoachingSessionsTable,
   emailInsightsTable,
   coachFollowUpsTable,
+  handoffTokenRedemptionsTable,
 } from "@workspace/db";
 import {
   ClaimAnonymousDataBody,
@@ -243,14 +244,42 @@ router.post(
       res.status(400).json({ error: parsed.error.message });
       return;
     }
-    const anonToken = verifyHandoffToken(parsed.data.handoff);
-    if (!anonToken) {
+    const verified = verifyHandoffToken(parsed.data.handoff);
+    if (!verified) {
       res.status(400).json({ error: "Invalid or expired handoff token" });
       return;
     }
 
+    // Record the jti so this handoff link can never be redeemed twice.
+    // ON CONFLICT DO NOTHING means a replay attempt produces zero inserted
+    // rows — we treat that as "already redeemed" and bail out before
+    // touching any anonymous rows. Doing this BEFORE the claim UPDATE
+    // also makes the check atomic against concurrent redeem attempts.
+    const inserted = await db
+      .insert(handoffTokenRedemptionsTable)
+      .values({
+        jti: verified.jti,
+        expiresAt: verified.expiresAt,
+      })
+      .onConflictDoNothing({ target: handoffTokenRedemptionsTable.jti })
+      .returning({ jti: handoffTokenRedemptionsTable.jti });
+    if (inserted.length === 0) {
+      req.log.warn(
+        { userId: req.user.id, jti: verified.jti },
+        "Rejected replay of already-redeemed handoff token",
+      );
+      res
+        .status(400)
+        .json({ error: "This handoff link has already been used" });
+      return;
+    }
+
     const userId = req.user.id;
-    const counts = await claimByAnonToken(userId, anonToken, parsed.data);
+    const counts = await claimByAnonToken(
+      userId,
+      verified.anonToken,
+      parsed.data,
+    );
     logIfShortfall(req, userId, parsed.data, counts, "handoff");
 
     res.json(RedeemAnonymousClaimHandoffResponse.parse({ claimed: counts }));

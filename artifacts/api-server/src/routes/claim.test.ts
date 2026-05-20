@@ -12,6 +12,7 @@ import {
   messageCoachingSessionsTable,
   emailInsightsTable,
   coachFollowUpsTable,
+  handoffTokenRedemptionsTable,
 } from "@workspace/db";
 import type { AuthUser } from "@workspace/api-zod";
 import claimRouter from "./claim";
@@ -460,7 +461,18 @@ describe("handoff token sign/verify", () => {
   it("round-trips a valid token", () => {
     const anon = crypto.randomBytes(32).toString("hex");
     const issued = signHandoffToken(anon);
-    expect(verifyHandoffToken(issued.token)).toBe(anon);
+    const verified = verifyHandoffToken(issued.token);
+    expect(verified?.anonToken).toBe(anon);
+    expect(verified?.jti).toBe(issued.jti);
+    expect(verified?.jti).toMatch(/^[a-f0-9]{32}$/);
+  });
+
+  it("mints a fresh jti for every issued token", () => {
+    const anon = crypto.randomBytes(32).toString("hex");
+    const a = signHandoffToken(anon);
+    const b = signHandoffToken(anon);
+    expect(a.jti).not.toBe(b.jti);
+    expect(a.token).not.toBe(b.token);
   });
 
   it("rejects an expired token", () => {
@@ -497,7 +509,7 @@ describe("POST /api/claim-anonymous/handoff/issue", () => {
     expect(res.status).toBe(200);
     expect(typeof res.body.handoff).toBe("string");
     expect(typeof res.body.expiresAt).toBe("string");
-    expect(verifyHandoffToken(res.body.handoff)).toBe(token);
+    expect(verifyHandoffToken(res.body.handoff)?.anonToken).toBe(token);
   });
 
   it("rejects callers without an anon cookie", async () => {
@@ -662,6 +674,57 @@ describe("POST /api/claim-anonymous/handoff/redeem", () => {
         );
       expect(other?.userId).toBe(OTHER_USER_ID);
     } finally {
+      await cleanup(ids);
+    }
+  });
+
+  it("rejects a replayed handoff token even if the original browser created new rows", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    const issued = signHandoffToken(token);
+    let replayAuditId: number | null = null;
+    try {
+      // First redemption: succeeds and claims the seeded audit.
+      const first = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .send({ handoff: issued.token, auditIds: [ids.ownedAuditId] });
+      expect(first.status).toBe(200);
+      expect(first.body.claimed.audits).toBe(1);
+
+      // The original browser, still anonymous, creates a brand-new row under
+      // the same anon token. A leaked handoff link must NOT be able to grab it.
+      const [newRow] = await db
+        .insert(auditsTable)
+        .values({
+          firstName: "Replay",
+          age: 33,
+          gender: "x",
+          datingGoal: "find a relationship",
+          bio: "post-claim bio",
+          anonymousClaimToken: token,
+        })
+        .returning({ id: auditsTable.id });
+      replayAuditId = newRow.id;
+
+      // Second redemption with the same handoff token must be rejected.
+      const second = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .send({ handoff: issued.token, auditIds: [replayAuditId] });
+      expect(second.status).toBe(400);
+      expect(second.body.error).toMatch(/already been used/i);
+
+      const [stillAnon] = await db
+        .select()
+        .from(auditsTable)
+        .where(eq(auditsTable.id, replayAuditId));
+      expect(stillAnon.userId).toBeNull();
+      expect(stillAnon.anonymousClaimToken).toBe(token);
+    } finally {
+      if (replayAuditId !== null) {
+        await db.delete(auditsTable).where(eq(auditsTable.id, replayAuditId));
+      }
+      await db
+        .delete(handoffTokenRedemptionsTable)
+        .where(eq(handoffTokenRedemptionsTable.jti, issued.jti));
       await cleanup(ids);
     }
   });
