@@ -1,7 +1,10 @@
 import { Feather } from "@expo/vector-icons";
-import { useGetAuditSummary } from "@workspace/api-client-react";
-import { useFocusEffect } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import {
+  getGetCoachFollowUpStatsQueryKey,
+  useGetAuditSummary,
+  useGetCoachFollowUpStats,
+} from "@workspace/api-client-react";
+import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -17,10 +20,7 @@ import Svg, { Polyline } from "react-native-svg";
 import { ScoreRing } from "@/components/ScoreRing";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { useColors } from "@/hooks/useColors";
-import {
-  loadCoachSendStats,
-  type CoachSendStats,
-} from "@/lib/coachNotifications";
+import { useAuth } from "@/lib/auth";
 
 const DEMO_HISTORY = [
   { date: "2025-04-01", score: 58 },
@@ -88,19 +88,14 @@ export default function ScoreScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { data, isLoading, isError, refetch, isFetching } = useGetAuditSummary();
-  const [sendStats, setSendStats] = useState<CoachSendStats | null>(null);
-
-  useFocusEffect(
-    useCallback(() => {
-      let active = true;
-      loadCoachSendStats().then((s) => {
-        if (active) setSendStats(s);
-      });
-      return () => {
-        active = false;
-      };
-    }, []),
+  const { isAuthenticated } = useAuth();
+  const followUpStatsQueryKey = useMemo(
+    () => getGetCoachFollowUpStatsQueryKey(),
+    [],
   );
+  const { data: sendStats } = useGetCoachFollowUpStats({
+    query: { queryKey: followUpStatsQueryKey, enabled: isAuthenticated },
+  });
 
   const sendThroughRate =
     sendStats && sendStats.totalPrompts > 0
@@ -331,7 +326,7 @@ export default function ScoreScreen() {
                       { color: colors.mutedForeground },
                     ]}
                   >
-                    Coached
+                    Prompts
                   </Text>
                 </View>
               </View>
@@ -351,7 +346,7 @@ export default function ScoreScreen() {
                   ]}
                 />
               </View>
-              {sendStats.snoozeCount > 0 || sendStats.dismissCount > 0 ? (
+              {sendStats.notSentCount > 0 ? (
                 <Text
                   style={[
                     styles.sendDeferText,
@@ -360,19 +355,7 @@ export default function ScoreScreen() {
                 >
                   <Feather name="clock" size={11} color={colors.mutedForeground} />
                   {"  "}
-                  {sendStats.snoozeCount > 0
-                    ? `Snoozed ${sendStats.snoozeCount} time${
-                        sendStats.snoozeCount === 1 ? "" : "s"
-                      }`
-                    : null}
-                  {sendStats.snoozeCount > 0 && sendStats.dismissCount > 0
-                    ? " · "
-                    : null}
-                  {sendStats.dismissCount > 0
-                    ? `Dismissed ${sendStats.dismissCount} time${
-                        sendStats.dismissCount === 1 ? "" : "s"
-                      }`
-                    : null}
+                  {`${sendStats.notSentCount} still thinking`}
                 </Text>
               ) : null}
             </>
