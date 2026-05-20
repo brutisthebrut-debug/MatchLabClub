@@ -268,6 +268,232 @@ describe("GET /api/audits/summary", () => {
   });
 });
 
+describe("GET /api/audits filters and pagination", () => {
+  interface SeedRow {
+    firstName: string;
+    bio: string;
+    readinessScore: number | null;
+    createdAt?: Date;
+  }
+
+  async function seedAudits(rows: SeedRow[]): Promise<number[]> {
+    const { db: testDb, auditsTable: tbl, dumpTable } = await import(
+      "../lib/testDb"
+    );
+    const ids: number[] = [];
+    for (const r of rows) {
+      const [{ id }] = await testDb
+        .insert(tbl)
+        .values({
+          firstName: r.firstName,
+          age: 30,
+          gender: "x",
+          orientation: "straight",
+          datingGoal: "find a relationship",
+          currentApps: ["Hinge"],
+          bio: r.bio,
+          prompts: null,
+          status: r.readinessScore === null ? "pending" : "complete",
+          source: "manual",
+          readinessScore: r.readinessScore,
+          userId: USER_ID,
+          anonymousClaimToken: null,
+        })
+        .returning({ id: tbl.id });
+      ids.push(id as number);
+    }
+    // Reassign createdAt so newest-sort tests are deterministic.
+    const stored = dumpTable("audits");
+    for (let i = 0; i < rows.length; i++) {
+      const target = stored.find((row) => row.id === ids[i]);
+      if (target) {
+        target.createdAt = rows[i].createdAt ?? new Date(2025, 0, i + 1);
+      }
+    }
+    return ids;
+  }
+
+  it("filters by `q` against firstName and bio (case-insensitive)", async () => {
+    await seedAudits([
+      { firstName: "Alice", bio: "Loves climbing and pottery", readinessScore: 80 },
+      { firstName: "Bob", bio: "Casual hiker", readinessScore: 60 },
+      { firstName: "Charlie", bio: "Enjoys POTTERY classes", readinessScore: 40 },
+    ]);
+
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).get("/api/audits?q=pottery");
+    expect(res.status).toBe(200);
+    const names = res.body.map((a: { firstName: string }) => a.firstName).sort();
+    expect(names).toEqual(["Alice", "Charlie"]);
+  });
+
+  it("treats `%` and `_` in `q` as literal characters, not SQL wildcards", async () => {
+    await seedAudits([
+      { firstName: "Alice", bio: "ordinary bio", readinessScore: 80 },
+      { firstName: "Bob", bio: "another bio", readinessScore: 70 },
+      { firstName: "Charlie", bio: "third bio", readinessScore: 60 },
+    ]);
+
+    testApp.setUser({ id: USER_ID });
+
+    // None of the seeded rows contain `%`, so a search for `%` must NOT
+    // be interpreted as the SQL "match anything" wildcard.
+    const pctRes = await request(testApp.app).get("/api/audits?q=%25");
+    expect(pctRes.status).toBe(200);
+    expect(pctRes.body.length).toBe(0);
+
+    // Same for `_` — it should be treated as a literal underscore, not
+    // "match any single character".
+    const underRes = await request(testApp.app).get("/api/audits?q=_");
+    expect(underRes.status).toBe(200);
+    expect(underRes.body.length).toBe(0);
+  });
+
+  it("sort=topScore orders by readinessScore desc", async () => {
+    await seedAudits([
+      { firstName: "Low", bio: "x", readinessScore: 30 },
+      { firstName: "High", bio: "x", readinessScore: 90 },
+      { firstName: "Mid", bio: "x", readinessScore: 60 },
+    ]);
+
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).get("/api/audits?sort=topScore");
+    expect(res.status).toBe(200);
+    const names = res.body.map((a: { firstName: string }) => a.firstName);
+    expect(names).toEqual(["High", "Mid", "Low"]);
+  });
+
+  it("default sort returns newest first", async () => {
+    await seedAudits([
+      { firstName: "Oldest", bio: "x", readinessScore: 80, createdAt: new Date(2025, 0, 1) },
+      { firstName: "Middle", bio: "x", readinessScore: 50, createdAt: new Date(2025, 0, 5) },
+      { firstName: "Newest", bio: "x", readinessScore: 60, createdAt: new Date(2025, 0, 9) },
+    ]);
+
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).get("/api/audits");
+    expect(res.status).toBe(200);
+    const names = res.body.map((a: { firstName: string }) => a.firstName);
+    expect(names).toEqual(["Newest", "Middle", "Oldest"]);
+  });
+
+  it("scoreRange=high returns only scores >= 75", async () => {
+    await seedAudits([
+      { firstName: "A", bio: "x", readinessScore: 74 },
+      { firstName: "B", bio: "x", readinessScore: 75 },
+      { firstName: "C", bio: "x", readinessScore: 99 },
+      { firstName: "D", bio: "x", readinessScore: null },
+    ]);
+
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).get("/api/audits?scoreRange=high");
+    expect(res.status).toBe(200);
+    const names = res.body.map((a: { firstName: string }) => a.firstName).sort();
+    expect(names).toEqual(["B", "C"]);
+  });
+
+  it("scoreRange=medium returns scores in [55, 75)", async () => {
+    await seedAudits([
+      { firstName: "A", bio: "x", readinessScore: 54 },
+      { firstName: "B", bio: "x", readinessScore: 55 },
+      { firstName: "C", bio: "x", readinessScore: 74 },
+      { firstName: "D", bio: "x", readinessScore: 75 },
+    ]);
+
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).get("/api/audits?scoreRange=medium");
+    expect(res.status).toBe(200);
+    const names = res.body.map((a: { firstName: string }) => a.firstName).sort();
+    expect(names).toEqual(["B", "C"]);
+  });
+
+  it("scoreRange=low returns scores < 55 and excludes null scores", async () => {
+    await seedAudits([
+      { firstName: "A", bio: "x", readinessScore: 10 },
+      { firstName: "B", bio: "x", readinessScore: 54 },
+      { firstName: "C", bio: "x", readinessScore: 55 },
+      { firstName: "Pending", bio: "x", readinessScore: null },
+    ]);
+
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).get("/api/audits?scoreRange=low");
+    expect(res.status).toBe(200);
+    const names = res.body.map((a: { firstName: string }) => a.firstName).sort();
+    expect(names).toEqual(["A", "B"]);
+  });
+
+  it("applies limit and offset for pagination", async () => {
+    await seedAudits([
+      { firstName: "R1", bio: "x", readinessScore: 80, createdAt: new Date(2025, 0, 1) },
+      { firstName: "R2", bio: "x", readinessScore: 80, createdAt: new Date(2025, 0, 2) },
+      { firstName: "R3", bio: "x", readinessScore: 80, createdAt: new Date(2025, 0, 3) },
+      { firstName: "R4", bio: "x", readinessScore: 80, createdAt: new Date(2025, 0, 4) },
+      { firstName: "R5", bio: "x", readinessScore: 80, createdAt: new Date(2025, 0, 5) },
+    ]);
+
+    testApp.setUser({ id: USER_ID });
+    const page1 = await request(testApp.app).get("/api/audits?limit=2&offset=0");
+    expect(page1.status).toBe(200);
+    expect(page1.body.map((a: { firstName: string }) => a.firstName)).toEqual([
+      "R5",
+      "R4",
+    ]);
+
+    const page2 = await request(testApp.app).get("/api/audits?limit=2&offset=2");
+    expect(page2.body.map((a: { firstName: string }) => a.firstName)).toEqual([
+      "R3",
+      "R2",
+    ]);
+
+    const page3 = await request(testApp.app).get("/api/audits?limit=2&offset=4");
+    expect(page3.body.map((a: { firstName: string }) => a.firstName)).toEqual([
+      "R1",
+    ]);
+  });
+
+  it("clamps limit to [1, 100] and falls back to defaults on garbage values", async () => {
+    await seedAudits(
+      Array.from({ length: 3 }, (_, i) => ({
+        firstName: `N${i}`,
+        bio: "x",
+        readinessScore: 80,
+      })),
+    );
+
+    testApp.setUser({ id: USER_ID });
+    const garbage = await request(testApp.app).get(
+      "/api/audits?limit=not-a-number&offset=also-bogus",
+    );
+    expect(garbage.status).toBe(200);
+    expect(garbage.body.length).toBe(3);
+
+    const tooSmall = await request(testApp.app).get("/api/audits?limit=0");
+    expect(tooSmall.status).toBe(200);
+    // limit clamped up to 1
+    expect(tooSmall.body.length).toBe(1);
+  });
+
+  it("combines q, scoreRange, sort, limit and offset together", async () => {
+    await seedAudits([
+      { firstName: "Pottery Pat", bio: "x", readinessScore: 90 },
+      { firstName: "Pottery Sam", bio: "x", readinessScore: 80 },
+      { firstName: "Pottery Lee", bio: "x", readinessScore: 60 },
+      { firstName: "Climbing Kim", bio: "x", readinessScore: 95 },
+    ]);
+
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app).get(
+      "/api/audits?q=pottery&scoreRange=high&sort=topScore&limit=1&offset=1",
+    );
+    expect(res.status).toBe(200);
+    // Pottery + high (>=75) = Pat (90), Sam (80). Top-score sorted: Pat, Sam.
+    // With offset=1, limit=1 → just Sam.
+    expect(res.body.map((a: { firstName: string }) => a.firstName)).toEqual([
+      "Pottery Sam",
+    ]);
+  });
+});
+
 describe("DELETE /api/audits/:id", () => {
   it("deletes only audits owned by the caller", async () => {
     const id = await createAudit({ id: USER_ID });
