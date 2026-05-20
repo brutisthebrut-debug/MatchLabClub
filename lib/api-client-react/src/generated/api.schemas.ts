@@ -534,6 +534,15 @@ export interface CoachFollowUpTimeline {
 export interface EmailInsightInput {
   pastedContent: string;
   sourceLabel: string;
+  /**
+     * Where the messages came from. Used to tune communication patterns,
+  growth areas, and profile tips. Recognized values include "Hinge",
+  "Bumble", "Tinder", "iMessage", and "Email"; anything else is
+  treated as unknown.
+
+     * @nullable
+     */
+  sourceApp?: string | null;
   consentGiven?: boolean;
 }
 
@@ -550,6 +559,11 @@ export const EmailInsightStatus = {
 export interface EmailInsight {
   id: number;
   sourceLabel: string;
+  /**
+     * Source platform the messages came from (e.g. "Hinge", "Bumble", "Tinder", "iMessage", "Email").
+     * @nullable
+     */
+  sourceApp?: string | null;
   pastedContent: string;
   consentGiven?: boolean;
   status: EmailInsightStatus;
@@ -564,6 +578,11 @@ export interface CommunicationPattern {
 
 export interface EmailInsightAnalysis {
   insightId: number;
+  /**
+     * Source platform the engine tuned its analysis for, if any.
+     * @nullable
+     */
+  sourceApp?: string | null;
   communicationPatterns: CommunicationPattern[];
   attachmentStyle: string;
   strengths: string[];

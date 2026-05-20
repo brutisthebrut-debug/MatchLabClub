@@ -10,6 +10,11 @@ import type { EmailInsightStatus } from './emailInsightStatus';
 export interface EmailInsight {
   id: number;
   sourceLabel: string;
+  /**
+     * Source platform the messages came from (e.g. "Hinge", "Bumble", "Tinder", "iMessage", "Email").
+     * @nullable
+     */
+  sourceApp?: string | null;
   pastedContent: string;
   consentGiven?: boolean;
   status: EmailInsightStatus;

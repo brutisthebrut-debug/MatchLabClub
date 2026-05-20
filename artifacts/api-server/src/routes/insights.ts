@@ -76,7 +76,15 @@ router.post("/insights/:id/analyze", async (req, res): Promise<void> => {
   const analysis = generateEmailInsightAnalysis({
     pastedContent: insight.pastedContent,
     sourceLabel: insight.sourceLabel,
+    sourceApp: insight.sourceApp,
   });
+
+  if (analysis.sourceApp && !insight.sourceApp) {
+    await db
+      .update(emailInsightsTable)
+      .set({ sourceApp: analysis.sourceApp })
+      .where(eq(emailInsightsTable.id, id));
+  }
 
   await db.update(emailInsightsTable).set({ status: "complete" }).where(eq(emailInsightsTable.id, id));
 

@@ -18,6 +18,19 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { Shield, Loader2, Mail, TrendingUp, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp } from "lucide-react";
 
+const SOURCE_APPS = ["Hinge", "Bumble", "Tinder", "iMessage", "Email"] as const;
+type InsightSource = (typeof SOURCE_APPS)[number];
+
+function detectSourceFromText(text: string): InsightSource | null {
+  const t = text.toLowerCase();
+  if (/\bhinge\b/.test(t)) return "Hinge";
+  if (/\bbumble\b/.test(t)) return "Bumble";
+  if (/\btinder\b/.test(t)) return "Tinder";
+  if (/\bimessage\b|\bsms\b|\btexts?\b/.test(t)) return "iMessage";
+  if (/\bemail\b|\bgmail\b|\boutlook\b|@\w+\.\w+/.test(t)) return "Email";
+  return null;
+}
+
 type Analysis = {
   communicationPatterns: { pattern: string; frequency: string; impact: string }[];
   attachmentStyle: string;
@@ -25,6 +38,7 @@ type Analysis = {
   growthAreas: string[];
   datingProfileTips: string[];
   summary: string;
+  sourceApp?: string | null;
 };
 
 const DEMO_ANALYSIS: Analysis = {
@@ -58,19 +72,26 @@ const DEMO_ANALYSIS: Analysis = {
 const DEMO_INSIGHT = {
   id: 1,
   sourceLabel: "Hinge conversation with Sam",
+  sourceApp: "Hinge",
   pastedContent: "Me: Hey! Love that you mentioned the Japan trip...",
   consentGiven: true,
   status: "complete",
   createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
 };
 
+const DEMO_DETECTED_SOURCE: InsightSource = "Hinge";
+
 export default function Insights() {
   useMeta("Communication Pattern Insights", "Paste your message history and discover your communication patterns, attachment style, and what to change to get better results.");
   const [sourceLabel, setSourceLabel] = useState("");
+  const [sourceApp, setSourceApp] = useState<InsightSource | "">("");
   const [content, setContent] = useState("");
   const [consent, setConsent] = useState(false);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [resultSource, setResultSource] = useState<InsightSource | null>(null);
   const [expandedPattern, setExpandedPattern] = useState<number | null>(null);
+  const detectedSource =
+    sourceApp || detectSourceFromText(`${sourceLabel}\n${content}`) || "";
   const queryClient = useQueryClient();
 
   const { isAuthenticated } = useAuth();
@@ -83,16 +104,27 @@ export default function Insights() {
   const isBrandNewUser = isAuthenticated && !insightsLoading && !hasInsights && !analysis;
 
   async function handleAnalyze() {
+    const appForRequest =
+      sourceApp || detectSourceFromText(`${sourceLabel}\n${content}`) || null;
     try {
       const insight = await createInsight.mutateAsync({
-        data: { sourceLabel: sourceLabel || "My messages", pastedContent: content, consentGiven: consent },
+        data: {
+          sourceLabel: sourceLabel || "My messages",
+          pastedContent: content,
+          consentGiven: consent,
+          sourceApp: appForRequest,
+        },
       });
       rememberAnonymousId("insights", insight.id);
       const result = await analyzeInsight.mutateAsync({ id: insight.id });
       setAnalysis(result as Analysis);
+      setResultSource(
+        ((result as Analysis).sourceApp as InsightSource | null | undefined) ?? appForRequest,
+      );
       queryClient.invalidateQueries({ queryKey: getListInsightsQueryKey() });
     } catch {
       setAnalysis(DEMO_ANALYSIS);
+      setResultSource(appForRequest);
     }
   }
 
@@ -167,6 +199,30 @@ export default function Insights() {
               />
             </div>
             <div className="space-y-2">
+              <Label>
+                Source platform
+                {!sourceApp && detectedSource ? (
+                  <span className="ml-2 text-[10px] text-muted-foreground font-normal" data-testid="text-insight-source-detected">
+                    detected: {detectedSource}
+                  </span>
+                ) : null}
+              </Label>
+              <div className="flex flex-wrap gap-1.5">
+                {SOURCE_APPS.map(a => (
+                  <button
+                    key={a}
+                    type="button"
+                    data-testid={`button-insight-source-${a.toLowerCase()}`}
+                    onClick={() => setSourceApp(prev => prev === a ? "" : a)}
+                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${sourceApp === a ? "bg-primary/10 text-primary border-primary/40" : "border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground"}`}
+                  >
+                    {a}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">Optional — we'll tune patterns, growth areas, and profile tips to this source. We auto-detect when we can.</p>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="pasteContent">Paste your message history</Label>
               <Textarea
                 id="pasteContent"
@@ -217,7 +273,17 @@ export default function Insights() {
                   <div className="bg-card border border-card-border rounded-3xl p-8 mb-6" data-testid="card-attachment-style">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                       <div className="flex-1">
-                        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Attachment Style</p>
+                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                          <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Attachment Style</p>
+                          {(analysis ? resultSource : DEMO_DETECTED_SOURCE) ? (
+                            <span
+                              className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30"
+                              data-testid="badge-insight-source"
+                            >
+                              {analysis ? resultSource : DEMO_DETECTED_SOURCE}
+                            </span>
+                          ) : null}
+                        </div>
                         <Badge className={`text-sm font-semibold border px-4 py-1 ${attachmentColor(r.attachmentStyle)}`} data-testid="badge-attachment-style">
                           {r.attachmentStyle}
                         </Badge>
@@ -316,7 +382,17 @@ export default function Insights() {
                         <div key={insight.id} className="flex items-center gap-3 p-3 rounded-xl border border-border" data-testid={`card-insight-${insight.id}`}>
                           <Mail className="w-4 h-4 text-muted-foreground" />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{insight.sourceLabel}</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-sm font-medium text-foreground truncate">{insight.sourceLabel}</p>
+                              {insight.sourceApp ? (
+                                <span
+                                  className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30"
+                                  data-testid={`badge-insight-source-${insight.id}`}
+                                >
+                                  {insight.sourceApp}
+                                </span>
+                              ) : null}
+                            </div>
                             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                               <Clock className="w-3 h-3" />
                               {new Date(insight.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}

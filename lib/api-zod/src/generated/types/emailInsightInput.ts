@@ -9,5 +9,14 @@
 export interface EmailInsightInput {
   pastedContent: string;
   sourceLabel: string;
+  /**
+     * Where the messages came from. Used to tune communication patterns,
+  growth areas, and profile tips. Recognized values include "Hinge",
+  "Bumble", "Tinder", "iMessage", and "Email"; anything else is
+  treated as unknown.
+
+     * @nullable
+     */
+  sourceApp?: string | null;
   consentGiven?: boolean;
 }

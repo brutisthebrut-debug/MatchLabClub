@@ -7,6 +7,7 @@ export const emailInsightsTable = pgTable("email_insights", {
   userId: varchar("user_id"),
   anonymousClaimToken: varchar("anonymous_claim_token"),
   sourceLabel: text("source_label").notNull(),
+  sourceApp: text("source_app"),
   pastedContent: text("pasted_content").notNull(),
   consentGiven: boolean("consent_given").default(false),
   status: text("status").notNull().default("pending"),

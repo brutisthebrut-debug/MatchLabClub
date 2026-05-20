@@ -1850,6 +1850,13 @@ components:
           type: string
         sourceLabel:
           type: string
+        sourceApp:
+          type: ["string", "null"]
+          description: |
+            Where the messages came from. Used to tune communication patterns,
+            growth areas, and profile tips. Recognized values include "Hinge",
+            "Bumble", "Tinder", "iMessage", and "Email"; anything else is
+            treated as unknown.
         consentGiven:
           type: boolean
 
@@ -1861,6 +1868,9 @@ components:
           type: integer
         sourceLabel:
           type: string
+        sourceApp:
+          type: ["string", "null"]
+          description: Source platform the messages came from (e.g. "Hinge", "Bumble", "Tinder", "iMessage", "Email").
         pastedContent:
           type: string
         consentGiven:
@@ -1877,6 +1887,9 @@ components:
       properties:
         insightId:
           type: integer
+        sourceApp:
+          type: ["string", "null"]
+          description: Source platform the engine tuned its analysis for, if any.
         communicationPatterns:
           type: array
           items:

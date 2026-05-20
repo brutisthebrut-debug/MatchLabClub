@@ -9,6 +9,11 @@ import type { CommunicationPattern } from './communicationPattern';
 
 export interface EmailInsightAnalysis {
   insightId: number;
+  /**
+     * Source platform the engine tuned its analysis for, if any.
+     * @nullable
+     */
+  sourceApp?: string | null;
   communicationPatterns: CommunicationPattern[];
   attachmentStyle: string;
   strengths: string[];

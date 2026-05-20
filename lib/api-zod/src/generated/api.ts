@@ -265,6 +265,7 @@ export const ExportMyDataResponse = zod.object({
   "insights": zod.array(zod.object({
   "id": zod.number(),
   "sourceLabel": zod.string(),
+  "sourceApp": zod.string().nullish().describe('Source platform the messages came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\", \"iMessage\", \"Email\").'),
   "pastedContent": zod.string(),
   "consentGiven": zod.boolean().optional(),
   "status": zod.enum(['pending', 'analyzing', 'complete', 'error']),
@@ -405,6 +406,7 @@ export const DownloadEmailedExportResponse = zod.object({
   "insights": zod.array(zod.object({
   "id": zod.number(),
   "sourceLabel": zod.string(),
+  "sourceApp": zod.string().nullish().describe('Source platform the messages came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\", \"iMessage\", \"Email\").'),
   "pastedContent": zod.string(),
   "consentGiven": zod.boolean().optional(),
   "status": zod.enum(['pending', 'analyzing', 'complete', 'error']),
@@ -1137,6 +1139,7 @@ export const GetCoachFollowUpTimelineResponse = zod.object({
 export const ListInsightsResponseItem = zod.object({
   "id": zod.number(),
   "sourceLabel": zod.string(),
+  "sourceApp": zod.string().nullish().describe('Source platform the messages came from (e.g. \"Hinge\", \"Bumble\", \"Tinder\", \"iMessage\", \"Email\").'),
   "pastedContent": zod.string(),
   "consentGiven": zod.boolean().optional(),
   "status": zod.enum(['pending', 'analyzing', 'complete', 'error']),
@@ -1151,6 +1154,7 @@ export const ListInsightsResponse = zod.array(ListInsightsResponseItem)
 export const CreateInsightBody = zod.object({
   "pastedContent": zod.string(),
   "sourceLabel": zod.string(),
+  "sourceApp": zod.string().nullish().describe('Where the messages came from. Used to tune communication patterns,\ngrowth areas, and profile tips. Recognized values include \"Hinge\",\n\"Bumble\", \"Tinder\", \"iMessage\", and \"Email\"; anything else is\ntreated as unknown.\n'),
   "consentGiven": zod.boolean().optional()
 })
 
@@ -1164,6 +1168,7 @@ export const AnalyzeInsightParams = zod.object({
 
 export const AnalyzeInsightResponse = zod.object({
   "insightId": zod.number(),
+  "sourceApp": zod.string().nullish().describe('Source platform the engine tuned its analysis for, if any.'),
   "communicationPatterns": zod.array(zod.object({
   "pattern": zod.string(),
   "frequency": zod.string(),

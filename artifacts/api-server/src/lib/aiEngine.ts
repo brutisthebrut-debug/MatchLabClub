@@ -36,6 +36,7 @@ export interface EmailInsightOutput {
   growthAreas: string[];
   datingProfileTips: string[];
   summary: string;
+  sourceApp: string | null;
 }
 
 function scoreFromBio(bio: string, goal: string, apps: string[]): number {
@@ -428,12 +429,114 @@ export function generateMessageCoaching(params: {
   };
 }
 
+type InsightSource = "Hinge" | "Bumble" | "Tinder" | "iMessage" | "Email";
+
+function normalizeInsightSource(raw?: string | null): InsightSource | null {
+  if (!raw) return null;
+  const t = raw.trim().toLowerCase();
+  if (t === "hinge") return "Hinge";
+  if (t === "bumble") return "Bumble";
+  if (t === "tinder") return "Tinder";
+  if (t === "imessage" || t === "messages" || t === "sms" || t === "text") return "iMessage";
+  if (t === "email" || t === "gmail" || t === "outlook") return "Email";
+  return null;
+}
+
+function detectInsightSource(text: string): InsightSource | null {
+  const t = text.toLowerCase();
+  if (/\bhinge\b/.test(t)) return "Hinge";
+  if (/\bbumble\b/.test(t)) return "Bumble";
+  if (/\btinder\b/.test(t)) return "Tinder";
+  if (/\bimessage\b|\bsms\b|\btexts?\b/.test(t)) return "iMessage";
+  if (/\bemail\b|\bgmail\b|\boutlook\b|@\w+\.\w+/.test(t)) return "Email";
+  return null;
+}
+
+function insightSourcePatternImpact(source: InsightSource | null, isLongMessages: boolean): string | null {
+  switch (source) {
+    case "Hinge":
+      return isLongMessages
+        ? "On Hinge, long messages early can outpace the conversational rhythm — readers expect punchy, prompt-anchored replies in the first few exchanges."
+        : "On Hinge, concise replies work — but make sure each one anchors back to a prompt or photo so the conversation stays specific.";
+    case "Bumble":
+      return isLongMessages
+        ? "On Bumble where women open, long replies can feel like pressure — keep early messages snappy and let them pick the thread."
+        : "On Bumble the 24-hour clock rewards your concise style — just make sure replies still bring fresh energy, not just acknowledgement.";
+    case "Tinder":
+      return isLongMessages
+        ? "On Tinder, multi-paragraph messages get skimmed — the platform rewards quick, sharp exchanges that move toward a plan fast."
+        : "On Tinder, your concise style fits the platform — just don't let so many short turns pass that the thread dies before you suggest plans.";
+    case "iMessage":
+      return "Once you're in iMessage, you've already cleared the hardest bar — protect that by keeping pacing relaxed and not over-texting between days.";
+    case "Email":
+      return "Email is a slower, more deliberate medium — your tone here will read more carefully than on apps, so word choice matters more than usual.";
+    default:
+      return null;
+  }
+}
+
+function insightSourceGrowthArea(source: InsightSource | null): string | null {
+  switch (source) {
+    case "Hinge":
+      return "On Hinge, tie at least one reply back to whatever prompt or photo originally got the like — it consistently lifts response quality.";
+    case "Bumble":
+      return "On Bumble, when she opens, your reply within the first few hours sets the tone — concise specifics beat long appreciative essays.";
+    case "Tinder":
+      return "On Tinder, set a soft deadline in your head — if you're past a dozen messages without suggesting plans, the thread is dying.";
+    case "iMessage":
+      return "Once you're texting, stop performing — the conversation should feel lighter and more spontaneous, not more polished, than the app phase.";
+    case "Email":
+      return "Email rewards brevity even more than apps — most threads die from length, not from being too direct.";
+    default:
+      return null;
+  }
+}
+
+function insightSourceProfileTip(source: InsightSource | null): string | null {
+  switch (source) {
+    case "Hinge":
+      return "Your Hinge prompts are doing most of the matchmaking — rotate one every two weeks and watch which versions actually pull likes.";
+    case "Bumble":
+      return "On Bumble, the lead photo and first bio line do nearly all the work — make sure both can stand on their own in under two seconds.";
+    case "Tinder":
+      return "On Tinder, a two-line bio with one specific hook will outperform a thoughtful paragraph almost every time — density beats depth.";
+    case "iMessage":
+      return "Since you're getting numbers, your profile is converting — the next leverage point is upgrading the app-to-text transition, not the bio.";
+    case "Email":
+      return "If conversations are moving to email, your profile is doing fine — focus coaching on tightening replies, not rewriting the bio.";
+    default:
+      return null;
+  }
+}
+
+function insightSourceSummaryAddendum(source: InsightSource | null): string {
+  switch (source) {
+    case "Hinge":
+      return " Tuned to Hinge conventions — prompt-anchored replies and individual-photo specificity weighted heavily.";
+    case "Bumble":
+      return " Tuned to Bumble dynamics — women-open timing and lead-photo weight factored in.";
+    case "Tinder":
+      return " Tuned to Tinder pacing — fast-decay thread expectations and plans-first asks weighted in.";
+    case "iMessage":
+      return " Calibrated for iMessage — you've already cleared the app, so the leverage is now in pacing and tone, not pitch.";
+    case "Email":
+      return " Calibrated for email — slower cadence, more deliberate phrasing, and brevity over polish.";
+    default:
+      return "";
+  }
+}
+
 export function generateEmailInsightAnalysis(params: {
   pastedContent: string;
   sourceLabel: string;
+  sourceApp?: string | null;
 }): EmailInsightOutput {
   const content = params.pastedContent.toLowerCase();
   const wordCount = content.split(" ").length;
+  const source =
+    normalizeInsightSource(params.sourceApp) ??
+    normalizeInsightSource(params.sourceLabel) ??
+    detectInsightSource(`${params.sourceLabel}\n${params.pastedContent}`);
 
   const isLongMessages =
     content.length / Math.max(1, (content.match(/\n/g) || []).length) > 80;
@@ -469,9 +572,13 @@ export function generateEmailInsightAnalysis(params: {
       {
         pattern: isLongMessages ? "Extended message length" : "Concise messaging style",
         frequency: isLongMessages ? "High — most messages are multi-paragraph" : "Consistent — you tend to keep messages short",
-        impact: isLongMessages
-          ? "Long messages signal investment but can create pressure — the other person may feel they owe an equivalent response, which is exhausting over time."
-          : "Concise messages are easy to respond to, but may read as low investment. Try occasionally matching their energy by going a little longer.",
+        impact: (() => {
+          const base = isLongMessages
+            ? "Long messages signal investment but can create pressure — the other person may feel they owe an equivalent response, which is exhausting over time."
+            : "Concise messages are easy to respond to, but may read as low investment. Try occasionally matching their energy by going a little longer.";
+          const flavor = insightSourcePatternImpact(source, isLongMessages);
+          return flavor ? `${base} ${flavor}` : base;
+        })(),
       },
       {
         pattern: hasQuestions > 5 ? "Question-heavy style" : "Statement-forward style",
@@ -524,6 +631,7 @@ export function generateEmailInsightAnalysis(params: {
       hasQuestions < 3
         ? "Ask more questions — curiosity is irresistible when it feels genuine"
         : "Balance questions with personal disclosures — reciprocity matters",
+      ...(insightSourceGrowthArea(source) ? [insightSourceGrowthArea(source) as string] : []),
     ],
     datingProfileTips: [
       hasHumor
@@ -535,8 +643,11 @@ export function generateEmailInsightAnalysis(params: {
       styleIndex === 1
         ? "Lead with who you are, not what you're looking for. Profiles that open with needs signal low confidence."
         : "Your restraint can read as confidence — lean into that. Be direct about what you want.",
-      "Add at least one prompt that ends with an implicit question — it converts profile views to messages far better than static statements.",
+      ...(insightSourceProfileTip(source)
+        ? [insightSourceProfileTip(source) as string]
+        : ["Add at least one prompt that ends with an implicit question — it converts profile views to messages far better than static statements."]),
     ],
-    summary: `Based on ${wordCount} words of conversation from ${params.sourceLabel}, your communication fingerprint is: ${attachmentStyles[styleIndex].split("—")[0].trim()}. ${hasHumor ? "Your natural humor is a real asset — it's the kind of thing people remember and seek out." : "You communicate with clarity and intention."} ${hasEmotional ? "You're emotionally present, which creates depth quickly — the growth edge is pacing that openness." : "Your restraint creates calm, but sometimes people need a little more warmth to feel safe opening up."} The patterns in this sample suggest your dating profile and conversation style could be better aligned — the coaching recommendations above will help bridge that gap.`,
+    summary: `Based on ${wordCount} words of conversation from ${params.sourceLabel}, your communication fingerprint is: ${attachmentStyles[styleIndex].split("—")[0].trim()}. ${hasHumor ? "Your natural humor is a real asset — it's the kind of thing people remember and seek out." : "You communicate with clarity and intention."} ${hasEmotional ? "You're emotionally present, which creates depth quickly — the growth edge is pacing that openness." : "Your restraint creates calm, but sometimes people need a little more warmth to feel safe opening up."} The patterns in this sample suggest your dating profile and conversation style could be better aligned — the coaching recommendations above will help bridge that gap.${insightSourceSummaryAddendum(source)}`,
+    sourceApp: source,
   };
 }
