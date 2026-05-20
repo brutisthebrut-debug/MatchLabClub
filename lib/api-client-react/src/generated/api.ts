@@ -42,6 +42,7 @@ import type {
   ClaimAnonymousResult,
   CoachFollowUpInput,
   CoachFollowUpStats,
+  CoachFollowUpTimeline,
   DatingProfile,
   DatingProfileInput,
   DatingProfileUpdate,
@@ -2894,6 +2895,83 @@ export function useGetCoachFollowUpStats<TData = Awaited<ReturnType<typeof getCo
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetCoachFollowUpStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetCoachFollowUpTimelineUrl = () => {
+
+
+
+
+  return `/api/coach/follow-ups/timeline`
+}
+
+/**
+ * @summary Get weekly send-through buckets for the current account
+ */
+export const getCoachFollowUpTimeline = async ( options?: RequestInit): Promise<CoachFollowUpTimeline> => {
+
+  return customFetch<CoachFollowUpTimeline>(getGetCoachFollowUpTimelineUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCoachFollowUpTimelineQueryKey = () => {
+    return [
+    `/api/coach/follow-ups/timeline`
+    ] as const;
+    }
+
+
+export const getGetCoachFollowUpTimelineQueryOptions = <TData = Awaited<ReturnType<typeof getCoachFollowUpTimeline>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCoachFollowUpTimeline>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCoachFollowUpTimelineQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCoachFollowUpTimeline>>> = ({ signal }) => getCoachFollowUpTimeline({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCoachFollowUpTimeline>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCoachFollowUpTimelineQueryResult = NonNullable<Awaited<ReturnType<typeof getCoachFollowUpTimeline>>>
+export type GetCoachFollowUpTimelineQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get weekly send-through buckets for the current account
+ */
+
+export function useGetCoachFollowUpTimeline<TData = Awaited<ReturnType<typeof getCoachFollowUpTimeline>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCoachFollowUpTimeline>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCoachFollowUpTimelineQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

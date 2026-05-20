@@ -4,6 +4,7 @@ import { db, coachFollowUpsTable } from "@workspace/db";
 import {
   RecordCoachFollowUpBody,
   RecordCoachFollowUpResponse,
+  GetCoachFollowUpTimelineResponse,
 } from "@workspace/api-zod";
 import {
   getOrCreateAnonClaimToken,
@@ -107,6 +108,90 @@ router.post("/coach/follow-ups", async (req, res): Promise<void> => {
 
   const stats = await loadStats(userId, anonToken ?? undefined);
   res.json(RecordCoachFollowUpResponse.parse(stats));
+});
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+function startOfIsoWeekUtc(d: Date): Date {
+  const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = date.getUTCDay();
+  const diff = (day + 6) % 7; // Monday-anchored
+  date.setUTCDate(date.getUTCDate() - diff);
+  return date;
+}
+
+async function loadTimeline(
+  userId: string | undefined,
+  anonToken: string | undefined,
+  weeks: number,
+) {
+  const now = new Date();
+  const currentWeekStart = startOfIsoWeekUtc(now);
+  const oldestStart = new Date(currentWeekStart.getTime() - (weeks - 1) * WEEK_MS);
+
+  const buckets: {
+    weekStart: string;
+    sentCount: number;
+    notSentCount: number;
+    total: number;
+    sendThroughRate: number | null;
+  }[] = [];
+  for (let i = 0; i < weeks; i++) {
+    const ws = new Date(oldestStart.getTime() + i * WEEK_MS);
+    buckets.push({
+      weekStart: ws.toISOString().slice(0, 10),
+      sentCount: 0,
+      notSentCount: 0,
+      total: 0,
+      sendThroughRate: null,
+    });
+  }
+
+  const where = scope(userId, anonToken);
+  if (!where) return { buckets };
+
+  const rows = await db
+    .select({
+      weekStart: sql<Date>`date_trunc('week', ${coachFollowUpsTable.createdAt})`,
+      answer: coachFollowUpsTable.answer,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(coachFollowUpsTable)
+    .where(
+      and(
+        where,
+        inArray(coachFollowUpsTable.answer, ["sent", "not_sent"]),
+        sql`${coachFollowUpsTable.createdAt} >= ${oldestStart.toISOString()}`,
+      ),
+    )
+    .groupBy(
+      sql`date_trunc('week', ${coachFollowUpsTable.createdAt})`,
+      coachFollowUpsTable.answer,
+    );
+
+  const byKey = new Map(buckets.map((b) => [b.weekStart, b]));
+  for (const row of rows) {
+    const wsDate = row.weekStart instanceof Date
+      ? row.weekStart
+      : new Date(row.weekStart);
+    const key = wsDate.toISOString().slice(0, 10);
+    const bucket = byKey.get(key);
+    if (!bucket) continue;
+    if (row.answer === "sent") bucket.sentCount += row.count;
+    else if (row.answer === "not_sent") bucket.notSentCount += row.count;
+  }
+  for (const b of buckets) {
+    b.total = b.sentCount + b.notSentCount;
+    b.sendThroughRate = b.total > 0 ? b.sentCount / b.total : null;
+  }
+  return { buckets };
+}
+
+router.get("/coach/follow-ups/timeline", async (req, res): Promise<void> => {
+  const userId = req.user?.id;
+  const anonToken = userId ? undefined : getAnonClaimToken(req);
+  const timeline = await loadTimeline(userId, anonToken, 8);
+  res.json(GetCoachFollowUpTimelineResponse.parse(timeline));
 });
 
 router.get("/coach/follow-ups/stats", async (req, res): Promise<void> => {

@@ -906,6 +906,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/CoachFollowUpStats"
 
+  /coach/follow-ups/timeline:
+    get:
+      operationId: getCoachFollowUpTimeline
+      tags: [messages]
+      summary: Get weekly send-through buckets for the current account
+      responses:
+        "200":
+          description: Weekly send-through buckets (most recent 8 weeks, oldest first)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoachFollowUpTimeline"
+
   /insights:
     get:
       operationId: listInsights
@@ -1730,6 +1743,33 @@ components:
         lastAnswer:
           type: ["string", "null"]
           enum: [sent, not_sent, null]
+
+    CoachFollowUpTimelineBucket:
+      type: object
+      required: [weekStart, sentCount, notSentCount, total, sendThroughRate]
+      properties:
+        weekStart:
+          type: string
+          description: ISO date for the start of the week (UTC, Monday)
+        sentCount:
+          type: integer
+        notSentCount:
+          type: integer
+        total:
+          type: integer
+          description: sentCount + notSentCount for this week
+        sendThroughRate:
+          type: ["number", "null"]
+          description: sentCount / total, or null when total is 0
+
+    CoachFollowUpTimeline:
+      type: object
+      required: [buckets]
+      properties:
+        buckets:
+          type: array
+          items:
+            $ref: "#/components/schemas/CoachFollowUpTimelineBucket"
 
     SuggestedReply:
       type: object

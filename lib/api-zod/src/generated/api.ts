@@ -1096,6 +1096,20 @@ export const GetCoachFollowUpStatsResponse = zod.object({
 
 
 /**
+ * @summary Get weekly send-through buckets for the current account
+ */
+export const GetCoachFollowUpTimelineResponse = zod.object({
+  "buckets": zod.array(zod.object({
+  "weekStart": zod.string().describe('ISO date for the start of the week (UTC, Monday)'),
+  "sentCount": zod.number(),
+  "notSentCount": zod.number(),
+  "total": zod.number().describe('sentCount + notSentCount for this week'),
+  "sendThroughRate": zod.number().nullable().describe('sentCount \/ total, or null when total is 0')
+}))
+})
+
+
+/**
  * @summary List email insight imports
  */
 export const ListInsightsResponseItem = zod.object({

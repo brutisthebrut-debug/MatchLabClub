@@ -492,6 +492,24 @@ export interface CoachFollowUpStats {
   lastAnswer: CoachFollowUpStatsLastAnswer;
 }
 
+export interface CoachFollowUpTimelineBucket {
+  /** ISO date for the start of the week (UTC, Monday) */
+  weekStart: string;
+  sentCount: number;
+  notSentCount: number;
+  /** sentCount + notSentCount for this week */
+  total: number;
+  /**
+     * sentCount / total, or null when total is 0
+     * @nullable
+     */
+  sendThroughRate: number | null;
+}
+
+export interface CoachFollowUpTimeline {
+  buckets: CoachFollowUpTimelineBucket[];
+}
+
 export interface EmailInsightInput {
   pastedContent: string;
   sourceLabel: string;

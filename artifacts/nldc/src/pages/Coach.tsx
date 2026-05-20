@@ -11,7 +11,9 @@ import {
   useListMessageCoachingSessions, useCreateMessageCoachingSession,
   useCoachMessage, getListMessageCoachingSessionsQueryKey,
   useGetCoachFollowUpStats, getGetCoachFollowUpStatsQueryKey,
+  useGetCoachFollowUpTimeline, getGetCoachFollowUpTimelineQueryKey,
 } from "@workspace/api-client-react";
+import { BarChart, Bar, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
@@ -102,6 +104,9 @@ export default function Coach() {
   const { data: sessions, isLoading: sessionsLoading } = useListMessageCoachingSessions();
   const { data: followUpStats } = useGetCoachFollowUpStats({
     query: { enabled: isAuthenticated, queryKey: getGetCoachFollowUpStatsQueryKey() },
+  });
+  const { data: followUpTimeline } = useGetCoachFollowUpTimeline({
+    query: { enabled: isAuthenticated, queryKey: getGetCoachFollowUpTimelineQueryKey() },
   });
   const createSession = useCreateMessageCoachingSession();
   const coachMessage = useCoachMessage();
@@ -270,6 +275,69 @@ export default function Coach() {
                   </p>
                 ) : (
                   <>
+                    {(() => {
+                      const buckets = followUpTimeline?.buckets ?? [];
+                      const weeksWithData = buckets.filter((b) => b.total > 0).length;
+                      const chartData = buckets.map((b) => ({
+                        weekStart: b.weekStart,
+                        label: new Date(b.weekStart).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+                        rate: b.sendThroughRate == null ? 0 : Math.round(b.sendThroughRate * 100),
+                        hasData: b.total > 0,
+                        sent: b.sentCount,
+                        notSent: b.notSentCount,
+                      }));
+                      if (weeksWithData < 2) {
+                        return (
+                          <div
+                            className="mb-3 rounded-2xl border border-dashed border-white/10 bg-[hsl(232_28%_14%/0.5)] px-3 py-3 text-center"
+                            data-testid="timeline-empty-state"
+                          >
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Weekly trend</p>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                              Keep answering prompts — we'll plot your weekly send-through rate once there are at least two weeks of data.
+                            </p>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="mb-3" data-testid="timeline-chart">
+                          <div className="flex items-baseline justify-between mb-1">
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Weekly send-through</p>
+                            <p className="text-[10px] text-muted-foreground">last {buckets.length}w</p>
+                          </div>
+                          <div className="h-24">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={chartData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+                                <XAxis
+                                  dataKey="label"
+                                  tick={{ fontSize: 9, fill: "hsl(0 0% 60%)" }}
+                                  axisLine={false}
+                                  tickLine={false}
+                                  interval="preserveStartEnd"
+                                />
+                                <YAxis hide domain={[0, 100]} />
+                                <Tooltip
+                                  cursor={{ fill: "hsl(232 28% 22% / 0.5)" }}
+                                  contentStyle={{
+                                    background: "hsl(232 28% 12%)",
+                                    border: "1px solid hsl(0 0% 100% / 0.08)",
+                                    borderRadius: "0.5rem",
+                                    fontSize: "11px",
+                                  }}
+                                  labelStyle={{ color: "hsl(0 0% 80%)" }}
+                                  formatter={(value: number, _name, item) => {
+                                    const p = item.payload as { hasData: boolean; sent: number; notSent: number };
+                                    if (!p.hasData) return ["No prompts", "Rate"];
+                                    return [`${value}% (${p.sent}/${p.sent + p.notSent})`, "Sent"];
+                                  }}
+                                />
+                                <Bar dataKey="rate" fill="hsl(142 55% 60%)" radius={[3, 3, 0, 0]} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                      );
+                    })()}
                     <div className="grid grid-cols-3 gap-2 mb-3">
                       <div className="text-center">
                         <p className="text-xl font-bold text-foreground" data-testid="stats-total-prompts">{followUpStats.totalPrompts}</p>

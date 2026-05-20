@@ -45,6 +45,8 @@ export * from './coachFollowUpInput';
 export * from './coachFollowUpInputAnswer';
 export * from './coachFollowUpStats';
 export * from './coachFollowUpStatsLastAnswer';
+export * from './coachFollowUpTimeline';
+export * from './coachFollowUpTimelineBucket';
 export * from './communicationPattern';
 export * from './datingProfile';
 export * from './datingProfileInput';
