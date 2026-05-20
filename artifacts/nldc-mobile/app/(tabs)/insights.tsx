@@ -1,7 +1,14 @@
 import { Feather } from "@expo/vector-icons";
-import { useAnalyzeInsight } from "@workspace/api-client-react";
+import {
+  useAnalyzeInsight,
+  useListInsights,
+  getListInsightsQueryKey,
+} from "@workspace/api-client-react";
+import type { EmailInsight } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Platform,
   Pressable,
   ScrollView,
@@ -16,6 +23,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { useColors } from "@/hooks/useColors";
+import { useAuth } from "@/lib/auth";
 import { useCreateInsightWithAnonClaim } from "@/lib/useCreateAnonymousAware";
 
 const SOURCE_APPS = ["Hinge", "Bumble", "Tinder", "iMessage", "Email"] as const;
@@ -91,9 +99,22 @@ function attachmentColor(style: string, colors: ReturnType<typeof useColors>) {
   return colors.rose;
 }
 
+function formatRelativeDate(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days} days ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks === 1) return "1 week ago";
+  if (weeks < 5) return `${weeks} weeks ago`;
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export default function InsightsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { isAuthenticated } = useAuth();
 
   const [sourceLabel, setSourceLabel] = useState("");
   const [sourceApp, setSourceApp] = useState<InsightSource | "">("");
@@ -102,9 +123,16 @@ export default function InsightsScreen() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [expandedPattern, setExpandedPattern] = useState<number | null>(null);
+  const [reanalyzingId, setReanalyzingId] = useState<number | null>(null);
+
+  const queryClient = useQueryClient();
+  const listInsightsKey = getListInsightsQueryKey();
 
   const createInsight = useCreateInsightWithAnonClaim();
   const analyzeInsight = useAnalyzeInsight();
+  const { data: insightHistory, isLoading: historyLoading } = useListInsights({
+    query: { enabled: isAuthenticated, queryKey: listInsightsKey },
+  });
 
   const isLoading = createInsight.isPending || analyzeInsight.isPending;
 
@@ -126,8 +154,23 @@ export default function InsightsScreen() {
       });
       const result = await analyzeInsight.mutateAsync({ id: insight.id });
       setAnalysis(result as Analysis);
+      queryClient.invalidateQueries({ queryKey: listInsightsKey });
     } catch {
       setAnalysis(DEMO_ANALYSIS);
+    }
+  }
+
+  async function handleReanalyze(insight: EmailInsight) {
+    if (reanalyzingId !== null) return;
+    setReanalyzingId(insight.id);
+    setErrorMsg(null);
+    try {
+      const result = await analyzeInsight.mutateAsync({ id: insight.id });
+      setAnalysis(result as Analysis);
+    } catch {
+      setErrorMsg("Couldn't load this analysis. Please try again.");
+    } finally {
+      setReanalyzingId(null);
     }
   }
 
@@ -301,6 +344,97 @@ export default function InsightsScreen() {
           onPress={handleAnalyze}
           disabled={isLoading || !content.trim() || !consent}
         />
+
+        {/* Past analyses history — authenticated users only */}
+        {isAuthenticated && (
+          <View style={styles.historySection}>
+            <View style={styles.historySectionHeader}>
+              <Feather name="clock" size={14} color={colors.mutedForeground} />
+              <Text style={[styles.historySectionTitle, { color: colors.mutedForeground }]}>
+                Past analyses
+              </Text>
+            </View>
+
+            {historyLoading ? (
+              <View style={[styles.historyEmpty, { borderColor: colors.cardBorder }]}>
+                <ActivityIndicator size="small" color={colors.violet} />
+              </View>
+            ) : insightHistory && insightHistory.length > 0 ? (
+              insightHistory
+                .slice()
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+                )
+                .map((item) => {
+                  const isReanalyzing = reanalyzingId === item.id;
+                  return (
+                    <Pressable
+                      key={item.id}
+                      onPress={() => handleReanalyze(item)}
+                      disabled={reanalyzingId !== null}
+                      testID={`history-item-${item.id}`}
+                      style={({ pressed }) => [
+                        styles.historyItem,
+                        {
+                          backgroundColor: colors.card,
+                          borderColor: colors.cardBorder,
+                          opacity: pressed || (reanalyzingId !== null && !isReanalyzing) ? 0.6 : 1,
+                        },
+                      ]}
+                    >
+                      <View style={styles.historyItemMain}>
+                        <View style={styles.historyItemTop}>
+                          <Text
+                            style={[styles.historyItemLabel, { color: colors.foreground }]}
+                            numberOfLines={1}
+                          >
+                            {item.sourceLabel}
+                          </Text>
+                          {isReanalyzing ? (
+                            <ActivityIndicator size="small" color={colors.violet} />
+                          ) : (
+                            <Feather
+                              name="refresh-cw"
+                              size={13}
+                              color={colors.mutedForeground}
+                            />
+                          )}
+                        </View>
+                        <View style={styles.historyItemMeta}>
+                          {item.sourceApp ? (
+                            <View
+                              style={[
+                                styles.historyItemPlatformBadge,
+                                { backgroundColor: `${colors.violet}18`, borderColor: `${colors.violet}30` },
+                              ]}
+                            >
+                              <Text
+                                style={[styles.historyItemPlatformText, { color: colors.violet }]}
+                              >
+                                {item.sourceApp}
+                              </Text>
+                            </View>
+                          ) : null}
+                          <Text
+                            style={[styles.historyItemDate, { color: colors.mutedForeground }]}
+                          >
+                            {formatRelativeDate(item.createdAt)}
+                          </Text>
+                        </View>
+                      </View>
+                    </Pressable>
+                  );
+                })
+            ) : (
+              <View style={[styles.historyEmpty, { borderColor: colors.cardBorder }]}>
+                <Text style={[styles.historyEmptyText, { color: colors.mutedForeground }]}>
+                  No past analyses yet — run your first one above.
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Results */}
         <View style={styles.resultsSection}>
@@ -674,5 +808,75 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     lineHeight: 20,
+  },
+  historySection: {
+    gap: 10,
+    marginTop: 4,
+  },
+  historySectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  historySectionTitle: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  historyItem: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  historyItemMain: {
+    gap: 6,
+  },
+  historyItemTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  historyItemLabel: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+    lineHeight: 19,
+  },
+  historyItemMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  historyItemPlatformBadge: {
+    borderWidth: 1,
+    borderRadius: 100,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  historyItemPlatformText: {
+    fontSize: 10,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  historyItemDate: {
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  historyEmpty: {
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    alignItems: "center",
+  },
+  historyEmptyText: {
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: "center",
   },
 });
