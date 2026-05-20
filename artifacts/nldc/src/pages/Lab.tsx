@@ -14,6 +14,7 @@ import {
   Loader2, Sparkles, Copy, Check, AlertTriangle,
   Lightbulb, Eye, TrendingUp, FlaskConical, ArrowRight
 } from "lucide-react";
+import { useMeta } from "@/hooks/useMeta";
 
 type CoachingResult = {
   analysis: string;
@@ -67,6 +68,7 @@ function CopyButton({ text }: { text: string }) {
 const GOALS = ["Get a date", "Keep the energy going", "Re-engage after a pause", "Recover from awkward"];
 
 export default function Lab() {
+  useMeta("Chemistry Lab", "Paste any dating app message or conversation and get 5 styled reply options — Warm, Playful, Direct, Date Ask, or Graceful Exit — with tone analysis and coaching.");
   const [message, setMessage] = useState("");
   const [context, setContext] = useState("");
   const [matchName, setMatchName] = useState("");

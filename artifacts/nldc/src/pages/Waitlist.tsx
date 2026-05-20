@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,7 @@ const INTERESTS = ["Profile audit", "Message coaching", "Full dating reset", "Mo
 type WaitlistEntry = { id: number; email: string; firstName: string; position: number; createdAt: string };
 
 export default function Waitlist() {
+  useMeta("Podcast Listener Waitlist — NLDC Early Access", "Join the NLDC waitlist. Early access, 40% off coaching, and priority support — exclusive to podcast listeners.");
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [source, setSource] = useState("");

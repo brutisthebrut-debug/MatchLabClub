@@ -16,6 +16,13 @@ import Diagnosis from "@/pages/Diagnosis";
 import Lab from "@/pages/Lab";
 import SignalCheck from "@/pages/SignalCheck";
 import Roadmap from "@/pages/Roadmap";
+import Privacy from "@/pages/Privacy";
+import Terms from "@/pages/Terms";
+import Checkout from "@/pages/Checkout";
+import CheckoutSuccess from "@/pages/CheckoutSuccess";
+import CheckoutCancel from "@/pages/CheckoutCancel";
+import Founder from "@/pages/Founder";
+import ShebangsPartner from "@/pages/ShebangsPartner";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +42,15 @@ function Router() {
       <Route path="/lab" component={Lab} />
       <Route path="/signal-check" component={SignalCheck} />
       <Route path="/roadmap" component={Roadmap} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/checkout/success" component={CheckoutSuccess} />
+      <Route path="/checkout/cancel" component={CheckoutCancel} />
+      <Route path="/checkout/:product">
+        {(params) => <Checkout product={params?.product ?? "dating-reset"} />}
+      </Route>
+      <Route path="/founder" component={Founder} />
+      <Route path="/partners/shebangs" component={ShebangsPartner} />
       <Route component={NotFound} />
     </Switch>
   );

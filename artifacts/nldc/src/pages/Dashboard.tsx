@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
@@ -85,10 +86,11 @@ const QUICK_ACTIONS = [
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] },
+  transition: { duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
 });
 
 export default function Dashboard() {
+  useMeta("Your Dashboard", "Your Signal Score history, recent audits, coaching sessions, and quick actions — all in one place.");
   const { data: audits, isLoading: auditsLoading } = useListAudits();
   const { data: summary, isLoading: summaryLoading } = useGetAuditSummary({
     query: { queryKey: getGetAuditSummaryQueryKey() }

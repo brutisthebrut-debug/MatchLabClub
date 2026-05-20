@@ -3,14 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { ArrowRight, CheckCircle, Shield, Sparkles, Headphones, Star, TrendingUp, Play, Quote, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
+import { useMeta } from "@/hooks/useMeta";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 28 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] },
+  transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
 });
 
 export default function Landing() {
+  useMeta(
+    "Free Dating Profile Audit & Message Coaching",
+    "Find out what your dating profile is really saying — and get it rewritten. Free Signal Check, full Profile Signal Audit, Chemistry Lab message coaching. Takes 3 minutes."
+  );
   return (
     <AppLayout>
       {/* ── Podcast Banner ── */}

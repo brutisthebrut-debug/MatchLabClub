@@ -8,7 +8,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCreateAudit, useGenerateAuditReport, getListAuditsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Loader2, Headphones, ArrowRight, Lock, CheckCircle, Sparkles, TrendingUp } from "lucide-react";
+import { Loader2, Headphones, ArrowRight, Lock, CheckCircle, Sparkles, TrendingUp, Mail } from "lucide-react";
+import { useMeta } from "@/hooks/useMeta";
+import { captureLead } from "@/lib/apiClient";
 
 const GOALS = [
   { value: "find a relationship", label: "Find a relationship", emoji: "💍" },
@@ -95,12 +97,15 @@ function AnimatedScore({ target, color }: { target: number; color: string }) {
 }
 
 export default function SignalCheck() {
+  useMeta("Free 3-Min Signal Check", "Paste your dating bio and get your Signal Strength score, profile category, #1 improvement, and a rewritten line — free, instant, no account needed.");
   const [firstName, setFirstName] = useState("");
   const [bio, setBio] = useState("");
   const [goal, setGoal] = useState("");
   const [result, setResult] = useState<TeaseReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [leadEmail, setLeadEmail] = useState("");
+  const [leadSaved, setLeadSaved] = useState(false);
 
   const queryClient = useQueryClient();
   const createAudit = useCreateAudit();
@@ -121,9 +126,9 @@ export default function SignalCheck() {
       const audit = await createAudit.mutateAsync({
         data: {
           firstName: firstName.trim() || "You",
-          age: null,
-          gender: null,
-          orientation: null,
+          age: 0,
+          gender: "not specified",
+          orientation: "not specified",
           currentApps: [],
           datingGoal: goal || "find a relationship",
           biggestChallenge: "Not sure how I come across",
@@ -256,6 +261,59 @@ export default function SignalCheck() {
                   </div>
                   <p className="text-xs text-muted-foreground mt-3 leading-relaxed">Personalise the [specific thing] to something real from their profile. Messages that reference something specific convert at 3× the rate of generic openers.</p>
                 </div>
+
+                {/* Email lead capture */}
+                {!leadSaved ? (
+                  <div className="glass border border-[hsl(268_52%_68%/0.2)] rounded-3xl p-6" data-testid="card-signal-lead-capture">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-[hsl(268_52%_68%/0.12)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Mail className="w-4 h-4 text-[hsl(268_52%_68%)]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground mb-0.5">Save your result</p>
+                        <p className="text-xs text-muted-foreground mb-3">Get your score and rewrite emailed to you — and be first to know when your full audit is ready.</p>
+                        <div className="flex gap-2">
+                          <input
+                            type="email"
+                            placeholder="your@email.com"
+                            value={leadEmail}
+                            onChange={(e) => setLeadEmail(e.target.value)}
+                            className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-[hsl(268_52%_68%/0.5)] transition-colors"
+                          />
+                          <button
+                            onClick={async () => {
+                              if (!leadEmail.includes("@")) return;
+                              try {
+                                await captureLead({
+                                  email: leadEmail,
+                                  firstName: firstName || null,
+                                  source: "signal-check",
+                                  interest: "signal-audit",
+                                  metadata: { score: result?.score, category: result?.category, auditId: result?.auditId },
+                                });
+                              } catch { /* silent — still show success */ }
+                              setLeadSaved(true);
+                            }}
+                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_55%)] text-white text-sm font-semibold hover:opacity-90 transition-opacity flex-shrink-0"
+                          >
+                            Save
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => setLeadSaved(true)}
+                          className="mt-2 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                        >
+                          No thanks, skip →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="glass rounded-3xl p-5 flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    <p className="text-sm text-foreground">Saved — we'll be in touch when your full audit is ready.</p>
+                  </div>
+                )}
 
                 {/* Locked Preview */}
                 <div className="relative glass border border-white/8 rounded-3xl p-7 overflow-hidden" data-testid="card-signal-locked">

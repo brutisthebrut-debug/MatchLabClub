@@ -38,10 +38,10 @@ export function Footer() {
           <div>
             <h3 className="font-sans font-semibold text-sm text-foreground/70 uppercase tracking-widest mb-5">Trust</h3>
             <ul className="space-y-3 text-sm">
-              <li><Link href="/integrations" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Promise</Link></li>
+              <li><Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
               <li><Link href="/waitlist" className="text-muted-foreground hover:text-foreground transition-colors">Podcast Listeners</Link></li>
-              <li><Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
-              <li><Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">Contact Us</Link></li>
+              <li><Link href="/partners/shebangs" className="text-muted-foreground hover:text-foreground transition-colors">Partner: Shebangs.com</Link></li>
             </ul>
           </div>
         </div>

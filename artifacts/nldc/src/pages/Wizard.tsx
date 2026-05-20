@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -60,6 +61,7 @@ const initial: FormData = {
 };
 
 export default function Wizard() {
+  useMeta("Start Your Profile Signal Audit", "Begin your free Profile Signal Audit. Takes 3 minutes. Get your Signal Score (0–100), bio rewrite, Signal Spectrum, and 7-day action plan.");
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormData>(initial);
   const [, setLocation] = useLocation();
@@ -372,18 +374,18 @@ export default function Wizard() {
                       You're ready, {form.firstName || "friend"}.
                     </h2>
                     <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-                      We have everything we need to build your personalized Dating Readiness Report. This takes about 20 seconds.
+                      We have everything we need to build your personalized Profile Signal Audit. This takes about 20 seconds.
                     </p>
                   </div>
                   <div className="bg-secondary/30 rounded-2xl p-6 text-left space-y-3 text-sm">
                     <p className="font-semibold text-foreground mb-3">Your report will include:</p>
                     {[
-                      "Dating Readiness Score (0-100)",
+                      "Signal Score (0-100)",
                       "Full bio audit — honest, specific, no fluff",
                       "AI-rewritten bio and prompts",
                       "Photo guidance checklist",
                       "Top strengths and risks",
-                      "Your personalized 5-step action plan",
+                      "Your 7-day action plan",
                     ].map((item, i) => (
                       <div key={i} className="flex items-center gap-3">
                         <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />

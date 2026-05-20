@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
@@ -109,10 +110,11 @@ const FAQS = [
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] },
+  transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
 });
 
 export default function Pricing() {
+  useMeta("Pricing — Free Audit, Dating Reset & Monthly Wingman", "Three ways to get your dating profile working. Free Signal Audit, The Dating Reset ($97 one-time), or Monthly Wingman coaching ($197/mo).");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (

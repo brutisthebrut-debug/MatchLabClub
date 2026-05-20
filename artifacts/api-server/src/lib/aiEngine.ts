@@ -243,6 +243,16 @@ export function generateMessageCoaching(params: {
         rationale:
           "Validates their contribution while opening a deeper thread. Use this if the conversation has been surface-level and you want to go somewhere real.",
       },
+      {
+        style: "Date Ask",
+        text: `I'd genuinely love to meet you. Want to grab coffee or a drink this week? I'll pick somewhere good.`,
+        rationale: `After solid rapport, asking directly converts far better than hinting. Moving to real life is the whole point — the cost of asking is almost always lower than people think.`,
+      },
+      {
+        style: "Graceful Exit",
+        text: `It's been genuinely nice chatting. I think we might be in different places right now, but I'm really glad we connected.`,
+        rationale: `Sometimes the kindest move is a clear, warm close. This ends things with dignity for both people — no ambiguity, no hard feelings, no bridge burned.`,
+      },
     ],
     tone:
       params.conversationContext.toLowerCase().includes("haha") ||
@@ -294,7 +304,7 @@ export function generateEmailInsightAnalysis(params: {
   ];
 
   const styleIndex = hasEmotional
-    ? hasLongMessages
+    ? isLongMessages
       ? 1
       : 3
     : hasHumor

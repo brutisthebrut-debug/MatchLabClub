@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,6 +73,7 @@ const STYLE_BG: Record<string, string> = {
 };
 
 export default function Coach() {
+  useMeta("Message Coach", "Paste any dating app conversation and get three personalised reply options — Playful, Direct, and Warm — with coaching rationale for each.");
   const [matchName, setMatchName] = useState("");
   const [context, setContext] = useState("");
   const [lastMessage, setLastMessage] = useState("");

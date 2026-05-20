@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,7 @@ const DEMO_INSIGHT = {
 };
 
 export default function Insights() {
+  useMeta("Communication Pattern Insights", "Paste your message history and discover your communication patterns, attachment style, and what to change to get better results.");
   const [sourceLabel, setSourceLabel] = useState("");
   const [content, setContent] = useState("");
   const [consent, setConsent] = useState(false);

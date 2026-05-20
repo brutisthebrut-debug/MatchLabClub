@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -98,6 +99,7 @@ const DEMO_REPORT: ReportData = {
 const STEP_LABELS = ["Your goal", "Your profile", "Next steps"];
 
 export default function Diagnosis() {
+  useMeta("Dating Diagnosis", "Find out your dating profile archetype and get targeted advice based on your Signal Score and communication patterns.");
   const [step, setStep] = useState(0);
   const [goal, setGoal] = useState("");
   const [bio, setBio] = useState("");
@@ -131,9 +133,9 @@ export default function Diagnosis() {
       const audit = await createAudit.mutateAsync({
         data: {
           firstName: "You",
-          age: null,
-          gender: null,
-          orientation: null,
+          age: 0,
+          gender: "not specified",
+          orientation: "not specified",
           currentApps: [],
           datingGoal: goal || "find a relationship",
           biggestChallenge: "Not sure how I come across",
