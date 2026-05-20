@@ -18,10 +18,6 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "test-claim-api"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "test-claim-client"
 
 [[workflows.workflow.tasks]]
@@ -32,16 +28,9 @@ args = "test-mobile-auth"
 task = "workflow.run"
 args = "e2e-founder-ocr-trend"
 
-[[workflows.workflow]]
-name = "test-claim-api"
-author = "agent"
-
 [[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/api-server run test"
-
-[workflows.workflow.metadata]
-isValidation = true
+task = "workflow.run"
+args = "api-tests"
 
 [[workflows.workflow]]
 name = "test-claim-client"
@@ -72,6 +61,17 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd e2e && DATABASE_URL=\"$DATABASE_URL\" node_modules/.bin/playwright test --project=chromium"
+
+[workflows.workflow.metadata]
+isValidation = true
+
+[[workflows.workflow]]
+name = "api-tests"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm --filter @workspace/api-server run test"
 
 [workflows.workflow.metadata]
 isValidation = true
