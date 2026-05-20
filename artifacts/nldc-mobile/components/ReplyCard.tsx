@@ -1,9 +1,7 @@
-import { Feather } from "@expo/vector-icons";
-import * as Clipboard from "expo-clipboard";
-import * as Haptics from "expo-haptics";
-import React, { useState } from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
 
+import { CopyButton } from "@/components/CopyButton";
 import { useColors } from "@/hooks/useColors";
 
 interface ReplyCardProps {
@@ -16,18 +14,7 @@ interface ReplyCardProps {
 
 export function ReplyCard({ style, text, rationale, accent, onCopy }: ReplyCardProps) {
   const colors = useColors();
-  const [copied, setCopied] = useState(false);
   const tint = accent ?? colors.violet;
-
-  async function copy() {
-    await Clipboard.setStringAsync(text);
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-    onCopy?.();
-  }
 
   return (
     <View
@@ -41,32 +28,7 @@ export function ReplyCard({ style, text, rationale, accent, onCopy }: ReplyCardP
           <View style={[styles.dot, { backgroundColor: tint }]} />
           <Text style={[styles.styleText, { color: tint }]}>{style}</Text>
         </View>
-        <Pressable
-          onPress={copy}
-          style={({ pressed }) => [
-            styles.copyBtn,
-            {
-              backgroundColor: copied ? `${colors.success}22` : colors.secondary,
-              borderColor: copied ? colors.success : colors.border,
-              opacity: pressed ? 0.7 : 1,
-            },
-          ]}
-          hitSlop={8}
-        >
-          <Feather
-            name={copied ? "check" : "copy"}
-            size={14}
-            color={copied ? colors.success : colors.foreground}
-          />
-          <Text
-            style={[
-              styles.copyText,
-              { color: copied ? colors.success : colors.foreground },
-            ]}
-          >
-            {copied ? "Copied" : "Copy"}
-          </Text>
-        </Pressable>
+        <CopyButton text={text} onCopy={onCopy} variant="outlined" />
       </View>
       <Text style={[styles.text, { color: colors.foreground }]}>{text}</Text>
       {rationale ? (
@@ -105,16 +67,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
     textTransform: "uppercase",
   },
-  copyBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  copyText: { fontSize: 12, fontFamily: "PlusJakartaSans_600SemiBold" },
   text: {
     fontSize: 15,
     fontFamily: "PlusJakartaSans_500Medium",

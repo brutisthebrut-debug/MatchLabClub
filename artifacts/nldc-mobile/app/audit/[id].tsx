@@ -10,7 +10,6 @@ import {
   useListAuditReportVersions,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import * as Clipboard from "expo-clipboard";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -26,6 +25,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { CopyButton } from "@/components/CopyButton";
 import { ScoreRing } from "@/components/ScoreRing";
 import { useColors } from "@/hooks/useColors";
 
@@ -1243,7 +1243,7 @@ export default function AuditDetailScreen() {
               iconBg={`${colors.violet}22`}
               iconColor={colors.violet}
               icon="feather"
-              headerRight={<PrevCopyButton text={report.rewrittenBio} />}
+              headerRight={<CopyButton text={report.rewrittenBio} />}
             >
               <Text style={[styles.body, { color: colors.foreground }]} testID="text-rewritten-bio">
                 {report.rewrittenBio}
@@ -1270,7 +1270,7 @@ export default function AuditDetailScreen() {
                       <Text style={[styles.prevPromptRewritten, { color: colors.foreground, flex: 1 }]}>
                         {p.rewritten}
                       </Text>
-                      <PrevCopyButton text={p.rewritten} />
+                      <CopyButton text={p.rewritten} />
                     </View>
                     {p.tip ? (
                       <Text style={[styles.body, { color: colors.mutedForeground, fontSize: 12 }]}>
@@ -1306,7 +1306,7 @@ export default function AuditDetailScreen() {
                         {item.description}
                       </Text>
                     </View>
-                    <PrevCopyButton text={`${item.title}: ${item.description}`} />
+                    <CopyButton text={`${item.title}: ${item.description}`} />
                   </View>
                 ))}
               </Section>
@@ -1721,37 +1721,6 @@ function CompareDiffItem({ item }: { item: DiffItem }) {
   );
 }
 
-function PrevCopyButton({ text }: { text: string }) {
-  const colors = useColors();
-  const [copied, setCopied] = useState(false);
-  const handleCopy = async () => {
-    await Clipboard.setStringAsync(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return (
-    <Pressable
-      onPress={handleCopy}
-      hitSlop={8}
-      accessibilityLabel="Copy to clipboard"
-      style={({ pressed }) => [styles.prevCopyBtn, { opacity: pressed ? 0.6 : 1 }]}
-    >
-      <Feather
-        name={copied ? "check" : "copy"}
-        size={13}
-        color={copied ? colors.success : colors.mutedForeground}
-      />
-      <Text
-        style={[
-          styles.prevCopyText,
-          { color: copied ? colors.success : colors.mutedForeground },
-        ]}
-      >
-        {copied ? "Copied" : "Copy"}
-      </Text>
-    </Pressable>
-  );
-}
 
 function PreviousReportContent({ report: pr }: { report: ReportShape }) {
   const colors = useColors();
@@ -1810,7 +1779,7 @@ function PreviousReportContent({ report: pr }: { report: ReportShape }) {
         iconBg={`${colors.violet}22`}
         iconColor={colors.violet}
         icon="feather"
-        headerRight={<PrevCopyButton text={pr.rewrittenBio} />}
+        headerRight={<CopyButton text={pr.rewrittenBio} />}
       >
         <Text
           style={[styles.body, { color: colors.foreground }]}
@@ -1847,7 +1816,7 @@ function PreviousReportContent({ report: pr }: { report: ReportShape }) {
                 >
                   {p.rewritten}
                 </Text>
-                <PrevCopyButton text={p.rewritten} />
+                <CopyButton text={p.rewritten} />
               </View>
             </View>
           ))}
@@ -1890,7 +1859,7 @@ function PreviousReportContent({ report: pr }: { report: ReportShape }) {
                   {item.description}
                 </Text>
               </View>
-              <PrevCopyButton text={`${item.title}: ${item.description}`} />
+              <CopyButton text={`${item.title}: ${item.description}`} />
             </View>
           ))}
         </Section>
@@ -2290,17 +2259,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "PlusJakartaSans_600SemiBold",
     lineHeight: 20,
-  },
-  prevCopyBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingVertical: 2,
-    paddingHorizontal: 4,
-  },
-  prevCopyText: {
-    fontSize: 12,
-    fontFamily: "PlusJakartaSans_500Medium",
   },
   prevActionItem: {
     flexDirection: "row",
