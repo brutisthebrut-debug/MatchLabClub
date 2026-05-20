@@ -1,5 +1,5 @@
-import { Router, type IRouter } from "express";
-import { and, eq, isNull, type SQL } from "drizzle-orm";
+import { Router, type IRouter, type Request } from "express";
+import { and, eq, isNull, sql, type SQL } from "drizzle-orm";
 import { db, profilesTable } from "@workspace/db";
 import {
   CreateProfileBody,
@@ -10,19 +10,27 @@ import {
   RewriteProfileBioResponse,
   DeleteProfileResponse,
 } from "@workspace/api-zod";
-import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
+import { getOrCreateAnonClaimToken, getAnonClaimToken } from "../lib/anonClaimToken";
 
 const router: IRouter = Router();
 
-function userScope(userId: string | undefined): SQL {
-  return userId ? eq(profilesTable.userId, userId) : isNull(profilesTable.userId);
+function userScope(req: Request): SQL {
+  if (req.user?.id) return eq(profilesTable.userId, req.user.id);
+  const anonToken = getAnonClaimToken(req);
+  if (anonToken) {
+    return and(
+      isNull(profilesTable.userId),
+      eq(profilesTable.anonymousClaimToken, anonToken),
+    ) as SQL;
+  }
+  return sql`false`;
 }
 
 router.get("/profiles", async (req, res): Promise<void> => {
   const profiles = await db
     .select()
     .from(profilesTable)
-    .where(userScope(req.user?.id))
+    .where(userScope(req))
     .orderBy(profilesTable.createdAt);
   res.json(ListProfilesResponse.parse(profiles.map((p) => ({
     ...p,
@@ -62,7 +70,7 @@ router.get("/profiles/:id", async (req, res): Promise<void> => {
   const [profile] = await db
     .select()
     .from(profilesTable)
-    .where(and(eq(profilesTable.id, id), userScope(req.user?.id)));
+    .where(and(eq(profilesTable.id, id), userScope(req)));
   if (!profile) {
     res.status(404).json({ error: "Profile not found" });
     return;
@@ -91,7 +99,7 @@ router.patch("/profiles/:id", async (req, res): Promise<void> => {
   const [profile] = await db
     .update(profilesTable)
     .set(parsed.data)
-    .where(and(eq(profilesTable.id, id), userScope(req.user?.id)))
+    .where(and(eq(profilesTable.id, id), userScope(req)))
     .returning();
 
   if (!profile) {
@@ -137,7 +145,7 @@ router.post("/profiles/:id/rewrite", async (req, res): Promise<void> => {
   const [profile] = await db
     .select()
     .from(profilesTable)
-    .where(and(eq(profilesTable.id, id), userScope(req.user?.id)));
+    .where(and(eq(profilesTable.id, id), userScope(req)));
   if (!profile) {
     res.status(404).json({ error: "Profile not found" });
     return;

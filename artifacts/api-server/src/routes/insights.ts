@@ -1,5 +1,5 @@
-import { Router, type IRouter } from "express";
-import { and, eq, isNull, type SQL } from "drizzle-orm";
+import { Router, type IRouter, type Request } from "express";
+import { and, eq, isNull, sql, type SQL } from "drizzle-orm";
 import { db, emailInsightsTable } from "@workspace/db";
 import {
   CreateInsightBody,
@@ -8,19 +8,27 @@ import {
   GetInsightsRollupResponse,
 } from "@workspace/api-zod";
 import { generateEmailInsightAnalysis } from "../lib/aiEngine";
-import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
+import { getOrCreateAnonClaimToken, getAnonClaimToken } from "../lib/anonClaimToken";
 
 const router: IRouter = Router();
 
-function userScope(userId: string | undefined): SQL {
-  return userId ? eq(emailInsightsTable.userId, userId) : isNull(emailInsightsTable.userId);
+function userScope(req: Request): SQL {
+  if (req.user?.id) return eq(emailInsightsTable.userId, req.user.id);
+  const anonToken = getAnonClaimToken(req);
+  if (anonToken) {
+    return and(
+      isNull(emailInsightsTable.userId),
+      eq(emailInsightsTable.anonymousClaimToken, anonToken),
+    ) as SQL;
+  }
+  return sql`false`;
 }
 
 router.get("/insights", async (req, res): Promise<void> => {
   const insights = await db
     .select()
     .from(emailInsightsTable)
-    .where(userScope(req.user?.id))
+    .where(userScope(req))
     .orderBy(emailInsightsTable.createdAt);
   res.json(ListInsightsResponse.parse(insights.map((i) => ({
     ...i,
@@ -59,7 +67,7 @@ router.get("/insights/rollup", async (req, res): Promise<void> => {
   const rows = await db
     .select()
     .from(emailInsightsTable)
-    .where(userScope(req.user?.id))
+    .where(userScope(req))
     .orderBy(emailInsightsTable.createdAt);
 
   const analyzed = rows.filter((r) => r.status === "complete");
@@ -203,7 +211,7 @@ router.delete("/insights/:id", async (req, res): Promise<void> => {
   const [existing] = await db
     .select()
     .from(emailInsightsTable)
-    .where(and(eq(emailInsightsTable.id, id), userScope(req.user?.id)));
+    .where(and(eq(emailInsightsTable.id, id), userScope(req)));
   if (!existing) {
     res.status(404).json({ error: "Insight not found" });
     return;
@@ -225,7 +233,7 @@ router.post("/insights/:id/analyze", async (req, res): Promise<void> => {
   const [insight] = await db
     .select()
     .from(emailInsightsTable)
-    .where(and(eq(emailInsightsTable.id, id), userScope(req.user?.id)));
+    .where(and(eq(emailInsightsTable.id, id), userScope(req)));
   if (!insight) {
     res.status(404).json({ error: "Insight not found" });
     return;

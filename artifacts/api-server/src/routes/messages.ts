@@ -1,5 +1,5 @@
-import { Router, type IRouter } from "express";
-import { and, eq, isNull, type SQL } from "drizzle-orm";
+import { Router, type IRouter, type Request } from "express";
+import { and, eq, isNull, sql, type SQL } from "drizzle-orm";
 import { db, messageCoachingSessionsTable } from "@workspace/db";
 import {
   CreateMessageCoachingSessionBody,
@@ -9,22 +9,28 @@ import {
   ExtractMessageScreenshotResponse,
 } from "@workspace/api-zod";
 import { generateMessageCoaching } from "../lib/aiEngine";
-import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
+import { getOrCreateAnonClaimToken, getAnonClaimToken } from "../lib/anonClaimToken";
 import { extractChatFromScreenshot } from "../lib/ocr";
 
 const router: IRouter = Router();
 
-function userScope(userId: string | undefined): SQL {
-  return userId
-    ? eq(messageCoachingSessionsTable.userId, userId)
-    : isNull(messageCoachingSessionsTable.userId);
+function userScope(req: Request): SQL {
+  if (req.user?.id) return eq(messageCoachingSessionsTable.userId, req.user.id);
+  const anonToken = getAnonClaimToken(req);
+  if (anonToken) {
+    return and(
+      isNull(messageCoachingSessionsTable.userId),
+      eq(messageCoachingSessionsTable.anonymousClaimToken, anonToken),
+    ) as SQL;
+  }
+  return sql`false`;
 }
 
 router.get("/messages", async (req, res): Promise<void> => {
   const sessions = await db
     .select()
     .from(messageCoachingSessionsTable)
-    .where(userScope(req.user?.id))
+    .where(userScope(req))
     .orderBy(messageCoachingSessionsTable.createdAt);
   res.json(ListMessageCoachingSessionsResponse.parse(sessions.map((s) => ({
     ...s,
@@ -101,7 +107,7 @@ router.post("/messages/:id/coach", async (req, res): Promise<void> => {
   const [session] = await db
     .select()
     .from(messageCoachingSessionsTable)
-    .where(and(eq(messageCoachingSessionsTable.id, id), userScope(req.user?.id)));
+    .where(and(eq(messageCoachingSessionsTable.id, id), userScope(req)));
   if (!session) {
     res.status(404).json({ error: "Session not found" });
     return;
