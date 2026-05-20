@@ -527,6 +527,33 @@ export default function AccountScreen() {
               dating profiles, message coaching sessions, and email insights.
               You'll be signed out immediately. This can't be undone.
             </Text>
+            <Pressable
+              testID="button-account-delete-download"
+              disabled={isExporting || isDeleting}
+              onPress={() => {
+                void handleDownload();
+              }}
+              style={({ pressed }) => [
+                styles.actionBtn,
+                {
+                  borderColor: colors.violet,
+                  backgroundColor: `${colors.violet}14`,
+                  opacity:
+                    isExporting || isDeleting ? 0.5 : pressed ? 0.85 : 1,
+                },
+              ]}
+            >
+              {isExporting ? (
+                <ActivityIndicator color={colors.violet} />
+              ) : (
+                <>
+                  <Feather name="download" size={15} color={colors.violet} />
+                  <Text style={[styles.actionLabel, { color: colors.violet }]}>
+                    Download my data first
+                  </Text>
+                </>
+              )}
+            </Pressable>
             <View style={styles.modalConfirmField}>
               <Text
                 style={[styles.modalLabel, { color: colors.mutedForeground }]}
