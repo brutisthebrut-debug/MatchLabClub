@@ -46,6 +46,10 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
       validationFailures: sql<number>`sum(case when ${aiRequestMetricsTable.validated} = false then 1 else 0 end)`,
       avgAttempts: sql<number>`avg(${aiRequestMetricsTable.attempts})`,
       avgDurationMs: sql<number>`avg(${aiRequestMetricsTable.durationMs})`,
+      total24h: sql<number>`sum(case when ${aiRequestMetricsTable.createdAt} >= now() - interval '24 hours' then 1 else 0 end)`,
+      fallbacks24h: sql<number>`sum(case when ${aiRequestMetricsTable.createdAt} >= now() - interval '24 hours' and ${aiRequestMetricsTable.isFallback} = true then 1 else 0 end)`,
+      total7d: sql<number>`sum(case when ${aiRequestMetricsTable.createdAt} >= now() - interval '7 days' then 1 else 0 end)`,
+      fallbacks7d: sql<number>`sum(case when ${aiRequestMetricsTable.createdAt} >= now() - interval '7 days' and ${aiRequestMetricsTable.isFallback} = true then 1 else 0 end)`,
     })
     .from(aiRequestMetricsTable)
     .groupBy(aiRequestMetricsTable.toolName)
@@ -100,6 +104,10 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
     const retriedOk = Number(row.retriedOk ?? 0);
     const fallbacks = Number(row.fallbacks ?? 0);
     const validationFailures = Number(row.validationFailures ?? 0);
+    const total24h = Number(row.total24h ?? 0);
+    const fallbacks24h = Number(row.fallbacks24h ?? 0);
+    const total7d = Number(row.total7d ?? 0);
+    const fallbacks7d = Number(row.fallbacks7d ?? 0);
     const recent = recentByTool.get(row.toolName) ?? { total: 0, firstTryOk: 0, fallbacks: 0 };
     const recentRate = recent.total > 0 ? recent.firstTryOk / recent.total : 0;
     const alert =
@@ -121,6 +129,16 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
         firstTryOk: recent.firstTryOk,
         fallbacks: recent.fallbacks,
         firstTrySuccessRate: recentRate,
+      },
+      last24h: {
+        total: total24h,
+        fallbacks: fallbacks24h,
+        fallbackRate: total24h > 0 ? fallbacks24h / total24h : 0,
+      },
+      last7d: {
+        total: total7d,
+        fallbacks: fallbacks7d,
+        fallbackRate: total7d > 0 ? fallbacks7d / total7d : 0,
       },
       alert,
     };

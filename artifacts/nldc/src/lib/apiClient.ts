@@ -91,6 +91,16 @@ export interface AiToolMetric {
     fallbacks: number;
     firstTrySuccessRate: number;
   };
+  last24h: {
+    total: number;
+    fallbacks: number;
+    fallbackRate: number;
+  };
+  last7d: {
+    total: number;
+    fallbacks: number;
+    fallbackRate: number;
+  };
   alert: boolean;
 }
 export interface AiMetricsResponse {

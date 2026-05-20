@@ -279,7 +279,7 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/8 bg-white/3">
-                  {["Tool", "Total", "1st-try ok", "Retried ok", "Fallbacks", "1st-try %", "Recent 50", "Avg attempts", "Avg ms"].map((h) => (
+                  {["Tool", "Total", "1st-try ok", "Retried ok", "Fallbacks", "1st-try %", "Fallback 24h", "Fallback 7d", "Recent 50", "Avg attempts", "Avg ms"].map((h) => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
                       {h}
                     </th>
@@ -313,6 +313,30 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
                     <td className="px-4 py-3 text-muted-foreground">{row.retriedOk}</td>
                     <td className="px-4 py-3 text-muted-foreground">{row.fallbacks}</td>
                     <td className="px-4 py-3 text-muted-foreground">{pct(row.firstTrySuccessRate)}</td>
+                    <td
+                      className={`px-4 py-3 ${
+                        row.last24h.total > 0 && row.last24h.fallbackRate >= 0.3
+                          ? "text-[hsl(348_65%_78%)] font-semibold"
+                          : "text-muted-foreground"
+                      }`}
+                      title={`${row.last24h.fallbacks} of ${row.last24h.total} answers in the last 24h used the backup`}
+                    >
+                      {row.last24h.total > 0
+                        ? `${pct(row.last24h.fallbackRate)} (${row.last24h.fallbacks}/${row.last24h.total})`
+                        : "—"}
+                    </td>
+                    <td
+                      className={`px-4 py-3 ${
+                        row.last7d.total > 0 && row.last7d.fallbackRate >= 0.3
+                          ? "text-[hsl(348_65%_78%)] font-semibold"
+                          : "text-muted-foreground"
+                      }`}
+                      title={`${row.last7d.fallbacks} of ${row.last7d.total} answers in the last 7 days used the backup`}
+                    >
+                      {row.last7d.total > 0
+                        ? `${pct(row.last7d.fallbackRate)} (${row.last7d.fallbacks}/${row.last7d.total})`
+                        : "—"}
+                    </td>
                     <td className={`px-4 py-3 ${row.alert ? "text-[hsl(348_65%_78%)] font-semibold" : "text-muted-foreground"}`}>
                       {row.recent.total > 0 ? `${pct(row.recent.firstTrySuccessRate)} (${row.recent.total})` : "—"}
                     </td>
