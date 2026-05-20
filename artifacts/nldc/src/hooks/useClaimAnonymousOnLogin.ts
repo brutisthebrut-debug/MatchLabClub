@@ -31,6 +31,7 @@ export function buildClaimedSummary(claimed: {
   profiles: number;
   messages: number;
   insights: number;
+  followUps: number;
 }): string | null {
   const parts: string[] = [];
   if (claimed.audits > 0) {
@@ -47,6 +48,11 @@ export function buildClaimedSummary(claimed: {
   if (claimed.insights > 0) {
     parts.push(
       pluralize(claimed.insights, "email insight", "email insights"),
+    );
+  }
+  if (claimed.followUps > 0) {
+    parts.push(
+      pluralize(claimed.followUps, "follow-up answer", "follow-up answers"),
     );
   }
   if (parts.length === 0) return null;
@@ -84,6 +90,7 @@ export function useClaimAnonymousOnLogin(): void {
     profiles: number;
     messages: number;
     insights: number;
+    followUps: number;
   }): void {
     const summary = buildClaimedSummary(claimed);
     if (summary) {
@@ -147,6 +154,7 @@ export function useClaimAnonymousOnLogin(): void {
           profileIds: pending.profileIds,
           messageSessionIds: pending.messageSessionIds,
           insightIds: pending.insightIds,
+          followUpIds: pending.followUpIds,
         },
       },
       {

@@ -9,6 +9,7 @@ export interface PendingHandoff {
   profileIds: number[];
   messageSessionIds: number[];
   insightIds: number[];
+  followUpIds: number[];
 }
 
 function b64urlEncode(s: string): string {
@@ -46,6 +47,7 @@ export function decodePendingHandoffParam(raw: string): PendingHandoff | null {
       profileIds: sanitizeIds(p.profileIds),
       messageSessionIds: sanitizeIds(p.messageSessionIds),
       insightIds: sanitizeIds(p.insightIds),
+      followUpIds: sanitizeIds(p.followUpIds),
     };
   } catch {
     return null;
@@ -117,6 +119,7 @@ export function readPendingHandoff(): PendingHandoff | null {
       profileIds: sanitizeIds(p.profileIds),
       messageSessionIds: sanitizeIds(p.messageSessionIds),
       insightIds: sanitizeIds(p.insightIds),
+      followUpIds: sanitizeIds(p.followUpIds),
     };
   } catch {
     return null;

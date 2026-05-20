@@ -117,6 +117,7 @@ describe("POST /api/coach/follow-ups", () => {
     expect(rows[0].anonymousClaimToken).toBeNull();
     expect(rows[0].answer).toBe("sent");
     expect(rows[0].sessionId).toBe(42);
+    expect(res.body.followUpId).toBe(rows[0].id);
   });
 
   it("records an anonymous follow-up and sets the anon_claim cookie when no user is signed in", async () => {

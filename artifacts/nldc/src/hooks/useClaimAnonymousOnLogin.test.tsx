@@ -123,12 +123,13 @@ describe("useClaimAnonymousOnLogin — full anon→login→claim flow", () => {
         profileIds: [99],
         messageSessionIds: [],
         insightIds: [],
+        followUpIds: [],
       },
     });
 
     //   4) on success, anon IDs are cleared and dashboard queries are invalidated
     act(() => {
-      opts.onSuccess({ claimed: { audits: 1, profiles: 1, messages: 0, insights: 0 } });
+      opts.onSuccess({ claimed: { audits: 1, profiles: 1, messages: 0, insights: 0, followUps: 0 } });
     });
 
     expect(readAnonymousIds()).toEqual({
@@ -136,6 +137,7 @@ describe("useClaimAnonymousOnLogin — full anon→login→claim flow", () => {
       profileIds: [],
       messageSessionIds: [],
       insightIds: [],
+      followUpIds: [],
     });
 
     const invalidatedKeys = invalidateSpy.mock.calls.map((c) => c[0]?.queryKey?.[0]);
@@ -171,6 +173,7 @@ describe("useClaimAnonymousOnLogin — full anon→login→claim flow", () => {
       profileIds: [],
       messageSessionIds: [],
       insightIds: [],
+      followUpIds: [21],
     };
     const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(handoffPayload))))
       .replace(/\+/g, "-")
@@ -200,12 +203,13 @@ describe("useClaimAnonymousOnLogin — full anon→login→claim flow", () => {
         profileIds: [],
         messageSessionIds: [],
         insightIds: [],
+        followUpIds: [21],
       },
     });
 
     // On success the pending handoff is cleared so it isn't retried.
     act(() => {
-      opts.onSuccess({ claimed: { audits: 1, profiles: 0, messages: 0, insights: 0 } });
+      opts.onSuccess({ claimed: { audits: 1, profiles: 0, messages: 0, insights: 0, followUps: 1 } });
     });
     expect(sessionStorage.getItem("nldc:pendingHandoff")).toBeNull();
   });

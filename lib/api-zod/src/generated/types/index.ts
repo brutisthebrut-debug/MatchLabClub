@@ -45,6 +45,8 @@ export * from './claimAnonymousResult';
 export * from './claimAnonymousResultClaimed';
 export * from './coachFollowUpInput';
 export * from './coachFollowUpInputAnswer';
+export * from './coachFollowUpRecorded';
+export * from './coachFollowUpRecordedLastAnswer';
 export * from './coachFollowUpStats';
 export * from './coachFollowUpStatsLastAnswer';
 export * from './coachFollowUpTimeline';

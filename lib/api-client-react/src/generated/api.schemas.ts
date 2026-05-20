@@ -547,6 +547,37 @@ export interface CoachFollowUpStats {
   lastAnswer: CoachFollowUpStatsLastAnswer;
 }
 
+/**
+ * @nullable
+ */
+export type CoachFollowUpRecordedLastAnswer = typeof CoachFollowUpRecordedLastAnswer[keyof typeof CoachFollowUpRecordedLastAnswer] | null;
+
+
+export const CoachFollowUpRecordedLastAnswer = {
+  sent: 'sent',
+  not_sent: 'not_sent',
+} as const;
+
+/**
+ * Result of recording a new follow-up answer. Includes the new row's id
+so anonymous callers can persist it locally and pass it to the claim
+endpoint after login.
+
+ */
+export interface CoachFollowUpRecorded {
+  /** ID of the just-inserted coach_follow_ups row. */
+  followUpId: number;
+  totalPrompts: number;
+  sentCount: number;
+  notSentCount: number;
+  snoozeCount: number;
+  dismissCount: number;
+  /** @nullable */
+  lastAnsweredAt: string | null;
+  /** @nullable */
+  lastAnswer: CoachFollowUpRecordedLastAnswer;
+}
+
 export interface CoachFollowUpTimelineBucket {
   /** ISO date for the start of the week (UTC, Monday) */
   weekStart: string;

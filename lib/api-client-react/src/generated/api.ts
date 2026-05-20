@@ -43,6 +43,7 @@ import type {
   ClaimAnonymousInput,
   ClaimAnonymousResult,
   CoachFollowUpInput,
+  CoachFollowUpRecorded,
   CoachFollowUpStats,
   CoachFollowUpTimeline,
   DatingProfile,
@@ -2850,9 +2851,9 @@ export const getRecordCoachFollowUpUrl = () => {
 /**
  * @summary Record whether the user sent a coached reply
  */
-export const recordCoachFollowUp = async (coachFollowUpInput: CoachFollowUpInput, options?: RequestInit): Promise<CoachFollowUpStats> => {
+export const recordCoachFollowUp = async (coachFollowUpInput: CoachFollowUpInput, options?: RequestInit): Promise<CoachFollowUpRecorded> => {
 
-  return customFetch<CoachFollowUpStats>(getRecordCoachFollowUpUrl(),
+  return customFetch<CoachFollowUpRecorded>(getRecordCoachFollowUpUrl(),
   {
     ...options,
     method: 'POST',

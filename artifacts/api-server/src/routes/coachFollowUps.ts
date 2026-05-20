@@ -4,6 +4,7 @@ import { db, coachFollowUpsTable } from "@workspace/db";
 import {
   RecordCoachFollowUpBody,
   RecordCoachFollowUpResponse,
+  GetCoachFollowUpStatsResponse,
   GetCoachFollowUpTimelineResponse,
 } from "@workspace/api-zod";
 import {
@@ -99,15 +100,23 @@ router.post("/coach/follow-ups", async (req, res): Promise<void> => {
   const userId = req.user?.id;
   const anonToken = userId ? null : getOrCreateAnonClaimToken(req, res);
 
-  await db.insert(coachFollowUpsTable).values({
-    userId: userId ?? null,
-    anonymousClaimToken: anonToken,
-    sessionId: parsed.data.sessionId ?? null,
-    answer: parsed.data.answer,
-  });
+  const [inserted] = await db
+    .insert(coachFollowUpsTable)
+    .values({
+      userId: userId ?? null,
+      anonymousClaimToken: anonToken,
+      sessionId: parsed.data.sessionId ?? null,
+      answer: parsed.data.answer,
+    })
+    .returning({ id: coachFollowUpsTable.id });
 
   const stats = await loadStats(userId, anonToken ?? undefined);
-  res.json(RecordCoachFollowUpResponse.parse(stats));
+  res.json(
+    RecordCoachFollowUpResponse.parse({
+      followUpId: inserted!.id,
+      ...stats,
+    }),
+  );
 });
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -198,7 +207,7 @@ router.get("/coach/follow-ups/stats", async (req, res): Promise<void> => {
   const userId = req.user?.id;
   const anonToken = userId ? undefined : getAnonClaimToken(req);
   const stats = await loadStats(userId, anonToken);
-  res.json(RecordCoachFollowUpResponse.parse(stats));
+  res.json(GetCoachFollowUpStatsResponse.parse(stats));
 });
 
 export default router;

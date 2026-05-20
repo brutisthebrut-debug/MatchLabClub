@@ -12,8 +12,10 @@ import {
   useCoachMessage, getListMessageCoachingSessionsQueryKey,
   useGetCoachFollowUpStats, getGetCoachFollowUpStatsQueryKey,
   useGetCoachFollowUpTimeline, getGetCoachFollowUpTimelineQueryKey,
+  useRecordCoachFollowUp,
   useExtractMessageScreenshot,
 } from "@workspace/api-client-react";
+import type { CoachFollowUpInputAnswer } from "@workspace/api-client-react";
 import { BarChart, Bar, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -125,6 +127,8 @@ export default function Coach() {
   const [sourceApp, setSourceApp] = useState<SourceApp | "">("");
   const [result, setResult] = useState<CoachingResult | null>(null);
   const [resultApp, setResultApp] = useState<SourceApp | null>(null);
+  const [resultSessionId, setResultSessionId] = useState<number | null>(null);
+  const [followUpAnswer, setFollowUpAnswer] = useState<CoachFollowUpInputAnswer | null>(null);
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [screenshotError, setScreenshotError] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -143,6 +147,7 @@ export default function Coach() {
   });
   const createSession = useCreateMessageCoachingSession();
   const coachMessage = useCoachMessage();
+  const recordFollowUp = useRecordCoachFollowUp();
   const isLoading = createSession.isPending || coachMessage.isPending;
   const hasSessions = !!(sessions && sessions.length > 0);
   const isBrandNewUser = isAuthenticated && !sessionsLoading && !hasSessions && !result;
@@ -212,10 +217,33 @@ export default function Coach() {
       const coaching = await coachMessage.mutateAsync({ id: session.id });
       setResult(coaching as CoachingResult);
       setResultApp(appForRequest);
+      setResultSessionId(session.id);
+      setFollowUpAnswer(null);
       queryClient.invalidateQueries({ queryKey: getListMessageCoachingSessionsQueryKey() });
     } catch {
       setResult(DEMO_RESULT);
       setResultApp(appForRequest);
+      setResultSessionId(null);
+      setFollowUpAnswer(null);
+    }
+  }
+
+  async function handleFollowUp(answer: CoachFollowUpInputAnswer) {
+    if (followUpAnswer || recordFollowUp.isPending) return;
+    setFollowUpAnswer(answer);
+    try {
+      const recorded = await recordFollowUp.mutateAsync({
+        data: { answer, sessionId: resultSessionId },
+      });
+      if (!isAuthenticated) {
+        rememberAnonymousId("followUps", recorded.followUpId);
+      }
+      if (isAuthenticated) {
+        queryClient.invalidateQueries({ queryKey: getGetCoachFollowUpStatsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetCoachFollowUpTimelineQueryKey() });
+      }
+    } catch {
+      setFollowUpAnswer(null);
     }
   }
 
@@ -664,6 +692,52 @@ export default function Coach() {
                     ))}
                   </div>
                 </div>
+
+                {/* Did you send it? */}
+                {result && resultSessionId != null && (
+                  <div
+                    className="glass border border-white/8 rounded-3xl p-6"
+                    data-testid="card-follow-up-prompt"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <Send className="w-4 h-4 text-[hsl(190_55%_60%)]" />
+                      <p className="font-semibold text-foreground text-sm">Did you send a coached reply?</p>
+                    </div>
+                    {followUpAnswer ? (
+                      <p
+                        className="text-xs text-muted-foreground leading-relaxed"
+                        data-testid="text-follow-up-thanks"
+                      >
+                        Thanks — we'll fold this into your send-through stats.
+                      </p>
+                    ) : (
+                      <>
+                        <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+                          Tell us what happened so we can track how often your coached replies actually go out.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {([
+                            { value: "sent", label: "I sent it" },
+                            { value: "not_sent", label: "Didn't send" },
+                            { value: "snoozed", label: "Snoozed" },
+                            { value: "dismissed", label: "Dismiss" },
+                          ] as const).map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              disabled={recordFollowUp.isPending}
+                              onClick={() => void handleFollowUp(opt.value)}
+                              data-testid={`button-follow-up-${opt.value}`}
+                              className="px-3 py-1.5 rounded-full border border-white/10 text-xs font-medium text-muted-foreground hover:border-white/20 hover:text-foreground transition-all disabled:opacity-50"
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
 
                 {/* Red Flags + Coach Tip */}
                 <div className="grid sm:grid-cols-2 gap-5">

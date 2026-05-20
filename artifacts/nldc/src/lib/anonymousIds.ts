@@ -3,6 +3,7 @@ const KEYS = {
   profiles: "nldc:anon:profileIds",
   messageSessions: "nldc:anon:messageSessionIds",
   insights: "nldc:anon:insightIds",
+  followUps: "nldc:anon:followUpIds",
 } as const;
 
 export type AnonymousKind = keyof typeof KEYS;
@@ -42,12 +43,14 @@ export function readAnonymousIds(): {
   profileIds: number[];
   messageSessionIds: number[];
   insightIds: number[];
+  followUpIds: number[];
 } {
   return {
     auditIds: safeRead(KEYS.audits),
     profileIds: safeRead(KEYS.profiles),
     messageSessionIds: safeRead(KEYS.messageSessions),
     insightIds: safeRead(KEYS.insights),
+    followUpIds: safeRead(KEYS.followUps),
   };
 }
 
@@ -63,11 +66,18 @@ export function clearAnonymousIds(): void {
 }
 
 export function hasAnyAnonymousIds(): boolean {
-  const { auditIds, profileIds, messageSessionIds, insightIds } = readAnonymousIds();
+  const {
+    auditIds,
+    profileIds,
+    messageSessionIds,
+    insightIds,
+    followUpIds,
+  } = readAnonymousIds();
   return (
     auditIds.length > 0 ||
     profileIds.length > 0 ||
     messageSessionIds.length > 0 ||
-    insightIds.length > 0
+    insightIds.length > 0 ||
+    followUpIds.length > 0
   );
 }

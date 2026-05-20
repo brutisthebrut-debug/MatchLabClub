@@ -921,11 +921,11 @@ paths:
               $ref: "#/components/schemas/CoachFollowUpInput"
       responses:
         "200":
-          description: Updated send-through stats
+          description: New follow-up id plus updated send-through stats
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CoachFollowUpStats"
+                $ref: "#/components/schemas/CoachFollowUpRecorded"
 
   /coach/follow-ups/stats:
     get:
@@ -1841,6 +1841,43 @@ components:
           lastAnswer,
         ]
       properties:
+        totalPrompts:
+          type: integer
+        sentCount:
+          type: integer
+        notSentCount:
+          type: integer
+        snoozeCount:
+          type: integer
+        dismissCount:
+          type: integer
+        lastAnsweredAt:
+          type: ["string", "null"]
+        lastAnswer:
+          type: ["string", "null"]
+          enum: [sent, not_sent, null]
+
+    CoachFollowUpRecorded:
+      description: |
+        Result of recording a new follow-up answer. Includes the new row's id
+        so anonymous callers can persist it locally and pass it to the claim
+        endpoint after login.
+      type: object
+      required:
+        [
+          followUpId,
+          totalPrompts,
+          sentCount,
+          notSentCount,
+          snoozeCount,
+          dismissCount,
+          lastAnsweredAt,
+          lastAnswer,
+        ]
+      properties:
+        followUpId:
+          type: integer
+          description: ID of the just-inserted coach_follow_ups row.
         totalPrompts:
           type: integer
         sentCount:

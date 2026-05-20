@@ -1401,6 +1401,7 @@ export const RecordCoachFollowUpBody = zod.object({
 })
 
 export const RecordCoachFollowUpResponse = zod.object({
+  "followUpId": zod.number().describe('ID of the just-inserted coach_follow_ups row.'),
   "totalPrompts": zod.number(),
   "sentCount": zod.number(),
   "notSentCount": zod.number(),
@@ -1408,7 +1409,7 @@ export const RecordCoachFollowUpResponse = zod.object({
   "dismissCount": zod.number(),
   "lastAnsweredAt": zod.string().nullable(),
   "lastAnswer": zod.union([zod.literal('sent'),zod.literal('not_sent'),zod.literal(null)]).nullable()
-})
+}).describe('Result of recording a new follow-up answer. Includes the new row\'s id\nso anonymous callers can persist it locally and pass it to the claim\nendpoint after login.\n')
 
 
 /**

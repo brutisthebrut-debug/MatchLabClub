@@ -18,11 +18,13 @@ vi.mock("@workspace/replit-auth-web", () => ({
 import {
   useCreateAudit,
   useListAudits,
+  useRecordCoachFollowUp,
   type Audit,
 } from "@workspace/api-client-react";
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 import {
   rememberAnonymousId,
+  readAnonymousIds,
   hasAnyAnonymousIds,
 } from "@/lib/anonymousIds";
 
@@ -35,13 +37,29 @@ interface StoredAudit {
   userId: string | null;
 }
 
-interface ServerState {
-  audits: StoredAudit[];
-  nextId: number;
-  claimCalls: number;
+interface StoredFollowUp {
+  id: number;
+  userId: string | null;
+  answer: string;
 }
 
-const server: ServerState = { audits: [], nextId: 1, claimCalls: 0 };
+interface ServerState {
+  audits: StoredAudit[];
+  followUps: StoredFollowUp[];
+  nextId: number;
+  nextFollowUpId: number;
+  claimCalls: number;
+  lastClaimBody: Record<string, unknown> | null;
+}
+
+const server: ServerState = {
+  audits: [],
+  followUps: [],
+  nextId: 1,
+  nextFollowUpId: 1,
+  claimCalls: 0,
+  lastClaimBody: null,
+};
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -90,6 +108,29 @@ function installFetchMock(): void {
         return jsonResponse(201, audit);
       }
 
+      // POST /api/coach/follow-ups — record a follow-up. Authed -> owned, anon -> userId=null.
+      if (method === "POST" && url.endsWith("/api/coach/follow-ups")) {
+        const body = init?.body ? JSON.parse(String(init.body)) : {};
+        const followUp: StoredFollowUp = {
+          id: server.nextFollowUpId++,
+          userId: authState.isAuthenticated ? authState.user!.id : null,
+          answer: body.answer ?? "sent",
+        };
+        server.followUps.push(followUp);
+        return jsonResponse(200, {
+          followUpId: followUp.id,
+          totalPrompts: 1,
+          sentCount: followUp.answer === "sent" ? 1 : 0,
+          notSentCount: followUp.answer === "not_sent" ? 1 : 0,
+          snoozeCount: 0,
+          dismissCount: 0,
+          lastAnsweredAt: new Date().toISOString(),
+          lastAnswer: followUp.answer === "sent" || followUp.answer === "not_sent"
+            ? followUp.answer
+            : null,
+        });
+      }
+
       // POST /api/claim-anonymous — reassign anon rows to the current user.
       if (method === "POST" && url.endsWith("/api/claim-anonymous")) {
         server.claimCalls += 1;
@@ -97,7 +138,9 @@ function installFetchMock(): void {
           return jsonResponse(401, { error: "Not authenticated" });
         }
         const body = init?.body ? JSON.parse(String(init.body)) : {};
+        server.lastClaimBody = body;
         const ids: number[] = Array.isArray(body.auditIds) ? body.auditIds : [];
+        const followUpIds: number[] = Array.isArray(body.followUpIds) ? body.followUpIds : [];
         let claimed = 0;
         for (const row of server.audits) {
           if (ids.includes(row.audit.id) && row.userId === null) {
@@ -105,8 +148,15 @@ function installFetchMock(): void {
             claimed += 1;
           }
         }
+        let claimedFollowUps = 0;
+        for (const fu of server.followUps) {
+          if (followUpIds.includes(fu.id) && fu.userId === null) {
+            fu.userId = authState.user!.id;
+            claimedFollowUps += 1;
+          }
+        }
         return jsonResponse(200, {
-          claimed: { audits: claimed, profiles: 0, messages: 0, insights: 0 },
+          claimed: { audits: claimed, profiles: 0, messages: 0, insights: 0, followUps: claimedFollowUps },
         });
       }
 
@@ -174,8 +224,11 @@ let qc: QueryClient;
 beforeEach(() => {
   localStorage.clear();
   server.audits = [];
+  server.followUps = [];
   server.nextId = 1;
+  server.nextFollowUpId = 1;
   server.claimCalls = 0;
+  server.lastClaimBody = null;
   authState = { isAuthenticated: false, isLoading: false, user: null };
   installFetchMock();
   qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -249,5 +302,85 @@ describe("Anonymous audit follows the user into their account", () => {
 
     // localStorage hand-off cleared after a successful claim.
     expect(hasAnyAnonymousIds()).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Anonymous coach follow-ups follow the user into their account too.
+// Models the new Coach.tsx persistence path: while anonymous, the new
+// follow-up's id is written to localStorage; on login the claim mutation
+// hands those ids to the server and the rows are reassigned.
+// ---------------------------------------------------------------------------
+
+function AnonFollowUpRecorder({ onRecorded }: { onRecorded: (id: number) => void }) {
+  const record = useRecordCoachFollowUp();
+  const firedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (firedRef.current) return;
+    firedRef.current = true;
+    record.mutate(
+      { data: { answer: "sent", sessionId: null } },
+      {
+        onSuccess: (recorded) => {
+          rememberAnonymousId("followUps", recorded.followUpId);
+          onRecorded(recorded.followUpId);
+        },
+      },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
+}
+
+function ClaimOnly() {
+  useClaimAnonymousOnLogin();
+  return null;
+}
+
+describe("Anonymous coach follow-up follows the user into their account", () => {
+  it("anon-recorded follow-up id is persisted, sent on claim, and reassigned", async () => {
+    let recordedId: number | undefined;
+
+    // 1) Anonymous visitor records a "did you send it?" answer.
+    const anon = render(
+      <Wrap>
+        <AnonFollowUpRecorder onRecorded={(id) => (recordedId = id)} />
+      </Wrap>,
+    );
+
+    await waitFor(() => expect(recordedId).toBeDefined());
+    expect(server.followUps).toHaveLength(1);
+    expect(server.followUps[0]!.userId).toBeNull();
+    expect(readAnonymousIds().followUpIds).toEqual([recordedId!]);
+    expect(hasAnyAnonymousIds()).toBe(true);
+
+    anon.unmount();
+
+    // 2) The user logs in.
+    act(() => {
+      authState = {
+        isAuthenticated: true,
+        isLoading: false,
+        user: { id: "user-followups", email: null },
+      };
+    });
+
+    // 3) Claim hook fires on mount.
+    render(
+      <Wrap>
+        <ClaimOnly />
+      </Wrap>,
+    );
+
+    await waitFor(() => expect(server.claimCalls).toBe(1));
+
+    // Claim payload included the persisted follow-up id.
+    expect(server.lastClaimBody?.followUpIds).toEqual([recordedId!]);
+
+    // Ownership transferred on the server side.
+    expect(server.followUps[0]!.userId).toBe("user-followups");
+
+    // localStorage hand-off cleared after a successful claim.
+    await waitFor(() => expect(hasAnyAnonymousIds()).toBe(false));
   });
 });
