@@ -893,6 +893,7 @@ export default function MatchesScreen() {
                       bio={audit.bio}
                       createdAt={audit.createdAt}
                       reportGeneratedAt={audit.reportGeneratedAt ?? null}
+                      matchContext={debouncedQuery.length > 0 ? (audit.matchContext ?? null) : null}
                       onPress={onRowPress}
                       onLongPress={onRowLongPress}
                       selected={isSelected}
@@ -941,6 +942,7 @@ export default function MatchesScreen() {
                       bio={audit.bio}
                       createdAt={audit.createdAt}
                       reportGeneratedAt={audit.reportGeneratedAt ?? null}
+                      matchContext={debouncedQuery.length > 0 ? (audit.matchContext ?? null) : null}
                       onPress={onRowPress}
                       onLongPress={onRowLongPress}
                     />
@@ -1305,6 +1307,7 @@ function MatchRow({
   bio,
   createdAt,
   reportGeneratedAt,
+  matchContext,
   onPress,
   onLongPress,
   disabled,
@@ -1315,6 +1318,7 @@ function MatchRow({
   bio: string;
   createdAt: string;
   reportGeneratedAt?: string | null;
+  matchContext?: { matchedField: "name" | "bio"; snippet?: string | null } | null;
   onPress?: () => void;
   onLongPress?: () => void;
   disabled?: boolean;
@@ -1394,6 +1398,27 @@ function MatchRow({
             <Feather name="refresh-cw" size={10} color={colors.gold} />
             <Text style={[styles.stalePillText, { color: colors.gold }]}>
               {staleHint}
+            </Text>
+          </View>
+        ) : null}
+        {matchContext ? (
+          <View
+            style={[
+              styles.stalePill,
+              {
+                backgroundColor: `${colors.violet}1a`,
+                borderColor: `${colors.violet}55`,
+              },
+            ]}
+            accessibilityLabel={matchContext.matchedField === "name" ? "Matched on name" : "Matched on bio"}
+          >
+            <Feather name="search" size={10} color={colors.violet} />
+            <Text style={[styles.stalePillText, { color: colors.violet }]} numberOfLines={1}>
+              {matchContext.matchedField === "name"
+                ? "name match"
+                : matchContext.snippet
+                  ? `bio: "${matchContext.snippet}"`
+                  : "bio match"}
             </Text>
           </View>
         ) : null}

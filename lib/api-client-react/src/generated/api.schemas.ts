@@ -195,6 +195,29 @@ export interface AuditReport {
   changeSummary?: ReportChangeSummary | null;
 }
 
+/**
+ * The field that best matched the search query.
+ */
+export type AuditMatchContextMatchedField = typeof AuditMatchContextMatchedField[keyof typeof AuditMatchContextMatchedField];
+
+
+export const AuditMatchContextMatchedField = {
+  name: 'name',
+  bio: 'bio',
+} as const;
+
+export interface AuditMatchContext {
+  /** The field that best matched the search query. */
+  matchedField: AuditMatchContextMatchedField;
+  /**
+     * A short excerpt from the bio showing the context around the match.
+  Only present when `matchedField` is `bio`.
+
+     * @nullable
+     */
+  snippet?: string | null;
+}
+
 export interface Audit {
   id: number;
   firstName: string;
@@ -258,6 +281,12 @@ export interface Audit {
      * @nullable
      */
   deletedAt?: string | null;
+  /** Present only when a search query (`q`) was supplied to `GET /audits`.
+  Indicates which field (name or bio) was the primary match source and,
+  for bio matches, a short excerpt around the matched text so users can
+  see why the result appeared.
+   */
+  matchContext?: AuditMatchContext | null;
 }
 
 export interface AuditReportVersion {

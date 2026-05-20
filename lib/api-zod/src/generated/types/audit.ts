@@ -5,6 +5,7 @@
  * Next Level Dating Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { AuditMatchContext } from './auditMatchContext';
 import type { AuditReport } from './auditReport';
 import type { AuditSource } from './auditSource';
 import type { AuditStatus } from './auditStatus';
@@ -72,4 +73,10 @@ export interface Audit {
      * @nullable
      */
   deletedAt?: string | null;
+  /** Present only when a search query (`q`) was supplied to `GET /audits`.
+  Indicates which field (name or bio) was the primary match source and,
+  for bio matches, a short excerpt around the matched text so users can
+  see why the result appeared.
+   */
+  matchContext?: AuditMatchContext | null;
 }

@@ -1415,6 +1415,16 @@ export default function Dashboard() {
                                 {staleHint}
                               </span>
                             ) : null}
+                            {debouncedQuery.length > 0 && audit.matchContext ? (
+                              <span
+                                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[hsl(268_52%_55%/0.35)] bg-[hsl(268_52%_55%/0.1)] text-[hsl(268_52%_78%)]"
+                                data-testid={`badge-match-${audit.id}`}
+                                title={audit.matchContext.snippet ?? undefined}
+                              >
+                                <Search className="w-2.5 h-2.5" />
+                                {audit.matchContext.matchedField === "name" ? "name match" : audit.matchContext.snippet ? `bio: "${audit.matchContext.snippet}"` : "bio match"}
+                              </span>
+                            ) : null}
                           </p>
                         </div>
                       </Link>

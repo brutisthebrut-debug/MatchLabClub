@@ -132,6 +132,79 @@ function escapeLike(input: string): string {
   return input.replace(/[\\%_]/g, (m) => `\\${m}`);
 }
 
+function bigramOverlap(a: string, b: string): number {
+  if (a.length < 2 || b.length < 2) return 0;
+  const toBigrams = (s: string): Set<string> => {
+    const set = new Set<string>();
+    for (let i = 0; i < s.length - 1; i++) set.add(s.slice(i, i + 2));
+    return set;
+  };
+  const aSet = toBigrams(a);
+  const bSet = toBigrams(b);
+  let count = 0;
+  for (const bg of aSet) {
+    if (bSet.has(bg)) count++;
+  }
+  return count;
+}
+
+function extractBioSnippet(text: string, matchIdx: number, matchLen: number): string {
+  const PAD = 40;
+  const start = Math.max(0, matchIdx - PAD);
+  const end = Math.min(text.length, matchIdx + matchLen + PAD);
+  let snippet = text.slice(start, end).trim();
+  if (start > 0) snippet = "\u2026" + snippet;
+  if (end < text.length) snippet = snippet + "\u2026";
+  return snippet;
+}
+
+function buildMatchContext(
+  q: string,
+  firstName: string,
+  bio: string,
+): { matchedField: "name" | "bio"; snippet: string | null } | null {
+  if (!q) return null;
+  const qLow = q.toLowerCase();
+  const nameLow = firstName.toLowerCase();
+  const bioLow = bio.toLowerCase();
+
+  // Exact substring: name wins first
+  if (nameLow.includes(qLow)) {
+    return { matchedField: "name", snippet: null };
+  }
+  // Exact substring: bio
+  const bioIdx = bioLow.indexOf(qLow);
+  if (bioIdx !== -1) {
+    return { matchedField: "bio", snippet: extractBioSnippet(bio, bioIdx, q.length) };
+  }
+  // Word-level: any word in the query appears in name
+  const words = qLow.split(/\s+/).filter(Boolean);
+  if (words.some((w) => nameLow.includes(w))) {
+    return { matchedField: "name", snippet: null };
+  }
+  // Word-level: any word in the query appears in bio
+  let wordBioIdx = -1;
+  let wordLen = 0;
+  for (const w of words) {
+    const idx = bioLow.indexOf(w);
+    if (idx !== -1) { wordBioIdx = idx; wordLen = w.length; break; }
+  }
+  if (wordBioIdx !== -1) {
+    return { matchedField: "bio", snippet: extractBioSnippet(bio, wordBioIdx, wordLen) };
+  }
+  // Fuzzy fallback: bigram overlap determines which field matched better
+  const nameScore = bigramOverlap(qLow, nameLow);
+  const bioScore = bigramOverlap(qLow, bioLow);
+  if (nameScore >= bioScore && nameScore > 0) {
+    return { matchedField: "name", snippet: null };
+  }
+  if (bio.length > 0) {
+    const snippet = bio.length > 80 ? bio.slice(0, 80).trimEnd() + "\u2026" : bio;
+    return { matchedField: "bio", snippet };
+  }
+  return { matchedField: "name", snippet: null };
+}
+
 router.get("/audits", async (req, res): Promise<void> => {
   const sourceParam = typeof req.query.source === "string" ? req.query.source : undefined;
   const sourceFilter =
@@ -205,7 +278,12 @@ router.get("/audits", async (req, res): Promise<void> => {
     .limit(limit)
     .offset(offset);
 
-  res.json(ListAuditsResponse.parse(audits.map(serializeAudit)));
+  const serialized = audits.map((a) => {
+    const base = serializeAudit(a);
+    if (qRaw.length === 0) return base;
+    return { ...base, matchContext: buildMatchContext(qRaw, a.firstName, a.bio ?? "") };
+  });
+  res.json(ListAuditsResponse.parse(serialized));
 });
 
 router.post("/audits", async (req, res): Promise<void> => {

@@ -28,6 +28,8 @@ export * from './anonymousClaimHandoff';
 export * from './audit';
 export * from './auditFromScreenshot400';
 export * from './auditInput';
+export * from './auditMatchContext';
+export * from './auditMatchContextMatchedField';
 export * from './auditReport';
 export * from './auditReportVersion';
 export * from './auditReportVersionList';

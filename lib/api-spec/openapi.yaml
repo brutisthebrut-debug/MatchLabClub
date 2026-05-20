@@ -1698,6 +1698,29 @@ components:
             audits. Soft-deleted audits are filtered out of regular list
             endpoints and only appear under `/audits/trash`; they are auto-
             purged after 30 days.
+        matchContext:
+          oneOf:
+            - $ref: "#/components/schemas/AuditMatchContext"
+            - type: "null"
+          description: |
+            Present only when a search query (`q`) was supplied to `GET /audits`.
+            Indicates which field (name or bio) was the primary match source and,
+            for bio matches, a short excerpt around the matched text so users can
+            see why the result appeared.
+
+    AuditMatchContext:
+      type: object
+      required: [matchedField]
+      properties:
+        matchedField:
+          type: string
+          enum: [name, bio]
+          description: The field that best matched the search query.
+        snippet:
+          type: ["string", "null"]
+          description: |
+            A short excerpt from the bio showing the context around the match.
+            Only present when `matchedField` is `bio`.
 
     AuditReport:
       type: object

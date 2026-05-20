@@ -289,7 +289,11 @@ export const ExportMyDataResponse = zod.object({
   "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
   "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
   "createdAt": zod.string(),
-  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
+  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n'),
+  "matchContext": zod.union([zod.object({
+  "matchedField": zod.enum(['name', 'bio']).describe('The field that best matched the search query.'),
+  "snippet": zod.string().nullish().describe('A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n')
+}),zod.null()]).optional().describe('Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n')
 })),
   "profiles": zod.array(zod.object({
   "id": zod.number(),
@@ -478,7 +482,11 @@ export const DownloadEmailedExportResponse = zod.object({
   "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
   "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
   "createdAt": zod.string(),
-  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
+  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n'),
+  "matchContext": zod.union([zod.object({
+  "matchedField": zod.enum(['name', 'bio']).describe('The field that best matched the search query.'),
+  "snippet": zod.string().nullish().describe('A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n')
+}),zod.null()]).optional().describe('Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n')
 })),
   "profiles": zod.array(zod.object({
   "id": zod.number(),
@@ -726,7 +734,11 @@ export const ListAuditsResponseItem = zod.object({
   "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
   "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
   "createdAt": zod.string(),
-  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
+  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n'),
+  "matchContext": zod.union([zod.object({
+  "matchedField": zod.enum(['name', 'bio']).describe('The field that best matched the search query.'),
+  "snippet": zod.string().nullish().describe('A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n')
+}),zod.null()]).optional().describe('Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n')
 })
 export const ListAuditsResponse = zod.array(ListAuditsResponseItem)
 
@@ -853,7 +865,11 @@ export const GetAuditResponse = zod.object({
   "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
   "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
   "createdAt": zod.string(),
-  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
+  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n'),
+  "matchContext": zod.union([zod.object({
+  "matchedField": zod.enum(['name', 'bio']).describe('The field that best matched the search query.'),
+  "snippet": zod.string().nullish().describe('A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n')
+}),zod.null()]).optional().describe('Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n')
 })
 
 
@@ -982,7 +998,11 @@ export const ListTrashedAuditsResponseItem = zod.object({
   "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
   "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
   "createdAt": zod.string(),
-  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
+  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n'),
+  "matchContext": zod.union([zod.object({
+  "matchedField": zod.enum(['name', 'bio']).describe('The field that best matched the search query.'),
+  "snippet": zod.string().nullish().describe('A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n')
+}),zod.null()]).optional().describe('Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n')
 })
 export const ListTrashedAuditsResponse = zod.array(ListTrashedAuditsResponseItem)
 
@@ -1104,7 +1124,11 @@ export const ListExpiringTrashedAuditsResponse = zod.object({
   "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
   "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
   "createdAt": zod.string(),
-  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
+  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n'),
+  "matchContext": zod.union([zod.object({
+  "matchedField": zod.enum(['name', 'bio']).describe('The field that best matched the search query.'),
+  "snippet": zod.string().nullish().describe('A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n')
+}),zod.null()]).optional().describe('Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n')
 })).describe('Trashed audits within `withinDays` of permanent purge, earliest first.'),
   "retentionDays": zod.number().describe('Number of days an audit can stay in the trash before being permanently purged.'),
   "withinDays": zod.number().describe('The lookahead window (in days) that was used to compute this list.')
@@ -1219,7 +1243,11 @@ export const RestoreAuditResponse = zod.object({
   "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
   "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
   "createdAt": zod.string(),
-  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n')
+  "deletedAt": zod.string().nullish().describe('ISO timestamp when the audit was soft-deleted. Null for active\naudits. Soft-deleted audits are filtered out of regular list\nendpoints and only appear under `\/audits\/trash`; they are auto-\npurged after 30 days.\n'),
+  "matchContext": zod.union([zod.object({
+  "matchedField": zod.enum(['name', 'bio']).describe('The field that best matched the search query.'),
+  "snippet": zod.string().nullish().describe('A short excerpt from the bio showing the context around the match.\nOnly present when `matchedField` is `bio`.\n')
+}),zod.null()]).optional().describe('Present only when a search query (`q`) was supplied to `GET \/audits`.\nIndicates which field (name or bio) was the primary match source and,\nfor bio matches, a short excerpt around the matched text so users can\nsee why the result appeared.\n')
 })
 
 
