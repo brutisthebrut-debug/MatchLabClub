@@ -1,9 +1,11 @@
 import { Feather } from "@expo/vector-icons";
 import {
   getGetCoachFollowUpStatsQueryKey,
+  getGetCoachFollowUpTimelineQueryKey,
   useCoachMessage,
   useCreateMessageCoachingSession,
   useGetCoachFollowUpStats,
+  useGetCoachFollowUpTimeline,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -110,8 +112,15 @@ export default function CoachScreen() {
     () => getGetCoachFollowUpStatsQueryKey(),
     [],
   );
+  const followUpTimelineQueryKey = useMemo(
+    () => getGetCoachFollowUpTimelineQueryKey(),
+    [],
+  );
   const { data: followUpStats } = useGetCoachFollowUpStats({
     query: { queryKey: followUpStatsQueryKey, enabled: isAuthenticated },
+  });
+  const { data: followUpTimeline } = useGetCoachFollowUpTimeline({
+    query: { queryKey: followUpTimelineQueryKey, enabled: isAuthenticated },
   });
 
   const isPending = createSession.isPending || coach.isPending;
@@ -142,6 +151,7 @@ export default function CoachScreen() {
     setFollowUpAck(answer);
     await recordCoachFollowUp(answer);
     queryClient.invalidateQueries({ queryKey: followUpStatsQueryKey });
+    queryClient.invalidateQueries({ queryKey: followUpTimelineQueryKey });
     setResults(null);
     setMatchName("");
     setContext("");
@@ -497,6 +507,93 @@ export default function CoachScreen() {
                 ) : null}
               </>
             )}
+            {followUpTimeline ? (
+              <View
+                style={[
+                  styles.timelineBlock,
+                  { borderTopColor: colors.cardBorder },
+                ]}
+                testID="card-send-through-timeline"
+              >
+                <Text
+                  style={[
+                    styles.statsLabel,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  Weekly trend
+                </Text>
+                {followUpTimeline.buckets.filter((b) => b.total > 0).length <
+                2 ? (
+                  <Text
+                    style={[
+                      styles.statsEmpty,
+                      { color: colors.mutedForeground },
+                    ]}
+                    testID="timeline-empty-state"
+                  >
+                    A couple more weeks of follow-ups and your send-through
+                    trend will show up here.
+                  </Text>
+                ) : (
+                  <>
+                    <View
+                      style={styles.timelineBars}
+                      testID="timeline-bars"
+                    >
+                      {followUpTimeline.buckets.map((b) => {
+                        const rate = b.sendThroughRate ?? 0;
+                        const hasData = b.total > 0;
+                        const heightPct = hasData
+                          ? Math.max(6, Math.round(rate * 100))
+                          : 0;
+                        return (
+                          <View key={b.weekStart} style={styles.timelineCol}>
+                            <View
+                              style={[
+                                styles.timelineTrack,
+                                { backgroundColor: `${colors.teal}1F` },
+                              ]}
+                            >
+                              <View
+                                style={[
+                                  styles.timelineFill,
+                                  {
+                                    height: `${heightPct}%`,
+                                    backgroundColor: hasData
+                                      ? colors.teal
+                                      : "transparent",
+                                  },
+                                ]}
+                              />
+                            </View>
+                            <Text
+                              style={[
+                                styles.timelineTick,
+                                { color: colors.mutedForeground },
+                              ]}
+                            >
+                              {new Date(b.weekStart).toLocaleDateString(
+                                "en-US",
+                                { month: "numeric", day: "numeric" },
+                              )}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                    <Text
+                      style={[
+                        styles.timelineCaption,
+                        { color: colors.mutedForeground },
+                      ]}
+                    >
+                      Send-through rate by week (last 8 weeks)
+                    </Text>
+                  </>
+                )}
+              </View>
+            ) : null}
           </View>
         ) : null}
 
@@ -1159,6 +1256,41 @@ const styles = StyleSheet.create({
   },
   statsLastDate: {
     fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  timelineBlock: {
+    borderTopWidth: 1,
+    paddingTop: 12,
+    gap: 8,
+  },
+  timelineBars: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 6,
+    height: 72,
+  },
+  timelineCol: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+  },
+  timelineTrack: {
+    width: "100%",
+    height: 56,
+    borderRadius: 4,
+    overflow: "hidden",
+    justifyContent: "flex-end",
+  },
+  timelineFill: {
+    width: "100%",
+    borderRadius: 4,
+  },
+  timelineTick: {
+    fontSize: 9,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  timelineCaption: {
+    fontSize: 11,
     fontFamily: "PlusJakartaSans_500Medium",
   },
   followUpAck: {
