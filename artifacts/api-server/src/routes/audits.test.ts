@@ -35,6 +35,7 @@ import {
   GenerateAuditReportResponse,
   GetAuditSummaryResponse,
   DeleteAuditResponse,
+  BulkDeleteAuditsResponse,
 } from "@workspace/api-zod";
 import type { AuthUser } from "@workspace/api-zod";
 
@@ -516,5 +517,122 @@ describe("DELETE /api/audits/:id", () => {
 
     const { dumpTable } = await import("../lib/testDb");
     expect(dumpTable("audits").find((r) => r.id === theirsId)).toBeDefined();
+  });
+});
+
+describe("POST /api/audits/bulk-delete", () => {
+  it("deletes only the caller's owned ids and skips ids belonging to others", async () => {
+    const otherUserId = `other-${crypto.randomBytes(4).toString("hex")}`;
+    const mine1 = await createAudit({ id: USER_ID });
+    const mine2 = await createAudit({ id: USER_ID });
+    const theirs = await createAudit({ id: otherUserId });
+
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app)
+      .post("/api/audits/bulk-delete")
+      .send({ ids: [mine1, mine2, theirs, 999999999] });
+
+    expect(res.status).toBe(200);
+    expect(() => BulkDeleteAuditsResponse.parse(res.body)).not.toThrow();
+    expect(res.body.success).toBe(true);
+    expect([...res.body.deletedIds].sort()).toEqual([mine1, mine2].sort());
+
+    const { dumpTable } = await import("../lib/testDb");
+    const remaining = dumpTable("audits").map((r) => r.id);
+    expect(remaining).not.toContain(mine1);
+    expect(remaining).not.toContain(mine2);
+    expect(remaining).toContain(theirs);
+  });
+
+  it("scopes anonymous bulk deletes by anon_claim cookie", async () => {
+    // Anonymous A creates two audits and gets a cookie back.
+    testApp.setUser(null);
+    const createA1 = await request(testApp.app).post("/api/audits").send(VALID_BODY);
+    expect(createA1.status).toBe(201);
+    const cookieA = (Array.isArray(createA1.headers["set-cookie"])
+      ? createA1.headers["set-cookie"]
+      : [createA1.headers["set-cookie"] ?? ""]) as string[];
+    const anonCookieA = cookieA
+      .map((c) => c.split(";")[0])
+      .find((c) => c.startsWith("anon_claim=")) as string;
+    expect(anonCookieA).toBeDefined();
+
+    const createA2 = await request(testApp.app)
+      .post("/api/audits")
+      .set("Cookie", anonCookieA)
+      .send(VALID_BODY);
+    expect(createA2.status).toBe(201);
+    const a1Id = createA1.body.id as number;
+    const a2Id = createA2.body.id as number;
+
+    // Anonymous B creates an audit with a different cookie.
+    const createB = await request(testApp.app).post("/api/audits").send(VALID_BODY);
+    expect(createB.status).toBe(201);
+    const cookieB = (Array.isArray(createB.headers["set-cookie"])
+      ? createB.headers["set-cookie"]
+      : [createB.headers["set-cookie"] ?? ""]) as string[];
+    const anonCookieB = cookieB
+      .map((c) => c.split(";")[0])
+      .find((c) => c.startsWith("anon_claim=")) as string;
+    const bId = createB.body.id as number;
+    expect(anonCookieB).toBeDefined();
+    expect(anonCookieB).not.toBe(anonCookieA);
+
+    // Anonymous A also tries to delete an audit owned by an authed user.
+    const authedId = await createAudit({ id: USER_ID });
+
+    testApp.setUser(null);
+    const res = await request(testApp.app)
+      .post("/api/audits/bulk-delete")
+      .set("Cookie", anonCookieA)
+      .send({ ids: [a1Id, a2Id, bId, authedId] });
+
+    expect(res.status).toBe(200);
+    expect(() => BulkDeleteAuditsResponse.parse(res.body)).not.toThrow();
+    expect([...res.body.deletedIds].sort()).toEqual([a1Id, a2Id].sort());
+
+    const { dumpTable } = await import("../lib/testDb");
+    const remaining = dumpTable("audits").map((r) => r.id);
+    expect(remaining).not.toContain(a1Id);
+    expect(remaining).not.toContain(a2Id);
+    expect(remaining).toContain(bId);
+    expect(remaining).toContain(authedId);
+  });
+
+  it("returns an empty deletedIds list (not 404) when caller owns none of the ids", async () => {
+    const otherUserId = `other-${crypto.randomBytes(4).toString("hex")}`;
+    const theirs1 = await createAudit({ id: otherUserId });
+    const theirs2 = await createAudit({ id: otherUserId });
+
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app)
+      .post("/api/audits/bulk-delete")
+      .send({ ids: [theirs1, theirs2] });
+
+    expect(res.status).toBe(200);
+    expect(() => BulkDeleteAuditsResponse.parse(res.body)).not.toThrow();
+    expect(res.body.deletedIds).toEqual([]);
+
+    const { dumpTable } = await import("../lib/testDb");
+    const remaining = dumpTable("audits").map((r) => r.id);
+    expect(remaining).toContain(theirs1);
+    expect(remaining).toContain(theirs2);
+  });
+
+  it("returns 400 when ids is empty", async () => {
+    testApp.setUser({ id: USER_ID });
+    const res = await request(testApp.app)
+      .post("/api/audits/bulk-delete")
+      .send({ ids: [] });
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when ids has more than 200 entries", async () => {
+    testApp.setUser({ id: USER_ID });
+    const ids = Array.from({ length: 201 }, (_, i) => i + 1);
+    const res = await request(testApp.app)
+      .post("/api/audits/bulk-delete")
+      .send({ ids });
+    expect(res.status).toBe(400);
   });
 });
