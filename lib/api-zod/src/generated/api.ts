@@ -2136,3 +2136,21 @@ export const TestAiResponse = zod.object({
 })
 
 
+/**
+ * Returns the timestamp of the last successful `audit_trash_purge` job run,
+together with the elapsed time and a staleness flag. Requires founder key.
+
+ * @summary When did the audit trash purge job last succeed?
+ */
+export const GetTrashPurgeHeartbeatHeader = zod.object({
+  "x-founder-key": zod.string().optional()
+})
+
+export const GetTrashPurgeHeartbeatResponse = zod.object({
+  "lastSuccessAt": zod.coerce.date().nullable().describe('ISO-8601 timestamp of the last successful audit_trash_purge run, or null if it has never run.'),
+  "ageMs": zod.number().nullable().describe('Milliseconds since the last successful run, or null if it has never run.'),
+  "staleThresholdMs": zod.number().describe('The staleness threshold in milliseconds. If ageMs exceeds this, stale is true.'),
+  "stale": zod.boolean().describe('True when the job has never run or last ran longer ago than staleThresholdMs.')
+})
+
+

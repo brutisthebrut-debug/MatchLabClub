@@ -91,6 +91,7 @@ import type {
   ScreenshotExtractInput,
   ScreenshotExtractResult,
   TestAiParams,
+  TrashPurgeHeartbeat,
   UnregisterPushTokenParams,
   UnregisterPushTokenResult,
   WaitlistEntry,
@@ -4864,4 +4865,84 @@ export const useTestAi = <TError = ErrorType<AiError>,
       > => {
       return useMutation(getTestAiMutationOptions(options));
     }
+
+export const getGetTrashPurgeHeartbeatUrl = () => {
+
+
+
+
+  return `/api/founder/trash-purge-heartbeat`
+}
+
+/**
+ * Returns the timestamp of the last successful `audit_trash_purge` job run,
+together with the elapsed time and a staleness flag. Requires founder key.
+
+ * @summary When did the audit trash purge job last succeed?
+ */
+export const getTrashPurgeHeartbeat = async ( options?: RequestInit): Promise<TrashPurgeHeartbeat> => {
+
+  return customFetch<TrashPurgeHeartbeat>(getGetTrashPurgeHeartbeatUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTrashPurgeHeartbeatQueryKey = () => {
+    return [
+    `/api/founder/trash-purge-heartbeat`
+    ] as const;
+    }
+
+
+export const getGetTrashPurgeHeartbeatQueryOptions = <TData = Awaited<ReturnType<typeof getTrashPurgeHeartbeat>>, TError = ErrorType<AiError>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTrashPurgeHeartbeat>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTrashPurgeHeartbeatQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTrashPurgeHeartbeat>>> = ({ signal }) => getTrashPurgeHeartbeat({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTrashPurgeHeartbeat>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTrashPurgeHeartbeatQueryResult = NonNullable<Awaited<ReturnType<typeof getTrashPurgeHeartbeat>>>
+export type GetTrashPurgeHeartbeatQueryError = ErrorType<AiError>
+
+
+/**
+ * @summary When did the audit trash purge job last succeed?
+ */
+
+export function useGetTrashPurgeHeartbeat<TData = Awaited<ReturnType<typeof getTrashPurgeHeartbeat>>, TError = ErrorType<AiError>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTrashPurgeHeartbeat>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTrashPurgeHeartbeatQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 

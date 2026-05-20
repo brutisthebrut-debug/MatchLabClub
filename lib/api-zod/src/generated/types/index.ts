@@ -121,6 +121,7 @@ export * from './screenshotExtractResult';
 export * from './screenshotExtractResultLowConfidenceFieldsItem';
 export * from './suggestedReply';
 export * from './testAiParams';
+export * from './trashPurgeHeartbeat';
 export * from './unregisterPushTokenParams';
 export * from './unregisterPushTokenResult';
 export * from './waitlistEntry';

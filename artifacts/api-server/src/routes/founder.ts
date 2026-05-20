@@ -35,6 +35,10 @@ import {
   getRollupHeartbeat,
   getRollupStaleThresholdMs,
 } from "../lib/aiMetricsRetention";
+import {
+  getTrashPurgeHeartbeat,
+  getTrashPurgeStaleThresholdMs,
+} from "../lib/auditTrashPurge";
 import { KNOWN_JOB_NAMES, getStaleThresholdMs } from "../lib/jobHeartbeat";
 import {
   DEFAULT_REBREACH_COOLDOWN_MINUTES,
@@ -378,6 +382,27 @@ router.get("/founder/ai-metrics", requireFounder, async (_req, res): Promise<voi
 router.get("/founder/rollup-heartbeat", requireFounder, async (_req, res): Promise<void> => {
   const lastSuccessAt = await getRollupHeartbeat();
   const staleThresholdMs = getRollupStaleThresholdMs();
+  if (!lastSuccessAt) {
+    res.json({
+      lastSuccessAt: null,
+      ageMs: null,
+      staleThresholdMs,
+      stale: true,
+    });
+    return;
+  }
+  const ageMs = Date.now() - lastSuccessAt.getTime();
+  res.json({
+    lastSuccessAt: lastSuccessAt.toISOString(),
+    ageMs,
+    staleThresholdMs,
+    stale: ageMs > staleThresholdMs,
+  });
+});
+
+router.get("/founder/trash-purge-heartbeat", requireFounder, async (_req, res): Promise<void> => {
+  const lastSuccessAt = await getTrashPurgeHeartbeat();
+  const staleThresholdMs = getTrashPurgeStaleThresholdMs();
   if (!lastSuccessAt) {
     res.json({
       lastSuccessAt: null,

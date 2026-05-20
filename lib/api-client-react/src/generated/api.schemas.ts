@@ -1104,6 +1104,23 @@ export interface AiTestResult {
   attempts?: number;
 }
 
+export interface TrashPurgeHeartbeat {
+  /**
+     * ISO-8601 timestamp of the last successful audit_trash_purge run, or null if it has never run.
+     * @nullable
+     */
+  lastSuccessAt: string | null;
+  /**
+     * Milliseconds since the last successful run, or null if it has never run.
+     * @nullable
+     */
+  ageMs: number | null;
+  /** The staleness threshold in milliseconds. If ageMs exceeds this, stale is true. */
+  staleThresholdMs: number;
+  /** True when the job has never run or last ran longer ago than staleThresholdMs. */
+  stale: boolean;
+}
+
 /**
  * Opaque session token — `Bearer <sid>`.
  */

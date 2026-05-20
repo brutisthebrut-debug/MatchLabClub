@@ -1,7 +1,7 @@
-import { and, isNotNull, lt } from "drizzle-orm";
-import { db, auditsTable } from "@workspace/db";
+import { and, eq, isNotNull, lt } from "drizzle-orm";
+import { db, auditsTable, jobHeartbeatsTable } from "@workspace/db";
 import { logger } from "./logger";
-import { recordJobHeartbeat } from "./jobHeartbeat";
+import { recordJobHeartbeat, getStaleThresholdMs } from "./jobHeartbeat";
 
 const AUDIT_TRASH_PURGE_JOB = "audit_trash_purge";
 
@@ -88,4 +88,21 @@ export function stopAuditTrashPurgeJob(): void {
     clearInterval(scheduledTimer);
     scheduledTimer = null;
   }
+}
+
+export function getTrashPurgeStaleThresholdMs(): number {
+  return getStaleThresholdMs(AUDIT_TRASH_PURGE_JOB);
+}
+
+export async function getTrashPurgeHeartbeat(): Promise<Date | null> {
+  const rows = await db
+    .select({ lastSuccessAt: jobHeartbeatsTable.lastSuccessAt })
+    .from(jobHeartbeatsTable)
+    .where(eq(jobHeartbeatsTable.jobName, AUDIT_TRASH_PURGE_JOB))
+    .limit(1);
+  const row = rows[0];
+  if (!row) return null;
+  return row.lastSuccessAt instanceof Date
+    ? row.lastSuccessAt
+    : new Date(row.lastSuccessAt as unknown as string);
 }

@@ -7,6 +7,8 @@ import {
   afterEach,
   vi,
 } from "vitest";
+import express, { type Express } from "express";
+import request from "supertest";
 import { and, isNotNull, sql } from "drizzle-orm";
 import {
   db,
@@ -59,6 +61,20 @@ async function setDeletedAt(id: number, date: Date): Promise<void> {
   await db.execute(
     sql`update audits set deleted_at = ${date.toISOString()} where id = ${id}`,
   );
+}
+
+async function makePurgeApp(): Promise<Express> {
+  const founderRouter = (await import("../routes/founder")).default;
+  const app = express();
+  app.use(express.json());
+  app.use((req, _res, next) => {
+    const noop = () => undefined;
+    // @ts-expect-error — test stub for pino logger
+    req.log = { info: noop, warn: noop, error: noop, debug: noop };
+    next();
+  });
+  app.use("/api", founderRouter);
+  return app;
 }
 
 describe("purgeExpiredTrashedAudits", () => {
@@ -226,6 +242,61 @@ describe("purgeExpiredTrashedAudits", () => {
         : new Date(rows[0].lastSuccessAt as unknown as string).getTime();
     expect(ts).toBeGreaterThanOrEqual(before - 5);
     expect(ts).toBeLessThanOrEqual(after + 5);
+  });
+
+  it("GET /api/founder/trash-purge-heartbeat reports fresh status after a successful purge", async () => {
+    vi.useRealTimers();
+
+    const id = await seedAudit();
+    await setDeletedAt(id, new Date("2026-04-01T00:00:00.000Z"));
+
+    await purgeExpiredTrashedAudits(30);
+
+    const app = await makePurgeApp();
+    const res = await request(app)
+      .get("/api/founder/trash-purge-heartbeat")
+      .set("x-founder-key", "nldc2024");
+    expect(res.status).toBe(200);
+    expect(res.body.lastSuccessAt).toEqual(expect.any(String));
+    expect(typeof res.body.ageMs).toBe("number");
+    expect(res.body.ageMs).toBeLessThan(60_000);
+    expect(res.body.stale).toBe(false);
+    expect(typeof res.body.staleThresholdMs).toBe("number");
+    expect(res.body.staleThresholdMs).toBeGreaterThan(0);
+  });
+
+  it("GET /api/founder/trash-purge-heartbeat reports stale=true when no heartbeat exists", async () => {
+    vi.useRealTimers();
+
+    const app = await makePurgeApp();
+    const res = await request(app)
+      .get("/api/founder/trash-purge-heartbeat")
+      .set("x-founder-key", "nldc2024");
+    expect(res.status).toBe(200);
+    expect(res.body.lastSuccessAt).toBeNull();
+    expect(res.body.ageMs).toBeNull();
+    expect(res.body.stale).toBe(true);
+  });
+
+  it("GET /api/founder/trash-purge-heartbeat reports stale=true when heartbeat is older than threshold", async () => {
+    vi.useRealTimers();
+
+    const old = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    await db
+      .insert(jobHeartbeatsTable)
+      .values({ jobName: AUDIT_TRASH_PURGE_JOB, lastSuccessAt: old })
+      .onConflictDoUpdate({
+        target: jobHeartbeatsTable.jobName,
+        set: { lastSuccessAt: old },
+      });
+
+    const app = await makePurgeApp();
+    const res = await request(app)
+      .get("/api/founder/trash-purge-heartbeat")
+      .set("x-founder-key", "nldc2024");
+    expect(res.status).toBe(200);
+    expect(res.body.stale).toBe(true);
+    expect(res.body.ageMs).toBeGreaterThan(36 * 60 * 60 * 1000);
   });
 
   it("handles an empty table without errors and returns 0", async () => {
