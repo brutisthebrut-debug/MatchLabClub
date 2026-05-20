@@ -47,6 +47,14 @@ import WellnessCenter from "@/pages/WellnessCenter";
 import UserControl from "@/pages/UserControl";
 import LifeContext from "@/pages/LifeContext";
 import FutureConnections from "@/pages/FutureConnections";
+import Copilot from "@/pages/Copilot";
+import StartMyReset from "@/pages/copilot/StartMyReset";
+import HelpMeReply from "@/pages/copilot/HelpMeReply";
+import ImproveMyProfile from "@/pages/copilot/ImproveMyProfile";
+import DebriefWhatHappened from "@/pages/copilot/DebriefWhatHappened";
+import WeeklyGrowthPlan from "@/pages/copilot/WeeklyGrowthPlan";
+import PrepareForDate from "@/pages/copilot/PrepareForDate";
+import FounderDemoJourney from "@/pages/copilot/FounderDemoJourney";
 
 const queryClient = new QueryClient();
 
@@ -102,6 +110,15 @@ function Router() {
       <Route path="/user-control" component={UserControl} />
       <Route path="/life-context" component={LifeContext} />
       <Route path="/future-connections" component={FutureConnections} />
+      {/* Copilot / Wingman Studio */}
+      <Route path="/copilot" component={Copilot} />
+      <Route path="/copilot/reset" component={StartMyReset} />
+      <Route path="/copilot/reply" component={HelpMeReply} />
+      <Route path="/copilot/profile" component={ImproveMyProfile} />
+      <Route path="/copilot/debrief" component={DebriefWhatHappened} />
+      <Route path="/copilot/weekly-plan" component={WeeklyGrowthPlan} />
+      <Route path="/copilot/prep" component={PrepareForDate} />
+      <Route path="/copilot/demo" component={FounderDemoJourney} />
       <Route component={NotFound} />
     </Switch>
   );

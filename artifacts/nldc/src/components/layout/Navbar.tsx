@@ -220,6 +220,12 @@ export function Navbar() {
 
           <div className="w-px h-5 bg-white/10 mx-1" />
 
+          <Link href="/copilot" onClick={closeAll}
+            className={`flex items-center gap-1.5 text-sm font-semibold px-3 py-2 rounded-lg transition-colors ${location.startsWith("/copilot") ? "text-[hsl(268_52%_78%)] bg-[hsl(268_52%_68%/0.1)]" : "text-muted-foreground hover:text-foreground hover:bg-white/4"}`}>
+            <Sparkles className="w-3.5 h-3.5" />
+            Copilot
+          </Link>
+
           <Link href="/dashboard" onClick={closeAll}
             className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${location === "/dashboard" ? "text-[hsl(268_52%_78%)] bg-white/5" : "text-muted-foreground hover:text-foreground hover:bg-white/4"}`}>
             Dashboard
@@ -296,6 +302,15 @@ export function Navbar() {
           {SETTINGS_TRUST.map(t => (
             <Link key={t.href} href={t.href} onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors">{t.name}</Link>
           ))}
+          <div className="h-px bg-white/5 my-2" />
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-1">Wingman Studio</p>
+          <Link href="/copilot" onClick={closeAll} className="text-sm font-semibold text-[hsl(268_52%_78%)] hover:text-foreground py-1.5">✦ AI Copilot</Link>
+          <Link href="/copilot/reset" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Start My Reset</Link>
+          <Link href="/copilot/reply" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Help Me Reply</Link>
+          <Link href="/copilot/profile" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Improve My Profile</Link>
+          <Link href="/copilot/debrief" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Debrief What Happened</Link>
+          <Link href="/copilot/weekly-plan" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Weekly Growth Plan</Link>
+          <Link href="/copilot/prep" onClick={closeAll} className="text-sm text-muted-foreground hover:text-foreground py-1.5 transition-colors pl-3">Prepare for a Date</Link>
           <div className="h-px bg-white/5 my-2" />
           <Link href="/dashboard" onClick={closeAll} className="text-sm font-medium text-muted-foreground hover:text-foreground py-1.5">Dashboard</Link>
           {isLoading ? null : isAuthenticated ? (

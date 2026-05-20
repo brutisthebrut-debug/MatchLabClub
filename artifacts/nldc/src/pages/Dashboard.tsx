@@ -110,6 +110,16 @@ const QUICK_ACTIONS = [
   { icon: Users,         label: "Companion Workspace",  desc: "Copy-ready situation guidance", href: "/progress/companion",    color: "hsl(190 55% 60%)" },
 ];
 
+const WINGMAN_NOTES = [
+  { note: "Your opener doesn't need to be clever. It needs to be specific. One real detail beats three perfect lines.", action: "Try Next Message", href: "/next-message" },
+  { note: "If you haven't messaged them in 3 days, send the re-engage option — low-pressure, no explanation required.", action: "Open Message Coach", href: "/coach" },
+  { note: "The bio rewrite that works best is the one that sounds like you'd actually say it out loud.", action: "Profile Glow-Up", href: "/glow-up" },
+  { note: "Most people don't 'catch up' — they just start somewhere. What's the one move available to you right now?", action: "See My Plan", href: "/copilot/weekly-plan" },
+  { note: "Weekend energy: lower the bar. A short, genuine message beats a perfect long one every time.", action: "Help Me Reply", href: "/copilot/reply" },
+  { note: "If something went well this week, log it in your Timeline before the detail fades. Small wins compound.", action: "My Timeline", href: "/progress/timeline" },
+  { note: "Specificity is your superpower. The more specific your profile, the more specific the people who match you.", action: "Improve My Profile", href: "/copilot/profile" },
+];
+
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -190,6 +200,26 @@ export default function Dashboard() {
             <p className="text-sm text-muted-foreground font-medium mb-1">Welcome back</p>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">Your Dating Blueprint</h1>
           </motion.div>
+
+          {/* Wingman Note */}
+          {(() => {
+            const note = WINGMAN_NOTES[new Date().getDay()];
+            return (
+              <motion.div {...fadeUp(0.03)} className="mb-4">
+                <div className="rounded-2xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3 bg-[hsl(268_52%_68%/0.07)] border border-[hsl(268_52%_68%/0.18)]">
+                  <Sparkles className="w-4 h-4 text-[hsl(268_52%_72%)] flex-shrink-0 hidden sm:block" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(268_52%_68%)] mb-0.5">Today's Wingman Note</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{note.note}</p>
+                  </div>
+                  <Link href={note.href}
+                    className="flex-shrink-0 text-xs font-semibold text-[hsl(268_52%_78%)] hover:text-[hsl(268_52%_88%)] transition-colors whitespace-nowrap self-end sm:self-auto">
+                    {note.action} →
+                  </Link>
+                </div>
+              </motion.div>
+            );
+          })()}
 
           {/* Next Best Action Banner */}
           <motion.div {...fadeUp(0.04)} className="mb-5">
