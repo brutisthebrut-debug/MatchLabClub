@@ -1243,6 +1243,7 @@ export default function AuditDetailScreen() {
               iconBg={`${colors.violet}22`}
               iconColor={colors.violet}
               icon="feather"
+              testID="section-rewritten-bio"
               headerRight={<CopyButton text={report.rewrittenBio} />}
             >
               <Text style={[styles.body, { color: colors.foreground }]} testID="text-rewritten-bio">
@@ -1885,6 +1886,7 @@ function Section({
   iconBg,
   iconColor,
   headerRight,
+  testID,
   children,
 }: {
   title: string;
@@ -1892,11 +1894,13 @@ function Section({
   iconBg: string;
   iconColor: string;
   headerRight?: React.ReactNode;
+  testID?: string;
   children: React.ReactNode;
 }) {
   const colors = useColors();
   return (
     <View
+      testID={testID}
       style={[
         styles.section,
         { backgroundColor: colors.card, borderColor: colors.cardBorder },

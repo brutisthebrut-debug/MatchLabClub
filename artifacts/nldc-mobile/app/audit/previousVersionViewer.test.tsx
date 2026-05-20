@@ -259,9 +259,22 @@ const NEW_CURRENT_REPORT = {
   risks: ["Current risk A"],
   bioAudit: "Current bio audit text.",
   rewrittenBio: "CURRENT_REWRITTEN_BIO: latest bio.",
-  rewrittenPrompts: [],
+  rewrittenPrompts: [
+    {
+      original: "What I'm looking for is...",
+      rewritten: "CURRENT_PROMPT_REWRITE_0: latest prompt rewrite.",
+      tip: "Current tip.",
+    },
+  ],
   photoGuidance: [],
-  actionPlan: [],
+  actionPlan: [
+    {
+      priority: 1,
+      title: "CURRENT_ACTION_TITLE_0",
+      description: "Current action description.",
+      timeframe: "This week",
+    },
+  ],
   messagingStyle: "Current messaging style.",
   coachingCta: "Current CTA.",
   engineVersion: "v1",
@@ -604,5 +617,190 @@ describe("Previous-version viewer — mobile audit detail screen", () => {
     await waitFor(() => {
       expect(screen.queryByTestId("button-view-previous-version")).toBeTruthy();
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Current report copy buttons
+// ---------------------------------------------------------------------------
+
+describe("Current report copy buttons — main report view", () => {
+  it("copy buttons are present in the current report for bio, prompt, and action plan", async () => {
+    auditDataRef.current = makeAudit({ withPrevious: false });
+
+    render(
+      <Wrap>
+        <AuditDetailScreen />
+      </Wrap>,
+    );
+
+    // Wait for all three sections to render.
+    await screen.findByTestId("section-rewritten-bio");
+    await screen.findByTestId("card-prompt-rewrite-0");
+    await screen.findByTestId("card-action-item-0");
+
+    expect(
+      within(screen.getByTestId("section-rewritten-bio")).getByRole("button", {
+        name: "Copy to clipboard",
+      }),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByTestId("card-prompt-rewrite-0")).getByRole("button", {
+        name: "Copy to clipboard",
+      }),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByTestId("card-action-item-0")).getByRole("button", {
+        name: "Copy to clipboard",
+      }),
+    ).toBeTruthy();
+  });
+
+  it("pressing the bio rewrite copy button calls Clipboard.setStringAsync with the bio text", async () => {
+    auditDataRef.current = makeAudit({ withPrevious: false });
+
+    render(
+      <Wrap>
+        <AuditDetailScreen />
+      </Wrap>,
+    );
+
+    const bioSection = await screen.findByTestId("section-rewritten-bio");
+    const copyBtn = within(bioSection).getByRole("button", {
+      name: "Copy to clipboard",
+    });
+
+    await act(async () => {
+      fireEvent.click(copyBtn);
+    });
+
+    expect(vi.mocked(Clipboard.setStringAsync)).toHaveBeenCalledWith(
+      NEW_CURRENT_REPORT.rewrittenBio,
+    );
+  });
+
+  it("pressing the prompt rewrite copy button calls Clipboard.setStringAsync with the rewritten text", async () => {
+    auditDataRef.current = makeAudit({ withPrevious: false });
+
+    render(
+      <Wrap>
+        <AuditDetailScreen />
+      </Wrap>,
+    );
+
+    const promptCard = await screen.findByTestId("card-prompt-rewrite-0");
+    const copyBtn = within(promptCard).getByRole("button", {
+      name: "Copy to clipboard",
+    });
+
+    await act(async () => {
+      fireEvent.click(copyBtn);
+    });
+
+    expect(vi.mocked(Clipboard.setStringAsync)).toHaveBeenCalledWith(
+      NEW_CURRENT_REPORT.rewrittenPrompts[0].rewritten,
+    );
+  });
+
+  it("pressing an action plan copy button calls Clipboard.setStringAsync with title + description", async () => {
+    auditDataRef.current = makeAudit({ withPrevious: false });
+
+    render(
+      <Wrap>
+        <AuditDetailScreen />
+      </Wrap>,
+    );
+
+    const actionCard = await screen.findByTestId("card-action-item-0");
+    const copyBtn = within(actionCard).getByRole("button", {
+      name: "Copy to clipboard",
+    });
+
+    await act(async () => {
+      fireEvent.click(copyBtn);
+    });
+
+    const expected = `${NEW_CURRENT_REPORT.actionPlan[0].title}: ${NEW_CURRENT_REPORT.actionPlan[0].description}`;
+    expect(vi.mocked(Clipboard.setStringAsync)).toHaveBeenCalledWith(expected);
+  });
+
+  it("bio copy button shows 'Copied' feedback after press", async () => {
+    auditDataRef.current = makeAudit({ withPrevious: false });
+
+    render(
+      <Wrap>
+        <AuditDetailScreen />
+      </Wrap>,
+    );
+
+    const bioSection = await screen.findByTestId("section-rewritten-bio");
+    const copyBtn = within(bioSection).getByRole("button", {
+      name: "Copy to clipboard",
+    });
+
+    await act(async () => {
+      fireEvent.click(copyBtn);
+    });
+
+    await waitFor(() => {
+      expect(within(bioSection).getByText("Copied")).toBeTruthy();
+    });
+
+    expect(vi.mocked(Clipboard.setStringAsync)).toHaveBeenCalledWith(
+      NEW_CURRENT_REPORT.rewrittenBio,
+    );
+  });
+
+  it("prompt rewrite copy button shows 'Copied' feedback after press", async () => {
+    auditDataRef.current = makeAudit({ withPrevious: false });
+
+    render(
+      <Wrap>
+        <AuditDetailScreen />
+      </Wrap>,
+    );
+
+    const promptCard = await screen.findByTestId("card-prompt-rewrite-0");
+    const copyBtn = within(promptCard).getByRole("button", {
+      name: "Copy to clipboard",
+    });
+
+    await act(async () => {
+      fireEvent.click(copyBtn);
+    });
+
+    await waitFor(() => {
+      expect(within(promptCard).getByText("Copied")).toBeTruthy();
+    });
+
+    expect(vi.mocked(Clipboard.setStringAsync)).toHaveBeenCalledWith(
+      NEW_CURRENT_REPORT.rewrittenPrompts[0].rewritten,
+    );
+  });
+
+  it("action plan copy button shows 'Copied' feedback after press", async () => {
+    auditDataRef.current = makeAudit({ withPrevious: false });
+
+    render(
+      <Wrap>
+        <AuditDetailScreen />
+      </Wrap>,
+    );
+
+    const actionCard = await screen.findByTestId("card-action-item-0");
+    const copyBtn = within(actionCard).getByRole("button", {
+      name: "Copy to clipboard",
+    });
+
+    await act(async () => {
+      fireEvent.click(copyBtn);
+    });
+
+    await waitFor(() => {
+      expect(within(actionCard).getByText("Copied")).toBeTruthy();
+    });
+
+    const expected = `${NEW_CURRENT_REPORT.actionPlan[0].title}: ${NEW_CURRENT_REPORT.actionPlan[0].description}`;
+    expect(vi.mocked(Clipboard.setStringAsync)).toHaveBeenCalledWith(expected);
   });
 });
