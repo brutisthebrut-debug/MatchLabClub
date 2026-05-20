@@ -1,0 +1,292 @@
+import { db, ocrLearnedRulesTable, auditsTable } from "@workspace/db";
+import { isNotNull, desc, sql } from "drizzle-orm";
+import type {
+  OcrCorrectionsRecord,
+  OcrCorrectionField,
+  OcrLearnedRule,
+} from "@workspace/db";
+import type { SourceApp } from "./profileParser";
+import { logger } from "./logger";
+
+export interface LearnedRules {
+  nameSubstitutions: Map<string, string>;
+  sourceAppOverrides: Map<SourceApp, SourceApp>;
+  promptAdditions: Set<string>;
+}
+
+export const EMPTY_LEARNED_RULES: LearnedRules = {
+  nameSubstitutions: new Map(),
+  sourceAppOverrides: new Map(),
+  promptAdditions: new Set(),
+};
+
+const MIN_OCCURRENCES = Number(process.env.OCR_LEARNING_MIN_OCCURRENCES ?? 2);
+const MAX_AUDITS_TO_SCAN = 5000;
+const VALID_SOURCE_APPS: ReadonlySet<SourceApp> = new Set([
+  "Hinge",
+  "Bumble",
+  "Tinder",
+]);
+
+let cache: LearnedRules = EMPTY_LEARNED_RULES;
+
+export function getCachedLearnedRules(): LearnedRules {
+  return cache;
+}
+
+export function setLearnedRulesCacheForTests(rules: LearnedRules): void {
+  cache = rules;
+}
+
+function normName(s: string): string {
+  return s.trim().toLowerCase();
+}
+
+function normPrompt(s: string): string {
+  return s.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/**
+ * Reduce a prompt string to a short stable "question prefix" we can match
+ * across audits even when users append different answers. We take the first
+ * ~6 words (capped at 40 chars), which captures the prompt question itself
+ * (e.g. "my new fav coffee shop is") without the user-specific tail.
+ */
+function promptPrefix(s: string): string {
+  const norm = normPrompt(s);
+  const words = norm.split(" ").slice(0, 6).join(" ");
+  return words.slice(0, 40);
+}
+
+function asStringValue(v: unknown): string | null {
+  if (v === null || v === undefined) return null;
+  if (Array.isArray(v)) return null;
+  const s = String(v).trim();
+  return s.length > 0 ? s : null;
+}
+
+function asStringArray(v: unknown): string[] {
+  if (Array.isArray(v)) {
+    return v.map((x) => String(x).trim()).filter((x) => x.length > 0);
+  }
+  return [];
+}
+
+function asSourceApp(v: unknown): SourceApp | null {
+  const s = asStringValue(v);
+  if (!s) return null;
+  const cap = (s[0].toUpperCase() + s.slice(1).toLowerCase()) as SourceApp;
+  return VALID_SOURCE_APPS.has(cap) ? cap : null;
+}
+
+export interface RuleCandidate {
+  kind: "nameSubstitution" | "sourceAppOverride" | "promptAddition";
+  pattern: string;
+  replacement: string;
+  scope: string | null;
+  occurrences: number;
+}
+
+/**
+ * Pure aggregation: turn a stream of audit OCR-correction records into a
+ * deduplicated list of candidate parser-improvement rules. Each candidate
+ * carries the number of audits it was observed in; only those meeting the
+ * minimum-occurrences threshold are promoted to learned rules.
+ */
+export function aggregateOcrCorrections(
+  records: Array<{ corrections: OcrCorrectionsRecord | null }>,
+  minOccurrences: number = MIN_OCCURRENCES,
+): RuleCandidate[] {
+  const nameCounts = new Map<string, { replacement: string; count: number }>();
+  const sourceAppCounts = new Map<string, { replacement: SourceApp; count: number }>();
+  const promptCounts = new Map<string, { exemplar: string; count: number }>();
+
+  for (const rec of records) {
+    const corr = rec.corrections;
+    if (!corr) continue;
+
+    if (corr.firstName) {
+      const raw = asStringValue(corr.firstName.raw);
+      const corrected = asStringValue(corr.firstName.corrected);
+      if (raw && corrected && raw.toLowerCase() !== corrected.toLowerCase()) {
+        const key = `${normName(raw)}\u0001${normName(corrected)}`;
+        const existing = nameCounts.get(key);
+        if (existing) existing.count += 1;
+        else nameCounts.set(key, { replacement: corrected, count: 1 });
+      }
+    }
+
+    if (corr.sourceApp) {
+      const raw = asSourceApp(corr.sourceApp.raw);
+      const corrected = asSourceApp(corr.sourceApp.corrected);
+      if (raw && corrected && raw !== corrected) {
+        const key = `${raw}\u0001${corrected}`;
+        const existing = sourceAppCounts.get(key);
+        if (existing) existing.count += 1;
+        else sourceAppCounts.set(key, { replacement: corrected, count: 1 });
+      }
+    }
+
+    if (corr.prompts) {
+      const raw = asStringArray(corr.prompts.raw);
+      const corrected = asStringArray(corr.prompts.corrected);
+      const rawPrefixes = new Set(raw.map(promptPrefix));
+      const seen = new Set<string>();
+      for (const p of corrected) {
+        const key = promptPrefix(p);
+        if (!key || key.length < 10) continue;
+        if (rawPrefixes.has(key)) continue;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const existing = promptCounts.get(key);
+        if (existing) existing.count += 1;
+        else promptCounts.set(key, { exemplar: key, count: 1 });
+      }
+    }
+  }
+
+  const out: RuleCandidate[] = [];
+
+  for (const [key, { replacement, count }] of nameCounts) {
+    if (count < minOccurrences) continue;
+    const [raw] = key.split("\u0001");
+    out.push({
+      kind: "nameSubstitution",
+      pattern: raw,
+      replacement,
+      scope: null,
+      occurrences: count,
+    });
+  }
+  for (const [key, { replacement, count }] of sourceAppCounts) {
+    if (count < minOccurrences) continue;
+    const [raw] = key.split("\u0001");
+    out.push({
+      kind: "sourceAppOverride",
+      pattern: raw,
+      replacement,
+      scope: null,
+      occurrences: count,
+    });
+  }
+  for (const [key, { exemplar, count }] of promptCounts) {
+    if (count < minOccurrences) continue;
+    out.push({
+      kind: "promptAddition",
+      pattern: key,
+      replacement: exemplar,
+      scope: null,
+      occurrences: count,
+    });
+  }
+
+  return out;
+}
+
+function ruleId(c: { kind: string; pattern: string; scope: string | null }): string {
+  return `${c.kind}:${c.scope ?? ""}:${c.pattern}`;
+}
+
+/**
+ * Build the runtime cache shape from a list of persisted rules.
+ */
+export function buildLearnedRules(rules: OcrLearnedRule[]): LearnedRules {
+  const result: LearnedRules = {
+    nameSubstitutions: new Map(),
+    sourceAppOverrides: new Map(),
+    promptAdditions: new Set(),
+  };
+  for (const r of rules) {
+    if (r.kind === "nameSubstitution") {
+      result.nameSubstitutions.set(r.pattern, r.replacement);
+    } else if (r.kind === "sourceAppOverride") {
+      if (VALID_SOURCE_APPS.has(r.pattern as SourceApp) && VALID_SOURCE_APPS.has(r.replacement as SourceApp)) {
+        result.sourceAppOverrides.set(r.pattern as SourceApp, r.replacement as SourceApp);
+      }
+    } else if (r.kind === "promptAddition") {
+      result.promptAdditions.add(r.pattern);
+    }
+  }
+  return result;
+}
+
+/**
+ * Read the current learned-rule rows from the DB and replace the cache.
+ * Safe to call at startup and after a learning run. Failures are logged
+ * and leave the previous cache in place.
+ */
+export async function refreshLearnedRulesCache(): Promise<LearnedRules> {
+  try {
+    const rows = await db.select().from(ocrLearnedRulesTable);
+    cache = buildLearnedRules(rows);
+    return cache;
+  } catch (err) {
+    logger.warn({ err }, "Failed to load OCR learned rules; keeping previous cache");
+    return cache;
+  }
+}
+
+/**
+ * Read recent audits with OCR corrections, derive parser-improvement
+ * candidates, persist any that meet the threshold, and refresh the cache.
+ */
+export async function learnFromCorrections(): Promise<{
+  scannedAudits: number;
+  candidates: RuleCandidate[];
+  persisted: number;
+}> {
+  const rows = await db
+    .select({
+      ocrCorrections: auditsTable.ocrCorrections,
+    })
+    .from(auditsTable)
+    .where(isNotNull(auditsTable.ocrCorrections))
+    .orderBy(desc(auditsTable.createdAt))
+    .limit(MAX_AUDITS_TO_SCAN);
+
+  const candidates = aggregateOcrCorrections(
+    rows.map((r) => ({ corrections: r.ocrCorrections as OcrCorrectionsRecord | null })),
+  );
+
+  const now = new Date();
+  let persisted = 0;
+  for (const c of candidates) {
+    await db
+      .insert(ocrLearnedRulesTable)
+      .values({
+        id: ruleId(c),
+        kind: c.kind,
+        pattern: c.pattern,
+        replacement: c.replacement,
+        scope: c.scope,
+        occurrences: c.occurrences,
+        learnedAt: now,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: ocrLearnedRulesTable.id,
+        set: {
+          replacement: c.replacement,
+          occurrences: c.occurrences,
+          updatedAt: now,
+        },
+      });
+    persisted += 1;
+  }
+
+  await refreshLearnedRulesCache();
+
+  return { scannedAudits: rows.length, candidates, persisted };
+}
+
+export async function listLearnedRules(): Promise<OcrLearnedRule[]> {
+  return await db
+    .select()
+    .from(ocrLearnedRulesTable)
+    .orderBy(desc(ocrLearnedRulesTable.occurrences), desc(ocrLearnedRulesTable.updatedAt));
+}
+
+export async function clearLearnedRules(): Promise<void> {
+  await db.delete(ocrLearnedRulesTable).where(sql`true`);
+  cache = EMPTY_LEARNED_RULES;
+}

@@ -16,6 +16,11 @@ import { count, sql, desc, gte, asc, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod/v4";
 import { requireFounder } from "../middlewares/founderAuth";
 import type { OcrCorrectionsRecord, OcrCorrectionField } from "@workspace/db";
+import {
+  learnFromCorrections,
+  listLearnedRules,
+  clearLearnedRules,
+} from "../lib/ocrLearning";
 
 const router: IRouter = Router();
 
@@ -431,6 +436,36 @@ router.get("/founder/ocr-mismatches", async (_req, res): Promise<void> => {
     perField,
     recent,
   });
+});
+
+router.get("/founder/ocr-rules", requireFounder, async (_req, res): Promise<void> => {
+  const rules = await listLearnedRules();
+  res.json({
+    rules: rules.map((r) => ({
+      id: r.id,
+      kind: r.kind,
+      pattern: r.pattern,
+      replacement: r.replacement,
+      scope: r.scope,
+      occurrences: r.occurrences,
+      learnedAt: r.learnedAt instanceof Date ? r.learnedAt.toISOString() : String(r.learnedAt),
+      updatedAt: r.updatedAt instanceof Date ? r.updatedAt.toISOString() : String(r.updatedAt),
+    })),
+  });
+});
+
+router.post("/founder/ocr-learn", requireFounder, async (_req, res): Promise<void> => {
+  const result = await learnFromCorrections();
+  res.json({
+    scannedAudits: result.scannedAudits,
+    candidates: result.candidates,
+    persisted: result.persisted,
+  });
+});
+
+router.delete("/founder/ocr-rules", requireFounder, async (_req, res): Promise<void> => {
+  await clearLearnedRules();
+  res.json({ ok: true });
 });
 
 router.get("/founder/ai-thresholds", requireFounder, async (_req, res): Promise<void> => {

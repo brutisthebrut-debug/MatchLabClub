@@ -8,6 +8,24 @@ export interface ParsedProfile {
   prompts: string[];
 }
 
+/**
+ * Rules learned from aggregated user OCR corrections. Optional input to
+ * `parseProfileText` — when provided, the parser uses them to fix common
+ * OCR mistakes before returning (so future scans don't re-record the same
+ * mismatch). See `ocrLearning.ts` for how these are derived and persisted.
+ */
+export interface ParserLearnedRules {
+  nameSubstitutions: Map<string, string>;
+  sourceAppOverrides: Map<SourceApp, SourceApp>;
+  promptAdditions: Set<string>;
+}
+
+const NO_RULES: ParserLearnedRules = {
+  nameSubstitutions: new Map(),
+  sourceAppOverrides: new Map(),
+  promptAdditions: new Set(),
+};
+
 // ---------------------------------------------------------------------------
 // Prompt dictionaries
 // ---------------------------------------------------------------------------
@@ -141,8 +159,12 @@ function startsWithAnyPrompt(line: string, dict: readonly string[]): boolean {
   return dict.some((p) => l.startsWith(p));
 }
 
-function isPromptQuestion(line: string): boolean {
+function isPromptQuestion(line: string, learned: ReadonlySet<string>): boolean {
   if (line.length > 90) return false;
+  const l = line.toLowerCase();
+  for (const p of learned) {
+    if (l.startsWith(p)) return true;
+  }
   // Require the prompt phrase to anchor at the start of the line so a bio
   // sentence like "Just moved here. Looking for someone..." isn't misread.
   return startsWithAnyPrompt(line, ALL_PROMPTS);
@@ -257,6 +279,7 @@ function isMetadataLine(line: string): boolean {
 function splitBioAndPrompts(
   lines: string[],
   skipHead: number,
+  learnedPrompts: ReadonlySet<string>,
 ): { bio: string; prompts: string[] } {
   const bioLines: string[] = [];
   const prompts: string[] = [];
@@ -270,10 +293,10 @@ function splitBioAndPrompts(
       continue;
     }
 
-    if (isPromptQuestion(line)) {
+    if (isPromptQuestion(line, learnedPrompts)) {
       let j = i + 1;
       while (j < body.length && (isNoise(body[j]) || isMetadataLine(body[j]))) j++;
-      const answer = j < body.length && !isPromptQuestion(body[j]) ? body[j] : null;
+      const answer = j < body.length && !isPromptQuestion(body[j], learnedPrompts) ? body[j] : null;
       prompts.push(answer ? `${line} ${answer}` : line);
       i = answer ? j + 1 : i + 1;
       continue;
@@ -302,14 +325,29 @@ function splitBioAndPrompts(
   return { bio: cleanedBio, prompts };
 }
 
-export function parseProfileText(rawText: string): ParsedProfile {
+export function parseProfileText(
+  rawText: string,
+  learnedRules: ParserLearnedRules = NO_RULES,
+): ParsedProfile {
   const lines = rawText
     .split(/\r?\n/)
     .map(normalize)
     .filter((l) => l.length > 0);
 
-  const sourceApp = detectSourceApp(lines);
-  const { firstName, age } = extractNameAndAge(lines);
+  let sourceApp = detectSourceApp(lines);
+  let { firstName, age } = extractNameAndAge(lines);
+
+  // Apply learned rules: fix common OCR mistakes captured from prior
+  // user corrections, so the parser produces the corrected value on the
+  // first try and no mismatch is recorded downstream.
+  if (firstName) {
+    const sub = learnedRules.nameSubstitutions.get(firstName.toLowerCase());
+    if (sub) firstName = sub;
+  }
+  if (sourceApp) {
+    const override = learnedRules.sourceAppOverrides.get(sourceApp);
+    if (override) sourceApp = override;
+  }
 
   let skipHead = 0;
   if (firstName) {
@@ -324,6 +362,10 @@ export function parseProfileText(rawText: string): ParsedProfile {
     }
   }
 
-  const { bio, prompts } = splitBioAndPrompts(lines, skipHead);
+  const { bio, prompts } = splitBioAndPrompts(
+    lines,
+    skipHead,
+    learnedRules.promptAdditions,
+  );
   return { firstName, age, sourceApp, bio, prompts };
 }

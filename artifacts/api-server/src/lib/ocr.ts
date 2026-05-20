@@ -1,6 +1,7 @@
 import { createWorker, type Worker } from "tesseract.js";
 import { logger } from "./logger";
 import { parseProfileText, detectSourceApp, type SourceApp } from "./profileParser";
+import { getCachedLearnedRules } from "./ocrLearning";
 
 export { parseProfileText, type SourceApp, type ParsedProfile } from "./profileParser";
 
@@ -68,7 +69,7 @@ export async function extractProfileFromScreenshot(imageBase64: string): Promise
   const rawText = (data.text || "").trim();
   logger.debug({ length: rawText.length }, "OCR completed");
 
-  const parsed = parseProfileText(rawText);
+  const parsed = parseProfileText(rawText, getCachedLearnedRules());
   return { ...parsed, rawText };
 }
 
