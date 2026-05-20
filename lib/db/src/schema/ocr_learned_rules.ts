@@ -5,6 +5,8 @@ export type OcrLearnedRuleKind =
   | "sourceAppOverride"
   | "promptAddition";
 
+export type OcrRuleStatus = "pending" | "approved" | "rejected";
+
 export const ocrLearnedRulesTable = pgTable(
   "ocr_learned_rules",
   {
@@ -14,6 +16,9 @@ export const ocrLearnedRulesTable = pgTable(
     replacement: text("replacement").notNull(),
     scope: text("scope"),
     occurrences: integer("occurrences").notNull().default(0),
+    status: text("status").notNull().default("pending"),
+    reviewedAt: timestamp("reviewed_at"),
+    reviewedBy: text("reviewed_by"),
     learnedAt: timestamp("learned_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

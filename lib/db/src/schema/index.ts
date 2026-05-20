@@ -15,6 +15,7 @@ export * from "./dataExportTokens";
 export * from "./handoffTokenRedemptions";
 export * from "./loginNotifications";
 export * from "./ocr_learned_rules";
+export * from "./ocr_rule_review_log";
 export * from "./job_heartbeats";
 export * from "./founder_settings";
 export * from "./push_tokens";

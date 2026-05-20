@@ -6,6 +6,7 @@ import {
   getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges, undoAiThresholdChange,
   getRollupHeartbeat, getOcrMismatches, getBackgroundJobs,
   getOcrLearnedRules, runOcrLearn, clearOcrLearnedRules, deleteOcrRule, getOcrMismatchesTrends,
+  getOcrPendingRules, approveOcrRule, rejectOcrRule, getOcrRuleReviewLog,
   getAlertSettings, updateAlertSettings, resetAlertSettings,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
   type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
@@ -13,7 +14,7 @@ import {
   type BackgroundJobStatus, type BackgroundJobsResponse,
   type OcrMismatchesResponse, type OcrMismatchesSort, type OcrMismatchesWindow,
   type OcrCorrectionField,
-  type OcrLearnedRule, type OcrLearnResult,
+  type OcrLearnedRule, type OcrLearnResult, type OcrRuleReviewLogEntry,
   type OcrMismatchesTrendsResponse, type OcrMismatchTrendEntry,
   type AlertSettingsResponse,
   type AiToolCooldownState,
@@ -2291,12 +2292,21 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
               <div className="space-y-1.5">
                 {grouped[kind].map((rule) => {
                   const isDeleting = deletingIds.has(rule.id);
+                  const statusStyle =
+                    rule.status === "approved"
+                      ? "text-[hsl(142_55%_70%)] border-[hsl(142_55%_50%/0.35)] bg-[hsl(142_55%_50%/0.1)]"
+                      : rule.status === "rejected"
+                        ? "text-[hsl(348_55%_68%)] border-[hsl(348_55%_65%/0.3)] bg-[hsl(348_55%_65%/0.1)]"
+                        : "text-[hsl(43_65%_75%)] border-[hsl(43_65%_65%/0.35)] bg-[hsl(43_65%_65%/0.1)]";
                   return (
                     <div
                       key={rule.id}
                       data-testid={`ocr-rule-${rule.id}`}
                       className="glass rounded-xl px-3 py-2 flex items-center gap-3 flex-wrap text-xs"
                     >
+                      <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${statusStyle}`}>
+                        {rule.status}
+                      </span>
                       <code className="font-mono text-foreground bg-white/5 px-2 py-0.5 rounded border border-white/10">
                         {rule.pattern}
                       </code>
@@ -2328,6 +2338,200 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
                   );
                 })}
               </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OcrPendingRulesPanel({ refreshKey, onApproved }: { refreshKey: number; onApproved?: () => void }) {
+  const [pending, setPending] = useState<OcrLearnedRule[] | null>(null);
+  const [log, setLog] = useState<OcrRuleReviewLogEntry[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [acting, setActing] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [showLog, setShowLog] = useState(false);
+  const [reloadTick, setReloadTick] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    Promise.all([
+      getOcrPendingRules(FOUNDER_KEY),
+      getOcrRuleReviewLog(FOUNDER_KEY, 30),
+    ])
+      .then(([pendingRes, logRes]) => {
+        if (!cancelled) {
+          setPending(pendingRes.rules);
+          setLog(logRes.log);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load");
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [refreshKey, reloadTick]);
+
+  const handleApprove = async (id: string) => {
+    setActing(id);
+    setActionError(null);
+    try {
+      await approveOcrRule(FOUNDER_KEY, id);
+      setReloadTick((t) => t + 1);
+      onApproved?.();
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Failed to approve");
+    } finally {
+      setActing(null);
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    setActing(id);
+    setActionError(null);
+    try {
+      await rejectOcrRule(FOUNDER_KEY, id);
+      setReloadTick((t) => t + 1);
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Failed to reject");
+    } finally {
+      setActing(null);
+    }
+  };
+
+  const pendingCount = pending?.length ?? 0;
+
+  return (
+    <div className="glass rounded-2xl p-6 space-y-4" data-testid="panel-ocr-pending-rules">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="font-semibold text-foreground">OCR Rule Review Queue</h2>
+            {pendingCount > 0 && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[hsl(43_65%_65%/0.2)] border border-[hsl(43_65%_65%/0.4)] text-[hsl(43_65%_75%)]">
+                {pendingCount} pending
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">
+            Approve or reject each candidate before it affects live OCR parsing.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            data-testid="btn-ocr-pending-refresh"
+            onClick={() => setReloadTick((t) => t + 1)}
+            className="text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-transparent text-muted-foreground hover:border-white/20 hover:text-foreground flex items-center gap-1.5"
+          >
+            <RefreshCw className="w-3 h-3" /> Refresh
+          </button>
+          <button
+            data-testid="btn-ocr-pending-toggle-log"
+            onClick={() => setShowLog((s) => !s)}
+            className="text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-transparent text-muted-foreground hover:border-white/20 hover:text-foreground"
+          >
+            {showLog ? "Hide log" : "View audit log"}
+          </button>
+        </div>
+      </div>
+
+      {actionError && (
+        <p className="text-xs text-[hsl(348_55%_68%)]" data-testid="ocr-pending-action-error">{actionError}</p>
+      )}
+
+      {loading && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
+        </div>
+      )}
+      {error && !loading && (
+        <p className="text-xs text-[hsl(348_55%_68%)]">Could not load pending rules: {error}</p>
+      )}
+
+      {pending && !loading && pending.length === 0 && (
+        <p className="text-xs text-muted-foreground/60 italic py-4" data-testid="ocr-pending-empty">
+          No pending candidates. Run OCR learning to mine new patterns from corrections.
+        </p>
+      )}
+
+      {pending && !loading && pending.length > 0 && (
+        <div className="space-y-2" data-testid="ocr-pending-list">
+          {pending.map((rule) => {
+            const isActing = acting === rule.id;
+            return (
+              <div
+                key={rule.id}
+                data-testid={`ocr-pending-rule-${rule.id}`}
+                className="glass rounded-xl px-4 py-3 flex items-center gap-3 flex-wrap text-xs border border-[hsl(43_65%_65%/0.2)]"
+              >
+                <div className="flex items-center gap-1.5 min-w-0 flex-1 flex-wrap">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 pr-1">{rule.kind}</span>
+                  <code className="font-mono text-foreground bg-white/5 px-2 py-0.5 rounded border border-white/10 shrink-0">
+                    {rule.pattern}
+                  </code>
+                  <span className="text-muted-foreground/50 shrink-0">→</span>
+                  <code className="font-mono text-foreground bg-white/5 px-2 py-0.5 rounded border border-white/10 shrink-0">
+                    {rule.replacement}
+                  </code>
+                  <span className="text-muted-foreground/50 shrink-0">
+                    <strong className="text-foreground/80">{rule.occurrences}</strong> seen
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    data-testid={`btn-approve-${rule.id}`}
+                    onClick={() => void handleApprove(rule.id)}
+                    disabled={isActing}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-[hsl(142_55%_50%/0.35)] bg-[hsl(142_55%_50%/0.12)] text-[hsl(142_55%_70%)] hover:bg-[hsl(142_55%_50%/0.22)] disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {isActing ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                    Approve
+                  </button>
+                  <button
+                    data-testid={`btn-reject-${rule.id}`}
+                    onClick={() => void handleReject(rule.id)}
+                    disabled={isActing}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-[hsl(348_55%_65%/0.3)] bg-transparent text-muted-foreground hover:border-[hsl(348_55%_65%/0.5)] hover:text-[hsl(348_55%_75%)] disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {isActing ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+                    Reject
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {showLog && log && (
+        <div className="space-y-2 pt-2 border-t border-white/8" data-testid="ocr-review-log">
+          <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground/50">Audit log</h3>
+          {log.length === 0 && (
+            <p className="text-xs text-muted-foreground/50 italic">No review actions yet.</p>
+          )}
+          {log.map((entry) => (
+            <div
+              key={entry.id}
+              data-testid={`ocr-log-entry-${entry.id}`}
+              className="text-xs flex items-center gap-3 flex-wrap py-1.5 border-b border-white/5 last:border-0"
+            >
+              <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${
+                entry.action === "approved"
+                  ? "text-[hsl(142_55%_70%)] border-[hsl(142_55%_50%/0.3)] bg-[hsl(142_55%_50%/0.1)]"
+                  : "text-[hsl(348_55%_68%)] border-[hsl(348_55%_65%/0.3)] bg-[hsl(348_55%_65%/0.1)]"
+              }`}>
+                {entry.action}
+              </span>
+              <span className="text-muted-foreground/50 text-[10px] uppercase tracking-wider">{entry.kind}</span>
+              <code className="font-mono bg-white/5 px-1.5 py-0.5 rounded border border-white/10">{entry.pattern}</code>
+              <span className="text-muted-foreground/40">→</span>
+              <code className="font-mono bg-white/5 px-1.5 py-0.5 rounded border border-white/10">{entry.replacement}</code>
+              <span className="ml-auto text-muted-foreground/40">{fmtDate(entry.reviewedAt)}</span>
             </div>
           ))}
         </div>
@@ -2690,6 +2894,7 @@ function Dashboard() {
           <OcrMismatchesPanel refreshKey={refreshKey} />
           <AiMetricsPanel refreshKey={refreshKey} />
           <AiReliabilityTrendsPanel refreshKey={refreshKey} />
+          <OcrPendingRulesPanel refreshKey={refreshKey} onApproved={() => setRefreshKey((k) => k + 1)} />
           <OcrRulesPanel refreshKey={refreshKey} />
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <StatCard label="Leads captured" value={stats?.leads ?? "—"} icon={Inbox} color="hsl(268 52% 68%)" />

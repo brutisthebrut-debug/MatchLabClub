@@ -24,6 +24,10 @@ import type { OcrCorrectionsRecord, OcrCorrectionField } from "@workspace/db";
 import {
   learnFromCorrections,
   listLearnedRules,
+  listPendingRules,
+  approveOcrRule,
+  rejectOcrRule,
+  listOcrRuleReviewLog,
   clearLearnedRules,
   deleteLearnedRule,
 } from "../lib/ocrLearning";
@@ -677,18 +681,86 @@ router.get("/founder/ocr-mismatches/trends", requireFounder, async (req, res): P
   res.json({ days, since: since.toISOString().slice(0, 10), series });
 });
 
+function serializeRule(r: {
+  id: string;
+  kind: string;
+  pattern: string;
+  replacement: string;
+  scope: string | null;
+  occurrences: number;
+  status: string;
+  reviewedAt: Date | null;
+  reviewedBy: string | null;
+  learnedAt: Date;
+  updatedAt: Date;
+}) {
+  return {
+    id: r.id,
+    kind: r.kind,
+    pattern: r.pattern,
+    replacement: r.replacement,
+    scope: r.scope,
+    occurrences: r.occurrences,
+    status: r.status,
+    reviewedAt: r.reviewedAt instanceof Date ? r.reviewedAt.toISOString() : (r.reviewedAt ? String(r.reviewedAt) : null),
+    reviewedBy: r.reviewedBy ?? null,
+    learnedAt: r.learnedAt instanceof Date ? r.learnedAt.toISOString() : String(r.learnedAt),
+    updatedAt: r.updatedAt instanceof Date ? r.updatedAt.toISOString() : String(r.updatedAt),
+  };
+}
+
 router.get("/founder/ocr-rules", requireFounder, async (_req, res): Promise<void> => {
   const rules = await listLearnedRules();
+  res.json({ rules: rules.map(serializeRule) });
+});
+
+router.get("/founder/ocr-pending-rules", requireFounder, async (_req, res): Promise<void> => {
+  const rules = await listPendingRules();
+  res.json({ rules: rules.map(serializeRule) });
+});
+
+router.post("/founder/ocr-pending-rules/:id/approve", requireFounder, async (req, res): Promise<void> => {
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  if (!id) {
+    res.status(400).json({ error: "Rule id is required." });
+    return;
+  }
+  const rule = await approveOcrRule(id, "founder");
+  if (!rule) {
+    res.status(404).json({ error: "Rule not found." });
+    return;
+  }
+  res.json({ rule: serializeRule(rule) });
+});
+
+router.post("/founder/ocr-pending-rules/:id/reject", requireFounder, async (req, res): Promise<void> => {
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  if (!id) {
+    res.status(400).json({ error: "Rule id is required." });
+    return;
+  }
+  const rule = await rejectOcrRule(id, "founder");
+  if (!rule) {
+    res.status(404).json({ error: "Rule not found." });
+    return;
+  }
+  res.json({ rule: serializeRule(rule) });
+});
+
+router.get("/founder/ocr-rule-review-log", requireFounder, async (req, res): Promise<void> => {
+  const rawLimit = Number(req.query.limit);
+  const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(Math.floor(rawLimit), 200) : 50;
+  const log = await listOcrRuleReviewLog(limit);
   res.json({
-    rules: rules.map((r) => ({
-      id: r.id,
-      kind: r.kind,
-      pattern: r.pattern,
-      replacement: r.replacement,
-      scope: r.scope,
-      occurrences: r.occurrences,
-      learnedAt: r.learnedAt instanceof Date ? r.learnedAt.toISOString() : String(r.learnedAt),
-      updatedAt: r.updatedAt instanceof Date ? r.updatedAt.toISOString() : String(r.updatedAt),
+    log: log.map((entry) => ({
+      id: entry.id,
+      ruleId: entry.ruleId,
+      action: entry.action,
+      reviewedBy: entry.reviewedBy,
+      reviewedAt: entry.reviewedAt instanceof Date ? entry.reviewedAt.toISOString() : String(entry.reviewedAt),
+      kind: entry.kind,
+      pattern: entry.pattern,
+      replacement: entry.replacement,
     })),
   });
 });

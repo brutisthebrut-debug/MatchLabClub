@@ -344,6 +344,9 @@ export interface OcrLearnedRule {
   replacement: string;
   scope: string | null;
   occurrences: number;
+  status: string;
+  reviewedAt: string | null;
+  reviewedBy: string | null;
   learnedAt: string;
   updatedAt: string;
 }
@@ -358,10 +361,60 @@ export interface OcrLearnResult {
   persisted: number;
 }
 
+export interface OcrRuleReviewLogEntry {
+  id: number;
+  ruleId: string;
+  action: string;
+  reviewedBy: string;
+  reviewedAt: string;
+  kind: string;
+  pattern: string;
+  replacement: string;
+}
+
+export interface OcrRuleReviewLogResponse {
+  log: OcrRuleReviewLogEntry[];
+}
+
 export const getOcrLearnedRules = (founderKey: string) =>
   get<OcrLearnedRulesResponse>("/founder/ocr-rules", {
     headers: { "x-founder-key": founderKey },
   });
+
+export const getOcrPendingRules = (founderKey: string) =>
+  get<OcrLearnedRulesResponse>("/founder/ocr-pending-rules", {
+    headers: { "x-founder-key": founderKey },
+  });
+
+export const approveOcrRule = async (founderKey: string, id: string): Promise<{ rule: OcrLearnedRule }> => {
+  const res = await fetch(`${BASE}/founder/ocr-pending-rules/${encodeURIComponent(id)}/approve`, {
+    method: "POST",
+    headers: { "x-founder-key": founderKey },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`POST /founder/ocr-pending-rules/${id}/approve failed (${res.status}): ${text}`);
+  }
+  return res.json();
+};
+
+export const rejectOcrRule = async (founderKey: string, id: string): Promise<{ rule: OcrLearnedRule }> => {
+  const res = await fetch(`${BASE}/founder/ocr-pending-rules/${encodeURIComponent(id)}/reject`, {
+    method: "POST",
+    headers: { "x-founder-key": founderKey },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`POST /founder/ocr-pending-rules/${id}/reject failed (${res.status}): ${text}`);
+  }
+  return res.json();
+};
+
+export const getOcrRuleReviewLog = (founderKey: string, limit = 50) =>
+  get<OcrRuleReviewLogResponse>(
+    `/founder/ocr-rule-review-log?limit=${encodeURIComponent(String(limit))}`,
+    { headers: { "x-founder-key": founderKey } },
+  );
 
 export const runOcrLearn = async (founderKey: string): Promise<OcrLearnResult> => {
   const res = await fetch(`${BASE}/founder/ocr-learn`, {

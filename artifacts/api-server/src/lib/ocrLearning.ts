@@ -1,5 +1,5 @@
-import { db, ocrLearnedRulesTable, auditsTable } from "@workspace/db";
-import { isNotNull, desc, sql } from "drizzle-orm";
+import { db, ocrLearnedRulesTable, ocrRuleReviewLogTable, auditsTable } from "@workspace/db";
+import { isNotNull, desc, sql, eq } from "drizzle-orm";
 import type {
   OcrCorrectionsRecord,
   OcrCorrectionField,
@@ -191,7 +191,7 @@ function ruleId(c: { kind: string; pattern: string; scope: string | null }): str
 }
 
 /**
- * Build the runtime cache shape from a list of persisted rules.
+ * Build the runtime cache shape from a list of approved persisted rules.
  */
 export function buildLearnedRules(rules: OcrLearnedRule[]): LearnedRules {
   const result: LearnedRules = {
@@ -214,13 +214,17 @@ export function buildLearnedRules(rules: OcrLearnedRule[]): LearnedRules {
 }
 
 /**
- * Read the current learned-rule rows from the DB and replace the cache.
+ * Read the current APPROVED learned-rule rows from the DB and replace the cache.
+ * Only approved rules affect parsing. Pending and rejected rules are ignored.
  * Safe to call at startup and after a learning run. Failures are logged
  * and leave the previous cache in place.
  */
 export async function refreshLearnedRulesCache(): Promise<LearnedRules> {
   try {
-    const rows = await db.select().from(ocrLearnedRulesTable);
+    const rows = await db
+      .select()
+      .from(ocrLearnedRulesTable)
+      .where(eq(ocrLearnedRulesTable.status, "approved"));
     cache = buildLearnedRules(rows);
     return cache;
   } catch (err) {
@@ -231,7 +235,8 @@ export async function refreshLearnedRulesCache(): Promise<LearnedRules> {
 
 /**
  * Read recent audits with OCR corrections, derive parser-improvement
- * candidates, persist any that meet the threshold, and refresh the cache.
+ * candidates, and persist any that meet the threshold as PENDING (awaiting
+ * founder review). Existing approved or rejected rules are not overwritten.
  */
 export async function learnFromCorrections(): Promise<{
   scannedAudits: number;
@@ -254,22 +259,24 @@ export async function learnFromCorrections(): Promise<{
   const now = new Date();
   let persisted = 0;
   for (const c of candidates) {
+    const id = ruleId(c);
     await db
       .insert(ocrLearnedRulesTable)
       .values({
-        id: ruleId(c),
+        id,
         kind: c.kind,
         pattern: c.pattern,
         replacement: c.replacement,
         scope: c.scope,
         occurrences: c.occurrences,
+        status: "pending",
         learnedAt: now,
         updatedAt: now,
       })
       .onConflictDoUpdate({
         target: ocrLearnedRulesTable.id,
         set: {
-          replacement: c.replacement,
+          replacement: sql`CASE WHEN ${ocrLearnedRulesTable.status} = 'pending' THEN EXCLUDED.replacement ELSE ${ocrLearnedRulesTable.replacement} END`,
           occurrences: c.occurrences,
           updatedAt: now,
         },
@@ -298,6 +305,67 @@ export async function deleteLearnedRule(id: string): Promise<boolean> {
   if (result.length === 0) return false;
   await refreshLearnedRulesCache();
   return true;
+}
+
+export async function listPendingRules(): Promise<OcrLearnedRule[]> {
+  return await db
+    .select()
+    .from(ocrLearnedRulesTable)
+    .where(eq(ocrLearnedRulesTable.status, "pending"))
+    .orderBy(desc(ocrLearnedRulesTable.occurrences), desc(ocrLearnedRulesTable.updatedAt));
+}
+
+export async function approveOcrRule(id: string, reviewedBy: string): Promise<OcrLearnedRule | null> {
+  const now = new Date();
+  const [updated] = await db
+    .update(ocrLearnedRulesTable)
+    .set({ status: "approved", reviewedAt: now, reviewedBy, updatedAt: now })
+    .where(eq(ocrLearnedRulesTable.id, id))
+    .returning();
+  if (!updated) return null;
+
+  await db.insert(ocrRuleReviewLogTable).values({
+    ruleId: id,
+    action: "approved",
+    reviewedBy,
+    reviewedAt: now,
+    kind: updated.kind,
+    pattern: updated.pattern,
+    replacement: updated.replacement,
+  });
+
+  await refreshLearnedRulesCache();
+  return updated;
+}
+
+export async function rejectOcrRule(id: string, reviewedBy: string): Promise<OcrLearnedRule | null> {
+  const now = new Date();
+  const [updated] = await db
+    .update(ocrLearnedRulesTable)
+    .set({ status: "rejected", reviewedAt: now, reviewedBy, updatedAt: now })
+    .where(eq(ocrLearnedRulesTable.id, id))
+    .returning();
+  if (!updated) return null;
+
+  await db.insert(ocrRuleReviewLogTable).values({
+    ruleId: id,
+    action: "rejected",
+    reviewedBy,
+    reviewedAt: now,
+    kind: updated.kind,
+    pattern: updated.pattern,
+    replacement: updated.replacement,
+  });
+
+  return updated;
+}
+
+export async function listOcrRuleReviewLog(limit = 50): Promise<typeof ocrRuleReviewLogTable.$inferSelect[]> {
+  return await db
+    .select()
+    .from(ocrRuleReviewLogTable)
+    .orderBy(desc(ocrRuleReviewLogTable.reviewedAt))
+    .limit(limit);
 }
 
 export async function clearLearnedRules(): Promise<void> {
