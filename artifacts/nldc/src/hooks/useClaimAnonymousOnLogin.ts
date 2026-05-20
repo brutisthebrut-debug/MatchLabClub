@@ -14,6 +14,40 @@ import {
   clearAnonymousIds,
   hasAnyAnonymousIds,
 } from "@/lib/anonymousIds";
+import { toast } from "@/hooks/use-toast";
+
+function pluralize(n: number, singular: string, plural: string): string {
+  return `${n} ${n === 1 ? singular : plural}`;
+}
+
+function buildClaimedSummary(claimed: {
+  audits: number;
+  profiles: number;
+  messages: number;
+  insights: number;
+}): string | null {
+  const parts: string[] = [];
+  if (claimed.audits > 0) {
+    parts.push(pluralize(claimed.audits, "audit", "audits"));
+  }
+  if (claimed.profiles > 0) {
+    parts.push(pluralize(claimed.profiles, "profile", "profiles"));
+  }
+  if (claimed.messages > 0) {
+    parts.push(
+      pluralize(claimed.messages, "message session", "message sessions"),
+    );
+  }
+  if (claimed.insights > 0) {
+    parts.push(
+      pluralize(claimed.insights, "email insight", "email insights"),
+    );
+  }
+  if (parts.length === 0) return null;
+  if (parts.length === 1) return parts[0]!;
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
+}
 
 export function useClaimAnonymousOnLogin(): void {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -36,7 +70,7 @@ export function useClaimAnonymousOnLogin(): void {
     claim.mutate(
       { data: ids },
       {
-        onSuccess: () => {
+        onSuccess: (result) => {
           clearAnonymousIds();
           queryClient.invalidateQueries({ queryKey: getListAuditsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetAuditSummaryQueryKey() });
@@ -45,6 +79,14 @@ export function useClaimAnonymousOnLogin(): void {
             queryKey: getListMessageCoachingSessionsQueryKey(),
           });
           queryClient.invalidateQueries({ queryKey: getListInsightsQueryKey() });
+
+          const summary = buildClaimedSummary(result.claimed);
+          if (summary) {
+            toast({
+              title: "Welcome back",
+              description: `We brought your ${summary} with you.`,
+            });
+          }
         },
         onError: () => {
           // Allow retry on next mount/auth change.
