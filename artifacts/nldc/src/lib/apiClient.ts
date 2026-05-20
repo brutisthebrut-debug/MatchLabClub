@@ -13,8 +13,8 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   return res.json();
 }
 
-async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`);
+async function get<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, init);
   if (!res.ok) throw new Error(`GET ${path} failed (${res.status})`);
   return res.json();
 }
@@ -273,6 +273,7 @@ export interface OcrMismatchesResponse {
 }
 
 export const getOcrMismatches = (
+  founderKey: string,
   params: { window?: OcrMismatchesWindow; sort?: OcrMismatchesSort } = {},
 ) => {
   const search = new URLSearchParams();
@@ -281,6 +282,7 @@ export const getOcrMismatches = (
   const qs = search.toString();
   return get<OcrMismatchesResponse>(
     `/founder/ocr-mismatches${qs ? `?${qs}` : ""}`,
+    { headers: { "x-founder-key": founderKey } },
   );
 };
 

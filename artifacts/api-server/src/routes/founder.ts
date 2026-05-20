@@ -407,7 +407,7 @@ function truncate(s: string, max: number): string {
 const OCR_WINDOW_DAYS = new Set([7, 30, 90]);
 type OcrSortMode = "total" | "top";
 
-router.get("/founder/ocr-mismatches", async (req, res): Promise<void> => {
+router.get("/founder/ocr-mismatches", requireFounder, async (req, res): Promise<void> => {
   const rawWindow = typeof req.query.window === "string" ? req.query.window : "";
   const parsedWindow = Number(rawWindow);
   const windowDays =

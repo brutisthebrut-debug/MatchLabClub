@@ -1372,7 +1372,7 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    getOcrMismatches({ window: windowDays ?? undefined, sort })
+    getOcrMismatches(FOUNDER_KEY, { window: windowDays ?? undefined, sort })
       .then((res) => { if (!cancelled) setData(res); })
       .catch((err: unknown) => {
         if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load");
