@@ -18,6 +18,8 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useListTrashedAudits,
+  useListExpiringTrashedAudits,
+  getListExpiringTrashedAuditsQueryKey,
   useRestoreAudit,
   usePurgeAudit,
   getListTrashedAuditsQueryKey,
@@ -26,6 +28,7 @@ import {
   type Audit,
 } from "@workspace/api-client-react";
 import {
+  AlertTriangle,
   ArrowLeft,
   RotateCcw,
   Trash2,
@@ -63,6 +66,9 @@ export default function Trash() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { data, isLoading, isError, refetch } = useListTrashedAudits();
+  const { data: expiringData } = useListExpiringTrashedAudits(undefined, {
+    query: { queryKey: getListExpiringTrashedAuditsQueryKey() },
+  });
   const restore = useRestoreAudit();
   const purge = usePurgeAudit();
 
@@ -154,6 +160,42 @@ export default function Trash() {
             Restore one to bring it back to your matches.
           </p>
         </div>
+
+        {expiringData && expiringData.audits.length > 0 && (() => {
+          const earliest = expiringData.audits[0]?.deletedAt;
+          const left = earliest
+            ? Math.max(
+                0,
+                expiringData.retentionDays -
+                  Math.floor(
+                    (Date.now() - new Date(earliest).getTime()) /
+                      (24 * 60 * 60 * 1000),
+                  ),
+              )
+            : 0;
+          const when =
+            left <= 0 ? "today" : left === 1 ? "tomorrow" : `in ${left} days`;
+          const count = expiringData.audits.length;
+          return (
+            <div
+              data-testid="banner-trash-expiring"
+              className="mb-6 flex items-start gap-3 rounded-2xl border border-[hsl(348_55%_55%/0.5)] bg-[hsl(348_55%_55%/0.08)] p-4"
+            >
+              <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-[hsl(348_55%_68%)]" />
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-[hsl(348_55%_75%)]">
+                  {count === 1
+                    ? "1 audit is about to be deleted forever"
+                    : `${count} audits are about to be deleted forever`}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {count === 1 ? "It" : "The earliest"} purges {when}. Restore
+                  anything you want to keep.
+                </p>
+              </div>
+            </div>
+          );
+        })()}
 
         {isLoading ? (
           <div className="space-y-3" data-testid="trash-loading">

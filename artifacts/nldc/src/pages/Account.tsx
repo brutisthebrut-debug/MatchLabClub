@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useAutoRefreshPref } from "@/lib/autoRefreshPref";
+import { useTrashReminderPref } from "@/lib/trashReminderPref";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -81,6 +82,7 @@ export default function Account() {
   });
   const emailExport = useEmailMyDataExport();
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useAutoRefreshPref();
+  const [trashRemindersEnabled, setTrashRemindersEnabled] = useTrashReminderPref();
 
   const auditCount = auditsQuery.data?.length ?? 0;
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Friend";
@@ -320,6 +322,32 @@ export default function Account() {
                   }}
                   data-testid="switch-auto-refresh-reports"
                   aria-label="Keep my reports up to date"
+                />
+              </div>
+              <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-[hsl(232_38%_15%)] border border-white/5">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">Recently deleted reminders</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                    When on, a banner appears on your dashboard when audits in
+                    your trash are close to being permanently deleted — so you
+                    can restore anything you want to keep before it's gone.
+                  </p>
+                </div>
+                <Switch
+                  checked={trashRemindersEnabled}
+                  onCheckedChange={(v) => {
+                    setTrashRemindersEnabled(v);
+                    toast({
+                      title: v
+                        ? "Recently deleted reminders on"
+                        : "Recently deleted reminders off",
+                      description: v
+                        ? "We'll warn you on the dashboard when audits are about to be purged."
+                        : "No banner will show for audits nearing permanent deletion.",
+                    });
+                  }}
+                  data-testid="switch-trash-reminders"
+                  aria-label="Recently deleted reminders"
                 />
               </div>
             </div>

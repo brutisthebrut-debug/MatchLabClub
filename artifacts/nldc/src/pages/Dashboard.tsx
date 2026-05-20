@@ -43,6 +43,8 @@ import {
   useDeleteAudit,
   generateAuditReport,
   deleteAudit as deleteAuditRequest,
+  useListExpiringTrashedAudits,
+  getListExpiringTrashedAuditsQueryKey,
   type Audit,
   type ListAuditsParams,
 } from "@workspace/api-client-react";
@@ -61,6 +63,11 @@ import {
   loadAutoRefreshPref,
   markSwept,
 } from "@/lib/autoRefreshPref";
+import {
+  dismissDashboardBanner,
+  isDashboardBannerDismissed,
+  loadTrashReminderPref,
+} from "@/lib/trashReminderPref";
 import {
   ArrowRight, FileText, MessageSquare, Mail, Settings,
   TrendingUp, AlertTriangle, Clock, Sparkles, Trophy, Eye,
@@ -785,6 +792,16 @@ export default function Dashboard() {
     setConfirmOpen(false);
   };
 
+  const [trashBannerDismissed, setTrashBannerDismissed] = useState<boolean>(
+    () => isDashboardBannerDismissed(),
+  );
+  const { data: expiringTrashedData } = useListExpiringTrashedAudits(undefined, {
+    query: {
+      queryKey: getListExpiringTrashedAuditsQueryKey(),
+      enabled: isAuthenticated && loadTrashReminderPref() && !trashBannerDismissed,
+    },
+  });
+
   const { data: summary, isLoading: summaryLoading } = useGetAuditSummary({
     query: { queryKey: getGetAuditSummaryQueryKey() }
   });
@@ -914,6 +931,72 @@ export default function Dashboard() {
               </Button>
             </div>
           </motion.div>
+
+          {/* Expiring trash banner */}
+          {!trashBannerDismissed &&
+            loadTrashReminderPref() &&
+            expiringTrashedData &&
+            expiringTrashedData.audits.length > 0 &&
+            (() => {
+              const earliest = expiringTrashedData.audits[0]?.deletedAt;
+              const left = earliest
+                ? Math.max(
+                    0,
+                    expiringTrashedData.retentionDays -
+                      Math.floor(
+                        (Date.now() - new Date(earliest).getTime()) /
+                          (24 * 60 * 60 * 1000),
+                      ),
+                  )
+                : 0;
+              const when =
+                left <= 0
+                  ? "today"
+                  : left === 1
+                    ? "tomorrow"
+                    : `in ${left} days`;
+              const count = expiringTrashedData.audits.length;
+              return (
+                <motion.div {...fadeUp(0.05)} className="mb-4">
+                  <div
+                    data-testid="banner-dashboard-trash-expiring"
+                    className="flex items-start gap-3 rounded-2xl border border-[hsl(348_55%_55%/0.5)] bg-[hsl(348_55%_55%/0.07)] px-4 py-3"
+                  >
+                    <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-[hsl(348_55%_68%)]" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-[hsl(348_55%_78%)]">
+                        {count === 1
+                          ? "1 deleted audit is about to be permanently removed"
+                          : `${count} deleted audits are about to be permanently removed`}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {count === 1 ? "It" : "The earliest"} purges {when}.{" "}
+                        <Link
+                          href="/trash"
+                          className="underline underline-offset-2 hover:text-foreground transition-colors"
+                          data-testid="link-dashboard-trash-expiring"
+                        >
+                          View Recently deleted
+                        </Link>{" "}
+                        to restore anything you want to keep.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        dismissDashboardBanner();
+                        setTrashBannerDismissed(true);
+                      }}
+                      className="flex-shrink-0 p-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Dismiss expiring trash warning"
+                      data-testid="button-dismiss-trash-banner"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })()}
 
           {/* Continue Where You Left Off / Start Here */}
           <motion.div {...fadeUp(0.07)} className="mb-5">
