@@ -334,6 +334,8 @@ describe("GET /api/insights/rollup", () => {
     expect(res.body.sources).toHaveLength(1);
     expect(res.body.sources[0].sourceApp).toBe("Hinge");
     expect(res.body.sources[0].count).toBe(1);
+    // Single-import summary must use the "One import from X." prefix.
+    expect(res.body.sources[0].summary).toMatch(/^One import from Hinge\./);
     expect(res.body.comparisons).toEqual([]);
   });
 
@@ -431,6 +433,12 @@ describe("GET /api/insights/rollup", () => {
     // Both imports produce short messages (wordCount < 80) so each analysis emits
     // "Concise messaging style" as its first pattern → count=2, wins the signaturePattern
     expect(tile.signaturePattern).toBe("Concise messaging style");
+
+    // The multi-import summary sentence must mention the import count, the source
+    // name, and the top pattern so that a typo or logic regression is caught.
+    expect(tile.summary).toContain("2");
+    expect(tile.summary).toContain("Hinge");
+    expect(tile.summary).toContain("Concise messaging style");
 
     // Only one source → no cross-source comparisons
     expect(res.body.comparisons).toEqual([]);
