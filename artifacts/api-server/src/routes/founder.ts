@@ -9,6 +9,11 @@ import {
   aiRequestMetricsTable,
 } from "@workspace/db";
 import { count, sql, desc } from "drizzle-orm";
+import {
+  ALERT_WINDOW,
+  ALERT_MIN_SAMPLE,
+  ALERT_THRESHOLD,
+} from "../lib/aiReliabilityAlerts";
 
 const router: IRouter = Router();
 
@@ -27,10 +32,6 @@ router.get("/founder/stats", async (req, res): Promise<void> => {
     messages: Number(messagesCount?.c ?? 0),
   });
 });
-
-const ALERT_WINDOW = 50;
-const ALERT_MIN_SAMPLE = 10;
-const ALERT_THRESHOLD = 0.7;
 
 router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
   const perTool = await db
