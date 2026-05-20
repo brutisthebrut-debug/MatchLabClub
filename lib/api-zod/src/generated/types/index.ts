@@ -58,6 +58,8 @@ export * from './emailMyDataExportResult';
 export * from './handleBrowserLoginCallbackParams';
 export * from './healthStatus';
 export * from './listAuditsParams';
+export * from './listAuditsScoreRange';
+export * from './listAuditsSort';
 export * from './listAuditsSource';
 export * from './logoutSuccess';
 export * from './messageCoachingInput';

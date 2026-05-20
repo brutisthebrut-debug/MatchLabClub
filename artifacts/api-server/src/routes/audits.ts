@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, eq, isNull, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, isNull, isNotNull, lt, or, sql, type SQL } from "drizzle-orm";
 import { db, auditsTable } from "@workspace/db";
 import {
   CreateAuditBody,
@@ -70,20 +70,83 @@ router.get("/audits/summary", async (req, res): Promise<void> => {
   res.json(summary);
 });
 
+function parseIntInRange(
+  raw: unknown,
+  min: number,
+  max: number,
+  fallback: number,
+): number {
+  if (typeof raw !== "string" || raw.length === 0) return fallback;
+  const n = Number.parseInt(raw, 10);
+  if (Number.isNaN(n)) return fallback;
+  if (n < min) return min;
+  if (n > max) return max;
+  return n;
+}
+
+function escapeLike(input: string): string {
+  return input.replace(/[\\%_]/g, (m) => `\\${m}`);
+}
+
 router.get("/audits", async (req, res): Promise<void> => {
   const sourceParam = typeof req.query.source === "string" ? req.query.source : undefined;
   const sourceFilter =
     sourceParam === "manual" || sourceParam === "screenshot"
       ? eq(auditsTable.source, sourceParam)
       : undefined;
-  const where = sourceFilter
-    ? and(ownerScope(req), sourceFilter)
-    : ownerScope(req);
+
+  const qRaw = typeof req.query.q === "string" ? req.query.q.trim() : "";
+  const qFilter =
+    qRaw.length > 0
+      ? or(
+          ilike(auditsTable.firstName, `%${escapeLike(qRaw)}%`),
+          ilike(auditsTable.bio, `%${escapeLike(qRaw)}%`),
+        )
+      : undefined;
+
+  const scoreRangeParam =
+    typeof req.query.scoreRange === "string" ? req.query.scoreRange : undefined;
+  let scoreFilter: SQL | undefined;
+  if (scoreRangeParam === "high") {
+    scoreFilter = gte(auditsTable.readinessScore, 75);
+  } else if (scoreRangeParam === "medium") {
+    scoreFilter = and(
+      gte(auditsTable.readinessScore, 55),
+      lt(auditsTable.readinessScore, 75),
+    ) as SQL;
+  } else if (scoreRangeParam === "low") {
+    scoreFilter = and(
+      isNotNull(auditsTable.readinessScore),
+      lt(auditsTable.readinessScore, 55),
+    ) as SQL;
+  }
+
+  const sortParam =
+    req.query.sort === "topScore" ? "topScore" : "newest";
+
+  const limit = parseIntInRange(req.query.limit, 1, 100, 50);
+  const offset = parseIntInRange(req.query.offset, 0, Number.MAX_SAFE_INTEGER, 0);
+
+  const where = and(
+    ownerScope(req),
+    ...[sourceFilter, qFilter, scoreFilter].filter(
+      (f): f is SQL => f !== undefined,
+    ),
+  ) as SQL;
+
+  const orderBy =
+    sortParam === "topScore"
+      ? [desc(auditsTable.readinessScore), desc(auditsTable.createdAt)]
+      : [desc(auditsTable.createdAt)];
+
   const audits = await db
     .select()
     .from(auditsTable)
     .where(where)
-    .orderBy(auditsTable.createdAt);
+    .orderBy(...orderBy)
+    .limit(limit)
+    .offset(offset);
+
   res.json(ListAuditsResponse.parse(audits.map((a) => ({
     ...a,
     report: a.report ?? null,

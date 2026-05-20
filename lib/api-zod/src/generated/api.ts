@@ -436,8 +436,22 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary List all profile audits for current session
  */
+export const listAuditsQuerySortDefault = `newest`;
+export const listAuditsQueryLimitDefault = 50;
+export const listAuditsQueryLimitMax = 100;
+
+export const listAuditsQueryOffsetDefault = 0;
+export const listAuditsQueryOffsetMin = 0;
+
+
+
 export const ListAuditsQueryParams = zod.object({
-  "source": zod.enum(['manual', 'screenshot']).optional()
+  "source": zod.enum(['manual', 'screenshot']).optional(),
+  "q": zod.coerce.string().optional().describe('Case-insensitive substring search across firstName and bio.'),
+  "sort": zod.enum(['newest', 'topScore']).default(listAuditsQuerySortDefault).describe('Sort order for results.'),
+  "scoreRange": zod.enum(['low', 'medium', 'high']).optional().describe('Filter by readiness score band. `low` = <55, `medium` = 55-74,\n`high` = >=75. Audits without a score are excluded when set.\n'),
+  "limit": zod.coerce.number().min(1).max(listAuditsQueryLimitMax).default(listAuditsQueryLimitDefault).describe('Maximum number of audits to return (1-100). Defaults to 50.'),
+  "offset": zod.coerce.number().min(listAuditsQueryOffsetMin).default(listAuditsQueryOffsetDefault).describe('Number of audits to skip for pagination.')
 })
 
 export const ListAuditsResponseItem = zod.object({

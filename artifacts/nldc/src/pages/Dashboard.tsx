@@ -252,7 +252,7 @@ export default function Dashboard() {
   const gradeColor = latestScore >= 75 ? "hsl(142 55% 60%)" : latestScore >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
   const scoreDelta = (displaySummary.latestScore ?? 0) - (displaySummary.scoreHistory[0]?.score ?? 0);
   const nextAction = getNextBestAction(latestScore, hasRealAudits);
-  const latestRealAudit = hasRealAudits ? audits![audits!.length - 1] : null;
+  const latestRealAudit = hasRealAudits ? audits![0] : null;
 
   return (
     <AppLayout>
@@ -576,7 +576,7 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="space-y-3">
-                {audits!.slice().reverse().map((audit) => {
+                {audits!.map((audit) => {
                   const score = audit.readinessScore ?? 0;
                   const color = score >= 75 ? "hsl(142 55% 60%)" : score >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
                   const bg    = score >= 75 ? "hsl(142 55% 45% / 0.12)" : score >= 55 ? "hsl(43 65% 55% / 0.12)" : "hsl(348 55% 55% / 0.12)";

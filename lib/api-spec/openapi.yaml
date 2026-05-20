@@ -409,6 +409,46 @@ paths:
           schema:
             type: string
             enum: [manual, screenshot]
+        - name: q
+          in: query
+          required: false
+          description: Case-insensitive substring search across firstName and bio.
+          schema:
+            type: string
+        - name: sort
+          in: query
+          required: false
+          description: Sort order for results.
+          schema:
+            type: string
+            enum: [newest, topScore]
+            default: newest
+        - name: scoreRange
+          in: query
+          required: false
+          description: |
+            Filter by readiness score band. `low` = <55, `medium` = 55-74,
+            `high` = >=75. Audits without a score are excluded when set.
+          schema:
+            type: string
+            enum: [low, medium, high]
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of audits to return (1-100). Defaults to 50.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          required: false
+          description: Number of audits to skip for pagination.
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
       responses:
         "200":
           description: List of audits

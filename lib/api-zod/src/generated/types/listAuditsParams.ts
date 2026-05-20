@@ -5,8 +5,35 @@
  * Next Level Dating Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { ListAuditsScoreRange } from './listAuditsScoreRange';
+import type { ListAuditsSort } from './listAuditsSort';
 import type { ListAuditsSource } from './listAuditsSource';
 
 export type ListAuditsParams = {
 source?: ListAuditsSource;
+/**
+ * Case-insensitive substring search across firstName and bio.
+ */
+q?: string;
+/**
+ * Sort order for results.
+ */
+sort?: ListAuditsSort;
+/**
+ * Filter by readiness score band. `low` = <55, `medium` = 55-74,
+`high` = >=75. Audits without a score are excluded when set.
+
+ */
+scoreRange?: ListAuditsScoreRange;
+/**
+ * Maximum number of audits to return (1-100). Defaults to 50.
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+/**
+ * Number of audits to skip for pagination.
+ * @minimum 0
+ */
+offset?: number;
 };

@@ -602,6 +602,31 @@ iss?: string;
 
 export type ListAuditsParams = {
 source?: ListAuditsSource;
+/**
+ * Case-insensitive substring search across firstName and bio.
+ */
+q?: string;
+/**
+ * Sort order for results.
+ */
+sort?: ListAuditsSort;
+/**
+ * Filter by readiness score band. `low` = <55, `medium` = 55-74,
+`high` = >=75. Audits without a score are excluded when set.
+
+ */
+scoreRange?: ListAuditsScoreRange;
+/**
+ * Maximum number of audits to return (1-100). Defaults to 50.
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+/**
+ * Number of audits to skip for pagination.
+ * @minimum 0
+ */
+offset?: number;
 };
 
 export type ListAuditsSource = typeof ListAuditsSource[keyof typeof ListAuditsSource];
@@ -610,6 +635,23 @@ export type ListAuditsSource = typeof ListAuditsSource[keyof typeof ListAuditsSo
 export const ListAuditsSource = {
   manual: 'manual',
   screenshot: 'screenshot',
+} as const;
+
+export type ListAuditsSort = typeof ListAuditsSort[keyof typeof ListAuditsSort];
+
+
+export const ListAuditsSort = {
+  newest: 'newest',
+  topScore: 'topScore',
+} as const;
+
+export type ListAuditsScoreRange = typeof ListAuditsScoreRange[keyof typeof ListAuditsScoreRange];
+
+
+export const ListAuditsScoreRange = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
 } as const;
 
 export type AuditFromScreenshot400 = {

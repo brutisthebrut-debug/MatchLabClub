@@ -65,6 +65,15 @@ const DEMO_MATCHES: DemoMatch[] = [
 type SortOrder = "newest" | "topScore";
 type ScoreRange = "all" | "low" | "medium" | "high";
 
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = React.useState(value);
+  React.useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
+
 function formatDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
@@ -89,20 +98,25 @@ function scoreColor(
   return colors.rose;
 }
 
-function matchesScoreRange(score: number | null, range: ScoreRange): boolean {
-  if (range === "all") return true;
-  if (score === null) return false;
-  if (range === "high") return score >= 75;
-  if (range === "medium") return score >= 55 && score < 75;
-  return score < 55;
-}
-
 export default function MatchesScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-  const listParams = { source: "screenshot" as const };
+  const [query, setQuery] = React.useState("");
+  const [sort, setSort] = React.useState<SortOrder>("newest");
+  const [range, setRange] = React.useState<ScoreRange>("all");
+  const debouncedQuery = useDebouncedValue(query.trim(), 250);
+
+  const listParams = React.useMemo(
+    () => ({
+      source: "screenshot" as const,
+      sort,
+      ...(debouncedQuery.length > 0 ? { q: debouncedQuery } : {}),
+      ...(range !== "all" ? { scoreRange: range } : {}),
+    }),
+    [sort, debouncedQuery, range],
+  );
   const { data, isLoading, isRefetching, refetch, error } = useListAudits(listParams);
   const queryClient = useQueryClient();
   const listKey = getListAuditsQueryKey(listParams);
@@ -133,10 +147,6 @@ export default function MatchesScreen() {
     },
   });
 
-  const [query, setQuery] = React.useState("");
-  const [sort, setSort] = React.useState<SortOrder>("newest");
-  const [range, setRange] = React.useState<ScoreRange>("all");
-
   const openSwipeRef = useRef<Swipeable | null>(null);
 
   const askDelete = (id: number, name: string) => {
@@ -156,33 +166,12 @@ export default function MatchesScreen() {
   const bottomInset =
     Platform.OS === "web" ? Math.max(insets.bottom, 34) + 84 : insets.bottom + 80;
 
-  const allAudits = React.useMemo(() => (data ?? []).slice().reverse(), [data]);
+  const audits = React.useMemo(() => data ?? [], [data]);
 
-  const filteredAudits = React.useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const filtered = allAudits.filter((a) => {
-      if (!matchesScoreRange(a.readinessScore ?? null, range)) return false;
-      if (!q) return true;
-      const name = (a.firstName ?? "").toLowerCase();
-      const bio = (a.bio ?? "").toLowerCase();
-      return name.includes(q) || bio.includes(q);
-    });
-    const sorted = filtered.slice();
-    if (sort === "topScore") {
-      sorted.sort((a, b) => (b.readinessScore ?? -1) - (a.readinessScore ?? -1));
-    } else {
-      sorted.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
-    }
-    return sorted;
-  }, [allAudits, query, sort, range]);
-
-  const showDemo = !isLoading && allAudits.length === 0;
   const hasFilters = query.trim().length > 0 || sort !== "newest" || range !== "all";
+  const showDemo = !isLoading && audits.length === 0 && !hasFilters;
   const showNoResults =
-    !isLoading && allAudits.length > 0 && filteredAudits.length === 0;
+    !isLoading && audits.length === 0 && hasFilters;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -206,7 +195,7 @@ export default function MatchesScreen() {
           subtitle="Every screenshot you audit lands here. Tap one to re-open its mini-report."
         />
 
-        {!showDemo && allAudits.length > 0 ? (
+        {!showDemo ? (
           <View style={styles.controls}>
             <View
               style={[
@@ -396,9 +385,9 @@ export default function MatchesScreen() {
           </View>
         ) : null}
 
-        {!showDemo && filteredAudits.length > 0 ? (
+        {!showDemo && audits.length > 0 ? (
           <View style={styles.list}>
-            {filteredAudits.map((audit) => {
+            {audits.map((audit) => {
               let swipeRef: Swipeable | null = null;
               return (
                 <Swipeable
