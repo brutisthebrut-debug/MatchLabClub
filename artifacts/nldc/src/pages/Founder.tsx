@@ -1830,6 +1830,47 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
     ? data.recent.filter((r) => r.field === filter)
     : data?.recent ?? [];
 
+  const exportOcrCsv = () => {
+    if (!data) return;
+    const esc = (v: string | number) => {
+      const s = String(v);
+      return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const windowLabel = windowDays === null ? "all-time" : `${windowDays}d`;
+    const lines: string[] = [];
+
+    lines.push("## Per-Field Summary");
+    const maxDiffs = Math.max(0, ...data.perField.map((f) => f.topDiffs.length));
+    const exampleHeaders = Array.from({ length: maxDiffs }, (_, i) => [`topExample${i + 1}`, `topExample${i + 1}Count`]).flat();
+    lines.push(["field", "label", "correctionsCount", "topDiffCount", ...exampleHeaders].map(esc).join(","));
+    for (const f of data.perField) {
+      const exampleCols: (string | number)[] = [];
+      for (let i = 0; i < maxDiffs; i++) {
+        exampleCols.push(f.topDiffs[i]?.example ?? "");
+        exampleCols.push(f.topDiffs[i]?.count ?? "");
+      }
+      lines.push([f.field, OCR_FIELD_LABELS[f.field] ?? f.field, f.correctionsCount, f.topDiffCount, ...exampleCols].map(esc).join(","));
+    }
+
+    lines.push("");
+    lines.push("## Recent Corrections");
+    lines.push(["auditId", "field", "label", "raw", "corrected", "date"].map(esc).join(","));
+    for (const r of data.recent) {
+      lines.push([r.auditId, r.field, OCR_FIELD_LABELS[r.field] ?? r.field, r.raw, r.corrected, r.createdAt].map(esc).join(","));
+    }
+
+    const csv = lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ocr-mismatches-${windowLabel}-sort-${sort}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="glass rounded-2xl p-6 space-y-4" data-testid="ocr-mismatches-panel">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -1865,6 +1906,17 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
+          <button
+            type="button"
+            onClick={exportOcrCsv}
+            disabled={!data || loading}
+            data-testid="button-export-ocr-csv"
+            title="Export per-field counts, top diffs, and recent corrections as CSV"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </button>
         </div>
       </div>
 
