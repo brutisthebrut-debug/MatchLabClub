@@ -5,8 +5,55 @@ import {
   JoinWaitlistBody,
   GetWaitlistStatsResponse,
 } from "@workspace/api-zod";
+import { sendMail } from "../lib/mailer";
 
 const router: IRouter = Router();
+
+async function sendWaitlistWelcomeEmail(
+  req: Parameters<Parameters<IRouter["post"]>[1]>[0],
+  to: string,
+  position: number,
+): Promise<void> {
+  const subject = "You're on the Next Level Dating Club waitlist 🎉";
+  const text = `Welcome to Next Level Dating Club!
+
+Thanks for joining the waitlist — you're #${position} in line.
+
+As an early listener, here's what you've locked in:
+  • Founding-member pricing when we open paid plans
+  • Priority access to new coaching tools as they ship
+  • A free profile audit the moment your spot opens
+  • Behind-the-scenes updates from the podcast crew
+
+We'll email you the moment your spot is ready. In the meantime, keep an eye out for podcast-exclusive perks and bonus episodes.
+
+— The Next Level Dating Club team
+`;
+  const html = `<!doctype html>
+<html>
+  <body style="font-family: -apple-system, Segoe UI, sans-serif; line-height: 1.6; color: #222; max-width: 560px; margin: 0 auto; padding: 24px;">
+    <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 24px; margin: 0 0 12px;">You're on the list.</h1>
+    <p>Thanks for joining the <strong>Next Level Dating Club</strong> waitlist — you're <strong>#${position}</strong> in line.</p>
+    <p>As an early listener, here's what you've locked in:</p>
+    <ul style="padding-left: 20px;">
+      <li>Founding-member pricing when we open paid plans</li>
+      <li>Priority access to new coaching tools as they ship</li>
+      <li>A free profile audit the moment your spot opens</li>
+      <li>Behind-the-scenes updates from the podcast crew</li>
+    </ul>
+    <p>We'll email you the moment your spot is ready. In the meantime, keep an eye out for podcast-exclusive perks and bonus episodes.</p>
+    <p style="margin-top: 24px;">— The Next Level Dating Club team</p>
+  </body>
+</html>`;
+  try {
+    await sendMail({ to, subject, text, html });
+  } catch (err) {
+    req.log.error(
+      { err, to },
+      "Failed to send waitlist welcome email (signup still succeeded)",
+    );
+  }
+}
 
 router.get("/waitlist", async (req, res): Promise<void> => {
   const [result] = await db.select({ total: count() }).from(waitlistTable);
@@ -61,6 +108,8 @@ router.post("/waitlist", async (req, res): Promise<void> => {
     .returning();
   const allEntries = await db.select().from(waitlistTable);
   const position = allEntries.length;
+
+  await sendWaitlistWelcomeEmail(req, entry.email, position);
 
   res.status(201).json({
     ...entry,
