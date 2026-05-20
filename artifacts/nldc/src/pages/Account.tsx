@@ -3,6 +3,8 @@ import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
@@ -62,7 +64,11 @@ export default function Account() {
   });
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isExporting, setIsExporting] = useState(false);
+  const DELETE_CONFIRM_PHRASE = "delete";
+  const isDeleteConfirmed =
+    deleteConfirmText.trim().toLowerCase() === DELETE_CONFIRM_PHRASE;
   const deleteAccount = useDeleteMyAccount();
   const summaryQuery = useGetAccountSummary({
     query: {
@@ -129,6 +135,7 @@ export default function Account() {
         description: "Your account and all associated data have been removed.",
       });
       setConfirmDeleteOpen(false);
+      setDeleteConfirmText("");
       logout();
     } catch (err) {
       toast({
@@ -326,7 +333,13 @@ export default function Account() {
           </div>
         )}
 
-        <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialog
+          open={confirmDeleteOpen}
+          onOpenChange={(open) => {
+            setConfirmDeleteOpen(open);
+            if (!open) setDeleteConfirmText("");
+          }}
+        >
           <AlertDialogContent data-testid="dialog-confirm-delete-account">
             <AlertDialogHeader>
               <AlertDialogTitle>Permanently delete your account?</AlertDialogTitle>
@@ -401,6 +414,23 @@ export default function Account() {
                 </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
+            <div className="space-y-2">
+              <Label htmlFor="delete-confirm-input" className="text-sm">
+                Type <span className="font-semibold">delete</span> to confirm
+              </Label>
+              <Input
+                id="delete-confirm-input"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="delete"
+                autoComplete="off"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+                disabled={deleteAccount.isPending}
+                data-testid="input-account-delete-confirm"
+              />
+            </div>
             <AlertDialogFooter>
               <AlertDialogCancel
                 disabled={deleteAccount.isPending}
@@ -431,7 +461,7 @@ export default function Account() {
                   e.preventDefault();
                   void handleConfirmDelete();
                 }}
-                disabled={deleteAccount.isPending}
+                disabled={deleteAccount.isPending || !isDeleteConfirmed}
                 className="bg-[hsl(348_55%_55%)] text-white hover:bg-[hsl(348_55%_48%)]"
                 data-testid="button-account-delete-confirm"
               >
