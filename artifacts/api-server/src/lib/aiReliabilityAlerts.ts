@@ -66,6 +66,60 @@ async function fetchRecentByTool(): Promise<
   return map;
 }
 
+function formatBreachDuration(start: Date, end: Date): string {
+  const ms = Math.max(0, end.getTime() - start.getTime());
+  const totalMinutes = Math.floor(ms / 60000);
+  if (totalMinutes < 1) return "less than a minute";
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+  const parts: string[] = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0 && days === 0) parts.push(`${minutes}m`);
+  return parts.join(" ") || `${totalMinutes}m`;
+}
+
+async function sendRecoveredEmail(
+  toolName: string,
+  total: number,
+  rate: number,
+  firstBreachedAt: Date | null,
+  now: Date,
+): Promise<void> {
+  const to = getFounderRecipient();
+  const pct = (rate * 100).toFixed(1);
+  const thresholdPct = (ALERT_THRESHOLD * 100).toFixed(0);
+  const duration = firstBreachedAt
+    ? formatBreachDuration(firstBreachedAt, now)
+    : "unknown";
+  const subject = `[NLDC] AI reliability recovered: ${toolName} back to ${pct}%`;
+  const text = [
+    `The "${toolName}" AI tool's first-try success rate has recovered above the alert threshold.`,
+    "",
+    `- Recent window: last ${total} requests`,
+    `- First-try success rate: ${pct}%`,
+    `- Threshold: ${thresholdPct}%`,
+    `- Breach lasted: ${duration}`,
+    "",
+    "You won't be notified again unless it drops below the threshold again.",
+  ].join("\n");
+
+  if (!to) {
+    logger.warn(
+      { toolName, total, rate },
+      "AI reliability recovery detected but FOUNDER_ALERT_EMAIL is not set; skipping email send",
+    );
+    return;
+  }
+
+  await sendMail({ to, subject, text });
+  logger.info(
+    { toolName, total, rate, to },
+    "Sent AI reliability recovered notification",
+  );
+}
+
 async function sendBreachEmail(
   toolName: string,
   total: number,
@@ -170,17 +224,45 @@ export async function checkAiReliabilityAlerts(): Promise<AlertCheckResult> {
           .where(eq(aiToolAlertStateTable.toolName, toolName));
       }
     } else if (!isBreached && wasBreached) {
-      await db
-        .update(aiToolAlertStateTable)
-        .set({
-          breached: false,
-          lastClearedAt: now,
-          lastRecentTotal: r.total,
-          lastRecentFirstTrySuccessRate: rate,
-          updatedAt: now,
-        })
-        .where(eq(aiToolAlertStateTable.toolName, toolName));
-      cleared.push(toolName);
+      let notified = false;
+      try {
+        await sendRecoveredEmail(
+          toolName,
+          r.total,
+          rate,
+          prev?.firstBreachedAt ?? null,
+          now,
+        );
+        notified = true;
+      } catch (err) {
+        logger.error(
+          { err: err instanceof Error ? err.message : String(err), toolName },
+          "Failed to send AI reliability recovered email; will retry on next check",
+        );
+      }
+
+      if (notified) {
+        await db
+          .update(aiToolAlertStateTable)
+          .set({
+            breached: false,
+            lastClearedAt: now,
+            lastRecentTotal: r.total,
+            lastRecentFirstTrySuccessRate: rate,
+            updatedAt: now,
+          })
+          .where(eq(aiToolAlertStateTable.toolName, toolName));
+        cleared.push(toolName);
+      } else if (prev) {
+        await db
+          .update(aiToolAlertStateTable)
+          .set({
+            lastRecentTotal: r.total,
+            lastRecentFirstTrySuccessRate: rate,
+            updatedAt: now,
+          })
+          .where(eq(aiToolAlertStateTable.toolName, toolName));
+      }
     } else if (prev) {
       await db
         .update(aiToolAlertStateTable)
