@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
@@ -229,6 +229,24 @@ export default function Insights() {
   const hasInsights = !!(insights && insights.length > 0);
   const isBrandNewUser = isAuthenticated && !insightsLoading && !hasInsights && !analysis;
 
+  // Detect the cookie-loss orphan scenario: the client had insight IDs in
+  // localStorage when signing in, but the server couldn't match them because
+  // the anon_claim cookie was already gone. useClaimAnonymousOnLogin stores a
+  // flag in sessionStorage when it detects this; we surface it here once.
+  const [insightsPossiblyOrphaned, setInsightsPossiblyOrphaned] = useState(false);
+  useEffect(() => {
+    if (!isAuthenticated || insightsLoading) return;
+    try {
+      const flag = window.sessionStorage.getItem("nldc:anon:insights_possibly_orphaned");
+      if (flag === "1") {
+        window.sessionStorage.removeItem("nldc:anon:insights_possibly_orphaned");
+        setInsightsPossiblyOrphaned(true);
+      }
+    } catch {
+      // sessionStorage may be unavailable — swallow.
+    }
+  }, [isAuthenticated, insightsLoading]);
+
   async function handleAnalyze() {
     const appForRequest =
       sourceApp || detectSourceFromText(`${sourceLabel}\n${content}`) || null;
@@ -280,7 +298,7 @@ export default function Insights() {
             <p className="text-muted-foreground mt-2 max-w-xl">Paste exported message history and we'll identify your communication patterns, attachment style, and profile coaching tips.</p>
           </motion.div>
 
-          {isBrandNewUser && (
+          {isBrandNewUser && !insightsPossiblyOrphaned && (
             <WelcomePanel
               icon={<Mail className="w-6 h-6 text-primary" />}
               eyebrow="Welcome to Email Insights"
@@ -288,6 +306,31 @@ export default function Insights() {
               description="Paste any message history below and we'll surface your communication patterns, attachment style, and the profile tweaks most likely to lift your results."
               testId="insights-empty-state"
             />
+          )}
+
+          {insightsPossiblyOrphaned && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 flex gap-4"
+              data-testid="banner-insights-possibly-orphaned"
+            >
+              <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-amber-900 text-sm mb-1">Your previous analysis may not have transferred</p>
+                <p className="text-sm text-amber-800 leading-relaxed">
+                  It looks like you ran an analysis before signing in, but your browser cookies were cleared before we could link it to your account. The analysis itself is not lost — it just isn't attached to your profile.{" "}
+                  <a
+                    href="mailto:support@nextleveldatingclub.com?subject=Anonymous%20Email%20Insight%20not%20transferred&body=Hi%2C%20I%20ran%20an%20Email%20Insights%20analysis%20before%20signing%20in%20and%20it%20did%20not%20appear%20in%20my%20account.%20Could%20you%20help%20me%20recover%20it%3F"
+                    className="underline underline-offset-2 font-medium text-amber-900 hover:text-amber-700 transition-colors"
+                    data-testid="link-insights-orphan-support"
+                  >
+                    Contact support
+                  </a>{" "}
+                  and we can manually reassign it for you.
+                </p>
+              </div>
+            </motion.div>
           )}
 
           {/* Privacy Notice */}

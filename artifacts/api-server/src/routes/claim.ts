@@ -193,6 +193,38 @@ function logIfShortfall(
   );
 }
 
+/**
+ * POST /api/claim-anonymous
+ *
+ * Reassigns anonymous rows (audits, profiles, message sessions, email insights,
+ * follow-ups) to the authenticated user, scoped to the `anon_claim` cookie
+ * present in the request.
+ *
+ * ## Orphan risk & intended behavior
+ *
+ * Every piece of anonymous data is tagged with an `anonymous_claim_token`
+ * derived from the `anon_claim` cookie. If that cookie is cleared before the
+ * user signs in (e.g. "Clear browsing data", private-browsing session ending,
+ * or switching devices without using the handoff flow), the rows cannot be
+ * matched and remain unclaimed indefinitely (`user_id = null`,
+ * `anonymous_claim_token` still set).
+ *
+ * **Intended behavior:**
+ * - Rows are never auto-deleted; they remain in the DB and can be manually
+ *   reassigned by a founder/admin via a direct SQL UPDATE.
+ * - The frontend detects this specific case (insight IDs were in localStorage
+ *   but the server returned 0 claimed) and stores a flag in sessionStorage.
+ *   The Email Insights page reads that flag and shows a user-facing notice
+ *   pointing to the support email so a manual recovery can be initiated.
+ * - No grace-period auto-claim is performed server-side because unclaimed
+ *   rows with a token set cannot be safely attributed to a different user
+ *   without the matching token. Attributing based solely on recency would risk
+ *   incorrectly merging data from two different anonymous sessions.
+ *
+ * For users who switch devices intentionally, the cross-device handoff flow
+ * (`POST /api/claim-anonymous/handoff/issue` +
+ *  `POST /api/claim-anonymous/handoff/redeem`) is the correct recovery path.
+ */
 router.post("/claim-anonymous", async (req, res): Promise<void> => {
   if (!req.user?.id) {
     res.status(401).json({ error: "Not authenticated" });

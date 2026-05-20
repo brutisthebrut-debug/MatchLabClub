@@ -142,6 +142,22 @@ export function useClaimAnonymousOnLogin(): void {
       { data: ids },
       {
         onSuccess: (result) => {
+          // Detect cookie-loss orphan scenario: the client had insight IDs in
+          // localStorage but the server claimed 0 of them. This almost always
+          // means the anon_claim cookie was cleared between the insight being
+          // created and the sign-in (e.g. "Clear browsing data"). Store a flag
+          // in sessionStorage so the Insights page can surface a helpful notice.
+          const hadInsightIds = (ids.insightIds?.length ?? 0) > 0;
+          if (hadInsightIds && result.claimed.insights === 0) {
+            try {
+              window.sessionStorage.setItem(
+                "nldc:anon:insights_possibly_orphaned",
+                "1",
+              );
+            } catch {
+              // sessionStorage may be unavailable — swallow.
+            }
+          }
           clearAnonymousIds();
           invalidateDashboardQueries();
           toastClaimed(result.claimed);
