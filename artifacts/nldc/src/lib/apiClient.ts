@@ -84,6 +84,14 @@ export interface AiToolMetric {
   overallSuccessRate: number;
   avgAttempts: number;
   avgDurationMs: number;
+  recent: {
+    windowSize: number;
+    total: number;
+    firstTryOk: number;
+    fallbacks: number;
+    firstTrySuccessRate: number;
+  };
+  alert: boolean;
 }
 export interface AiMetricsResponse {
   overall: {
@@ -97,6 +105,12 @@ export interface AiMetricsResponse {
     avgDurationMs: number;
   };
   perTool: AiToolMetric[];
+  alertThreshold: {
+    windowSize: number;
+    minSample: number;
+    firstTrySuccessRate: number;
+  };
+  alerts: { toolName: string; recentTotal: number; recentFirstTrySuccessRate: number }[];
 }
 
 export const getAiMetrics = () =>

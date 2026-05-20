@@ -28,6 +28,10 @@ router.get("/founder/stats", async (req, res): Promise<void> => {
   });
 });
 
+const ALERT_WINDOW = 50;
+const ALERT_MIN_SAMPLE = 10;
+const ALERT_THRESHOLD = 0.7;
+
 router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
   const perTool = await db
     .select({
@@ -43,6 +47,38 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
     .from(aiRequestMetricsTable)
     .groupBy(aiRequestMetricsTable.toolName)
     .orderBy(desc(count()));
+
+  const recentRows = await db.execute<{
+    tool_name: string;
+    recent_total: string | number;
+    recent_first_try_ok: string | number;
+    recent_fallbacks: string | number;
+  }>(sql`
+    select
+      tool_name,
+      count(*) as recent_total,
+      sum(case when attempts = 1 and is_fallback = false then 1 else 0 end) as recent_first_try_ok,
+      sum(case when is_fallback = true then 1 else 0 end) as recent_fallbacks
+    from (
+      select
+        tool_name,
+        attempts,
+        is_fallback,
+        row_number() over (partition by tool_name order by created_at desc) as rn
+      from ai_request_metrics
+    ) t
+    where rn <= ${ALERT_WINDOW}
+    group by tool_name
+  `);
+
+  const recentByTool = new Map<string, { total: number; firstTryOk: number; fallbacks: number }>();
+  for (const r of recentRows.rows ?? []) {
+    recentByTool.set(r.tool_name, {
+      total: Number(r.recent_total ?? 0),
+      firstTryOk: Number(r.recent_first_try_ok ?? 0),
+      fallbacks: Number(r.recent_fallbacks ?? 0),
+    });
+  }
 
   const [totals] = await db
     .select({
@@ -61,6 +97,10 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
     const retriedOk = Number(row.retriedOk ?? 0);
     const fallbacks = Number(row.fallbacks ?? 0);
     const validationFailures = Number(row.validationFailures ?? 0);
+    const recent = recentByTool.get(row.toolName) ?? { total: 0, firstTryOk: 0, fallbacks: 0 };
+    const recentRate = recent.total > 0 ? recent.firstTryOk / recent.total : 0;
+    const alert =
+      recent.total >= ALERT_MIN_SAMPLE && recentRate < ALERT_THRESHOLD;
     return {
       toolName: row.toolName,
       total,
@@ -72,6 +112,14 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
       overallSuccessRate: total > 0 ? (firstTryOk + retriedOk) / total : 0,
       avgAttempts: Number(row.avgAttempts ?? 0),
       avgDurationMs: Number(row.avgDurationMs ?? 0),
+      recent: {
+        windowSize: ALERT_WINDOW,
+        total: recent.total,
+        firstTryOk: recent.firstTryOk,
+        fallbacks: recent.fallbacks,
+        firstTrySuccessRate: recentRate,
+      },
+      alert,
     };
   };
 
@@ -79,6 +127,9 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
   const totalFirstTry = Number(totals?.firstTryOk ?? 0);
   const totalRetried = Number(totals?.retriedOk ?? 0);
   const totalFallbacks = Number(totals?.fallbacks ?? 0);
+
+  const perToolNorm = perTool.map(norm);
+  const alerts = perToolNorm.filter((t) => t.alert);
 
   res.json({
     overall: {
@@ -91,7 +142,17 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
       avgAttempts: Number(totals?.avgAttempts ?? 0),
       avgDurationMs: Number(totals?.avgDurationMs ?? 0),
     },
-    perTool: perTool.map(norm),
+    perTool: perToolNorm,
+    alertThreshold: {
+      windowSize: ALERT_WINDOW,
+      minSample: ALERT_MIN_SAMPLE,
+      firstTrySuccessRate: ALERT_THRESHOLD,
+    },
+    alerts: alerts.map((t) => ({
+      toolName: t.toolName,
+      recentTotal: t.recent.total,
+      recentFirstTrySuccessRate: t.recent.firstTrySuccessRate,
+    })),
   });
 });
 

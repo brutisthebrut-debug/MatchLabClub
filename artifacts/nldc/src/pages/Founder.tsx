@@ -221,6 +221,39 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
         </p>
       )}
 
+      {data && data.alerts.length > 0 && (
+        <div
+          className="rounded-xl p-4 border space-y-2"
+          style={{
+            background: "hsl(348 55% 58% / 0.10)",
+            borderColor: "hsl(348 55% 58% / 0.40)",
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" style={{ color: "hsl(348 65% 70%)" }} />
+            <p className="text-sm font-semibold" style={{ color: "hsl(348 65% 78%)" }}>
+              {data.alerts.length === 1
+                ? "1 tool is below the reliability threshold"
+                : `${data.alerts.length} tools are below the reliability threshold`}
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground/80">
+            First-try success rate fell below {pct(data.alertThreshold.firstTrySuccessRate)} over the
+            last {data.alertThreshold.windowSize} requests (min {data.alertThreshold.minSample} samples).
+          </p>
+          <ul className="text-xs text-foreground/85 space-y-1 pl-1">
+            {data.alerts.map((a) => (
+              <li key={a.toolName} className="flex items-center justify-between gap-2">
+                <span className="truncate">{a.toolName}</span>
+                <span className="text-muted-foreground/70 shrink-0">
+                  {pct(a.recentFirstTrySuccessRate)} · last {a.recentTotal}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {overall && overall.total > 0 && (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -246,7 +279,7 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/8 bg-white/3">
-                  {["Tool", "Total", "1st-try ok", "Retried ok", "Fallbacks", "1st-try %", "Avg attempts", "Avg ms"].map((h) => (
+                  {["Tool", "Total", "1st-try ok", "Retried ok", "Fallbacks", "1st-try %", "Recent 50", "Avg attempts", "Avg ms"].map((h) => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
                       {h}
                     </th>
@@ -256,12 +289,33 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
               <tbody>
                 {data!.perTool.map((row) => (
                   <tr key={row.toolName} className="border-b border-white/5 hover:bg-white/3 transition-colors">
-                    <td className="px-4 py-3 text-foreground/90 max-w-[260px] truncate">{row.toolName}</td>
+                    <td className="px-4 py-3 text-foreground/90 max-w-[260px]">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate">{row.toolName}</span>
+                        {row.alert && (
+                          <span
+                            title={`Recent first-try success ${pct(row.recent.firstTrySuccessRate)} over last ${row.recent.total} (threshold ${pct(data!.alertThreshold.firstTrySuccessRate)})`}
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold shrink-0"
+                            style={{
+                              background: "hsl(348 55% 58% / 0.18)",
+                              color: "hsl(348 65% 78%)",
+                              border: "1px solid hsl(348 55% 58% / 0.45)",
+                            }}
+                          >
+                            <AlertTriangle className="w-3 h-3" />
+                            Low
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground">{row.total}</td>
                     <td className="px-4 py-3 text-muted-foreground">{row.firstTryOk}</td>
                     <td className="px-4 py-3 text-muted-foreground">{row.retriedOk}</td>
                     <td className="px-4 py-3 text-muted-foreground">{row.fallbacks}</td>
                     <td className="px-4 py-3 text-muted-foreground">{pct(row.firstTrySuccessRate)}</td>
+                    <td className={`px-4 py-3 ${row.alert ? "text-[hsl(348_65%_78%)] font-semibold" : "text-muted-foreground"}`}>
+                      {row.recent.total > 0 ? `${pct(row.recent.firstTrySuccessRate)} (${row.recent.total})` : "—"}
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground">{row.avgAttempts.toFixed(2)}</td>
                     <td className="px-4 py-3 text-muted-foreground">{Math.round(row.avgDurationMs)}</td>
                   </tr>
