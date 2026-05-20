@@ -192,6 +192,28 @@ router.post("/insights", async (req, res): Promise<void> => {
   });
 });
 
+router.delete("/insights/:id", async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+
+  const [existing] = await db
+    .select()
+    .from(emailInsightsTable)
+    .where(and(eq(emailInsightsTable.id, id), userScope(req.user?.id)));
+  if (!existing) {
+    res.status(404).json({ error: "Insight not found" });
+    return;
+  }
+
+  await db.delete(emailInsightsTable).where(eq(emailInsightsTable.id, id));
+
+  res.json({ success: true, deletedId: id });
+});
+
 router.post("/insights/:id/analyze", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(raw, 10);

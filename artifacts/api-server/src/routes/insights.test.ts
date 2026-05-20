@@ -245,6 +245,70 @@ const IMESSAGE_CONTENT =
   "Me: haha totally kidding\n" +
   "Them: lol nice one lmao";
 
+describe("DELETE /api/insights/:id", () => {
+  it("deletes an insight owned by the current user and returns success", async () => {
+    const userId = `test-delete-${crypto.randomBytes(4).toString("hex")}`;
+    testApp.setUser({ id: userId });
+    const create = await request(testApp.app).post("/api/insights").send(VALID_BODY);
+    expect(create.status).toBe(201);
+    const id: number = create.body.id;
+
+    const res = await request(testApp.app).delete(`/api/insights/${id}`);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.deletedId).toBe(id);
+
+    const list = await request(testApp.app).get("/api/insights");
+    expect(list.body.find((i: { id: number }) => i.id === id)).toBeUndefined();
+  });
+
+  it("returns 400 for a non-numeric id", async () => {
+    testApp.setUser({ id: "user-x" });
+    const res = await request(testApp.app).delete("/api/insights/abc");
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 404 when insight does not exist", async () => {
+    testApp.setUser({ id: "user-x" });
+    const res = await request(testApp.app).delete("/api/insights/999999");
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 404 when insight belongs to a different user", async () => {
+    const ownerUser = `test-owner-${crypto.randomBytes(4).toString("hex")}`;
+    const otherUser = `test-other-${crypto.randomBytes(4).toString("hex")}`;
+
+    testApp.setUser({ id: ownerUser });
+    const create = await request(testApp.app).post("/api/insights").send(VALID_BODY);
+    expect(create.status).toBe(201);
+    const id: number = create.body.id;
+
+    testApp.setUser({ id: otherUser });
+    const res = await request(testApp.app).delete(`/api/insights/${id}`);
+    expect(res.status).toBe(404);
+  });
+
+  it("rollup updates after deletion (no longer counts deleted insight)", async () => {
+    const userId = `test-rollup-delete-${crypto.randomBytes(4).toString("hex")}`;
+    const id = await createAndAnalyzeInsight(userId, {
+      sourceLabel: "Hinge chat",
+      pastedContent: HINGE_CONTENT,
+      sourceApp: "Hinge",
+      consentGiven: true,
+    });
+
+    testApp.setUser({ id: userId });
+    const before = await request(testApp.app).get("/api/insights/rollup");
+    expect(before.body.totalAnalyzed).toBe(1);
+
+    await request(testApp.app).delete(`/api/insights/${id}`);
+
+    const after = await request(testApp.app).get("/api/insights/rollup");
+    expect(after.body.totalAnalyzed).toBe(0);
+    expect(after.body.sources).toHaveLength(0);
+  });
+});
+
 describe("GET /api/insights/rollup", () => {
   it("returns an empty rollup when no insights have been analyzed", async () => {
     testApp.setUser({ id: ROLLUP_USER_ID });

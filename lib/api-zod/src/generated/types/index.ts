@@ -61,6 +61,7 @@ export * from './datingProfile';
 export * from './datingProfileInput';
 export * from './datingProfileUpdate';
 export * from './deleteAuditResult';
+export * from './deleteInsightResult';
 export * from './deleteMyAccountResult';
 export * from './deleteMyAccountResultDeleted';
 export * from './emailInsight';

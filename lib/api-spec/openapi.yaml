@@ -1239,6 +1239,29 @@ paths:
               schema:
                 $ref: "#/components/schemas/InsightsRollup"
 
+  /insights/{id}:
+    delete:
+      operationId: deleteInsight
+      tags: [insights]
+      summary: Delete an insight import owned by the current session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Insight deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteInsightResult"
+        "400":
+          description: Invalid id
+        "404":
+          description: Not found
+
   /insights/{id}/analyze:
     post:
       operationId: analyzeInsight
@@ -2695,6 +2718,16 @@ components:
         withinDays:
           type: integer
           description: The lookahead window (in days) that was used to compute this list.
+
+    DeleteInsightResult:
+      type: object
+      required: [success, deletedId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        deletedId:
+          type: integer
 
     DeleteAuditResult:
       type: object

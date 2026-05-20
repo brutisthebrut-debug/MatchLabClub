@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
@@ -8,18 +8,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ToastAction } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   useListInsights, useCreateInsight, useAnalyzeInsight,
   useGetInsightsRollup,
+  useDeleteInsight,
   getListInsightsQueryKey,
   getGetInsightsRollupQueryKey,
 } from "@workspace/api-client-react";
+import type { EmailInsight } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
-import { Shield, Loader2, Mail, TrendingUp, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, X, Filter } from "lucide-react";
+import { Shield, Loader2, Mail, TrendingUp, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, X, Filter, Trash2 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
+
+const UNDO_WINDOW_MS = 5000;
 
 const SOURCE_APPS = ["Hinge", "Bumble", "Tinder", "iMessage", "Email"] as const;
 type InsightSource = (typeof SOURCE_APPS)[number];
@@ -116,10 +122,88 @@ export default function Insights() {
   const queryClient = useQueryClient();
 
   const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const { data: insights, isLoading: insightsLoading } = useListInsights();
   const { data: rollup } = useGetInsightsRollup();
   const createInsight = useCreateInsight();
   const analyzeInsight = useAnalyzeInsight();
+
+  const listInsightsKey = getListInsightsQueryKey();
+  const rollupKey = getGetInsightsRollupQueryKey();
+
+  const pendingDeleteRef = useRef<{
+    insight: EmailInsight;
+    timer: ReturnType<typeof setTimeout>;
+  } | null>(null);
+
+  const deleteInsight = useDeleteInsight({
+    mutation: {
+      onError: () => {
+        toast({ title: "Couldn't delete", description: "Something went wrong. Try again.", variant: "destructive" });
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: listInsightsKey });
+        queryClient.invalidateQueries({ queryKey: rollupKey });
+      },
+    },
+  });
+
+  const finalizePendingDelete = useCallback(() => {
+    const pending = pendingDeleteRef.current;
+    if (!pending) return;
+    clearTimeout(pending.timer);
+    pendingDeleteRef.current = null;
+    deleteInsight.mutate({ id: pending.insight.id });
+  }, [deleteInsight]);
+
+  const undoPendingDelete = useCallback(() => {
+    const pending = pendingDeleteRef.current;
+    if (!pending) return;
+    clearTimeout(pending.timer);
+    pendingDeleteRef.current = null;
+    const current = queryClient.getQueryData<EmailInsight[]>(listInsightsKey);
+    if (!current) return;
+    if (current.some((i) => i.id === pending.insight.id)) return;
+    queryClient.setQueryData<EmailInsight[]>(
+      listInsightsKey,
+      [...current, pending.insight].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      ),
+    );
+  }, [queryClient, listInsightsKey]);
+
+  const handleDeleteInsight = useCallback(
+    (insight: EmailInsight) => {
+      if (pendingDeleteRef.current) finalizePendingDelete();
+      const current = queryClient.getQueryData<EmailInsight[]>(listInsightsKey);
+      if (current) {
+        queryClient.setQueryData<EmailInsight[]>(
+          listInsightsKey,
+          current.filter((i) => i.id !== insight.id),
+        );
+      }
+      const timer = setTimeout(() => finalizePendingDelete(), UNDO_WINDOW_MS);
+      pendingDeleteRef.current = { insight, timer };
+      const t = toast({
+        title: "Import removed",
+        description: `"${insight.sourceLabel}" was deleted.`,
+        duration: UNDO_WINDOW_MS,
+        action: (
+          <ToastAction
+            altText="Undo delete"
+            data-testid={`button-undo-delete-insight-${insight.id}`}
+            onClick={() => {
+              undoPendingDelete();
+              t.dismiss();
+            }}
+          >
+            Undo
+          </ToastAction>
+        ),
+      });
+    },
+    [finalizePendingDelete, undoPendingDelete, queryClient, listInsightsKey, toast],
+  );
 
   const isLoading = createInsight.isPending || analyzeInsight.isPending;
   const hasInsights = !!(insights && insights.length > 0);
@@ -585,7 +669,7 @@ export default function Insights() {
                       <div className="space-y-3">
                         {displayInsights.slice().reverse().map((insight) => (
                           <div key={insight.id} className="flex items-center gap-3 p-3 rounded-xl border border-border" data-testid={`card-insight-${insight.id}`}>
-                            <Mail className="w-4 h-4 text-muted-foreground" />
+                            <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <p className="text-sm font-medium text-foreground truncate">{insight.sourceLabel}</p>
@@ -604,6 +688,17 @@ export default function Insights() {
                               </p>
                             </div>
                             <Badge variant="secondary" className={insight.status === "complete" ? "bg-green-50 text-green-700" : ""}>{insight.status}</Badge>
+                            {hasInsights && (
+                              <button
+                                type="button"
+                                aria-label={`Delete import "${insight.sourceLabel}"`}
+                                data-testid={`button-delete-insight-${insight.id}`}
+                                onClick={() => handleDeleteInsight(insight as EmailInsight)}
+                                className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         ))}
                       </div>

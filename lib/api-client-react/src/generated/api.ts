@@ -53,6 +53,7 @@ import type {
   DatingProfileInput,
   DatingProfileUpdate,
   DeleteAuditResult,
+  DeleteInsightResult,
   DeleteMyAccountResult,
   EmailInsight,
   EmailInsightAnalysis,
@@ -4023,6 +4024,76 @@ export function useGetInsightsRollup<TData = Awaited<ReturnType<typeof getInsigh
 
 
 
+
+export const getDeleteInsightUrl = (id: number,) => {
+
+
+
+
+  return `/api/insights/${id}`
+}
+
+/**
+ * @summary Delete an insight import owned by the current session
+ */
+export const deleteInsight = async (id: number, options?: RequestInit): Promise<DeleteInsightResult> => {
+
+  return customFetch<DeleteInsightResult>(getDeleteInsightUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteInsightMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteInsight>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteInsight>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteInsight'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteInsight>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteInsight(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteInsightMutationResult = NonNullable<Awaited<ReturnType<typeof deleteInsight>>>
+
+    export type DeleteInsightMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete an insight import owned by the current session
+ */
+export const useDeleteInsight = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteInsight>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteInsight>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteInsightMutationOptions(options));
+    }
 
 export const getAnalyzeInsightUrl = (id: number,) => {
 

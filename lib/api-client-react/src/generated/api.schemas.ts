@@ -934,6 +934,11 @@ export interface ExpiringTrashedAudits {
   withinDays: number;
 }
 
+export interface DeleteInsightResult {
+  success: true;
+  deletedId: number;
+}
+
 export interface DeleteAuditResult {
   success: true;
   deletedId: number;

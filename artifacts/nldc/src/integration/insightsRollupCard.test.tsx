@@ -46,6 +46,7 @@ vi.mock("@workspace/api-client-react", () => ({
   useCreateInsight: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useAnalyzeInsight: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useGetInsightsRollup: () => ({ data: mockRollup }),
+  useDeleteInsight: () => ({ mutate: vi.fn(), isPending: false }),
   getListInsightsQueryKey: () => ["insights"],
   getGetInsightsRollupQueryKey: () => ["insights-rollup"],
 }));

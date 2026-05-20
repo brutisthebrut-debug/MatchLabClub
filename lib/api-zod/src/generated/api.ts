@@ -1888,6 +1888,19 @@ export const GetInsightsRollupResponse = zod.object({
 
 
 /**
+ * @summary Delete an insight import owned by the current session
+ */
+export const DeleteInsightParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteInsightResponse = zod.object({
+  "success": zod.boolean(),
+  "deletedId": zod.number()
+})
+
+
+/**
  * @summary Run AI analysis on pasted email/message history
  */
 export const AnalyzeInsightParams = zod.object({
