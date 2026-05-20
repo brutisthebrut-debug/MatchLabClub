@@ -33,9 +33,15 @@ import {
   getListInsightsQueryKey,
   useDeleteAudit,
   generateAuditReport,
+  deleteAudit as deleteAuditRequest,
   type Audit,
 } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
+import {
+  recordPendingAuditDelete,
+  clearPendingAuditDelete,
+  drainPendingAuditDeletes,
+} from "@/lib/pendingAuditDeletes";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { HandoffShareDialog } from "@/components/HandoffShareDialog";
 import { hasAnyAnonymousIds } from "@/lib/anonymousIds";
@@ -371,6 +377,9 @@ export default function Dashboard() {
           variant: "destructive",
         });
       },
+      onSuccess: (_data, vars) => {
+        clearPendingAuditDelete(vars.id);
+      },
       onSettled: () => {
         queryClient.invalidateQueries({ queryKey: listAuditsKey });
       },
@@ -424,6 +433,7 @@ export default function Dashboard() {
     if (!pending) return;
     clearTimeout(pending.timer);
     pendingRef.current = null;
+    clearPendingAuditDelete(pending.audit.id);
     const current = queryClient.getQueryData<InfiniteAuditData>(listAuditsKey);
     if (!current) return;
     if (current.pages.some((p) => p.some((a) => a.id === pending.audit.id))) return;
@@ -450,6 +460,7 @@ export default function Dashboard() {
       }
       const timer = setTimeout(() => finalizePending(), UNDO_WINDOW_MS);
       pendingRef.current = { audit, timer };
+      recordPendingAuditDelete(audit.id);
       const t = toast({
         title: "Match removed",
         description: `${audit.firstName}'s audit was deleted.`,
@@ -472,6 +483,23 @@ export default function Dashboard() {
   );
 
   useEffect(() => {
+    const orphaned = drainPendingAuditDeletes();
+    if (orphaned.length > 0) {
+      const previous = queryClient.getQueryData<InfiniteAuditData>(listAuditsKey);
+      if (previous) {
+        const ids = new Set(orphaned);
+        queryClient.setQueryData<InfiniteAuditData>(listAuditsKey, {
+          ...previous,
+          pages: previous.pages.map((p) => p.filter((a) => !ids.has(a.id))),
+        });
+      }
+      Promise.allSettled(
+        orphaned.map((id) => deleteAuditRequest(id)),
+      ).finally(() => {
+        queryClient.invalidateQueries({ queryKey: listAuditsKey });
+        queryClient.invalidateQueries({ queryKey: getGetAuditSummaryQueryKey() });
+      });
+    }
     return () => {
       const pending = pendingRef.current;
       if (pending) {

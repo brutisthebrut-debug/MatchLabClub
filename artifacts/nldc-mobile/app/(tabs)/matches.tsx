@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import {
+  deleteAudit as deleteAuditRequest,
   generateAuditReport,
   getGetAuditSummaryQueryKey,
   getListAuditsQueryKey,
@@ -9,6 +10,11 @@ import {
   type Audit,
   type ListAuditsParams,
 } from "@workspace/api-client-react";
+import {
+  clearPendingAuditDelete,
+  drainPendingAuditDeletes,
+  recordPendingAuditDelete,
+} from "@/lib/pendingAuditDeletes";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
@@ -181,6 +187,9 @@ export default function MatchesScreen() {
           Alert.alert("Couldn't delete", "Something went wrong. Try again.");
         }
       },
+      onSuccess: (_data, vars) => {
+        void clearPendingAuditDelete(vars.id);
+      },
       onSettled: () => {
         queryClient.invalidateQueries({ queryKey: listKey });
       },
@@ -246,6 +255,7 @@ export default function MatchesScreen() {
     }
     pendingAuditRef.current = audit;
     removeFromCache(audit.id);
+    void recordPendingAuditDelete(audit.id);
     setPendingDelete({ audit, expiresAt: Date.now() + UNDO_WINDOW_MS });
     pendingTimerRef.current = setTimeout(() => {
       finalizePendingDelete();
@@ -253,7 +263,28 @@ export default function MatchesScreen() {
   };
 
   useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const orphaned = await drainPendingAuditDeletes();
+      if (cancelled || orphaned.length === 0) return;
+      const previous = queryClient.getQueryData<InfiniteAuditData>(listKey);
+      if (previous) {
+        const ids = new Set(orphaned);
+        queryClient.setQueryData<InfiniteAuditData>(listKey, {
+          ...previous,
+          pages: previous.pages.map((page) =>
+            page.filter((a) => !ids.has(a.id)),
+          ),
+        });
+      }
+      await Promise.allSettled(
+        orphaned.map((id) => deleteAuditRequest(id)),
+      );
+      queryClient.invalidateQueries({ queryKey: listKey });
+      queryClient.invalidateQueries({ queryKey: getGetAuditSummaryQueryKey() });
+    })();
     return () => {
+      cancelled = true;
       if (pendingTimerRef.current) {
         clearTimeout(pendingTimerRef.current);
         pendingTimerRef.current = null;
