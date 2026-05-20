@@ -1267,6 +1267,17 @@ describe("Anonymous Email Insight follows the user into their account via cross-
     // Server response reports the insight was claimed.
     expect(server.lastRedeemResponse?.claimed.insights).toBe(1);
 
+    // The user-facing success toast mentions "email insight" so users know
+    // their insight followed them onto this device.
+    await waitFor(() =>
+      expect(vi.mocked(toast)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Welcome back",
+          description: expect.stringMatching(/1 email insight\b/),
+        }),
+      ),
+    );
+
     // Ownership transferred on the server side.
     expect(server.insights[0]!.userId).toBe("user-insight-B");
     expect(server.insights[0]!.anonToken).toBeNull();

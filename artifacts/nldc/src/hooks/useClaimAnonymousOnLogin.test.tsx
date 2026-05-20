@@ -166,6 +166,94 @@ describe("useClaimAnonymousOnLogin — full anon→login→claim flow", () => {
     );
   });
 
+  it("shows a 'Welcome back' toast mentioning email insights when the cookie-scoped claim returns claimed.insights > 0", async () => {
+    rememberAnonymousId("insights", 11);
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { id: "user-insights-cookie", email: null },
+    });
+
+    renderHook(() => useClaimAnonymousOnLogin(), { wrapper });
+
+    await waitFor(() => expect(claimMutateImpl).toHaveBeenCalledTimes(1));
+    const [, opts] = claimMutateImpl.mock.calls[0];
+
+    act(() => {
+      opts.onSuccess({
+        claimed: { audits: 0, profiles: 0, messages: 0, insights: 1, followUps: 0 },
+      });
+    });
+
+    expect(toastSpy).toHaveBeenCalledTimes(1);
+    const arg = toastSpy.mock.calls[0][0] as { title: string; description: string };
+    expect(arg.title).toBe("Welcome back");
+    expect(arg.description).toMatch(/1 email insight\b/);
+    expect(arg.description).not.toMatch(/email insights\b/);
+  });
+
+  it("pluralizes 'email insights' in the toast when the cookie-scoped claim returns multiple", async () => {
+    rememberAnonymousId("insights", 11);
+    rememberAnonymousId("insights", 12);
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { id: "user-insights-cookie-many", email: null },
+    });
+
+    renderHook(() => useClaimAnonymousOnLogin(), { wrapper });
+
+    await waitFor(() => expect(claimMutateImpl).toHaveBeenCalledTimes(1));
+    const [, opts] = claimMutateImpl.mock.calls[0];
+
+    act(() => {
+      opts.onSuccess({
+        claimed: { audits: 0, profiles: 0, messages: 0, insights: 3, followUps: 0 },
+      });
+    });
+
+    const arg = toastSpy.mock.calls[0][0] as { description: string };
+    expect(arg.description).toMatch(/3 email insights\b/);
+  });
+
+  it("shows a 'Welcome back' toast mentioning email insights when the handoff redeem returns claimed.insights > 0", async () => {
+    const handoffPayload = {
+      handoff: "insights-handoff-token",
+      auditIds: [],
+      profileIds: [],
+      messageSessionIds: [],
+      insightIds: [55],
+      followUpIds: [],
+    };
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(handoffPayload))))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+    window.history.replaceState(null, "", `/?nldc_handoff=${b64}`);
+
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { id: "user-insights-handoff", email: null },
+    });
+
+    renderHook(() => useClaimAnonymousOnLogin(), { wrapper });
+
+    await waitFor(() => expect(redeemMutateImpl).toHaveBeenCalledTimes(1));
+    const [, opts] = redeemMutateImpl.mock.calls[0];
+
+    act(() => {
+      opts.onSuccess({
+        claimed: { audits: 0, profiles: 0, messages: 0, insights: 1, followUps: 0 },
+      });
+    });
+
+    expect(toastSpy).toHaveBeenCalledTimes(1);
+    const arg = toastSpy.mock.calls[0][0] as { title: string; description: string };
+    expect(arg.title).toBe("Welcome back");
+    expect(arg.description).toMatch(/1 email insight\b/);
+  });
+
   it("does not call claim when the user is authenticated but has no anon IDs", () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
