@@ -8,6 +8,15 @@ export const ALERT_MIN_SAMPLE = 10;
 export const ALERT_THRESHOLD = 0.7;
 
 const DEFAULT_INTERVAL_MINUTES = 5;
+const DEFAULT_REBREACH_COOLDOWN_MINUTES = 15;
+
+function getRebreachCooldownMs(): number {
+  const minutes = readPositiveNumberEnv(
+    "AI_RELIABILITY_REBREACH_COOLDOWN_MINUTES",
+    DEFAULT_REBREACH_COOLDOWN_MINUTES,
+  );
+  return minutes * 60 * 1000;
+}
 
 function readPositiveNumberEnv(name: string, fallback: number): number {
   const raw = process.env[name];
@@ -172,6 +181,39 @@ export async function checkAiReliabilityAlerts(): Promise<AlertCheckResult> {
     const now = new Date();
 
     if (isBreached && !wasBreached) {
+      // Cooldown: if the tool recently recovered, suppress the new breach
+      // email until enough healthy time has passed. We still record the
+      // re-breach in state so the dashboard reflects reality.
+      const cooldownMs = getRebreachCooldownMs();
+      const lastClearedAt = prev?.lastClearedAt ?? null;
+      const inCooldown =
+        lastClearedAt !== null &&
+        now.getTime() - lastClearedAt.getTime() < cooldownMs;
+
+      if (inCooldown) {
+        logger.info(
+          {
+            toolName,
+            total: r.total,
+            rate,
+            lastClearedAt,
+            cooldownMs,
+          },
+          "Suppressing AI reliability breach email — tool re-breached inside cooldown window",
+        );
+        await db
+          .update(aiToolAlertStateTable)
+          .set({
+            breached: true,
+            firstBreachedAt: now,
+            lastRecentTotal: r.total,
+            lastRecentFirstTrySuccessRate: rate,
+            updatedAt: now,
+          })
+          .where(eq(aiToolAlertStateTable.toolName, toolName));
+        continue;
+      }
+
       // Send notification FIRST. Only mark the tool as breached if delivery
       // succeeds (or there is no recipient configured — in which case the
       // logged warning counts as the one-time notification). If the email

@@ -176,6 +176,73 @@ describe("checkAiReliabilityAlerts", () => {
     expect(states[0]?.lastClearedAt).toBeTruthy();
   });
 
+  it("suppresses re-alert when tool re-breaches inside cooldown window", async () => {
+    process.env.AI_RELIABILITY_REBREACH_COOLDOWN_MINUTES = "60";
+    try {
+      const toolName = uniqueTool("rebreach-cooldown");
+
+      // 1. Initial breach.
+      await seedMetrics(toolName, { total: 20, firstTryOk: 5 });
+      const first = await checkAiReliabilityAlerts();
+      expect(first.breached).toContain(toolName);
+      expect(sendMailMock).toHaveBeenCalledTimes(1);
+      sendMailMock.mockClear();
+
+      // 2. Recover.
+      await seedMetrics(toolName, {
+        total: ALERT_WINDOW,
+        firstTryOk: ALERT_WINDOW,
+      });
+      const recovered = await checkAiReliabilityAlerts();
+      expect(recovered.cleared).toContain(toolName);
+      expect(sendMailMock).toHaveBeenCalledTimes(1);
+      sendMailMock.mockClear();
+
+      // 3. Immediately re-breach by piling on more bad rows.
+      await seedMetrics(toolName, { total: ALERT_WINDOW, firstTryOk: 0 });
+      const rebreach = await checkAiReliabilityAlerts();
+      expect(rebreach.breached).not.toContain(toolName);
+      expect(sendMailMock).not.toHaveBeenCalled();
+
+      const states = await db
+        .select()
+        .from(aiToolAlertStateTable)
+        .where(eq(aiToolAlertStateTable.toolName, toolName));
+      // State still flips to breached so dashboards reflect reality.
+      expect(states[0]?.breached).toBe(true);
+    } finally {
+      delete process.env.AI_RELIABILITY_REBREACH_COOLDOWN_MINUTES;
+    }
+  });
+
+  it("allows re-alert once cooldown has elapsed since recovery", async () => {
+    // Tiny cooldown so the elapsed wall-clock satisfies it without sleeping.
+    // 0 is rejected by readPositiveNumberEnv, so we use a value that parses
+    // to a sub-millisecond cooldown.
+    process.env.AI_RELIABILITY_REBREACH_COOLDOWN_MINUTES = "0.0000001";
+    try {
+      const toolName = uniqueTool("rebreach-after-cooldown");
+
+      await seedMetrics(toolName, { total: 20, firstTryOk: 5 });
+      await checkAiReliabilityAlerts();
+      sendMailMock.mockClear();
+
+      await seedMetrics(toolName, {
+        total: ALERT_WINDOW,
+        firstTryOk: ALERT_WINDOW,
+      });
+      await checkAiReliabilityAlerts();
+      sendMailMock.mockClear();
+
+      await seedMetrics(toolName, { total: ALERT_WINDOW, firstTryOk: 0 });
+      const rebreach = await checkAiReliabilityAlerts();
+      expect(rebreach.breached).toContain(toolName);
+      expect(sendMailMock).toHaveBeenCalledTimes(1);
+    } finally {
+      delete process.env.AI_RELIABILITY_REBREACH_COOLDOWN_MINUTES;
+    }
+  });
+
   it("never alerts when sample size is below ALERT_MIN_SAMPLE", async () => {
     const toolName = uniqueTool("low-sample");
     // Fewer than ALERT_MIN_SAMPLE rows, all failing — should still not alert.
