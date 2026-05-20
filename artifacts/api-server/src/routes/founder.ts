@@ -64,7 +64,7 @@ interface ThresholdConfig {
   threshold: number;
 }
 
-function buildAlertReason(args: {
+export function buildAlertReason(args: {
   recentTotal: number;
   recentFallbacks: number;
   recentValidationFailures: number;
