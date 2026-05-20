@@ -46,6 +46,7 @@ import {
   markSwept as markAutoRefreshSwept,
 } from "@/lib/autoRefreshPref";
 import {
+  clearSkippedAuditIds,
   loadSkippedAuditIds,
   saveSkippedAuditIds,
 } from "@/lib/skippedRefreshAudits";
@@ -496,6 +497,7 @@ export default function MatchesScreen() {
       setRefreshingOneIds((prev) => new Set(prev).add(audit.id));
       try {
         await generateAuditReport(audit.id);
+        await clearSkippedAuditIds([audit.id]);
         await queryClient.invalidateQueries({ queryKey: listKey });
         await queryClient.invalidateQueries({ queryKey: getGetAuditSummaryQueryKey() });
       } catch {
@@ -568,6 +570,7 @@ export default function MatchesScreen() {
     await saveSkippedAuditIds(skippedIds);
     setPickerOpen(false);
     await runRefresh(chosen);
+    await clearSkippedAuditIds(chosen.map((a) => a.id));
   }, [staleAudits, pickerSelected, runRefresh]);
 
   // Background auto-refresh: when the user has opted in, quietly regenerate a

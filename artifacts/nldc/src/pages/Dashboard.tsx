@@ -65,6 +65,7 @@ import {
   markSwept,
 } from "@/lib/autoRefreshPref";
 import {
+  clearSkippedAuditIds,
   loadSkippedAuditIds,
   saveSkippedAuditIds,
 } from "@/lib/skippedRefreshAudits";
@@ -474,6 +475,7 @@ export default function Dashboard() {
       setRefreshingIds((prev) => new Set(prev).add(audit.id));
       try {
         await generateAuditReport(audit.id);
+        clearSkippedAuditIds([audit.id]);
         await queryClient.invalidateQueries({ queryKey: listAuditsKey });
         await queryClient.invalidateQueries({ queryKey: getGetAuditSummaryQueryKey() });
       } catch {
@@ -587,6 +589,7 @@ export default function Dashboard() {
     saveSkippedAuditIds(skippedIds);
     setPickerOpen(false);
     await refreshAudits(chosen);
+    clearSkippedAuditIds(chosen.map((a) => a.id));
   }, [staleAudits, pickerSelected, refreshAudits]);
 
   // Background auto-refresh: when the user has opted in, quietly regenerate a

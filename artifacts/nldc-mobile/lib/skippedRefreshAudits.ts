@@ -32,3 +32,12 @@ export async function saveSkippedAuditIds(ids: Set<number>): Promise<void> {
     // ignore — preference is a nice-to-have
   }
 }
+
+export async function clearSkippedAuditIds(ids: number[]): Promise<void> {
+  if (ids.length === 0) return;
+  const current = await loadSkippedAuditIds();
+  const changed = ids.some((id) => current.has(id));
+  if (!changed) return;
+  for (const id of ids) current.delete(id);
+  await saveSkippedAuditIds(current);
+}

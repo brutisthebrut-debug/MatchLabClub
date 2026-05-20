@@ -32,3 +32,12 @@ export function saveSkippedAuditIds(ids: Set<number>): void {
     // ignore — preference is a nice-to-have
   }
 }
+
+export function clearSkippedAuditIds(ids: number[]): void {
+  if (ids.length === 0) return;
+  const current = loadSkippedAuditIds();
+  const changed = ids.some((id) => current.has(id));
+  if (!changed) return;
+  for (const id of ids) current.delete(id);
+  saveSkippedAuditIds(current);
+}
