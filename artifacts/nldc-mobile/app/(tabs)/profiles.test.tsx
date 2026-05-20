@@ -28,6 +28,23 @@ const createRef = vi.hoisted(() => ({
   },
 }));
 
+const updateRef = vi.hoisted(() => ({
+  current: {
+    mutateAsync: vi.fn<
+      [{ id: number; data: Partial<Omit<DatingProfile, "id" | "createdAt">> }],
+      Promise<DatingProfile>
+    >(),
+    isPending: false,
+  },
+}));
+
+const deleteRef = vi.hoisted(() => ({
+  current: {
+    mutateAsync: vi.fn<[{ id: number }], Promise<void>>(),
+    isPending: false,
+  },
+}));
+
 // ---------------------------------------------------------------------------
 // React Native mocks — registered before any screen import.
 // ---------------------------------------------------------------------------
@@ -221,7 +238,7 @@ vi.mock("react-native", () => ({
 vi.mock("react-native-gesture-handler", () => ({
   Swipeable: ({
     children,
-    renderRightActions: _rra,
+    renderRightActions,
     onSwipeableWillOpen: _oswo,
     friction: _f,
     rightThreshold: _rt,
@@ -233,7 +250,12 @@ vi.mock("react-native-gesture-handler", () => ({
     friction?: number;
     rightThreshold?: number;
     overshootRight?: boolean;
-  }) => <div>{children}</div>,
+  }) => (
+    <div>
+      {children}
+      {renderRightActions?.()}
+    </div>
+  ),
   RectButton: ({
     children,
     onPress,
@@ -266,8 +288,8 @@ vi.mock("@expo/vector-icons", () => ({
 vi.mock("@workspace/api-client-react", () => ({
   useListProfiles: () => profilesRef.current,
   useCreateProfile: (_opts?: unknown) => createRef.current,
-  useUpdateProfile: () => ({ mutateAsync: vi.fn(), isPending: false }),
-  useDeleteProfile: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useUpdateProfile: () => updateRef.current,
+  useDeleteProfile: () => deleteRef.current,
   getListProfilesQueryKey: () => ["list-profiles"],
 }));
 
@@ -370,6 +392,14 @@ beforeEach(() => {
     refetch: vi.fn(),
   };
   createRef.current = {
+    mutateAsync: vi.fn(),
+    isPending: false,
+  };
+  updateRef.current = {
+    mutateAsync: vi.fn(),
+    isPending: false,
+  };
+  deleteRef.current = {
     mutateAsync: vi.fn(),
     isPending: false,
   };
@@ -797,5 +827,209 @@ describe("Profiles screen — profile list", () => {
     expect(
       screen.queryByText("No saved profiles yet. Here's what they'll look like."),
     ).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests: edit profile flow
+// ---------------------------------------------------------------------------
+
+describe("Profiles screen — edit profile", () => {
+  const savedProfile = makeProfile({
+    id: 20,
+    platform: "Hinge",
+    bio: "Brooklyn designer, sourdough hobbyist.",
+    prompts: "The way to win me over is… good taste in film.",
+    notes: "Really liked this one",
+  });
+
+  beforeEach(() => {
+    profilesRef.current = {
+      data: [savedProfile],
+      isLoading: false,
+      isRefetching: false,
+      refetch: vi.fn(),
+    };
+  });
+
+  it("tapping a profile card opens the edit modal pre-filled with saved values", async () => {
+    render(
+      <Wrap>
+        <ProfilesScreen />
+      </Wrap>,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: `Edit ${savedProfile.platform} profile` }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("modal-sheet")).toBeTruthy();
+    });
+
+    expect(screen.getByText("Edit profile")).toBeTruthy();
+
+    const bioInput = screen.getByPlaceholderText("Paste the bio here…") as HTMLTextAreaElement;
+    expect(bioInput.value).toBe(savedProfile.bio);
+
+    const promptsInput = screen.getByPlaceholderText("Paste any prompt answers here…") as HTMLTextAreaElement;
+    expect(promptsInput.value).toBe(savedProfile.prompts);
+
+    const notesInput = screen.getByPlaceholderText(
+      "Anything you want to remember about this profile…",
+    ) as HTMLTextAreaElement;
+    expect(notesInput.value).toBe(savedProfile.notes);
+
+    const platformInput = screen.getByPlaceholderText("Or type a platform name") as HTMLInputElement;
+    expect(platformInput.value).toBe(savedProfile.platform);
+  });
+
+  it("changing the bio and saving calls updateProfile with the new data", async () => {
+    updateRef.current.mutateAsync = vi.fn().mockResolvedValue({
+      ...savedProfile,
+      bio: "Updated bio text.",
+    });
+
+    render(
+      <Wrap>
+        <ProfilesScreen />
+      </Wrap>,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: `Edit ${savedProfile.platform} profile` }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("modal-sheet")).toBeTruthy();
+    });
+
+    const bioInput = screen.getByPlaceholderText("Paste the bio here…");
+    fireEvent.change(bioInput, { target: { value: "Updated bio text." } });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    });
+
+    await waitFor(() => {
+      expect(updateRef.current.mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: savedProfile.id,
+          data: expect.objectContaining({
+            platform: savedProfile.platform,
+            bio: "Updated bio text.",
+          }),
+        }),
+      );
+    });
+
+    expect(createRef.current.mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it("closes the modal after a successful edit save", async () => {
+    updateRef.current.mutateAsync = vi.fn().mockResolvedValue(savedProfile);
+
+    render(
+      <Wrap>
+        <ProfilesScreen />
+      </Wrap>,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: `Edit ${savedProfile.platform} profile` }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("modal-sheet")).toBeTruthy();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("modal-sheet")).toBeNull();
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests: swipe-to-delete + undo toast
+// ---------------------------------------------------------------------------
+
+describe("Profiles screen — swipe-to-delete and undo", () => {
+  const profileToDelete = makeProfile({
+    id: 30,
+    platform: "Tinder",
+    bio: "Adventurous soul who loves hiking.",
+  });
+
+  beforeEach(() => {
+    profilesRef.current = {
+      data: [profileToDelete],
+      isLoading: false,
+      isRefetching: false,
+      refetch: vi.fn(),
+    };
+    deleteRef.current.mutateAsync = vi.fn().mockResolvedValue(undefined);
+  });
+
+  it("shows the undo toast after pressing the swipe-delete action button", async () => {
+    render(
+      <Wrap>
+        <ProfilesScreen />
+      </Wrap>,
+    );
+
+    const deleteBtn = screen.getByRole("button", { name: "Delete" });
+    fireEvent.click(deleteBtn);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(`Removed ${profileToDelete.platform} profile`),
+      ).toBeTruthy();
+    });
+
+    expect(screen.getByRole("button", { name: "Undo delete" })).toBeTruthy();
+  });
+
+  it("dismisses the undo toast after pressing Undo", async () => {
+    render(
+      <Wrap>
+        <ProfilesScreen />
+      </Wrap>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Undo delete" })).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Undo delete" }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText(`Removed ${profileToDelete.platform} profile`),
+      ).toBeNull();
+    });
+
+    expect(screen.queryByRole("button", { name: "Undo delete" })).toBeNull();
+  });
+
+  it("does not call deleteProfile.mutateAsync while the undo window is open", async () => {
+    render(
+      <Wrap>
+        <ProfilesScreen />
+      </Wrap>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Undo delete" })).toBeTruthy();
+    });
+
+    expect(deleteRef.current.mutateAsync).not.toHaveBeenCalled();
   });
 });
