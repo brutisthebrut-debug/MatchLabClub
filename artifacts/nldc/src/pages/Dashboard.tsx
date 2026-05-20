@@ -6,19 +6,31 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useListAudits,
   useGetAuditSummary,
+  useBulkDeleteAudits,
   getGetAuditSummaryQueryKey,
+  getListAuditsQueryKey,
   useListProfiles,
   useListMessageCoachingSessions,
   useListInsights,
   getListProfilesQueryKey,
   getListMessageCoachingSessionsQueryKey,
   getListInsightsQueryKey,
-  getListAuditsQueryKey,
   useDeleteAudit,
   generateAuditReport,
   type Audit,
@@ -254,6 +266,19 @@ export default function Dashboard() {
   const listAuditsKey = getListAuditsQueryKey();
   const { data: audits, isLoading: auditsLoading } = useListAudits();
 
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set());
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const selectionMode = selectedIds.size > 0;
+
+  const toggleSelected = (id: number) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const clearSelection = () => setSelectedIds(new Set());
+
   const staleAudits = useMemo(
     () =>
       (audits ?? []).filter((a) =>
@@ -309,6 +334,7 @@ export default function Dashboard() {
       variant: failed === staleAudits.length ? "destructive" : undefined,
     });
   }, [refreshState.inProgress, staleAudits, queryClient, listAuditsKey, toast]);
+
   const deleteAudit = useDeleteAudit({
     mutation: {
       onError: () => {
@@ -320,6 +346,35 @@ export default function Dashboard() {
       },
       onSettled: () => {
         queryClient.invalidateQueries({ queryKey: listAuditsKey });
+      },
+    },
+  });
+
+  const bulkDeleteAudits = useBulkDeleteAudits({
+    mutation: {
+      onMutate: async ({ data }) => {
+        await queryClient.cancelQueries({ queryKey: listAuditsKey });
+        const previous = queryClient.getQueryData<Audit[]>(listAuditsKey);
+        const ids = new Set(data.ids);
+        if (previous) {
+          queryClient.setQueryData<Audit[]>(
+            listAuditsKey,
+            previous.filter((a) => !ids.has(a.id)),
+          );
+        }
+        return { previous };
+      },
+      onError: (_err, _vars, ctx) => {
+        if (ctx?.previous) queryClient.setQueryData(listAuditsKey, ctx.previous);
+        toast({
+          title: "Couldn't delete",
+          description: "Something went wrong. Try again.",
+          variant: "destructive",
+        });
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: listAuditsKey });
+        queryClient.invalidateQueries({ queryKey: getGetAuditSummaryQueryKey() });
       },
     },
   });
@@ -396,6 +451,14 @@ export default function Dashboard() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const runBulkDelete = () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    bulkDeleteAudits.mutate({ data: { ids } });
+    clearSelection();
+    setConfirmOpen(false);
+  };
 
   const { data: summary, isLoading: summaryLoading } = useGetAuditSummary({
     query: { queryKey: getGetAuditSummaryQueryKey() }
@@ -746,7 +809,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between mb-5 gap-2 flex-wrap">
               <h2 className="font-semibold text-foreground text-sm">Recent Audits</h2>
               <div className="flex items-center gap-2">
-                {hasRealAudits && staleAudits.length > 0 ? (
+                {hasRealAudits && !selectionMode && staleAudits.length > 0 ? (
                   <Button
                     type="button"
                     variant="ghost"
@@ -763,6 +826,44 @@ export default function Dashboard() {
                       : `Refresh stale (${staleAudits.length})`}
                   </Button>
                 ) : null}
+                {hasRealAudits && (
+                  selectionMode ? (
+                    <>
+                      <span className="text-xs text-muted-foreground" data-testid="text-selection-count">
+                        {selectedIds.size} selected
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-foreground text-xs"
+                        onClick={clearSelection}
+                        data-testid="button-cancel-select"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="text-xs rounded-full"
+                        onClick={() => setConfirmOpen(true)}
+                        disabled={bulkDeleteAudits.isPending}
+                        data-testid="button-delete-selected"
+                      >
+                        Delete selected
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-foreground text-xs"
+                      onClick={() => audits && audits.length > 0 && toggleSelected(audits[0].id)}
+                      data-testid="button-enter-select"
+                    >
+                      Select
+                    </Button>
+                  )
+                )}
                 <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-xs" data-testid="button-new-audit">
                   <Link href="/start">New Audit <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
                 </Button>
@@ -789,6 +890,50 @@ export default function Dashboard() {
                   const bg    = score >= 75 ? "hsl(142 55% 45% / 0.12)" : score >= 55 ? "hsl(43 65% 55% / 0.12)" : "hsl(348 55% 55% / 0.12)";
                   const date  = new Date(audit.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
                   const staleHint = staleHintFromGeneratedAt(audit.reportGeneratedAt);
+                  const isSelected = selectedIds.has(audit.id);
+                  if (selectionMode) {
+                    return (
+                      <div
+                        key={audit.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => toggleSelected(audit.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === " " || e.key === "Enter") {
+                            e.preventDefault();
+                            toggleSelected(audit.id);
+                          }
+                        }}
+                        className={`flex items-center justify-between p-3 sm:p-4 rounded-2xl border transition-all cursor-pointer card-hover gap-3 ${
+                          isSelected
+                            ? "border-[hsl(268_52%_68%/0.6)] bg-[hsl(268_52%_68%/0.08)]"
+                            : "border-white/6 hover:border-[hsl(268_52%_68%/0.25)] hover:bg-white/2"
+                        }`}
+                        data-testid={`row-audit-${audit.id}`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelected(audit.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label={`Select ${audit.firstName}'s audit`}
+                            data-testid={`checkbox-audit-${audit.id}`}
+                          />
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center font-bold text-sm flex-shrink-0" style={{ background: bg, color }}>
+                            {score}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-foreground text-sm truncate">{audit.firstName}'s Signal Audit</p>
+                            <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                              <Clock className="w-3 h-3 flex-shrink-0" /> {date}
+                              <span className="hidden sm:inline">· {audit.currentApps?.join(", ")}</span>
+                            </p>
+                          </div>
+                        </div>
+                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium hidden sm:block ${audit.status === "complete" ? "tag-strength border" : "tag-risk border"}`}>{audit.status}</span>
+                      </div>
+                    );
+                  }
                   return (
                     <div
                       key={audit.id}
@@ -862,6 +1007,32 @@ export default function Dashboard() {
 
         </div>
       </div>
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent data-testid="dialog-confirm-bulk-delete">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {selectedIds.size === 1
+                ? "Delete this audit?"
+                : `Delete ${selectedIds.size} audits?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedIds.size === 1
+                ? "This will permanently remove 1 audit. This can't be undone."
+                : `This will permanently remove ${selectedIds.size} audits. This can't be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-confirm-cancel">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={runBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 }
