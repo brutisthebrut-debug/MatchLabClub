@@ -213,3 +213,134 @@ describe("POST /api/insights/:id/analyze", () => {
     expect(row?.sourceApp ?? null).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Cross-import rollup
+// ---------------------------------------------------------------------------
+
+const ROLLUP_USER_ID = `test-rollup-user-${crypto.randomBytes(6).toString("hex")}`;
+
+async function createAndAnalyzeInsight(
+  userId: string,
+  body: { sourceLabel: string; pastedContent: string; sourceApp?: string; consentGiven: boolean },
+): Promise<number> {
+  testApp.setUser({ id: userId });
+  const create = await request(testApp.app).post("/api/insights").send(body);
+  expect(create.status).toBe(201);
+  const id: number = create.body.id;
+  const analyze = await request(testApp.app).post(`/api/insights/${id}/analyze`).send({});
+  expect(analyze.status).toBe(200);
+  return id;
+}
+
+const HINGE_CONTENT =
+  "Me: I really love talking to you, feel like we connect.\n" +
+  "Them: Same here, I miss you when you're offline.\n" +
+  "Me: I care so much about these conversations. I'm excited!\n" +
+  "Them: I feel happy and love how honest you are. I'm sad when it ends.";
+
+const IMESSAGE_CONTENT =
+  "Me: haha that's wild lol\n" +
+  "Them: lmao right jk jk\n" +
+  "Me: haha totally kidding\n" +
+  "Them: lol nice one lmao";
+
+describe("GET /api/insights/rollup", () => {
+  it("returns an empty rollup when no insights have been analyzed", async () => {
+    testApp.setUser({ id: ROLLUP_USER_ID });
+    const res = await request(testApp.app).get("/api/insights/rollup");
+    expect(res.status).toBe(200);
+    expect(res.body.totalAnalyzed).toBe(0);
+    expect(res.body.sources).toEqual([]);
+    expect(res.body.comparisons).toEqual([]);
+  });
+
+  it("returns a single-source rollup with no comparisons for 1 analyzed insight", async () => {
+    await createAndAnalyzeInsight(ROLLUP_USER_ID, {
+      sourceLabel: "Hinge chat",
+      pastedContent: HINGE_CONTENT,
+      sourceApp: "Hinge",
+      consentGiven: true,
+    });
+
+    testApp.setUser({ id: ROLLUP_USER_ID });
+    const res = await request(testApp.app).get("/api/insights/rollup");
+    expect(res.status).toBe(200);
+    expect(res.body.totalAnalyzed).toBe(1);
+    expect(res.body.sources).toHaveLength(1);
+    expect(res.body.sources[0].sourceApp).toBe("Hinge");
+    expect(res.body.sources[0].count).toBe(1);
+    expect(res.body.comparisons).toEqual([]);
+  });
+
+  it("returns per-source tiles for two sources and fires warmth comparison", async () => {
+    await createAndAnalyzeInsight(ROLLUP_USER_ID, {
+      sourceLabel: "Hinge export",
+      pastedContent: HINGE_CONTENT,
+      sourceApp: "Hinge",
+      consentGiven: true,
+    });
+    await createAndAnalyzeInsight(ROLLUP_USER_ID, {
+      sourceLabel: "iMessage export",
+      pastedContent: IMESSAGE_CONTENT,
+      sourceApp: "iMessage",
+      consentGiven: true,
+    });
+
+    testApp.setUser({ id: ROLLUP_USER_ID });
+    const res = await request(testApp.app).get("/api/insights/rollup");
+    expect(res.status).toBe(200);
+
+    expect(res.body.totalAnalyzed).toBe(2);
+    expect(res.body.sources).toHaveLength(2);
+
+    const sourceApps: string[] = res.body.sources.map((s: { sourceApp: string }) => s.sourceApp);
+    expect(sourceApps).toContain("Hinge");
+    expect(sourceApps).toContain("iMessage");
+
+    expect(res.body.comparisons.length).toBeGreaterThan(0);
+    const warmthCmp = res.body.comparisons.find((c: { trait: string }) => c.trait === "warmth");
+    expect(warmthCmp).toBeDefined();
+    expect(warmthCmp.leader).toBe("Hinge");
+    expect(warmthCmp.laggard).toBe("iMessage");
+    expect(warmthCmp.delta).toBeGreaterThanOrEqual(15);
+    expect(warmthCmp.sentence).toMatch(/warmer on Hinge than on iMessage/i);
+  });
+
+  it("response matches GetInsightsRollupResponse schema for a two-source rollup", async () => {
+    const { GetInsightsRollupResponse } = await import("@workspace/api-zod");
+
+    await createAndAnalyzeInsight(ROLLUP_USER_ID, {
+      sourceLabel: "Hinge export",
+      pastedContent: HINGE_CONTENT,
+      sourceApp: "Hinge",
+      consentGiven: true,
+    });
+    await createAndAnalyzeInsight(ROLLUP_USER_ID, {
+      sourceLabel: "iMessage export",
+      pastedContent: IMESSAGE_CONTENT,
+      sourceApp: "iMessage",
+      consentGiven: true,
+    });
+
+    testApp.setUser({ id: ROLLUP_USER_ID });
+    const res = await request(testApp.app).get("/api/insights/rollup");
+    expect(res.status).toBe(200);
+    expect(() => GetInsightsRollupResponse.parse(res.body)).not.toThrow();
+  });
+
+  it("does not leak insights from a different user into the rollup", async () => {
+    const otherUser = `other-rollup-${crypto.randomBytes(4).toString("hex")}`;
+    await createAndAnalyzeInsight(otherUser, {
+      sourceLabel: "Other user Hinge export",
+      pastedContent: HINGE_CONTENT,
+      sourceApp: "Hinge",
+      consentGiven: true,
+    });
+
+    testApp.setUser({ id: ROLLUP_USER_ID });
+    const res = await request(testApp.app).get("/api/insights/rollup");
+    expect(res.status).toBe(200);
+    expect(res.body.totalAnalyzed).toBe(0);
+  });
+});
