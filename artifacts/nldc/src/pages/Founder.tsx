@@ -198,9 +198,11 @@ function AiStatusPanel() {
 function AlertThresholdEditor({
   data,
   onSaved,
+  reloadKey,
 }: {
   data: AiMetricsResponse;
   onSaved: () => void;
+  reloadKey?: number;
 }) {
   const [open, setOpen] = useState(false);
   const [thresholds, setThresholds] = useState<AiThresholdsResponse | null>(null);
@@ -235,6 +237,10 @@ function AlertThresholdEditor({
   useEffect(() => {
     if (open && !thresholds) void load();
   }, [open]);
+
+  useEffect(() => {
+    if (open && reloadKey !== undefined) void load();
+  }, [reloadKey]);
 
   const knownTools = data.perTool.map((t) => t.toolName);
   const availableForOverride = knownTools.filter(
@@ -879,7 +885,7 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
         </div>
         <div className="flex items-center gap-2">
           {loading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground/60" />}
-          {data && <AlertThresholdEditor data={data} onSaved={() => setBump((x) => x + 1)} />}
+          {data && <AlertThresholdEditor data={data} onSaved={() => setBump((x) => x + 1)} reloadKey={bump} />}
         </div>
       </div>
 

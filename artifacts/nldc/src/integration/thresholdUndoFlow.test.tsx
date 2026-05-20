@@ -305,8 +305,6 @@ vi.mock("@/lib/apiClient", () => ({
   getOcrLearnedRules: vi.fn(async () => ({ rules: [] })),
   runOcrLearn: vi.fn(async () => ({ scannedAudits: 0, candidates: 0, persisted: 0 })),
   clearOcrLearnedRules: vi.fn(async () => {}),
-  getOcrMismatchesTrends: vi.fn(async () => ({ days: 30, since: "2026-04-20", series: [] })),
-  getBackgroundJobs: vi.fn(async () => ({ jobs: [] })),
 }));
 
 vi.mock("@workspace/api-client-react", () => ({
@@ -466,6 +464,15 @@ describe("Threshold change undo flow", () => {
 
     // Assert: the undo button for the 65% update row is now disabled (marked "Undone").
     expect((undoBtn as HTMLButtonElement).disabled).toBe(true);
+
+    // Assert: the editor override row for ProfileReader now shows 80% (reverted from 65%).
+    await waitFor(() => {
+      const overrideRowReverted = document.querySelector<HTMLElement>(
+        "span.truncate[title='ProfileReader']",
+      )!.closest("div")!;
+      const inputs = overrideRowReverted.querySelectorAll("input");
+      expect(inputs[2]!.value).toBe("80");
+    });
   });
 
   it("undoes a per-tool 'create' (no prior values): logs a remove entry and reverts server state", async () => {
@@ -522,5 +529,15 @@ describe("Threshold change undo flow", () => {
 
     // Assert: the undo button for the original create row is now disabled.
     expect((undoBtn as HTMLButtonElement).disabled).toBe(true);
+
+    // Assert: the editor no longer shows a ProfileReader override row.
+    // The audit log still has a span[title='ProfileReader'] with class "font-mono",
+    // so we specifically exclude that and look for the editor-only span (no font-mono).
+    await waitFor(() => {
+      const editorOverrideSpan = document.querySelector<HTMLElement>(
+        "span.truncate[title='ProfileReader']:not(.font-mono)",
+      );
+      expect(editorOverrideSpan).toBeNull();
+    });
   });
 });
