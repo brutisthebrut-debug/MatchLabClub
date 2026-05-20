@@ -102,6 +102,7 @@ async function buildAll() {
       "electron",
       "tesseract.js",
       "tesseract.js-core",
+      "geoip-lite",
     ],
     sourcemap: "linked",
     plugins: [

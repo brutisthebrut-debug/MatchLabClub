@@ -3,6 +3,7 @@ import { and, eq, gte } from "drizzle-orm";
 import { db, loginNotificationsTable } from "@workspace/db";
 import { sendMail } from "./mailer";
 import { logger } from "./logger";
+import { describeIpLocation } from "./geoLocation";
 
 const THROTTLE_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -79,6 +80,8 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
   const when = now.toUTCString();
   const device = describeUserAgent(userAgent);
   const displayIp = ip || "unknown";
+  const location = describeIpLocation(ip);
+  const displayLocation = location || "Approximate location unavailable";
   const channelLabel = channel === "mobile" ? "the mobile app" : "the web app";
 
   const text = [
@@ -88,6 +91,7 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
     "",
     `When: ${when}`,
     `Device: ${device}`,
+    `Approximate location: ${displayLocation}`,
     `IP address: ${displayIp}`,
     "",
     "If this was you, no action is needed.",
@@ -104,6 +108,7 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
     <p style="font-size: 13px; color: #666;">
       <strong>When:</strong> ${when}<br/>
       <strong>Device:</strong> ${device}<br/>
+      <strong>Approximate location:</strong> ${displayLocation}<br/>
       <strong>IP address:</strong> ${displayIp}
     </p>
     <p>If this was you, no action is needed.</p>
