@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Sparkles, ChevronDown, TrendingUp, BookOpen, MessageSquare, Gift, LogIn, LogOut, User as UserIcon } from "lucide-react";
+import { Menu, X, Sparkles, ChevronDown, TrendingUp, BookOpen, MessageSquare, Gift, LogIn, LogOut, Shield, User as UserIcon } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@workspace/replit-auth-web";
 
@@ -63,7 +63,7 @@ const SETTINGS_TRUST = [
   { name: "Beta Feedback",      href: "/feedback",     desc: "Help shape what gets built next" },
 ];
 
-type DropdownId = "blueprint" | "messages" | "growth" | "offers" | null;
+type DropdownId = "blueprint" | "messages" | "growth" | "offers" | "context" | null;
 
 export function Navbar() {
   const [location] = useLocation();
@@ -114,7 +114,7 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-1 [&_button]:whitespace-nowrap [&_a]:whitespace-nowrap">
 
           {/* Your Blueprint */}
           <button
@@ -122,7 +122,7 @@ export function Navbar() {
             className={`flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${activeMenu === "blueprint" || isActive(["/blueprint", "/diagnosis", "/signal-check", "/glow-up", "/mirror", "/profile-reader", "/archetype", "/connection-style", "/compatibility-compass", "/reflection"]) ? "text-[hsl(268_52%_78%)] bg-white/5" : "text-muted-foreground hover:text-foreground hover:bg-white/4"}`}
           >
             <BookOpen className="w-3.5 h-3.5" />
-            Your Blueprint
+            The Reset
             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${activeMenu === "blueprint" ? "rotate-180" : ""}`} />
           </button>
           {activeMenu === "blueprint" && (
@@ -202,27 +202,35 @@ export function Navbar() {
             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${activeMenu === "offers" ? "rotate-180" : ""}`} />
           </button>
           {activeMenu === "offers" && (
-            <div className="absolute top-16 right-4 w-[580px] glass-strong rounded-2xl p-3 shadow-[0_20px_60px_rgb(0_0_0/0.5)] border border-[hsl(43_65%_65%/0.2)] animate-in fade-in-0 zoom-in-95 z-50">
-              <div className="grid grid-cols-2 gap-x-2">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pt-1 pb-2">Offers</p>
-                  {OFFERS.map(t => (
-                    <Link key={t.href} href={t.href} onClick={closeAll} className="flex flex-col gap-0.5 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors">
-                      <span className="text-xs font-semibold text-foreground leading-tight">{t.name}</span>
-                      <span className="text-[11px] text-muted-foreground/70 leading-tight">{t.desc}</span>
-                    </Link>
-                  ))}
-                </div>
-                <div className="border-l border-white/5">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pt-1 pb-2">Settings &amp; Trust</p>
-                  {SETTINGS_TRUST.map(t => (
-                    <Link key={t.href} href={t.href} onClick={closeAll} className="flex flex-col gap-0.5 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors">
-                      <span className="text-xs font-semibold text-foreground leading-tight">{t.name}</span>
-                      <span className="text-[11px] text-muted-foreground/70 leading-tight">{t.desc}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
+            <div className="absolute top-16 w-72 glass-strong rounded-2xl p-3 shadow-[0_20px_60px_rgb(0_0_0/0.5)] border border-[hsl(43_65%_65%/0.2)] animate-in fade-in-0 zoom-in-95 z-50" style={{ right: "8rem" }}>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pt-1 pb-2">Offers</p>
+              {OFFERS.map(t => (
+                <Link key={t.href} href={t.href} onClick={closeAll} className="flex flex-col gap-0.5 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors">
+                  <span className="text-xs font-semibold text-foreground leading-tight">{t.name}</span>
+                  <span className="text-[11px] text-muted-foreground/70 leading-tight">{t.desc}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {/* Context & Trust */}
+          <button
+            onClick={() => toggle("context")}
+            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${activeMenu === "context" || isActive(["/integrations", "/wellness", "/life-context", "/user-control", "/connections", "/privacy", "/feedback", "/vault"]) ? "text-[hsl(268_52%_78%)] bg-white/5" : "text-muted-foreground hover:text-foreground hover:bg-white/4"}`}
+          >
+            <Shield className="w-3.5 h-3.5" />
+            Context &amp; Trust
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${activeMenu === "context" ? "rotate-180" : ""}`} />
+          </button>
+          {activeMenu === "context" && (
+            <div className="absolute top-16 right-4 w-72 glass-strong rounded-2xl p-3 shadow-[0_20px_60px_rgb(0_0_0/0.5)] border border-[hsl(268_52%_68%/0.2)] animate-in fade-in-0 zoom-in-95 z-50">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-3 pt-1 pb-2">Context &amp; Trust</p>
+              {SETTINGS_TRUST.map(t => (
+                <Link key={t.href} href={t.href} onClick={closeAll} className="flex flex-col gap-0.5 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors">
+                  <span className="text-xs font-semibold text-foreground leading-tight">{t.name}</span>
+                  <span className="text-[11px] text-muted-foreground/70 leading-tight">{t.desc}</span>
+                </Link>
+              ))}
             </div>
           )}
 
@@ -285,7 +293,7 @@ export function Navbar() {
             [
               {
                 id: "blueprint",
-                label: "Your Blueprint",
+                label: "The Reset",
                 icon: <BookOpen className="w-3.5 h-3.5" />,
                 color: "hsl(268 52% 78%)",
                 subsections: [
@@ -331,15 +339,15 @@ export function Navbar() {
               },
               {
                 id: "offers",
-                label: "Offers & Vision",
+                label: "Offers",
                 icon: <Gift className="w-3.5 h-3.5" />,
                 color: "hsl(43 65% 72%)",
                 subsections: [{ heading: null, links: OFFERS }],
               },
               {
                 id: "settings",
-                label: "Settings & Trust",
-                icon: null,
+                label: "Context & Trust",
+                icon: <Shield className="w-3.5 h-3.5" />,
                 color: "hsl(268 52% 68%)",
                 subsections: [{ heading: null, links: SETTINGS_TRUST }],
               },
