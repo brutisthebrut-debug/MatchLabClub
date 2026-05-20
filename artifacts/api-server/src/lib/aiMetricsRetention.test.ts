@@ -190,6 +190,41 @@ describe("rollupThenPruneAiMetrics", () => {
     expect(result.pruned).toBe(1);
   });
 
+  it("buckets rows by UTC day even when their local-time day differs", async () => {
+    // 2026-05-15 23:30 UTC: in any timezone east of UTC (e.g. Asia/Tokyo,
+    // UTC+9 → 2026-05-16 08:30 local) this instant's local-time day is the
+    // *next* calendar day. The rollup must still attribute it to UTC day
+    // 2026-05-15.
+    const lateUtc = new Date("2026-05-15T23:30:00.000Z");
+    // 2026-05-16 00:30 UTC: in any timezone west of UTC (e.g. America/New_York,
+    // UTC-4 → 2026-05-15 20:30 local) the local-time day is the *previous*
+    // calendar day. The rollup must still attribute it to UTC day 2026-05-16.
+    const earlyUtc = new Date("2026-05-16T00:30:00.000Z");
+    await seedRaw([
+      { toolName: "audit_engine", attempts: 1, createdAt: lateUtc, durationMs: 100 },
+      { toolName: "audit_engine", attempts: 1, createdAt: earlyUtc, durationMs: 200 },
+    ]);
+
+    const written15 = await rollupAiMetricsForDay(new Date("2026-05-15T00:00:00.000Z"));
+    const written16 = await rollupAiMetricsForDay(new Date("2026-05-16T00:00:00.000Z"));
+    expect(written15).toBe(1);
+    expect(written16).toBe(1);
+
+    const rows = await db.select().from(aiRequestMetricsDailyTable);
+    const day15 = rows.find((r) => String(r.day).slice(0, 10) === "2026-05-15");
+    const day16 = rows.find((r) => String(r.day).slice(0, 10) === "2026-05-16");
+    expect(day15).toBeDefined();
+    expect(day16).toBeDefined();
+    expect(day15!.total).toBe(1);
+    expect(day16!.total).toBe(1);
+
+    // Sanity check: neighbouring UTC days don't pick up the other row.
+    const written14 = await rollupAiMetricsForDay(new Date("2026-05-14T00:00:00.000Z"));
+    const written17 = await rollupAiMetricsForDay(new Date("2026-05-17T00:00:00.000Z"));
+    expect(written14).toBe(0);
+    expect(written17).toBe(0);
+  });
+
   it("rolls up an empty day to zero rows without errors", async () => {
     const written = await rollupAiMetricsForDay(dayOffsetUTC(5));
     expect(written).toBe(0);

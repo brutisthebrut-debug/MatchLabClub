@@ -47,8 +47,8 @@ export async function rollupAiMetricsForDay(day: Date): Promise<number> {
       coalesce(avg(attempts), 0)::double precision as avg_attempts,
       coalesce(avg(duration_ms), 0)::double precision as avg_duration_ms
     from ai_request_metrics
-    where created_at >= ${dayStr}::date
-      and created_at < (${dayStr}::date + interval '1 day')
+    where (created_at at time zone 'UTC') >= (${dayStr}::date at time zone 'UTC')
+      and (created_at at time zone 'UTC') < ((${dayStr}::date + interval '1 day') at time zone 'UTC')
     group by tool_name
     on conflict (day, tool_name) do update set
       total = excluded.total,
