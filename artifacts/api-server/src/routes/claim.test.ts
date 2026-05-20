@@ -729,6 +729,66 @@ describe("POST /api/claim-anonymous/handoff/redeem", () => {
     }
   });
 
+  it("returns a styled HTML expired page for browser navigations (valid-signature but expired token)", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    try {
+      const handoff = signHandoffToken(token, -1).token;
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .set("Accept", "text/html,application/xhtml+xml,*/*")
+        .send({ handoff, auditIds: [ids.ownedAuditId] });
+
+      expect(res.status).toBe(410);
+      expect(res.headers["content-type"]).toMatch(/text\/html/);
+      expect(res.headers["cache-control"]).toBe("no-store");
+      expect(res.text).toMatch(/Link expired/);
+      expect(res.text).toMatch(/hand-?off link/i);
+      expect(res.text).toMatch(/Back to Next Level Dating Club/);
+
+      const [row] = await db
+        .select()
+        .from(auditsTable)
+        .where(eq(auditsTable.id, ids.ownedAuditId));
+      expect(row.userId).toBeNull();
+      expect(row.anonymousClaimToken).toBe(token);
+    } finally {
+      await cleanup(ids);
+    }
+  });
+
+  it("preserves JSON 400 for non-browser clients when token is valid-signature but expired", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    try {
+      const handoff = signHandoffToken(token, -1).token;
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .set("Accept", "application/json")
+        .send({ handoff, auditIds: [ids.ownedAuditId] });
+
+      expect(res.status).toBe(400);
+      expect(res.headers["content-type"]).toMatch(/application\/json/);
+      expect(res.body.error).toMatch(/invalid or expired/i);
+    } finally {
+      await cleanup(ids);
+    }
+  });
+
+  it("returns HTML expired page when browser signals navigation via Sec-Fetch-Mode even without explicit Accept", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    try {
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/redeem")
+        .set("Sec-Fetch-Mode", "navigate")
+        .send({ handoff: "garbage-token", auditIds: [ids.ownedAuditId] });
+
+      expect(res.status).toBe(410);
+      expect(res.headers["content-type"]).toMatch(/text\/html/);
+      expect(res.text).toMatch(/Link expired/);
+    } finally {
+      await cleanup(ids);
+    }
+  });
+
   it("returns a styled HTML expired page for browser navigations (invalid token)", async () => {
     testApp.setUser({ id: TEST_USER_ID });
     try {
