@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { z } from "zod";
-import { generate, getAiStatus, coachingPrompt, type AiContext } from "../lib/aiService";
+import { generate, getAiStatus, coachingPrompt, toolPrompt, type AiContext } from "../lib/aiService";
 import { requireFounder, rateLimit } from "../middlewares/founderAuth";
 
 const router: IRouter = Router();
@@ -27,6 +27,12 @@ const ContextSchema = z
 
 const TestBody = z.object({
   sample: z.string().min(1).max(2000),
+  context: ContextSchema,
+});
+
+const EnhanceBody = z.object({
+  toolName: z.string().min(1).max(80),
+  prompt: z.string().min(1).max(4000),
   context: ContextSchema,
 });
 
@@ -60,6 +66,40 @@ router.post(
         context: ctx,
         maxTokens: 160,
         temperature: 0.5,
+      },
+      fallback,
+    );
+
+    res.json(result);
+  },
+);
+
+router.post(
+  "/ai/enhance",
+  rateLimit({ windowMs: 60_000, max: 20 }),
+  async (req, res): Promise<void> => {
+    const parsed = EnhanceBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "toolName and prompt are required." });
+      return;
+    }
+    const { toolName, prompt, context } = parsed.data;
+    const ctx: AiContext = context ?? { toolName };
+
+    const fallback = "";
+
+    const result = await generate(
+      {
+        system: coachingPrompt(
+          toolPrompt(
+            toolName,
+            "Provide a thoughtful, specific coaching response based on the user's input. Be warm, direct, practical — never generic.",
+          ),
+        ),
+        user: prompt,
+        context: { ...ctx, toolName },
+        maxTokens: 600,
+        temperature: 0.6,
       },
       fallback,
     );
