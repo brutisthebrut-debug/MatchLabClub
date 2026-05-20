@@ -21,6 +21,7 @@ import type {
 
 import type {
   AccountExport,
+  AccountSummary,
   AiEnhanceInput,
   AiError,
   AiStatus,
@@ -681,6 +682,87 @@ export function useExportMyData<TData = Awaited<ReturnType<typeof exportMyData>>
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getExportMyDataQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetAccountSummaryUrl = () => {
+
+
+
+
+  return `/api/account/summary`
+}
+
+/**
+ * Returns counts of the authenticated user's audits, dating profiles,
+message coaching sessions, and email insights. Used to show users
+exactly what they'd lose before confirming account deletion.
+
+ * @summary Get counts of the signed-in user's data
+ */
+export const getAccountSummary = async ( options?: RequestInit): Promise<AccountSummary> => {
+
+  return customFetch<AccountSummary>(getGetAccountSummaryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAccountSummaryQueryKey = () => {
+    return [
+    `/api/account/summary`
+    ] as const;
+    }
+
+
+export const getGetAccountSummaryQueryOptions = <TData = Awaited<ReturnType<typeof getAccountSummary>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAccountSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAccountSummaryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAccountSummary>>> = ({ signal }) => getAccountSummary({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAccountSummary>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAccountSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof getAccountSummary>>>
+export type GetAccountSummaryQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get counts of the signed-in user's data
+ */
+
+export function useGetAccountSummary<TData = Awaited<ReturnType<typeof getAccountSummary>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAccountSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAccountSummaryQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

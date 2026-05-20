@@ -187,6 +187,25 @@ export const ExportMyDataResponse = zod.object({
 
 
 /**
+ * Returns counts of the authenticated user's audits, dating profiles,
+message coaching sessions, and email insights. Used to show users
+exactly what they'd lose before confirming account deletion.
+
+ * @summary Get counts of the signed-in user's data
+ */
+export const GetAccountSummaryHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetAccountSummaryResponse = zod.object({
+  "audits": zod.number(),
+  "profiles": zod.number(),
+  "messages": zod.number(),
+  "insights": zod.number()
+})
+
+
+/**
  * Permanently removes the authenticated user along with every audit,
 dating profile, message coaching session, and email insight tied to
 that user. Also clears every active session for the user and the

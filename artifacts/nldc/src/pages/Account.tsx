@@ -21,6 +21,8 @@ import {
   getListAuditsQueryKey,
   exportMyData,
   useDeleteMyAccount,
+  useGetAccountSummary,
+  getGetAccountSummaryQueryKey,
 } from "@workspace/api-client-react";
 import {
   LogIn,
@@ -60,6 +62,12 @@ export default function Account() {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const deleteAccount = useDeleteMyAccount();
+  const summaryQuery = useGetAccountSummary({
+    query: {
+      queryKey: getGetAccountSummaryQueryKey(),
+      enabled: isAuthenticated && confirmDeleteOpen,
+    },
+  });
 
   const auditCount = auditsQuery.data?.length ?? 0;
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Friend";
@@ -284,10 +292,75 @@ export default function Account() {
           <AlertDialogContent data-testid="dialog-confirm-delete-account">
             <AlertDialogHeader>
               <AlertDialogTitle>Permanently delete your account?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This removes your profile, every audit you've run, your saved
-                dating profiles, message coaching sessions, and email insights.
-                You'll be signed out immediately. This can't be undone.
+              <AlertDialogDescription asChild>
+                <div className="space-y-3">
+                  <p>
+                    You'll be signed out immediately and the following will be
+                    permanently removed. This can't be undone.
+                  </p>
+                  {summaryQuery.isLoading ? (
+                    <div
+                      className="space-y-2"
+                      data-testid="delete-summary-loading"
+                    >
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-4 w-2/3" />
+                      <Skeleton className="h-4 w-1/2" />
+                      <Skeleton className="h-4 w-3/5" />
+                    </div>
+                  ) : summaryQuery.data ? (
+                    <ul
+                      className="space-y-1.5 rounded-xl border border-border/60 bg-muted/30 p-4 text-sm"
+                      data-testid="delete-summary-counts"
+                    >
+                      <li className="flex justify-between gap-4">
+                        <span>Profile audits</span>
+                        <span
+                          className="font-semibold text-foreground"
+                          data-testid="delete-summary-audits"
+                        >
+                          {summaryQuery.data.audits}
+                        </span>
+                      </li>
+                      <li className="flex justify-between gap-4">
+                        <span>Saved dating profiles</span>
+                        <span
+                          className="font-semibold text-foreground"
+                          data-testid="delete-summary-profiles"
+                        >
+                          {summaryQuery.data.profiles}
+                        </span>
+                      </li>
+                      <li className="flex justify-between gap-4">
+                        <span>Message coaching sessions</span>
+                        <span
+                          className="font-semibold text-foreground"
+                          data-testid="delete-summary-messages"
+                        >
+                          {summaryQuery.data.messages}
+                        </span>
+                      </li>
+                      <li className="flex justify-between gap-4">
+                        <span>Email insights</span>
+                        <span
+                          className="font-semibold text-foreground"
+                          data-testid="delete-summary-insights"
+                        >
+                          {summaryQuery.data.insights}
+                        </span>
+                      </li>
+                    </ul>
+                  ) : summaryQuery.isError ? (
+                    <p
+                      className="text-sm text-[hsl(348_55%_78%)]"
+                      data-testid="delete-summary-error"
+                    >
+                      Couldn't load your data summary. Your profile, audits,
+                      saved dating profiles, message coaching sessions, and
+                      email insights will all be removed.
+                    </p>
+                  ) : null}
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

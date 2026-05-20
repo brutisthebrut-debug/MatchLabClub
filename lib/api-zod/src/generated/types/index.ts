@@ -8,6 +8,7 @@
 
 export * from './accountExport';
 export * from './accountExportUser';
+export * from './accountSummary';
 export * from './actionPlanItem';
 export * from './aiContextInput';
 export * from './aiContextInputExtras';

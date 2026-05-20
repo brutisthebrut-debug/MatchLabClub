@@ -453,6 +453,13 @@ export interface AiTestInput {
   context?: AiContextInput;
 }
 
+export interface AccountSummary {
+  audits: number;
+  profiles: number;
+  messages: number;
+  insights: number;
+}
+
 export interface AccountExportUser {
   id: string;
   /** @nullable */

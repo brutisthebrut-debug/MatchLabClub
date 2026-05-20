@@ -12,6 +12,7 @@ import {
 import {
   ExportMyDataResponse,
   DeleteMyAccountResponse,
+  GetAccountSummaryResponse,
 } from "@workspace/api-zod";
 import { clearSession, getSessionId, SESSION_COOKIE } from "../lib/auth";
 
@@ -20,6 +21,43 @@ const router: IRouter = Router();
 function toIso(value: unknown): string {
   return value instanceof Date ? value.toISOString() : String(value);
 }
+
+router.get("/account/summary", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+
+  const userId = req.user.id;
+
+  const [audits, profiles, messages, insights] = await Promise.all([
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(auditsTable)
+      .where(eq(auditsTable.userId, userId)),
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(profilesTable)
+      .where(eq(profilesTable.userId, userId)),
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(messageCoachingSessionsTable)
+      .where(eq(messageCoachingSessionsTable.userId, userId)),
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(emailInsightsTable)
+      .where(eq(emailInsightsTable.userId, userId)),
+  ]);
+
+  res.json(
+    GetAccountSummaryResponse.parse({
+      audits: audits[0]?.n ?? 0,
+      profiles: profiles[0]?.n ?? 0,
+      messages: messages[0]?.n ?? 0,
+      insights: insights[0]?.n ?? 0,
+    }),
+  );
+});
 
 router.get("/account/export", async (req, res): Promise<void> => {
   if (!req.user?.id) {
