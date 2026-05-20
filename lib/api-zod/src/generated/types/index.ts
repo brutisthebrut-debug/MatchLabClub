@@ -66,6 +66,7 @@ export * from './deleteAuditResult';
 export * from './deleteInsightResult';
 export * from './deleteMyAccountResult';
 export * from './deleteMyAccountResultDeleted';
+export * from './deleteProfileResult';
 export * from './emailInsight';
 export * from './emailInsightAnalysis';
 export * from './emailInsightInput';

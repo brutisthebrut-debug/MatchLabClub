@@ -8,6 +8,7 @@ import {
   GetProfileResponse,
   UpdateProfileResponse,
   RewriteProfileBioResponse,
+  DeleteProfileResponse,
 } from "@workspace/api-zod";
 import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
 
@@ -102,6 +103,27 @@ router.patch("/profiles/:id", async (req, res): Promise<void> => {
     ...profile,
     createdAt: profile.createdAt instanceof Date ? profile.createdAt.toISOString() : String(profile.createdAt),
   }));
+});
+
+router.delete("/profiles/:id", async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+
+  const [deleted] = await db
+    .delete(profilesTable)
+    .where(and(eq(profilesTable.id, id), userScope(req.user?.id)))
+    .returning();
+
+  if (!deleted) {
+    res.status(404).json({ error: "Profile not found" });
+    return;
+  }
+
+  res.json(DeleteProfileResponse.parse({ success: true, deletedId: id }));
 });
 
 router.post("/profiles/:id/rewrite", async (req, res): Promise<void> => {

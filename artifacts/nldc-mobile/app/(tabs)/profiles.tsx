@@ -1,12 +1,15 @@
 import { Feather } from "@expo/vector-icons";
 import {
   getListProfilesQueryKey,
+  useDeleteProfile,
   useListProfiles,
+  useUpdateProfile,
   type DatingProfile,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -18,6 +21,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Swipeable, RectButton } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -26,6 +30,8 @@ import { useColors } from "@/hooks/useColors";
 import { useCreateProfileWithAnonClaim } from "@/lib/useCreateAnonymousAware";
 
 const PLATFORM_CHIPS = ["Hinge", "Bumble", "Tinder", "OkCupid", "Coffee Meets Bagel", "Other"];
+
+const UNDO_WINDOW_MS = 4500;
 
 const DEMO_PROFILES: (DatingProfile & { isDemo: true })[] = [
   {
@@ -67,16 +73,28 @@ function formatDate(iso: string): string {
 function ProfileCard({
   profile,
   isDemo,
+  onPress,
 }: {
   profile: DatingProfile;
   isDemo?: boolean;
+  onPress?: () => void;
 }) {
   const colors = useColors();
   return (
-    <View
-      style={[
+    <Pressable
+      onPress={onPress}
+      disabled={isDemo || !onPress}
+      accessibilityRole={onPress && !isDemo ? "button" : "none"}
+      accessibilityLabel={
+        onPress && !isDemo ? `Edit ${profile.platform} profile` : undefined
+      }
+      style={({ pressed }) => [
         styles.card,
-        { backgroundColor: colors.card, borderColor: colors.cardBorder },
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.cardBorder,
+          opacity: pressed && !isDemo ? 0.85 : 1,
+        },
       ]}
     >
       <View style={styles.cardHeader}>
@@ -99,6 +117,11 @@ function ProfileCard({
               ]}
             >
               <Text style={[styles.demoText, { color: colors.gold }]}>Demo</Text>
+            </View>
+          )}
+          {!isDemo && onPress && (
+            <View style={styles.editHint}>
+              <Feather name="edit-2" size={11} color={colors.mutedForeground} />
             </View>
           )}
         </View>
@@ -144,7 +167,7 @@ function ProfileCard({
           </Text>
         </View>
       ) : null}
-    </View>
+    </Pressable>
   );
 }
 
@@ -164,6 +187,96 @@ const EMPTY_FORM: FormState = {
   notes: "",
 };
 
+function profileToForm(profile: DatingProfile): FormState {
+  return {
+    platform: profile.platform,
+    bio: profile.bio,
+    prompts: profile.prompts ?? "",
+    photoCount: profile.photoCount != null ? String(profile.photoCount) : "",
+    notes: profile.notes ?? "",
+  };
+}
+
+function UndoToast({
+  label,
+  durationMs,
+  bottomOffset,
+  onUndo,
+}: {
+  label: string;
+  durationMs: number;
+  bottomOffset: number;
+  onUndo: () => void;
+}) {
+  const colors = useColors();
+  const progress = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: 1,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(progress, {
+      toValue: 0,
+      duration: durationMs,
+      useNativeDriver: false,
+    }).start();
+  }, [durationMs, opacity, progress]);
+
+  const barWidth = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0%", "100%"],
+  });
+
+  return (
+    <Animated.View
+      pointerEvents="box-none"
+      style={[styles.toastWrap, { bottom: Math.max(bottomOffset, 16), opacity }]}
+      accessibilityLiveRegion="polite"
+    >
+      <View
+        style={[
+          styles.toast,
+          { backgroundColor: colors.foreground, borderColor: colors.cardBorder },
+        ]}
+      >
+        <Feather name="trash-2" size={14} color={colors.background} />
+        <Text
+          style={[styles.toastText, { color: colors.background }]}
+          numberOfLines={1}
+        >
+          {label}
+        </Text>
+        <Pressable
+          onPress={onUndo}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Undo delete"
+          style={({ pressed }) => [
+            styles.toastUndo,
+            {
+              borderColor: colors.background,
+              opacity: pressed ? 0.6 : 1,
+            },
+          ]}
+        >
+          <Text style={[styles.toastUndoText, { color: colors.background }]}>
+            Undo
+          </Text>
+        </Pressable>
+        <Animated.View
+          style={[
+            styles.toastProgress,
+            { backgroundColor: colors.primary, width: barWidth },
+          ]}
+        />
+      </View>
+    </Animated.View>
+  );
+}
+
 export default function ProfilesScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -171,20 +284,38 @@ export default function ProfilesScreen() {
 
   const { data, isLoading, isRefetching, refetch } = useListProfiles();
   const createProfile = useCreateProfileWithAnonClaim();
+  const updateProfile = useUpdateProfile();
+  const deleteProfile = useDeleteProfile();
+
+  const openSwipeRef = useRef<Swipeable | null>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingProfile, setEditingProfile] = useState<DatingProfile | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
 
+  const [pendingDelete, setPendingDelete] = useState<{
+    profile: DatingProfile;
+    undoTimeout: ReturnType<typeof setTimeout>;
+  } | null>(null);
+
   const profiles = data ?? [];
-  const showDemo = !isLoading && profiles.length === 0;
+  const showDemo = !isLoading && profiles.length === 0 && pendingDelete === null;
 
   const topInset = Platform.OS === "web" ? Math.max(insets.top, 24) : insets.top;
   const bottomInset =
     Platform.OS === "web" ? Math.max(insets.bottom, 34) + 84 : insets.bottom + 80;
 
-  function openModal() {
+  function openCreateModal() {
+    setEditingProfile(null);
     setForm(EMPTY_FORM);
+    setFormError(null);
+    setModalOpen(true);
+  }
+
+  function openEditModal(profile: DatingProfile) {
+    setEditingProfile(profile);
+    setForm(profileToForm(profile));
     setFormError(null);
     setModalOpen(true);
   }
@@ -192,6 +323,7 @@ export default function ProfilesScreen() {
   function closeModal() {
     setModalOpen(false);
     setFormError(null);
+    setEditingProfile(null);
   }
 
   async function handleSave() {
@@ -208,18 +340,80 @@ export default function ProfilesScreen() {
     setFormError(null);
     const photoCount =
       form.photoCount.trim() !== "" ? parseInt(form.photoCount.trim(), 10) : null;
-    await createProfile.mutateAsync({
-      data: {
-        platform,
-        bio,
-        prompts: form.prompts.trim() || null,
-        photoCount: Number.isNaN(photoCount) ? null : photoCount,
-        notes: form.notes.trim() || null,
-      },
-    });
+    const photoCountValue = Number.isNaN(photoCount) ? null : photoCount;
+
+    if (editingProfile) {
+      await updateProfile.mutateAsync({
+        id: editingProfile.id,
+        data: {
+          platform,
+          bio,
+          prompts: form.prompts.trim() || null,
+          photoCount: photoCountValue,
+          notes: form.notes.trim() || null,
+        },
+      });
+    } else {
+      await createProfile.mutateAsync({
+        data: {
+          platform,
+          bio,
+          prompts: form.prompts.trim() || null,
+          photoCount: photoCountValue,
+          notes: form.notes.trim() || null,
+        },
+      });
+    }
     await queryClient.invalidateQueries({ queryKey: getListProfilesQueryKey() });
     closeModal();
   }
+
+  function askDelete(profile: DatingProfile) {
+    if (pendingDelete) {
+      clearTimeout(pendingDelete.undoTimeout);
+      void commitDelete(pendingDelete.profile);
+    }
+
+    const undoTimeout = setTimeout(() => {
+      setPendingDelete(null);
+      void commitDelete(profile);
+    }, UNDO_WINDOW_MS);
+
+    setPendingDelete({ profile, undoTimeout });
+
+    queryClient.setQueryData<DatingProfile[]>(
+      getListProfilesQueryKey(),
+      (old) => (old ?? []).filter((p) => p.id !== profile.id),
+    );
+  }
+
+  async function commitDelete(profile: DatingProfile) {
+    try {
+      await deleteProfile.mutateAsync({ id: profile.id });
+      await queryClient.invalidateQueries({ queryKey: getListProfilesQueryKey() });
+    } catch {
+      await queryClient.invalidateQueries({ queryKey: getListProfilesQueryKey() });
+    }
+  }
+
+  function undoPendingDelete() {
+    if (!pendingDelete) return;
+    clearTimeout(pendingDelete.undoTimeout);
+    setPendingDelete(null);
+    queryClient.setQueryData<DatingProfile[]>(
+      getListProfilesQueryKey(),
+      (old) => {
+        const restored = pendingDelete.profile;
+        const existing = old ?? [];
+        if (existing.find((p) => p.id === restored.id)) return existing;
+        return [...existing, restored].sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        );
+      },
+    );
+  }
+
+  const isSaving = createProfile.isPending || updateProfile.isPending;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -244,7 +438,7 @@ export default function ProfilesScreen() {
         />
 
         <Pressable
-          onPress={openModal}
+          onPress={openCreateModal}
           accessibilityRole="button"
           accessibilityLabel="Save a dating profile"
           style={({ pressed }) => [
@@ -281,17 +475,64 @@ export default function ProfilesScreen() {
           </View>
         ) : (
           <View style={styles.listWrap}>
-            {profiles.map((p) => (
-              <ProfileCard
-                key={p.id}
-                profile={p}
-              />
-            ))}
+            {profiles.map((profile) => {
+              let swipeRef: Swipeable | null = null;
+              return (
+                <Swipeable
+                  key={profile.id}
+                  ref={(r) => {
+                    swipeRef = r;
+                  }}
+                  friction={2}
+                  rightThreshold={40}
+                  overshootRight={false}
+                  onSwipeableWillOpen={() => {
+                    if (
+                      openSwipeRef.current &&
+                      openSwipeRef.current !== swipeRef
+                    ) {
+                      openSwipeRef.current.close();
+                    }
+                    openSwipeRef.current = swipeRef;
+                  }}
+                  renderRightActions={() => (
+                    <RectButton
+                      style={[
+                        styles.deleteAction,
+                        { backgroundColor: colors.destructive },
+                      ]}
+                      onPress={() => {
+                        swipeRef?.close();
+                        askDelete(profile);
+                      }}
+                    >
+                      <Feather name="trash-2" size={18} color="#fff" />
+                      <Text style={styles.deleteActionText}>Delete</Text>
+                    </RectButton>
+                  )}
+                >
+                  <ProfileCard
+                    profile={profile}
+                    onPress={() => openEditModal(profile)}
+                  />
+                </Swipeable>
+              );
+            })}
           </View>
         )}
       </ScrollView>
 
-      {/* Save Profile Modal */}
+      {pendingDelete ? (
+        <UndoToast
+          key={pendingDelete.profile.id}
+          label={`Removed ${pendingDelete.profile.platform} profile`}
+          durationMs={UNDO_WINDOW_MS}
+          bottomOffset={bottomInset - 60}
+          onUndo={undoPendingDelete}
+        />
+      ) : null}
+
+      {/* Save / Edit Profile Modal */}
       <Modal
         visible={modalOpen}
         animationType="slide"
@@ -311,7 +552,7 @@ export default function ProfilesScreen() {
               ]}
             >
               <Text style={[styles.modalTitle, { color: colors.foreground }]}>
-                Save a profile
+                {editingProfile ? "Edit profile" : "Save a profile"}
               </Text>
               <Pressable
                 onPress={closeModal}
@@ -493,11 +734,11 @@ export default function ProfilesScreen() {
               ) : null}
 
               <PrimaryButton
-                label="Save profile"
+                label={editingProfile ? "Save changes" : "Save profile"}
                 onPress={() => { void handleSave(); }}
-                loading={createProfile.isPending}
-                disabled={createProfile.isPending}
-                icon="bookmark"
+                loading={isSaving}
+                disabled={isSaving}
+                icon={editingProfile ? "check" : "bookmark"}
               />
 
               <View style={{ height: 32 }} />
@@ -601,6 +842,9 @@ const styles = StyleSheet.create({
     fontFamily: "PlusJakartaSans_600SemiBold",
     letterSpacing: 0.3,
   },
+  editHint: {
+    opacity: 0.5,
+  },
   dateText: {
     fontSize: 12,
     fontFamily: "PlusJakartaSans_400Regular",
@@ -645,6 +889,65 @@ const styles = StyleSheet.create({
   photoCountText: {
     fontSize: 12,
     fontFamily: "PlusJakartaSans_400Regular",
+  },
+
+  deleteAction: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 84,
+    borderRadius: 14,
+    marginLeft: 8,
+    gap: 4,
+  },
+  deleteActionText: {
+    color: "#fff",
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+
+  toastWrap: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    alignItems: "stretch",
+  },
+  toast: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  toastText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+  },
+  toastUndo: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  toastUndoText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+  },
+  toastProgress: {
+    position: "absolute",
+    left: 0,
+    bottom: 0,
+    height: 2,
   },
 
   // Modal

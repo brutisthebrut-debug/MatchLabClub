@@ -1744,6 +1744,19 @@ export const UpdateProfileResponse = zod.object({
 
 
 /**
+ * @summary Delete a saved dating profile
+ */
+export const DeleteProfileParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteProfileResponse = zod.object({
+  "success": zod.boolean(),
+  "deletedId": zod.number()
+})
+
+
+/**
  * @summary Generate AI-rewritten bio and prompts for a profile
  */
 export const RewriteProfileBioParams = zod.object({

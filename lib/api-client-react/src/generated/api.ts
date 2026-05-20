@@ -55,6 +55,7 @@ import type {
   DeleteAuditResult,
   DeleteInsightResult,
   DeleteMyAccountResult,
+  DeleteProfileResult,
   EmailInsight,
   EmailInsightAnalysis,
   EmailInsightInput,
@@ -3369,6 +3370,76 @@ export const useUpdateProfile = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdateProfileMutationOptions(options));
+    }
+
+export const getDeleteProfileUrl = (id: number,) => {
+
+
+
+
+  return `/api/profiles/${id}`
+}
+
+/**
+ * @summary Delete a saved dating profile
+ */
+export const deleteProfile = async (id: number, options?: RequestInit): Promise<DeleteProfileResult> => {
+
+  return customFetch<DeleteProfileResult>(getDeleteProfileUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteProfileMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProfile>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteProfile>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteProfile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteProfile>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteProfile(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteProfileMutationResult = NonNullable<Awaited<ReturnType<typeof deleteProfile>>>
+
+    export type DeleteProfileMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a saved dating profile
+ */
+export const useDeleteProfile = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProfile>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteProfile>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteProfileMutationOptions(options));
     }
 
 export const getRewriteProfileBioUrl = (id: number,) => {

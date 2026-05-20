@@ -1106,6 +1106,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DatingProfile"
+    delete:
+      operationId: deleteProfile
+      tags: [profiles]
+      summary: Delete a saved dating profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Profile deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteProfileResult"
+        "400":
+          description: Invalid id
+        "404":
+          description: Not found
 
   /profiles/{id}/rewrite:
     post:
@@ -2806,6 +2827,16 @@ components:
           description: The lookahead window (in days) that was used to compute this list.
 
     DeleteInsightResult:
+      type: object
+      required: [success, deletedId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        deletedId:
+          type: integer
+
+    DeleteProfileResult:
       type: object
       required: [success, deletedId]
       properties:

@@ -964,6 +964,11 @@ export interface DeleteInsightResult {
   deletedId: number;
 }
 
+export interface DeleteProfileResult {
+  success: true;
+  deletedId: number;
+}
+
 export interface DeleteAuditResult {
   success: true;
   deletedId: number;
