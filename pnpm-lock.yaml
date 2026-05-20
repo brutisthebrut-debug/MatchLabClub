@@ -166,6 +166,9 @@ importers:
 
   artifacts/api-server:
     dependencies:
+      '@workspace/ai-schemas':
+        specifier: workspace:*
+        version: link:../../lib/ai-schemas
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
@@ -527,6 +530,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: 'catalog:'
         version: 5.2.0(vite@7.3.3(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4))
+      '@workspace/ai-schemas':
+        specifier: workspace:*
+        version: link:../../lib/ai-schemas
       '@workspace/api-client-react':
         specifier: workspace:*
         version: link:../../lib/api-client-react
@@ -750,6 +756,12 @@ importers:
       zod-validation-error:
         specifier: ^3.4.0
         version: 3.5.4(zod@3.25.76)
+
+  lib/ai-schemas:
+    dependencies:
+      zod:
+        specifier: 'catalog:'
+        version: 3.25.76
 
   lib/api-client-react:
     dependencies:

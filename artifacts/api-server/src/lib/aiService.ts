@@ -1,4 +1,6 @@
 import OpenAI from "openai";
+import { z } from "zod";
+import { extractAndValidateJson, getAiToolSchema } from "@workspace/ai-schemas";
 import { logger } from "./logger";
 
 export type AiMode = "live" | "fallback" | "setup-needed";
@@ -30,6 +32,10 @@ export interface GenerateResult<T = string> {
   durationMs: number;
   error?: string;
   model?: string;
+  /** Set when a schema validation was attempted. True if validated output was returned. */
+  validated?: boolean;
+  /** Number of model attempts made (1 = no retry, 2 = one retry). */
+  attempts?: number;
 }
 
 const DEFAULT_MODEL = "gpt-4o-mini";
@@ -162,6 +168,37 @@ export function parseStructured<T = unknown>(raw: string, fallback: T): { value:
   }
 }
 
+interface RawCallResult {
+  ok: boolean;
+  text: string;
+  error?: string;
+}
+
+async function callModelOnce(
+  client: OpenAI,
+  opts: GenerateOptions,
+  model: string,
+  userContent: string,
+): Promise<RawCallResult> {
+  try {
+    const response = await client.chat.completions.create({
+      model,
+      temperature: opts.temperature ?? 0.7,
+      max_tokens: opts.maxTokens ?? 600,
+      messages: [
+        { role: "system", content: opts.system },
+        { role: "user", content: userContent },
+      ],
+      ...(opts.expectJson ? { response_format: { type: "json_object" as const } } : {}),
+    });
+    const text = response.choices[0]?.message?.content?.trim() ?? "";
+    return { ok: text.length > 0, text };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown OpenAI error";
+    return { ok: false, text: "", error: message };
+  }
+}
+
 export async function generate(
   opts: GenerateOptions,
   fallbackOutput: string,
@@ -183,47 +220,106 @@ export async function generate(
   const contextBlock = contextToPromptBlock(opts.context);
   const userContent = `${opts.user}${contextBlock}`;
 
-  try {
-    const response = await client.chat.completions.create({
-      model,
-      temperature: opts.temperature ?? 0.7,
-      max_tokens: opts.maxTokens ?? 600,
-      messages: [
-        { role: "system", content: opts.system },
-        { role: "user", content: userContent },
-      ],
-      ...(opts.expectJson ? { response_format: { type: "json_object" as const } } : {}),
-    });
+  const schema = opts.expectJson ? getAiToolSchema(opts.context?.toolName) : null;
 
-    const text = response.choices[0]?.message?.content?.trim() ?? "";
-    if (!text) {
-      return {
-        mode: "setup-needed",
-        isFallback: true,
-        output: fallbackOutput,
-        durationMs: Date.now() - start,
-        error: "Empty response from model",
-        model,
-      };
+  const first = await callModelOnce(client, opts, model, userContent);
+  if (!first.ok) {
+    if (first.error) {
+      logger.warn({ err: first.error }, "OpenAI generate failed; using fallback");
     }
-    return {
-      mode: "live",
-      isFallback: false,
-      output: text,
-      raw: text,
-      durationMs: Date.now() - start,
-      model,
-    };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown OpenAI error";
-    logger.warn({ err: message }, "OpenAI generate failed; using fallback");
     return {
       mode: "setup-needed",
       isFallback: true,
       output: fallbackOutput,
       durationMs: Date.now() - start,
-      error: message,
+      error: first.error ?? "Empty response from model",
       model,
+      attempts: 1,
+      ...(schema ? { validated: false } : {}),
     };
   }
+
+  if (!schema) {
+    return {
+      mode: "live",
+      isFallback: false,
+      output: first.text,
+      raw: first.text,
+      durationMs: Date.now() - start,
+      model,
+      attempts: 1,
+    };
+  }
+
+  // Structured output: validate against the per-tool schema, retrying once on failure.
+  const firstParsed = extractAndValidateJson(schema, first.text);
+  if (firstParsed.ok) {
+    return {
+      mode: "live",
+      isFallback: false,
+      output: JSON.stringify(firstParsed.value),
+      raw: first.text,
+      durationMs: Date.now() - start,
+      model,
+      validated: true,
+      attempts: 1,
+    };
+  }
+
+  logger.warn(
+    { toolName: opts.context?.toolName, rawPreview: first.text.slice(0, 240) },
+    "AI structured output failed schema validation; retrying once",
+  );
+
+  const repairUser = [
+    userContent,
+    "",
+    "Your previous response did not match the required JSON schema for this tool.",
+    "Respond again with VALID JSON only — no prose, no code fences — that strictly matches the expected shape.",
+    "Previous attempt (for reference):",
+    first.text.slice(0, 1500),
+  ].join("\n");
+
+  const second = await callModelOnce(
+    client,
+    { ...opts, expectJson: true },
+    model,
+    repairUser,
+  );
+
+  if (second.ok) {
+    const secondParsed = extractAndValidateJson(schema, second.text);
+    if (secondParsed.ok) {
+      return {
+        mode: "live",
+        isFallback: false,
+        output: JSON.stringify(secondParsed.value),
+        raw: second.text,
+        durationMs: Date.now() - start,
+        model,
+        validated: true,
+        attempts: 2,
+      };
+    }
+  }
+
+  logger.warn(
+    { toolName: opts.context?.toolName, err: second.error },
+    "AI structured output failed schema validation after retry; returning fallback",
+  );
+
+  return {
+    mode: "fallback",
+    isFallback: true,
+    output: fallbackOutput,
+    raw: second.ok ? second.text : first.text,
+    durationMs: Date.now() - start,
+    model,
+    validated: false,
+    attempts: 2,
+    error: "Structured output failed schema validation after retry",
+  };
 }
+
+/** Re-export so callers can construct ad-hoc schemas if needed. */
+export { z };
