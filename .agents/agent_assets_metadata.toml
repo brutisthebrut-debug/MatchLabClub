@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "ZDp6JAruIywqfbhiGrYXm"
+uri = "file://artifacts/nldc-mobile/assets/images/icon.png"
+type = "image"
+title = "nldc icon"

@@ -1,0 +1,354 @@
+import { Feather } from "@expo/vector-icons";
+import { useGetAuditSummary } from "@workspace/api-client-react";
+import React, { useMemo } from "react";
+import {
+  ActivityIndicator,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Polyline } from "react-native-svg";
+
+import { ScoreRing } from "@/components/ScoreRing";
+import { ScreenHeader } from "@/components/ScreenHeader";
+import { useColors } from "@/hooks/useColors";
+
+const DEMO_HISTORY = [
+  { date: "2025-04-01", score: 58 },
+  { date: "2025-04-09", score: 64 },
+  { date: "2025-04-18", score: 71 },
+  { date: "2025-04-27", score: 76 },
+  { date: "2025-05-05", score: 80 },
+  { date: "2025-05-14", score: 84 },
+];
+
+const DEMO_STRENGTHS = [
+  "Bio shows genuine specificity",
+  "Photos vary in setting",
+  "Opening messages reference profile",
+];
+
+const DEMO_RISKS = [
+  "Prompts lean generic",
+  "Few prompts about future plans",
+];
+
+interface ScoreHistoryPoint {
+  date: string;
+  score: number;
+}
+
+function Sparkline({ history }: { history: ScoreHistoryPoint[] }) {
+  const colors = useColors();
+  const width = 280;
+  const height = 70;
+  const padding = 8;
+
+  if (history.length < 2) return null;
+
+  const min = Math.min(...history.map((h) => h.score));
+  const max = Math.max(...history.map((h) => h.score));
+  const range = Math.max(1, max - min);
+
+  const points = history
+    .map((h, i) => {
+      const x = padding + (i * (width - padding * 2)) / (history.length - 1);
+      const y =
+        height -
+        padding -
+        ((h.score - min) / range) * (height - padding * 2);
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  return (
+    <Svg width={width} height={height}>
+      <Polyline
+        points={points}
+        fill="none"
+        stroke={colors.violet}
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export default function ScoreScreen() {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const { data, isLoading, isError, refetch, isFetching } = useGetAuditSummary();
+
+  const summary = useMemo(() => {
+    if (data && data.totalAudits > 0) {
+      return {
+        score: data.latestScore ?? Math.round(data.averageScore),
+        average: data.averageScore,
+        total: data.totalAudits,
+        history:
+          data.scoreHistory.length > 1 ? data.scoreHistory : DEMO_HISTORY,
+        strengths: data.topStrengths.length ? data.topStrengths : DEMO_STRENGTHS,
+        risks: data.topRisks.length ? data.topRisks : DEMO_RISKS,
+        demo: false,
+      };
+    }
+    return {
+      score: 84,
+      average: 76.5,
+      total: 6,
+      history: DEMO_HISTORY,
+      strengths: DEMO_STRENGTHS,
+      risks: DEMO_RISKS,
+      demo: true,
+    };
+  }, [data]);
+
+  const trend =
+    summary.history.length > 1
+      ? summary.history[summary.history.length - 1].score -
+        summary.history[0].score
+      : 0;
+
+  const topInset = Platform.OS === "web" ? Math.max(insets.top, 24) : insets.top;
+  const bottomInset =
+    Platform.OS === "web" ? Math.max(insets.bottom, 34) + 84 : insets.bottom + 80;
+
+  return (
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: topInset + 16, paddingBottom: bottomInset },
+        ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={isFetching && !isLoading}
+            onRefresh={() => refetch()}
+            tintColor={colors.primary}
+          />
+        }
+      >
+        <ScreenHeader
+          eyebrow="Next Level Dating Club"
+          title="Your Signal Score"
+          subtitle={
+            summary.demo
+              ? "Demo score — complete a profile audit on the web to see your real number."
+              : `Average across ${summary.total} audit${summary.total === 1 ? "" : "s"}: ${summary.average.toFixed(1)}`
+          }
+        />
+
+        {isLoading ? (
+          <View style={styles.loading}>
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : null}
+
+        {isError ? (
+          <View
+            style={[
+              styles.errorBanner,
+              { backgroundColor: `${colors.destructive}22`, borderColor: colors.destructive },
+            ]}
+          >
+            <Feather name="alert-circle" size={16} color={colors.destructive} />
+            <Text style={[styles.errorText, { color: colors.destructive }]}>
+              Couldn't reach the API — showing demo data.
+            </Text>
+          </View>
+        ) : null}
+
+        <View
+          style={[
+            styles.ringCard,
+            { backgroundColor: colors.card, borderColor: colors.cardBorder },
+          ]}
+        >
+          <ScoreRing score={summary.score} />
+          <View
+            style={[
+              styles.trendPill,
+              {
+                backgroundColor:
+                  trend >= 0 ? `${colors.success}22` : `${colors.destructive}22`,
+              },
+            ]}
+          >
+            <Feather
+              name={trend >= 0 ? "trending-up" : "trending-down"}
+              size={14}
+              color={trend >= 0 ? colors.success : colors.destructive}
+            />
+            <Text
+              style={[
+                styles.trendText,
+                { color: trend >= 0 ? colors.success : colors.destructive },
+              ]}
+            >
+              {trend >= 0 ? "+" : ""}
+              {trend} pts over {summary.history.length} audits
+            </Text>
+          </View>
+          <View style={styles.sparkWrap}>
+            <Sparkline history={summary.history} />
+          </View>
+        </View>
+
+        <View
+          style={[
+            styles.section,
+            { backgroundColor: colors.card, borderColor: colors.cardBorder },
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <View
+              style={[styles.iconBubble, { backgroundColor: `${colors.success}22` }]}
+            >
+              <Feather name="check-circle" size={16} color={colors.success} />
+            </View>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+              Strengths
+            </Text>
+          </View>
+          {summary.strengths.map((item, i) => (
+            <View key={`s-${i}`} style={styles.item}>
+              <View style={[styles.bullet, { backgroundColor: colors.success }]} />
+              <Text style={[styles.itemText, { color: colors.foreground }]}>{item}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View
+          style={[
+            styles.section,
+            { backgroundColor: colors.card, borderColor: colors.cardBorder },
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <View
+              style={[styles.iconBubble, { backgroundColor: `${colors.rose}22` }]}
+            >
+              <Feather name="alert-triangle" size={16} color={colors.rose} />
+            </View>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+              Risks to fix
+            </Text>
+          </View>
+          {summary.risks.map((item, i) => (
+            <View key={`r-${i}`} style={styles.item}>
+              <View style={[styles.bullet, { backgroundColor: colors.rose }]} />
+              <Text style={[styles.itemText, { color: colors.foreground }]}>{item}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View
+          style={[
+            styles.footerCard,
+            { backgroundColor: colors.card, borderColor: colors.cardBorder },
+          ]}
+        >
+          <Feather name="zap" size={18} color={colors.gold} />
+          <Text style={[styles.footerText, { color: colors.mutedForeground }]}>
+            Use the Coach tab when a match replies, or Next to draft an opener you'll actually send.
+          </Text>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  content: { paddingHorizontal: 20, gap: 16 },
+  loading: { paddingVertical: 30, alignItems: "center" },
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  ringCard: {
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+    gap: 18,
+  },
+  trendPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  trendText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+  },
+  sparkWrap: { alignItems: "center" },
+  section: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    gap: 10,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 4,
+  },
+  iconBubble: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: "PlusJakartaSans_700Bold",
+  },
+  item: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  bullet: { width: 6, height: 6, borderRadius: 3, marginTop: 7 },
+  itemText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 20,
+  },
+  footerCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 14,
+  },
+  footerText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 19,
+  },
+});
