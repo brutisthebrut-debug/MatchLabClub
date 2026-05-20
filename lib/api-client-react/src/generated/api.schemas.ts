@@ -182,6 +182,33 @@ export interface AuditSummary {
   topRisks: string[];
 }
 
+export interface ScreenshotAuditInput {
+  /** Base64-encoded screenshot of a dating profile. May include a data URL
+  prefix (e.g. "data:image/jpeg;base64,..."); the server strips it.
+   */
+  imageBase64: string;
+  /**
+     * Optional name (e.g. the match's first name pulled from the profile).
+     * @nullable
+     */
+  firstName?: string | null;
+  /** @nullable */
+  datingGoal?: string | null;
+  /**
+     * Which dating app the screenshot was taken from (e.g. "Hinge").
+     * @nullable
+     */
+  sourceApp?: string | null;
+}
+
+export interface ScreenshotAuditReport {
+  auditId: number;
+  extractedBio: string;
+  extractedPrompts: string[];
+  rawOcrText?: string;
+  report: AuditReport;
+}
+
 export interface DatingProfileInput {
   platform: string;
   bio: string;
@@ -443,6 +470,10 @@ export type HandleBrowserLoginCallbackParams = {
 code?: string;
 state?: string;
 iss?: string;
+};
+
+export type AuditFromScreenshot400 = {
+  error?: string;
 };
 
 export type TestAiParams = {

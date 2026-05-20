@@ -26,6 +26,7 @@ import type {
   AiTestInput,
   AiTestResult,
   Audit,
+  AuditFromScreenshot400,
   AuditInput,
   AuditReport,
   AuditSummary,
@@ -49,6 +50,8 @@ import type {
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
   ProfileRewrite,
+  ScreenshotAuditInput,
+  ScreenshotAuditReport,
   TestAiParams,
   WaitlistEntry,
   WaitlistInput,
@@ -976,6 +979,82 @@ export const useGenerateAuditReport = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getGenerateAuditReportMutationOptions(options));
+    }
+
+export const getAuditFromScreenshotUrl = () => {
+
+
+
+
+  return `/api/audits/from-screenshot`
+}
+
+/**
+ * Accepts a base64-encoded screenshot of a dating profile (typically taken from
+the user's phone). The server runs OCR to extract bio and prompt text and then
+feeds the result through the standard audit engine, returning a generated
+mini-report alongside the persisted audit id.
+
+ * @summary OCR a profile screenshot and run an audit on the extracted text
+ */
+export const auditFromScreenshot = async (screenshotAuditInput: ScreenshotAuditInput, options?: RequestInit): Promise<ScreenshotAuditReport> => {
+
+  return customFetch<ScreenshotAuditReport>(getAuditFromScreenshotUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      screenshotAuditInput,)
+  }
+);}
+
+
+
+
+export const getAuditFromScreenshotMutationOptions = <TError = ErrorType<AuditFromScreenshot400>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof auditFromScreenshot>>, TError,{data: BodyType<ScreenshotAuditInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof auditFromScreenshot>>, TError,{data: BodyType<ScreenshotAuditInput>}, TContext> => {
+
+const mutationKey = ['auditFromScreenshot'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof auditFromScreenshot>>, {data: BodyType<ScreenshotAuditInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  auditFromScreenshot(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AuditFromScreenshotMutationResult = NonNullable<Awaited<ReturnType<typeof auditFromScreenshot>>>
+    export type AuditFromScreenshotMutationBody = BodyType<ScreenshotAuditInput>
+    export type AuditFromScreenshotMutationError = ErrorType<AuditFromScreenshot400>
+
+    /**
+ * @summary OCR a profile screenshot and run an audit on the extracted text
+ */
+export const useAuditFromScreenshot = <TError = ErrorType<AuditFromScreenshot400>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof auditFromScreenshot>>, TError,{data: BodyType<ScreenshotAuditInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof auditFromScreenshot>>,
+        TError,
+        {data: BodyType<ScreenshotAuditInput>},
+        TContext
+      > => {
+      return useMutation(getAuditFromScreenshotMutationOptions(options));
     }
 
 export const getGetAuditSummaryUrl = () => {

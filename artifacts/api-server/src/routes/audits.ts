@@ -7,9 +7,12 @@ import {
   GetAuditResponse,
   GenerateAuditReportResponse,
   GetAuditSummaryResponse,
+  AuditFromScreenshotBody,
+  AuditFromScreenshotResponse,
 } from "@workspace/api-zod";
 import { generateAuditReport } from "../lib/aiEngine";
 import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
+import { extractProfileFromScreenshot } from "../lib/ocr";
 
 const router: IRouter = Router();
 
@@ -150,6 +153,73 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
     .where(eq(auditsTable.id, id));
 
   res.json(GenerateAuditReportResponse.parse({ auditId: id, ...report }));
+});
+
+router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
+  const parsed = AuditFromScreenshotBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  let extracted: { bio: string; prompts: string[]; rawText: string };
+  try {
+    extracted = await extractProfileFromScreenshot(parsed.data.imageBase64);
+  } catch (err) {
+    req.log.error({ err }, "OCR failed");
+    res.status(400).json({ error: "Couldn't read text from that screenshot. Try a clearer image." });
+    return;
+  }
+
+  if (!extracted.bio && extracted.prompts.length === 0) {
+    res.status(400).json({ error: "No readable profile text found in the screenshot." });
+    return;
+  }
+
+  const firstName = parsed.data.firstName?.trim() || "Match";
+  const datingGoal = parsed.data.datingGoal?.trim() || "find a relationship";
+  const sourceApp = parsed.data.sourceApp?.trim() || "Hinge";
+
+  const promptsText = extracted.prompts.length ? extracted.prompts.join("\n") : null;
+
+  const [audit] = await db
+    .insert(auditsTable)
+    .values({
+      firstName,
+      age: 30,
+      gender: "unspecified",
+      orientation: "unspecified",
+      datingGoal,
+      currentApps: [sourceApp],
+      bio: extracted.bio || extracted.rawText,
+      prompts: promptsText,
+      status: "generating",
+      userId: req.user?.id ?? null,
+    })
+    .returning();
+
+  const report = generateAuditReport({
+    firstName,
+    bio: extracted.bio || extracted.rawText,
+    prompts: promptsText,
+    datingGoal,
+    currentApps: [sourceApp],
+  });
+
+  await db
+    .update(auditsTable)
+    .set({ status: "complete", readinessScore: report.readinessScore })
+    .where(eq(auditsTable.id, audit.id));
+
+  res.json(
+    AuditFromScreenshotResponse.parse({
+      auditId: audit.id,
+      extractedBio: extracted.bio,
+      extractedPrompts: extracted.prompts,
+      rawOcrText: extracted.rawText,
+      report: { auditId: audit.id, ...report },
+    }),
+  );
 });
 
 export default router;

@@ -231,6 +231,56 @@ export const GenerateAuditReportResponse = zod.object({
 
 
 /**
+ * Accepts a base64-encoded screenshot of a dating profile (typically taken from
+the user's phone). The server runs OCR to extract bio and prompt text and then
+feeds the result through the standard audit engine, returning a generated
+mini-report alongside the persisted audit id.
+
+ * @summary OCR a profile screenshot and run an audit on the extracted text
+ */
+export const AuditFromScreenshotBody = zod.object({
+  "imageBase64": zod.string().describe('Base64-encoded screenshot of a dating profile. May include a data URL\nprefix (e.g. \"data:image\/jpeg;base64,...\"); the server strips it.\n'),
+  "firstName": zod.string().nullish().describe('Optional name (e.g. the match\'s first name pulled from the profile).'),
+  "datingGoal": zod.string().nullish(),
+  "sourceApp": zod.string().nullish().describe('Which dating app the screenshot was taken from (e.g. \"Hinge\").')
+})
+
+export const AuditFromScreenshotResponse = zod.object({
+  "auditId": zod.number(),
+  "extractedBio": zod.string(),
+  "extractedPrompts": zod.array(zod.string()),
+  "rawOcrText": zod.string().optional(),
+  "report": zod.object({
+  "auditId": zod.number(),
+  "readinessScore": zod.number(),
+  "overallGrade": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "risks": zod.array(zod.string()),
+  "bioAudit": zod.string(),
+  "rewrittenBio": zod.string(),
+  "rewrittenPrompts": zod.array(zod.object({
+  "original": zod.string(),
+  "rewritten": zod.string(),
+  "tip": zod.string()
+})),
+  "photoGuidance": zod.array(zod.object({
+  "category": zod.string(),
+  "status": zod.enum(['good', 'needs_work', 'missing']),
+  "advice": zod.string()
+})),
+  "actionPlan": zod.array(zod.object({
+  "priority": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "timeframe": zod.string()
+})),
+  "messagingStyle": zod.string(),
+  "coachingCta": zod.string()
+})
+})
+
+
+/**
  * @summary Get aggregate summary of user audits (scores, trends)
  */
 export const GetAuditSummaryResponse = zod.object({
