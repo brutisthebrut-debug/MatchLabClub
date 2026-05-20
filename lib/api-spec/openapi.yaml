@@ -2044,9 +2044,21 @@ components:
             Base64-encoded screenshot of a dating-app chat. May include a data
             URL prefix (e.g. "data:image/jpeg;base64,..."); the server strips it.
 
+    ChatSpeakerTurn:
+      type: object
+      required: [speaker, text]
+      properties:
+        speaker:
+          type: string
+          enum: [them, you]
+          description: Who sent this message — "them" for the match, "you" for the user.
+        text:
+          type: string
+          description: The message text for this turn.
+
     ChatScreenshotExtractResult:
       type: object
-      required: [conversationText, rawOcrText]
+      required: [conversationText, rawOcrText, speakerTurns]
       properties:
         conversationText:
           type: string
@@ -2059,6 +2071,14 @@ components:
           description: Detected source app — "Hinge", "Bumble", "Tinder", or null when undetectable.
         rawOcrText:
           type: string
+        speakerTurns:
+          type: array
+          description: |
+            Ordered list of inferred speaker turns extracted from the screenshot.
+            Speaker attribution is a heuristic (noise-boundary alternation) and may
+            need user correction — the client should offer a way to flip misattributed turns.
+          items:
+            $ref: "#/components/schemas/ChatSpeakerTurn"
 
     ScreenshotAuditInput:
       type: object

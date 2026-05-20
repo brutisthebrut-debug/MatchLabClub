@@ -109,6 +109,22 @@ function normalizeAppName(value: string | null | undefined): SourceApp | "" {
   return "";
 }
 
+type SpeakerTurn = { speaker: "them" | "you"; text: string };
+
+function speakerTurnsToContext(turns: SpeakerTurn[], name: string): string {
+  const theirLabel = name.trim() || "Them";
+  return turns
+    .map((t) => `${t.speaker === "them" ? theirLabel : "Me"}: ${t.text}`)
+    .join("\n");
+}
+
+function flipSpeakers(turns: SpeakerTurn[]): SpeakerTurn[] {
+  return turns.map((t) => ({
+    ...t,
+    speaker: t.speaker === "them" ? "you" : "them",
+  }));
+}
+
 const DEMO_REPLIES: Reply[] = [
   {
     style: "Playful",
@@ -147,6 +163,7 @@ export default function CoachScreen() {
   const [sourceApp, setSourceApp] = useState<SourceApp | "">("");
   const [screenshotUri, setScreenshotUri] = useState<string | null>(null);
   const [screenshotError, setScreenshotError] = useState<string | null>(null);
+  const [screenshotTurns, setScreenshotTurns] = useState<SpeakerTurn[] | null>(null);
   const [results, setResults] = useState<Reply[] | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showLineTagger, setShowLineTagger] = useState(false);
@@ -299,7 +316,14 @@ export default function CoachScreen() {
       const res = await extractScreenshot.mutateAsync({
         data: { imageBase64: base64 },
       });
-      if (res.conversationText) {
+      if (res.speakerTurns && res.speakerTurns.length > 0) {
+        const turns = res.speakerTurns as SpeakerTurn[];
+        setScreenshotTurns(turns);
+        const formatted = speakerTurnsToContext(turns, matchName);
+        setContext((prev) =>
+          prev.trim() ? `${prev}\n${formatted}` : formatted,
+        );
+      } else if (res.conversationText) {
         setContext((prev) =>
           prev.trim() ? `${prev}\n${res.conversationText}` : res.conversationText,
         );
@@ -309,6 +333,13 @@ export default function CoachScreen() {
     } catch {
       setScreenshotError("Couldn't read that screenshot. Try a clearer image.");
     }
+  }
+
+  function handleFlipSpeakers() {
+    if (!screenshotTurns) return;
+    const flipped = flipSpeakers(screenshotTurns);
+    setScreenshotTurns(flipped);
+    setContext(speakerTurnsToContext(flipped, matchName));
   }
 
   async function pickScreenshotFromLibrary() {
@@ -348,6 +379,7 @@ export default function CoachScreen() {
   function clearScreenshot() {
     setScreenshotUri(null);
     setScreenshotError(null);
+    setScreenshotTurns(null);
   }
 
   async function handleReplyCopied() {
@@ -939,7 +971,27 @@ export default function CoachScreen() {
             </View>
           </View>
 
-          <Field label="The conversation so far">
+          <View style={styles.conversationFieldWrapper}>
+            <View style={styles.conversationFieldHeader}>
+              <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>
+                The conversation so far
+              </Text>
+              {screenshotTurns && screenshotTurns.length > 0 && (
+                <Pressable
+                  onPress={handleFlipSpeakers}
+                  testID="button-flip-speakers"
+                  style={[
+                    styles.flipBtn,
+                    { borderColor: colors.border },
+                  ]}
+                >
+                  <Feather name="repeat" size={11} color={colors.mutedForeground} />
+                  <Text style={[styles.flipBtnText, { color: colors.mutedForeground }]}>
+                    Flip speaker order
+                  </Text>
+                </Pressable>
+              )}
+            </View>
             <TextInput
               value={context}
               onChangeText={(t) => {
@@ -1025,7 +1077,12 @@ export default function CoachScreen() {
                 onClose={() => setShowLineTagger(false)}
               />
             ) : null}
-          </Field>
+            {screenshotTurns && screenshotTurns.length > 0 && (
+              <Text style={[styles.flipHint, { color: colors.mutedForeground }]}>
+                Speaker order auto-detected — tap "Flip" if the first message is yours.
+              </Text>
+            )}
+          </View>
 
           <Field label="Their last message to you">
             <TextInput
@@ -1705,6 +1762,30 @@ const styles = StyleSheet.create({
   screenshotClearText: {
     fontSize: 11,
     fontFamily: "PlusJakartaSans_700Bold",
+  },
+  conversationFieldWrapper: { gap: 6 },
+  conversationFieldHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  flipBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  flipBtnText: {
+    fontSize: 10,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+  },
+  flipHint: {
+    fontSize: 10,
+    fontFamily: "PlusJakartaSans_400Regular",
+    lineHeight: 14,
   },
   sourceAppBlock: { gap: 8 },
   sourceAppRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },

@@ -100,16 +100,57 @@ function isChatNoise(line: string): boolean {
   return CHAT_UI_NOISE.some((rx) => rx.test(line));
 }
 
+export type ChatSpeakerTurn = {
+  speaker: "them" | "you";
+  text: string;
+};
+
 /**
- * Run OCR on a chat-screenshot and return the conversation text and the
- * detected source app. We do *not* try to attribute messages to speakers —
- * the user can fix that in the textarea. The goal is just to seed the
- * coaching form with the visible text and the right app badge.
+ * Infer speaker turns from an ordered list of raw OCR lines.
+ *
+ * Heuristic: noise lines (timestamps, delivery indicators, UI chrome) act as
+ * turn boundaries. Consecutive content lines without intervening noise belong
+ * to the same speaker. Speakers alternate across turn blocks, starting with
+ * "them" (the match) — the most common arrangement in a dating-app screenshot.
+ *
+ * This is intentionally simple; the client should let users flip misattributed
+ * turns rather than trying to be perfect here.
+ */
+export function inferSpeakerTurns(lines: string[]): ChatSpeakerTurn[] {
+  const blocks: string[][] = [];
+  let current: string[] = [];
+
+  for (const line of lines) {
+    if (isChatNoise(line)) {
+      if (current.length > 0) {
+        blocks.push(current);
+        current = [];
+      }
+    } else {
+      current.push(line);
+    }
+  }
+  if (current.length > 0) blocks.push(current);
+
+  return blocks.flatMap((block, i) =>
+    block.map((text) => ({
+      speaker: (i % 2 === 0 ? "them" : "you") as "them" | "you",
+      text,
+    })),
+  );
+}
+
+/**
+ * Run OCR on a chat-screenshot and return the conversation text, the
+ * detected source app, and an ordered list of inferred speaker turns.
+ * Speaker attribution is heuristic — the client should let users correct
+ * misattributed bubbles.
  */
 export async function extractChatFromScreenshot(imageBase64: string): Promise<{
   conversationText: string;
   sourceApp: SourceApp | null;
   rawText: string;
+  speakerTurns: ChatSpeakerTurn[];
 }> {
   const cleaned = stripDataUrlPrefix(imageBase64.trim());
   if (!cleaned) {
@@ -132,6 +173,7 @@ export async function extractChatFromScreenshot(imageBase64: string): Promise<{
 
   const sourceApp = detectSourceApp(lines);
   const conversationText = lines.filter((l) => !isChatNoise(l)).join("\n");
+  const speakerTurns = inferSpeakerTurns(lines);
 
-  return { conversationText, sourceApp, rawText };
+  return { conversationText, sourceApp, rawText, speakerTurns };
 }

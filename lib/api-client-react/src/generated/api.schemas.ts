@@ -369,6 +369,24 @@ export interface ChatScreenshotExtractInput {
   imageBase64: string;
 }
 
+/**
+ * Who sent this message — "them" for the match, "you" for the user.
+ */
+export type ChatSpeakerTurnSpeaker = typeof ChatSpeakerTurnSpeaker[keyof typeof ChatSpeakerTurnSpeaker];
+
+
+export const ChatSpeakerTurnSpeaker = {
+  them: 'them',
+  you: 'you',
+} as const;
+
+export interface ChatSpeakerTurn {
+  /** Who sent this message — "them" for the match, "you" for the user. */
+  speaker: ChatSpeakerTurnSpeaker;
+  /** The message text for this turn. */
+  text: string;
+}
+
 export interface ChatScreenshotExtractResult {
   /** OCR-extracted conversation text, with obvious UI chrome (timestamps,
   "Delivered", "Send", etc.) filtered out. The user is expected to
@@ -381,6 +399,11 @@ export interface ChatScreenshotExtractResult {
      */
   sourceApp?: string | null;
   rawOcrText: string;
+  /** Ordered list of inferred speaker turns extracted from the screenshot.
+  Speaker attribution is a heuristic (noise-boundary alternation) and may
+  need user correction — the client should offer a way to flip misattributed turns.
+   */
+  speakerTurns: ChatSpeakerTurn[];
 }
 
 /**

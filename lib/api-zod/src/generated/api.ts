@@ -1827,7 +1827,11 @@ export const ExtractMessageScreenshotBody = zod.object({
 export const ExtractMessageScreenshotResponse = zod.object({
   "conversationText": zod.string().describe('OCR-extracted conversation text, with obvious UI chrome (timestamps,\n\"Delivered\", \"Send\", etc.) filtered out. The user is expected to\ntidy it up in the Coach textarea before submitting.\n'),
   "sourceApp": zod.string().nullish().describe('Detected source app — \"Hinge\", \"Bumble\", \"Tinder\", or null when undetectable.'),
-  "rawOcrText": zod.string()
+  "rawOcrText": zod.string(),
+  "speakerTurns": zod.array(zod.object({
+  "speaker": zod.enum(['them', 'you']).describe('Who sent this message — \"them\" for the match, \"you\" for the user.'),
+  "text": zod.string().describe('The message text for this turn.')
+})).describe('Ordered list of inferred speaker turns extracted from the screenshot.\nSpeaker attribution is a heuristic (noise-boundary alternation) and may\nneed user correction — the client should offer a way to flip misattributed turns.\n')
 })
 
 

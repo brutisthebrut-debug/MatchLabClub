@@ -85,6 +85,7 @@ router.post("/messages/extract-screenshot", async (req, res): Promise<void> => {
       conversationText: extracted.conversationText,
       sourceApp: extracted.sourceApp,
       rawOcrText: extracted.rawText,
+      speakerTurns: extracted.speakerTurns,
     }),
   );
 });

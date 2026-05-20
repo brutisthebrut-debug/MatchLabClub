@@ -45,6 +45,8 @@ export * from './bulkDeleteAuditsInput';
 export * from './bulkDeleteAuditsResult';
 export * from './chatScreenshotExtractInput';
 export * from './chatScreenshotExtractResult';
+export * from './chatSpeakerTurn';
+export * from './chatSpeakerTurnSpeaker';
 export * from './claimAnonymousInput';
 export * from './claimAnonymousResult';
 export * from './claimAnonymousResultClaimed';

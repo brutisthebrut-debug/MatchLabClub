@@ -126,6 +126,19 @@ function normalizeAppName(value: string | null | undefined): SourceApp | "" {
   return "";
 }
 
+type SpeakerTurn = { speaker: "them" | "you"; text: string };
+
+function speakerTurnsToContext(turns: SpeakerTurn[], name: string): string {
+  const theirLabel = name.trim() || "Them";
+  return turns
+    .map((t) => `${t.speaker === "them" ? theirLabel : "Me"}: ${t.text}`)
+    .join("\n");
+}
+
+function flipSpeakers(turns: SpeakerTurn[]): SpeakerTurn[] {
+  return turns.map((t) => ({ ...t, speaker: t.speaker === "them" ? "you" : "them" }));
+}
+
 export default function Coach() {
   useMeta("Message Coach", "Paste any dating app conversation and get three personalised reply options — Playful, Direct, and Warm — with coaching rationale for each.");
   const [matchName, setMatchName] = useState("");
@@ -144,6 +157,7 @@ export default function Coach() {
   const tomorrowMorningHourOptions = buildTomorrowMorningHourOptions();
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [screenshotError, setScreenshotError] = useState<string | null>(null);
+  const [screenshotTurns, setScreenshotTurns] = useState<SpeakerTurn[] | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isFallback, setIsFallback] = useState(false);
   const { toast } = useToast();
@@ -180,7 +194,12 @@ export default function Coach() {
       const res = await extractScreenshot.mutateAsync({
         data: { imageBase64: img.base64 },
       });
-      if (res.conversationText) {
+      if (res.speakerTurns && res.speakerTurns.length > 0) {
+        const turns = res.speakerTurns as SpeakerTurn[];
+        setScreenshotTurns(turns);
+        const formatted = speakerTurnsToContext(turns, matchName);
+        setContext((prev) => (prev.trim() ? `${prev}\n${formatted}` : formatted));
+      } else if (res.conversationText) {
         setContext((prev) => (prev.trim() ? `${prev}\n${res.conversationText}` : res.conversationText));
       }
       const detected = normalizeAppName(res.sourceApp);
@@ -197,7 +216,15 @@ export default function Coach() {
   function clearScreenshot() {
     setScreenshotPreview(null);
     setScreenshotError(null);
+    setScreenshotTurns(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function handleFlipSpeakers() {
+    if (!screenshotTurns) return;
+    const flipped = flipSpeakers(screenshotTurns);
+    setScreenshotTurns(flipped);
+    setContext(speakerTurnsToContext(flipped, matchName));
   }
 
   useEffect(() => {
@@ -452,7 +479,20 @@ export default function Coach() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Conversation so far</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Conversation so far</Label>
+                  {screenshotTurns && screenshotTurns.length > 0 && (
+                    <button
+                      type="button"
+                      data-testid="button-flip-speakers"
+                      onClick={handleFlipSpeakers}
+                      className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors border border-white/10 hover:border-white/20 rounded-full px-2 py-0.5"
+                    >
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="opacity-70"><path d="M1 3.5L3.5 1M3.5 1L6 3.5M3.5 1V7M9 6.5L6.5 9M6.5 9L4 6.5M6.5 9V3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      Flip speaker order
+                    </button>
+                  )}
+                </div>
                 <Textarea
                   data-testid="textarea-conversation"
                   placeholder={"Alex: I love that little ramen place on 5th\nMe: Oh nice, which one?\nAlex: The one with the black garlic broth!\nMe: I've been meaning to try it"}
@@ -460,7 +500,12 @@ export default function Coach() {
                   onChange={e => setContext(e.target.value)}
                   className="min-h-[140px] resize-none font-mono text-xs bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40"
                 />
-                <p className="text-xs text-muted-foreground">Format: Name: message — each on a new line. Use "Me:" for your messages.</p>
+                <p className="text-xs text-muted-foreground">
+                  Format: Name: message — each on a new line. Use "Me:" for your messages.
+                  {screenshotTurns && screenshotTurns.length > 0 && (
+                    <span className="ml-1 text-[hsl(268_52%_68%)]">Speaker order auto-detected — tap "Flip" if the first message is yours.</span>
+                  )}
+                </p>
               </div>
               <div className="space-y-2">
                 <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Your last message</Label>

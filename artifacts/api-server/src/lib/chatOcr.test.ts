@@ -16,7 +16,7 @@ vi.mock("./ocrLearning", () => ({
   }),
 }));
 
-import { extractChatFromScreenshot } from "./ocr";
+import { extractChatFromScreenshot, inferSpeakerTurns } from "./ocr";
 
 function toBase64(text: string): string {
   return Buffer.from(text, "utf8").toString("base64");
@@ -170,5 +170,88 @@ describe("extractChatFromScreenshot — input validation", () => {
     const dataUrl = `data:image/png;base64,${toBase64("ignored")}`;
     const out = await extractChatFromScreenshot(dataUrl);
     expect(out.conversationText).toMatch(/General Kenobi/);
+  });
+});
+
+describe("inferSpeakerTurns — speaker attribution", () => {
+  it("alternates speakers across noise-separated blocks, starting with 'them'", () => {
+    const lines = [
+      "Hey! Saw you climbed Kilimanjaro",
+      "9:41 AM",
+      "Honestly the sunrise was surreal.",
+      "Delivered",
+      "What was the hardest part?",
+    ];
+    const turns = inferSpeakerTurns(lines);
+    expect(turns[0]).toEqual({ speaker: "them", text: "Hey! Saw you climbed Kilimanjaro" });
+    expect(turns[1]).toEqual({ speaker: "you", text: "Honestly the sunrise was surreal." });
+    expect(turns[2]).toEqual({ speaker: "them", text: "What was the hardest part?" });
+  });
+
+  it("groups consecutive content lines without intervening noise into the same turn/speaker", () => {
+    const lines = [
+      "Line one from them",
+      "Line two from them",
+      "Delivered",
+      "My reply",
+    ];
+    const turns = inferSpeakerTurns(lines);
+    expect(turns).toHaveLength(3);
+    expect(turns[0]).toEqual({ speaker: "them", text: "Line one from them" });
+    expect(turns[1]).toEqual({ speaker: "them", text: "Line two from them" });
+    expect(turns[2]).toEqual({ speaker: "you", text: "My reply" });
+  });
+
+  it("returns an empty array for an all-noise input", () => {
+    const lines = ["9:41 AM", "Delivered", "Read", "Monday"];
+    expect(inferSpeakerTurns(lines)).toEqual([]);
+  });
+
+  it("returns a single 'them' turn when there is no noise separator", () => {
+    const lines = ["Just one message"];
+    const turns = inferSpeakerTurns(lines);
+    expect(turns).toEqual([{ speaker: "them", text: "Just one message" }]);
+  });
+
+  it("multiple noise lines in a row count as one boundary (no empty blocks)", () => {
+    const lines = [
+      "From them",
+      "9:41 AM",
+      "Delivered",
+      "Read",
+      "From you",
+      "Seen",
+      "From them again",
+    ];
+    const turns = inferSpeakerTurns(lines);
+    expect(turns[0]).toEqual({ speaker: "them", text: "From them" });
+    expect(turns[1]).toEqual({ speaker: "you", text: "From you" });
+    expect(turns[2]).toEqual({ speaker: "them", text: "From them again" });
+  });
+});
+
+describe("extractChatFromScreenshot — speakerTurns shape", () => {
+  it("returns speakerTurns alongside conversationText", async () => {
+    mockOcrText = [
+      "Hey how was your weekend?",
+      "9:41 AM",
+      "Really good — went hiking.",
+      "Delivered",
+      "Nice! Where?",
+    ].join("\n");
+
+    const out = await extractChatFromScreenshot(toBase64("ignored"));
+    expect(out.speakerTurns).toBeDefined();
+    expect(Array.isArray(out.speakerTurns)).toBe(true);
+    expect(out.speakerTurns.length).toBe(3);
+    expect(out.speakerTurns[0]).toMatchObject({ speaker: "them", text: expect.any(String) });
+    expect(out.speakerTurns[1]).toMatchObject({ speaker: "you", text: expect.any(String) });
+    expect(out.speakerTurns[2]).toMatchObject({ speaker: "them", text: expect.any(String) });
+  });
+
+  it("returns empty speakerTurns when all lines are noise", async () => {
+    mockOcrText = "9:41 AM\nDelivered\nRead\nMonday";
+    const out = await extractChatFromScreenshot(toBase64("ignored"));
+    expect(out.speakerTurns).toEqual([]);
   });
 });

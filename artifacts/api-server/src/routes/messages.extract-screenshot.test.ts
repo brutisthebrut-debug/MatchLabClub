@@ -58,6 +58,22 @@ vi.mock("../lib/ocr", async () => {
     return CHAT_UI_NOISE.some((rx) => rx.test(line));
   }
 
+  function inferSpeakerTurns(lines: string[]): { speaker: "them" | "you"; text: string }[] {
+    const blocks: string[][] = [];
+    let current: string[] = [];
+    for (const line of lines) {
+      if (isChatNoise(line)) {
+        if (current.length > 0) { blocks.push(current); current = []; }
+      } else {
+        current.push(line);
+      }
+    }
+    if (current.length > 0) blocks.push(current);
+    return blocks.flatMap((block, i) =>
+      block.map((text) => ({ speaker: (i % 2 === 0 ? "them" : "you") as "them" | "you", text })),
+    );
+  }
+
   return {
     extractChatFromScreenshot: async (imageBase64: string) => {
       const cleaned = imageBase64.trim();
@@ -69,7 +85,8 @@ vi.mock("../lib/ocr", async () => {
         .filter((l) => l.length > 0);
       const sourceApp = profileParser.detectSourceApp(lines);
       const conversationText = lines.filter((l) => !isChatNoise(l)).join("\n");
-      return { conversationText, sourceApp, rawText };
+      const speakerTurns = inferSpeakerTurns(lines);
+      return { conversationText, sourceApp, rawText, speakerTurns };
     },
   };
 });
@@ -153,6 +170,19 @@ describe("POST /api/messages/extract-screenshot", () => {
     expect(res.body.conversationText).not.toMatch(/^9:41$/m);
     expect(res.body.rawOcrText).toMatch(/Send Like/);
     expect(res.body.rawOcrText).toMatch(/Delivered/);
+    // Speaker turns should be returned and contain valid speaker values.
+    expect(Array.isArray(res.body.speakerTurns)).toBe(true);
+    expect(res.body.speakerTurns.length).toBeGreaterThan(0);
+    for (const turn of res.body.speakerTurns) {
+      expect(["them", "you"]).toContain(turn.speaker);
+      expect(typeof turn.text).toBe("string");
+    }
+    // The Hinge sample has no noise between the two message lines so they both
+    // land in the first block → attributed to "them".
+    const kilimanjaro = res.body.speakerTurns.find((t: { text: string }) =>
+      t.text.includes("Kilimanjaro"),
+    );
+    expect(kilimanjaro?.speaker).toBe("them");
   });
 
   it("happy path: extracts a Bumble chat", async () => {
@@ -165,6 +195,8 @@ describe("POST /api/messages/extract-screenshot", () => {
     expect(res.body.sourceApp).toBe("Bumble");
     expect(res.body.conversationText).toMatch(/breakfast burrito/);
     expect(res.body.conversationText).not.toMatch(/Send a Compliment/);
+    expect(Array.isArray(res.body.speakerTurns)).toBe(true);
+    expect(res.body.speakerTurns.length).toBeGreaterThan(0);
   });
 
   it("happy path: extracts a Tinder chat", async () => {
@@ -178,6 +210,8 @@ describe("POST /api/messages/extract-screenshot", () => {
     expect(res.body.conversationText).toMatch(/Coffee black/);
     expect(res.body.conversationText).not.toMatch(/Type a message/);
     expect(res.body.conversationText).not.toMatch(/It's a Match/i);
+    expect(Array.isArray(res.body.speakerTurns)).toBe(true);
+    expect(res.body.speakerTurns.length).toBeGreaterThan(0);
   });
 
   it("returns null sourceApp when no app-specific cues are present", async () => {

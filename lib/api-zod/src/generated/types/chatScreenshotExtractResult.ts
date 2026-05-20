@@ -5,6 +5,7 @@
  * Next Level Dating Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { ChatSpeakerTurn } from './chatSpeakerTurn';
 
 export interface ChatScreenshotExtractResult {
   /** OCR-extracted conversation text, with obvious UI chrome (timestamps,
@@ -18,4 +19,9 @@ export interface ChatScreenshotExtractResult {
      */
   sourceApp?: string | null;
   rawOcrText: string;
+  /** Ordered list of inferred speaker turns extracted from the screenshot.
+  Speaker attribution is a heuristic (noise-boundary alternation) and may
+  need user correction — the client should offer a way to flip misattributed turns.
+   */
+  speakerTurns: ChatSpeakerTurn[];
 }
