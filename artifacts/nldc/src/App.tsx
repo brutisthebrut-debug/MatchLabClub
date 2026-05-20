@@ -33,6 +33,16 @@ import NextMessage from "@/pages/NextMessage";
 import GlowUp from "@/pages/GlowUp";
 import ConnectionStyle from "@/pages/ConnectionStyle";
 import CompatibilityCompass from "@/pages/CompatibilityCompass";
+import ProgressTimeline from "@/pages/ProgressTimeline";
+import ProgressPatterns from "@/pages/ProgressPatterns";
+import ProgressExperiments from "@/pages/ProgressExperiments";
+import ProgressFollowUp from "@/pages/ProgressFollowUp";
+import ProgressScorecard from "@/pages/ProgressScorecard";
+import ProgressFeed from "@/pages/ProgressFeed";
+import ProgressControl from "@/pages/ProgressControl";
+import ProgressInsightsRoadmap from "@/pages/ProgressInsightsRoadmap";
+import ProgressReadiness from "@/pages/ProgressReadiness";
+import ProgressCompanion from "@/pages/ProgressCompanion";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +82,17 @@ function Router() {
       <Route path="/glow-up" component={GlowUp} />
       <Route path="/connection-style" component={ConnectionStyle} />
       <Route path="/compatibility-compass" component={CompatibilityCompass} />
+      {/* Progress Workspace */}
+      <Route path="/progress/timeline" component={ProgressTimeline} />
+      <Route path="/progress/patterns" component={ProgressPatterns} />
+      <Route path="/progress/experiments" component={ProgressExperiments} />
+      <Route path="/progress/followup" component={ProgressFollowUp} />
+      <Route path="/progress/scorecard" component={ProgressScorecard} />
+      <Route path="/progress/feed" component={ProgressFeed} />
+      <Route path="/progress/control" component={ProgressControl} />
+      <Route path="/progress/insights-roadmap" component={ProgressInsightsRoadmap} />
+      <Route path="/progress/readiness" component={ProgressReadiness} />
+      <Route path="/progress/companion" component={ProgressCompanion} />
       <Route component={NotFound} />
     </Switch>
   );

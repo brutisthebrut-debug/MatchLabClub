@@ -11,7 +11,7 @@ import {
   TrendingUp, AlertTriangle, Clock, Sparkles, Trophy, Eye,
   ChevronRight, FlaskConical, Stethoscope, Zap,
   Wand2, ScanFace, BarChart2, Heart, Compass, BookOpen,
-  MessageCircle, User, Map
+  MessageCircle, User, Map, Brain, Rss, Shield, Users, BarChart
 } from "lucide-react";
 
 function ScoreRing({ score }: { score: number }) {
@@ -91,8 +91,18 @@ const QUICK_ACTIONS = [
   { icon: Heart,         label: "Post-Meeting Reflect",   desc: "Pursue / pause / pass read",    href: "/reflection",           color: "hsl(348 55% 65%)" },
   { icon: Eye,           label: "Connection Style",       desc: "Your attachment pattern",       href: "/connection-style",     color: "hsl(285 45% 65%)" },
   { icon: Compass,       label: "Compat. Compass",        desc: "Dynamics that support you",     href: "/compatibility-compass",color: "hsl(142 55% 60%)" },
-  { icon: Settings,      label: "Integrations",           desc: "Manage connections",            href: "/integrations",         color: "hsl(228 18% 55%)" },
-  { icon: Map,           label: "Platform Vision",        desc: "See what's coming",             href: "/roadmap",              color: "hsl(43 65% 60%)"  },
+  { icon: Settings,      label: "Integrations",           desc: "Manage connections",            href: "/integrations",              color: "hsl(228 18% 55%)" },
+  { icon: Map,           label: "Platform Vision",        desc: "See what's coming",             href: "/roadmap",                   color: "hsl(43 65% 60%)"  },
+  { icon: Clock,         label: "My Timeline",            desc: "Log wins, patterns, questions", href: "/progress/timeline",         color: "hsl(190 55% 60%)" },
+  { icon: Brain,         label: "Pattern Board",          desc: "Recurring themes from entries", href: "/progress/patterns",         color: "hsl(268 52% 68%)" },
+  { icon: FlaskConical,  label: "Experiments",            desc: "Try it, track it, learn",       href: "/progress/experiments",      color: "hsl(43 65% 65%)"  },
+  { icon: MessageSquare, label: "Follow-Up Check",        desc: "Questions tied to your notes",  href: "/progress/followup",         color: "hsl(285 45% 65%)" },
+  { icon: BarChart,      label: "Progress Scorecard",     desc: "7 growth dimension meters",     href: "/progress/scorecard",        color: "hsl(142 55% 60%)" },
+  { icon: Rss,           label: "Learning Feed",          desc: "Observations from your log",    href: "/progress/feed",             color: "hsl(268 52% 68%)" },
+  { icon: Shield,        label: "Control Center",         desc: "Your data, your toggles",       href: "/progress/control",          color: "hsl(228 18% 55%)" },
+  { icon: Map,           label: "Insights Roadmap",       desc: "What's being built + controls", href: "/progress/insights-roadmap", color: "hsl(43 65% 65%)"  },
+  { icon: Heart,         label: "Readiness Guide",        desc: "Goal-based readiness read",     href: "/progress/readiness",        color: "hsl(348 55% 65%)" },
+  { icon: Users,         label: "Companion Workspace",    desc: "Copy-ready situation guidance", href: "/progress/companion",        color: "hsl(190 55% 60%)" },
 ];
 
 const fadeUp = (delay = 0) => ({
