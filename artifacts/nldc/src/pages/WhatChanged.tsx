@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
+import { WelcomePanel } from "@/components/WelcomePanel";
 import { motion } from "framer-motion";
 import { RefreshCw, ArrowRight, Trophy, Zap, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -96,18 +97,13 @@ export default function WhatChanged() {
           </motion.div>
 
           {isBrandNewUser && (
-            <motion.div {...fadeUp(0.03)} className="mb-6" data-testid="whatchanged-empty-state">
-              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
-                  <RefreshCw className="w-6 h-6 text-primary" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to What Changed</p>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Your first check-in</h2>
-                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
-                  Take five minutes to note what's shifted, what you tried, and what you're noticing. Over time these check-ins become the clearest read on your progress.
-                </p>
-              </div>
-            </motion.div>
+            <WelcomePanel
+              icon={<RefreshCw className="w-6 h-6 text-primary" />}
+              eyebrow="Welcome to What Changed"
+              title="Your first check-in"
+              description="Take five minutes to note what's shifted, what you tried, and what you're noticing. Over time these check-ins become the clearest read on your progress."
+              testId="whatchanged-empty-state"
+            />
           )}
 
           {/* Previous reflection */}

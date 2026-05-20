@@ -3,6 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { WelcomePanel } from "@/components/WelcomePanel";
 import { Sparkles, Copy, Check, RefreshCw, Share2 } from "lucide-react";
 import { useAuth } from "@workspace/replit-auth-web";
 
@@ -264,18 +265,13 @@ export default function Archetype() {
           </motion.div>
 
           {isBrandNewUser && (
-            <motion.div {...fadeUp(0.03)} className="mb-6" data-testid="archetype-empty-state">
-              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-primary" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to Dating Archetype</p>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Find out how you actually connect</h2>
-                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
-                  Six quick questions and you'll get a shareable archetype that names your dating style, the risk loop underneath it, and the one experiment that could change your results.
-                </p>
-              </div>
-            </motion.div>
+            <WelcomePanel
+              icon={<Sparkles className="w-6 h-6 text-primary" />}
+              eyebrow="Welcome to Dating Archetype"
+              title="Find out how you actually connect"
+              description="Six quick questions and you'll get a shareable archetype that names your dating style, the risk loop underneath it, and the one experiment that could change your results."
+              testId="archetype-empty-state"
+            />
           )}
 
           <AnimatePresence mode="wait">

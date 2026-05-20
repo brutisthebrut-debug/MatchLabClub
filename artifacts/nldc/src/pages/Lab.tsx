@@ -3,6 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { WelcomePanel } from "@/components/WelcomePanel";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
@@ -127,18 +128,13 @@ export default function Lab() {
           </motion.div>
 
           {isBrandNewUser && (
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="mb-6" data-testid="lab-empty-state">
-              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
-                  <FlaskConical className="w-6 h-6 text-primary" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to the Chemistry Lab</p>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Run your first experiment</h2>
-                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
-                  Drop in a message or short conversation and we'll surface the tone you're sending, your best next move, and five styled reply options to choose from.
-                </p>
-              </div>
-            </motion.div>
+            <WelcomePanel
+              icon={<FlaskConical className="w-6 h-6 text-primary" />}
+              eyebrow="Welcome to the Chemistry Lab"
+              title="Run your first experiment"
+              description="Drop in a message or short conversation and we'll surface the tone you're sending, your best next move, and five styled reply options to choose from."
+              testId="lab-empty-state"
+            />
           )}
 
           {/* Form */}

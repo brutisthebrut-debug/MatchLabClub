@@ -3,6 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { WelcomePanel } from "@/components/WelcomePanel";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCreateAudit, useGenerateAuditReport, getListAuditsQueryKey } from "@workspace/api-client-react";
@@ -206,18 +207,13 @@ export default function SignalCheck() {
           </motion.div>
 
           {isBrandNewUser && (
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="mb-6" data-testid="signalcheck-empty-state">
-              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-primary" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to Signal Check</p>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Get an instant read on your profile</h2>
-                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
-                  Paste your bio for a quick Signal Strength score, your category, your #1 improvement area, and one rewritten line you can use today.
-                </p>
-              </div>
-            </motion.div>
+            <WelcomePanel
+              icon={<Sparkles className="w-6 h-6 text-primary" />}
+              eyebrow="Welcome to Signal Check"
+              title="Get an instant read on your profile"
+              description="Paste your bio for a quick Signal Strength score, your category, your #1 improvement area, and one rewritten line you can use today."
+              testId="signalcheck-empty-state"
+            />
           )}
 
           <AnimatePresence mode="wait">

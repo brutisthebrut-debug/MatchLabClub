@@ -23,6 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { Shield, Loader2, Mail, TrendingUp, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, X, Filter, Trash2 } from "lucide-react";
+import { WelcomePanel } from "@/components/WelcomePanel";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const UNDO_WINDOW_MS = 5000;
@@ -261,22 +262,13 @@ export default function Insights() {
           </motion.div>
 
           {isBrandNewUser && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}
-              className="mb-6"
-              data-testid="insights-empty-state"
-            >
-              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
-                  <Mail className="w-6 h-6 text-primary" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to Email Insights</p>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Analyze your first conversation</h2>
-                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
-                  Paste any message history below and we'll surface your communication patterns, attachment style, and the profile tweaks most likely to lift your results.
-                </p>
-              </div>
-            </motion.div>
+            <WelcomePanel
+              icon={<Mail className="w-6 h-6 text-primary" />}
+              eyebrow="Welcome to Email Insights"
+              title="Analyze your first conversation"
+              description="Paste any message history below and we'll surface your communication patterns, attachment style, and the profile tweaks most likely to lift your results."
+              testId="insights-empty-state"
+            />
           )}
 
           {/* Privacy Notice */}

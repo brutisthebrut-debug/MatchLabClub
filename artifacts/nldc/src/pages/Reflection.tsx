@@ -3,6 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { WelcomePanel } from "@/components/WelcomePanel";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, RefreshCw, Copy, Check, AlertCircle, Heart } from "lucide-react";
@@ -303,18 +304,13 @@ export default function Reflection() {
           </motion.div>
 
           {isBrandNewUser && (
-            <motion.div {...fadeUp(0.03)} className="mb-6" data-testid="reflection-empty-state">
-              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
-                  <Heart className="w-6 h-6 text-primary" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to Post-Meeting Reflection</p>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Process your next connection</h2>
-                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
-                  After a date or call, jot down what happened and how it felt. We'll surface the signals worth paying attention to and a suggested next move.
-                </p>
-              </div>
-            </motion.div>
+            <WelcomePanel
+              icon={<Heart className="w-6 h-6 text-primary" />}
+              eyebrow="Welcome to Post-Meeting Reflection"
+              title="Process your next connection"
+              description="After a date or call, jot down what happened and how it felt. We'll surface the signals worth paying attention to and a suggested next move."
+              testId="reflection-empty-state"
+            />
           )}
 
           <motion.div {...fadeUp(0.05)} className="glass border border-white/8 rounded-3xl p-7 space-y-6 mb-6">

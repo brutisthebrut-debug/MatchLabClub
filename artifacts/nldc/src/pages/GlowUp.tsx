@@ -3,6 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { WelcomePanel } from "@/components/WelcomePanel";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, Wand2, Copy, Check, RefreshCw, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
@@ -287,18 +288,13 @@ export default function GlowUp() {
           </motion.div>
 
           {isBrandNewUser && (
-            <motion.div {...fadeUp(0.03)} className="mb-6" data-testid="glowup-empty-state">
-              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
-                  <Wand2 className="w-6 h-6 text-primary" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to the Glow-Up Studio</p>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Rewrite your first bio</h2>
-                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
-                  Paste a generic bio and we'll give you ten sharper versions — different styles and platforms — that actually sound like you.
-                </p>
-              </div>
-            </motion.div>
+            <WelcomePanel
+              icon={<Wand2 className="w-6 h-6 text-primary" />}
+              eyebrow="Welcome to the Glow-Up Studio"
+              title="Rewrite your first bio"
+              description="Paste a generic bio and we'll give you ten sharper versions — different styles and platforms — that actually sound like you."
+              testId="glowup-empty-state"
+            />
           )}
 
           <motion.div {...fadeUp(0.05)} className="glass border border-white/8 rounded-3xl p-7 space-y-5 mb-6">

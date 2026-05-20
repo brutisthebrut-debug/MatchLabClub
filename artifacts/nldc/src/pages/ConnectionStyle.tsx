@@ -3,6 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { WelcomePanel } from "@/components/WelcomePanel";
 import { Loader2, Sparkles, RefreshCw, Info } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -402,18 +403,13 @@ export default function ConnectionStyle() {
           </motion.div>
 
           {isBrandNewUser && (
-            <motion.div {...fadeUp(0.03)} className="mb-6" data-testid="connection-style-empty-state">
-              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-primary" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to Connection Style Lens</p>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">See the pattern beneath your dating</h2>
-                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
-                  Answer six quick questions and we'll name the connection style you're moving from, the risk loop that keeps showing up, and one experiment that could shift it.
-                </p>
-              </div>
-            </motion.div>
+            <WelcomePanel
+              icon={<Sparkles className="w-6 h-6 text-primary" />}
+              eyebrow="Welcome to Connection Style Lens"
+              title="See the pattern beneath your dating"
+              description="Answer six quick questions and we'll name the connection style you're moving from, the risk loop that keeps showing up, and one experiment that could shift it."
+              testId="connection-style-empty-state"
+            />
           )}
 
           {/* Disclaimer */}

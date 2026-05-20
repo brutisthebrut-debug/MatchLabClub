@@ -3,6 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { WelcomePanel } from "@/components/WelcomePanel";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
@@ -228,18 +229,13 @@ export default function Blueprint() {
           </motion.div>
 
           {isBrandNewUser && (
-            <motion.div {...fadeUp(0.03)} className="mb-6" data-testid="blueprint-empty-state">
-              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-primary" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to Personal Blueprint</p>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Map your patterns and growth edges</h2>
-                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
-                  Share a little about how you show up and what keeps repeating — we'll surface the recurring threads and one concrete shift that could change your results.
-                </p>
-              </div>
-            </motion.div>
+            <WelcomePanel
+              icon={<Sparkles className="w-6 h-6 text-primary" />}
+              eyebrow="Welcome to Personal Blueprint"
+              title="Map your patterns and growth edges"
+              description="Share a little about how you show up and what keeps repeating — we'll surface the recurring threads and one concrete shift that could change your results."
+              testId="blueprint-empty-state"
+            />
           )}
 
           {/* Form */}
