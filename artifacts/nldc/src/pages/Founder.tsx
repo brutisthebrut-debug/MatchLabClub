@@ -1216,7 +1216,7 @@ function AiMetricsPanel({ refreshKey, founderKey }: { refreshKey: number; founde
                 {data!.perTool.map((row) => (
                   <tr key={row.toolName} className="border-b border-white/5 hover:bg-white/3 transition-colors">
                     <td className="px-4 py-3 text-foreground/90 max-w-[260px]">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="truncate">{row.toolName}</span>
                         {row.alert && (
                           <span
@@ -1230,6 +1230,20 @@ function AiMetricsPanel({ refreshKey, founderKey }: { refreshKey: number; founde
                           >
                             <AlertTriangle className="w-3 h-3" />
                             Low
+                          </span>
+                        )}
+                        {row.inCooldown && row.cooldownRemainingMs != null && (
+                          <span
+                            title={`Re-alert cooldown active — next breach email allowed after ${row.cooldownEndsAt ? new Date(row.cooldownEndsAt).toLocaleTimeString() : "cooldown expires"}`}
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold shrink-0"
+                            style={{
+                              background: "hsl(43 65% 65% / 0.15)",
+                              color: "hsl(43 65% 78%)",
+                              border: "1px solid hsl(43 65% 65% / 0.40)",
+                            }}
+                          >
+                            <Clock className="w-3 h-3" />
+                            Cooldown · {formatCooldownRemaining(row.cooldownRemainingMs)} left
                           </span>
                         )}
                       </div>

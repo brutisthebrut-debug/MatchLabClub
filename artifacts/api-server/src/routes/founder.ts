@@ -333,6 +333,17 @@ router.get("/founder/ai-metrics", requireFounder, async (_req, res): Promise<voi
     .filter((s) => s.inCooldown);
 
   const cooldownToolNames = new Set(cooldownStates.map((s) => s.toolName));
+  const cooldownByTool = new Map(cooldownStates.map((s) => [s.toolName, s]));
+
+  const perToolWithCooldown = perToolNorm.map((t) => {
+    const cd = cooldownByTool.get(t.toolName);
+    return {
+      ...t,
+      inCooldown: cd != null,
+      cooldownEndsAt: cd?.cooldownEndsAt ?? null,
+      cooldownRemainingMs: cd?.cooldownRemainingMs ?? null,
+    };
+  });
 
   res.json({
     overall: {
@@ -345,7 +356,7 @@ router.get("/founder/ai-metrics", requireFounder, async (_req, res): Promise<voi
       avgAttempts: Number(totals?.avgAttempts ?? 0),
       avgDurationMs: Number(totals?.avgDurationMs ?? 0),
     },
-    perTool: perToolNorm,
+    perTool: perToolWithCooldown,
     alertThreshold: {
       windowSize: globalCfg.windowSize,
       minSample: globalCfg.minSample,

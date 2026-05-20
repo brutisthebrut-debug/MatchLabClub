@@ -110,6 +110,9 @@ export interface AiToolMetric {
     isOverride: boolean;
   };
   alert: boolean;
+  inCooldown: boolean;
+  cooldownEndsAt: string | null;
+  cooldownRemainingMs: number | null;
 }
 export interface AiThresholdConfig {
   windowSize: number;
