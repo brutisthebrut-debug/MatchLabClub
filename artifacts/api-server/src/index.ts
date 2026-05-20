@@ -6,6 +6,7 @@ import { startHandoffRedemptionCleanupJob } from "./lib/handoffRedemptionCleanup
 import { startAiReliabilityAlertsJob } from "./lib/aiReliabilityAlerts";
 import { startAuditTrashPurgeJob } from "./lib/auditTrashPurge";
 import { refreshLearnedRulesCache } from "./lib/ocrLearning";
+import { startOcrLearningJob } from "./lib/ocrLearningJob";
 
 const rawPort = process.env["PORT"];
 
@@ -36,4 +37,5 @@ app.listen(port, (err) => {
   refreshLearnedRulesCache().catch((err) =>
     logger.warn({ err }, "Initial OCR learned-rules load failed"),
   );
+  startOcrLearningJob();
 });
