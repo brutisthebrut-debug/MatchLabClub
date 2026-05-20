@@ -21,10 +21,9 @@ import {
   COACH_ACTION_SNOOZE_1H,
   COACH_ACTION_SNOOZE_3H,
   COACH_NOTIFICATION_TYPE,
-  COACH_SNOOZE_1H_SECONDS,
-  COACH_SNOOZE_3H_SECONDS,
   cancelCoachReminder,
   configureNotificationHandler,
+  loadCoachReminderPrefs,
   recordCoachDismissed,
   recordCoachFollowUp,
   recordCoachSnoozed,
@@ -85,17 +84,19 @@ function RootLayoutNav() {
         return;
       }
       if (action === COACH_ACTION_SNOOZE_1H) {
+        const prefs = await loadCoachReminderPrefs();
         await snoozeCoachReminder({
           matchName,
-          delaySeconds: COACH_SNOOZE_1H_SECONDS,
+          delaySeconds: prefs.snoozeShortSeconds,
         });
         await recordCoachSnoozed();
         return;
       }
       if (action === COACH_ACTION_SNOOZE_3H) {
+        const prefs = await loadCoachReminderPrefs();
         await snoozeCoachReminder({
           matchName,
-          delaySeconds: COACH_SNOOZE_3H_SECONDS,
+          delaySeconds: prefs.snoozeLongSeconds,
         });
         await recordCoachSnoozed();
         return;

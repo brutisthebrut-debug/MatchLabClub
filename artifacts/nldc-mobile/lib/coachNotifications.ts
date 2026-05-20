@@ -31,15 +31,60 @@ export const COACH_REMINDER_DELAY_OPTIONS: Array<{
   { label: "6 hr", seconds: 6 * 60 * 60 },
 ];
 
+export const COACH_SNOOZE_SHORT_OPTIONS: Array<{
+  label: string;
+  seconds: number;
+}> = [
+  { label: "30 min", seconds: 30 * 60 },
+  { label: "1 hr", seconds: 60 * 60 },
+  { label: "2 hr", seconds: 2 * 60 * 60 },
+];
+
+export const COACH_SNOOZE_LONG_OPTIONS: Array<{
+  label: string;
+  seconds: number;
+}> = [
+  { label: "3 hr", seconds: 3 * 60 * 60 },
+  { label: "6 hr", seconds: 6 * 60 * 60 },
+  { label: "12 hr", seconds: 12 * 60 * 60 },
+];
+
+export const COACH_SNOOZE_CUSTOM_MIN_SECONDS = 5 * 60;
+export const COACH_SNOOZE_CUSTOM_MAX_SECONDS = 24 * 60 * 60;
+
 export interface CoachReminderPrefs {
   enabled: boolean;
   delaySeconds: number;
+  snoozeShortSeconds: number;
+  snoozeLongSeconds: number;
 }
 
 export const DEFAULT_COACH_REMINDER_PREFS: CoachReminderPrefs = {
   enabled: true,
   delaySeconds: COACH_REMINDER_DELAY_SECONDS,
+  snoozeShortSeconds: COACH_SNOOZE_1H_SECONDS,
+  snoozeLongSeconds: COACH_SNOOZE_3H_SECONDS,
 };
+
+function clampSnoozeSeconds(seconds: number, fallback: number): number {
+  if (typeof seconds !== "number" || !Number.isFinite(seconds) || seconds <= 0) {
+    return fallback;
+  }
+  const rounded = Math.round(seconds);
+  if (rounded < COACH_SNOOZE_CUSTOM_MIN_SECONDS)
+    return COACH_SNOOZE_CUSTOM_MIN_SECONDS;
+  if (rounded > COACH_SNOOZE_CUSTOM_MAX_SECONDS)
+    return COACH_SNOOZE_CUSTOM_MAX_SECONDS;
+  return rounded;
+}
+
+export function formatSnoozeDuration(seconds: number): string {
+  const mins = Math.max(1, Math.round(seconds / 60));
+  if (mins < 60) return `${mins} min`;
+  const hours = mins / 60;
+  if (Number.isInteger(hours)) return `${hours} hr`;
+  return `${hours.toFixed(1)} hr`;
+}
 
 export async function loadCoachReminderPrefs(): Promise<CoachReminderPrefs> {
   try {
@@ -54,7 +99,15 @@ export async function loadCoachReminderPrefs(): Promise<CoachReminderPrefs> {
       typeof parsed.enabled === "boolean"
         ? parsed.enabled
         : DEFAULT_COACH_REMINDER_PREFS.enabled;
-    return { enabled, delaySeconds };
+    const snoozeShortSeconds = clampSnoozeSeconds(
+      parsed.snoozeShortSeconds as number,
+      DEFAULT_COACH_REMINDER_PREFS.snoozeShortSeconds,
+    );
+    const snoozeLongSeconds = clampSnoozeSeconds(
+      parsed.snoozeLongSeconds as number,
+      DEFAULT_COACH_REMINDER_PREFS.snoozeLongSeconds,
+    );
+    return { enabled, delaySeconds, snoozeShortSeconds, snoozeLongSeconds };
   } catch {
     return { ...DEFAULT_COACH_REMINDER_PREFS };
   }
@@ -66,6 +119,7 @@ export async function saveCoachReminderPrefs(prefs: CoachReminderPrefs) {
   } catch {
     // ignore
   }
+  await applyCoachNotificationCategory(prefs).catch(() => {});
 }
 
 export interface SavedCoachDraft {
@@ -99,7 +153,6 @@ const EMPTY_STATS: CoachSendStats = {
 };
 
 let handlerConfigured = false;
-let categoryConfigured = false;
 
 export function configureNotificationHandler() {
   if (handlerConfigured) return;
@@ -112,13 +165,14 @@ export function configureNotificationHandler() {
       shouldSetBadge: false,
     }),
   });
-  void configureCoachNotificationCategory();
+  void applyCoachNotificationCategory();
 }
 
-async function configureCoachNotificationCategory() {
-  if (categoryConfigured) return;
+export async function applyCoachNotificationCategory(
+  prefs?: CoachReminderPrefs,
+) {
   if (Platform.OS === "web") return;
-  categoryConfigured = true;
+  const current = prefs ?? (await loadCoachReminderPrefs());
   try {
     await Notifications.setNotificationCategoryAsync(
       COACH_NOTIFICATION_CATEGORY,
@@ -135,12 +189,12 @@ async function configureCoachNotificationCategory() {
         },
         {
           identifier: COACH_ACTION_SNOOZE_1H,
-          buttonTitle: "Remind me in 1 hr",
+          buttonTitle: `Remind me in ${formatSnoozeDuration(current.snoozeShortSeconds)}`,
           options: { opensAppToForeground: false },
         },
         {
           identifier: COACH_ACTION_SNOOZE_3H,
-          buttonTitle: "Remind me in 3 hr",
+          buttonTitle: `Remind me in ${formatSnoozeDuration(current.snoozeLongSeconds)}`,
           options: { opensAppToForeground: false },
         },
         {

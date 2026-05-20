@@ -24,6 +24,10 @@ import {
   cancelCoachReminder,
   clearCoachDraft,
   COACH_REMINDER_DELAY_OPTIONS,
+  COACH_SNOOZE_CUSTOM_MAX_SECONDS,
+  COACH_SNOOZE_CUSTOM_MIN_SECONDS,
+  COACH_SNOOZE_LONG_OPTIONS,
+  COACH_SNOOZE_SHORT_OPTIONS,
   type CoachReminderPrefs,
   consumePendingCoachFollowUpPrompt,
   DEFAULT_COACH_REMINDER_PREFS,
@@ -154,6 +158,20 @@ export default function CoachScreen() {
 
   async function onPickDelay(seconds: number) {
     await updateReminderPrefs({ ...reminderPrefs, delaySeconds: seconds });
+  }
+
+  async function onPickSnoozeShort(seconds: number) {
+    await updateReminderPrefs({
+      ...reminderPrefs,
+      snoozeShortSeconds: seconds,
+    });
+  }
+
+  async function onPickSnoozeLong(seconds: number) {
+    await updateReminderPrefs({
+      ...reminderPrefs,
+      snoozeLongSeconds: seconds,
+    });
   }
 
   async function handleReplyCopied() {
@@ -415,40 +433,65 @@ export default function CoachScreen() {
             />
           </View>
 
-          <View style={styles.delayRow}>
-            {COACH_REMINDER_DELAY_OPTIONS.map((opt) => {
-              const selected = reminderPrefs.delaySeconds === opt.seconds;
-              const disabled = !reminderPrefs.enabled;
-              return (
-                <Pressable
-                  key={opt.seconds}
-                  onPress={() => onPickDelay(opt.seconds)}
-                  disabled={disabled}
-                  style={[
-                    styles.delayChip,
-                    {
-                      borderColor: selected ? colors.primary : colors.border,
-                      backgroundColor: selected
-                        ? `${colors.primary}22`
-                        : colors.input,
-                      opacity: disabled ? 0.45 : 1,
-                    },
-                  ]}
-                >
-                  <Text
+          <View style={styles.pickerBlock}>
+            <Text
+              style={[
+                styles.pickerLabel,
+                { color: colors.mutedForeground },
+              ]}
+            >
+              First nudge after
+            </Text>
+            <View style={styles.delayRow}>
+              {COACH_REMINDER_DELAY_OPTIONS.map((opt) => {
+                const selected = reminderPrefs.delaySeconds === opt.seconds;
+                const disabled = !reminderPrefs.enabled;
+                return (
+                  <Pressable
+                    key={opt.seconds}
+                    onPress={() => onPickDelay(opt.seconds)}
+                    disabled={disabled}
                     style={[
-                      styles.delayChipText,
+                      styles.delayChip,
                       {
-                        color: selected ? colors.primary : colors.foreground,
+                        borderColor: selected ? colors.primary : colors.border,
+                        backgroundColor: selected
+                          ? `${colors.primary}22`
+                          : colors.input,
+                        opacity: disabled ? 0.45 : 1,
                       },
                     ]}
                   >
-                    {opt.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
+                    <Text
+                      style={[
+                        styles.delayChipText,
+                        {
+                          color: selected ? colors.primary : colors.foreground,
+                        },
+                      ]}
+                    >
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
+
+          <SnoozeDurationPicker
+            label="Short snooze"
+            options={COACH_SNOOZE_SHORT_OPTIONS}
+            value={reminderPrefs.snoozeShortSeconds}
+            onChange={onPickSnoozeShort}
+            disabled={!reminderPrefs.enabled}
+          />
+          <SnoozeDurationPicker
+            label="Long snooze"
+            options={COACH_SNOOZE_LONG_OPTIONS}
+            value={reminderPrefs.snoozeLongSeconds}
+            onChange={onPickSnoozeLong}
+            disabled={!reminderPrefs.enabled}
+          />
         </View>
 
         <View style={styles.resultsHeader}>
@@ -496,6 +539,154 @@ function Field({
     <View style={styles.field}>
       <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>{label}</Text>
       {children}
+    </View>
+  );
+}
+
+function SnoozeDurationPicker({
+  label,
+  options,
+  value,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  options: Array<{ label: string; seconds: number }>;
+  value: number;
+  onChange: (seconds: number) => void;
+  disabled: boolean;
+}) {
+  const colors = useColors();
+  const isPreset = options.some((o) => o.seconds === value);
+  const [customOpen, setCustomOpen] = useState(!isPreset);
+  const [customText, setCustomText] = useState(
+    !isPreset ? String(Math.max(1, Math.round(value / 60))) : "",
+  );
+
+  useEffect(() => {
+    if (isPreset) {
+      setCustomOpen(false);
+      setCustomText("");
+    } else {
+      setCustomOpen(true);
+      setCustomText((prev) =>
+        prev ? prev : String(Math.max(1, Math.round(value / 60))),
+      );
+    }
+  }, [value, isPreset]);
+
+  function commitCustom(text: string) {
+    const minutes = parseInt(text, 10);
+    if (!Number.isFinite(minutes) || minutes <= 0) return;
+    let seconds = minutes * 60;
+    if (seconds < COACH_SNOOZE_CUSTOM_MIN_SECONDS)
+      seconds = COACH_SNOOZE_CUSTOM_MIN_SECONDS;
+    if (seconds > COACH_SNOOZE_CUSTOM_MAX_SECONDS)
+      seconds = COACH_SNOOZE_CUSTOM_MAX_SECONDS;
+    if (seconds === value) return;
+    onChange(seconds);
+  }
+
+  const customSelected = customOpen && !isPreset;
+
+  return (
+    <View style={styles.pickerBlock}>
+      <Text style={[styles.pickerLabel, { color: colors.mutedForeground }]}>
+        {label}
+      </Text>
+      <View style={styles.delayRow}>
+        {options.map((opt) => {
+          const selected = !customOpen && value === opt.seconds;
+          return (
+            <Pressable
+              key={opt.seconds}
+              onPress={() => {
+                setCustomOpen(false);
+                setCustomText("");
+                onChange(opt.seconds);
+              }}
+              disabled={disabled}
+              style={[
+                styles.delayChip,
+                {
+                  borderColor: selected ? colors.primary : colors.border,
+                  backgroundColor: selected
+                    ? `${colors.primary}22`
+                    : colors.input,
+                  opacity: disabled ? 0.45 : 1,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.delayChipText,
+                  { color: selected ? colors.primary : colors.foreground },
+                ]}
+              >
+                {opt.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+        <Pressable
+          onPress={() => {
+            if (!customOpen) {
+              setCustomOpen(true);
+              if (!customText) {
+                setCustomText(String(Math.max(1, Math.round(value / 60))));
+              }
+            }
+          }}
+          disabled={disabled}
+          style={[
+            styles.delayChip,
+            {
+              borderColor: customSelected ? colors.primary : colors.border,
+              backgroundColor: customSelected
+                ? `${colors.primary}22`
+                : colors.input,
+              opacity: disabled ? 0.45 : 1,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.delayChipText,
+              { color: customSelected ? colors.primary : colors.foreground },
+            ]}
+          >
+            Custom
+          </Text>
+        </Pressable>
+      </View>
+      {customOpen ? (
+        <View style={styles.customRow}>
+          <TextInput
+            value={customText}
+            onChangeText={setCustomText}
+            onEndEditing={(e) => commitCustom(e.nativeEvent.text)}
+            onBlur={() => commitCustom(customText)}
+            keyboardType="number-pad"
+            editable={!disabled}
+            placeholder="e.g. 45"
+            placeholderTextColor={colors.mutedForeground}
+            style={[
+              styles.customInput,
+              {
+                borderColor: colors.border,
+                backgroundColor: colors.input,
+                color: colors.foreground,
+                opacity: disabled ? 0.45 : 1,
+              },
+            ]}
+          />
+          <Text
+            style={[styles.customSuffix, { color: colors.mutedForeground }]}
+          >
+            minutes (5–1440)
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -640,5 +831,30 @@ const styles = StyleSheet.create({
   delayChipText: {
     fontSize: 13,
     fontFamily: "PlusJakartaSans_600SemiBold",
+  },
+  pickerBlock: { gap: 8 },
+  pickerLabel: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+  },
+  customRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  customInput: {
+    width: 90,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  customSuffix: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
   },
 });
