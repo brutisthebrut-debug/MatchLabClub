@@ -97,7 +97,7 @@ export function Navbar() {
     <header
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         scrolled
-          ? "border-b border-white/5 bg-[hsl(232_38%_7%/0.92)] backdrop-blur-xl shadow-[0_8px_40px_rgb(0_0_0/0.4)]"
+          ? "border-b border-foreground/8 bg-background/95 backdrop-blur-xl shadow-[0_2px_16px_rgb(0_0_0/0.07)]"
           : "border-b border-transparent bg-transparent"
       }`}
       ref={navRef}
@@ -279,7 +279,7 @@ export function Navbar() {
 
       {/* Mobile Nav */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-white/5 bg-[hsl(232_38%_7%/0.98)] backdrop-blur-xl animate-in slide-in-from-top-2 max-h-[85vh] overflow-y-auto">
+        <div className="md:hidden border-t border-foreground/8 bg-background/98 backdrop-blur-xl animate-in slide-in-from-top-2 max-h-[85vh] overflow-y-auto">
           {/* Accordion sections */}
           {(
             [
@@ -351,10 +351,10 @@ export function Navbar() {
               subsections: Array<{ heading: string | null; links: Array<{ name: string; href: string; desc: string }> }>;
             }>
           ).map(section => (
-            <div key={section.id} className="border-b border-white/5 last:border-0">
+            <div key={section.id} className="border-b border-foreground/8 last:border-0">
               <button
                 onClick={() => setMobileSection(prev => prev === section.id ? null : section.id)}
-                className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-white/3 transition-colors"
+                className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-foreground/5 transition-colors"
               >
                 <span className="flex items-center gap-2.5 text-sm font-medium" style={{ color: mobileSection === section.id ? section.color : undefined }}>
                   {section.icon && <span style={{ color: section.color }}>{section.icon}</span>}

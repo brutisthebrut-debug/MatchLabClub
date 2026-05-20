@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { ArrowRight, CheckCircle, Shield, Sparkles, Headphones, Star, TrendingUp, Play, Quote, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMeta } from "@/hooks/useMeta";
+import { TrustBadge } from "@/components/TrustBadge";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 28 },
@@ -19,9 +20,9 @@ export default function Landing() {
   return (
     <AppLayout>
       {/* ── Podcast Banner ── */}
-      <div className="bg-gradient-to-r from-[hsl(268_52%_68%/0.15)] via-[hsl(285_45%_60%/0.1)] to-[hsl(43_65%_62%/0.12)] border-b border-white/5 py-2.5">
+      <div className="bg-gradient-to-r from-[hsl(268_52%_55%/0.08)] via-[hsl(285_45%_55%/0.05)] to-[hsl(43_65%_55%/0.07)] border-b border-foreground/8 py-2.5">
         <div className="container mx-auto px-4 flex items-center justify-center gap-2.5 text-sm font-medium">
-          <Headphones className="w-4 h-4 text-[hsl(43_65%_68%)]" />
+          <Headphones className="w-4 h-4 text-[hsl(43_65%_42%)]" />
           <span className="text-foreground/80">As heard on <strong className="text-foreground">The Love Reset Podcast</strong></span>
           <span className="hidden md:inline text-muted-foreground">—</span>
           <Link href="/waitlist" className="hidden md:inline gradient-text-gold font-semibold hover:opacity-80 transition-opacity">
@@ -41,7 +42,7 @@ export default function Landing() {
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
             <motion.div {...fadeUp(0)}>
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border border-[hsl(268_52%_68%/0.2)] text-xs font-semibold uppercase tracking-widest text-[hsl(268_60%_82%)] mb-8">
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border border-[hsl(268_52%_55%/0.3)] text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_48%)] mb-8">
                 <span className="w-1.5 h-1.5 rounded-full bg-[hsl(268_52%_68%)] animate-pulse" />
                 Podcast Launch — Limited Early Access
               </span>
@@ -85,7 +86,7 @@ export default function Landing() {
                 asChild
                 size="lg"
                 variant="ghost"
-                className="h-14 px-8 text-base font-medium rounded-full border border-white/10 hover:bg-white/5 text-muted-foreground hover:text-foreground transition-all"
+                className="h-14 px-8 text-base font-medium rounded-full border border-foreground/12 hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all"
               >
                 <Link href="#how-it-works">
                   <Play className="mr-2 h-4 w-4" /> See How It Works
@@ -107,7 +108,7 @@ export default function Landing() {
                 {["A", "M", "J", "S", "R"].map((l, i) => (
                   <div
                     key={i}
-                    className="w-9 h-9 rounded-full border-2 border-[hsl(232_38%_7%)] flex items-center justify-center text-[11px] font-bold text-white"
+                    className="w-9 h-9 rounded-full border-2 border-background flex items-center justify-center text-[11px] font-bold text-white"
                     style={{ background: `hsl(${268 - i * 18} 52% ${58 + i * 3}%)` }}
                   >
                     {l}
@@ -117,7 +118,7 @@ export default function Landing() {
               <div className="text-sm">
                 <span className="text-foreground font-semibold">2,847 audits</span>
                 <span className="text-muted-foreground"> completed. Avg score gain: </span>
-                <span className="text-[hsl(43_65%_68%)] font-semibold">+23 pts.</span>
+                <span className="text-[hsl(43_65%_42%)] font-semibold">+23 pts.</span>
               </div>
             </motion.div>
           </div>
@@ -258,7 +259,7 @@ export default function Landing() {
                   <Button asChild size="lg" className="rounded-full font-semibold" style={{ background: "linear-gradient(135deg, hsl(43 65% 55%), hsl(43 65% 42%))", boxShadow: "0 4px 20px hsl(43 65% 55% / 0.35)" }} data-testid="button-landing-signal-check">
                     <Link href="/signal-check"><Headphones className="mr-2 h-4 w-4" /> Check My Signal — Free</Link>
                   </Button>
-                  <Button asChild variant="ghost" size="lg" className="rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5">
+                  <Button asChild variant="ghost" size="lg" className="rounded-full border border-foreground/12 text-muted-foreground hover:text-foreground hover:bg-foreground/5">
                     <Link href="/start">Full Audit Instead <ArrowRight className="ml-2 h-4 w-4" /></Link>
                   </Button>
                 </div>
@@ -476,7 +477,7 @@ export default function Landing() {
                 <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold glow-pulse">
                   <Link href="/start">Get My Free Signal Audit <ArrowRight className="ml-2 h-4 w-4" /></Link>
                 </Button>
-                <Button asChild variant="ghost" className="rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5">
+                <Button asChild variant="ghost" className="rounded-full border border-foreground/12 text-muted-foreground hover:text-foreground hover:bg-foreground/5">
                   <Link href="/roadmap">Our Vision <ArrowRight className="ml-2 h-4 w-4" /></Link>
                 </Button>
               </div>
@@ -678,6 +679,7 @@ export default function Landing() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-6">Free audit · No credit card · Instant results</p>
+            <TrustBadge className="mt-3 justify-center" />
           </motion.div>
         </div>
       </section>

@@ -3,7 +3,7 @@ import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { CheckCircle, ArrowRight, Headphones, Sparkles, Zap, Heart } from "lucide-react";
+import { CheckCircle, ArrowRight, Headphones, Sparkles, Zap, Heart, Star } from "lucide-react";
 import { useState } from "react";
 import { TrustBadge } from "@/components/TrustBadge";
 
@@ -37,6 +37,40 @@ const TIERS = [
       "Score history tracking",
     ],
     walkaway: ["Your Signal Score", "Your top 3 action items", "What you're actually projecting"],
+  },
+  {
+    name: "Profile Signal Audit",
+    price: "$29",
+    promoPrice: null,
+    period: "one-time",
+    popular: false,
+    badge: null,
+    desc: "Complete audit with full bio rewrite, all prompt rewrites, photo checklist, and your 7-day action plan. One payment, done.",
+    cta: "Get My Audit — $29",
+    href: "/start",
+    accentColor: "hsl(190 75% 40%)",
+    icon: Star,
+    features: [
+      "1 complete Profile Signal Audit",
+      "Your Signal Score (0–100)",
+      "Signal Spectrum — 8 dimensions",
+      "Full bio rewrite — sounds like you",
+      "All prompts rewritten with coach notes",
+      "Photo checklist (5 categories)",
+      "7-day personalised action plan",
+      "Dating Diagnosis summary",
+    ],
+    excluded: [
+      "Unlimited future audits",
+      "Score history tracking",
+      "Message coaching sessions",
+      "Direct coach access",
+    ],
+    walkaway: [
+      "A bio rewritten to sound like you",
+      "Your 7-day action plan",
+      "Honest, specific photo guidance",
+    ],
   },
   {
     name: "The Dating Reset",
@@ -115,7 +149,7 @@ const fadeUp = (delay = 0) => ({
 });
 
 export default function Pricing() {
-  useMeta("Pricing — Free Audit, Dating Reset & Monthly Wingman", "Three ways to get your dating profile working. Free Signal Audit, The Dating Reset ($97 one-time), or Monthly Wingman coaching ($197/mo).");
+  useMeta("Pricing — Free, $29, $97 & $197 Coaching", "Four ways to get your dating profile working. Free Signal Check, $29 one-time audit, The Dating Reset ($97), or Monthly Wingman coaching ($197/mo).");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
@@ -143,12 +177,12 @@ export default function Pricing() {
 
           {/* Shebangs Partner */}
           <motion.div {...fadeUp(0.04)}
-            className="relative rounded-2xl p-4 mb-10 overflow-hidden"
-            style={{ background: "hsl(232 34% 13% / 0.6)", border: "1px solid hsl(232 28% 22%)" }}
+            className="relative rounded-2xl p-4 mb-10 overflow-hidden glass"
+            style={{ border: "1px solid hsl(268 52% 55% / 0.12)" }}
           >
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Launch partner</span>
-              <div className="h-4 w-px bg-white/10" />
+              <div className="h-4 w-px bg-foreground/10" />
               <a href="https://shebangs.club" target="_blank" rel="noopener noreferrer"
                 className="font-semibold text-foreground text-sm hover:text-[hsl(43_65%_68%)] transition-colors">
                 Shebangs.club
@@ -171,7 +205,7 @@ export default function Pricing() {
           </motion.div>
 
           {/* Pricing Cards */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-14">
+          <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-14">
             {TIERS.map((tier, i) => (
               <motion.div key={tier.name} {...fadeUp(0.12 + i * 0.07)}
                 className="relative flex flex-col"

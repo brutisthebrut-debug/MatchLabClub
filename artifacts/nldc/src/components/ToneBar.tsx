@@ -39,8 +39,8 @@ const TONES = [
 
 export function ToneBar({ onApply, loading }: { onApply: (hint: string) => void; loading?: boolean }) {
   return (
-    <div className="flex items-center gap-2 flex-wrap mt-4 pt-4 border-t border-white/5">
-      <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/35 mr-1">
+    <div className="flex items-center gap-2 flex-wrap mt-4 pt-4 border-t border-foreground/8">
+      <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 mr-1">
         Adjust tone:
       </span>
       {TONES.map(t => (
@@ -48,7 +48,7 @@ export function ToneBar({ onApply, loading }: { onApply: (hint: string) => void;
           key={t.label}
           onClick={() => onApply(t.hint)}
           disabled={loading}
-          className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:border-[hsl(268_52%_68%/0.35)] hover:bg-[hsl(268_52%_68%/0.07)] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border border-foreground/12 text-muted-foreground hover:text-foreground hover:border-[hsl(268_52%_55%/0.45)] hover:bg-[hsl(268_52%_55%/0.07)] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {loading && <RefreshCw className="w-2.5 h-2.5 animate-spin" />}
           {t.label}
