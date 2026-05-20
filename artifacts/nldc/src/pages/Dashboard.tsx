@@ -18,9 +18,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { motion } from "framer-motion";
-import { useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  useListAudits,
+  listAudits,
   useGetAuditSummary,
   useBulkDeleteAudits,
   getGetAuditSummaryQueryKey,
@@ -263,8 +263,35 @@ export default function Dashboard() {
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const listAuditsKey = getListAuditsQueryKey();
-  const { data: audits, isLoading: auditsLoading } = useListAudits();
+  const PAGE_SIZE = 50;
+  const listAuditsKey = useMemo(
+    () => [...getListAuditsQueryKey(), "infinite", PAGE_SIZE] as const,
+    [],
+  );
+  const {
+    data: auditsData,
+    isLoading: auditsLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: listAuditsKey,
+    queryFn: ({ pageParam = 0, signal }) =>
+      listAudits(
+        { limit: PAGE_SIZE, offset: pageParam as number },
+        { signal },
+      ),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length < PAGE_SIZE
+        ? undefined
+        : allPages.reduce((sum, p) => sum + p.length, 0),
+  });
+  type InfiniteAuditData = { pages: Audit[][]; pageParams: unknown[] };
+  const audits = useMemo<Audit[] | undefined>(
+    () => (auditsData ? auditsData.pages.flat() : undefined),
+    [auditsData],
+  );
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set());
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -354,13 +381,13 @@ export default function Dashboard() {
     mutation: {
       onMutate: async ({ data }) => {
         await queryClient.cancelQueries({ queryKey: listAuditsKey });
-        const previous = queryClient.getQueryData<Audit[]>(listAuditsKey);
+        const previous = queryClient.getQueryData<InfiniteAuditData>(listAuditsKey);
         const ids = new Set(data.ids);
         if (previous) {
-          queryClient.setQueryData<Audit[]>(
-            listAuditsKey,
-            previous.filter((a) => !ids.has(a.id)),
-          );
+          queryClient.setQueryData<InfiniteAuditData>(listAuditsKey, {
+            ...previous,
+            pages: previous.pages.map((p) => p.filter((a) => !ids.has(a.id))),
+          });
         }
         return { previous };
       },
@@ -397,25 +424,29 @@ export default function Dashboard() {
     if (!pending) return;
     clearTimeout(pending.timer);
     pendingRef.current = null;
-    const current = queryClient.getQueryData<Audit[]>(listAuditsKey) ?? [];
-    if (!current.some((a) => a.id === pending.audit.id)) {
-      const restored = [...current, pending.audit].sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
-      queryClient.setQueryData<Audit[]>(listAuditsKey, restored);
-    }
+    const current = queryClient.getQueryData<InfiniteAuditData>(listAuditsKey);
+    if (!current) return;
+    if (current.pages.some((p) => p.some((a) => a.id === pending.audit.id))) return;
+    const pages = current.pages.length > 0 ? [...current.pages] : [[]];
+    pages[0] = [pending.audit, ...pages[0]].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+    queryClient.setQueryData<InfiniteAuditData>(listAuditsKey, {
+      ...current,
+      pages,
+    });
   }, [queryClient, listAuditsKey]);
 
   const handleDeleteAudit = useCallback(
     (audit: Audit) => {
       if (pendingRef.current) finalizePending();
-      const previous = queryClient.getQueryData<Audit[]>(listAuditsKey);
+      const previous = queryClient.getQueryData<InfiniteAuditData>(listAuditsKey);
       if (previous) {
-        queryClient.setQueryData<Audit[]>(
-          listAuditsKey,
-          previous.filter((a) => a.id !== audit.id),
-        );
+        queryClient.setQueryData<InfiniteAuditData>(listAuditsKey, {
+          ...previous,
+          pages: previous.pages.map((p) => p.filter((a) => a.id !== audit.id)),
+        });
       }
       const timer = setTimeout(() => finalizePending(), UNDO_WINDOW_MS);
       pendingRef.current = { audit, timer };
@@ -451,6 +482,27 @@ export default function Dashboard() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    if (!hasNextPage) return;
+    if (typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+            break;
+          }
+        }
+      },
+      { rootMargin: "400px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, audits?.length]);
 
   const runBulkDelete = () => {
     const ids = Array.from(selectedIds);
@@ -980,6 +1032,17 @@ export default function Dashboard() {
                     </div>
                   );
                 })}
+                {hasNextPage ? (
+                  <div
+                    ref={loadMoreRef}
+                    data-testid="audits-load-more-sentinel"
+                    className="h-8 flex items-center justify-center"
+                  >
+                    {isFetchingNextPage ? (
+                      <Skeleton className="h-12 w-full rounded-2xl" />
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             )}
           </motion.div>
