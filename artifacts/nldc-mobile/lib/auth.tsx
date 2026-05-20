@@ -3,12 +3,14 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import * as AuthSession from "expo-auth-session";
 import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
+import { setUnauthorizedHandler } from "@workspace/api-client-react";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -88,6 +90,23 @@ export function AuthProvider({
     discovery,
   );
 
+  const sessionExpiredRef = useRef(false);
+
+  const handleSessionExpired = useCallback(async () => {
+    // Only surface the "session expired" message once per stale token.
+    if (sessionExpiredRef.current) return;
+    sessionExpiredRef.current = true;
+    try {
+      await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
+    } catch {
+      // best-effort — always clear local state
+    }
+    setUser(null);
+    setError("Your session expired. Please sign in again.");
+    setIsLoading(false);
+    onAuthChange?.();
+  }, [onAuthChange]);
+
   const fetchUser = useCallback(async () => {
     try {
       const token = await getStoredAuthToken();
@@ -102,6 +121,11 @@ export function AuthProvider({
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      if (res.status === 401) {
+        await handleSessionExpired();
+        return;
+      }
+
       if (!res.ok) {
         await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
         setUser(null);
@@ -110,17 +134,32 @@ export function AuthProvider({
 
       const data = (await res.json()) as { user: AuthUser | null };
       if (data.user) {
+        // A successful authenticated call clears any prior expired state.
+        sessionExpiredRef.current = false;
         setUser(data.user);
       } else {
-        await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
-        setUser(null);
+        // Server says "no user" with a 200 — treat the token as stale and
+        // surface the same expired message so the user knows to sign in again.
+        await handleSessionExpired();
       }
     } catch {
       setUser(null);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [handleSessionExpired]);
+
+  useEffect(() => {
+    setUnauthorizedHandler(({ hadAuthToken }) => {
+      // Ignore 401s on unauthenticated calls (e.g. anonymous endpoints) —
+      // they don't mean the user's session expired.
+      if (!hadAuthToken) return;
+      void handleSessionExpired();
+    });
+    return () => {
+      setUnauthorizedHandler(null);
+    };
+  }, [handleSessionExpired]);
 
   useEffect(() => {
     void fetchUser();
@@ -177,6 +216,7 @@ export function AuthProvider({
         const data = (await exchangeRes.json()) as { token?: string };
         if (data.token) {
           await SecureStore.setItemAsync(AUTH_TOKEN_KEY, data.token);
+          sessionExpiredRef.current = false;
           setError(null);
           setIsLoading(true);
           await fetchUser();
@@ -230,6 +270,7 @@ export function AuthProvider({
       // best-effort — always clear local state
     } finally {
       await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
+      sessionExpiredRef.current = false;
       setUser(null);
       setError(null);
       onAuthChange?.();
