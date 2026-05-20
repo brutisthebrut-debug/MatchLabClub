@@ -14,7 +14,13 @@ const FIELD_LABELS: Record<OcrCorrectionFieldName, string> = {
   prompts: "Prompts",
 };
 
-export function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
+export function OcrMismatchesPanel({
+  refreshKey,
+  founderKey = "",
+}: {
+  refreshKey: number;
+  founderKey?: string;
+}) {
   const [data, setData] = useState<OcrMismatchesResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -22,7 +28,7 @@ export function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
   useEffect(() => {
     setLoading(true);
     setErr(null);
-    getOcrMismatches()
+    getOcrMismatches(founderKey)
       .then(setData)
       .catch((e: unknown) =>
         setErr(e instanceof Error ? e.message : "Failed to load"),

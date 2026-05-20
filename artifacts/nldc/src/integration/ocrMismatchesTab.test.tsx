@@ -123,6 +123,9 @@ vi.mock("@/lib/apiClient", async () => {
     getAiThresholdChanges: stub,
     getRollupHeartbeat: stub,
     getOcrMismatches: () => getOcrMismatchesMock(),
+    getOcrLearnedRules: async () => ({ rules: [] }),
+    runOcrLearn: async () => ({ scannedAudits: 0, candidates: 0, persisted: 0 }),
+    clearOcrLearnedRules: async () => {},
   };
 });
 

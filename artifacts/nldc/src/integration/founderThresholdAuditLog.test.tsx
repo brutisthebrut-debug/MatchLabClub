@@ -211,6 +211,9 @@ vi.mock("@/lib/apiClient", () => ({
     perField: [],
     recent: [],
   })),
+  getOcrLearnedRules: vi.fn(async () => ({ rules: [] })),
+  runOcrLearn: vi.fn(async () => ({ scannedAudits: 0, candidates: 0, persisted: 0 })),
+  clearOcrLearnedRules: vi.fn(async () => {}),
 }));
 
 vi.mock("@workspace/api-client-react", () => ({

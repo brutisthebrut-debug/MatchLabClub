@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
+import { FallbackNotice } from "@/components/FallbackNotice";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -132,6 +134,8 @@ export default function Coach() {
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [screenshotError, setScreenshotError] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isFallback, setIsFallback] = useState(false);
+  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const detectedApp = sourceApp || detectAppFromText(`${context}\n${lastMessage}`) || "";
   const queryClient = useQueryClient();
@@ -209,6 +213,7 @@ export default function Coach() {
   async function handleCoach() {
     const appForRequest =
       sourceApp || detectAppFromText(`${context}\n${lastMessage}`) || null;
+    setIsFallback(false);
     try {
       const session = await createSession.mutateAsync({
         data: { matchName: matchName || "My match", conversationContext: context, yourLastMessage: lastMessage, goal: goal || null, sourceApp: appForRequest },
@@ -225,6 +230,8 @@ export default function Coach() {
       setResultApp(appForRequest);
       setResultSessionId(null);
       setFollowUpAnswer(null);
+      setIsFallback(true);
+      toast({ title: "Using example output", description: "Couldn't reach the coaching service — showing a sample result instead.", variant: "default" });
     }
   }
 
@@ -700,10 +707,17 @@ export default function Coach() {
                 className={`mt-6 space-y-5 ${!result ? "opacity-60" : ""}`}
                 data-testid="section-coaching-results"
               >
-                {!result && (
+                {!result && !isFallback && (
                   <div className="text-center py-2">
                     <p className="text-xs text-muted-foreground font-medium">Example coaching output — fill in the form above to get yours</p>
                   </div>
+                )}
+                {isFallback && (
+                  <FallbackNotice
+                    label="coaching result"
+                    onRetry={() => { void handleCoach(); }}
+                    loading={isLoading}
+                  />
                 )}
 
                 {/* Analysis */}
