@@ -3,7 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import {
   getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
-  getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges,
+  getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges, undoAiThresholdChange,
   getRollupHeartbeat, getOcrMismatches,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
   type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
@@ -522,10 +522,19 @@ function formatRelativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString();
 }
 
-function ThresholdChangeLog({ refreshKey }: { refreshKey: number }) {
+function ThresholdChangeLog({
+  refreshKey,
+  onUndone,
+}: {
+  refreshKey: number;
+  onUndone?: () => void;
+}) {
   const [changes, setChanges] = useState<AiThresholdChange[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [undoingId, setUndoingId] = useState<number | null>(null);
+  const [undoneIds, setUndoneIds] = useState<Set<number>>(new Set());
+  const [bump, setBump] = useState(0);
 
   useEffect(() => {
     setLoading(true);
@@ -534,7 +543,26 @@ function ThresholdChangeLog({ refreshKey }: { refreshKey: number }) {
       .then((r) => setChanges(r.changes))
       .catch((e: unknown) => setErr(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false));
-  }, [refreshKey]);
+  }, [refreshKey, bump]);
+
+  const handleUndo = async (id: number) => {
+    setUndoingId(id);
+    setErr(null);
+    try {
+      await undoAiThresholdChange(FOUNDER_KEY, id);
+      setUndoneIds((prev) => {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
+      });
+      setBump((x) => x + 1);
+      onUndone?.();
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Failed to undo");
+    } finally {
+      setUndoingId(null);
+    }
+  };
 
   const fmtCfg = (
     w: number | null,
@@ -571,6 +599,7 @@ function ThresholdChangeLog({ refreshKey }: { refreshKey: number }) {
           {changes.map((c) => (
             <li
               key={c.id}
+              data-testid={`threshold-change-row-${c.id}`}
               className="text-xs text-foreground/85 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-b border-white/5 pb-2 last:border-0 last:pb-0"
             >
               <div className="flex items-center gap-2 min-w-0">
@@ -599,6 +628,25 @@ function ThresholdChangeLog({ refreshKey }: { refreshKey: number }) {
                 <span className="text-muted-foreground/60 ml-2" title={c.createdAt}>
                   {formatRelativeTime(c.createdAt)}
                 </span>
+                <button
+                  type="button"
+                  onClick={() => handleUndo(c.id)}
+                  disabled={undoingId !== null || undoneIds.has(c.id)}
+                  data-testid={`undo-threshold-change-${c.id}`}
+                  className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-white/15 bg-white/5 text-foreground/80 font-sans text-[11px] hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title={
+                    undoneIds.has(c.id)
+                      ? "Already undone — refresh to apply a new undo"
+                      : "Restore the previous values for this tool"
+                  }
+                >
+                  {undoingId === c.id ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-3 h-3" />
+                  )}
+                  {undoneIds.has(c.id) ? "Undone" : "Undo"}
+                </button>
               </div>
             </li>
           ))}
@@ -864,7 +912,7 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
         </>
       )}
 
-      <ThresholdChangeLog refreshKey={bump + refreshKey} />
+      <ThresholdChangeLog refreshKey={bump + refreshKey} onUndone={() => setBump((x) => x + 1)} />
     </div>
   );
 }

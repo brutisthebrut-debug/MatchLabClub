@@ -241,6 +241,25 @@ export const getAiThresholdChanges = (founderKey: string, limit = 10) =>
     return res.json() as Promise<AiThresholdChangesResponse>;
   });
 
+export interface UndoAiThresholdChangeResponse {
+  undoneId: number;
+  undoAction: "create" | "update" | "remove" | "reset";
+  global: AiThresholdConfig;
+  perTool: AiPerToolThreshold[];
+}
+
+export const undoAiThresholdChange = (founderKey: string, id: number) =>
+  fetch(`${BASE}/founder/ai-threshold-changes/${encodeURIComponent(String(id))}/undo`, {
+    method: "POST",
+    headers: { "x-founder-key": founderKey },
+  }).then(async (res) => {
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`POST /founder/ai-threshold-changes/${id}/undo failed (${res.status}): ${text}`);
+    }
+    return res.json() as Promise<UndoAiThresholdChangeResponse>;
+  });
+
 export type OcrCorrectionFieldName = "firstName" | "age" | "sourceApp" | "bio" | "prompts";
 export type OcrMismatchesWindow = 7 | 30 | 90 | null;
 export type OcrMismatchesSort = "total" | "top";

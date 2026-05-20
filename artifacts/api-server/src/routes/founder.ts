@@ -631,6 +631,95 @@ router.get("/founder/ai-threshold-changes", requireFounder, async (req, res): Pr
   });
 });
 
+router.post("/founder/ai-threshold-changes/:id/undo", requireFounder, async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id) || id <= 0) {
+    res.status(400).json({ error: "Invalid change id." });
+    return;
+  }
+  const [row] = await db
+    .select()
+    .from(aiAlertThresholdChangesTable)
+    .where(eq(aiAlertThresholdChangesTable.id, id))
+    .limit(1);
+  if (!row) {
+    res.status(404).json({ error: "Threshold change not found." });
+    return;
+  }
+
+  const toolName = row.toolName;
+  const isGlobal = toolName === AI_ALERT_GLOBAL_KEY;
+  const hasOld =
+    row.oldWindowSize !== null && row.oldMinSample !== null && row.oldThreshold !== null;
+  const [existing] = await db
+    .select()
+    .from(aiAlertThresholdsTable)
+    .where(eq(aiAlertThresholdsTable.toolName, toolName))
+    .limit(1);
+  const hadRow = Boolean(existing);
+  const current: ThresholdConfig | undefined = existing
+    ? { windowSize: existing.windowSize, minSample: existing.minSample, threshold: existing.threshold }
+    : undefined;
+
+  let undoAction: "create" | "update" | "remove" | "reset";
+
+  if (hasOld) {
+    // Restore previous values (covers update, remove, reset originals).
+    const w = row.oldWindowSize as number;
+    const m = row.oldMinSample as number;
+    const t = row.oldThreshold as number;
+    await db
+      .insert(aiAlertThresholdsTable)
+      .values({ toolName, windowSize: w, minSample: m, threshold: t })
+      .onConflictDoUpdate({
+        target: aiAlertThresholdsTable.toolName,
+        set: { windowSize: w, minSample: m, threshold: t, updatedAt: new Date() },
+      });
+    undoAction = hadRow ? "update" : "create";
+    await db.insert(aiAlertThresholdChangesTable).values({
+      toolName,
+      action: undoAction,
+      oldWindowSize: current?.windowSize ?? null,
+      oldMinSample: current?.minSample ?? null,
+      oldThreshold: current?.threshold ?? null,
+      newWindowSize: w,
+      newMinSample: m,
+      newThreshold: t,
+    });
+  } else {
+    // Original action was a "create" with no prior values — inverse is to remove the row.
+    await db.delete(aiAlertThresholdsTable).where(eq(aiAlertThresholdsTable.toolName, toolName));
+    undoAction = isGlobal ? "reset" : "remove";
+    await db.insert(aiAlertThresholdChangesTable).values({
+      toolName,
+      action: undoAction,
+      oldWindowSize: current?.windowSize ?? null,
+      oldMinSample: current?.minSample ?? null,
+      oldThreshold: current?.threshold ?? null,
+      newWindowSize: null,
+      newMinSample: null,
+      newThreshold: null,
+    });
+  }
+
+  const { global: g, perTool: pt } = await loadThresholds();
+  res.json({
+    undoneId: id,
+    undoAction,
+    global: {
+      windowSize: g.windowSize,
+      minSample: g.minSample,
+      firstTrySuccessRate: g.threshold,
+    },
+    perTool: Array.from(pt.entries()).map(([n, c]) => ({
+      toolName: n,
+      windowSize: c.windowSize,
+      minSample: c.minSample,
+      firstTrySuccessRate: c.threshold,
+    })),
+  });
+});
+
 router.put("/founder/ai-thresholds", requireFounder, async (req, res): Promise<void> => {
   const parsed = putThresholdsSchema.safeParse(req.body);
   if (!parsed.success) {
