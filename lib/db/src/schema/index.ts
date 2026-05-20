@@ -1,3 +1,4 @@
+export * from "./auth";
 export * from "./audits";
 export * from "./profiles";
 export * from "./messages";

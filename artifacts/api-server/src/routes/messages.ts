@@ -1,9 +1,8 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull, type SQL } from "drizzle-orm";
 import { db, messageCoachingSessionsTable } from "@workspace/db";
 import {
   CreateMessageCoachingSessionBody,
-  CoachMessageParams,
   ListMessageCoachingSessionsResponse,
   CoachMessageResponse,
 } from "@workspace/api-zod";
@@ -11,8 +10,18 @@ import { generateMessageCoaching } from "../lib/aiEngine";
 
 const router: IRouter = Router();
 
+function userScope(userId: string | undefined): SQL {
+  return userId
+    ? eq(messageCoachingSessionsTable.userId, userId)
+    : isNull(messageCoachingSessionsTable.userId);
+}
+
 router.get("/messages", async (req, res): Promise<void> => {
-  const sessions = await db.select().from(messageCoachingSessionsTable).orderBy(messageCoachingSessionsTable.createdAt);
+  const sessions = await db
+    .select()
+    .from(messageCoachingSessionsTable)
+    .where(userScope(req.user?.id))
+    .orderBy(messageCoachingSessionsTable.createdAt);
   res.json(ListMessageCoachingSessionsResponse.parse(sessions.map((s) => ({
     ...s,
     createdAt: s.createdAt instanceof Date ? s.createdAt.toISOString() : String(s.createdAt),
@@ -28,7 +37,7 @@ router.post("/messages", async (req, res): Promise<void> => {
 
   const [session] = await db
     .insert(messageCoachingSessionsTable)
-    .values({ ...parsed.data, status: "pending" })
+    .values({ ...parsed.data, status: "pending", userId: req.user?.id ?? null })
     .returning();
 
   res.status(201).json({
@@ -45,7 +54,10 @@ router.post("/messages/:id/coach", async (req, res): Promise<void> => {
     return;
   }
 
-  const [session] = await db.select().from(messageCoachingSessionsTable).where(eq(messageCoachingSessionsTable.id, id));
+  const [session] = await db
+    .select()
+    .from(messageCoachingSessionsTable)
+    .where(and(eq(messageCoachingSessionsTable.id, id), userScope(req.user?.id)));
   if (!session) {
     res.status(404).json({ error: "Session not found" });
     return;

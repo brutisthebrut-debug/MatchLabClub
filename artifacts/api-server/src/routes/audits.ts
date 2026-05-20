@@ -1,10 +1,8 @@
 import { Router, type IRouter } from "express";
-import { eq, avg, count } from "drizzle-orm";
+import { and, eq, isNull, type SQL } from "drizzle-orm";
 import { db, auditsTable } from "@workspace/db";
 import {
   CreateAuditBody,
-  GetAuditParams,
-  GenerateAuditReportParams,
   ListAuditsResponse,
   GetAuditResponse,
   GenerateAuditReportResponse,
@@ -14,10 +12,15 @@ import { generateAuditReport } from "../lib/aiEngine";
 
 const router: IRouter = Router();
 
+function userScope(userId: string | undefined): SQL {
+  return userId ? eq(auditsTable.userId, userId) : isNull(auditsTable.userId);
+}
+
 router.get("/audits/summary", async (req, res): Promise<void> => {
   const audits = await db
     .select()
     .from(auditsTable)
+    .where(userScope(req.user?.id))
     .orderBy(auditsTable.createdAt);
 
   const completed = audits.filter((a) => a.readinessScore !== null);
@@ -51,7 +54,11 @@ router.get("/audits/summary", async (req, res): Promise<void> => {
 });
 
 router.get("/audits", async (req, res): Promise<void> => {
-  const audits = await db.select().from(auditsTable).orderBy(auditsTable.createdAt);
+  const audits = await db
+    .select()
+    .from(auditsTable)
+    .where(userScope(req.user?.id))
+    .orderBy(auditsTable.createdAt);
   res.json(ListAuditsResponse.parse(audits.map((a) => ({
     ...a,
     createdAt: a.createdAt instanceof Date ? a.createdAt.toISOString() : String(a.createdAt),
@@ -67,7 +74,7 @@ router.post("/audits", async (req, res): Promise<void> => {
 
   const [audit] = await db
     .insert(auditsTable)
-    .values({ ...parsed.data, status: "pending" })
+    .values({ ...parsed.data, status: "pending", userId: req.user?.id ?? null })
     .returning();
 
   res.status(201).json(GetAuditResponse.parse({
@@ -84,7 +91,10 @@ router.get("/audits/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [audit] = await db.select().from(auditsTable).where(eq(auditsTable.id, id));
+  const [audit] = await db
+    .select()
+    .from(auditsTable)
+    .where(and(eq(auditsTable.id, id), userScope(req.user?.id)));
   if (!audit) {
     res.status(404).json({ error: "Audit not found" });
     return;
@@ -104,7 +114,10 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
     return;
   }
 
-  const [audit] = await db.select().from(auditsTable).where(eq(auditsTable.id, id));
+  const [audit] = await db
+    .select()
+    .from(auditsTable)
+    .where(and(eq(auditsTable.id, id), userScope(req.user?.id)));
   if (!audit) {
     res.status(404).json({ error: "Audit not found" });
     return;

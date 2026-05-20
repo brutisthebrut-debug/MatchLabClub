@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, waitlistTable } from "@workspace/db";
-import { count } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import {
   JoinWaitlistBody,
   GetWaitlistStatsResponse,
@@ -29,20 +29,36 @@ router.post("/waitlist", async (req, res): Promise<void> => {
     return;
   }
 
-  // Check if email already exists
+  // Only link a waitlist row to a user when the submitted email matches the
+  // user's authenticated email claim. Anyone else who submits that email gets
+  // the "already joined" response but no ownership transfer.
+  const submittedEmail = parsed.data.email.trim().toLowerCase();
+  const userEmail = req.user?.email?.trim().toLowerCase() ?? null;
+  const emailMatchesUser = !!userEmail && userEmail === submittedEmail;
+
   const existing = await db.select().from(waitlistTable);
-  const alreadyJoined = existing.find((e) => e.email === parsed.data.email);
+  const alreadyJoined = existing.find((e) => e.email.trim().toLowerCase() === submittedEmail);
   if (alreadyJoined) {
-    const position = existing.findIndex((e) => e.email === parsed.data.email) + 1;
+    if (emailMatchesUser && req.user?.id && alreadyJoined.userId !== req.user.id) {
+      await db
+        .update(waitlistTable)
+        .set({ userId: req.user.id })
+        .where(eq(waitlistTable.id, alreadyJoined.id));
+    }
+    const position = existing.findIndex((e) => e.email.trim().toLowerCase() === submittedEmail) + 1;
     res.status(201).json({
       ...alreadyJoined,
+      userId: emailMatchesUser && req.user?.id ? req.user.id : alreadyJoined.userId,
       position,
       createdAt: alreadyJoined.createdAt instanceof Date ? alreadyJoined.createdAt.toISOString() : String(alreadyJoined.createdAt),
     });
     return;
   }
 
-  const [entry] = await db.insert(waitlistTable).values(parsed.data).returning();
+  const [entry] = await db
+    .insert(waitlistTable)
+    .values({ ...parsed.data, userId: emailMatchesUser && req.user?.id ? req.user.id : null })
+    .returning();
   const allEntries = await db.select().from(waitlistTable);
   const position = allEntries.length;
 

@@ -1,9 +1,8 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull, type SQL } from "drizzle-orm";
 import { db, emailInsightsTable } from "@workspace/db";
 import {
   CreateInsightBody,
-  AnalyzeInsightParams,
   ListInsightsResponse,
   AnalyzeInsightResponse,
 } from "@workspace/api-zod";
@@ -11,8 +10,16 @@ import { generateEmailInsightAnalysis } from "../lib/aiEngine";
 
 const router: IRouter = Router();
 
+function userScope(userId: string | undefined): SQL {
+  return userId ? eq(emailInsightsTable.userId, userId) : isNull(emailInsightsTable.userId);
+}
+
 router.get("/insights", async (req, res): Promise<void> => {
-  const insights = await db.select().from(emailInsightsTable).orderBy(emailInsightsTable.createdAt);
+  const insights = await db
+    .select()
+    .from(emailInsightsTable)
+    .where(userScope(req.user?.id))
+    .orderBy(emailInsightsTable.createdAt);
   res.json(ListInsightsResponse.parse(insights.map((i) => ({
     ...i,
     createdAt: i.createdAt instanceof Date ? i.createdAt.toISOString() : String(i.createdAt),
@@ -28,7 +35,7 @@ router.post("/insights", async (req, res): Promise<void> => {
 
   const [insight] = await db
     .insert(emailInsightsTable)
-    .values({ ...parsed.data, status: "pending" })
+    .values({ ...parsed.data, status: "pending", userId: req.user?.id ?? null })
     .returning();
 
   res.status(201).json({
@@ -45,7 +52,10 @@ router.post("/insights/:id/analyze", async (req, res): Promise<void> => {
     return;
   }
 
-  const [insight] = await db.select().from(emailInsightsTable).where(eq(emailInsightsTable.id, id));
+  const [insight] = await db
+    .select()
+    .from(emailInsightsTable)
+    .where(and(eq(emailInsightsTable.id, id), userScope(req.user?.id)));
   if (!insight) {
     res.status(404).json({ error: "Insight not found" });
     return;

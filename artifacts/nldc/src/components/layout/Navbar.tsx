@@ -1,7 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Sparkles, ChevronDown, TrendingUp, BookOpen, MessageSquare, Gift, LogIn } from "lucide-react";
+import { Menu, X, Sparkles, ChevronDown, TrendingUp, BookOpen, MessageSquare, Gift, LogIn, LogOut, User as UserIcon } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@workspace/replit-auth-web";
 
 const YOUR_BLUEPRINT_PROFILE = [
   { name: "Dating Diagnosis",   href: "/diagnosis",      desc: "Your category + what to fix first" },
@@ -63,6 +64,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [activeMenu, setActiveMenu] = useState<DropdownId>(null);
   const navRef = useRef<HTMLDivElement>(null);
+  const { user, isAuthenticated, isLoading, login, logout } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -223,10 +225,27 @@ export function Navbar() {
             Dashboard
           </Link>
 
-          <Link href="/" onClick={closeAll}
-            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors text-muted-foreground hover:text-foreground hover:bg-white/4`}>
-            <LogIn className="w-3.5 h-3.5" /> Sign In
-          </Link>
+          {isLoading ? null : isAuthenticated ? (
+            <button
+              type="button"
+              onClick={() => { closeAll(); logout(); }}
+              className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors text-muted-foreground hover:text-foreground hover:bg-white/4"
+              data-testid="button-logout"
+            >
+              <UserIcon className="w-3.5 h-3.5" />
+              <span className="max-w-[120px] truncate">{user?.firstName || user?.email || "Account"}</span>
+              <LogOut className="w-3.5 h-3.5 opacity-60" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { closeAll(); login(); }}
+              className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors text-muted-foreground hover:text-foreground hover:bg-white/4"
+              data-testid="button-login"
+            >
+              <LogIn className="w-3.5 h-3.5" /> Sign In
+            </button>
+          )}
 
           <Button
             asChild
@@ -279,7 +298,26 @@ export function Navbar() {
           ))}
           <div className="h-px bg-white/5 my-2" />
           <Link href="/dashboard" onClick={closeAll} className="text-sm font-medium text-muted-foreground hover:text-foreground py-1.5">Dashboard</Link>
-          <Link href="/" onClick={closeAll} className="text-sm font-medium text-muted-foreground hover:text-foreground py-1.5 flex items-center gap-2"><LogIn className="w-4 h-4" />Sign In</Link>
+          {isLoading ? null : isAuthenticated ? (
+            <button
+              type="button"
+              onClick={() => { closeAll(); logout(); }}
+              className="text-left text-sm font-medium text-muted-foreground hover:text-foreground py-1.5 flex items-center gap-2"
+              data-testid="button-logout-mobile"
+            >
+              <LogOut className="w-4 h-4" />Sign Out
+              <span className="ml-auto text-[11px] text-muted-foreground/70 truncate max-w-[140px]">{user?.firstName || user?.email}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { closeAll(); login(); }}
+              className="text-left text-sm font-medium text-muted-foreground hover:text-foreground py-1.5 flex items-center gap-2"
+              data-testid="button-login-mobile"
+            >
+              <LogIn className="w-4 h-4" />Sign In
+            </button>
+          )}
           <Button asChild className="rounded-full w-full mt-3 bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold" onClick={closeAll}>
             <Link href="/start">Start Here — Get My Free Audit</Link>
           </Button>

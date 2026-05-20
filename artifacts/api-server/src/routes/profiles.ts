@@ -1,22 +1,27 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull, type SQL } from "drizzle-orm";
 import { db, profilesTable } from "@workspace/db";
 import {
   CreateProfileBody,
-  GetProfileParams,
-  UpdateProfileParams,
   UpdateProfileBody,
   ListProfilesResponse,
   GetProfileResponse,
   UpdateProfileResponse,
-  RewriteProfileBioParams,
   RewriteProfileBioResponse,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
+function userScope(userId: string | undefined): SQL {
+  return userId ? eq(profilesTable.userId, userId) : isNull(profilesTable.userId);
+}
+
 router.get("/profiles", async (req, res): Promise<void> => {
-  const profiles = await db.select().from(profilesTable).orderBy(profilesTable.createdAt);
+  const profiles = await db
+    .select()
+    .from(profilesTable)
+    .where(userScope(req.user?.id))
+    .orderBy(profilesTable.createdAt);
   res.json(ListProfilesResponse.parse(profiles.map((p) => ({
     ...p,
     createdAt: p.createdAt instanceof Date ? p.createdAt.toISOString() : String(p.createdAt),
@@ -30,7 +35,10 @@ router.post("/profiles", async (req, res): Promise<void> => {
     return;
   }
 
-  const [profile] = await db.insert(profilesTable).values(parsed.data).returning();
+  const [profile] = await db
+    .insert(profilesTable)
+    .values({ ...parsed.data, userId: req.user?.id ?? null })
+    .returning();
   res.status(201).json(GetProfileResponse.parse({
     ...profile,
     createdAt: profile.createdAt instanceof Date ? profile.createdAt.toISOString() : String(profile.createdAt),
@@ -45,7 +53,10 @@ router.get("/profiles/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [profile] = await db.select().from(profilesTable).where(eq(profilesTable.id, id));
+  const [profile] = await db
+    .select()
+    .from(profilesTable)
+    .where(and(eq(profilesTable.id, id), userScope(req.user?.id)));
   if (!profile) {
     res.status(404).json({ error: "Profile not found" });
     return;
@@ -74,7 +85,7 @@ router.patch("/profiles/:id", async (req, res): Promise<void> => {
   const [profile] = await db
     .update(profilesTable)
     .set(parsed.data)
-    .where(eq(profilesTable.id, id))
+    .where(and(eq(profilesTable.id, id), userScope(req.user?.id)))
     .returning();
 
   if (!profile) {
@@ -96,7 +107,10 @@ router.post("/profiles/:id/rewrite", async (req, res): Promise<void> => {
     return;
   }
 
-  const [profile] = await db.select().from(profilesTable).where(eq(profilesTable.id, id));
+  const [profile] = await db
+    .select()
+    .from(profilesTable)
+    .where(and(eq(profilesTable.id, id), userScope(req.user?.id)));
   if (!profile) {
     res.status(404).json({ error: "Profile not found" });
     return;

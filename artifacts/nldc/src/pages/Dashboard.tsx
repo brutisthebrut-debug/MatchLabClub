@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { useListAudits, useGetAuditSummary, getGetAuditSummaryQueryKey } from "@workspace/api-client-react";
+import { useAuth } from "@workspace/replit-auth-web";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import {
   ArrowRight, FileText, MessageSquare, Mail, Settings,
@@ -163,9 +164,12 @@ export default function Dashboard() {
     query: { queryKey: getGetAuditSummaryQueryKey() }
   });
 
+  const { isAuthenticated } = useAuth();
   const hasRealAudits = !!(audits && audits.length > 0);
-  const displayAudits = hasRealAudits ? audits : DEMO_AUDITS;
-  const displaySummary = summary ?? DEMO_SUMMARY;
+  const showDemo = !isAuthenticated && !hasRealAudits;
+  const displayAudits = hasRealAudits ? audits : showDemo ? DEMO_AUDITS : [];
+  const EMPTY_SUMMARY = { totalAudits: 0, averageScore: 0, latestScore: 0, scoreHistory: [], topStrengths: [], topRisks: [] };
+  const displaySummary = hasRealAudits ? summary ?? DEMO_SUMMARY : showDemo ? DEMO_SUMMARY : EMPTY_SUMMARY;
   const latestScore = displaySummary.latestScore ?? 0;
   const grade = latestScore >= 85 ? "A" : latestScore >= 72 ? "B" : latestScore >= 58 ? "C" : latestScore >= 42 ? "D" : "F";
   const gradeColor = latestScore >= 75 ? "hsl(142 55% 60%)" : latestScore >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
