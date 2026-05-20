@@ -11,9 +11,8 @@ let seededAuditIds: number[] = [];
 test.beforeAll(async () => {
   pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-  // The trend series covers the last N days up to (but not including) today,
-  // so seed with yesterday's timestamp to ensure the entry falls inside the
-  // chart's visible range.
+  // The trend series now includes today (loop is d <= days), so seeding with
+  // NOW() is sufficient to ensure the entry falls inside the chart's visible range.
   const result = await pool.query<{ id: number }>(`
     INSERT INTO audits (
       first_name, age, gender, dating_goal, bio, source,
@@ -27,7 +26,7 @@ test.beforeAll(async () => {
       'screenshot',
       'TestOcrTotl\n28\nE2E test bio for OCR trend.',
       '{"firstName": {"raw": "TestOcrTotl", "corrected": "TestOcrTotal"}, "bio": {"raw": "E2E test bio for OCR trend.", "corrected": "E2E test bio for OCR trend chart Total line."}}',
-      NOW() - INTERVAL '1 day'
+      NOW()
     )
     RETURNING id
   `);

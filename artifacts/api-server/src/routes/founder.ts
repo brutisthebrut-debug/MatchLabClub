@@ -671,7 +671,7 @@ router.get("/founder/ocr-mismatches/trends", requireFounder, async (req, res): P
     total: number;
   }> = [];
 
-  for (let d = 0; d < days; d++) {
+  for (let d = 0; d <= days; d++) {
     const day = new Date(since.getTime() + d * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const entry = byDayField.get(day) ?? { firstName: 0, age: 0, sourceApp: 0, bio: 0, prompts: 0 };
     const total = OCR_FIELDS.reduce((sum, f) => sum + entry[f], 0);
