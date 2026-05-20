@@ -13,7 +13,6 @@ import { Link } from "wouter";
 import { Loader2, Headphones, ArrowRight, Lock, CheckCircle, Sparkles, TrendingUp, Mail } from "lucide-react";
 import { useMeta } from "@/hooks/useMeta";
 import { captureLead } from "@/lib/apiClient";
-import { useAuth } from "@workspace/replit-auth-web";
 
 const GOALS = [
   { value: "find a relationship", label: "Find a relationship", emoji: "💍" },
