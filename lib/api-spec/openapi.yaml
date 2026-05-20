@@ -1159,6 +1159,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/EmailInsight"
 
+  /insights/rollup:
+    get:
+      operationId: getInsightsRollup
+      tags: [insights]
+      summary: Cross-import communication pattern rollup grouped by source app
+      responses:
+        "200":
+          description: Per-source rollup and cross-source comparisons
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightsRollup"
+
   /insights/{id}/analyze:
     post:
       operationId: analyzeInsight
@@ -2216,6 +2229,68 @@ components:
             type: string
         summary:
           type: string
+
+    InsightsRollupSource:
+      type: object
+      required: [sourceApp, count, attachmentStyle, traits, signaturePattern, summary]
+      properties:
+        sourceApp:
+          type: string
+          description: Source platform label. "Other" is used for imports without a recognized source.
+        count:
+          type: integer
+        attachmentStyle:
+          type: string
+          description: Most common attachment style across imports from this source.
+        traits:
+          type: object
+          required: [warmth, curiosity, verbosity, humor]
+          description: Average 0-100 scores across this source's imports.
+          properties:
+            warmth:
+              type: integer
+            curiosity:
+              type: integer
+            verbosity:
+              type: integer
+            humor:
+              type: integer
+        signaturePattern:
+          type: string
+          description: The communication pattern that shows up most across imports from this source.
+        summary:
+          type: string
+
+    InsightsRollupComparison:
+      type: object
+      required: [trait, leader, laggard, delta, sentence]
+      properties:
+        trait:
+          type: string
+          enum: [warmth, curiosity, verbosity, humor]
+        leader:
+          type: string
+        laggard:
+          type: string
+        delta:
+          type: integer
+        sentence:
+          type: string
+
+    InsightsRollup:
+      type: object
+      required: [totalAnalyzed, sources, comparisons]
+      properties:
+        totalAnalyzed:
+          type: integer
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/InsightsRollupSource"
+        comparisons:
+          type: array
+          items:
+            $ref: "#/components/schemas/InsightsRollupComparison"
 
     CommunicationPattern:
       type: object

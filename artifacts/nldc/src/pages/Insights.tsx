@@ -11,7 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   useListInsights, useCreateInsight, useAnalyzeInsight,
+  useGetInsightsRollup,
   getListInsightsQueryKey,
+  getGetInsightsRollupQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -96,6 +98,7 @@ export default function Insights() {
 
   const { isAuthenticated } = useAuth();
   const { data: insights, isLoading: insightsLoading } = useListInsights();
+  const { data: rollup } = useGetInsightsRollup();
   const createInsight = useCreateInsight();
   const analyzeInsight = useAnalyzeInsight();
 
@@ -122,6 +125,7 @@ export default function Insights() {
         ((result as Analysis).sourceApp as InsightSource | null | undefined) ?? appForRequest,
       );
       queryClient.invalidateQueries({ queryKey: getListInsightsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetInsightsRollupQueryKey() });
     } catch {
       setAnalysis(DEMO_ANALYSIS);
       setResultSource(appForRequest);
@@ -182,6 +186,89 @@ export default function Insights() {
               </p>
             </div>
           </motion.div>
+
+          {/* Cross-import rollup */}
+          {rollup && rollup.totalAnalyzed >= 2 && rollup.sources.length >= 2 && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }}
+              className="bg-card border border-card-border rounded-3xl p-6 sm:p-8 mb-6"
+              data-testid="card-insights-rollup"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                <p className="text-xs font-bold uppercase tracking-widest text-primary">Cross-import trends</p>
+              </div>
+              <h2 className="text-xl font-serif font-bold text-foreground mb-1">How your patterns shift between sources</h2>
+              <p className="text-sm text-muted-foreground mb-5">
+                Based on {rollup.totalAnalyzed} analyzed imports across {rollup.sources.length} sources.
+              </p>
+
+              {rollup.comparisons.length > 0 && (
+                <ul className="space-y-2 mb-6" data-testid="list-rollup-comparisons">
+                  {rollup.comparisons.map((c, i) => (
+                    <li
+                      key={`${c.trait}-${i}`}
+                      className="flex items-start gap-2 text-sm text-foreground"
+                      data-testid={`rollup-comparison-${c.trait}`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+                      <span>{c.sentence}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="grid sm:grid-cols-2 gap-3">
+                {rollup.sources.map((s) => (
+                  <div
+                    key={s.sourceApp}
+                    className="border border-border rounded-2xl p-4"
+                    data-testid={`rollup-source-${s.sourceApp.toLowerCase()}`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span
+                        className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30"
+                      >
+                        {s.sourceApp}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{s.count} import{s.count === 1 ? "" : "s"}</span>
+                    </div>
+                    <p className="text-sm font-semibold text-foreground leading-snug mb-1">{s.signaturePattern}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed mb-3">{s.summary}</p>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {(["warmth", "curiosity", "verbosity", "humor"] as const).map((t) => (
+                        <div key={t} className="text-center">
+                          <div className="h-1 bg-secondary rounded-full overflow-hidden mb-1">
+                            <div
+                              className="h-full bg-primary"
+                              style={{ width: `${s.traits[t]}%` }}
+                            />
+                          </div>
+                          <p className="text-[9px] uppercase tracking-wide text-muted-foreground">{t}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {rollup && rollup.totalAnalyzed >= 1 && rollup.sources.length < 2 && isAuthenticated && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }}
+              className="bg-secondary/30 border border-border rounded-3xl p-5 mb-6 flex items-start gap-3"
+              data-testid="card-insights-rollup-single"
+            >
+              <TrendingUp className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">One source so far</p>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
+                  Import a conversation from a different platform (e.g. iMessage if you've analyzed Hinge) and we'll surface how your patterns shift across sources.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           {/* Form */}
           <motion.div

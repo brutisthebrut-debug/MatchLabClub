@@ -656,6 +656,53 @@ export interface EmailInsightAnalysis {
   summary: string;
 }
 
+/**
+ * Average 0-100 scores across this source's imports.
+ */
+export type InsightsRollupSourceTraits = {
+  warmth: number;
+  curiosity: number;
+  verbosity: number;
+  humor: number;
+};
+
+export interface InsightsRollupSource {
+  /** Source platform label. "Other" is used for imports without a recognized source. */
+  sourceApp: string;
+  count: number;
+  /** Most common attachment style across imports from this source. */
+  attachmentStyle: string;
+  /** Average 0-100 scores across this source's imports. */
+  traits: InsightsRollupSourceTraits;
+  /** The communication pattern that shows up most across imports from this source. */
+  signaturePattern: string;
+  summary: string;
+}
+
+export type InsightsRollupComparisonTrait = typeof InsightsRollupComparisonTrait[keyof typeof InsightsRollupComparisonTrait];
+
+
+export const InsightsRollupComparisonTrait = {
+  warmth: 'warmth',
+  curiosity: 'curiosity',
+  verbosity: 'verbosity',
+  humor: 'humor',
+} as const;
+
+export interface InsightsRollupComparison {
+  trait: InsightsRollupComparisonTrait;
+  leader: string;
+  laggard: string;
+  delta: number;
+  sentence: string;
+}
+
+export interface InsightsRollup {
+  totalAnalyzed: number;
+  sources: InsightsRollupSource[];
+  comparisons: InsightsRollupComparison[];
+}
+
 export interface WaitlistInput {
   email: string;
   firstName: string;

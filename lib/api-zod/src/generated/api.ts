@@ -1698,6 +1698,34 @@ export const CreateInsightBody = zod.object({
 
 
 /**
+ * @summary Cross-import communication pattern rollup grouped by source app
+ */
+export const GetInsightsRollupResponse = zod.object({
+  "totalAnalyzed": zod.number(),
+  "sources": zod.array(zod.object({
+  "sourceApp": zod.string().describe('Source platform label. \"Other\" is used for imports without a recognized source.'),
+  "count": zod.number(),
+  "attachmentStyle": zod.string().describe('Most common attachment style across imports from this source.'),
+  "traits": zod.object({
+  "warmth": zod.number(),
+  "curiosity": zod.number(),
+  "verbosity": zod.number(),
+  "humor": zod.number()
+}).describe('Average 0-100 scores across this source\'s imports.'),
+  "signaturePattern": zod.string().describe('The communication pattern that shows up most across imports from this source.'),
+  "summary": zod.string()
+})),
+  "comparisons": zod.array(zod.object({
+  "trait": zod.enum(['warmth', 'curiosity', 'verbosity', 'humor']),
+  "leader": zod.string(),
+  "laggard": zod.string(),
+  "delta": zod.number(),
+  "sentence": zod.string()
+}))
+})
+
+
+/**
  * @summary Run AI analysis on pasted email/message history
  */
 export const AnalyzeInsightParams = zod.object({

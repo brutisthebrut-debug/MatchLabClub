@@ -64,6 +64,7 @@ import type {
   GetAiFallbackRateParams,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
+  InsightsRollup,
   ListAuditsParams,
   ListExpiringTrashedAuditsParams,
   LogoutSuccess,
@@ -3776,6 +3777,83 @@ export const useCreateInsight = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getCreateInsightMutationOptions(options));
     }
+
+export const getGetInsightsRollupUrl = () => {
+
+
+
+
+  return `/api/insights/rollup`
+}
+
+/**
+ * @summary Cross-import communication pattern rollup grouped by source app
+ */
+export const getInsightsRollup = async ( options?: RequestInit): Promise<InsightsRollup> => {
+
+  return customFetch<InsightsRollup>(getGetInsightsRollupUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetInsightsRollupQueryKey = () => {
+    return [
+    `/api/insights/rollup`
+    ] as const;
+    }
+
+
+export const getGetInsightsRollupQueryOptions = <TData = Awaited<ReturnType<typeof getInsightsRollup>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getInsightsRollup>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetInsightsRollupQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getInsightsRollup>>> = ({ signal }) => getInsightsRollup({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getInsightsRollup>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetInsightsRollupQueryResult = NonNullable<Awaited<ReturnType<typeof getInsightsRollup>>>
+export type GetInsightsRollupQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Cross-import communication pattern rollup grouped by source app
+ */
+
+export function useGetInsightsRollup<TData = Awaited<ReturnType<typeof getInsightsRollup>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getInsightsRollup>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetInsightsRollupQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getAnalyzeInsightUrl = (id: number,) => {
 
