@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, RefreshCw, Copy, Check, AlertCircle, Heart } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
+import { useSavedContext } from "@/hooks/useSavedContext";
+import { SavedContextChip } from "@/components/SavedContextChip";
 import { FallbackNotice } from "@/components/FallbackNotice";
 import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 
@@ -168,6 +170,7 @@ export default function Reflection() {
   const loading = enhance.isPending;
   const { isAuthenticated } = useAuth();
   const isBrandNewUser = isAuthenticated && !result;
+  const savedCtx = useSavedContext();
 
   const canSubmit = before && during && mutual && afterward;
 
@@ -344,6 +347,9 @@ export default function Reflection() {
               className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50">
               {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Reading the signals…</> : <><Sparkles className="mr-2 h-4 w-4" />Get My Reflection</>}
             </Button>
+            {savedCtx.hasSavedContext && (
+              <SavedContextChip summary={savedCtx.summary} className="justify-center" />
+            )}
           </motion.div>
 
           <AnimatePresence>

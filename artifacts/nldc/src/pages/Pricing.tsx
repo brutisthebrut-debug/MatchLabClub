@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { CheckCircle, ArrowRight, Headphones, Sparkles, Zap, Heart } from "lucide-react";
 import { useState } from "react";
+import { TrustBadge } from "@/components/TrustBadge";
 
 const TIERS = [
   {
@@ -261,6 +262,7 @@ export default function Pricing() {
               </motion.div>
             ))}
           </div>
+          <TrustBadge className="mt-2 mb-2" />
 
           {/* What Happens After You Pay */}
           <motion.div {...fadeUp(0.26)} className="max-w-3xl mx-auto mb-12">

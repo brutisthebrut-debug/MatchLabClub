@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, waitFor, act, cleanup, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-const mockSetLocation = vi.hoisted(() => vi.fn<[string], void>());
+const mockSetLocation = vi.hoisted(() => vi.fn<(location: string) => void>());
 
 // Mock the auth hook so we can flip from anonymous -> authenticated mid-test.
 let authState: {
@@ -964,7 +964,7 @@ describe("Cross-device hand-off claim flow", () => {
       ),
     );
 
-    // The "Open dashboard" CTA was included in the toast.
+    // The "Start fresh" CTA was included in the toast.
     const toastCall = vi.mocked(toast).mock.calls.find((args) =>
       (args[0] as { title?: string }).title === "This link was already used",
     );
@@ -991,7 +991,7 @@ describe("Cross-device hand-off claim flow", () => {
     expect(server.claimCalls).toBe(0);
   });
 
-  it("clicking 'Open dashboard' in the already-used toast navigates to /dashboard", async () => {
+  it("clicking 'Start fresh' in the already-used toast navigates to /start", async () => {
     // ===== DEVICE A — anonymous, creates an audit and mints a hand-off token =====
     currentAnonToken = "anon-token-device-A";
 
@@ -1077,12 +1077,12 @@ describe("Cross-device hand-off claim flow", () => {
     expect(actionElement).toBeDefined();
 
     const { getByRole } = render(<>{actionElement}</>);
-    const btn = getByRole("button", { name: /open dashboard/i });
+    const btn = getByRole("button", { name: /start fresh/i });
 
     // Click the CTA.
     fireEvent.click(btn);
 
-    // Navigation must have been directed to /dashboard.
-    expect(mockSetLocation).toHaveBeenCalledWith("/dashboard");
+    // Navigation must have been directed to /start.
+    expect(mockSetLocation).toHaveBeenCalledWith("/start");
   });
 });

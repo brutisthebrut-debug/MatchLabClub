@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, MessageCircle, Copy, Check, RefreshCw, AlertCircle } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
+import { useSavedContext } from "@/hooks/useSavedContext";
+import { SavedContextChip } from "@/components/SavedContextChip";
 import { nextMessageSchema, parseAiJson } from "@/lib/aiSchemas";
 import { ToneBar, ConfidenceLabel, getConfidenceLevel } from "@/components/ToneBar";
 import { FallbackRateBadge } from "@/components/FallbackRateBadge";
@@ -196,6 +198,7 @@ export default function NextMessage() {
   const loading = enhance.isPending;
   const { isAuthenticated } = useAuth();
   const isBrandNewUser = isAuthenticated && !result && !loading;
+  const savedCtx = useSavedContext();
 
   function tryParseNextMessage(raw: string, deterministic: NextMessageResult): NextMessageResult | null {
     const parsed = parseAiJson(nextMessageSchema, raw);
@@ -237,6 +240,13 @@ export default function NextMessage() {
           context: {
             toolName: "Next Message",
             formValues: { name, goal, conversation: context, lastMessage: lastMsg },
+            savedResults: savedCtx.blueprintResult
+              ? { blueprint: savedCtx.blueprintResult as Record<string, unknown> }
+              : undefined,
+            goals: savedCtx.goals.length > 0 ? savedCtx.goals : undefined,
+            progressEntries: savedCtx.progressEntries.length > 0
+              ? savedCtx.progressEntries.slice(0, 5)
+              : undefined,
           },
           expectJson: true,
         },
@@ -323,6 +333,9 @@ export default function NextMessage() {
               className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50">
               {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Writing options…</> : <><Sparkles className="mr-2 h-4 w-4" />Get My 7 Options</>}
             </Button>
+            {savedCtx.hasSavedContext && (
+              <SavedContextChip summary={savedCtx.summary} className="justify-center" />
+            )}
           </motion.div>
 
           {isBrandNewUser && (

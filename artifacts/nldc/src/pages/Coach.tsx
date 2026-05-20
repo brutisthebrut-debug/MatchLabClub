@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
+import { useSavedContext } from "@/hooks/useSavedContext";
+import { SavedContextChip } from "@/components/SavedContextChip";
 import { FallbackNotice } from "@/components/FallbackNotice";
 import { WelcomePanel } from "@/components/WelcomePanel";
 import { useToast } from "@/hooks/use-toast";
@@ -177,6 +179,7 @@ export default function Coach() {
   });
   const createSession = useCreateMessageCoachingSession();
   const coachMessage = useCoachMessage();
+  const savedCtx = useSavedContext();
   const recordFollowUp = useRecordCoachFollowUp();
   const isLoading = createSession.isPending || coachMessage.isPending;
   const hasSessions = !!(sessions && sessions.length > 0);
@@ -515,6 +518,9 @@ export default function Coach() {
               >
                 {isLoading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Analyzing...</> : <><Sparkles className="mr-2 h-4 w-4" /> Get Coaching Advice</>}
               </Button>
+              {savedCtx.hasSavedContext && (
+                <SavedContextChip summary={savedCtx.summary} className="justify-center" />
+              )}
             </motion.div>
 
             <div className="space-y-5">

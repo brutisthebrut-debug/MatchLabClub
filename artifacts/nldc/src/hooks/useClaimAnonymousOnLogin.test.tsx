@@ -267,13 +267,13 @@ describe("useClaimAnonymousOnLogin — full anon→login→claim flow", () => {
       action: React.ReactElement<{ onClick: () => void }>;
     };
     expect(arg.title).toMatch(/already used/i);
-    expect(arg.description).toMatch(/dashboard/i);
+    expect(arg.description).toMatch(/fresh link|start a new audit/i);
 
-    // Clicking the action navigates to /dashboard.
+    // Clicking the action navigates to /start.
     act(() => {
       arg.action.props.onClick();
     });
-    expect(setLocationSpy).toHaveBeenCalledWith("/dashboard");
+    expect(setLocationSpy).toHaveBeenCalledWith("/start");
 
     // The pending handoff is cleared so we don't retry it.
     expect(sessionStorage.getItem("nldc:pendingHandoff")).toBeNull();

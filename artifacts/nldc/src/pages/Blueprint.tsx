@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, MapPin, RefreshCw, AlertCircle, Copy, Check } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
+import { useSavedContext } from "@/hooks/useSavedContext";
+import { SavedContextChip } from "@/components/SavedContextChip";
 import { blueprintSchema, parseAiJson, type BlueprintOutput } from "@/lib/aiSchemas";
 import { ToneBar, ConfidenceLabel, getConfidenceLevel } from "@/components/ToneBar";
 
@@ -187,6 +189,7 @@ export default function Blueprint() {
   const loading = enhance.isPending;
   const { isAuthenticated } = useAuth();
   const isBrandNewUser = isAuthenticated && !result;
+  const savedCtx = useSavedContext();
 
   async function handleAnalyze(extraTone?: string) {
     if (!text.trim()) return;
@@ -208,6 +211,8 @@ export default function Blueprint() {
           context: {
             toolName: "Personal Blueprint",
             formValues: { selfDescription: text, pattern, misread, want },
+            goals: savedCtx.goals,
+            progressEntries: savedCtx.progressEntries.slice(0, 5),
           },
           expectJson: true,
         },
@@ -305,6 +310,9 @@ export default function Blueprint() {
               className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50">
               {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Building your blueprint…</> : <><Sparkles className="mr-2 h-4 w-4" />Build My Blueprint</>}
             </Button>
+            {savedCtx.hasSavedContext && (
+              <SavedContextChip summary={savedCtx.summary} className="justify-center" />
+            )}
           </motion.div>
 
           {/* Results */}

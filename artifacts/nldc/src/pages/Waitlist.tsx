@@ -10,6 +10,7 @@ import { useJoinWaitlist, useGetWaitlistStats, getGetWaitlistStatsQueryKey } fro
 import { useQueryClient } from "@tanstack/react-query";
 import { Headphones, Users, CheckCircle, ArrowRight, Share2, Loader2, Clock, Quote, Sparkles } from "lucide-react";
 import { Link } from "wouter";
+import { TrustBadge } from "@/components/TrustBadge";
 
 const PODCAST_SOURCES = ["The Love Reset Podcast", "Modern Romance", "Dates & Mates", "Word of Mouth", "Social Media", "Other"];
 const INTERESTS = ["Profile audit", "Message coaching", "Full dating reset", "Monthly coaching", "Just curious"];
@@ -200,6 +201,7 @@ export default function Waitlist() {
                     {joinWaitlist.isPending ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Reserving...</> : <>Reserve My Spot <ArrowRight className="ml-2 h-5 w-5" /></>}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center">No spam. Unsubscribe anytime.</p>
+                  <TrustBadge />
                 </div>
               </motion.div>
             )}
