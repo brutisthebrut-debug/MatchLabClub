@@ -178,7 +178,7 @@ export default function NextMessage() {
     const parsed = parseAiJson(nextMessageSchema, raw);
     if (!parsed) return null;
     const palette = deterministic.options;
-    const options: MessageOption[] = parsed.options.map((o, i) => {
+    const options: MessageOption[] = parsed.options.map((o: { style: string; text: string; when?: string }, i: number) => {
       const fallback = palette[i] ?? palette[0];
       return {
         style: o.style,

@@ -14,6 +14,13 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
 });
 
+const QUICK_MOMENTS = [
+  { emoji: "💬", label: "They Didn't Reply", hint: "Re-engage after quiet", href: "/next-message" },
+  { emoji: "✨", label: "I Got a Match!", hint: "Write your first opener", href: "/copilot/reply" },
+  { emoji: "🌀", label: "I'm Spiraling", hint: "Ground yourself fast", href: "/blueprint" },
+  { emoji: "🎨", label: "Sound More Like Me", hint: "Tone-match your rewrite", href: "/copilot/profile" },
+];
+
 const WORKFLOWS = [
   {
     icon: Zap,
@@ -147,6 +154,22 @@ export default function Copilot() {
                   );
                 })}
               </div>
+
+              {/* Quick Moments */}
+              <motion.div {...fadeUp(0.38)} className="mt-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-2.5">Quick moments</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {QUICK_MOMENTS.map((qm) => (
+                    <Link key={qm.href} href={qm.href}>
+                      <div className="glass border border-white/8 rounded-xl p-3 hover:border-white/18 transition-all cursor-pointer text-center group">
+                        <div className="text-xl mb-1.5">{qm.emoji}</div>
+                        <p className="text-[11px] font-semibold text-foreground leading-tight group-hover:text-white transition-colors">{qm.label}</p>
+                        <p className="text-[10px] text-muted-foreground/55 mt-0.5 leading-tight">{qm.hint}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </motion.div>
 
               {/* Safety copy */}
               <motion.div {...fadeUp(0.42)} className="mt-5 glass border border-white/5 rounded-2xl p-4 flex items-start gap-3">

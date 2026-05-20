@@ -12,7 +12,8 @@ import {
   TrendingUp, AlertTriangle, Clock, Sparkles, Trophy, Eye,
   ChevronRight, FlaskConical, Stethoscope, Zap,
   Wand2, ScanFace, BarChart2, Heart, Compass, BookOpen,
-  MessageCircle, User, Map, Brain, Rss, Shield, Users, BarChart, Lightbulb, Layers
+  MessageCircle, User, Map, Brain, Rss, Shield, Users, BarChart, Lightbulb, Layers,
+  Calendar, Star, Images
 } from "lucide-react";
 
 function ScoreRing({ score }: { score: number }) {
@@ -75,39 +76,72 @@ const HOW_YOU_COME_ACROSS = [
   { label: "Your conversation energy is...",     values: ["Curious", "Attentive", "Measured"],        color: "tag-violet border"   },
 ];
 
-const QUICK_ACTIONS = [
-  { icon: FileText,      label: "New Audit",           desc: "Reanalyze your profile",        href: "/start",                 color: "hsl(268 52% 68%)" },
-  { icon: Zap,           label: "Signal Check",         desc: "3-minute quick read",           href: "/signal-check",          color: "hsl(43 65% 65%)"  },
-  { icon: FlaskConical,  label: "Chemistry Lab",        desc: "Analyse a message",             href: "/lab",                   color: "hsl(190 55% 60%)" },
-  { icon: MessageSquare, label: "Message Coach",        desc: "Get 5 reply options",           href: "/coach",                 color: "hsl(285 45% 62%)" },
-  { icon: Stethoscope,   label: "Dating Diagnosis",     desc: "Find your pattern",             href: "/diagnosis",             color: "hsl(348 55% 65%)" },
-  { icon: Mail,          label: "Import Patterns",      desc: "Communication style analysis",  href: "/insights",              color: "hsl(142 55% 58%)" },
-  { icon: Wand2,         label: "Profile Glow-Up",      desc: "10 rewrites for any platform",  href: "/glow-up",               color: "hsl(268 52% 68%)" },
-  { icon: User,          label: "Profile Reader",       desc: "Decode someone's profile",      href: "/profile-reader",        color: "hsl(190 55% 60%)" },
-  { icon: MessageCircle, label: "Next Message",         desc: "7 copy-ready options",          href: "/next-message",          color: "hsl(285 45% 62%)" },
-  { icon: BarChart2,     label: "Style Map",            desc: "9 dimensions of your style",    href: "/style-map",             color: "hsl(43 65% 65%)"  },
-  { icon: BookOpen,      label: "Dating Blueprint",     desc: "Your personalized action plan", href: "/blueprint",             color: "hsl(142 55% 58%)" },
-  { icon: ScanFace,      label: "Mirror Profile",       desc: "See yourself as others do",     href: "/mirror",                color: "hsl(268 52% 68%)" },
-  { icon: Sparkles,      label: "Dating Archetype",     desc: "6-question shareable quiz",     href: "/archetype",             color: "hsl(43 65% 65%)"  },
-  { icon: Heart,         label: "Post-Meeting Reflect", desc: "Pursue / pause / pass read",    href: "/reflection",            color: "hsl(348 55% 65%)" },
-  { icon: Eye,           label: "Connection Style",     desc: "Your attachment pattern",       href: "/connection-style",      color: "hsl(285 45% 65%)" },
-  { icon: Compass,       label: "Compat. Compass",      desc: "Dynamics that support you",     href: "/compatibility-compass", color: "hsl(142 55% 60%)" },
-  { icon: Heart,         label: "Wellness Center",      desc: "8 dimensions of readiness",     href: "/wellness",              color: "hsl(43 65% 65%)"  },
-  { icon: Shield,        label: "User Control",         desc: "Approve, edit, export, delete", href: "/user-control",          color: "hsl(142 55% 60%)" },
-  { icon: Layers,        label: "Life Context",         desc: "Your approved insights",        href: "/life-context",          color: "hsl(268 52% 68%)" },
-  { icon: Eye,           label: "Future Connections",   desc: "Sources we'd consider next",    href: "/future-connections",    color: "hsl(190 55% 60%)" },
-  { icon: Settings,      label: "Integrations",         desc: "Manage connections",            href: "/integrations",          color: "hsl(228 18% 55%)" },
-  { icon: Map,           label: "Platform Vision",      desc: "See what's coming",             href: "/roadmap",               color: "hsl(43 65% 60%)"  },
-  { icon: Clock,         label: "My Timeline",          desc: "Log wins, patterns, questions", href: "/progress/timeline",     color: "hsl(190 55% 60%)" },
-  { icon: Brain,         label: "Pattern Board",        desc: "Recurring themes from entries", href: "/progress/patterns",     color: "hsl(268 52% 68%)" },
-  { icon: FlaskConical,  label: "Experiments",          desc: "Try it, track it, learn",       href: "/progress/experiments",  color: "hsl(43 65% 65%)"  },
-  { icon: MessageSquare, label: "Follow-Up Check",      desc: "Questions tied to your notes",  href: "/progress/followup",     color: "hsl(285 45% 65%)" },
-  { icon: BarChart,      label: "Progress Scorecard",   desc: "7 growth dimension meters",     href: "/progress/scorecard",    color: "hsl(142 55% 60%)" },
-  { icon: Rss,           label: "Learning Feed",        desc: "Observations from your log",    href: "/progress/feed",         color: "hsl(268 52% 68%)" },
-  { icon: Shield,        label: "Control Center",       desc: "Your data, your toggles",       href: "/progress/control",      color: "hsl(228 18% 55%)" },
-  { icon: Map,           label: "Insights Roadmap",     desc: "What's being built + controls", href: "/progress/insights-roadmap", color: "hsl(43 65% 65%)" },
-  { icon: Heart,         label: "Readiness Guide",      desc: "Goal-based readiness read",     href: "/progress/readiness",    color: "hsl(348 55% 65%)" },
-  { icon: Users,         label: "Companion Workspace",  desc: "Copy-ready situation guidance", href: "/progress/companion",    color: "hsl(190 55% 60%)" },
+const ACTION_GROUPS = [
+  {
+    label: "Start Here", color: "hsl(268 52% 68%)",
+    items: [
+      { icon: FileText,      label: "New Audit",         desc: "Full profile audit + 7-day plan",  href: "/start"          },
+      { icon: Zap,           label: "Signal Check",      desc: "3-minute quick read",              href: "/signal-check"   },
+    ],
+  },
+  {
+    label: "Profile Tools", color: "hsl(43 65% 65%)",
+    items: [
+      { icon: Stethoscope,   label: "Dating Diagnosis",  desc: "Find your pattern",                href: "/diagnosis"      },
+      { icon: Wand2,         label: "Profile Glow-Up",   desc: "10 rewrites for any platform",     href: "/glow-up"        },
+      { icon: ScanFace,      label: "Mirror Profile",    desc: "See yourself as others do",        href: "/mirror"         },
+      { icon: User,          label: "Profile Reader",    desc: "Decode someone's profile",         href: "/profile-reader" },
+      { icon: Images,        label: "Before & After",    desc: "Sample rewrites by scenario",      href: "/gallery"        },
+    ],
+  },
+  {
+    label: "Message Tools", color: "hsl(190 55% 60%)",
+    items: [
+      { icon: FlaskConical,  label: "Chemistry Lab",     desc: "Analyse a message",                href: "/lab"            },
+      { icon: MessageSquare, label: "Message Coach",     desc: "5 styled reply options",           href: "/coach"          },
+      { icon: MessageCircle, label: "Next Message",      desc: "7 copy-ready options",             href: "/next-message"   },
+      { icon: BarChart2,     label: "Style Map",         desc: "9 dimensions of your style",       href: "/style-map"      },
+      { icon: Mail,          label: "Import Patterns",   desc: "Communication style analysis",     href: "/insights"       },
+    ],
+  },
+  {
+    label: "Self-Insight", color: "hsl(285 45% 65%)",
+    items: [
+      { icon: Sparkles,      label: "Signal Type Quiz",  desc: "8 questions → your archetype",     href: "/quiz"                   },
+      { icon: BookOpen,      label: "Blueprint",         desc: "Your personalized action plan",    href: "/blueprint"              },
+      { icon: Star,          label: "Dating Archetype",  desc: "6-question shareable quiz",        href: "/archetype"              },
+      { icon: Heart,         label: "Post-Date Reflect", desc: "Pursue / pause / pass read",       href: "/reflection"             },
+      { icon: Eye,           label: "Connection Style",  desc: "Your attachment pattern",          href: "/connection-style"       },
+      { icon: Compass,       label: "Compat. Compass",   desc: "Dynamics that support you",        href: "/compatibility-compass"  },
+    ],
+  },
+  {
+    label: "Wingman Studio", color: "hsl(348 55% 65%)",
+    items: [
+      { icon: MessageSquare, label: "Help Me Reply",     desc: "Guided reply workflow",            href: "/copilot/reply"   },
+      { icon: Wand2,         label: "Improve Profile",   desc: "Prioritized rewrite plan",         href: "/copilot/profile" },
+      { icon: Heart,         label: "Flirt Coach",       desc: "Draft messages for any moment",    href: "/copilot/flirt"   },
+      { icon: Calendar,      label: "Prep for a Date",   desc: "Practical pre-date card",          href: "/copilot/prep"    },
+    ],
+  },
+  {
+    label: "Growth Tracker", color: "hsl(142 55% 60%)",
+    items: [
+      { icon: Clock,         label: "My Timeline",       desc: "Log wins, patterns, questions",    href: "/progress/timeline"  },
+      { icon: Brain,         label: "Pattern Board",     desc: "Recurring themes",                 href: "/progress/patterns"  },
+      { icon: BarChart,      label: "Scorecard",         desc: "7 growth dimension meters",        href: "/progress/scorecard" },
+      { icon: Users,         label: "Companion",         desc: "Copy-ready situation guidance",    href: "/progress/companion" },
+    ],
+  },
+  {
+    label: "Settings & Trust", color: "hsl(228 18% 55%)",
+    items: [
+      { icon: Heart,         label: "Wellness Center",   desc: "8 dimensions of readiness",        href: "/wellness"        },
+      { icon: Layers,        label: "Connection Center", desc: "Bring in context on your terms",   href: "/connections"     },
+      { icon: Shield,        label: "Data Vault",        desc: "Preview, export, or delete",       href: "/vault"           },
+      { icon: Settings,      label: "Integrations",      desc: "Manage connections",               href: "/integrations"    },
+    ],
+  },
 ];
 
 const WINGMAN_NOTES = [
@@ -427,27 +461,34 @@ export default function Dashboard() {
             </motion.div>
           </div>
 
-          {/* Quick Actions */}
+          {/* Quick Actions — Grouped */}
           <motion.div {...fadeUp(0.22)} className="mb-5">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-4">
               <p className="font-semibold text-foreground text-sm">Your Tools</p>
-              <Link href="/roadmap">
+              <Link href="/copilot">
                 <span className="text-xs text-muted-foreground hover:text-[hsl(268_52%_68%)] transition-colors flex items-center gap-1">
-                  Platform vision <ArrowRight className="w-3 h-3" />
+                  Wingman Studio <ArrowRight className="w-3 h-3" />
                 </span>
               </Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {QUICK_ACTIONS.map((action, i) => (
-                <Link key={i} href={action.href} data-testid={`card-quick-action-${action.label.toLowerCase().replace(/ /g, "-")}`}>
-                  <div className="glass border border-white/8 rounded-2xl p-3 sm:p-4 hover:border-[hsl(268_52%_68%/0.3)] hover:shadow-[0_8px_30px_rgb(0_0_0/0.4)] transition-all cursor-pointer h-full card-hover">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center mb-2.5" style={{ background: `${action.color.replace(")", " / 0.12)")}` }}>
-                      <action.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: action.color }} />
-                    </div>
-                    <p className="font-semibold text-foreground text-xs leading-tight">{action.label}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight hidden sm:block">{action.desc}</p>
+            <div className="space-y-5">
+              {ACTION_GROUPS.map((group) => (
+                <div key={group.label}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5 px-0.5" style={{ color: group.color }}>{group.label}</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {group.items.map((action, i) => (
+                      <Link key={i} href={action.href} data-testid={`card-quick-action-${action.label.toLowerCase().replace(/ /g, "-")}`}>
+                        <div className="glass border border-white/8 rounded-2xl p-3 hover:border-[hsl(268_52%_68%/0.3)] hover:shadow-[0_8px_30px_rgb(0_0_0/0.35)] transition-all cursor-pointer h-full card-hover">
+                          <div className="w-7 h-7 rounded-xl flex items-center justify-center mb-2" style={{ background: `${group.color.replace(")", " / 0.12)")}` }}>
+                            <action.icon className="w-3.5 h-3.5" style={{ color: group.color }} />
+                          </div>
+                          <p className="font-semibold text-foreground text-xs leading-tight">{action.label}</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight hidden sm:block">{action.desc}</p>
+                        </div>
+                      </Link>
+                    ))}
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </motion.div>

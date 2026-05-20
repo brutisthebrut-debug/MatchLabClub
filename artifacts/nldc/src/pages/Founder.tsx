@@ -286,7 +286,7 @@ function LockedView({ onSubmit }: { onSubmit: (key: string) => void }) {
           </button>
         </form>
         <p className="text-xs text-muted-foreground/40">
-          Default key: <code className="font-mono">nldc2024</code> — set <code className="font-mono">VITE_FOUNDER_KEY</code> to change it.
+          Set <code className="font-mono">VITE_FOUNDER_KEY</code> to configure a custom key.
         </p>
       </div>
     </div>

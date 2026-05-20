@@ -151,7 +151,9 @@ export const ExportMyDataResponse = zod.object({
   "photoCount": zod.number().nullish(),
   "relationshipHistory": zod.string().nullish(),
   "biggestChallenge": zod.string().nullish(),
+  "sourceApp": zod.string().nullish().describe('Dating app the audit originated from (e.g. \"Hinge\"), detected from OCR or supplied by the client.'),
   "status": zod.enum(['pending', 'generating', 'complete', 'error']),
+  "source": zod.enum(['manual', 'screenshot']),
   "readinessScore": zod.number().nullish(),
   "createdAt": zod.string()
 })),

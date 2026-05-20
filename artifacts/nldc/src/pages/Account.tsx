@@ -54,7 +54,7 @@ export default function Account() {
   const { user, isAuthenticated, isLoading, login, logout } = useAuth();
   const { toast } = useToast();
   const auditsQuery = useListAudits({
-    query: { queryKey: getListAuditsQueryKey(), enabled: isAuthenticated },
+    query: { queryKey: getListAuditsQueryKey() },
   });
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
