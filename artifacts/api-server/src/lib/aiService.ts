@@ -1,0 +1,229 @@
+import OpenAI from "openai";
+import { logger } from "./logger";
+
+export type AiMode = "live" | "fallback" | "setup-needed";
+
+export interface AiContext {
+  toolName?: string;
+  formValues?: Record<string, unknown>;
+  savedResults?: Record<string, unknown>;
+  goals?: string[];
+  progressEntries?: Array<{ date?: string; tag?: string; note?: string }>;
+  extras?: Record<string, unknown>;
+}
+
+export interface GenerateOptions {
+  system: string;
+  user: string;
+  context?: AiContext;
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+  expectJson?: boolean;
+}
+
+export interface GenerateResult<T = string> {
+  mode: AiMode;
+  isFallback: boolean;
+  output: T;
+  raw?: string;
+  durationMs: number;
+  error?: string;
+  model?: string;
+}
+
+const DEFAULT_MODEL = "gpt-4o-mini";
+
+let cachedClient: OpenAI | null = null;
+let cachedKeyHash: string | null = null;
+
+function resolveKey(): { apiKey: string | null; baseURL?: string; source: "direct" | "replit-proxy" | "none" } {
+  const direct = process.env.OPENAI_API_KEY;
+  if (direct && direct.trim().length > 0) {
+    return { apiKey: direct.trim(), source: "direct" };
+  }
+  const proxyKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+  const proxyUrl = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+  if (proxyKey && proxyKey.trim().length > 0) {
+    return { apiKey: proxyKey.trim(), baseURL: proxyUrl, source: "replit-proxy" };
+  }
+  return { apiKey: null, source: "none" };
+}
+
+function getClient(): OpenAI | null {
+  const { apiKey, baseURL } = resolveKey();
+  if (!apiKey) {
+    cachedClient = null;
+    cachedKeyHash = null;
+    return null;
+  }
+  const hash = `${apiKey.slice(0, 6)}:${baseURL ?? ""}`;
+  if (cachedClient && cachedKeyHash === hash) return cachedClient;
+  cachedClient = new OpenAI({ apiKey, baseURL });
+  cachedKeyHash = hash;
+  return cachedClient;
+}
+
+export function hasApiKey(): boolean {
+  return resolveKey().apiKey !== null;
+}
+
+export function getAiStatus(): {
+  mode: AiMode;
+  keyDetected: boolean;
+  provider: "openai" | null;
+  source: "direct" | "replit-proxy" | "none";
+  model: string;
+  message: string;
+} {
+  const { apiKey, source } = resolveKey();
+  if (!apiKey) {
+    return {
+      mode: "fallback",
+      keyDetected: false,
+      provider: null,
+      source,
+      model: DEFAULT_MODEL,
+      message: "No OpenAI API key detected. App runs on deterministic fallback content.",
+    };
+  }
+  return {
+    mode: "live",
+    keyDetected: true,
+    provider: "openai",
+    source,
+    model: DEFAULT_MODEL,
+    message:
+      source === "replit-proxy"
+        ? "OpenAI connected via Replit AI Integrations."
+        : "OpenAI connected via direct API key.",
+  };
+}
+
+function contextToPromptBlock(ctx?: AiContext): string {
+  if (!ctx) return "";
+  const lines: string[] = [];
+  if (ctx.toolName) lines.push(`Tool: ${ctx.toolName}`);
+  if (ctx.goals && ctx.goals.length > 0) lines.push(`User goals: ${ctx.goals.join(", ")}`);
+  if (ctx.formValues && Object.keys(ctx.formValues).length > 0) {
+    lines.push(`Form values:\n${JSON.stringify(ctx.formValues, null, 2)}`);
+  }
+  if (ctx.savedResults && Object.keys(ctx.savedResults).length > 0) {
+    lines.push(`Saved results:\n${JSON.stringify(ctx.savedResults, null, 2)}`);
+  }
+  if (ctx.progressEntries && ctx.progressEntries.length > 0) {
+    const recent = ctx.progressEntries.slice(0, 8).map((e) => {
+      const date = e.date ? `[${e.date}]` : "";
+      const tag = e.tag ? `(${e.tag})` : "";
+      return `${date}${tag} ${e.note ?? ""}`.trim();
+    });
+    lines.push(`Recent progress entries:\n${recent.join("\n")}`);
+  }
+  if (ctx.extras && Object.keys(ctx.extras).length > 0) {
+    lines.push(`Additional context:\n${JSON.stringify(ctx.extras, null, 2)}`);
+  }
+  return lines.length === 0 ? "" : `\n\n--- CONTEXT ---\n${lines.join("\n\n")}\n--- END CONTEXT ---`;
+}
+
+export function coachingPrompt(toolPurpose: string): string {
+  return [
+    "You are the Next Level Dating Club coach — warm, direct, never preachy.",
+    "Tone: practical, kind, specific. Avoid generic advice and clichés.",
+    "Never claim to be human. Never recommend deception, manipulation, or unsafe behavior.",
+    `Purpose of this response: ${toolPurpose}`,
+    "If the user provides little context, give a thoughtful general response — never refuse.",
+  ].join("\n");
+}
+
+export function toolPrompt(toolName: string, instruction: string): string {
+  return [
+    `Tool: ${toolName}`,
+    `Instruction: ${instruction}`,
+    "Use any provided context to make the response feel specific to this person.",
+  ].join("\n");
+}
+
+export function parseStructured<T = unknown>(raw: string, fallback: T): { value: T; ok: boolean } {
+  try {
+    const trimmed = raw.trim();
+    const start = trimmed.indexOf("{");
+    const arrStart = trimmed.indexOf("[");
+    const startIdx =
+      start === -1 ? arrStart : arrStart === -1 ? start : Math.min(start, arrStart);
+    if (startIdx === -1) return { value: fallback, ok: false };
+    const endChar = trimmed[startIdx] === "{" ? "}" : "]";
+    const endIdx = trimmed.lastIndexOf(endChar);
+    if (endIdx === -1 || endIdx <= startIdx) return { value: fallback, ok: false };
+    const slice = trimmed.slice(startIdx, endIdx + 1);
+    const parsed = JSON.parse(slice) as T;
+    return { value: parsed, ok: true };
+  } catch {
+    return { value: fallback, ok: false };
+  }
+}
+
+export async function generate(
+  opts: GenerateOptions,
+  fallbackOutput: string,
+): Promise<GenerateResult<string>> {
+  const start = Date.now();
+  const client = getClient();
+  const model = opts.model ?? DEFAULT_MODEL;
+
+  if (!client) {
+    return {
+      mode: "fallback",
+      isFallback: true,
+      output: fallbackOutput,
+      durationMs: Date.now() - start,
+      model,
+    };
+  }
+
+  const contextBlock = contextToPromptBlock(opts.context);
+  const userContent = `${opts.user}${contextBlock}`;
+
+  try {
+    const response = await client.chat.completions.create({
+      model,
+      temperature: opts.temperature ?? 0.7,
+      max_tokens: opts.maxTokens ?? 600,
+      messages: [
+        { role: "system", content: opts.system },
+        { role: "user", content: userContent },
+      ],
+      ...(opts.expectJson ? { response_format: { type: "json_object" as const } } : {}),
+    });
+
+    const text = response.choices[0]?.message?.content?.trim() ?? "";
+    if (!text) {
+      return {
+        mode: "setup-needed",
+        isFallback: true,
+        output: fallbackOutput,
+        durationMs: Date.now() - start,
+        error: "Empty response from model",
+        model,
+      };
+    }
+    return {
+      mode: "live",
+      isFallback: false,
+      output: text,
+      raw: text,
+      durationMs: Date.now() - start,
+      model,
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown OpenAI error";
+    logger.warn({ err: message }, "OpenAI generate failed; using fallback");
+    return {
+      mode: "setup-needed",
+      isFallback: true,
+      output: fallbackOutput,
+      durationMs: Date.now() - start,
+      error: message,
+      model,
+    };
+  }
+}

@@ -343,3 +343,59 @@ export const GetWaitlistStatsResponse = zod.object({
 })
 
 
+/**
+ * Returns whether OpenAI is connected, in fallback mode, or needs setup.
+ * @summary Get current AI integration status
+ */
+export const GetAiStatusResponse = zod.object({
+  "mode": zod.enum(['live', 'fallback', 'setup-needed']),
+  "keyDetected": zod.boolean(),
+  "provider": zod.string().nullish(),
+  "source": zod.enum(['direct', 'replit-proxy', 'none']),
+  "model": zod.string(),
+  "message": zod.string()
+})
+
+
+/**
+ * Safe diagnostic endpoint — runs a tiny generation request. Requires founder key. Falls back gracefully if AI is unavailable.
+ * @summary Send a sample prompt through the server-side AI helper
+ */
+export const TestAiQueryParams = zod.object({
+  "key": zod.coerce.string().optional()
+})
+
+export const TestAiHeader = zod.object({
+  "x-founder-key": zod.string().optional()
+})
+
+export const testAiBodySampleMax = 2000;
+
+
+
+export const TestAiBody = zod.object({
+  "sample": zod.string().min(1).max(testAiBodySampleMax),
+  "context": zod.object({
+  "toolName": zod.string().optional(),
+  "formValues": zod.record(zod.string(), zod.unknown()).optional(),
+  "savedResults": zod.record(zod.string(), zod.unknown()).optional(),
+  "goals": zod.array(zod.string()).optional(),
+  "progressEntries": zod.array(zod.object({
+  "date": zod.string().optional(),
+  "tag": zod.string().optional(),
+  "note": zod.string().optional()
+})).optional(),
+  "extras": zod.record(zod.string(), zod.unknown()).optional()
+}).optional()
+})
+
+export const TestAiResponse = zod.object({
+  "mode": zod.enum(['live', 'fallback', 'setup-needed']),
+  "isFallback": zod.boolean(),
+  "output": zod.string(),
+  "durationMs": zod.number(),
+  "error": zod.string().optional(),
+  "model": zod.string().optional()
+})
+
+

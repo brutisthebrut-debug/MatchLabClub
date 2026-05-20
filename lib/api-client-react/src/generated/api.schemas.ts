@@ -274,3 +274,87 @@ export interface WaitlistStats {
   nextMilestone: number;
 }
 
+export type AiStatusMode = typeof AiStatusMode[keyof typeof AiStatusMode];
+
+
+export const AiStatusMode = {
+  live: 'live',
+  fallback: 'fallback',
+  'setup-needed': 'setup-needed',
+} as const;
+
+export type AiStatusSource = typeof AiStatusSource[keyof typeof AiStatusSource];
+
+
+export const AiStatusSource = {
+  direct: 'direct',
+  'replit-proxy': 'replit-proxy',
+  none: 'none',
+} as const;
+
+export interface AiStatus {
+  mode: AiStatusMode;
+  keyDetected: boolean;
+  /** @nullable */
+  provider?: string | null;
+  source: AiStatusSource;
+  model: string;
+  message: string;
+}
+
+export interface AiError {
+  error: string;
+}
+
+export type AiContextInputFormValues = { [key: string]: unknown };
+
+export type AiContextInputSavedResults = { [key: string]: unknown };
+
+export type AiContextInputProgressEntriesItem = {
+  date?: string;
+  tag?: string;
+  note?: string;
+};
+
+export type AiContextInputExtras = { [key: string]: unknown };
+
+export interface AiContextInput {
+  toolName?: string;
+  formValues?: AiContextInputFormValues;
+  savedResults?: AiContextInputSavedResults;
+  goals?: string[];
+  progressEntries?: AiContextInputProgressEntriesItem[];
+  extras?: AiContextInputExtras;
+}
+
+export interface AiTestInput {
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  sample: string;
+  context?: AiContextInput;
+}
+
+export type AiTestResultMode = typeof AiTestResultMode[keyof typeof AiTestResultMode];
+
+
+export const AiTestResultMode = {
+  live: 'live',
+  fallback: 'fallback',
+  'setup-needed': 'setup-needed',
+} as const;
+
+export interface AiTestResult {
+  mode: AiTestResultMode;
+  isFallback: boolean;
+  output: string;
+  durationMs: number;
+  error?: string;
+  model?: string;
+}
+
+export type TestAiParams = {
+key?: string;
+};
+

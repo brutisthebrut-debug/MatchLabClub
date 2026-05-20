@@ -19,6 +19,8 @@ tags:
     description: Email insight import operations
   - name: waitlist
     description: Waitlist operations
+  - name: ai
+    description: AI integration status and diagnostics
 paths:
   /healthz:
     get:
@@ -343,6 +345,69 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WaitlistStats"
+
+  /ai/status:
+    get:
+      operationId: getAiStatus
+      tags: [ai]
+      summary: Get current AI integration status
+      description: Returns whether OpenAI is connected, in fallback mode, or needs setup.
+      responses:
+        "200":
+          description: AI status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiStatus"
+
+  /ai/test:
+    post:
+      operationId: testAi
+      tags: [ai]
+      summary: Send a sample prompt through the server-side AI helper
+      description: Safe diagnostic endpoint — runs a tiny generation request. Requires founder key. Falls back gracefully if AI is unavailable.
+      parameters:
+        - name: x-founder-key
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: key
+          in: query
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiTestInput"
+      responses:
+        "200":
+          description: AI test result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiTestResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiError"
+        "401":
+          description: Founder key required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiError"
+        "429":
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiError"
 
 components:
   schemas:
@@ -771,3 +836,88 @@ components:
           type: integer
         nextMilestone:
           type: integer
+
+    AiStatus:
+      type: object
+      required: [mode, keyDetected, source, model, message]
+      properties:
+        mode:
+          type: string
+          enum: [live, fallback, setup-needed]
+        keyDetected:
+          type: boolean
+        provider:
+          type: ["string", "null"]
+        source:
+          type: string
+          enum: [direct, replit-proxy, none]
+        model:
+          type: string
+        message:
+          type: string
+
+    AiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    AiContextInput:
+      type: object
+      properties:
+        toolName:
+          type: string
+        formValues:
+          type: object
+          additionalProperties: true
+        savedResults:
+          type: object
+          additionalProperties: true
+        goals:
+          type: array
+          items:
+            type: string
+        progressEntries:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              tag:
+                type: string
+              note:
+                type: string
+        extras:
+          type: object
+          additionalProperties: true
+
+    AiTestInput:
+      type: object
+      required: [sample]
+      properties:
+        sample:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        context:
+          $ref: "#/components/schemas/AiContextInput"
+
+    AiTestResult:
+      type: object
+      required: [mode, isFallback, output, durationMs]
+      properties:
+        mode:
+          type: string
+          enum: [live, fallback, setup-needed]
+        isFallback:
+          type: boolean
+        output:
+          type: string
+        durationMs:
+          type: integer
+        error:
+          type: string
+        model:
+          type: string

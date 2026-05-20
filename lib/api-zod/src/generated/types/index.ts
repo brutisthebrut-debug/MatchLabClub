@@ -7,6 +7,18 @@
  */
 
 export * from './actionPlanItem';
+export * from './aiContextInput';
+export * from './aiContextInputExtras';
+export * from './aiContextInputFormValues';
+export * from './aiContextInputProgressEntriesItem';
+export * from './aiContextInputSavedResults';
+export * from './aiError';
+export * from './aiStatus';
+export * from './aiStatusMode';
+export * from './aiStatusSource';
+export * from './aiTestInput';
+export * from './aiTestResult';
+export * from './aiTestResultMode';
 export * from './audit';
 export * from './auditInput';
 export * from './auditReport';
@@ -31,6 +43,7 @@ export * from './profileRewrite';
 export * from './rewrittenPrompt';
 export * from './scoreHistoryPoint';
 export * from './suggestedReply';
+export * from './testAiParams';
 export * from './waitlistEntry';
 export * from './waitlistInput';
 export * from './waitlistStats';

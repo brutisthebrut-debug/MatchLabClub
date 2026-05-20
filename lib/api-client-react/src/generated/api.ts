@@ -20,6 +20,10 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AiError,
+  AiStatus,
+  AiTestInput,
+  AiTestResult,
   Audit,
   AuditInput,
   AuditReport,
@@ -35,6 +39,7 @@ import type {
   MessageCoachingResponse,
   MessageCoachingSession,
   ProfileRewrite,
+  TestAiParams,
   WaitlistEntry,
   WaitlistInput,
   WaitlistStats
@@ -1452,4 +1457,162 @@ export function useGetWaitlistStats<TData = Awaited<ReturnType<typeof getWaitlis
 
 
 
+
+export const getGetAiStatusUrl = () => {
+
+
+
+
+  return `/api/ai/status`
+}
+
+/**
+ * Returns whether OpenAI is connected, in fallback mode, or needs setup.
+ * @summary Get current AI integration status
+ */
+export const getAiStatus = async ( options?: RequestInit): Promise<AiStatus> => {
+
+  return customFetch<AiStatus>(getGetAiStatusUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAiStatusQueryKey = () => {
+    return [
+    `/api/ai/status`
+    ] as const;
+    }
+
+
+export const getGetAiStatusQueryOptions = <TData = Awaited<ReturnType<typeof getAiStatus>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAiStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAiStatusQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiStatus>>> = ({ signal }) => getAiStatus({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAiStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAiStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getAiStatus>>>
+export type GetAiStatusQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get current AI integration status
+ */
+
+export function useGetAiStatus<TData = Awaited<ReturnType<typeof getAiStatus>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAiStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAiStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getTestAiUrl = (params?: TestAiParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/ai/test?${stringifiedParams}` : `/api/ai/test`
+}
+
+/**
+ * Safe diagnostic endpoint — runs a tiny generation request. Requires founder key. Falls back gracefully if AI is unavailable.
+ * @summary Send a sample prompt through the server-side AI helper
+ */
+export const testAi = async (aiTestInput: AiTestInput,
+    params?: TestAiParams, options?: RequestInit): Promise<AiTestResult> => {
+
+  return customFetch<AiTestResult>(getTestAiUrl(params),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      aiTestInput,)
+  }
+);}
+
+
+
+
+export const getTestAiMutationOptions = <TError = ErrorType<AiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testAi>>, TError,{data: BodyType<AiTestInput>;params?: TestAiParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof testAi>>, TError,{data: BodyType<AiTestInput>;params?: TestAiParams}, TContext> => {
+
+const mutationKey = ['testAi'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testAi>>, {data: BodyType<AiTestInput>;params?: TestAiParams}> = (props) => {
+          const {data,params} = props ?? {};
+
+          return  testAi(data,params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestAiMutationResult = NonNullable<Awaited<ReturnType<typeof testAi>>>
+    export type TestAiMutationBody = BodyType<AiTestInput>
+    export type TestAiMutationError = ErrorType<AiError>
+
+    /**
+ * @summary Send a sample prompt through the server-side AI helper
+ */
+export const useTestAi = <TError = ErrorType<AiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testAi>>, TError,{data: BodyType<AiTestInput>;params?: TestAiParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof testAi>>,
+        TError,
+        {data: BodyType<AiTestInput>;params?: TestAiParams},
+        TContext
+      > => {
+      return useMutation(getTestAiMutationOptions(options));
+    }
 

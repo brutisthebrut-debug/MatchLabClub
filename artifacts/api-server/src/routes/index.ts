@@ -8,6 +8,7 @@ import waitlistRouter from "./waitlist";
 import leadsRouter from "./leads";
 import purchaseInterestRouter from "./purchaseInterest";
 import founderRouter from "./founder";
+import aiRouter from "./ai";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(waitlistRouter);
 router.use(leadsRouter);
 router.use(purchaseInterestRouter);
 router.use(founderRouter);
+router.use(aiRouter);
 
 export default router;
