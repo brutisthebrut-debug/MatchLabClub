@@ -258,6 +258,21 @@ export default function NextMessage() {
             <p className="text-muted-foreground mt-2">Give us context. Get seven copy-ready options — from safe to bold to clean exit. Pick the one that fits.</p>
           </motion.div>
 
+          {isBrandNewUser && (
+            <motion.div {...fadeUp(0.03)} className="mb-6" data-testid="nextmessage-empty-state">
+              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
+                  <MessageCircle className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to Next Message</p>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Get your first reply options</h2>
+                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
+                  Paste a conversation and we'll give you seven copy-ready next messages — from safe and warm to playfully bold to a clean exit.
+                </p>
+              </div>
+            </motion.div>
+          )}
+
           <motion.div {...fadeUp(0.05)} className="glass border border-white/8 rounded-3xl p-7 space-y-5 mb-6">
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">

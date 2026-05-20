@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCreateAudit, useGenerateAuditReport, getListAuditsQueryKey } from "@workspace/api-client-react";
+import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -204,6 +205,21 @@ export default function SignalCheck() {
               Paste your bio. Get your Signal Strength score, your profile category, your #1 improvement, and a rewritten line — in 3 minutes flat.
             </p>
           </motion.div>
+
+          {isBrandNewUser && (
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="mb-6" data-testid="signalcheck-empty-state">
+              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to Signal Check</p>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Get an instant read on your profile</h2>
+                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
+                  Paste your bio for a quick Signal Strength score, your category, your #1 improvement area, and one rewritten line you can use today.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           <AnimatePresence mode="wait">
             {/* RESULT */}

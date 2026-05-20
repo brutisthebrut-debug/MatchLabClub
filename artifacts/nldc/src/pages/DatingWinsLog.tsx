@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Plus, Trash2, Calendar, MessageSquare, Sparkles, Eye, Star, Heart, Shield } from "lucide-react";
@@ -56,6 +57,8 @@ export default function DatingWinsLog() {
   const [category, setCategory] = useState<WinCategory>("sent-it");
   const [text, setText] = useState("");
   const [isDemo, setIsDemo] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const isBrandNewUser = isAuthenticated && isDemo;
 
   useEffect(() => {
     const stored = loadWins();
@@ -109,6 +112,21 @@ export default function DatingWinsLog() {
               Stored locally in your browser. Private to you.
             </p>
           </motion.div>
+
+          {isBrandNewUser && (
+            <motion.div {...fadeUp(0.03)} className="mb-6" data-testid="wins-empty-state">
+              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
+                  <Trophy className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to Dating Wins Log</p>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Log your first win</h2>
+                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
+                  Small wins compound. Capture a moment of courage, a good conversation, or anything that felt like forward movement — and watch the pattern build.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           {/* Add Win */}
           <motion.div {...fadeUp(0.06)} className="mb-6">

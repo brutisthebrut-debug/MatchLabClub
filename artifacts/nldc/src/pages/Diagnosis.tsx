@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCreateAudit, useGenerateAuditReport, getListAuditsQueryKey } from "@workspace/api-client-react";
+import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -113,6 +114,8 @@ export default function Diagnosis() {
   const queryClient = useQueryClient();
   const createAudit = useCreateAudit();
   const generateReport = useGenerateAuditReport();
+  const { isAuthenticated } = useAuth();
+  const isBrandNewUser = isAuthenticated && !result && !loading;
 
   const LOADING_MSGS = [
     "Scanning for authenticity signals...",
@@ -176,6 +179,21 @@ export default function Diagnosis() {
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">What's your profile really saying?</h1>
             <p className="text-muted-foreground leading-relaxed">Get a personalised diagnosis of your dating profile — your category, what's working, what's not, and exactly what to fix first.</p>
           </motion.div>
+
+          {isBrandNewUser && (
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="mb-6" data-testid="diagnosis-empty-state">
+              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to Dating Diagnosis</p>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Run your first diagnosis</h2>
+                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
+                  Get a quick read on your profile archetype, your strengths, and the one fix most likely to lift your results.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           <AnimatePresence mode="wait">
             {/* RESULTS */}

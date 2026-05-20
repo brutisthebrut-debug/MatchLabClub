@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, ScanFace, AlertCircle, RefreshCw } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
+import { useAuth } from "@workspace/replit-auth-web";
 import { FallbackNotice } from "@/components/FallbackNotice";
 import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 
@@ -159,6 +160,8 @@ export default function MirrorProfile() {
   const [usedFallback, setUsedFallback] = useState(false);
   const enhance = useEnhanceAi();
   const loading = enhance.isPending;
+  const { isAuthenticated } = useAuth();
+  const isBrandNewUser = isAuthenticated && !result;
 
   const MIRROR_KEYS: (keyof MirrorResult)[] = [
     "values", "protectiveHabits", "signalsShown", "understatedQualities",
@@ -236,6 +239,21 @@ export default function MirrorProfile() {
 
             <p className="text-muted-foreground mt-2 leading-relaxed">Paste your bio or a short self-description. We'll reflect back what it shows — values, patterns, gaps, and the version of you that isn't fully visible yet.<br /><span className="text-xs text-muted-foreground/60">Based only on what you share. Practical coaching guidance — not clinical advice.</span></p>
           </motion.div>
+
+          {isBrandNewUser && (
+            <motion.div {...fadeUp(0.03)} className="mb-6" data-testid="mirror-empty-state">
+              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
+                  <ScanFace className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to Mirror Profile</p>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">See your bio through fresh eyes</h2>
+                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
+                  Paste your bio or a short self-description and we'll reflect back what it actually signals — values, gaps, and one experiment that could shift everything.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           <motion.div {...fadeUp(0.05)} className="glass border border-white/8 rounded-3xl p-7 space-y-5 mb-6">
             <div className="space-y-2">

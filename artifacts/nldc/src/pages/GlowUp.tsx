@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, Wand2, Copy, Check, RefreshCw, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
+import { useAuth } from "@workspace/replit-auth-web";
 import { ConfidenceLabel, getConfidenceLevel } from "@/components/ToneBar";
 import { FallbackNotice } from "@/components/FallbackNotice";
 import { FallbackRateBadge } from "@/components/FallbackRateBadge";
@@ -185,6 +186,8 @@ export default function GlowUp() {
   const enhance = useEnhanceAi();
   const loading = enhance.isPending;
   const [filter, setFilter] = useState<string[]>([]);
+  const { isAuthenticated } = useAuth();
+  const isBrandNewUser = isAuthenticated && !result;
 
   function tryParseGlowUp(raw: string, deterministic: GlowVersion[]): GlowVersion[] | null {
     try {
@@ -282,6 +285,21 @@ export default function GlowUp() {
 
             <p className="text-muted-foreground mt-2">Paste your current bio and get 10 versions — different styles, different platforms, all built from what actually works.</p>
           </motion.div>
+
+          {isBrandNewUser && (
+            <motion.div {...fadeUp(0.03)} className="mb-6" data-testid="glowup-empty-state">
+              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
+                  <Wand2 className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to the Glow-Up Studio</p>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Rewrite your first bio</h2>
+                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
+                  Paste a generic bio and we'll give you ten sharper versions — different styles and platforms — that actually sound like you.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           <motion.div {...fadeUp(0.05)} className="glass border border-white/8 rounded-3xl p-7 space-y-5 mb-6">
             <div className="space-y-2">

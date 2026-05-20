@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, MapPin, RefreshCw, AlertCircle, Copy, Check } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
+import { useAuth } from "@workspace/replit-auth-web";
 import { blueprintSchema, parseAiJson, type BlueprintOutput } from "@/lib/aiSchemas";
 import { ToneBar, ConfidenceLabel, getConfidenceLevel } from "@/components/ToneBar";
 
@@ -167,6 +168,8 @@ export default function Blueprint() {
   const [usedFallback, setUsedFallback] = useState(false);
   const enhance = useEnhanceAi();
   const loading = enhance.isPending;
+  const { isAuthenticated } = useAuth();
+  const isBrandNewUser = isAuthenticated && !result;
 
   async function handleAnalyze(extraTone?: string) {
     if (!text.trim()) return;
@@ -223,6 +226,21 @@ export default function Blueprint() {
             <h1 className="text-3xl font-bold text-foreground">Personal Blueprint</h1>
             <p className="text-muted-foreground mt-2 leading-relaxed">A coaching lens on how you show up, what patterns keep appearing, and where one shift would make the most difference.<br /><span className="text-xs text-muted-foreground/60">Based only on what you choose to share. Practical coaching guidance — not clinical advice.</span></p>
           </motion.div>
+
+          {isBrandNewUser && (
+            <motion.div {...fadeUp(0.03)} className="mb-6" data-testid="blueprint-empty-state">
+              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to Personal Blueprint</p>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Map your patterns and growth edges</h2>
+                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
+                  Share a little about how you show up and what keeps repeating — we'll surface the recurring threads and one concrete shift that could change your results.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           {/* Form */}
           <motion.div {...fadeUp(0.05)} className="glass border border-white/8 rounded-3xl p-6 sm:p-7 space-y-6 mb-6">

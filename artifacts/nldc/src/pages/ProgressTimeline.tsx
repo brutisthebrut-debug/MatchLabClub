@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -115,12 +116,15 @@ function EntryCard({ entry, onStatusChange, onDelete }: {
 export default function ProgressTimeline() {
   useMeta("My Timeline", "Your personal log of dated notes, observations, wins, and patterns — sorted chronologically.");
   const [entries, setEntries] = useState<TimelineEntry[]>(DEMO_ENTRIES);
+  const [hasAdded, setHasAdded] = useState(false);
   const [newNote, setNewNote] = useState("");
   const [newTags, setNewTags] = useState<EntryTag[]>([]);
   const [newStatus, setNewStatus] = useState<EntryStatus>("noted");
   const [filterTag, setFilterTag] = useState<EntryTag | null>(null);
   const [filterStatus, setFilterStatus] = useState<EntryStatus | null>(null);
   const [adding, setAdding] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const isBrandNewUser = isAuthenticated && !hasAdded;
 
   function handleAdd() {
     if (!newNote.trim()) return;
@@ -132,6 +136,7 @@ export default function ProgressTimeline() {
       status: newStatus,
     };
     setEntries(prev => [entry, ...prev]);
+    setHasAdded(true);
     setNewNote(""); setNewTags([]); setNewStatus("noted"); setAdding(false);
   }
 
@@ -168,6 +173,21 @@ export default function ProgressTimeline() {
             <h1 className="text-3xl font-bold text-foreground">My Timeline</h1>
             <p className="text-muted-foreground mt-2">A personal log of your observations, wins, patterns, and questions — sorted by date. Tap a status chip to cycle through stages.</p>
           </motion.div>
+
+          {isBrandNewUser && (
+            <motion.div {...fadeUp(0.03)} className="mb-6" data-testid="timeline-empty-state">
+              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to your Timeline</p>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Start your dating timeline</h2>
+                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
+                  Add your first observation, win, or pattern. Over time you'll see the threads connecting — what's shifting, what's stuck, what's working.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           {/* Filters + Add */}
           <motion.div {...fadeUp(0.05)} className="flex flex-wrap items-center gap-2 mb-5">

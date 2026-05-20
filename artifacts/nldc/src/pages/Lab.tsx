@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -80,6 +81,8 @@ export default function Lab() {
   const queryClient = useQueryClient();
   const createSession = useCreateMessageCoachingSession();
   const coachMessage = useCoachMessage();
+  const { isAuthenticated } = useAuth();
+  const isBrandNewUser = isAuthenticated && !result;
 
   async function runLab() {
     setLoading(true);
@@ -121,6 +124,21 @@ export default function Lab() {
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">What does your message actually say?</h1>
             <p className="text-muted-foreground leading-relaxed">Paste a message or conversation. Get tone analysis, your recommended next action, and 5 styled reply options — each with a different approach.</p>
           </motion.div>
+
+          {isBrandNewUser && (
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="mb-6" data-testid="lab-empty-state">
+              <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 sm:p-8 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 mx-auto mb-4 flex items-center justify-center">
+                  <FlaskConical className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Welcome to the Chemistry Lab</p>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-foreground mb-2">Run your first experiment</h2>
+                <p className="text-muted-foreground max-w-lg mx-auto text-sm leading-relaxed">
+                  Drop in a message or short conversation and we'll surface the tone you're sending, your best next move, and five styled reply options to choose from.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           {/* Form */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
