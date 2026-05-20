@@ -14,6 +14,7 @@ vi.mock("@workspace/replit-auth-web", () => ({
 // Mock the API client. `useClaimAnonymousData` returns a mutation-like object;
 // we record the body it was called with and resolve with a canned response.
 const claimMutateImpl = vi.fn();
+const redeemMutateImpl = vi.fn();
 
 vi.mock("@workspace/api-client-react", () => {
   const claimAnonymousData = vi.fn();
@@ -21,6 +22,11 @@ vi.mock("@workspace/api-client-react", () => {
     useClaimAnonymousData: () => ({
       mutate: (vars: { data: unknown }, opts?: { onSuccess?: (r: unknown) => void; onError?: (e: unknown) => void }) => {
         claimMutateImpl(vars, opts);
+      },
+    }),
+    useRedeemAnonymousClaimHandoff: () => ({
+      mutate: (vars: { data: unknown }, opts?: { onSuccess?: (r: unknown) => void; onError?: (e: unknown) => void }) => {
+        redeemMutateImpl(vars, opts);
       },
     }),
     claimAnonymousData,
@@ -51,12 +57,17 @@ function wrapper({ children }: { children: React.ReactNode }) {
 
 beforeEach(() => {
   localStorage.clear();
+  sessionStorage.clear();
   mockUseAuth.mockReset();
   claimMutateImpl.mockReset();
+  redeemMutateImpl.mockReset();
+  window.history.replaceState(null, "", "/");
 });
 
 afterEach(() => {
   localStorage.clear();
+  sessionStorage.clear();
+  window.history.replaceState(null, "", "/");
 });
 
 describe("useClaimAnonymousOnLogin — full anon→login→claim flow", () => {
@@ -149,6 +160,64 @@ describe("useClaimAnonymousOnLogin — full anon→login→claim flow", () => {
     renderHook(() => useClaimAnonymousOnLogin(), { wrapper });
 
     expect(claimMutateImpl).not.toHaveBeenCalled();
+  });
+
+  it("redeems a pending handoff token captured from the URL on login", async () => {
+    // Build a handoff payload exactly like the originating browser would, then
+    // navigate the (receiving) browser to a URL carrying it.
+    const handoffPayload = {
+      handoff: "test-handoff-token",
+      auditIds: [13],
+      profileIds: [],
+      messageSessionIds: [],
+      insightIds: [],
+    };
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(handoffPayload))))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+    window.history.replaceState(null, "", `/?nldc_handoff=${b64}`);
+
+    // Authenticated user lands on the page from another device.
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { id: "user-handoff", email: null },
+    });
+
+    renderHook(() => useClaimAnonymousOnLogin(), { wrapper });
+
+    // Param is stripped from the URL.
+    expect(window.location.search).toBe("");
+
+    // Redeem mutation is fired with the IDs encoded in the handoff URL.
+    await waitFor(() => expect(redeemMutateImpl).toHaveBeenCalledTimes(1));
+    const [vars, opts] = redeemMutateImpl.mock.calls[0];
+    expect(vars).toEqual({
+      data: {
+        handoff: "test-handoff-token",
+        auditIds: [13],
+        profileIds: [],
+        messageSessionIds: [],
+        insightIds: [],
+      },
+    });
+
+    // On success the pending handoff is cleared so it isn't retried.
+    act(() => {
+      opts.onSuccess({ claimed: { audits: 1, profiles: 0, messages: 0, insights: 0 } });
+    });
+    expect(sessionStorage.getItem("nldc:pendingHandoff")).toBeNull();
+  });
+
+  it("ignores a missing handoff param without firing redeem", () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { id: "user-no-handoff", email: null },
+    });
+    renderHook(() => useClaimAnonymousOnLogin(), { wrapper });
+    expect(redeemMutateImpl).not.toHaveBeenCalled();
   });
 
   it("allows retry on the next render if the claim errors out", async () => {

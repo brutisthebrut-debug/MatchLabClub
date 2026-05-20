@@ -24,6 +24,8 @@ import {
 } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import { HandoffShareDialog } from "@/components/HandoffShareDialog";
+import { hasAnyAnonymousIds } from "@/lib/anonymousIds";
 import {
   ArrowRight, FileText, MessageSquare, Mail, Settings,
   TrendingUp, AlertTriangle, Clock, Sparkles, Trophy, Eye,
@@ -345,6 +347,7 @@ export default function Dashboard() {
     !hasMessages &&
     !hasInsights;
   const showDemo = !isAuthenticated && !hasRealAudits;
+  const showHandoffOffer = !isAuthenticated && hasAnyAnonymousIds();
   const displayAudits = hasRealAudits ? audits : showDemo ? DEMO_AUDITS : [];
   const EMPTY_SUMMARY = { totalAudits: 0, averageScore: 0, latestScore: 0, scoreHistory: [], topStrengths: [], topRisks: [] };
   const displaySummary = hasRealAudits ? summary ?? DEMO_SUMMARY : showDemo ? DEMO_SUMMARY : EMPTY_SUMMARY;
@@ -364,9 +367,16 @@ export default function Dashboard() {
         <div className="max-w-5xl mx-auto relative z-10">
 
           {/* Header */}
-          <motion.div {...fadeUp(0)} className="mb-6">
-            <p className="text-sm text-muted-foreground font-medium mb-1">Welcome back</p>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">Your Dating Blueprint</h1>
+          <motion.div {...fadeUp(0)} className="mb-6 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm text-muted-foreground font-medium mb-1">Welcome back</p>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">Your Dating Blueprint</h1>
+            </div>
+            {showHandoffOffer && (
+              <div className="flex-shrink-0 pt-1" data-testid="handoff-cta">
+                <HandoffShareDialog />
+              </div>
+            )}
           </motion.div>
 
           {/* Wingman Note */}
