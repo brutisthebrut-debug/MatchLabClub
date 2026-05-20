@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, BarChart2, AlertCircle, RefreshCw } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
+import { FallbackNotice } from "@/components/FallbackNotice";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -156,6 +157,7 @@ export default function StyleMap() {
   useMeta("Communication Style Map", "Paste a conversation and see meters for warmth, clarity, playfulness, pacing, directness, pressure, and more — plus a short practical readout.");
   const [text, setText] = useState("");
   const [result, setResult] = useState<StyleMapResult | null>(null);
+  const [usedFallback, setUsedFallback] = useState(false);
   const enhance = useEnhanceAi();
   const loading = enhance.isPending;
 
@@ -200,13 +202,17 @@ export default function StyleMap() {
           context: { toolName: "Communication Style Map", formValues: { conversation: text } },
         },
       });
-      if (ai.isFallback || !ai.output.trim()) {
+      const validationFailed = ai.validated === false;
+      if (ai.isFallback || validationFailed || !ai.output.trim()) {
+        setUsedFallback(true);
         setResult(deterministic);
         return;
       }
       const parsed = tryParseStyleMap(ai.output, deterministic);
+      setUsedFallback(parsed == null);
       setResult(parsed ?? deterministic);
     } catch {
+      setUsedFallback(true);
       setResult(deterministic);
     }
   }
@@ -252,6 +258,14 @@ export default function StyleMap() {
                     <AlertCircle className="w-3.5 h-3.5" />Example output — paste your messages above to get yours
                   </p>
                 </div>
+              )}
+              {!isDemo && usedFallback && (
+                <FallbackNotice
+                  onRetry={handleAnalyze}
+                  loading={loading}
+                  label="style read"
+                  testId="button-retry-stylemap"
+                />
               )}
               <div className="space-y-5">
                 {/* Meters */}

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, Compass, RefreshCw, AlertCircle } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
+import { FallbackNotice } from "@/components/FallbackNotice";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -171,6 +172,7 @@ export default function CompatibilityCompass() {
   const [patterns, setPatterns] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [result, setResult] = useState<CompassResult | null>(null);
+  const [usedFallback, setUsedFallback] = useState(false);
   const enhance = useEnhanceAi();
   const loading = enhance.isPending;
 
@@ -238,13 +240,17 @@ export default function CompatibilityCompass() {
           context: { toolName: "Compatibility Compass", formValues: { ownStyle, patterns, notes } },
         },
       });
-      if (ai.isFallback || !ai.output.trim()) {
+      const validationFailed = ai.validated === false;
+      if (ai.isFallback || validationFailed || !ai.output.trim()) {
+        setUsedFallback(true);
         setResult(deterministic);
         return;
       }
       const parsed = tryParseCompass(ai.output);
+      setUsedFallback(parsed == null);
       setResult(parsed ?? deterministic);
     } catch {
+      setUsedFallback(true);
       setResult(deterministic);
     }
   }
@@ -309,6 +315,14 @@ export default function CompatibilityCompass() {
                     <AlertCircle className="w-3.5 h-3.5" />Example output — select your style above to get yours
                   </p>
                 </div>
+              )}
+              {!isDemo && usedFallback && (
+                <FallbackNotice
+                  onRetry={handleAnalyze}
+                  loading={loading}
+                  label="compass read"
+                  testId="button-retry-compass"
+                />
               )}
               <div className="space-y-4">
                 <div className="glass border border-white/8 rounded-2xl p-6">

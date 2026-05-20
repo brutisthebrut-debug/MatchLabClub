@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, Wand2, Copy, Check, RefreshCw, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { ConfidenceLabel, getConfidenceLevel } from "@/components/ToneBar";
+import { FallbackNotice } from "@/components/FallbackNotice";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -179,6 +180,7 @@ export default function GlowUp() {
   const [bio, setBio] = useState("");
   const [goal, setGoal] = useState("");
   const [result, setResult] = useState<GlowVersion[] | null>(null);
+  const [usedFallback, setUsedFallback] = useState(false);
   const enhance = useEnhanceAi();
   const loading = enhance.isPending;
   const [filter, setFilter] = useState<string[]>([]);
@@ -238,13 +240,17 @@ export default function GlowUp() {
           context: { toolName: "Profile Glow-Up Studio", formValues: { bio, goal } },
         },
       });
-      if (ai.isFallback || !ai.output.trim()) {
+      const validationFailed = ai.validated === false;
+      if (ai.isFallback || validationFailed || !ai.output.trim()) {
+        setUsedFallback(true);
         setResult(deterministic);
         return;
       }
       const parsed = tryParseGlowUp(ai.output, deterministic);
+      setUsedFallback(parsed == null);
       setResult(parsed ?? deterministic);
     } catch {
+      setUsedFallback(true);
       setResult(deterministic);
     }
   }
@@ -306,6 +312,14 @@ export default function GlowUp() {
                     <AlertCircle className="w-3.5 h-3.5" />Example rewrites — paste your bio above to get yours
                   </p>
                 </div>
+              )}
+              {!isDemo && usedFallback && (
+                <FallbackNotice
+                  onRetry={handleGenerate}
+                  loading={loading}
+                  label="rewrite set"
+                  testId="button-retry-glowup"
+                />
               )}
 
               {result && (

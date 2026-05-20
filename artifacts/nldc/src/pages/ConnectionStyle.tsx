@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, RefreshCw, Info } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
+import { FallbackNotice } from "@/components/FallbackNotice";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -241,6 +242,7 @@ export default function ConnectionStyle() {
   const [answers, setAnswers] = useState<number[]>(Array(QUESTIONS.length).fill(-1));
   const [result, setResult] = useState<StyleKey | null>(null);
   const [override, setOverride] = useState<StyleOverride>({});
+  const [usedFallback, setUsedFallback] = useState(false);
   const enhance = useEnhanceAi();
   const loading = enhance.isPending;
   const answered = answers.filter(a => a >= 0).length;
@@ -278,6 +280,7 @@ export default function ConnectionStyle() {
     const styleKey = computeStyle(answers);
     setResult(styleKey);
     setOverride({});
+    setUsedFallback(false);
     const base = STYLES[styleKey];
     const answerSummary = QUESTIONS.map((q, qi) => {
       const ai = answers[qi];
@@ -305,10 +308,67 @@ export default function ConnectionStyle() {
           context: { toolName: "Connection Style Lens", formValues: { styleKey, answers } },
         },
       });
-      if (ai.isFallback || !ai.output.trim()) return;
+      const validationFailed = ai.validated === false;
+      if (ai.isFallback || validationFailed || !ai.output.trim()) {
+        setUsedFallback(true);
+        return;
+      }
       const parsed = tryParseOverride(ai.output);
-      if (parsed) setOverride(parsed);
-    } catch { /* silent fallback */ }
+      if (parsed) {
+        setOverride(parsed);
+      } else {
+        setUsedFallback(true);
+      }
+    } catch {
+      setUsedFallback(true);
+    }
+  }
+
+  async function handleRetry() {
+    if (!result) return;
+    const styleKey = result;
+    const base = STYLES[styleKey];
+    const answerSummary = QUESTIONS.map((q, qi) => {
+      const ai = answers[qi];
+      return ai >= 0 ? `${q.q} → ${q.opts[ai].label}` : null;
+    }).filter(Boolean).join("\n");
+    setUsedFallback(false);
+    try {
+      const ai = await enhance.mutateAsync({
+        data: {
+          toolName: "Connection Style Lens",
+          prompt: [
+            `The user's connection style was identified as "${base.name}".`,
+            "Personalize the readout based on their answers. Return ONLY a single JSON object:",
+            '{ "tagline": string, "strengths": string[], "activationPattern": string, "whatHelps": string, "nextExperiment": string }',
+            "tagline: 1-2 sentence summary of this pattern.",
+            "strengths: 2-4 short bullet points (each one short clause).",
+            "activationPattern: 2 sentences describing how the pattern activates.",
+            "whatHelps: 2 sentences of concrete guidance.",
+            "nextExperiment: 1-2 sentences of a small, doable experiment.",
+            "",
+            "Their answers:",
+            answerSummary,
+            "",
+            "Return ONLY the JSON object. No prose, no markdown.",
+          ].join("\n"),
+          context: { toolName: "Connection Style Lens", formValues: { styleKey, answers } },
+        },
+      });
+      const validationFailed = ai.validated === false;
+      if (ai.isFallback || validationFailed || !ai.output.trim()) {
+        setUsedFallback(true);
+        return;
+      }
+      const parsed = tryParseOverride(ai.output);
+      if (parsed) {
+        setOverride(parsed);
+      } else {
+        setUsedFallback(true);
+      }
+    } catch {
+      setUsedFallback(true);
+    }
   }
 
   const baseStyle = result ? STYLES[result] : null;
@@ -371,6 +431,14 @@ export default function ConnectionStyle() {
               </motion.div>
             ) : (
               <motion.div key="result" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} className="space-y-4">
+                {usedFallback && (
+                  <FallbackNotice
+                    onRetry={handleRetry}
+                    loading={loading}
+                    label="style read"
+                    testId="button-retry-connection-style"
+                  />
+                )}
                 {/* Header */}
                 <div className="rounded-3xl p-8 border text-center" style={{ background: style!.bg, borderColor: style!.border }}>
                   <div className="text-5xl mb-4">{style!.emoji}</div>
