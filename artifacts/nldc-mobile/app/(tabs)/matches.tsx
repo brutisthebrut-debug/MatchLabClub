@@ -459,6 +459,31 @@ export default function MatchesScreen() {
     [refreshState.inProgress, queryClient, listKey],
   );
 
+  // Per-row single-audit refresh
+  const [refreshingOneIds, setRefreshingOneIds] = React.useState<Set<number>>(() => new Set());
+  const handleRefreshOne = React.useCallback(
+    async (audit: Audit) => {
+      if (refreshingOneIds.has(audit.id)) return;
+      setRefreshingOneIds((prev) => new Set(prev).add(audit.id));
+      try {
+        await generateAuditReport(audit.id);
+        await queryClient.invalidateQueries({ queryKey: listKey });
+        await queryClient.invalidateQueries({ queryKey: getGetAuditSummaryQueryKey() });
+      } catch {
+        if (Platform.OS !== "web") {
+          Alert.alert("Couldn't refresh", "Something went wrong. Try again.");
+        }
+      } finally {
+        setRefreshingOneIds((prev) => {
+          const next = new Set(prev);
+          next.delete(audit.id);
+          return next;
+        });
+      }
+    },
+    [refreshingOneIds, queryClient, listKey],
+  );
+
   const [pickerOpen, setPickerOpen] = React.useState(false);
   const [pickerSelected, setPickerSelected] = React.useState<Set<Audit["id"]>>(
     new Set(),
@@ -945,6 +970,8 @@ export default function MatchesScreen() {
                       matchContext={debouncedQuery.length > 0 ? (audit.matchContext ?? null) : null}
                       onPress={onRowPress}
                       onLongPress={onRowLongPress}
+                      onRefresh={() => void handleRefreshOne(audit)}
+                      isRefreshing={refreshingOneIds.has(audit.id)}
                     />
                   </Swipeable>
                 );
@@ -1310,6 +1337,8 @@ function MatchRow({
   matchContext,
   onPress,
   onLongPress,
+  onRefresh,
+  isRefreshing,
   disabled,
   selected,
 }: {
@@ -1321,6 +1350,8 @@ function MatchRow({
   matchContext?: { matchedField: "name" | "bio"; snippet?: string | null } | null;
   onPress?: () => void;
   onLongPress?: () => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
   disabled?: boolean;
   selected?: boolean;
 }) {
@@ -1385,20 +1416,49 @@ function MatchRow({
           {thumbnail || "No bio text extracted."}
         </Text>
         {staleHint ? (
-          <View
-            style={[
-              styles.stalePill,
-              {
-                backgroundColor: `${colors.gold}1f`,
-                borderColor: `${colors.gold}66`,
-              },
-            ]}
-            accessibilityLabel={`${staleHint}. Tap refresh to regenerate.`}
-          >
-            <Feather name="refresh-cw" size={10} color={colors.gold} />
-            <Text style={[styles.stalePillText, { color: colors.gold }]}>
-              {staleHint}
-            </Text>
+          <View style={styles.staleRow}>
+            <View
+              style={[
+                styles.stalePill,
+                {
+                  backgroundColor: `${colors.gold}1f`,
+                  borderColor: `${colors.gold}66`,
+                },
+              ]}
+              accessibilityLabel={staleHint}
+            >
+              <Feather name="refresh-cw" size={10} color={colors.gold} />
+              <Text style={[styles.stalePillText, { color: colors.gold }]}>
+                {staleHint}
+              </Text>
+            </View>
+            {onRefresh && !disabled && selected === undefined ? (
+              <Pressable
+                onPress={(e) => { e.stopPropagation?.(); onRefresh(); }}
+                disabled={isRefreshing}
+                accessibilityRole="button"
+                accessibilityLabel="Regenerate this report"
+                hitSlop={6}
+                style={({ pressed }) => [
+                  styles.stalePill,
+                  {
+                    backgroundColor: `${colors.gold}33`,
+                    borderColor: colors.gold,
+                    opacity: isRefreshing ? 0.6 : pressed ? 0.7 : 1,
+                  },
+                ]}
+              >
+                <Feather
+                  name="refresh-cw"
+                  size={10}
+                  color={colors.gold}
+                  style={isRefreshing ? { opacity: 0.7 } : undefined}
+                />
+                <Text style={[styles.stalePillText, { color: colors.gold }]}>
+                  {isRefreshing ? "Refreshing…" : "Refresh"}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         ) : null}
         {matchContext ? (
@@ -1583,6 +1643,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "PlusJakartaSans_700Bold",
   },
+  staleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 4,
+  },
   stalePill: {
     alignSelf: "flex-start",
     flexDirection: "row",
@@ -1592,7 +1659,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    marginTop: 4,
   },
   stalePillText: {
     fontSize: 10,

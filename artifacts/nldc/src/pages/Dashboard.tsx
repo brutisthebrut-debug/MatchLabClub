@@ -453,6 +453,26 @@ export default function Dashboard() {
       ),
     [audits],
   );
+
+  // Per-row single-audit refresh
+  const [refreshingIds, setRefreshingIds] = useState<Set<number>>(() => new Set());
+  const handleRefreshOne = useCallback(
+    async (audit: Audit) => {
+      if (refreshingIds.has(audit.id)) return;
+      setRefreshingIds((prev) => new Set(prev).add(audit.id));
+      try {
+        await generateAuditReport(audit.id);
+        await queryClient.invalidateQueries({ queryKey: listAuditsKey });
+        await queryClient.invalidateQueries({ queryKey: getGetAuditSummaryQueryKey() });
+      } catch {
+        toast({ title: "Couldn't refresh", description: "Something went wrong. Try again.", variant: "destructive" });
+      } finally {
+        setRefreshingIds((prev) => { const next = new Set(prev); next.delete(audit.id); return next; });
+      }
+    },
+    [refreshingIds, queryClient, listAuditsKey, toast],
+  );
+
   const [refreshState, setRefreshState] = useState<{
     inProgress: boolean;
     done: number;
@@ -1459,6 +1479,19 @@ export default function Dashboard() {
                                 <RefreshCw className="w-2.5 h-2.5" />
                                 {staleHint}
                               </span>
+                            ) : null}
+                            {staleHint ? (
+                              <button
+                                type="button"
+                                data-testid={`button-refresh-one-${audit.id}`}
+                                aria-label={`Regenerate ${audit.firstName}'s report`}
+                                disabled={refreshingIds.has(audit.id)}
+                                onClick={(e) => { e.preventDefault(); void handleRefreshOne(audit); }}
+                                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[hsl(43_65%_55%/0.5)] bg-[hsl(43_65%_55%/0.18)] text-[hsl(43_65%_75%)] hover:bg-[hsl(43_65%_55%/0.28)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <RefreshCw className={`w-2.5 h-2.5 ${refreshingIds.has(audit.id) ? "animate-spin" : ""}`} />
+                                {refreshingIds.has(audit.id) ? "Regenerating…" : "Regenerate"}
+                              </button>
                             ) : null}
                             {debouncedQuery.length > 0 && audit.matchContext ? (
                               <span
