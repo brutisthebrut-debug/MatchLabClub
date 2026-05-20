@@ -44,7 +44,7 @@ import {
 
 const router: IRouter = Router();
 
-router.get("/founder/stats", async (req, res): Promise<void> => {
+router.get("/founder/stats", requireFounder, async (req, res): Promise<void> => {
   const [leadsCount] = await db.select({ c: count() }).from(leadsTable);
   const [purchaseCount] = await db.select({ c: count() }).from(purchaseInterestTable);
   const [auditsCount] = await db.select({ c: count() }).from(auditsTable);
@@ -132,7 +132,7 @@ async function loadThresholds(): Promise<{
   return { global, perTool };
 }
 
-router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
+router.get("/founder/ai-metrics", requireFounder, async (_req, res): Promise<void> => {
   const { global: globalCfg, perTool: perToolCfg } = await loadThresholds();
 
   const perTool = await db
@@ -375,7 +375,7 @@ router.get("/founder/ai-metrics", async (_req, res): Promise<void> => {
   });
 });
 
-router.get("/founder/rollup-heartbeat", async (_req, res): Promise<void> => {
+router.get("/founder/rollup-heartbeat", requireFounder, async (_req, res): Promise<void> => {
   const lastSuccessAt = await getRollupHeartbeat();
   const staleThresholdMs = getRollupStaleThresholdMs();
   if (!lastSuccessAt) {
@@ -396,7 +396,7 @@ router.get("/founder/rollup-heartbeat", async (_req, res): Promise<void> => {
   });
 });
 
-router.get("/founder/background-jobs", async (_req, res): Promise<void> => {
+router.get("/founder/background-jobs", requireFounder, async (_req, res): Promise<void> => {
   const rows = await db
     .select()
     .from(jobHeartbeatsTable)
@@ -438,7 +438,7 @@ router.get("/founder/background-jobs", async (_req, res): Promise<void> => {
   res.json({ jobs });
 });
 
-router.get("/founder/ai-metrics/trends", async (req, res): Promise<void> => {
+router.get("/founder/ai-metrics/trends", requireFounder, async (req, res): Promise<void> => {
   const rawDays = Number(req.query.days);
   const days = Number.isFinite(rawDays) && rawDays > 0 ? Math.min(Math.floor(rawDays), 365) : 90;
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);

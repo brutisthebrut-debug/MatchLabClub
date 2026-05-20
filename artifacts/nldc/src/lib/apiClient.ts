@@ -72,8 +72,8 @@ export const captureLead = (data: LeadInput) =>
 export const capturePurchaseInterest = (data: PurchaseInterestInput) =>
   post<PurchaseInterest>("/purchase-interest", data);
 
-export const getFounderStats = () =>
-  get<FounderStats>("/founder/stats");
+export const getFounderStats = (founderKey: string) =>
+  get<FounderStats>("/founder/stats", { headers: { "x-founder-key": founderKey } });
 
 export interface AiToolMetric {
   toolName: string;
@@ -167,8 +167,8 @@ export interface AiMetricsResponse {
   }[];
 }
 
-export const getAiMetrics = () =>
-  get<AiMetricsResponse>("/founder/ai-metrics");
+export const getAiMetrics = (founderKey: string) =>
+  get<AiMetricsResponse>("/founder/ai-metrics", { headers: { "x-founder-key": founderKey } });
 
 export interface RollupHeartbeatResponse {
   lastSuccessAt: string | null;
@@ -177,8 +177,8 @@ export interface RollupHeartbeatResponse {
   stale: boolean;
 }
 
-export const getRollupHeartbeat = () =>
-  get<RollupHeartbeatResponse>("/founder/rollup-heartbeat");
+export const getRollupHeartbeat = (founderKey: string) =>
+  get<RollupHeartbeatResponse>("/founder/rollup-heartbeat", { headers: { "x-founder-key": founderKey } });
 
 export interface BackgroundJobStatus {
   jobName: string;
@@ -192,8 +192,8 @@ export interface BackgroundJobsResponse {
   jobs: BackgroundJobStatus[];
 }
 
-export const getBackgroundJobs = () =>
-  get<BackgroundJobsResponse>("/founder/background-jobs");
+export const getBackgroundJobs = (founderKey: string) =>
+  get<BackgroundJobsResponse>("/founder/background-jobs", { headers: { "x-founder-key": founderKey } });
 
 export interface AiMetricsTrendPoint {
   day: string;
@@ -215,8 +215,8 @@ export interface AiMetricsTrendsResponse {
   series: AiMetricsTrendPoint[];
 }
 
-export const getAiMetricsTrends = (days: number) =>
-  get<AiMetricsTrendsResponse>(`/founder/ai-metrics/trends?days=${encodeURIComponent(String(days))}`);
+export const getAiMetricsTrends = (founderKey: string, days: number) =>
+  get<AiMetricsTrendsResponse>(`/founder/ai-metrics/trends?days=${encodeURIComponent(String(days))}`, { headers: { "x-founder-key": founderKey } });
 
 export const getAiThresholds = (founderKey: string) =>
   fetch(`${BASE}/founder/ai-thresholds`, {

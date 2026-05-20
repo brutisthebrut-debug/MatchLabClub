@@ -785,7 +785,7 @@ function formatThreshold(ms: number): string {
   return `${Math.round(hr / 24)}d`;
 }
 
-function BackgroundJobsPanel({ refreshKey }: { refreshKey: number }) {
+function BackgroundJobsPanel({ refreshKey, founderKey }: { refreshKey: number; founderKey: string }) {
   const [data, setData] = useState<BackgroundJobsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -793,11 +793,11 @@ function BackgroundJobsPanel({ refreshKey }: { refreshKey: number }) {
   useEffect(() => {
     setLoading(true);
     setErr(null);
-    getBackgroundJobs()
+    getBackgroundJobs(founderKey)
       .then(setData)
       .catch((e: unknown) => setErr(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false));
-  }, [refreshKey]);
+  }, [refreshKey, founderKey]);
 
   const okColor = "hsl(142 55% 60%)";
   const warnColor = "hsl(348 65% 70%)";
@@ -879,7 +879,7 @@ function BackgroundJobsPanel({ refreshKey }: { refreshKey: number }) {
   );
 }
 
-function RollupHeartbeatPanel({ refreshKey }: { refreshKey: number }) {
+function RollupHeartbeatPanel({ refreshKey, founderKey }: { refreshKey: number; founderKey: string }) {
   const [data, setData] = useState<RollupHeartbeatResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -887,11 +887,11 @@ function RollupHeartbeatPanel({ refreshKey }: { refreshKey: number }) {
   useEffect(() => {
     setLoading(true);
     setErr(null);
-    getRollupHeartbeat()
+    getRollupHeartbeat(founderKey)
       .then(setData)
       .catch((e: unknown) => setErr(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false));
-  }, [refreshKey]);
+  }, [refreshKey, founderKey]);
 
   const stale = data?.stale ?? false;
   const thresholdHours = data ? Math.round(data.staleThresholdMs / (60 * 60 * 1000)) : 36;
@@ -980,7 +980,7 @@ function CooldownBadge({ state }: { state: AiToolCooldownState }) {
   );
 }
 
-function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
+function AiMetricsPanel({ refreshKey, founderKey }: { refreshKey: number; founderKey: string }) {
   const [data, setData] = useState<AiMetricsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -989,11 +989,11 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
   useEffect(() => {
     setLoading(true);
     setErr(null);
-    getAiMetrics()
+    getAiMetrics(founderKey)
       .then(setData)
       .catch((e: unknown) => setErr(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false));
-  }, [refreshKey, bump]);
+  }, [refreshKey, bump, founderKey]);
 
   const pct = (n: number) => `${Math.round(n * 100)}%`;
   const overall = data?.overall;
@@ -1347,7 +1347,7 @@ function groupTrendByWeek(series: OcrMismatchTrendEntry[]): OcrMismatchTrendEntr
   return [...buckets.values()].sort((a, b) => a.day.localeCompare(b.day));
 }
 
-function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
+function AiReliabilityTrendsPanel({ refreshKey, founderKey }: { refreshKey: number; founderKey: string }) {
   const [days, setDays] = useState<TrendDays>(90);
   const [metric, setMetric] = useState<TrendMetric>("firstTrySuccessRate");
   const [data, setData] = useState<AiMetricsTrendsResponse | null>(null);
@@ -1359,12 +1359,12 @@ function AiReliabilityTrendsPanel({ refreshKey }: { refreshKey: number }) {
     let cancelled = false;
     setLoading(true);
     setErr(null);
-    getAiMetricsTrends(days)
+    getAiMetricsTrends(founderKey, days)
       .then((res) => { if (!cancelled) setData(res); })
       .catch((e: unknown) => { if (!cancelled) setErr(e instanceof Error ? e.message : "Failed to load"); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [days, refreshKey]);
+  }, [days, refreshKey, founderKey]);
 
   const { chartRows, toolNames, focusedRows, focusedTotals } = (() => {
     if (!data) {
@@ -2907,7 +2907,7 @@ function Dashboard() {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      getFounderStats().then(setStats).catch(() => {}),
+      getFounderStats(FOUNDER_KEY).then(setStats).catch(() => {}),
       getLeads().then(setLeads).catch(() => {}),
       getPurchaseInterestList().then(setPurchases).catch(() => {}),
     ]).finally(() => setLoading(false));
@@ -2962,10 +2962,10 @@ function Dashboard() {
       {tab === "overview" && (
         <div className="space-y-8">
           <AiStatusPanel />
-          <BackgroundJobsPanel refreshKey={refreshKey} />
+          <BackgroundJobsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
           <OcrMismatchesPanel refreshKey={refreshKey} />
-          <AiMetricsPanel refreshKey={refreshKey} />
-          <AiReliabilityTrendsPanel refreshKey={refreshKey} />
+          <AiMetricsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
+          <AiReliabilityTrendsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
           <OcrPendingRulesPanel refreshKey={refreshKey} onApproved={() => setRefreshKey((k) => k + 1)} />
           <OcrRulesPanel refreshKey={refreshKey} />
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

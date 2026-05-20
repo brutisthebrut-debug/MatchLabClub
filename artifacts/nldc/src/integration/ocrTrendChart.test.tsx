@@ -50,6 +50,8 @@ vi.mock("@/lib/apiClient", async () => {
     getOcrMismatches: () => getOcrMismatchesMock(),
     getOcrMismatchesTrends: () => getOcrMismatchesTrendsMock(),
     getOcrLearnedRules: async () => ({ rules: [] }),
+    getOcrPendingRules: async () => ({ rules: [] }),
+    getOcrRuleReviewLog: async () => ({ log: [] }),
     runOcrLearn: async () => ({
       scannedAudits: 0,
       candidates: 0,
