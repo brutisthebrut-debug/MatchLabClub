@@ -41,6 +41,8 @@ export interface FounderStats {
   audits: number;
   waitlist: number;
   messages: number;
+  followUpSnoozeCount: number;
+  followUpDismissCount: number;
 }
 
 export interface Lead {

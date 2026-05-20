@@ -11,6 +11,7 @@ import {
   aiAlertThresholdsTable,
   aiAlertThresholdChangesTable,
   AI_ALERT_GLOBAL_KEY,
+  coachFollowUpsTable,
 } from "@workspace/db";
 import { count, sql, desc, gte, asc, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod/v4";
@@ -30,6 +31,12 @@ router.get("/founder/stats", async (req, res): Promise<void> => {
   const [auditsCount] = await db.select({ c: count() }).from(auditsTable);
   const [waitlistCount] = await db.select({ c: count() }).from(waitlistTable);
   const [messagesCount] = await db.select({ c: count() }).from(messageCoachingSessionsTable);
+  const [followUpAgg] = await db
+    .select({
+      snoozed: sql<number>`count(*) filter (where ${coachFollowUpsTable.answer} = 'snoozed')::int`,
+      dismissed: sql<number>`count(*) filter (where ${coachFollowUpsTable.answer} = 'dismissed')::int`,
+    })
+    .from(coachFollowUpsTable);
 
   res.json({
     leads: Number(leadsCount?.c ?? 0),
@@ -37,6 +44,8 @@ router.get("/founder/stats", async (req, res): Promise<void> => {
     audits: Number(auditsCount?.c ?? 0),
     waitlist: Number(waitlistCount?.c ?? 0),
     messages: Number(messagesCount?.c ?? 0),
+    followUpSnoozeCount: Number(followUpAgg?.snoozed ?? 0),
+    followUpDismissCount: Number(followUpAgg?.dismissed ?? 0),
   });
 });
 

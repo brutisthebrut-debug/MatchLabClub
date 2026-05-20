@@ -558,6 +558,16 @@ export default function Coach() {
                         <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">Skipped</p>
                       </div>
                     </div>
+                    <div className="grid grid-cols-2 gap-2 mb-3 pt-3 border-t border-white/8">
+                      <div className="text-center">
+                        <p className="text-lg font-bold text-[hsl(220_55%_70%)]" data-testid="stats-snooze-count">{followUpStats.snoozeCount ?? 0}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">Snoozed</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-lg font-bold text-[hsl(0_55%_65%)]" data-testid="stats-dismiss-count">{followUpStats.dismissCount ?? 0}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">Dismissed</p>
+                      </div>
+                    </div>
                     {followUpStats.lastAnswer && followUpStats.lastAnsweredAt && (
                       <div className="pt-3 border-t border-white/8">
                         <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Last answer</p>

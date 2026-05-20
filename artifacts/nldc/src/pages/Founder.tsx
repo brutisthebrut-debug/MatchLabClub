@@ -10,7 +10,7 @@ import {
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
-import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle } from "lucide-react";
+import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
 
 type AiMode = "live" | "fallback" | "setup-needed";
@@ -786,9 +786,9 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
 const FOUNDER_KEY =
   (import.meta.env as Record<string, string>).VITE_FOUNDER_KEY || "nldc2024";
 
-function StatCard({ label, value, icon: Icon, color }: { label: string; value: number | string; icon: React.ElementType; color: string }) {
+function StatCard({ label, value, icon: Icon, color, "data-testid": testId }: { label: string; value: number | string; icon: React.ElementType; color: string; "data-testid"?: string }) {
   return (
-    <div className="glass rounded-2xl p-5 flex items-center gap-4">
+    <div className="glass rounded-2xl p-5 flex items-center gap-4" data-testid={testId}>
       <div
         className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
         style={{ background: `${color}20`, border: `1px solid ${color}40` }}
@@ -1219,6 +1219,23 @@ function Dashboard() {
             <StatCard label="Audits completed" value={stats?.audits ?? "—"} icon={ListChecks} color="hsl(142 55% 50%)" />
             <StatCard label="Waitlist signups" value={stats?.waitlist ?? "—"} icon={Users} color="hsl(43 65% 52%)" />
             <StatCard label="Message sessions" value={stats?.messages ?? "—"} icon={BarChart3} color="hsl(190 55% 52%)" />
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-2 gap-4" data-testid="card-follow-up-engagement">
+            <StatCard
+              label="Follow-ups snoozed"
+              value={stats?.followUpSnoozeCount ?? "—"}
+              icon={Moon}
+              color="hsl(220 55% 65%)"
+              data-testid="stat-follow-up-snoozed"
+            />
+            <StatCard
+              label="Follow-ups dismissed"
+              value={stats?.followUpDismissCount ?? "—"}
+              icon={XCircle}
+              color="hsl(0 55% 60%)"
+              data-testid="stat-follow-up-dismissed"
+            />
           </div>
 
           <div className="glass rounded-2xl p-6 space-y-3">
