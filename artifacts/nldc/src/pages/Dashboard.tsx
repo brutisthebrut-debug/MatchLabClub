@@ -64,6 +64,10 @@ import {
   markSwept,
 } from "@/lib/autoRefreshPref";
 import {
+  loadSkippedAuditIds,
+  saveSkippedAuditIds,
+} from "@/lib/skippedRefreshAudits";
+import {
   dismissDashboardBanner,
   isDashboardBannerDismissed,
   loadTrashReminderPref,
@@ -558,7 +562,11 @@ export default function Dashboard() {
     });
   }, [staleAudits, pickerSort]);
   const openRefreshPicker = useCallback(() => {
-    setPickerSelected(new Set(staleAudits.map((a) => a.id)));
+    const skipped = loadSkippedAuditIds();
+    const initialSelected = new Set(
+      staleAudits.filter((a) => !skipped.has(a.id)).map((a) => a.id),
+    );
+    setPickerSelected(initialSelected);
     setPickerSort("score");
     setPickerOpen(true);
   }, [staleAudits]);
@@ -572,6 +580,10 @@ export default function Dashboard() {
   }, []);
   const confirmRefreshPicker = useCallback(async () => {
     const chosen = staleAudits.filter((a) => pickerSelected.has(a.id));
+    const skippedIds = new Set(
+      staleAudits.filter((a) => !pickerSelected.has(a.id)).map((a) => a.id),
+    );
+    saveSkippedAuditIds(skippedIds);
     setPickerOpen(false);
     await refreshAudits(chosen);
   }, [staleAudits, pickerSelected, refreshAudits]);

@@ -45,6 +45,10 @@ import {
   loadAutoRefreshPref,
   markSwept as markAutoRefreshSwept,
 } from "@/lib/autoRefreshPref";
+import {
+  loadSkippedAuditIds,
+  saveSkippedAuditIds,
+} from "@/lib/skippedRefreshAudits";
 
 interface DemoMatch {
   id: number;
@@ -514,8 +518,12 @@ export default function MatchesScreen() {
       return tb - ta;
     });
   }, [staleAudits, pickerSort]);
-  const openRefreshPicker = React.useCallback(() => {
-    setPickerSelected(new Set(staleAudits.map((a) => a.id)));
+  const openRefreshPicker = React.useCallback(async () => {
+    const skipped = await loadSkippedAuditIds();
+    const initialSelected = new Set(
+      staleAudits.filter((a) => !skipped.has(a.id)).map((a) => a.id),
+    );
+    setPickerSelected(initialSelected);
     setPickerSort("score");
     setPickerOpen(true);
   }, [staleAudits]);
@@ -529,6 +537,10 @@ export default function MatchesScreen() {
   }, []);
   const confirmRefreshPicker = React.useCallback(async () => {
     const chosen = staleAudits.filter((a) => pickerSelected.has(a.id));
+    const skippedIds = new Set(
+      staleAudits.filter((a) => !pickerSelected.has(a.id)).map((a) => a.id),
+    );
+    await saveSkippedAuditIds(skippedIds);
     setPickerOpen(false);
     await runRefresh(chosen);
   }, [staleAudits, pickerSelected, runRefresh]);
