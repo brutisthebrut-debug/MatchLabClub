@@ -1,5 +1,5 @@
 import { db, ocrLearnedRulesTable, ocrRuleReviewLogTable, auditsTable } from "@workspace/db";
-import { isNotNull, desc, sql, eq } from "drizzle-orm";
+import { isNotNull, desc, sql, eq, and, inArray } from "drizzle-orm";
 import type {
   OcrCorrectionsRecord,
   OcrCorrectionField,
@@ -241,18 +241,31 @@ export async function refreshLearnedRulesCache(): Promise<LearnedRules> {
  * Read recent audits with OCR corrections, derive parser-improvement
  * candidates, and persist any that meet the threshold as PENDING (awaiting
  * founder review). Existing approved or rejected rules are not overwritten.
+ *
+ * @param options.limitToAuditIds - When provided, the scan is restricted to
+ *   audits whose `id` is in this list. Intended for integration tests that
+ *   need to scope this global-scan to their own seeded rows so parallel
+ *   workers do not interfere with each other's assertions.
  */
-export async function learnFromCorrections(): Promise<{
+export async function learnFromCorrections(options?: {
+  limitToAuditIds?: number[];
+}): Promise<{
   scannedAudits: number;
   candidates: RuleCandidate[];
   persisted: number;
 }> {
+  const { limitToAuditIds } = options ?? {};
+  const scopeFilter =
+    limitToAuditIds && limitToAuditIds.length > 0
+      ? inArray(auditsTable.id, limitToAuditIds)
+      : undefined;
+
   const rows = await db
     .select({
       ocrCorrections: auditsTable.ocrCorrections,
     })
     .from(auditsTable)
-    .where(isNotNull(auditsTable.ocrCorrections))
+    .where(and(isNotNull(auditsTable.ocrCorrections), scopeFilter))
     .orderBy(desc(auditsTable.createdAt))
     .limit(MAX_AUDITS_TO_SCAN);
 
