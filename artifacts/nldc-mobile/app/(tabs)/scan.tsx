@@ -3,8 +3,9 @@ import {
   useAuditFromScreenshot,
   useExtractScreenshot,
 } from "@workspace/api-client-react";
+import * as Clipboard from "expo-clipboard";
 import * as ImagePicker from "expo-image-picker";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -125,6 +126,82 @@ export default function ScanScreen() {
       setResult(null);
     }
   }
+
+  async function loadFromBase64(base64: string, uri?: string) {
+    setPicked({
+      uri: uri ?? `data:image/png;base64,${base64}`,
+      base64,
+    });
+    setDraft(null);
+    setResult(null);
+  }
+
+  async function pasteFromClipboard() {
+    setErrorMsg(null);
+    try {
+      const hasImage = await Clipboard.hasImageAsync();
+      if (!hasImage) {
+        setErrorMsg(
+          "No image on the clipboard. Copy a screenshot first, then paste.",
+        );
+        return;
+      }
+      const res = await Clipboard.getImageAsync({ format: "png" });
+      if (!res?.data) {
+        setErrorMsg("Couldn't read that image from the clipboard.");
+        return;
+      }
+      const data = res.data;
+      const comma = data.indexOf(",");
+      const base64 = comma >= 0 ? data.slice(comma + 1) : data;
+      await loadFromBase64(base64, data.startsWith("data:") ? data : undefined);
+    } catch {
+      setErrorMsg("Couldn't read that image from the clipboard.");
+    }
+  }
+
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    function onPaste(e: ClipboardEvent) {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const target = e.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        if (
+          tag === "INPUT" ||
+          tag === "TEXTAREA" ||
+          (target as HTMLElement).isContentEditable
+        ) {
+          return;
+        }
+      }
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.kind === "file" && item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            const reader = new FileReader();
+            reader.onload = () => {
+              const result = reader.result;
+              if (typeof result !== "string") return;
+              const comma = result.indexOf(",");
+              const base64 = comma >= 0 ? result.slice(comma + 1) : result;
+              setErrorMsg(null);
+              void loadFromBase64(base64, result);
+            };
+            reader.onerror = () =>
+              setErrorMsg("Couldn't read that pasted image.");
+            reader.readAsDataURL(file);
+            return;
+          }
+        }
+      }
+    }
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, []);
 
   async function takePhoto() {
     setErrorMsg(null);
@@ -314,6 +391,19 @@ export default function ScanScreen() {
                 <Feather name="image" size={22} color={colors.gold} />
                 <Text style={[styles.pickLabel, { color: colors.foreground }]}>
                   From library
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={pasteFromClipboard}
+                style={[
+                  styles.pickBtn,
+                  { backgroundColor: colors.input, borderColor: colors.border },
+                ]}
+                testID="button-paste-clipboard"
+              >
+                <Feather name="clipboard" size={22} color={colors.teal} />
+                <Text style={[styles.pickLabel, { color: colors.foreground }]}>
+                  Paste
                 </Text>
               </Pressable>
             </View>
