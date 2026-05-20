@@ -102,6 +102,7 @@ vi.mock("@/lib/apiClient", () => ({
     ],
     alertThreshold: { ...DEFAULTS },
     perToolOverrides: [],
+    mailerHealth: [],
     alerts: [],
   })),
   getAiThresholds: vi.fn(async () => ({

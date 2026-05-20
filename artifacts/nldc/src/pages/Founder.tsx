@@ -1105,6 +1105,46 @@ function AiMetricsPanel({ refreshKey }: { refreshKey: number }) {
         </div>
       )}
 
+      {data && data.mailerHealth.length > 0 && (
+        <div
+          className="rounded-xl p-4 border space-y-2"
+          style={{
+            background: "hsl(27 80% 52% / 0.10)",
+            borderColor: "hsl(27 80% 52% / 0.40)",
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <Mail className="w-4 h-4" style={{ color: "hsl(27 90% 65%)" }} />
+            <p className="text-sm font-semibold" style={{ color: "hsl(27 90% 72%)" }}>
+              Alert delivery degraded
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground/80">
+            Breach / recovery emails are failing for the following{" "}
+            {data.mailerHealth.length === 1 ? "tool" : `${data.mailerHealth.length} tools`}.
+            Alerts will resume once the mailer recovers.
+          </p>
+          <ul className="text-xs text-foreground/85 space-y-2 pl-1">
+            {data.mailerHealth.map((h) => (
+              <li key={h.toolName} className="space-y-0.5">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="truncate font-medium">{h.toolName}</p>
+                  <span className="text-muted-foreground/70 shrink-0">
+                    {h.consecutiveSendFailures} consecutive failure{h.consecutiveSendFailures !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                {h.lastSendFailureAt && (
+                  <p className="text-[11px] text-muted-foreground/60">
+                    Last failed {new Date(h.lastSendFailureAt).toLocaleString()}
+                    {h.lastSendFailureMessage ? ` — ${h.lastSendFailureMessage}` : ""}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {overall && overall.total > 0 && (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

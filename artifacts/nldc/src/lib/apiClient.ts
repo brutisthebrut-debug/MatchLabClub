@@ -152,6 +152,12 @@ export interface AiMetricsResponse {
   };
   perToolOverrides: AiPerToolThreshold[];
   cooldownStates: AiToolCooldownState[];
+  mailerHealth: {
+    toolName: string;
+    consecutiveSendFailures: number;
+    lastSendFailureAt: string | null;
+    lastSendFailureMessage: string | null;
+  }[];
   alerts: {
     toolName: string;
     recentTotal: number;
