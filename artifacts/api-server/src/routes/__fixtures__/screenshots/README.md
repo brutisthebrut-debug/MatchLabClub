@@ -5,11 +5,12 @@ the mocked unit tests can't see.
 
 One fixture per supported app layout:
 
-| File               | App    | Name  | Age | Key bio words            |
-|--------------------|--------|-------|-----|--------------------------|
-| hinge-sample.png   | Hinge  | Sarah | 28  | hiking, coffee, sunday   |
-| bumble-sample.png  | Bumble | Emma  | 25  | yoga, brunch, hikes      |
-| tinder-sample.png  | Tinder | Jake  | 30  | foodie, traveler, adventure |
+| File               | App              | Name  | Age | Key bio words                  |
+|--------------------|------------------|-------|-----|--------------------------------|
+| hinge-sample.png   | Hinge            | Sarah | 28  | hiking, coffee, sunday         |
+| bumble-sample.png  | Bumble           | Emma  | 25  | yoga, brunch, hikes            |
+| tinder-sample.png  | Tinder           | Jake  | 30  | foodie, traveler, adventure    |
+| cmb-sample.png     | CoffeeMeetsBagel | Mia   | 27  | bookworm, coffee, sunday reads |
 
 Run the gated tests with:
 
@@ -60,6 +61,27 @@ magick -size 600x500 xc:white -font DejaVu-Sans -pointsize 28 -fill black \
   -annotate +20+350 "Cooking, Travel, Photography" \
   -annotate +20+430 "It's a match" \
   tinder-sample.png
+```
+
+---
+
+## cmb-sample.png
+
+Used by `audits.from-screenshot.real-ocr.test.ts` — exercises the Coffee Meets
+Bagel OCR path. Asserts firstName (Mia), age (27), sourceApp (CoffeeMeetsBagel),
+and bio keywords.
+
+Regenerate with ImageMagick:
+
+```
+magick -size 600x420 xc:white -font DejaVu-Sans -pointsize 28 -fill black \
+  -annotate +20+55  "Coffee Meets Bagel" \
+  -annotate +20+110 "Mia, 27" \
+  -annotate +20+170 "Bookworm who loves spontaneous coffee" \
+  -annotate +20+210 "runs and lazy Sunday reads." \
+  -annotate +20+280 "Bagel of the Day" \
+  -annotate +20+350 "Connect" \
+  cmb-sample.png
 ```
 
 ---

@@ -29,6 +29,7 @@ const VALID_SOURCE_APPS: ReadonlySet<SourceApp> = new Set([
   "Hinge",
   "Bumble",
   "Tinder",
+  "CoffeeMeetsBagel",
 ]);
 
 let cache: LearnedRules = EMPTY_LEARNED_RULES;
@@ -78,8 +79,11 @@ function asStringArray(v: unknown): string[] {
 function asSourceApp(v: unknown): SourceApp | null {
   const s = asStringValue(v);
   if (!s) return null;
-  const cap = (s[0].toUpperCase() + s.slice(1).toLowerCase()) as SourceApp;
-  return VALID_SOURCE_APPS.has(cap) ? cap : null;
+  const lower = s.toLowerCase();
+  for (const app of VALID_SOURCE_APPS) {
+    if (app.toLowerCase() === lower) return app;
+  }
+  return null;
 }
 
 export interface RuleCandidate {

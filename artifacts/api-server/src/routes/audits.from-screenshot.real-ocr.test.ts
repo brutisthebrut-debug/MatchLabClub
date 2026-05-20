@@ -73,4 +73,19 @@ describe.skipIf(!ENABLED)("extractProfileFromScreenshot (real OCR)", () => {
     },
     120_000,
   );
+
+  it(
+    "parses firstName/age/sourceApp/bio from a Coffee Meets Bagel screenshot",
+    async () => {
+      const imageBase64 = loadFixture("cmb-sample.png");
+      const result = await extractProfileFromScreenshot(imageBase64);
+
+      expect(result.rawText.length).toBeGreaterThan(0);
+      expect(result.firstName).toBe("Mia");
+      expect(result.age).toBe(27);
+      expect(result.sourceApp).toBe("CoffeeMeetsBagel");
+      expect(result.bio.toLowerCase()).toMatch(/bookworm|coffee|sunday/);
+    },
+    120_000,
+  );
 });

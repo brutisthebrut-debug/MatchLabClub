@@ -1,4 +1,4 @@
-export type SourceApp = "Hinge" | "Bumble" | "Tinder";
+export type SourceApp = "Hinge" | "Bumble" | "Tinder" | "CoffeeMeetsBagel";
 
 export interface ParsedProfile {
   firstName: string | null;
@@ -144,6 +144,7 @@ const UI_NOISE_PATTERNS: RegExp[] = [
 ];
 
 const APP_NAME_RX = /\b(hinge|bumble|tinder)\b/i;
+const CMB_RX = /coffee\s+meets\s+bagel/i;
 
 function normalize(line: string): string {
   return line.replace(/\s+/g, " ").trim();
@@ -173,7 +174,7 @@ function isPromptQuestion(line: string, learned: ReadonlySet<string>): boolean {
 export function detectSourceApp(lines: string[]): SourceApp | null {
   const text = lines.join("\n");
   const lower = text.toLowerCase();
-  const scores: Record<SourceApp, number> = { Hinge: 0, Bumble: 0, Tinder: 0 };
+  const scores: Record<SourceApp, number> = { Hinge: 0, Bumble: 0, Tinder: 0, CoffeeMeetsBagel: 0 };
 
   const named = APP_NAME_RX.exec(text);
   if (named) {
@@ -196,6 +197,12 @@ export function detectSourceApp(lines: string[]): SourceApp | null {
   if (/^passions$/im.test(text)) scores.Tinder += 2;
   if (/^my interests$/im.test(text)) scores.Tinder += 2;
   for (const p of TINDER_PROMPTS) if (lower.includes(p)) scores.Tinder += 1;
+
+  if (CMB_RX.test(text)) scores.CoffeeMeetsBagel += 5;
+  if (/\bcmb\b/.test(text)) scores.CoffeeMeetsBagel += 3;
+  if (/\bbagel\b/i.test(text)) scores.CoffeeMeetsBagel += 3;
+  if (/^connect$/im.test(text)) scores.CoffeeMeetsBagel += 2;
+  if (/bagel of the day/i.test(text)) scores.CoffeeMeetsBagel += 3;
 
   const metaLine = /^(\d['′][\s]?\d{1,2}["″]?|\d{1,3}\s?cm|\d+\s?mi(les)?\s?away|located in)/i;
   const metaCount = lines.filter((l) => metaLine.test(l)).length;
@@ -220,7 +227,7 @@ const NAME_BLOCKLIST = new Set([
   "About", "Hinge", "Bumble", "Tinder", "Like", "Pass", "Match", "Send",
   "Looking", "My", "The", "What", "Why", "How", "When", "Home", "Profile",
   "Settings", "Edit", "View", "Photos", "Photo", "Reply", "Message",
-  "Likes", "Compliment", "Anthem", "Passions",
+  "Likes", "Compliment", "Anthem", "Passions", "Bagel", "Connect", "Coffee",
 ]);
 
 function isPlausibleAge(n: number): boolean {
