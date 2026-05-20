@@ -1571,7 +1571,15 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
   const [trendData, setTrendData] = useState<OcrMismatchesTrendsResponse | null>(null);
   const [trendLoading, setTrendLoading] = useState(true);
   const [trendError, setTrendError] = useState<string | null>(null);
-  const [groupBy, setGroupBy] = useState<"day" | "week">("day");
+  const [groupBy, setGroupBy] = useState<"day" | "week">(() => {
+    const saved = localStorage.getItem("ocr-trend-groupBy");
+    return saved === "week" ? "week" : "day";
+  });
+
+  const handleSetGroupBy = (value: "day" | "week") => {
+    localStorage.setItem("ocr-trend-groupBy", value);
+    setGroupBy(value);
+  };
 
   const trendDays = windowDays === null ? 90 : windowDays;
 
@@ -1686,7 +1694,7 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
                   <button
                     key={opt}
                     data-testid={`ocr-trend-groupby-${opt}`}
-                    onClick={() => setGroupBy(opt)}
+                    onClick={() => handleSetGroupBy(opt)}
                     className={[
                       "px-3 py-1 capitalize transition-colors",
                       groupBy === opt
