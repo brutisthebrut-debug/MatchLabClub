@@ -1543,9 +1543,17 @@ export default function Dashboard() {
                           </div>
                           <div className="min-w-0">
                             <p className="font-semibold text-foreground text-sm truncate">{audit.firstName}'s Signal Audit</p>
-                            <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                            <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5 flex-wrap">
                               <Clock className="w-3 h-3 flex-shrink-0" /> {date}
                               <span className="hidden sm:inline">· {audit.currentApps?.join(", ")}</span>
+                              {audit.sourceApp ? (
+                                <span
+                                  className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.12)] text-[hsl(268_60%_78%)] border border-[hsl(268_52%_68%/0.3)]"
+                                  data-testid={`badge-source-app-${audit.id}`}
+                                >
+                                  {audit.sourceApp}
+                                </span>
+                              ) : null}
                             </p>
                           </div>
                         </div>
@@ -1568,6 +1576,14 @@ export default function Dashboard() {
                           <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5 flex-wrap">
                             <Clock className="w-3 h-3 flex-shrink-0" /> {date}
                             <span className="hidden sm:inline">· {audit.currentApps?.join(", ")}</span>
+                            {audit.sourceApp ? (
+                              <span
+                                className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.12)] text-[hsl(268_60%_78%)] border border-[hsl(268_52%_68%/0.3)]"
+                                data-testid={`badge-source-app-${audit.id}`}
+                              >
+                                {audit.sourceApp}
+                              </span>
+                            ) : null}
                             {staleHint ? (
                               <span
                                 className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[hsl(43_65%_55%/0.35)] bg-[hsl(43_65%_55%/0.12)] text-[hsl(43_65%_75%)]"
