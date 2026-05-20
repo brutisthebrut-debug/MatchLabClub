@@ -444,6 +444,190 @@ describe("Stale-report picker", () => {
     expect(fetchState.generateCallIds).not.toContain(21);
   });
 
+  // -------------------------------------------------------------------------
+  // Sort button tests
+  // -------------------------------------------------------------------------
+
+  it("default Score sort orders picker rows by readinessScore descending", async () => {
+    const base = Date.now() - 35 * 24 * 60 * 60 * 1000;
+    fetchState.audits = [
+      buildAudit({
+        id: 50,
+        firstName: "Low",
+        readinessScore: 40,
+        reportGeneratedAt: new Date(base).toISOString(),
+      }),
+      buildAudit({
+        id: 51,
+        firstName: "High",
+        readinessScore: 90,
+        reportGeneratedAt: new Date(base - 1000).toISOString(),
+      }),
+      buildAudit({
+        id: 52,
+        firstName: "Mid",
+        readinessScore: 65,
+        reportGeneratedAt: new Date(base - 2000).toISOString(),
+      }),
+    ];
+
+    render(
+      <Wrap>
+        <Dashboard />
+      </Wrap>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("row-audit-50")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByTestId("button-refresh-stale-reports"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("dialog-refresh-stale-picker")).toBeTruthy();
+    });
+
+    // Score sort is the default — no extra click needed.
+    // Verify the sort button is present (it should exist).
+    expect(screen.getByTestId("button-refresh-picker-sort-score")).toBeTruthy();
+
+    // Read picker rows in DOM order.
+    const rows = document.querySelectorAll(
+      '[data-testid^="row-refresh-picker-"]',
+    );
+    const ids = Array.from(rows).map((el) =>
+      Number(el.getAttribute("data-testid")!.replace("row-refresh-picker-", "")),
+    );
+
+    // Expected descending score order: 51 (90), 52 (65), 50 (40).
+    expect(ids).toEqual([51, 52, 50]);
+  });
+
+  it("Oldest first sort reorders picker rows by reportGeneratedAt ascending", async () => {
+    const now = Date.now();
+    // Three different stale dates: 40 days (oldest), 37 days, 35 days (most recent).
+    fetchState.audits = [
+      buildAudit({
+        id: 60,
+        firstName: "Middle",
+        readinessScore: 70,
+        reportGeneratedAt: new Date(
+          now - 37 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
+      }),
+      buildAudit({
+        id: 61,
+        firstName: "Newest",
+        readinessScore: 70,
+        reportGeneratedAt: new Date(
+          now - 35 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
+      }),
+      buildAudit({
+        id: 62,
+        firstName: "Oldest",
+        readinessScore: 70,
+        reportGeneratedAt: new Date(
+          now - 40 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
+      }),
+    ];
+
+    render(
+      <Wrap>
+        <Dashboard />
+      </Wrap>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("row-audit-60")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByTestId("button-refresh-stale-reports"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("dialog-refresh-stale-picker")).toBeTruthy();
+    });
+
+    // Switch to Oldest first.
+    fireEvent.click(screen.getByTestId("button-refresh-picker-sort-oldest"));
+
+    // Rows should reorder: 62 (40 days ago) → 60 (37 days ago) → 61 (35 days ago).
+    await waitFor(() => {
+      const rows = document.querySelectorAll(
+        '[data-testid^="row-refresh-picker-"]',
+      );
+      const ids = Array.from(rows).map((el) =>
+        Number(
+          el.getAttribute("data-testid")!.replace("row-refresh-picker-", ""),
+        ),
+      );
+      expect(ids).toEqual([62, 60, 61]);
+    });
+  });
+
+  it("Newest first sort reorders picker rows by reportGeneratedAt descending", async () => {
+    const now = Date.now();
+    fetchState.audits = [
+      buildAudit({
+        id: 70,
+        firstName: "Middle",
+        readinessScore: 70,
+        reportGeneratedAt: new Date(
+          now - 37 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
+      }),
+      buildAudit({
+        id: 71,
+        firstName: "Oldest",
+        readinessScore: 70,
+        reportGeneratedAt: new Date(
+          now - 40 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
+      }),
+      buildAudit({
+        id: 72,
+        firstName: "Newest",
+        readinessScore: 70,
+        reportGeneratedAt: new Date(
+          now - 35 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
+      }),
+    ];
+
+    render(
+      <Wrap>
+        <Dashboard />
+      </Wrap>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("row-audit-70")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByTestId("button-refresh-stale-reports"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("dialog-refresh-stale-picker")).toBeTruthy();
+    });
+
+    // Switch to Newest first.
+    fireEvent.click(screen.getByTestId("button-refresh-picker-sort-newest"));
+
+    // Rows should reorder: 72 (35 days ago, most recent) → 70 (37 days ago) → 71 (40 days ago, oldest).
+    await waitFor(() => {
+      const rows = document.querySelectorAll(
+        '[data-testid^="row-refresh-picker-"]',
+      );
+      const ids = Array.from(rows).map((el) =>
+        Number(
+          el.getAttribute("data-testid")!.replace("row-refresh-picker-", ""),
+        ),
+      );
+      expect(ids).toEqual([72, 70, 71]);
+    });
+  });
+
   it("Cancel closes the dialog without firing any regenerate calls", async () => {
     fetchState.audits = [
       buildAudit({ id: 30, firstName: "Ivy" }),
