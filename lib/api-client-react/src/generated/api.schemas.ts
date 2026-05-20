@@ -166,6 +166,14 @@ export interface AuditReport {
   actionPlan: ActionPlanItem[];
   messagingStyle: string;
   coachingCta: string;
+  /**
+     * Version tag of the deterministic engine that produced this report.
+  Older saved reports may be missing this field; clients should treat
+  a missing or non-matching value as stale and offer a re-run.
+
+     * @nullable
+     */
+  engineVersion?: string | null;
 }
 
 export interface Audit {

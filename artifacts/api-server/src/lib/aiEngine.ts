@@ -1,6 +1,11 @@
 // AI Engine — deterministic mock for MVP (no external API keys required)
 // Returns realistic, coaching-quality output for every audit/report/coaching session.
 
+// Bump this string whenever the deterministic engine's output changes in a
+// user-visible way. Stored reports tagged with an older version will be
+// flagged as stale on the client so the user can re-run with the latest.
+export const ENGINE_VERSION = "2026-05-20";
+
 export interface AuditReportOutput {
   readinessScore: number;
   overallGrade: string;
@@ -13,6 +18,7 @@ export interface AuditReportOutput {
   actionPlan: { priority: number; title: string; description: string; timeframe: string }[];
   messagingStyle: string;
   coachingCta: string;
+  engineVersion: string;
 }
 
 export interface MessageCoachingOutput {
@@ -294,6 +300,7 @@ export function generateAuditReport(params: {
         : "No message sample provided. Add a conversation snippet in your next audit to unlock personalized messaging analysis. In the meantime: the single highest-ROI change most people can make is in the first message — it should reference something specific from their profile, ask one question, and land in 2 sentences or less.",
     coachingCta:
       "Ready to go deeper? Book a 1:1 coaching session and we'll rebuild your entire dating strategy — from photos to first messages to closing for dates. Most clients see a 2-3x improvement in meaningful matches within 30 days.",
+    engineVersion: ENGINE_VERSION,
   };
 }
 

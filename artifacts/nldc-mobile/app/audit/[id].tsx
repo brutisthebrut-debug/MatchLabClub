@@ -24,6 +24,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScoreRing } from "@/components/ScoreRing";
 import { useColors } from "@/hooks/useColors";
 
+// Keep in sync with `ENGINE_VERSION` in artifacts/api-server/src/lib/aiEngine.ts.
+const CURRENT_ENGINE_VERSION = "2026-05-20";
+
 function formatGeneratedAt(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "earlier";
@@ -168,6 +171,12 @@ export default function AuditDetailScreen() {
     ? formatGeneratedAt(reportGeneratedAt)
     : null;
 
+  const storedEngineVersion =
+    (storedReport as { engineVersion?: string | null } | null)?.engineVersion ??
+    null;
+  const isStaleEngine =
+    !!storedReport && storedEngineVersion !== CURRENT_ENGINE_VERSION;
+
   const regenerate = () => {
     if (!valid || generate.isPending) return;
     setErrorMsg(null);
@@ -310,6 +319,27 @@ export default function AuditDetailScreen() {
                     ? `Report from ${reportGeneratedLabel}`
                     : "Report generated"}
                 </Text>
+                {isStaleEngine ? (
+                  <View
+                    style={[
+                      styles.staleBadge,
+                      {
+                        backgroundColor: `${colors.gold}22`,
+                        borderColor: colors.gold,
+                      },
+                    ]}
+                    accessibilityLabel="This report is from an older engine"
+                  >
+                    <Feather
+                      name="alert-circle"
+                      size={11}
+                      color={colors.gold}
+                    />
+                    <Text style={[styles.staleText, { color: colors.gold }]}>
+                      Older engine
+                    </Text>
+                  </View>
+                ) : null}
                 <Pressable
                   onPress={regenerate}
                   disabled={generate.isPending}
@@ -321,7 +351,11 @@ export default function AuditDetailScreen() {
                       opacity: generate.isPending ? 0.5 : pressed ? 0.7 : 1,
                     },
                   ]}
-                  accessibilityLabel="Regenerate mini-report"
+                  accessibilityLabel={
+                    isStaleEngine
+                      ? "Re-run mini-report with latest engine"
+                      : "Regenerate mini-report"
+                  }
                 >
                   <Feather
                     name="refresh-cw"
@@ -329,7 +363,11 @@ export default function AuditDetailScreen() {
                     color={colors.primary}
                   />
                   <Text style={[styles.regenText, { color: colors.primary }]}>
-                    {generate.isPending ? "Refreshing…" : "Regenerate"}
+                    {generate.isPending
+                      ? "Refreshing…"
+                      : isStaleEngine
+                      ? "Re-run with latest"
+                      : "Regenerate"}
                   </Text>
                 </Pressable>
               </View>
@@ -520,6 +558,21 @@ const styles = StyleSheet.create({
     marginTop: 10,
     alignItems: "center",
     gap: 8,
+  },
+  staleBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  staleText: {
+    fontSize: 10,
+    fontFamily: "PlusJakartaSans_700Bold",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
   },
   generatedText: {
     fontSize: 11,

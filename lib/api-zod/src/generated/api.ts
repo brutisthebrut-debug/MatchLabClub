@@ -236,7 +236,8 @@ export const ExportMyDataResponse = zod.object({
   "timeframe": zod.string()
 })),
   "messagingStyle": zod.string(),
-  "coachingCta": zod.string()
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "createdAt": zod.string()
@@ -374,7 +375,8 @@ export const DownloadEmailedExportResponse = zod.object({
   "timeframe": zod.string()
 })),
   "messagingStyle": zod.string(),
-  "coachingCta": zod.string()
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "createdAt": zod.string()
@@ -505,7 +507,8 @@ export const ListAuditsResponseItem = zod.object({
   "timeframe": zod.string()
 })),
   "messagingStyle": zod.string(),
-  "coachingCta": zod.string()
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "createdAt": zod.string()
@@ -582,7 +585,8 @@ export const GetAuditResponse = zod.object({
   "timeframe": zod.string()
 })),
   "messagingStyle": zod.string(),
-  "coachingCta": zod.string()
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "createdAt": zod.string()
@@ -661,7 +665,8 @@ export const GenerateAuditReportResponse = zod.object({
   "timeframe": zod.string()
 })),
   "messagingStyle": zod.string(),
-  "coachingCta": zod.string()
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
 })
 
 
@@ -745,7 +750,8 @@ export const AuditFromScreenshotResponse = zod.object({
   "timeframe": zod.string()
 })),
   "messagingStyle": zod.string(),
-  "coachingCta": zod.string()
+  "coachingCta": zod.string(),
+  "engineVersion": zod.string().nullish().describe('Version tag of the deterministic engine that produced this report.\nOlder saved reports may be missing this field; clients should treat\na missing or non-matching value as stale and offer a re-run.\n')
 })
 })
 
