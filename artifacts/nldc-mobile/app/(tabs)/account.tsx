@@ -7,6 +7,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -102,6 +103,7 @@ export default function AccountScreen() {
     },
     [trashPrefs],
   );
+  const router = useRouter();
   const {
     user,
     isAuthenticated,
@@ -422,6 +424,45 @@ export default function AccountScreen() {
               {banner.text}
             </Text>
           </View>
+        ) : null}
+
+        {isAuthenticated ? (
+          <Pressable
+            testID="button-account-sessions"
+            onPress={() => router.push("/sessions" as never)}
+            style={({ pressed }) => [
+              styles.card,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.cardBorder,
+                opacity: pressed ? 0.75 : 1,
+              },
+            ]}
+          >
+            <View style={styles.cardHeader}>
+              <View
+                style={[
+                  styles.iconBubble,
+                  { backgroundColor: `${colors.violet}22` },
+                ]}
+              >
+                <Feather name="shield" size={16} color={colors.violet} />
+              </View>
+              <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+                Devices & sign-ins
+              </Text>
+              <View style={{ flex: 1 }} />
+              <Feather
+                name="chevron-right"
+                size={16}
+                color={colors.mutedForeground}
+              />
+            </View>
+            <Text style={[styles.cardBody, { color: colors.mutedForeground }]}>
+              See every browser or app signed in to your account and sign out
+              any device you don&apos;t recognize.
+            </Text>
+          </Pressable>
         ) : null}
 
         <View
