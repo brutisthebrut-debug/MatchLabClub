@@ -132,12 +132,18 @@ function ProfileCard({
         </View>
       </View>
 
-      <Text
-        style={[styles.bioText, { color: colors.foreground }]}
-        numberOfLines={3}
-      >
-        {profile.bio}
-      </Text>
+      {profile.bio ? (
+        <Text
+          style={[styles.bioText, { color: colors.foreground }]}
+          numberOfLines={3}
+        >
+          {profile.bio}
+        </Text>
+      ) : (
+        <Text style={[styles.bioText, styles.bioEmpty, { color: colors.mutedForeground }]}>
+          No bio saved
+        </Text>
+      )}
 
       {profile.prompts ? (
         <View style={[styles.promptWrap, { borderLeftColor: colors.primary + "50" }]}>
@@ -854,6 +860,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "PlusJakartaSans_400Regular",
     lineHeight: 20,
+  },
+
+  bioEmpty: {
+    fontStyle: "italic",
   },
 
   promptWrap: {

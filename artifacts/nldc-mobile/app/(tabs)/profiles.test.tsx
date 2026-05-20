@@ -828,6 +828,41 @@ describe("Profiles screen — profile list", () => {
       screen.queryByText("No saved profiles yet. Here's what they'll look like."),
     ).toBeNull();
   });
+
+  it("shows 'No bio saved' placeholder when the profile has an empty bio", async () => {
+    profilesRef.current = {
+      data: [makeProfile({ id: 11, platform: "Hinge", bio: "" })],
+      isLoading: false,
+      isRefetching: false,
+      refetch: vi.fn(),
+    };
+
+    render(
+      <Wrap>
+        <ProfilesScreen />
+      </Wrap>,
+    );
+
+    expect(screen.getByText("No bio saved")).toBeTruthy();
+    expect(screen.queryByText("Marketing manager, runs half marathons.")).toBeNull();
+  });
+
+  it("shows 'No bio saved' placeholder when the profile bio is null", async () => {
+    profilesRef.current = {
+      data: [makeProfile({ id: 12, platform: "Tinder", bio: null as unknown as string })],
+      isLoading: false,
+      isRefetching: false,
+      refetch: vi.fn(),
+    };
+
+    render(
+      <Wrap>
+        <ProfilesScreen />
+      </Wrap>,
+    );
+
+    expect(screen.getByText("No bio saved")).toBeTruthy();
+  });
 });
 
 // ---------------------------------------------------------------------------
