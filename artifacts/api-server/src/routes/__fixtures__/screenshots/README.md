@@ -5,12 +5,13 @@ the mocked unit tests can't see.
 
 One fixture per supported app layout:
 
-| File               | App              | Name  | Age | Key bio words                  |
-|--------------------|------------------|-------|-----|--------------------------------|
-| hinge-sample.png   | Hinge            | Sarah | 28  | hiking, coffee, sunday         |
-| bumble-sample.png  | Bumble           | Emma  | 25  | yoga, brunch, hikes            |
-| tinder-sample.png  | Tinder           | Jake  | 30  | foodie, traveler, adventure    |
-| cmb-sample.png     | CoffeeMeetsBagel | Mia   | 27  | bookworm, coffee, sunday reads |
+| File                  | App              | Name  | Age | Key bio words                  |
+|-----------------------|------------------|-------|-----|--------------------------------|
+| hinge-sample.png      | Hinge            | Sarah | 28  | hiking, coffee, sunday         |
+| bumble-sample.png     | Bumble           | Emma  | 25  | yoga, brunch, hikes            |
+| tinder-sample.png     | Tinder           | Jake  | 30  | foodie, traveler, adventure    |
+| cmb-sample.png        | CoffeeMeetsBagel | Mia   | 27  | bookworm, coffee, sunday reads |
+| okcupid-sample.png    | OkCupid          | Lily  | 26  | travel, music, outdoors        |
 
 Run the gated tests with:
 
@@ -82,6 +83,30 @@ magick -size 600x420 xc:white -font DejaVu-Sans -pointsize 28 -fill black \
   -annotate +20+280 "Bagel of the Day" \
   -annotate +20+350 "Connect" \
   cmb-sample.png
+```
+
+---
+
+## okcupid-sample.png
+
+Used by `audits.from-screenshot.real-ocr.test.ts` — exercises the OkCupid OCR
+path. Asserts firstName (Lily), age (26), sourceApp (OkCupid), and bio keywords.
+
+Regenerate with ImageMagick:
+
+```
+magick -size 600x520 xc:white -font DejaVu-Sans -pointsize 28 -fill black \
+  -annotate +20+55  "OkCupid" \
+  -annotate +20+110 "Lily, 26" \
+  -annotate +20+160 "89% Match" \
+  -annotate +20+220 "My self-summary" \
+  -annotate +20+265 "Travel addict who lives for live music and" \
+  -annotate +20+305 "long hikes in the outdoors." \
+  -annotate +20+365 "I spend a lot of time thinking about" \
+  -annotate +20+410 "How to make every weekend an adventure." \
+  -annotate +20+470 "Like" \
+  -annotate +300+470 "Pass" \
+  okcupid-sample.png
 ```
 
 ---

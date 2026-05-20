@@ -30,6 +30,7 @@ const VALID_SOURCE_APPS: ReadonlySet<SourceApp> = new Set([
   "Bumble",
   "Tinder",
   "CoffeeMeetsBagel",
+  "OkCupid",
 ]);
 
 let cache: LearnedRules = EMPTY_LEARNED_RULES;

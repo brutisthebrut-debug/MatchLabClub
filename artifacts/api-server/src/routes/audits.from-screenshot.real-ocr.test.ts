@@ -88,4 +88,19 @@ describe.skipIf(!ENABLED)("extractProfileFromScreenshot (real OCR)", () => {
     },
     120_000,
   );
+
+  it(
+    "parses firstName/age/sourceApp/bio from an OkCupid screenshot",
+    async () => {
+      const imageBase64 = loadFixture("okcupid-sample.png");
+      const result = await extractProfileFromScreenshot(imageBase64);
+
+      expect(result.rawText.length).toBeGreaterThan(0);
+      expect(result.firstName).toBe("Lily");
+      expect(result.age).toBe(26);
+      expect(result.sourceApp).toBe("OkCupid");
+      expect(result.bio.toLowerCase()).toMatch(/travel|music|outdoors|hike/);
+    },
+    120_000,
+  );
 });

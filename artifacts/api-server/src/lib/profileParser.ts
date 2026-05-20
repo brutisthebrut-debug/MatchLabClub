@@ -1,4 +1,4 @@
-export type SourceApp = "Hinge" | "Bumble" | "Tinder" | "CoffeeMeetsBagel";
+export type SourceApp = "Hinge" | "Bumble" | "Tinder" | "CoffeeMeetsBagel" | "OkCupid";
 
 export interface ParsedProfile {
   firstName: string | null;
@@ -105,7 +105,20 @@ const TINDER_PROMPTS = [
   "the key to my heart",
 ];
 
-const ALL_PROMPTS = [...HINGE_PROMPTS, ...BUMBLE_PROMPTS, ...TINDER_PROMPTS];
+const OKCUPID_PROMPTS = [
+  "my self-summary",
+  "what i'm doing with my life",
+  "i'm really good at",
+  "the six things i could never do without",
+  "i spend a lot of time thinking about",
+  "on a typical friday night i am",
+  "you should message me if",
+  "the most private thing i'm willing to admit",
+  "i'm looking for",
+  "what i'm looking for in a person",
+];
+
+const ALL_PROMPTS = [...HINGE_PROMPTS, ...BUMBLE_PROMPTS, ...TINDER_PROMPTS, ...OKCUPID_PROMPTS];
 
 // Lines that mark the start of the bio paragraph but aren't prompts themselves.
 // We drop them and continue collecting subsequent text into the bio.
@@ -143,7 +156,8 @@ const UI_NOISE_PATTERNS: RegExp[] = [
   /^[a-z]{1,2}$/i,
 ];
 
-const APP_NAME_RX = /\b(hinge|bumble|tinder)\b/i;
+const APP_NAME_RX = /\b(hinge|bumble|tinder|okcupid)\b/i;
+const OKC_RX = /\bokcupid\b/i;
 const CMB_RX = /coffee\s+meets\s+bagel/i;
 
 function normalize(line: string): string {
@@ -174,11 +188,16 @@ function isPromptQuestion(line: string, learned: ReadonlySet<string>): boolean {
 export function detectSourceApp(lines: string[]): SourceApp | null {
   const text = lines.join("\n");
   const lower = text.toLowerCase();
-  const scores: Record<SourceApp, number> = { Hinge: 0, Bumble: 0, Tinder: 0, CoffeeMeetsBagel: 0 };
+  const scores: Record<SourceApp, number> = { Hinge: 0, Bumble: 0, Tinder: 0, CoffeeMeetsBagel: 0, OkCupid: 0 };
 
   const named = APP_NAME_RX.exec(text);
   if (named) {
-    const cap = (named[1][0].toUpperCase() + named[1].slice(1).toLowerCase()) as SourceApp;
+    const raw = named[1];
+    // Normalise "okcupid" → "OkCupid"; other names are simple Title Case.
+    const cap: SourceApp =
+      raw.toLowerCase() === "okcupid"
+        ? "OkCupid"
+        : ((raw[0].toUpperCase() + raw.slice(1).toLowerCase()) as SourceApp);
     scores[cap] += 4;
   }
 
@@ -197,6 +216,14 @@ export function detectSourceApp(lines: string[]): SourceApp | null {
   if (/^passions$/im.test(text)) scores.Tinder += 2;
   if (/^my interests$/im.test(text)) scores.Tinder += 2;
   for (const p of TINDER_PROMPTS) if (lower.includes(p)) scores.Tinder += 1;
+
+  if (OKC_RX.test(text)) scores.OkCupid += 5;
+  if (/\d+%\s*match/i.test(text)) scores.OkCupid += 3;
+  if (/my self-summary/i.test(text)) scores.OkCupid += 3;
+  if (/you should message me if/i.test(text)) scores.OkCupid += 3;
+  if (/i spend a lot of time thinking about/i.test(text)) scores.OkCupid += 2;
+  if (/on a typical friday night/i.test(text)) scores.OkCupid += 2;
+  for (const p of OKCUPID_PROMPTS) if (lower.includes(p)) scores.OkCupid += 1;
 
   if (CMB_RX.test(text)) scores.CoffeeMeetsBagel += 5;
   if (/\bcmb\b/.test(text)) scores.CoffeeMeetsBagel += 3;
@@ -224,7 +251,7 @@ const NAME_AGE_RX = /^([A-Z][a-zA-Z'’\-]{1,20})[,\s]+(\d{2})\b/;
 const STANDALONE_AGE_RX = /^(\d{2})$/;
 
 const NAME_BLOCKLIST = new Set([
-  "About", "Hinge", "Bumble", "Tinder", "Like", "Pass", "Match", "Send",
+  "About", "Hinge", "Bumble", "Tinder", "OkCupid", "Like", "Pass", "Match", "Send",
   "Looking", "My", "The", "What", "Why", "How", "When", "Home", "Profile",
   "Settings", "Edit", "View", "Photos", "Photo", "Reply", "Message",
   "Likes", "Compliment", "Anthem", "Passions", "Bagel", "Connect", "Coffee",
