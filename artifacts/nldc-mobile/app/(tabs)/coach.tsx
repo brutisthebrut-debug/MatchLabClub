@@ -3,7 +3,7 @@ import {
   useCoachMessage,
   useCreateMessageCoachingSession,
 } from "@workspace/api-client-react";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Platform,
   StyleSheet,
@@ -18,6 +18,14 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { ReplyCard } from "@/components/ReplyCard";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { useColors } from "@/hooks/useColors";
+import {
+  cancelCoachReminder,
+  clearCoachDraft,
+  ensureCoachNotificationPermission,
+  loadCoachDraft,
+  saveCoachDraft,
+  scheduleCoachReminder,
+} from "@/lib/coachNotifications";
 
 interface Reply {
   style: string;
@@ -67,6 +75,29 @@ export default function CoachScreen() {
   const coach = useCoachMessage();
 
   const isPending = createSession.isPending || coach.isPending;
+  const hasRequestedPermission = useRef(false);
+  const hasRestoredDraft = useRef(false);
+
+  useEffect(() => {
+    if (hasRestoredDraft.current) return;
+    hasRestoredDraft.current = true;
+    let cancelled = false;
+    loadCoachDraft().then((draft) => {
+      if (cancelled || !draft) return;
+      setMatchName(draft.matchName);
+      setContext(draft.context);
+      setLastMessage(draft.lastMessage);
+      setResults(draft.replies);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function handleReplyCopied() {
+    await cancelCoachReminder();
+    await clearCoachDraft();
+  }
 
   const accentFor = (style: string) => {
     const key = style.toLowerCase();
@@ -95,6 +126,19 @@ export default function CoachScreen() {
       });
       const coached = await coach.mutateAsync({ id: session.id });
       setResults(coached.suggestedReplies);
+
+      if (!hasRequestedPermission.current) {
+        hasRequestedPermission.current = true;
+        await ensureCoachNotificationPermission();
+      }
+      await saveCoachDraft({
+        matchName,
+        context,
+        lastMessage,
+        replies: coached.suggestedReplies,
+        savedAt: Date.now(),
+      });
+      await scheduleCoachReminder({ matchName });
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Something went wrong. Try again.";
@@ -230,6 +274,7 @@ export default function CoachScreen() {
               text={r.text}
               rationale={r.rationale}
               accent={accentFor(r.style)}
+              onCopy={showingDemo ? undefined : handleReplyCopied}
             />
           ))}
         </View>

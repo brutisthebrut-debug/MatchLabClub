@@ -57,6 +57,7 @@
   },
   "dependencies": {
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
-    "expo-clipboard": "^55.0.13"
+    "expo-clipboard": "^55.0.13",
+    "expo-notifications": "~0.32.17"
   }
 }

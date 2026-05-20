@@ -11,9 +11,10 @@ interface ReplyCardProps {
   text: string;
   rationale?: string;
   accent?: string;
+  onCopy?: () => void;
 }
 
-export function ReplyCard({ style, text, rationale, accent }: ReplyCardProps) {
+export function ReplyCard({ style, text, rationale, accent, onCopy }: ReplyCardProps) {
   const colors = useColors();
   const [copied, setCopied] = useState(false);
   const tint = accent ?? colors.violet;
@@ -25,6 +26,7 @@ export function ReplyCard({ style, text, rationale, accent }: ReplyCardProps) {
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+    onCopy?.();
   }
 
   return (

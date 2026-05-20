@@ -8,13 +8,22 @@ import {
 } from "@expo-google-fonts/plus-jakarta-sans";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { setBaseUrl } from "@workspace/api-client-react";
-import { Stack } from "expo-router";
+import * as Notifications from "expo-notifications";
+import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
+
+import {
+  COACH_NOTIFICATION_TYPE,
+  configureNotificationHandler,
+} from "@/lib/coachNotifications";
+
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+
+configureNotificationHandler();
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -35,6 +44,34 @@ const queryClient = new QueryClient({
 });
 
 function RootLayoutNav() {
+  const router = useRouter();
+
+  useEffect(() => {
+    function handleData(data: unknown) {
+      if (
+        data &&
+        typeof data === "object" &&
+        (data as { type?: unknown }).type === COACH_NOTIFICATION_TYPE
+      ) {
+        router.push("/coach");
+      }
+    }
+
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        handleData(response.notification.request.content.data);
+      },
+    );
+
+    Notifications.getLastNotificationResponseAsync()
+      .then((response) => {
+        if (response) handleData(response.notification.request.content.data);
+      })
+      .catch(() => {});
+
+    return () => subscription.remove();
+  }, [router]);
+
   return (
     <Stack
       screenOptions={{
