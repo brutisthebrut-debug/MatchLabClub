@@ -22,6 +22,8 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { ScoreRing } from "@/components/ScoreRing";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { useColors } from "@/hooks/useColors";
+import { rememberAnonymousId } from "@/lib/anonymousIds";
+import { useAuth } from "@/lib/auth";
 
 interface PickedImage {
   uri: string;
@@ -99,6 +101,7 @@ export default function ScanScreen() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const extract = useExtractScreenshot();
   const scan = useAuditFromScreenshot();
+  const { isAuthenticated } = useAuth();
 
   const topInset = Platform.OS === "web" ? Math.max(insets.top, 24) : insets.top;
   const bottomInset =
@@ -196,6 +199,9 @@ export default function ScanScreen() {
           },
         },
       });
+      if (!isAuthenticated) {
+        await rememberAnonymousId("audits", res.auditId);
+      }
       setResult({
         auditId: res.auditId,
         extractedBio: res.extractedBio,

@@ -20,6 +20,8 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { ReplyCard } from "@/components/ReplyCard";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { useColors } from "@/hooks/useColors";
+import { rememberAnonymousId } from "@/lib/anonymousIds";
+import { useAuth } from "@/lib/auth";
 import {
   cancelCoachReminder,
   clearCoachDraft,
@@ -94,6 +96,7 @@ export default function CoachScreen() {
 
   const createSession = useCreateMessageCoachingSession();
   const coach = useCoachMessage();
+  const { isAuthenticated } = useAuth();
 
   const isPending = createSession.isPending || coach.isPending;
   const hasRequestedPermission = useRef(false);
@@ -208,6 +211,9 @@ export default function CoachScreen() {
           goal: "Keep the conversation alive",
         },
       });
+      if (!isAuthenticated) {
+        await rememberAnonymousId("messageSessions", session.id);
+      }
       const coached = await coach.mutateAsync({ id: session.id });
       setResults(coached.suggestedReplies);
 

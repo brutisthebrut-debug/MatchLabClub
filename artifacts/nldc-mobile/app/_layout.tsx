@@ -9,6 +9,7 @@ import {
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
 import { AuthProvider, getStoredAuthToken } from "@/lib/auth";
+import { useClaimAnonymousOnLogin } from "@/lib/useClaimAnonymousOnLogin";
 import * as Notifications from "expo-notifications";
 import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -57,6 +58,14 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+function AuthDependentEffects() {
+  // Mounted inside AuthProvider so it can read auth state. When the user
+  // signs in, reassign any anonymous audits/sessions/etc. recorded on this
+  // device to their account.
+  useClaimAnonymousOnLogin();
+  return null;
+}
 
 function RootLayoutNav() {
   const router = useRouter();
@@ -135,6 +144,7 @@ function RootLayoutNav() {
 
   return (
     <AuthProvider onAuthChange={handleAuthChange}>
+      <AuthDependentEffects />
       <Stack
         screenOptions={{
           headerBackTitle: "Back",
