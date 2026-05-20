@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, MessageCircle, Copy, Check, RefreshCw, AlertCircle } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { nextMessageSchema, parseAiJson } from "@/lib/aiSchemas";
+import { ToneBar, ConfidenceLabel, getConfidenceLevel } from "@/components/ToneBar";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -192,7 +193,7 @@ export default function NextMessage() {
     return { options, coachNote: parsed.coachNote };
   }
 
-  async function handleGenerate() {
+  async function handleGenerate(extraTone?: string) {
     if (!context.trim() && !lastMsg.trim()) return;
     const deterministic = generateMessages(context, lastMsg, name, goal);
     try {
@@ -210,6 +211,7 @@ export default function NextMessage() {
             goal ? `User's goal: ${goal}` : "",
             context.trim() ? `Conversation context:\n${context}` : "",
             lastMsg.trim() ? `Their last message / user's last message: ${lastMsg}` : "",
+            extraTone ? `Tone instruction: ${extraTone}` : "",
           ].filter(Boolean).join("\n"),
           context: {
             toolName: "Next Message",
@@ -280,7 +282,7 @@ export default function NextMessage() {
               <input value={lastMsg} onChange={e => setLastMsg(e.target.value)} placeholder="What was the last thing you said?"
                 className="w-full h-10 rounded-xl px-3 text-sm bg-[hsl(232_28%_14%)] border border-white/10 text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-[hsl(268_52%_68%/0.4)]" />
             </div>
-            <Button onClick={handleGenerate} disabled={loading || (!context.trim() && !lastMsg.trim())}
+            <Button onClick={() => { void handleGenerate(); }} disabled={loading || (!context.trim() && !lastMsg.trim())}
               className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50">
               {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Writing options…</> : <><Sparkles className="mr-2 h-4 w-4" />Get My 7 Options</>}
             </Button>
@@ -295,6 +297,12 @@ export default function NextMessage() {
                   </p>
                 </div>
               )}
+              {!isDemo && (
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs font-semibold text-muted-foreground/60">Your options</p>
+                  <ConfidenceLabel level={getConfidenceLevel(context.length + lastMsg.length, [name, goal].filter(Boolean).length)} />
+                </div>
+              )}
               {!isDemo && usedFallback && (
                 <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-2xl border border-[hsl(43_65%_65%/0.25)] bg-[hsl(43_65%_65%/0.08)] px-4 py-3">
                   <div className="flex items-start gap-2">
@@ -305,7 +313,7 @@ export default function NextMessage() {
                     </p>
                   </div>
                   <Button
-                    onClick={handleGenerate}
+                    onClick={() => { void handleGenerate(); }}
                     disabled={loading}
                     variant="outline"
                     size="sm"
@@ -345,6 +353,9 @@ export default function NextMessage() {
                 <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(268_52%_68%)] mb-1.5">Coach Note</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">{show.coachNote}</p>
               </motion.div>
+              {result && (
+                <ToneBar onApply={(hint) => { void handleGenerate(hint); }} loading={loading} />
+              )}
               {result && (
                 <div className="mt-5 flex justify-center">
                   <button onClick={() => { setResult(null); setContext(""); setLastMsg(""); setName(""); setGoal(""); }}

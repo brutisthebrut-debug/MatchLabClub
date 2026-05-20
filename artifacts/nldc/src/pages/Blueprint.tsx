@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, MapPin, RefreshCw, AlertCircle, Copy, Check } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { blueprintSchema, parseAiJson, type BlueprintOutput } from "@/lib/aiSchemas";
+import { ToneBar, ConfidenceLabel, getConfidenceLevel } from "@/components/ToneBar";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -167,7 +168,7 @@ export default function Blueprint() {
   const enhance = useEnhanceAi();
   const loading = enhance.isPending;
 
-  async function handleAnalyze() {
+  async function handleAnalyze(extraTone?: string) {
     if (!text.trim()) return;
     const deterministic = analyzeBlueprint(text, pattern, misread, want);
     try {
@@ -182,6 +183,7 @@ export default function Blueprint() {
             pattern ? `Repeating pattern: ${pattern}` : "",
             misread ? `What people misread: ${misread}` : "",
             want ? `What they want: ${want}` : "",
+            extraTone ? `Tone instruction: ${extraTone}` : "",
           ].filter(Boolean).join("\n"),
           context: {
             toolName: "Personal Blueprint",
@@ -265,7 +267,7 @@ export default function Blueprint() {
                 ))}
               </div>
             </div>
-            <Button onClick={handleAnalyze} disabled={loading || !text.trim()}
+            <Button onClick={() => { void handleAnalyze(); }} disabled={loading || !text.trim()}
               className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50">
               {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Building your blueprint…</> : <><Sparkles className="mr-2 h-4 w-4" />Build My Blueprint</>}
             </Button>
@@ -281,6 +283,12 @@ export default function Blueprint() {
                   </p>
                 </div>
               )}
+              {!isDemo && (
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs font-semibold text-muted-foreground/60">Your blueprint</p>
+                  <ConfidenceLabel level={getConfidenceLevel(text.length, [pattern, misread, want].filter(Boolean).length)} />
+                </div>
+              )}
               {!isDemo && usedFallback && (
                 <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-2xl border border-[hsl(43_65%_65%/0.25)] bg-[hsl(43_65%_65%/0.08)] px-4 py-3">
                   <div className="flex items-start gap-2">
@@ -291,7 +299,7 @@ export default function Blueprint() {
                     </p>
                   </div>
                   <Button
-                    onClick={handleAnalyze}
+                    onClick={() => { void handleAnalyze(); }}
                     disabled={loading}
                     variant="outline"
                     size="sm"
@@ -320,6 +328,9 @@ export default function Blueprint() {
                   </motion.div>
                 ))}
               </div>
+              {result && (
+                <ToneBar onApply={(hint) => { void handleAnalyze(hint); }} loading={loading} />
+              )}
               {result && (
                 <div className="mt-5 flex justify-center">
                   <button onClick={() => { setResult(null); setText(""); setPattern(""); setMisread(""); setWant(""); }}

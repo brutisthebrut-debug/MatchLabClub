@@ -63,6 +63,9 @@ import ConnectionCenter from "@/pages/ConnectionCenter";
 import DataVault from "@/pages/DataVault";
 import DatingWinsLog from "@/pages/DatingWinsLog";
 import PatternBreaker from "@/pages/PatternBreaker";
+import WhatChanged from "@/pages/WhatChanged";
+import Feedback from "@/pages/Feedback";
+import SampleReport from "@/pages/SampleReport";
 
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 
@@ -142,6 +145,9 @@ function Router() {
       <Route path="/vault" component={DataVault} />
       <Route path="/progress/wins" component={DatingWinsLog} />
       <Route path="/progress/pattern-breaker" component={PatternBreaker} />
+      <Route path="/copilot/what-changed" component={WhatChanged} />
+      <Route path="/feedback" component={Feedback} />
+      <Route path="/sample-report" component={SampleReport} />
       <Route component={NotFound} />
     </Switch>
   );

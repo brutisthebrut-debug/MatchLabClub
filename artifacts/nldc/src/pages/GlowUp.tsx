@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, Wand2, Copy, Check, RefreshCw, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
+import { ConfidenceLabel, getConfidenceLevel } from "@/components/ToneBar";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -307,6 +308,12 @@ export default function GlowUp() {
                 </div>
               )}
 
+              {result && (
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-semibold text-muted-foreground/60">Your rewrites</p>
+                  <ConfidenceLabel level={getConfidenceLevel(bio.length, goal ? 1 : 0)} />
+                </div>
+              )}
               {/* Filter */}
               <div className="flex flex-wrap gap-2 mb-4">
                 {FILTER_OPTS.map(f => (

@@ -337,6 +337,86 @@ function fmtDate(iso: string) {
   }
 }
 
+const LEAD_STATUS_OPTIONS = [
+  "New",
+  "Needs Review",
+  "Reviewed",
+  "Follow-Up Sent",
+  "Converted",
+  "Testimonial Requested",
+  "Archived",
+] as const;
+
+type LeadStatus = (typeof LEAD_STATUS_OPTIONS)[number];
+
+const STATUS_COLORS: Record<LeadStatus, { color: string; bg: string }> = {
+  "New":                  { color: "hsl(268 52% 68%)", bg: "hsl(268 52% 68% / 0.12)" },
+  "Needs Review":         { color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.12)"  },
+  "Reviewed":             { color: "hsl(190 55% 60%)", bg: "hsl(190 55% 60% / 0.12)" },
+  "Follow-Up Sent":       { color: "hsl(228 40% 65%)", bg: "hsl(228 40% 65% / 0.12)" },
+  "Converted":            { color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.12)" },
+  "Testimonial Requested":{ color: "hsl(348 55% 65%)", bg: "hsl(348 55% 65% / 0.12)" },
+  "Archived":             { color: "hsl(var(--muted-foreground))", bg: "hsl(var(--muted) / 0.3)" },
+};
+
+const LEAD_STATUS_KEY = "nldc_lead_statuses";
+
+function useLeadStatuses() {
+  const [statuses, setStatuses] = useState<Record<string, LeadStatus>>(() => {
+    try { return JSON.parse(localStorage.getItem(LEAD_STATUS_KEY) ?? "{}") as Record<string, LeadStatus>; }
+    catch { return {}; }
+  });
+  const setStatus = (id: string | number, s: LeadStatus) => {
+    setStatuses(prev => {
+      const next = { ...prev, [String(id)]: s };
+      try { localStorage.setItem(LEAD_STATUS_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+  return { statuses, setStatus };
+}
+
+function LeadsStatusTable({ leads }: { leads: Lead[] }) {
+  const { statuses, setStatus } = useLeadStatuses();
+  if (!leads.length) return <p className="text-sm text-muted-foreground/60 italic py-6 text-center">No leads yet.</p>;
+  return (
+    <div className="space-y-2">
+      {leads.map((l) => {
+        const currentStatus = statuses[String(l.id)] ?? "New";
+        const sc = STATUS_COLORS[currentStatus];
+        return (
+          <div key={l.id} className="glass border border-white/8 rounded-xl p-4 flex flex-col sm:flex-row sm:items-start gap-3">
+            <div className="flex-1 min-w-0 space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-semibold text-sm text-foreground">{l.firstName}</span>
+                {l.email && <span className="text-xs text-muted-foreground/60">{l.email}</span>}
+                <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ml-auto sm:ml-0"
+                  style={{ color: sc.color, borderColor: sc.color.replace(")", " / 0.3)"), background: sc.bg }}>
+                  {currentStatus}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-[10px] text-muted-foreground/50 font-mono">{l.source}</span>
+                {l.interest && <span className="text-xs text-muted-foreground/60 truncate max-w-[240px]">{l.interest}</span>}
+                <span className="text-[10px] text-muted-foreground/35">{fmtDate(l.createdAt)}</span>
+              </div>
+            </div>
+            <div className="flex-shrink-0">
+              <select
+                value={currentStatus}
+                onChange={e => setStatus(l.id, e.target.value as LeadStatus)}
+                className="text-xs rounded-lg border border-white/10 bg-white/5 text-muted-foreground px-2 py-1.5 outline-none focus:border-[hsl(268_52%_68%/0.4)] cursor-pointer"
+              >
+                {LEAD_STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function LockedView({ onSubmit }: { onSubmit: (key: string) => void }) {
   const [value, setValue] = useState("");
   const [error, setError] = useState(false);
@@ -476,11 +556,37 @@ function Dashboard() {
       {/* Leads */}
       {tab === "leads" && (
         <div className="glass rounded-2xl p-6 space-y-4">
-          <h2 className="font-semibold text-foreground">All leads ({leads.length})</h2>
-          <TableShell
-            headers={["ID", "Name", "Email", "Source", "Interest", "Date"]}
-            rows={leads.map((l) => [l.id, l.firstName, l.email, l.source, l.interest, fmtDate(l.createdAt)])}
-          />
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h2 className="font-semibold text-foreground">All leads ({leads.length})</h2>
+              <p className="text-xs text-muted-foreground/50 mt-0.5">Set a status per lead — saved in browser. Export the list with the button below.</p>
+            </div>
+            <button
+              onClick={() => {
+                const csv = [
+                  ["ID", "Name", "Email", "Source", "Interest", "Date"].join(","),
+                  ...leads.map(l => [l.id, l.firstName, l.email, l.source, `"${(l.interest ?? "").replace(/"/g, '""')}"`, fmtDate(l.createdAt)].join(",")),
+                ].join("\n");
+                const blob = new Blob([csv], { type: "text/csv" });
+                const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "leads.csv"; a.click();
+              }}
+              className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-colors"
+            >
+              Export CSV
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {LEAD_STATUS_OPTIONS.map(s => {
+              const sc = STATUS_COLORS[s];
+              return (
+                <span key={s} className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
+                  style={{ color: sc.color, borderColor: sc.color.replace(")", " / 0.3)"), background: sc.bg }}>
+                  {s}
+                </span>
+              );
+            })}
+          </div>
+          <LeadsStatusTable leads={leads} />
         </div>
       )}
 
@@ -659,6 +765,68 @@ One question: Did the output you got feel specific to you, or more generic?
 Hit reply and tell me — even one sentence helps. Or if you're willing to leave a short quote on what worked (or didn't), I'd be grateful.
 
 Thank you for being here early.
+
+— [Founder name]`,
+  },
+  {
+    name: "First 10 Beta — DM Outreach",
+    subject: "(DM) — for direct message, no subject line",
+    body: `Hey [First name] — I built something I think you'd actually find useful. It's a dating profile coaching tool — free Signal Check in about 3 minutes, tells you exactly what's working and what isn't about how you're showing up.
+
+I tested it on my own old profiles first, then a few people I trust. The feedback has been really good.
+
+Would you be willing to try it and tell me what you think? [link]
+
+No sign-up needed to see your free result.`,
+  },
+  {
+    name: "Profile Feedback Invite",
+    subject: "Would you try this and tell me what you think?",
+    body: `Hi [First name],
+
+I've been working on something for a while and I'd love a real opinion from someone I trust.
+
+It's a free dating profile audit — takes 3 minutes, gives you a Signal Score and specific feedback on your bio, photos, and messaging approach. No account, no credit card.
+
+If you try it and tell me: (1) Did it feel accurate? (2) Was anything confusing? — that would genuinely help me.
+
+Here's the link: [link]
+
+If you end up finding it useful, I'd love to know what worked. And if not, I want to know that too.
+
+— [Founder name]`,
+  },
+  {
+    name: "Partner Visitor Follow-Up (Shebangs)",
+    subject: "Welcome from Next Level Dating Club — your free profile check",
+    body: `Hi [First name],
+
+Thanks for visiting through Shebangs. You're getting early access to something we don't have open publicly yet.
+
+Your free Signal Check is available at [link] — takes 3 minutes, no account needed. It gives you:
+- A Signal Score (0–100) across 8 dimensions
+- A bio critique — honest and specific
+- Your top 3 action items
+
+As a Shebangs member, you also get 20% off the full Dating Reset using code SHEBANGS20 at checkout.
+
+Let me know if you have any questions — I read every reply.
+
+— [Founder name]
+Next Level Dating Club`,
+  },
+  {
+    name: "Sample Report Viewer Follow-Up",
+    subject: "The report you saw — here's how to get yours",
+    body: `Hi [First name],
+
+You looked at Jordan's sample Dating Reset report. That's the exact format we'd produce for your actual profile.
+
+The free Signal Check takes 3 minutes and gives you your own score and breakdown (no account needed): [link]
+
+If you want the full report — bio rewrite, message strategy, 7-day plan, plus a founder review note during the beta — the Dating Reset is $97: [link]
+
+Any questions, just reply to this.
 
 — [Founder name]`,
   },
@@ -872,6 +1040,58 @@ const TEST_FLOWS: TestFlow[] = [
       "AI Reliability panel shows per-tool success stats",
       "Test prompt textarea works and shows output",
       "Disconnect API key → all tools still produce polished fallback output",
+    ],
+  },
+  {
+    id: "tf16", area: "Launch",
+    flow: "New pages — What Changed, Feedback, Sample Report",
+    steps: [
+      "Go to /copilot/what-changed → form loads, save works, localStorage persists",
+      "Go to /feedback → form loads, all fields work, submit shows thank-you state",
+      "Go to /sample-report → full report renders, CTAs link correctly",
+      "Copilot hub → Quick Moments shows 'What Changed?' as 5th item",
+    ],
+  },
+  {
+    id: "tf17", area: "Launch",
+    flow: "Privacy & terms links",
+    steps: [
+      "Go to /privacy → content loads, no 404",
+      "Go to /terms → content loads, no 404",
+      "Footer or nav links to both pages work",
+      "Privacy statement mentions data deletion and export",
+    ],
+  },
+  {
+    id: "tf18", area: "Launch",
+    flow: "Tone controls + confidence labels",
+    steps: [
+      "Go to /blueprint → fill form → generate → 'Your blueprint' label shows confidence badge",
+      "Tone adjustment pills appear after result — click 'Warmer' → new result generates",
+      "Go to /next-message → same confidence label and tone controls visible after result",
+      "Go to /glow-up → paste bio → generate → 'Your rewrites' label shows confidence badge",
+    ],
+  },
+  {
+    id: "tf19", area: "Launch",
+    flow: "Founder dashboard status labels",
+    steps: [
+      "Go to /founder → Leads tab",
+      "Each lead card shows status dropdown — default 'New'",
+      "Change status → persists after tab switch and page refresh",
+      "Export CSV button downloads a usable file",
+      "Email Templates tab shows all 9 templates with copy buttons",
+    ],
+  },
+  {
+    id: "tf20", area: "Launch",
+    flow: "Revenue path — Pricing + offer",
+    steps: [
+      "Go to /pricing — 'What Happens After You Pay' section visible",
+      "Founding Beta / First 25 offer block visible with CTA",
+      "Sample Report link leads to /sample-report with full content",
+      "All 3 pricing tier CTAs work (Signal Check free, Dating Reset $97, Wingman $197)",
+      "Promo code PODCAST40 mentioned correctly",
     ],
   },
 ];

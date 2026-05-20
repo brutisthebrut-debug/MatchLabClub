@@ -19,6 +19,7 @@ const QUICK_MOMENTS = [
   { emoji: "✨", label: "I Got a Match!", hint: "Write your first opener", href: "/copilot/reply" },
   { emoji: "🌀", label: "I'm Spiraling", hint: "Ground yourself fast", href: "/blueprint" },
   { emoji: "🎨", label: "Sound More Like Me", hint: "Tone-match your rewrite", href: "/copilot/profile" },
+  { emoji: "🔄", label: "What Changed?", hint: "Check in on your progress", href: "/copilot/what-changed" },
 ];
 
 const WORKFLOWS = [
@@ -158,7 +159,7 @@ export default function Copilot() {
               {/* Quick Moments */}
               <motion.div {...fadeUp(0.38)} className="mt-4">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-2.5">Quick moments</p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                   {QUICK_MOMENTS.map((qm) => (
                     <Link key={qm.href} href={qm.href}>
                       <div className="glass border border-white/8 rounded-xl p-3 hover:border-white/18 transition-all cursor-pointer text-center group">

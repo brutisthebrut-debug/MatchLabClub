@@ -259,6 +259,90 @@ export default function Pricing() {
             ))}
           </div>
 
+          {/* What Happens After You Pay */}
+          <motion.div {...fadeUp(0.26)} className="max-w-3xl mx-auto mb-12">
+            <div className="text-center mb-6">
+              <p className="text-xs font-bold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-2">No surprises</p>
+              <h2 className="text-2xl font-bold text-foreground">What happens after you pay</h2>
+            </div>
+            <div className="space-y-3">
+              {[
+                {
+                  step: "1",
+                  title: "You submit your profile details",
+                  desc: "Bio, prompts, a quick conversation sample, and optionally a photo context note. Takes about 5 minutes. Nothing is shared with third parties — ever.",
+                  color: "hsl(268 52% 68%)",
+                },
+                {
+                  step: "2",
+                  title: "Your report generates instantly",
+                  desc: "Signal Score, Personal Blueprint, full bio rewrite, rewritten prompts, photo checklist, message strategy, Compatibility Compass, and your 7-day action plan. Ready in seconds.",
+                  color: "hsl(190 55% 60%)",
+                },
+                {
+                  step: "3",
+                  title: "During beta: a personal founder review note",
+                  desc: "For founding beta users, the founder reads your report and writes a personal note on the 1–2 highest-leverage things specific to your situation. This takes up to 48 hours and is not a template.",
+                  color: "hsl(43 65% 65%)",
+                },
+                {
+                  step: "4",
+                  title: "You start with Day 1 of your action plan",
+                  desc: "Don't wait for the founder note. Start with the 7-day plan immediately — most people who do it see measurably better results within the first week.",
+                  color: "hsl(142 55% 60%)",
+                },
+              ].map((item) => (
+                <div key={item.step} className="flex items-start gap-4 glass border border-white/8 rounded-2xl p-4">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold text-white"
+                    style={{ background: item.color }}>
+                    {item.step}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground text-sm mb-0.5">{item.title}</p>
+                    <p className="text-xs text-muted-foreground/70 leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 glass border border-white/5 rounded-xl p-4 flex items-start gap-3">
+              <span className="text-base flex-shrink-0">🔒</span>
+              <p className="text-xs text-muted-foreground/55 leading-relaxed">
+                <strong className="text-muted-foreground/70">Privacy promise:</strong>{" "}
+                You control what is saved. Private content is not sold. You choose what becomes part of your profile — and you can export or delete everything at any time from your account page.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Founding Beta offer */}
+          <motion.div {...fadeUp(0.28)} className="max-w-3xl mx-auto mb-10 rounded-2xl border border-[hsl(142_55%_60%/0.25)] bg-[hsl(142_55%_60%/0.05)] p-6">
+            <div className="flex items-start gap-4 flex-col sm:flex-row">
+              <div className="w-10 h-10 rounded-xl bg-[hsl(142_55%_60%/0.15)] border border-[hsl(142_55%_60%/0.25)] flex items-center justify-center text-xl flex-shrink-0">
+                🌱
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 flex-wrap mb-1.5">
+                  <p className="text-xs font-bold uppercase tracking-widest text-[hsl(142_55%_65%)]">Founding Beta</p>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-[hsl(142_55%_60%/0.3)] text-[hsl(142_55%_65%)] bg-[hsl(142_55%_60%/0.1)]">First 25 users</span>
+                </div>
+                <h3 className="text-lg font-bold text-foreground mb-2">Early access — founder involvement guaranteed</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                  The first 25 users to run a full Dating Reset get the product at today's price — $97 one-time — and a personal founder review note with every report. This is a real read of your situation, not a template. It won't scale at this price once we're past the founding cohort.
+                </p>
+                <div className="flex items-center gap-4 flex-wrap">
+                  <Link href="/sample-report"
+                    className="text-xs text-[hsl(142_55%_65%)] hover:text-[hsl(142_55%_75%)] transition-colors underline underline-offset-2">
+                    See a sample report →
+                  </Link>
+                  <Link href="/checkout/dating-reset"
+                    className="px-4 py-2 rounded-full text-sm font-semibold text-white"
+                    style={{ background: "linear-gradient(135deg, hsl(142 55% 50%), hsl(190 55% 55%))" }}>
+                    Claim a founding spot
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Founder-Reviewed Beta Offer */}
           <motion.div {...fadeUp(0.3)}
             className="max-w-3xl mx-auto mb-16 rounded-3xl p-7 relative overflow-hidden"
