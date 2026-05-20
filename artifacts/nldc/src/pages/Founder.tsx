@@ -16,7 +16,7 @@ import {
   type OcrMismatchesTrendsResponse, type OcrMismatchTrendEntry,
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
-import { useListAudits, useGetWaitlistStats } from "@workspace/api-client-react";
+import { useListAudits, useGetWaitlistStats, useGetCoachFollowUpTimeline } from "@workspace/api-client-react";
 import { Lock, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
 
@@ -2188,6 +2188,147 @@ function LeadsStatusTable({ leads }: { leads: Lead[] }) {
   );
 }
 
+type FollowUpSeries = "sentCount" | "notSentCount" | "snoozeCount" | "dismissCount";
+
+const FOLLOW_UP_SERIES_CONFIG: {
+  key: FollowUpSeries;
+  label: string;
+  color: string;
+}[] = [
+  { key: "sentCount",    label: "Sent",      color: "hsl(142 55% 60%)" },
+  { key: "notSentCount", label: "Not sent",  color: "hsl(43 65% 65%)"  },
+  { key: "snoozeCount",  label: "Snoozed",   color: "hsl(220 55% 65%)" },
+  { key: "dismissCount", label: "Dismissed", color: "hsl(0 55% 60%)"   },
+];
+
+function FollowUpTrendsPanel() {
+  const { data, isLoading, isError } = useGetCoachFollowUpTimeline();
+  const [visible, setVisible] = useState<Set<FollowUpSeries>>(
+    new Set(["sentCount", "notSentCount", "snoozeCount", "dismissCount"]),
+  );
+
+  const toggle = (key: FollowUpSeries) => {
+    setVisible((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        if (next.size > 1) next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  const chartRows = (data?.buckets ?? []).map((b) => ({
+    week: b.weekStart.slice(5),
+    sentCount: b.sentCount,
+    notSentCount: b.notSentCount,
+    snoozeCount: b.snoozeCount,
+    dismissCount: b.dismissCount,
+  }));
+
+  const hasActivity = chartRows.some(
+    (r) => r.sentCount + r.notSentCount + r.snoozeCount + r.dismissCount > 0,
+  );
+
+  return (
+    <div className="glass rounded-2xl p-6 space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
+            Follow-up Trends
+          </p>
+          <p className="text-sm text-muted-foreground/70 mt-0.5">
+            Weekly sent · not-sent · snoozed · dismissed — last 8 weeks
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {FOLLOW_UP_SERIES_CONFIG.map(({ key, label, color }) => {
+            const active = visible.has(key);
+            return (
+              <button
+                key={key}
+                onClick={() => toggle(key)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all"
+                style={
+                  active
+                    ? { color, borderColor: color.replace(")", " / 0.4)"), background: color.replace(")", " / 0.1)") }
+                    : { color: "hsl(var(--muted-foreground))", borderColor: "hsl(var(--border))", background: "transparent", opacity: 0.5 }
+                }
+              >
+                <span
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ background: active ? color : "currentColor" }}
+                />
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {isLoading && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground/60 py-6 justify-center">
+          <Loader2 className="w-3 h-3 animate-spin" /> Loading…
+        </div>
+      )}
+
+      {isError && (
+        <p className="text-xs text-red-400 py-4 text-center">Failed to load timeline data.</p>
+      )}
+
+      {!isLoading && !isError && !hasActivity && (
+        <p className="text-xs text-muted-foreground/50 italic py-4 text-center">
+          No follow-up events recorded yet. Data will appear here once users interact with coaching prompts.
+        </p>
+      )}
+
+      {!isLoading && !isError && hasActivity && (
+        <ResponsiveContainer width="100%" height={220}>
+          <LineChart data={chartRows} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.3)" />
+            <XAxis
+              dataKey="week"
+              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              allowDecimals={false}
+              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip
+              contentStyle={{
+                background: "hsl(var(--popover))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: 8,
+                fontSize: 11,
+              }}
+              labelStyle={{ color: "hsl(var(--muted-foreground))", marginBottom: 4 }}
+            />
+            {FOLLOW_UP_SERIES_CONFIG.map(({ key, label, color }) =>
+              visible.has(key) ? (
+                <Line
+                  key={key}
+                  type="monotone"
+                  dataKey={key}
+                  name={label}
+                  stroke={color}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 0 }}
+                />
+              ) : null,
+            )}
+          </LineChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+  );
+}
+
 function LockedView({ onSubmit }: { onSubmit: (key: string) => void }) {
   const [value, setValue] = useState("");
   const [error, setError] = useState(false);
@@ -2336,6 +2477,8 @@ function Dashboard() {
               data-testid="stat-follow-up-dismissed"
             />
           </div>
+
+          <FollowUpTrendsPanel />
 
           <div className="glass rounded-2xl p-6 space-y-3">
             <h2 className="font-semibold text-sm text-foreground">Recent leads</h2>

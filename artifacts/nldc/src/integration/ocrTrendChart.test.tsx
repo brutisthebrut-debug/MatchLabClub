@@ -20,6 +20,7 @@ vi.mock("@workspace/api-client-react", () => ({
   useGetWaitlistStats: () => ({
     data: { totalCount: 0, spotsRemaining: 0, nextMilestone: 0 },
   }),
+  useGetCoachFollowUpTimeline: () => ({ data: { buckets: [] }, isLoading: false, isError: false }),
 }));
 
 vi.mock("@/components/layout/AppLayout", () => ({

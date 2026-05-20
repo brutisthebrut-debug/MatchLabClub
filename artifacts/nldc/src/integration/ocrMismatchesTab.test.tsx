@@ -98,6 +98,7 @@ const ocrMismatchesPayload = {
 vi.mock("@workspace/api-client-react", () => ({
   useListAudits: () => ({ data: [] }),
   useGetWaitlistStats: () => ({ data: { totalCount: 0, spotsRemaining: 0, nextMilestone: 0 } }),
+  useGetCoachFollowUpTimeline: () => ({ data: { buckets: [] }, isLoading: false, isError: false }),
 }));
 
 vi.mock("@/components/layout/AppLayout", () => ({

@@ -142,6 +142,8 @@ async function loadTimeline(
     weekStart: string;
     sentCount: number;
     notSentCount: number;
+    snoozeCount: number;
+    dismissCount: number;
     total: number;
     sendThroughRate: number | null;
   }[] = [];
@@ -151,6 +153,8 @@ async function loadTimeline(
       weekStart: ws.toISOString().slice(0, 10),
       sentCount: 0,
       notSentCount: 0,
+      snoozeCount: 0,
+      dismissCount: 0,
       total: 0,
       sendThroughRate: null,
     });
@@ -169,7 +173,7 @@ async function loadTimeline(
     .where(
       and(
         where,
-        inArray(coachFollowUpsTable.answer, ["sent", "not_sent"]),
+        inArray(coachFollowUpsTable.answer, ["sent", "not_sent", "snoozed", "dismissed"]),
         sql`${coachFollowUpsTable.createdAt} >= ${oldestStart.toISOString()}`,
       ),
     )
@@ -188,6 +192,8 @@ async function loadTimeline(
     if (!bucket) continue;
     if (row.answer === "sent") bucket.sentCount += row.count;
     else if (row.answer === "not_sent") bucket.notSentCount += row.count;
+    else if (row.answer === "snoozed") bucket.snoozeCount += row.count;
+    else if (row.answer === "dismissed") bucket.dismissCount += row.count;
   }
   for (const b of buckets) {
     b.total = b.sentCount + b.notSentCount;

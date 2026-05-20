@@ -221,6 +221,7 @@ vi.mock("@/lib/apiClient", () => ({
 vi.mock("@workspace/api-client-react", () => ({
   useListAudits: () => ({ data: [] as unknown[] }),
   useGetWaitlistStats: () => ({ data: { totalCount: 0 } }),
+  useGetCoachFollowUpTimeline: () => ({ data: { buckets: [] }, isLoading: false, isError: false }),
 }));
 
 vi.mock("@/components/layout/AppLayout", () => ({

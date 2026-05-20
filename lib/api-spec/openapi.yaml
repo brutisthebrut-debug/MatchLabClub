@@ -2276,7 +2276,7 @@ components:
 
     CoachFollowUpTimelineBucket:
       type: object
-      required: [weekStart, sentCount, notSentCount, total, sendThroughRate]
+      required: [weekStart, sentCount, notSentCount, snoozeCount, dismissCount, total, sendThroughRate]
       properties:
         weekStart:
           type: string
@@ -2284,6 +2284,10 @@ components:
         sentCount:
           type: integer
         notSentCount:
+          type: integer
+        snoozeCount:
+          type: integer
+        dismissCount:
           type: integer
         total:
           type: integer

@@ -11,6 +11,8 @@ export interface CoachFollowUpTimelineBucket {
   weekStart: string;
   sentCount: number;
   notSentCount: number;
+  snoozeCount: number;
+  dismissCount: number;
   /** sentCount + notSentCount for this week */
   total: number;
   /**

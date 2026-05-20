@@ -1828,6 +1828,8 @@ export const GetCoachFollowUpTimelineResponse = zod.object({
   "weekStart": zod.string().describe('ISO date for the start of the week (UTC, Monday)'),
   "sentCount": zod.number(),
   "notSentCount": zod.number(),
+  "snoozeCount": zod.number(),
+  "dismissCount": zod.number(),
   "total": zod.number().describe('sentCount + notSentCount for this week'),
   "sendThroughRate": zod.number().nullable().describe('sentCount \/ total, or null when total is 0')
 }))
