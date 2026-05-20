@@ -107,37 +107,6 @@ export const AuditSource = {
   screenshot: 'screenshot',
 } as const;
 
-export interface Audit {
-  id: number;
-  firstName: string;
-  age: number;
-  gender: string;
-  orientation?: string;
-  datingGoal: string;
-  currentApps: string[];
-  bio: string;
-  /** @nullable */
-  prompts?: string | null;
-  /** @nullable */
-  recentMessageSample?: string | null;
-  /** @nullable */
-  photoCount?: number | null;
-  /** @nullable */
-  relationshipHistory?: string | null;
-  /** @nullable */
-  biggestChallenge?: string | null;
-  /**
-     * Dating app the audit originated from (e.g. "Hinge"), detected from OCR or supplied by the client.
-     * @nullable
-     */
-  sourceApp?: string | null;
-  status: AuditStatus;
-  source: AuditSource;
-  /** @nullable */
-  readinessScore?: number | null;
-  createdAt: string;
-}
-
 export interface RewrittenPrompt {
   original: string;
   rewritten: string;
@@ -179,6 +148,42 @@ export interface AuditReport {
   actionPlan: ActionPlanItem[];
   messagingStyle: string;
   coachingCta: string;
+}
+
+export interface Audit {
+  id: number;
+  firstName: string;
+  age: number;
+  gender: string;
+  orientation?: string;
+  datingGoal: string;
+  currentApps: string[];
+  bio: string;
+  /** @nullable */
+  prompts?: string | null;
+  /** @nullable */
+  recentMessageSample?: string | null;
+  /** @nullable */
+  photoCount?: number | null;
+  /** @nullable */
+  relationshipHistory?: string | null;
+  /** @nullable */
+  biggestChallenge?: string | null;
+  /**
+     * Dating app the audit originated from (e.g. "Hinge"), detected from OCR or supplied by the client.
+     * @nullable
+     */
+  sourceApp?: string | null;
+  status: AuditStatus;
+  source: AuditSource;
+  /** @nullable */
+  readinessScore?: number | null;
+  /** The persisted mini-report generated at scan time. Present for newer
+  audits; older audits without a stored report return null and the
+  client should fall back to calling `generateAuditReport`.
+   */
+  report?: AuditReport | null;
+  createdAt: string;
 }
 
 export interface ScoreHistoryPoint {

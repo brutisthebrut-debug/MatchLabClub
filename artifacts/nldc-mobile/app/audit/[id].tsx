@@ -82,8 +82,27 @@ export default function AuditDetailScreen() {
   const [report, setReport] = useState<ReportShape | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const storedReport = auditQuery.data?.report ?? null;
+
+  useEffect(() => {
+    if (!storedReport || report) return;
+    const r = storedReport as unknown as ReportShape;
+    setReport({
+      readinessScore: r.readinessScore,
+      overallGrade: r.overallGrade,
+      strengths: r.strengths,
+      risks: r.risks,
+      bioAudit: r.bioAudit,
+      rewrittenBio: r.rewrittenBio,
+      messagingStyle: r.messagingStyle,
+      coachingCta: r.coachingCta,
+    });
+  }, [storedReport, report]);
+
   useEffect(() => {
     if (!valid || report || generate.isPending) return;
+    if (!auditQuery.data) return;
+    if (auditQuery.data.report) return;
     generate
       .mutateAsync({ id })
       .then((r) => {
@@ -106,7 +125,7 @@ export default function AuditDetailScreen() {
         setErrorMsg(m);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valid, id]);
+  }, [valid, id, auditQuery.data]);
 
   const topInset = Platform.OS === "web" ? Math.max(insets.top, 24) : insets.top;
   const bottomInset =

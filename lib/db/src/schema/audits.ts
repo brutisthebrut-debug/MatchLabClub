@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, varchar, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -22,9 +22,10 @@ export const auditsTable = pgTable("audits", {
   status: text("status").notNull().default("pending"),
   source: text("source").notNull().default("manual"),
   readinessScore: integer("readiness_score"),
+  report: jsonb("report").$type<Record<string, unknown>>(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const insertAuditSchema = createInsertSchema(auditsTable).omit({ id: true, createdAt: true, status: true, readinessScore: true, userId: true });
+export const insertAuditSchema = createInsertSchema(auditsTable).omit({ id: true, createdAt: true, status: true, readinessScore: true, userId: true, report: true });
 export type InsertAudit = z.infer<typeof insertAuditSchema>;
 export type Audit = typeof auditsTable.$inferSelect;

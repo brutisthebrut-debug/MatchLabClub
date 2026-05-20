@@ -933,6 +933,14 @@ components:
           enum: [manual, screenshot]
         readinessScore:
           type: ["integer", "null"]
+        report:
+          oneOf:
+            - $ref: "#/components/schemas/AuditReport"
+            - type: "null"
+          description: |
+            The persisted mini-report generated at scan time. Present for newer
+            audits; older audits without a stored report return null and the
+            client should fall back to calling `generateAuditReport`.
         createdAt:
           type: string
 

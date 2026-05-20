@@ -86,6 +86,7 @@ router.get("/audits", async (req, res): Promise<void> => {
     .orderBy(auditsTable.createdAt);
   res.json(ListAuditsResponse.parse(audits.map((a) => ({
     ...a,
+    report: a.report ?? null,
     createdAt: a.createdAt instanceof Date ? a.createdAt.toISOString() : String(a.createdAt),
   }))));
 });
@@ -113,6 +114,7 @@ router.post("/audits", async (req, res): Promise<void> => {
 
   res.status(201).json(GetAuditResponse.parse({
     ...audit,
+    report: audit.report ?? null,
     createdAt: audit.createdAt instanceof Date ? audit.createdAt.toISOString() : String(audit.createdAt),
   }));
 });
@@ -136,6 +138,7 @@ router.get("/audits/:id", async (req, res): Promise<void> => {
 
   res.json(GetAuditResponse.parse({
     ...audit,
+    report: audit.report ?? null,
     createdAt: audit.createdAt instanceof Date ? audit.createdAt.toISOString() : String(audit.createdAt),
   }));
 });
@@ -191,11 +194,12 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
     recentMessageSample: audit.recentMessageSample,
   });
 
+  const fullReport = { auditId: id, ...report };
   await db.update(auditsTable)
-    .set({ status: "complete", readinessScore: report.readinessScore })
+    .set({ status: "complete", readinessScore: report.readinessScore, report: fullReport })
     .where(eq(auditsTable.id, id));
 
-  res.json(GenerateAuditReportResponse.parse({ auditId: id, ...report }));
+  res.json(GenerateAuditReportResponse.parse(fullReport));
 });
 
 router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
@@ -259,9 +263,10 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
     currentApps: [sourceApp],
   });
 
+  const fullReport = { auditId: audit.id, ...report };
   await db
     .update(auditsTable)
-    .set({ status: "complete", readinessScore: report.readinessScore })
+    .set({ status: "complete", readinessScore: report.readinessScore, report: fullReport })
     .where(eq(auditsTable.id, audit.id));
 
   res.json(
@@ -270,7 +275,7 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
       extractedBio: extracted.bio,
       extractedPrompts: extracted.prompts,
       rawOcrText: extracted.rawText,
-      report: { auditId: audit.id, ...report },
+      report: fullReport,
     }),
   );
 });

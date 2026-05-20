@@ -5,6 +5,7 @@
  * Next Level Dating Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { AuditReport } from './auditReport';
 import type { AuditSource } from './auditSource';
 import type { AuditStatus } from './auditStatus';
 
@@ -36,5 +37,10 @@ export interface Audit {
   source: AuditSource;
   /** @nullable */
   readinessScore?: number | null;
+  /** The persisted mini-report generated at scan time. Present for newer
+  audits; older audits without a stored report return null and the
+  client should fall back to calling `generateAuditReport`.
+   */
+  report?: AuditReport | null;
   createdAt: string;
 }
