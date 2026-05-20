@@ -1,18 +1,21 @@
 import { Feather } from "@expo/vector-icons";
 import {
   getListAuditsQueryKey,
+  listAudits,
   useBulkDeleteAudits,
   useDeleteAudit,
-  useListAudits,
   type Audit,
+  type ListAuditsParams,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   Alert,
   Animated,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Platform,
   Pressable,
   RefreshControl,
@@ -110,8 +113,9 @@ export default function MatchesScreen() {
   const [range, setRange] = React.useState<ScoreRange>("all");
   const debouncedQuery = useDebouncedValue(query.trim(), 250);
 
-  const listParams = React.useMemo(
-    () => ({
+  const PAGE_SIZE = 50;
+  const filterParams = React.useMemo(
+    (): ListAuditsParams => ({
       source: "screenshot" as const,
       sort,
       ...(debouncedQuery.length > 0 ? { q: debouncedQuery } : {}),
@@ -119,9 +123,35 @@ export default function MatchesScreen() {
     }),
     [sort, debouncedQuery, range],
   );
-  const { data, isLoading, isRefetching, refetch, error } = useListAudits(listParams);
   const queryClient = useQueryClient();
-  const listKey = getListAuditsQueryKey(listParams);
+  const listKey = React.useMemo(
+    () => [...getListAuditsQueryKey(filterParams), "infinite", PAGE_SIZE] as const,
+    [filterParams],
+  );
+  const {
+    data,
+    isLoading,
+    isRefetching,
+    refetch,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: listKey,
+    queryFn: ({ pageParam = 0, signal }) =>
+      listAudits(
+        { ...filterParams, limit: PAGE_SIZE, offset: pageParam as number },
+        { signal },
+      ),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length < PAGE_SIZE
+        ? undefined
+        : allPages.reduce((sum, p) => sum + p.length, 0),
+  });
+
+  type InfiniteAuditData = { pages: Audit[][]; pageParams: unknown[] };
   const deleteAudit = useDeleteAudit({
     mutation: {
       onError: (_err, _vars, _ctx) => {
@@ -144,19 +174,24 @@ export default function MatchesScreen() {
   const UNDO_WINDOW_MS = 5000;
 
   const removeFromCache = (id: number) => {
-    const previous = queryClient.getQueryData<Audit[]>(listKey);
-    if (previous) {
-      queryClient.setQueryData<Audit[]>(
-        listKey,
-        previous.filter((a) => a.id !== id),
-      );
-    }
+    const previous = queryClient.getQueryData<InfiniteAuditData>(listKey);
+    if (!previous) return;
+    queryClient.setQueryData<InfiniteAuditData>(listKey, {
+      ...previous,
+      pages: previous.pages.map((page) => page.filter((a) => a.id !== id)),
+    });
   };
 
   const restoreToCache = (audit: Audit) => {
-    const previous = queryClient.getQueryData<Audit[]>(listKey) ?? [];
-    if (previous.some((a) => a.id === audit.id)) return;
-    queryClient.setQueryData<Audit[]>(listKey, [...previous, audit]);
+    const previous = queryClient.getQueryData<InfiniteAuditData>(listKey);
+    if (!previous) return;
+    if (previous.pages.some((p) => p.some((a) => a.id === audit.id))) return;
+    const pages = previous.pages.length > 0 ? [...previous.pages] : [[]];
+    pages[0] = [audit, ...pages[0]];
+    queryClient.setQueryData<InfiniteAuditData>(listKey, {
+      ...previous,
+      pages,
+    });
   };
 
   const finalizePendingDelete = React.useCallback(() => {
@@ -213,13 +248,15 @@ export default function MatchesScreen() {
     mutation: {
       onMutate: async ({ data }) => {
         await queryClient.cancelQueries({ queryKey: listKey });
-        const previous = queryClient.getQueryData<Audit[]>(listKey);
+        const previous = queryClient.getQueryData<InfiniteAuditData>(listKey);
         const ids = new Set(data.ids);
         if (previous) {
-          queryClient.setQueryData<Audit[]>(
-            listKey,
-            previous.filter((a) => !ids.has(a.id)),
-          );
+          queryClient.setQueryData<InfiniteAuditData>(listKey, {
+            ...previous,
+            pages: previous.pages.map((page) =>
+              page.filter((a) => !ids.has(a.id)),
+            ),
+          });
         }
         return { previous };
       },
@@ -308,7 +345,23 @@ export default function MatchesScreen() {
   const bottomInset =
     Platform.OS === "web" ? Math.max(insets.bottom, 34) + 84 : insets.bottom + 80;
 
-  const audits = React.useMemo(() => data ?? [], [data]);
+  const audits = React.useMemo(
+    () => (data?.pages ?? []).flat(),
+    [data],
+  );
+
+  const onScroll = React.useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!hasNextPage || isFetchingNextPage || isLoading) return;
+      const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+      const distanceFromBottom =
+        contentSize.height - (contentOffset.y + layoutMeasurement.height);
+      if (distanceFromBottom < 400) {
+        fetchNextPage();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, isLoading, fetchNextPage],
+  );
 
   const hasFilters = query.trim().length > 0 || sort !== "newest" || range !== "all";
   const showDemo = !isLoading && audits.length === 0 && !hasFilters;
@@ -324,11 +377,13 @@ export default function MatchesScreen() {
         ]}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
+            refreshing={isRefetching && !isFetchingNextPage}
             onRefresh={() => refetch()}
             tintColor={colors.primary}
           />
         }
+        onScroll={onScroll}
+        scrollEventThrottle={200}
         keyboardShouldPersistTaps="handled"
       >
         <ScreenHeader
@@ -642,6 +697,16 @@ export default function MatchesScreen() {
                 );
               })}
             </View>
+            {isFetchingNextPage ? (
+              <View style={styles.footerLoading}>
+                <ActivityIndicator color={colors.primary} />
+                <Text
+                  style={[styles.footerLoadingText, { color: colors.mutedForeground }]}
+                >
+                  Loading more matches…
+                </Text>
+              </View>
+            ) : null}
           </>
         ) : null}
       </ScrollView>
@@ -996,6 +1061,17 @@ const styles = StyleSheet.create({
     fontFamily: "PlusJakartaSans_600SemiBold",
   },
   list: { gap: 10 },
+  footerLoading: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 16,
+  },
+  footerLoadingText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
   selectionBar: {
     flexDirection: "row",
     alignItems: "center",
