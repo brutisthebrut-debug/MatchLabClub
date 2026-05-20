@@ -38,8 +38,20 @@ vi.mock("@workspace/api-client-react", () => {
   };
 });
 
+// Capture toast calls so we can assert the UI surface.
+const toastSpy = vi.fn();
+vi.mock("@/hooks/use-toast", () => ({
+  toast: (args: unknown) => toastSpy(args),
+}));
+
+// Track location changes triggered by toast actions.
+const setLocationSpy = vi.fn();
+vi.mock("wouter", () => ({
+  useLocation: () => ["/", setLocationSpy] as const,
+}));
+
 // Import AFTER mocks are registered.
-import { useClaimAnonymousOnLogin } from "./useClaimAnonymousOnLogin";
+import { useClaimAnonymousOnLogin, classifyRedeemError } from "./useClaimAnonymousOnLogin";
 import {
   rememberAnonymousId,
   hasAnyAnonymousIds,
@@ -61,6 +73,8 @@ beforeEach(() => {
   mockUseAuth.mockReset();
   claimMutateImpl.mockReset();
   redeemMutateImpl.mockReset();
+  toastSpy.mockReset();
+  setLocationSpy.mockReset();
   window.history.replaceState(null, "", "/");
 });
 
@@ -212,6 +226,137 @@ describe("useClaimAnonymousOnLogin — full anon→login→claim flow", () => {
       opts.onSuccess({ claimed: { audits: 1, profiles: 0, messages: 0, insights: 0, followUps: 1 } });
     });
     expect(sessionStorage.getItem("nldc:pendingHandoff")).toBeNull();
+  });
+
+  it("shows an 'already used' toast with a dashboard action when redeem returns the replay error", async () => {
+    const handoffPayload = {
+      handoff: "replayed-token",
+      auditIds: [42],
+      profileIds: [],
+      messageSessionIds: [],
+      insightIds: [],
+    };
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(handoffPayload))))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+    window.history.replaceState(null, "", `/?nldc_handoff=${b64}`);
+
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { id: "user-replay", email: null },
+    });
+
+    renderHook(() => useClaimAnonymousOnLogin(), { wrapper });
+
+    await waitFor(() => expect(redeemMutateImpl).toHaveBeenCalledTimes(1));
+    const [, opts] = redeemMutateImpl.mock.calls[0];
+
+    act(() => {
+      opts.onError({
+        status: 400,
+        data: { error: "This handoff link has already been used" },
+      });
+    });
+
+    expect(toastSpy).toHaveBeenCalledTimes(1);
+    const arg = toastSpy.mock.calls[0][0] as {
+      title: string;
+      description: string;
+      action: React.ReactElement<{ onClick: () => void }>;
+    };
+    expect(arg.title).toMatch(/already used/i);
+    expect(arg.description).toMatch(/dashboard/i);
+
+    // Clicking the action navigates to /dashboard.
+    act(() => {
+      arg.action.props.onClick();
+    });
+    expect(setLocationSpy).toHaveBeenCalledWith("/dashboard");
+
+    // The pending handoff is cleared so we don't retry it.
+    expect(sessionStorage.getItem("nldc:pendingHandoff")).toBeNull();
+  });
+
+  it("shows an 'expired link' toast with a start-audit action when redeem returns invalid/expired", async () => {
+    const handoffPayload = {
+      handoff: "expired-token",
+      auditIds: [1],
+      profileIds: [],
+      messageSessionIds: [],
+      insightIds: [],
+    };
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(handoffPayload))))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+    window.history.replaceState(null, "", `/?nldc_handoff=${b64}`);
+
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { id: "user-expired", email: null },
+    });
+
+    renderHook(() => useClaimAnonymousOnLogin(), { wrapper });
+
+    await waitFor(() => expect(redeemMutateImpl).toHaveBeenCalledTimes(1));
+    const [, opts] = redeemMutateImpl.mock.calls[0];
+
+    act(() => {
+      opts.onError({
+        status: 400,
+        data: { error: "Invalid or expired handoff token" },
+      });
+    });
+
+    expect(toastSpy).toHaveBeenCalledTimes(1);
+    const arg = toastSpy.mock.calls[0][0] as {
+      title: string;
+      action: React.ReactElement<{ onClick: () => void }>;
+    };
+    expect(arg.title).toMatch(/expired/i);
+
+    act(() => {
+      arg.action.props.onClick();
+    });
+    expect(setLocationSpy).toHaveBeenCalledWith("/start");
+  });
+
+  it("shows a generic failure toast when the redeem error doesn't match a known reason", async () => {
+    const handoffPayload = {
+      handoff: "x",
+      auditIds: [],
+      profileIds: [],
+      messageSessionIds: [],
+      insightIds: [],
+    };
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(handoffPayload))))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+    window.history.replaceState(null, "", `/?nldc_handoff=${b64}`);
+
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { id: "user-other", email: null },
+    });
+
+    renderHook(() => useClaimAnonymousOnLogin(), { wrapper });
+
+    await waitFor(() => expect(redeemMutateImpl).toHaveBeenCalledTimes(1));
+    const [, opts] = redeemMutateImpl.mock.calls[0];
+
+    act(() => {
+      opts.onError(new Error("network down"));
+    });
+
+    expect(toastSpy).toHaveBeenCalledTimes(1);
+    const arg = toastSpy.mock.calls[0][0] as { title: string; variant?: string };
+    expect(arg.title).toMatch(/couldn.?t bring/i);
+    expect(arg.variant).toBe("destructive");
   });
 
   it("ignores a missing handoff param without firing redeem", () => {
