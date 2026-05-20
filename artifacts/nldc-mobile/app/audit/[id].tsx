@@ -10,6 +10,7 @@ import {
   useListAuditReportVersions,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import * as Clipboard from "expo-clipboard";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -1646,6 +1647,38 @@ function CompareDiffItem({ item }: { item: DiffItem }) {
   );
 }
 
+function PrevCopyButton({ text }: { text: string }) {
+  const colors = useColors();
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    await Clipboard.setStringAsync(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <Pressable
+      onPress={handleCopy}
+      hitSlop={8}
+      accessibilityLabel="Copy to clipboard"
+      style={({ pressed }) => [styles.prevCopyBtn, { opacity: pressed ? 0.6 : 1 }]}
+    >
+      <Feather
+        name={copied ? "check" : "copy"}
+        size={13}
+        color={copied ? colors.success : colors.mutedForeground}
+      />
+      <Text
+        style={[
+          styles.prevCopyText,
+          { color: copied ? colors.success : colors.mutedForeground },
+        ]}
+      >
+        {copied ? "Copied" : "Copy"}
+      </Text>
+    </Pressable>
+  );
+}
+
 function PreviousReportContent({ report: pr }: { report: ReportShape }) {
   const colors = useColors();
   return (
@@ -1703,6 +1736,7 @@ function PreviousReportContent({ report: pr }: { report: ReportShape }) {
         iconBg={`${colors.violet}22`}
         iconColor={colors.violet}
         icon="feather"
+        headerRight={<PrevCopyButton text={pr.rewrittenBio} />}
       >
         <Text
           style={[styles.body, { color: colors.foreground }]}
@@ -1733,11 +1767,14 @@ function PreviousReportContent({ report: pr }: { report: ReportShape }) {
               >
                 {p.original}
               </Text>
-              <Text
-                style={[styles.prevPromptRewritten, { color: colors.foreground }]}
-              >
-                {p.rewritten}
-              </Text>
+              <View style={styles.prevPromptRewrittenRow}>
+                <Text
+                  style={[styles.prevPromptRewritten, { color: colors.foreground, flex: 1 }]}
+                >
+                  {p.rewritten}
+                </Text>
+                <PrevCopyButton text={p.rewritten} />
+              </View>
             </View>
           ))}
         </Section>
@@ -1779,6 +1816,7 @@ function PreviousReportContent({ report: pr }: { report: ReportShape }) {
                   {item.description}
                 </Text>
               </View>
+              <PrevCopyButton text={`${item.title}: ${item.description}`} />
             </View>
           ))}
         </Section>
@@ -1803,12 +1841,14 @@ function Section({
   icon,
   iconBg,
   iconColor,
+  headerRight,
   children,
 }: {
   title: string;
   icon: React.ComponentProps<typeof Feather>["name"];
   iconBg: string;
   iconColor: string;
+  headerRight?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const colors = useColors();
@@ -1823,9 +1863,10 @@ function Section({
         <View style={[styles.iconBubble, { backgroundColor: iconBg }]}>
           <Feather name={icon} size={16} color={iconColor} />
         </View>
-        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+        <Text style={[styles.sectionTitle, { color: colors.foreground, flex: 1 }]}>
           {title}
         </Text>
+        {headerRight ?? null}
       </View>
       {children}
     </View>
@@ -2166,10 +2207,26 @@ const styles = StyleSheet.create({
     fontFamily: "PlusJakartaSans_500Medium",
     fontStyle: "italic",
   },
+  prevPromptRewrittenRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+  },
   prevPromptRewritten: {
     fontSize: 14,
     fontFamily: "PlusJakartaSans_600SemiBold",
     lineHeight: 20,
+  },
+  prevCopyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+  },
+  prevCopyText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
   },
   prevActionItem: {
     flexDirection: "row",

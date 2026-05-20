@@ -1232,9 +1232,12 @@ function PreviousReportView({
       </div>
 
       <div className="rounded-2xl p-4 border border-[hsl(268_52%_68%/0.25)] bg-[hsl(268_52%_68%/0.05)]">
-        <p className="text-xs font-bold uppercase tracking-wider text-[hsl(268_60%_78%)] mb-2">
-          Previous rewritten bio
-        </p>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-bold uppercase tracking-wider text-[hsl(268_60%_78%)]">
+            Previous rewritten bio
+          </p>
+          <CopyButton text={pr.rewrittenBio} />
+        </div>
         <p className="text-sm text-foreground leading-relaxed" data-testid="text-previous-rewritten-bio">
           {pr.rewrittenBio}
         </p>
@@ -1255,7 +1258,10 @@ function PreviousReportView({
                 <p className="text-xs text-muted-foreground italic">{p.original}</p>
               </div>
               <div className="px-4 py-3 bg-[hsl(268_52%_68%/0.06)]">
-                <p className="text-sm text-foreground">{p.rewritten}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm text-foreground flex-1">{p.rewritten}</p>
+                  <CopyButton text={p.rewritten} />
+                </div>
               </div>
             </div>
           ))}
@@ -1287,6 +1293,7 @@ function PreviousReportView({
                   {item.description}
                 </p>
               </div>
+              <CopyButton text={`${item.title}: ${item.description}`} />
             </div>
           ))}
         </div>
