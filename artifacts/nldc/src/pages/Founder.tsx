@@ -2466,6 +2466,8 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [clearResult, setClearResult] = useState<{ deleted: number; preserved: number } | null>(null);
   const [reloadTick, setReloadTick] = useState(0);
+  const [sincePreset, setSincePreset] = useState<"all" | "24h" | "7d" | "30d" | "custom">("all");
+  const [sinceCustom, setSinceCustom] = useState<string>("");
 
   useEffect(() => {
     let cancelled = false;
@@ -2480,11 +2482,28 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
     return () => { cancelled = true; };
   }, [refreshKey, reloadTick]);
 
+  const resolveSinceIso = (): string | undefined => {
+    const now = Date.now();
+    if (sincePreset === "24h") return new Date(now - 24 * 60 * 60 * 1000).toISOString();
+    if (sincePreset === "7d") return new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+    if (sincePreset === "30d") return new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
+    if (sincePreset === "custom" && sinceCustom) {
+      const parsed = new Date(sinceCustom);
+      if (!isNaN(parsed.getTime())) return parsed.toISOString();
+    }
+    return undefined;
+  };
+
   const handleRun = async () => {
+    const since = resolveSinceIso();
+    if (sincePreset === "custom" && !since) {
+      setActionError("Pick a valid date for the custom 'since' value.");
+      return;
+    }
     setRunning(true);
     setActionError(null);
     try {
-      const result = await runOcrLearn(FOUNDER_KEY);
+      const result = await runOcrLearn(FOUNDER_KEY, since);
       setLastRun(result);
       setReloadTick((t) => t + 1);
     } catch (err: unknown) {
@@ -2560,6 +2579,37 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <div
+            className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-muted-foreground/60"
+            data-testid="ocr-learn-since-presets"
+          >
+            <span className="mr-1">Since:</span>
+            {(["all", "24h", "7d", "30d", "custom"] as const).map((preset) => (
+              <button
+                key={preset}
+                data-testid={`btn-ocr-learn-since-${preset}`}
+                onClick={() => setSincePreset(preset)}
+                disabled={running || clearing}
+                className={`px-2 py-1 rounded-md border text-[10px] uppercase tracking-widest disabled:opacity-50 ${
+                  sincePreset === preset
+                    ? "border-[hsl(268_52%_68%/0.5)] bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_52%_82%)]"
+                    : "border-white/10 bg-transparent text-muted-foreground hover:border-white/20"
+                }`}
+              >
+                {preset === "all" ? "All time" : preset === "custom" ? "Custom" : `Last ${preset}`}
+              </button>
+            ))}
+            {sincePreset === "custom" && (
+              <input
+                data-testid="input-ocr-learn-since-custom"
+                type="date"
+                value={sinceCustom}
+                onChange={(e) => setSinceCustom(e.target.value)}
+                disabled={running || clearing}
+                className="ml-1 px-2 py-1 rounded-md border border-white/10 bg-transparent text-foreground text-[11px] disabled:opacity-50"
+              />
+            )}
+          </div>
           <button
             data-testid="btn-ocr-learn-run"
             onClick={handleRun}

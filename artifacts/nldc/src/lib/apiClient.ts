@@ -454,10 +454,17 @@ export const getOcrRuleReviewLog = (founderKey: string, limit = 50) =>
     { headers: { "x-founder-key": founderKey } },
   );
 
-export const runOcrLearn = async (founderKey: string): Promise<OcrLearnResult> => {
+export const runOcrLearn = async (
+  founderKey: string,
+  since?: string,
+): Promise<OcrLearnResult> => {
   const res = await fetch(`${BASE}/founder/ocr-learn`, {
     method: "POST",
-    headers: { "x-founder-key": founderKey },
+    headers: {
+      "x-founder-key": founderKey,
+      ...(since ? { "content-type": "application/json" } : {}),
+    },
+    ...(since ? { body: JSON.stringify({ since }) } : {}),
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
