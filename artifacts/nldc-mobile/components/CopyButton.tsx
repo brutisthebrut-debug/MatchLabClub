@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Platform, Pressable, StyleSheet, Text } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
@@ -23,6 +23,16 @@ const RESET_DELAY_MS = 2000;
 export function CopyButton({ text, onCopy, variant = "ghost" }: CopyButtonProps) {
   const colors = useColors();
   const [copied, setCopied] = useState(false);
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current !== null) {
+        clearTimeout(resetTimerRef.current);
+        resetTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const handleCopy = async () => {
     await Clipboard.setStringAsync(text);
@@ -30,7 +40,13 @@ export function CopyButton({ text, onCopy, variant = "ghost" }: CopyButtonProps)
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     }
     setCopied(true);
-    setTimeout(() => setCopied(false), RESET_DELAY_MS);
+    if (resetTimerRef.current !== null) {
+      clearTimeout(resetTimerRef.current);
+    }
+    resetTimerRef.current = setTimeout(() => {
+      resetTimerRef.current = null;
+      setCopied(false);
+    }, RESET_DELAY_MS);
     onCopy?.();
   };
 

@@ -75,7 +75,6 @@ class FakeResizeObserver {
 // Import Dashboard AFTER mocks are registered.
 // ---------------------------------------------------------------------------
 import Dashboard from "@/pages/Dashboard";
-import { Toaster } from "@/components/ui/toaster";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -216,10 +215,7 @@ afterEach(() => {
 
 function Wrap({ children }: { children: React.ReactNode }) {
   return (
-    <QueryClientProvider client={qc}>
-      {children}
-      <Toaster />
-    </QueryClientProvider>
+    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );
 }
 
