@@ -13,6 +13,7 @@ import * as ImagePicker from "expo-image-picker";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Image,
+  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -201,6 +202,9 @@ export default function CoachScreen() {
   const [timelineActiveSeries, setTimelineActiveSeries] = useState<Set<string>>(
     () => new Set(["sent", "not_sent", "snoozed", "dismissed"]),
   );
+  const [selectedTimelineWeek, setSelectedTimelineWeek] = useState<
+    string | null
+  >(null);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -776,7 +780,13 @@ export default function CoachScreen() {
                           ),
                         );
                         return followUpTimeline.buckets.map((b) => (
-                          <View key={b.weekStart} style={styles.timelineCol}>
+                          <Pressable
+                            key={b.weekStart}
+                            style={styles.timelineCol}
+                            onPress={() => setSelectedTimelineWeek(b.weekStart)}
+                            accessibilityLabel={`See breakdown for week of ${new Date(b.weekStart).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`}
+                            testID={`timeline-bar-${b.weekStart}`}
+                          >
                             <View style={styles.timelineBarGroup}>
                               {activeDefs.map((s) => {
                                 const count = getCount(b, s.key);
@@ -820,7 +830,7 @@ export default function CoachScreen() {
                                 { month: "numeric", day: "numeric" },
                               )}
                             </Text>
-                          </View>
+                          </Pressable>
                         ));
                       })()}
                     </View>
@@ -837,6 +847,155 @@ export default function CoachScreen() {
               </View>
             ) : null}
           </View>
+        ) : null}
+
+        {followUpTimeline ? (
+          <Modal
+            transparent
+            visible={selectedTimelineWeek !== null}
+            animationType="fade"
+            onRequestClose={() => setSelectedTimelineWeek(null)}
+          >
+            <Pressable
+              style={styles.timelineSheetBackdrop}
+              onPress={() => setSelectedTimelineWeek(null)}
+              testID="timeline-week-sheet-backdrop"
+            >
+              {(() => {
+                const bucket = followUpTimeline.buckets.find(
+                  (b) => b.weekStart === selectedTimelineWeek,
+                );
+                if (!bucket) return null;
+                const rows = [
+                  {
+                    key: "sent",
+                    label: "Sent",
+                    color: colors.teal,
+                    value: bucket.sentCount,
+                    testID: "timeline-week-sheet-sent",
+                  },
+                  {
+                    key: "not_sent",
+                    label: "Not sent",
+                    color: colors.gold,
+                    value: bucket.notSentCount,
+                    testID: "timeline-week-sheet-not_sent",
+                  },
+                  {
+                    key: "snoozed",
+                    label: "Snoozed",
+                    color: "#7B93D4",
+                    value: bucket.snoozeCount,
+                    testID: "timeline-week-sheet-snoozed",
+                  },
+                  {
+                    key: "dismissed",
+                    label: "Dismissed",
+                    color: colors.rose,
+                    value: bucket.dismissCount,
+                    testID: "timeline-week-sheet-dismissed",
+                  },
+                ];
+                const weekDate = new Date(bucket.weekStart);
+                const weekLabel = weekDate.toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                });
+                return (
+                  <Pressable
+                    onPress={() => {}}
+                    style={[
+                      styles.timelineSheet,
+                      {
+                        backgroundColor: colors.card,
+                        borderColor: colors.cardBorder,
+                      },
+                    ]}
+                    testID="timeline-week-sheet"
+                  >
+                    <View style={styles.timelineSheetHandle} />
+                    <Text
+                      style={[
+                        styles.timelineSheetEyebrow,
+                        { color: colors.mutedForeground },
+                      ]}
+                    >
+                      Week of
+                    </Text>
+                    <Text
+                      style={[
+                        styles.timelineSheetTitle,
+                        { color: colors.foreground },
+                      ]}
+                      testID="timeline-week-sheet-title"
+                    >
+                      {weekLabel}
+                    </Text>
+                    <View style={styles.timelineSheetRows}>
+                      {rows.map((r) => (
+                        <View
+                          key={r.key}
+                          style={[
+                            styles.timelineSheetRow,
+                            { borderColor: colors.cardBorder },
+                          ]}
+                        >
+                          <View style={styles.timelineSheetRowLeft}>
+                            <View
+                              style={[
+                                styles.timelineSheetSwatch,
+                                { backgroundColor: r.color },
+                              ]}
+                            />
+                            <Text
+                              style={[
+                                styles.timelineSheetLabel,
+                                { color: colors.foreground },
+                              ]}
+                            >
+                              {r.label}
+                            </Text>
+                          </View>
+                          <Text
+                            style={[
+                              styles.timelineSheetValue,
+                              { color: colors.foreground },
+                            ]}
+                            testID={r.testID}
+                          >
+                            {r.value}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                    <Pressable
+                      onPress={() => setSelectedTimelineWeek(null)}
+                      style={({ pressed }) => [
+                        styles.timelineSheetClose,
+                        {
+                          borderColor: colors.border,
+                          backgroundColor: colors.input,
+                          opacity: pressed ? 0.85 : 1,
+                        },
+                      ]}
+                      testID="timeline-week-sheet-close"
+                      accessibilityLabel="Close week breakdown"
+                    >
+                      <Text
+                        style={[
+                          styles.timelineSheetCloseLabel,
+                          { color: colors.foreground },
+                        ]}
+                      >
+                        Close
+                      </Text>
+                    </Pressable>
+                  </Pressable>
+                );
+              })()}
+            </Pressable>
+          </Modal>
         ) : null}
 
         {followUpAck ? (
@@ -2077,6 +2236,79 @@ const styles = StyleSheet.create({
   timelineCaption: {
     fontSize: 11,
     fontFamily: "PlusJakartaSans_500Medium",
+  },
+  timelineSheetBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "flex-end",
+  },
+  timelineSheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderWidth: 1,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 24,
+    gap: 12,
+  },
+  timelineSheetHandle: {
+    alignSelf: "center",
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    marginBottom: 6,
+  },
+  timelineSheetEyebrow: {
+    fontSize: 11,
+    fontFamily: "PlusJakartaSans_600SemiBold",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+  timelineSheetTitle: {
+    fontSize: 18,
+    fontFamily: "PlayfairDisplay_600SemiBold",
+  },
+  timelineSheetRows: {
+    gap: 0,
+  },
+  timelineSheetRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  timelineSheetRowLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  timelineSheetSwatch: {
+    width: 10,
+    height: 10,
+    borderRadius: 2,
+  },
+  timelineSheetLabel: {
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
+  timelineSheetValue: {
+    fontSize: 16,
+    fontFamily: "PlusJakartaSans_700Bold",
+    fontVariant: ["tabular-nums"],
+  },
+  timelineSheetClose: {
+    marginTop: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+  },
+  timelineSheetCloseLabel: {
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_600SemiBold",
   },
   followUpAck: {
     flexDirection: "row",

@@ -166,8 +166,22 @@ vi.mock("react-native", () => ({
   ActivityIndicator: () => null,
   Alert: { alert: vi.fn() },
   Platform: { OS: "web" },
+  Modal: ({
+    children,
+    visible,
+    onRequestClose: _orc,
+    animationType: _at,
+    transparent: _t,
+  }: {
+    children?: React.ReactNode;
+    visible?: boolean;
+    onRequestClose?: () => void;
+    animationType?: string;
+    transparent?: boolean;
+  }) => (visible ? <div data-testid="__modal">{children}</div> : null),
   StyleSheet: {
     create: <T extends Record<string, unknown>>(s: T): T => s,
+    hairlineWidth: 1,
   },
 }));
 
@@ -939,5 +953,131 @@ describe("Coach timeline — snooze and dismiss series chips", () => {
     fireEvent.click(screen.getByTestId("timeline-chip-dismissed"));
 
     expect(screen.getByTestId("timeline-bars")).toBeTruthy();
+  });
+});
+
+describe("Coach timeline — week breakdown sheet", () => {
+  it("does not show the breakdown sheet until a bar is tapped", async () => {
+    statsRef.current.data = STATS_WITH_SNOOZE_DISMISS;
+    timelineRef.current.data = TIMELINE_WITH_SNOOZE_DISMISS;
+
+    render(
+      <Wrap>
+        <CoachScreen />
+      </Wrap>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("timeline-bars")).toBeTruthy();
+    });
+
+    expect(screen.queryByTestId("timeline-week-sheet")).toBeNull();
+  });
+
+  it("opens the breakdown sheet with all four counts when a bar is tapped", async () => {
+    statsRef.current.data = STATS_WITH_SNOOZE_DISMISS;
+    timelineRef.current.data = TIMELINE_WITH_SNOOZE_DISMISS;
+
+    render(
+      <Wrap>
+        <CoachScreen />
+      </Wrap>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("timeline-bar-2026-05-11")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByTestId("timeline-bar-2026-05-11"));
+
+    expect(screen.getByTestId("timeline-week-sheet")).toBeTruthy();
+    expect(screen.getByTestId("timeline-week-sheet-title").textContent).toMatch(
+      /May 11, 2026/,
+    );
+    expect(screen.getByTestId("timeline-week-sheet-sent").textContent).toBe("4");
+    expect(screen.getByTestId("timeline-week-sheet-not_sent").textContent).toBe(
+      "0",
+    );
+    expect(screen.getByTestId("timeline-week-sheet-snoozed").textContent).toBe(
+      "3",
+    );
+    expect(screen.getByTestId("timeline-week-sheet-dismissed").textContent).toBe(
+      "2",
+    );
+  });
+
+  it("shows counts for a different tapped week", async () => {
+    statsRef.current.data = STATS_WITH_SNOOZE_DISMISS;
+    timelineRef.current.data = TIMELINE_WITH_SNOOZE_DISMISS;
+
+    render(
+      <Wrap>
+        <CoachScreen />
+      </Wrap>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("timeline-bar-2026-04-27")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByTestId("timeline-bar-2026-04-27"));
+
+    expect(screen.getByTestId("timeline-week-sheet-title").textContent).toMatch(
+      /April 27, 2026/,
+    );
+    expect(screen.getByTestId("timeline-week-sheet-sent").textContent).toBe("3");
+    expect(screen.getByTestId("timeline-week-sheet-not_sent").textContent).toBe(
+      "1",
+    );
+    expect(screen.getByTestId("timeline-week-sheet-snoozed").textContent).toBe(
+      "2",
+    );
+    expect(screen.getByTestId("timeline-week-sheet-dismissed").textContent).toBe(
+      "1",
+    );
+  });
+
+  it("closes the breakdown sheet when the close button is tapped", async () => {
+    statsRef.current.data = STATS_WITH_SNOOZE_DISMISS;
+    timelineRef.current.data = TIMELINE_WITH_SNOOZE_DISMISS;
+
+    render(
+      <Wrap>
+        <CoachScreen />
+      </Wrap>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("timeline-bar-2026-05-04")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByTestId("timeline-bar-2026-05-04"));
+    expect(screen.getByTestId("timeline-week-sheet")).toBeTruthy();
+
+    fireEvent.click(screen.getByTestId("timeline-week-sheet-close"));
+
+    expect(screen.queryByTestId("timeline-week-sheet")).toBeNull();
+  });
+
+  it("closes the breakdown sheet when the backdrop is tapped", async () => {
+    statsRef.current.data = STATS_WITH_SNOOZE_DISMISS;
+    timelineRef.current.data = TIMELINE_WITH_SNOOZE_DISMISS;
+
+    render(
+      <Wrap>
+        <CoachScreen />
+      </Wrap>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("timeline-bar-2026-05-04")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByTestId("timeline-bar-2026-05-04"));
+    expect(screen.getByTestId("timeline-week-sheet")).toBeTruthy();
+
+    fireEvent.click(screen.getByTestId("timeline-week-sheet-backdrop"));
+
+    expect(screen.queryByTestId("timeline-week-sheet")).toBeNull();
   });
 });
