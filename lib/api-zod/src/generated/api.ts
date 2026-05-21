@@ -174,6 +174,31 @@ export const RedeemAnonymousClaimHandoffResponse = zod.object({
 
 
 /**
+ * Lightweight, idempotent status check for a handoff token. Verifies the
+signature so only the original holder can poll, and reports whether
+the token's `jti` has already been recorded in
+`handoff_token_redemptions` (i.e. someone has signed in on the other
+device and claimed the data). Used by the originating device's share
+dialog to surface a "transfer complete" state. Does not consume the
+token — calling this never blocks a future redeem.
+
+ * @summary Check whether a previously issued handoff link has been redeemed yet
+ */
+
+
+
+export const GetAnonymousClaimHandoffStatusBody = zod.object({
+  "handoff": zod.string().min(1)
+})
+
+export const GetAnonymousClaimHandoffStatusResponse = zod.object({
+  "redeemed": zod.boolean().describe('True once the handoff token\'s `jti` has been recorded in `handoff_token_redemptions` (i.e. the other device successfully claimed the data).'),
+  "expired": zod.boolean().describe('True once the token\'s TTL has passed. Mutually compatible with `redeemed` — a token may be both redeemed and expired.'),
+  "expiresAt": zod.coerce.date().optional().describe('The token\'s expiry timestamp. Omitted if the token can\'t be verified.')
+})
+
+
+/**
  * Returns a single JSON document containing the authenticated user's
 profile record plus every audit, dating profile, message coaching
 session, and email insight tied to that user. Intended to power a

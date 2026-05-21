@@ -15,6 +15,8 @@ import {
   IssueAnonymousClaimHandoffResponse,
   RedeemAnonymousClaimHandoffBody,
   RedeemAnonymousClaimHandoffResponse,
+  GetAnonymousClaimHandoffStatusBody,
+  GetAnonymousClaimHandoffStatusResponse,
 } from "@workspace/api-zod";
 import {
   getAnonClaimToken,
@@ -297,6 +299,38 @@ router.post("/claim-anonymous/handoff/issue", async (req, res): Promise<void> =>
     }),
   );
 });
+
+router.post(
+  "/claim-anonymous/handoff/status",
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = GetAnonymousClaimHandoffStatusBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    const verified = verifyHandoffToken(parsed.data.handoff);
+    if (!verified) {
+      // Either malformed/wrong-signature (refuse) or genuinely expired. We
+      // can't distinguish the two without re-decoding unsigned payload, and
+      // we don't want to leak "valid signature but expired" vs "forged" —
+      // both 400 with a generic message.
+      res.status(400).json({ error: "Invalid or expired handoff token" });
+      return;
+    }
+    const existing = await db
+      .select({ jti: handoffTokenRedemptionsTable.jti })
+      .from(handoffTokenRedemptionsTable)
+      .where(eq(handoffTokenRedemptionsTable.jti, verified.jti))
+      .limit(1);
+    res.json(
+      GetAnonymousClaimHandoffStatusResponse.parse({
+        redeemed: existing.length > 0,
+        expired: verified.expiresAt.getTime() <= Date.now(),
+        expiresAt: verified.expiresAt.toISOString(),
+      }),
+    );
+  },
+);
 
 router.post(
   "/claim-anonymous/handoff/redeem",

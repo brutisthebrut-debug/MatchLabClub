@@ -25,6 +25,8 @@ export * from './aiTestInput';
 export * from './aiTestResult';
 export * from './aiTestResultMode';
 export * from './anonymousClaimHandoff';
+export * from './anonymousClaimHandoffStatus';
+export * from './anonymousClaimHandoffStatusInput';
 export * from './audit';
 export * from './auditFromScreenshot400';
 export * from './auditInput';

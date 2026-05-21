@@ -70,6 +70,20 @@ export interface AnonymousClaimHandoff {
   expiresAt: string;
 }
 
+export interface AnonymousClaimHandoffStatusInput {
+  /** @minLength 1 */
+  handoff: string;
+}
+
+export interface AnonymousClaimHandoffStatus {
+  /** True once the handoff token's `jti` has been recorded in `handoff_token_redemptions` (i.e. the other device successfully claimed the data). */
+  redeemed: boolean;
+  /** True once the token's TTL has passed. Mutually compatible with `redeemed` — a token may be both redeemed and expired. */
+  expired: boolean;
+  /** The token's expiry timestamp. Omitted if the token can't be verified. */
+  expiresAt?: string;
+}
+
 export interface RedeemAnonymousClaimHandoffInput {
   /** @minLength 1 */
   handoff: string;

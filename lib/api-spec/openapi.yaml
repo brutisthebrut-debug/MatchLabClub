@@ -240,6 +240,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /claim-anonymous/handoff/status:
+    post:
+      tags: [Auth]
+      operationId: getAnonymousClaimHandoffStatus
+      summary: Check whether a previously issued handoff link has been redeemed yet
+      description: |
+        Lightweight, idempotent status check for a handoff token. Verifies the
+        signature so only the original holder can poll, and reports whether
+        the token's `jti` has already been recorded in
+        `handoff_token_redemptions` (i.e. someone has signed in on the other
+        device and claimed the data). Used by the originating device's share
+        dialog to surface a "transfer complete" state. Does not consume the
+        token — calling this never blocks a future redeem.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnonymousClaimHandoffStatusInput'
+      responses:
+        '200':
+          description: Current status of the handoff link.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnonymousClaimHandoffStatus'
+        '400':
+          description: The handoff token is malformed, expired, or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /account/export:
     get:
       tags: [Auth]
@@ -1758,6 +1791,27 @@ components:
         expiresAt:
           type: string
           format: date-time
+    AnonymousClaimHandoffStatusInput:
+      type: object
+      required: [handoff]
+      properties:
+        handoff:
+          type: string
+          minLength: 1
+    AnonymousClaimHandoffStatus:
+      type: object
+      required: [redeemed, expired]
+      properties:
+        redeemed:
+          type: boolean
+          description: True once the handoff token's `jti` has been recorded in `handoff_token_redemptions` (i.e. the other device successfully claimed the data).
+        expired:
+          type: boolean
+          description: True once the token's TTL has passed. Mutually compatible with `redeemed` — a token may be both redeemed and expired.
+        expiresAt:
+          type: string
+          format: date-time
+          description: The token's expiry timestamp. Omitted if the token can't be verified.
     RedeemAnonymousClaimHandoffInput:
       type: object
       required: [handoff]

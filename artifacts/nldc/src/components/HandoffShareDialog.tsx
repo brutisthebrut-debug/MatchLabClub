@@ -1,7 +1,18 @@
 import { useEffect, useState } from "react";
-import { Smartphone, Copy, Check, Loader2, Download, RefreshCw } from "lucide-react";
+import {
+  Smartphone,
+  Copy,
+  Check,
+  Loader2,
+  Download,
+  RefreshCw,
+  CheckCircle2,
+} from "lucide-react";
 import QRCode from "qrcode";
-import { useIssueAnonymousClaimHandoff } from "@workspace/api-client-react";
+import {
+  useIssueAnonymousClaimHandoff,
+  getAnonymousClaimHandoffStatus,
+} from "@workspace/api-client-react";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +27,8 @@ import { buildHandoffShareUrl } from "@/lib/handoffLink";
 
 interface IssuedLink {
   url: string;
+  /** Raw signed token, needed to poll the status endpoint. */
+  handoff: string;
   expiresAt: string;
   /** True once this link has been shared at least once (copy or download). */
   wasShared: boolean;
@@ -37,6 +50,7 @@ export function HandoffShareDialog() {
   const [issued, setIssued] = useState<IssuedLink | null>(null);
   const [copied, setCopied] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [redeemed, setRedeemed] = useState(false);
   const issue = useIssueAnonymousClaimHandoff();
 
   useEffect(() => {
@@ -62,12 +76,52 @@ export function HandoffShareDialog() {
     };
   }, [issued]);
 
+  // Poll the status endpoint while the dialog is open and the link has been
+  // shared, so the originating device can surface a "transfer complete" state
+  // as soon as the other device redeems. We only poll after the user has
+  // actually shared the link — polling sooner would burn requests for a state
+  // that can't change yet. We also stop polling once we see `redeemed: true`
+  // or the link expires.
+  useEffect(() => {
+    if (!open) return;
+    if (!issued) return;
+    if (!issued.wasShared) return;
+    if (redeemed) return;
+    if (isExpired(issued.expiresAt)) return;
+
+    let cancelled = false;
+    const handoff = issued.handoff;
+
+    async function checkOnce(): Promise<void> {
+      try {
+        const status = await getAnonymousClaimHandoffStatus({ handoff });
+        if (cancelled) return;
+        if (status.redeemed) setRedeemed(true);
+      } catch {
+        // Swallow — status polling is best-effort. The dialog still works.
+      }
+    }
+
+    void checkOnce();
+    const id = window.setInterval(checkOnce, 4000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [open, issued, redeemed]);
+
   async function generateLink(): Promise<void> {
     try {
       const result = await issue.mutateAsync();
       const url = buildHandoffShareUrl(result.handoff);
-      setIssued({ url, expiresAt: result.expiresAt, wasShared: false });
+      setIssued({
+        url,
+        handoff: result.handoff,
+        expiresAt: result.expiresAt,
+        wasShared: false,
+      });
       setCopied(false);
+      setRedeemed(false);
     } catch {
       toast({
         title: "Couldn't generate link",
@@ -95,6 +149,7 @@ export function HandoffShareDialog() {
 
   async function handleGenerateNew(): Promise<void> {
     setIssued(null);
+    setRedeemed(false);
     await generateLink();
   }
 
@@ -159,7 +214,29 @@ export function HandoffShareDialog() {
           </div>
         )}
 
-        {issued && !expired && (
+        {issued && !expired && redeemed && (
+          <div
+            className="space-y-3 py-2 text-center"
+            data-testid="handoff-redeemed"
+          >
+            <div className="flex justify-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                <CheckCircle2 className="h-8 w-8" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold">
+                Transfer succeeded — check your dashboard
+              </p>
+              <p className="text-[12px] text-muted-foreground">
+                Your audit is now waiting on the other device. You can close
+                this window — no need to send the link again.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {issued && !expired && !redeemed && (
           <div className="space-y-3">
             {issued.wasShared && (
               <p

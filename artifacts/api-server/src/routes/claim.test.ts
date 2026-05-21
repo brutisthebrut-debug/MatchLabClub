@@ -539,6 +539,70 @@ describe("POST /api/claim-anonymous/handoff/issue", () => {
   });
 });
 
+describe("POST /api/claim-anonymous/handoff/status", () => {
+  it("reports redeemed=false for a freshly issued token", async () => {
+    const token = makeToken();
+    const handoff = signHandoffToken(token).token;
+    const res = await request(testApp.app)
+      .post("/api/claim-anonymous/handoff/status")
+      .send({ handoff });
+    expect(res.status).toBe(200);
+    expect(res.body.redeemed).toBe(false);
+    expect(res.body.expired).toBe(false);
+    expect(typeof res.body.expiresAt).toBe("string");
+  });
+
+  it("reports redeemed=true once the token's jti has been recorded", async () => {
+    const token = makeToken();
+    const issued = signHandoffToken(token);
+    await db.insert(handoffTokenRedemptionsTable).values({
+      jti: issued.jti,
+      expiresAt: new Date(issued.expiresAt),
+    });
+    try {
+      const res = await request(testApp.app)
+        .post("/api/claim-anonymous/handoff/status")
+        .send({ handoff: issued.token });
+      expect(res.status).toBe(200);
+      expect(res.body.redeemed).toBe(true);
+    } finally {
+      await db
+        .delete(handoffTokenRedemptionsTable)
+        .where(eq(handoffTokenRedemptionsTable.jti, issued.jti));
+    }
+  });
+
+  it("rejects an invalid or unsigned token with 400", async () => {
+    const res = await request(testApp.app)
+      .post("/api/claim-anonymous/handoff/status")
+      .send({ handoff: "not-a-real-token" });
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects an expired token with 400", async () => {
+    const token = makeToken();
+    const handoff = signHandoffToken(token, -1).token;
+    const res = await request(testApp.app)
+      .post("/api/claim-anonymous/handoff/status")
+      .send({ handoff });
+    expect(res.status).toBe(400);
+  });
+
+  it("does NOT record a redemption (is read-only)", async () => {
+    const token = makeToken();
+    const issued = signHandoffToken(token);
+    const res = await request(testApp.app)
+      .post("/api/claim-anonymous/handoff/status")
+      .send({ handoff: issued.token });
+    expect(res.status).toBe(200);
+    const rows = await db
+      .select()
+      .from(handoffTokenRedemptionsTable)
+      .where(eq(handoffTokenRedemptionsTable.jti, issued.jti));
+    expect(rows).toHaveLength(0);
+  });
+});
+
 describe("POST /api/claim-anonymous/handoff/redeem", () => {
   let token: string;
   let ids: SeedIds;

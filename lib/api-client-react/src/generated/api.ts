@@ -29,6 +29,8 @@ import type {
   AiTestInput,
   AiTestResult,
   AnonymousClaimHandoff,
+  AnonymousClaimHandoffStatus,
+  AnonymousClaimHandoffStatusInput,
   Audit,
   AuditFromScreenshot400,
   AuditInput,
@@ -808,6 +810,85 @@ export const useRedeemAnonymousClaimHandoff = <TError = ErrorType<AuthErrorEnvel
         TContext
       > => {
       return useMutation(getRedeemAnonymousClaimHandoffMutationOptions(options));
+    }
+
+export const getGetAnonymousClaimHandoffStatusUrl = () => {
+
+
+
+
+  return `/api/claim-anonymous/handoff/status`
+}
+
+/**
+ * Lightweight, idempotent status check for a handoff token. Verifies the
+signature so only the original holder can poll, and reports whether
+the token's `jti` has already been recorded in
+`handoff_token_redemptions` (i.e. someone has signed in on the other
+device and claimed the data). Used by the originating device's share
+dialog to surface a "transfer complete" state. Does not consume the
+token — calling this never blocks a future redeem.
+
+ * @summary Check whether a previously issued handoff link has been redeemed yet
+ */
+export const getAnonymousClaimHandoffStatus = async (anonymousClaimHandoffStatusInput: AnonymousClaimHandoffStatusInput, options?: RequestInit): Promise<AnonymousClaimHandoffStatus> => {
+
+  return customFetch<AnonymousClaimHandoffStatus>(getGetAnonymousClaimHandoffStatusUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      anonymousClaimHandoffStatusInput,)
+  }
+);}
+
+
+
+
+export const getGetAnonymousClaimHandoffStatusMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAnonymousClaimHandoffStatus>>, TError,{data: BodyType<AnonymousClaimHandoffStatusInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof getAnonymousClaimHandoffStatus>>, TError,{data: BodyType<AnonymousClaimHandoffStatusInput>}, TContext> => {
+
+const mutationKey = ['getAnonymousClaimHandoffStatus'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getAnonymousClaimHandoffStatus>>, {data: BodyType<AnonymousClaimHandoffStatusInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  getAnonymousClaimHandoffStatus(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GetAnonymousClaimHandoffStatusMutationResult = NonNullable<Awaited<ReturnType<typeof getAnonymousClaimHandoffStatus>>>
+    export type GetAnonymousClaimHandoffStatusMutationBody = BodyType<AnonymousClaimHandoffStatusInput>
+    export type GetAnonymousClaimHandoffStatusMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Check whether a previously issued handoff link has been redeemed yet
+ */
+export const useGetAnonymousClaimHandoffStatus = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAnonymousClaimHandoffStatus>>, TError,{data: BodyType<AnonymousClaimHandoffStatusInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof getAnonymousClaimHandoffStatus>>,
+        TError,
+        {data: BodyType<AnonymousClaimHandoffStatusInput>},
+        TContext
+      > => {
+      return useMutation(getGetAnonymousClaimHandoffStatusMutationOptions(options));
     }
 
 export const getExportMyDataUrl = () => {
