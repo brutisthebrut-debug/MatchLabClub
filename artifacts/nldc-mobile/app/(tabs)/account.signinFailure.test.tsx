@@ -70,6 +70,10 @@ vi.mock("@/lib/auditTrashNotifications", () => ({
   deregisterPushTokenFromServer: vi.fn(async () => {}),
 }));
 
+vi.mock("@/lib/signInPushToken", () => ({
+  getSigningInDevicePushToken: vi.fn(async () => null),
+}));
+
 // ---------------------------------------------------------------------------
 // React Native primitives — minimal DOM equivalents
 // ---------------------------------------------------------------------------

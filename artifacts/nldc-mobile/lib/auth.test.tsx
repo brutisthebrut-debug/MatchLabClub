@@ -18,6 +18,15 @@ vi.mock("expo-web-browser", () => ({
   maybeCompleteAuthSession: vi.fn(),
 }));
 
+vi.mock("./signInPushToken", () => ({
+  getSigningInDevicePushToken: vi.fn(async () => null),
+}));
+
+vi.mock("./auditTrashNotifications", () => ({
+  registerPushTokenWithServer: vi.fn(async () => {}),
+  deregisterPushTokenFromServer: vi.fn(async () => {}),
+}));
+
 // Module-level variables controlling the useAuthRequest mock.
 // The factory captures them by closure; they are initialised before any test runs.
 let mockAuthRequest: { codeVerifier: string } | null = { codeVerifier: "v" };

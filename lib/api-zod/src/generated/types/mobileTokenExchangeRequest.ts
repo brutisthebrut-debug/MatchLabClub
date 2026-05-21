@@ -17,4 +17,13 @@ export interface MobileTokenExchangeRequest {
   state: string;
   /** @minLength 1 */
   nonce?: string;
+  /**
+     * Expo push token for the signing-in device, if available. When
+  provided, this token is excluded from the recipients of the
+  new-sign-in push notification so the device performing the
+  sign-in doesn't notify itself.
+
+     * @minLength 1
+     */
+  push_token?: string;
 }

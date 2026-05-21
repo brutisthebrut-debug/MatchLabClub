@@ -260,7 +260,8 @@ router.post(
       return;
     }
 
-    const { code, code_verifier, redirect_uri, state, nonce } = parsed.data;
+    const { code, code_verifier, redirect_uri, state, nonce, push_token } =
+      parsed.data;
 
     try {
       const config = await getOidcConfig();
@@ -317,6 +318,7 @@ router.post(
           ip,
           userAgent,
           channel: "mobile",
+          excludePushToken: push_token ?? null,
         });
       } catch (err) {
         req.log.error(

@@ -12,6 +12,7 @@ import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
 import { setUnauthorizedHandler } from "@workspace/api-client-react";
 import { registerPushTokenWithServer, deregisterPushTokenFromServer } from "./auditTrashNotifications";
+import { getSigningInDevicePushToken } from "./signInPushToken";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -195,6 +196,11 @@ export function AuthProvider({
           return;
         }
 
+        // Best-effort: include this device's push token so the server can
+        // exclude it from new-sign-in push notification recipients. Failing
+        // to obtain a token must not block sign-in.
+        const devicePushToken = await getSigningInDevicePushToken();
+
         const exchangeRes = await fetch(
           `${apiBase}/api/mobile-auth/token-exchange`,
           {
@@ -205,6 +211,7 @@ export function AuthProvider({
               code_verifier: request.codeVerifier,
               redirect_uri: redirectUri,
               state,
+              ...(devicePushToken ? { push_token: devicePushToken } : {}),
             }),
           },
         );

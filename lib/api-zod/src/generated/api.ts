@@ -62,12 +62,14 @@ export const LogoutBrowserSessionHeader = zod.object({
 
 
 
+
 export const ExchangeMobileAuthorizationCodeBody = zod.object({
   "code": zod.string().min(1),
   "code_verifier": zod.string().min(1),
   "redirect_uri": zod.string().url().min(1),
   "state": zod.string().min(1),
-  "nonce": zod.string().min(1).optional()
+  "nonce": zod.string().min(1).optional(),
+  "push_token": zod.string().min(1).optional().describe('Expo push token for the signing-in device, if available. When\nprovided, this token is excluded from the recipients of the\nnew-sign-in push notification so the device performing the\nsign-in doesn\'t notify itself.\n')
 })
 
 export const ExchangeMobileAuthorizationCodeResponse = zod.object({

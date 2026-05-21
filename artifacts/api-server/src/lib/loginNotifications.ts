@@ -29,6 +29,12 @@ export interface NotifyLoginInput {
   ip: string;
   userAgent: string;
   channel: "web" | "mobile";
+  /**
+   * Expo push token of the device performing the sign-in, if known. When
+   * provided, this token is excluded from the new-sign-in push notification
+   * recipients so the signing-in device doesn't notify itself.
+   */
+  excludePushToken?: string | null;
 }
 
 export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> {
@@ -128,15 +134,21 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
     );
   }
 
-  await sendNewSignInPushNotification({ userId, device, displayLocation: displayLocation ?? displayIp });
+  await sendNewSignInPushNotification({
+    userId,
+    device,
+    displayLocation: displayLocation ?? displayIp,
+    excludePushToken: input.excludePushToken ?? null,
+  });
 }
 
 async function sendNewSignInPushNotification(opts: {
   userId: string;
   device: string;
   displayLocation: string | null;
+  excludePushToken: string | null;
 }): Promise<void> {
-  const { userId, device, displayLocation } = opts;
+  const { userId, device, displayLocation, excludePushToken } = opts;
 
   let tokenRows: { token: string }[];
   try {
@@ -157,6 +169,7 @@ async function sendNewSignInPushNotification(opts: {
   const { Expo } = (await import("expo-server-sdk")) as typeof import("expo-server-sdk");
 
   const messages = tokenRows
+    .filter((r) => r.token !== excludePushToken)
     .filter((r) => Expo.isExpoPushToken(r.token))
     .map((r) => ({
       to: r.token,
