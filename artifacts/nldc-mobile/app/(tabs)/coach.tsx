@@ -606,6 +606,51 @@ export default function CoachScreen() {
                     </Text>
                   </View>
                 </View>
+                <View
+                  style={[
+                    styles.statsSecondaryRow,
+                    { borderTopColor: colors.cardBorder },
+                  ]}
+                >
+                  <View style={styles.statsCell}>
+                    <Text
+                      style={[
+                        styles.statsValueSmall,
+                        { color: "#7B93D4" },
+                      ]}
+                      testID="stats-snooze-count"
+                    >
+                      {followUpStats.snoozeCount ?? 0}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.statsLabel,
+                        { color: colors.mutedForeground },
+                      ]}
+                    >
+                      Snoozed
+                    </Text>
+                  </View>
+                  <View style={styles.statsCell}>
+                    <Text
+                      style={[
+                        styles.statsValueSmall,
+                        { color: colors.rose },
+                      ]}
+                      testID="stats-dismiss-count"
+                    >
+                      {followUpStats.dismissCount ?? 0}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.statsLabel,
+                        { color: colors.mutedForeground },
+                      ]}
+                    >
+                      Dismissed
+                    </Text>
+                  </View>
+                </View>
                 {followUpStats.lastAnswer && followUpStats.lastAnsweredAt ? (
                   <View
                     style={[
@@ -2156,6 +2201,17 @@ const styles = StyleSheet.create({
     fontFamily: "PlusJakartaSans_700Bold",
     letterSpacing: 1.2,
     textTransform: "uppercase",
+  },
+  statsSecondaryRow: {
+    flexDirection: "row",
+    gap: 12,
+    borderTopWidth: 1,
+    paddingTop: 10,
+    marginTop: 4,
+  },
+  statsValueSmall: {
+    fontSize: 18,
+    fontFamily: "PlusJakartaSans_700Bold",
   },
   statsLastRow: {
     borderTopWidth: 1,
