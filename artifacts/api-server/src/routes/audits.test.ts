@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vitest";
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import request from "supertest";
@@ -87,9 +87,18 @@ beforeAll(async () => {
   testApp = await makeTestApp();
 });
 
+// Scoped cleanup: snapshot the row ids that exist before each test, then
+// in afterEach remove exactly the rows this test inserted. Avoids the
+// blanket `resetTestDb()` (in-memory TRUNCATE) which would wipe rows
+// belonging to other tests running in parallel within the same worker.
+let dbSnapshot: Map<string, Set<unknown>>;
 beforeEach(async () => {
-  const { resetTestDb } = await import("../lib/testDb");
-  resetTestDb();
+  const { snapshotTestDb } = await import("../lib/testDb");
+  dbSnapshot = snapshotTestDb();
+});
+afterEach(async () => {
+  const { cleanupNewRows } = await import("../lib/testDb");
+  cleanupNewRows(dbSnapshot);
 });
 
 const USER_ID = `test-audit-user-${crypto.randomBytes(6).toString("hex")}`;

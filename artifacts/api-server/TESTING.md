@@ -106,7 +106,56 @@ clause), you have two options:
    vitest config or use `--pool-options.threads.singleThread` on the CLI.
    This is a last resort; prefer option 1.
 
-## Reference test files
+## Tests that use the in-memory `testDb` fake
+
+Route-layer tests use `vi.mock("@workspace/db", ...)` to swap the real
+Postgres-backed db for the in-memory fake in `src/lib/testDb.ts`. The
+fake's stores are module-level state, so the same scoped-cleanup discipline
+applies: each test must only delete the rows it inserted, not call
+`resetTestDb()` (the in-memory equivalent of `TRUNCATE`).
+
+### Helpers
+
+`testDb.ts` exposes `snapshotTestDb()` and `cleanupNewRows(snapshot)`:
+
+```typescript
+import { describe, it, beforeEach, afterEach } from "vitest";
+
+let dbSnapshot: Map<string, Set<unknown>>;
+beforeEach(async () => {
+  const { snapshotTestDb } = await import("../lib/testDb");
+  dbSnapshot = snapshotTestDb();
+});
+afterEach(async () => {
+  const { cleanupNewRows } = await import("../lib/testDb");
+  cleanupNewRows(dbSnapshot);
+});
+```
+
+`snapshotTestDb()` captures the row ids present in every store before the
+test runs, and `cleanupNewRows(snapshot)` removes any rows whose ids are
+not in the snapshot — i.e. exactly the rows the current test inserted.
+This is functionally equivalent to issuing a
+`db.delete(table).where(inArray(table.id, newIds))` for every table the
+test touched, but expressed once.
+
+**Do not call `resetTestDb()` from new tests.** It still exists for legacy
+callers but should be considered deprecated; it wipes every store and
+breaks tests that run alongside it.
+
+### Reference test files using the fake `testDb`
+
+- `src/lib/ocrLearning.integration.test.ts` — first conversion (Task #385),
+  uses explicit ID tracking for the rows it inserts directly via `db.insert`.
+- `src/routes/audits.test.ts`, `audits.from-screenshot.test.ts`,
+  `audits-matches-infinite-scroll.test.ts`, `coachFollowUps.test.ts`,
+  `insights.test.ts`, `messages.test.ts`,
+  `messages.extract-screenshot.test.ts`, `profiles.test.ts` — use the
+  `snapshotTestDb()` / `cleanupNewRows()` helper because they insert
+  primarily through HTTP routes where direct ID tracking is awkward
+  (Task #495).
+
+## Reference test files (real Postgres tests)
 
 - `src/lib/aiReliabilityAlerts.test.ts` — canonical example of the pattern
 - `src/routes/founder.ai-metrics.alert-reason.test.ts` — another example

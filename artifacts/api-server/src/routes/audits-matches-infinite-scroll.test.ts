@@ -22,7 +22,7 @@
  *   library-tested behaviors. The interesting failure modes all live in the
  *   API contract this test covers.
  */
-import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vitest";
 import express, {
   type Express,
   type Request,
@@ -106,9 +106,16 @@ beforeAll(async () => {
   testApp = await makeTestApp();
 });
 
+// Scoped cleanup: snapshot row ids before each test, then in afterEach
+// delete only the rows this test inserted. See `TESTING.md`.
+let dbSnapshot: Map<string, Set<unknown>>;
 beforeEach(async () => {
-  const { resetTestDb } = await import("../lib/testDb");
-  resetTestDb();
+  const { snapshotTestDb } = await import("../lib/testDb");
+  dbSnapshot = snapshotTestDb();
+});
+afterEach(async () => {
+  const { cleanupNewRows } = await import("../lib/testDb");
+  cleanupNewRows(dbSnapshot);
 });
 
 const USER_ID = `matches-infinite-${crypto.randomBytes(6).toString("hex")}`;

@@ -121,6 +121,36 @@ export function resetTestDb(): void {
   monotonicClockMs = 0;
 }
 
+/**
+ * Scoped-cleanup helper: capture the set of row ids currently present in
+ * every store. Pair with `cleanupNewRows(snapshot)` in `afterEach` so each
+ * test only removes the rows it inserted instead of calling `resetTestDb()`
+ * (which is the in-memory equivalent of `TRUNCATE` and would also wipe rows
+ * inserted by tests running in parallel within the same worker).
+ *
+ * See `TESTING.md` ("scoped cleanup pattern").
+ */
+export function snapshotTestDb(): Map<string, Set<unknown>> {
+  const snapshot = new Map<string, Set<unknown>>();
+  for (const [name, store] of Object.entries(stores)) {
+    snapshot.set(name, new Set(store.rows.map((r) => r.id)));
+  }
+  return snapshot;
+}
+
+/**
+ * Companion to `snapshotTestDb()`. Removes every row in every store whose
+ * id is NOT in the snapshot — i.e. the rows the current test inserted.
+ * Equivalent to issuing a `db.delete(table).where(inArray(table.id, newIds))`
+ * for each table touched, but expressed once against the in-memory stores.
+ */
+export function cleanupNewRows(snapshot: Map<string, Set<unknown>>): void {
+  for (const [name, store] of Object.entries(stores)) {
+    const existing = snapshot.get(name) ?? new Set<unknown>();
+    store.rows = store.rows.filter((r) => existing.has(r.id));
+  }
+}
+
 export function dumpTable(name: string): Row[] {
   return stores[name]?.rows ?? [];
 }
