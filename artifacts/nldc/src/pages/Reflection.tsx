@@ -295,9 +295,12 @@ export default function Reflection() {
             <h1 className="text-3xl font-bold text-foreground">Post-Meeting Reflection</h1>
             <div className="flex items-center gap-2 flex-wrap mt-1">
               <FallbackRateBadge toolName="Post-Meeting Reflection" />
-              {!isBrandNewUser && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+              {savedCtx.hasSavedContext && (
+                <span
+                  className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                  title={savedCtx.summary}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" aria-hidden="true" />
                   Using your saved profile
                 </span>
               )}

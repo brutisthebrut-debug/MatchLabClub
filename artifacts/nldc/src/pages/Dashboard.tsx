@@ -58,6 +58,7 @@ import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { HandoffShareDialog } from "@/components/HandoffShareDialog";
 import { WelcomePanel } from "@/components/WelcomePanel";
 import { hasAnyAnonymousIds } from "@/lib/anonymousIds";
+import { readSavedProgressEntries, type ProgressEntryLike } from "@/lib/contextBuilder";
 import {
   AUTO_REFRESH_BATCH_SIZE,
   hasSwept,
@@ -82,6 +83,21 @@ import {
   MessageCircle, User, Map, Brain, Rss, Shield, Users, BarChart, Lightbulb, Layers,
   Calendar, Star, Images, Trash2, RefreshCw, Search, X,
 } from "lucide-react";
+
+function formatRelativeTimestamp(iso: string | undefined | null): string {
+  if (!iso) return "";
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return "";
+  const diffMs = Date.now() - t;
+  const minutes = Math.round(diffMs / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 function useDebouncedValue<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -917,6 +933,43 @@ export default function Dashboard() {
   const hasFilteredAudits = !!(audits && audits.length > 0);
   const hasProfiles = !!(profiles && profiles.length > 0);
   const hasMessages = !!(messageSessions && messageSessions.length > 0);
+
+  // Latest message coaching session for "Continue where you left off".
+  // The API returns sessions in ascending createdAt order, so compute max
+  // by timestamp instead of taking index 0.
+  const latestMessageSession = useMemo(() => {
+    if (!messageSessions || messageSessions.length === 0) return null;
+    let best = messageSessions[0];
+    let bestT = Date.parse(best.createdAt) || 0;
+    for (let i = 1; i < messageSessions.length; i++) {
+      const t = Date.parse(messageSessions[i].createdAt) || 0;
+      if (t > bestT) { best = messageSessions[i]; bestT = t; }
+    }
+    return best;
+  }, [messageSessions]);
+
+  // Latest progress entry (localStorage-backed)
+  const savedProgressEntries = useMemo<ProgressEntryLike[]>(
+    () => readSavedProgressEntries(),
+    // re-read whenever auth or audits change so the dashboard picks up
+    // entries logged from other pages on this device
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isAuthenticated, hasRealAudits],
+  );
+  const latestProgressEntry = useMemo(() => {
+    if (savedProgressEntries.length === 0) return null;
+    const sorted = [...savedProgressEntries].sort((a, b) => {
+      const ad = a.date ? Date.parse(a.date) : 0;
+      const bd = b.date ? Date.parse(b.date) : 0;
+      return bd - ad;
+    });
+    return sorted[0] ?? null;
+  }, [savedProgressEntries]);
+
+  const hasProgressEntries = savedProgressEntries.length > 0;
+
+  // Show the recency rail whenever ANY real context exists, not just audits
+  const hasAnyRecentContext = hasRealAudits || hasMessages || hasProgressEntries;
   const hasInsights = !!(insights && insights.length > 0);
   const accountDataLoading =
     auditsLoading ||
@@ -1079,34 +1132,79 @@ export default function Dashboard() {
 
           {/* Continue Where You Left Off / Start Here */}
           <motion.div {...fadeUp(0.07)} className="mb-5">
-            {hasRealAudits ? (
+            {hasAnyRecentContext ? (
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">Continue where you left off</p>
                 <div className="grid sm:grid-cols-3 gap-3">
-                  <Link href={`/report/${latestRealAudit!.id}`} className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(268_52%_68%/0.3)] transition-all block card-hover">
-                    <div className="flex items-center gap-2 mb-1">
-                      <FileText className="w-3.5 h-3.5 text-[hsl(268_52%_68%)]" />
-                      <span className="text-xs font-semibold text-[hsl(268_52%_78%)]">Latest Report</span>
-                    </div>
-                    <p className="text-sm font-medium text-foreground truncate">{latestRealAudit!.firstName}'s Audit</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Score {latestRealAudit!.readinessScore} · {new Date(latestRealAudit!.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
-                  </Link>
-                  <Link href="/coach" className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(285_45%_62%/0.3)] transition-all block card-hover">
-                    <div className="flex items-center gap-2 mb-1">
-                      <MessageSquare className="w-3.5 h-3.5 text-[hsl(285_45%_65%)]" />
-                      <span className="text-xs font-semibold text-[hsl(285_52%_78%)]">Message Coach</span>
-                    </div>
-                    <p className="text-sm font-medium text-foreground">Coach a reply</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Paste a conversation → 3 styled options</p>
-                  </Link>
-                  <Link href="/progress/timeline" className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(190_55%_60%/0.3)] transition-all block card-hover">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Clock className="w-3.5 h-3.5 text-[hsl(190_55%_60%)]" />
-                      <span className="text-xs font-semibold text-[hsl(190_55%_72%)]">My Timeline</span>
-                    </div>
-                    <p className="text-sm font-medium text-foreground">Log a note</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Track wins, questions, patterns</p>
-                  </Link>
+                  {/* Latest audit slot */}
+                  {latestRealAudit ? (
+                    <Link href={`/report/${latestRealAudit.id}`} className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(268_52%_68%/0.3)] transition-all block card-hover">
+                      <div className="flex items-center gap-2 mb-1">
+                        <FileText className="w-3.5 h-3.5 text-[hsl(268_52%_68%)]" />
+                        <span className="text-xs font-semibold text-[hsl(268_52%_78%)]">Latest Report</span>
+                      </div>
+                      <p className="text-sm font-medium text-foreground truncate">{latestRealAudit.firstName}'s Audit</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Score {latestRealAudit.readinessScore} · {formatRelativeTimestamp(latestRealAudit.createdAt)}
+                      </p>
+                    </Link>
+                  ) : (
+                    <Link href="/start" className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(268_52%_68%/0.3)] transition-all block card-hover">
+                      <div className="flex items-center gap-2 mb-1">
+                        <FileText className="w-3.5 h-3.5 text-[hsl(268_52%_68%)]" />
+                        <span className="text-xs font-semibold text-[hsl(268_52%_78%)]">Signal Audit</span>
+                      </div>
+                      <p className="text-sm font-medium text-foreground">Run your first audit</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">3 minutes · Free · Instant score</p>
+                    </Link>
+                  )}
+
+                  {/* Latest message session slot */}
+                  {latestMessageSession ? (
+                    <Link href="/coach" className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(285_45%_62%/0.3)] transition-all block card-hover">
+                      <div className="flex items-center gap-2 mb-1">
+                        <MessageSquare className="w-3.5 h-3.5 text-[hsl(285_45%_65%)]" />
+                        <span className="text-xs font-semibold text-[hsl(285_52%_78%)]">Last Coached Reply</span>
+                      </div>
+                      <p className="text-sm font-medium text-foreground truncate">Pick up where you left off</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{formatRelativeTimestamp(latestMessageSession.createdAt)}</p>
+                    </Link>
+                  ) : (
+                    <Link href="/coach" className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(285_45%_62%/0.3)] transition-all block card-hover">
+                      <div className="flex items-center gap-2 mb-1">
+                        <MessageSquare className="w-3.5 h-3.5 text-[hsl(285_45%_65%)]" />
+                        <span className="text-xs font-semibold text-[hsl(285_52%_78%)]">Message Coach</span>
+                      </div>
+                      <p className="text-sm font-medium text-foreground">Coach a reply</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Paste a conversation → 3 styled options</p>
+                    </Link>
+                  )}
+
+                  {/* Latest progress entry slot */}
+                  {latestProgressEntry ? (
+                    <Link href="/progress/timeline" className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(190_55%_60%/0.3)] transition-all block card-hover">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Clock className="w-3.5 h-3.5 text-[hsl(190_55%_60%)]" />
+                        <span className="text-xs font-semibold text-[hsl(190_55%_72%)]">Latest Progress Entry</span>
+                      </div>
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {latestProgressEntry.tag ? `${latestProgressEntry.tag}` : "Note"}
+                        {latestProgressEntry.note ? ` · ${latestProgressEntry.note.slice(0, 40)}${latestProgressEntry.note.length > 40 ? "…" : ""}` : ""}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {latestProgressEntry.date ? formatRelativeTimestamp(latestProgressEntry.date) : "Recent"}
+                      </p>
+                    </Link>
+                  ) : (
+                    <Link href="/progress/timeline" className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(190_55%_60%/0.3)] transition-all block card-hover">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Clock className="w-3.5 h-3.5 text-[hsl(190_55%_60%)]" />
+                        <span className="text-xs font-semibold text-[hsl(190_55%_72%)]">My Timeline</span>
+                      </div>
+                      <p className="text-sm font-medium text-foreground">Log a note</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Track wins, questions, patterns</p>
+                    </Link>
+                  )}
                 </div>
               </div>
             ) : (

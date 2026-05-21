@@ -2,30 +2,37 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
   Menu, X, Sparkles, ChevronDown, TrendingUp, BookOpen,
-  MessageSquare, Shield, LogIn, LogOut, User as UserIcon, ArrowRight, Tag,
+  MessageSquare, Shield, LogIn, LogOut, User as UserIcon, ArrowRight, Tag, Compass,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@workspace/replit-auth-web";
 
-// ── Package tool lists (all original routes preserved) ──────────────────────
+// ── Six-section taxonomy (Start Here, Your Blueprint, Message Tools,
+// Growth Tracker, Offers, Settings/Trust). Every existing route is preserved.
 
-const RESET_TOOLS = [
-  { name: "Signal Check",         href: "/signal-check",          desc: "3-min quick read — instant profile score" },
-  { name: "Dating Blueprint",     href: "/blueprint",             desc: "Your personalized dating action plan" },
-  { name: "Profile Glow-Up",      href: "/glow-up",               desc: "10 bio rewrites for any platform" },
-  { name: "Mirror Profile",       href: "/mirror",                desc: "See yourself the way others do" },
-  { name: "Dating Signal Quiz",   href: "/quiz",                  desc: "8 questions → your dating archetype" },
+const START_HERE_TOOLS = [
+  { name: "Get your Signal Audit", href: "/start",         desc: "Begin here — 3-min intake wizard" },
+  { name: "Signal Check",          href: "/signal-check",  desc: "Quick read — instant profile score" },
+  { name: "Photo Scan",            href: "/scan",          desc: "Upload a photo, get a fast read" },
+  { name: "Dating Signal Quiz",    href: "/quiz",          desc: "8 questions → your dating archetype" },
 ];
 
-const RESET_MORE = [
-  { name: "Dating Diagnosis",       href: "/diagnosis" },
-  { name: "Before & After Gallery", href: "/gallery" },
-  { name: "Profile Reader",         href: "/profile-reader" },
-  { name: "Photo Scan",             href: "/scan" },
+const START_HERE_MORE = [
+  { name: "Dating Diagnosis", href: "/diagnosis" },
+  { name: "Profile Reader",   href: "/profile-reader" },
+];
+
+const BLUEPRINT_TOOLS = [
+  { name: "Dating Blueprint",      href: "/blueprint",  desc: "Your personalized dating action plan" },
+  { name: "Profile Glow-Up",       href: "/glow-up",    desc: "10 bio rewrites for any platform" },
+  { name: "Mirror Profile",        href: "/mirror",     desc: "See yourself the way others do" },
+  { name: "Before & After Gallery", href: "/gallery",   desc: "Real before/after profile examples" },
+];
+
+const BLUEPRINT_MORE = [
   { name: "Dating Archetype",       href: "/archetype" },
   { name: "Connection Style",       href: "/connection-style" },
   { name: "Compatibility Compass",  href: "/compatibility-compass" },
-  { name: "Post-Date Reflect",      href: "/reflection" },
 ];
 
 const MESSAGES_TOOLS = [
@@ -62,6 +69,13 @@ const GROWTH_MORE = [
   { name: "Debrief",              href: "/copilot/debrief" },
 ];
 
+const OFFERS_TOOLS = [
+  { name: "Plans & Pricing",     href: "/pricing",  desc: "Three tiers, podcast discount, no surprises" },
+  { name: "Join the Waitlist",   href: "/waitlist", desc: "Be first when paid tiers open" },
+];
+
+const OFFERS_MORE: { name: string; href: string }[] = [];
+
 const TRUST_TOOLS = [
   { name: "Wellness Center",    href: "/wellness",      desc: "8 dimensions of your readiness" },
   { name: "Data Vault",         href: "/vault",         desc: "Preview, export, or delete your data" },
@@ -74,37 +88,49 @@ const TRUST_MORE = [
   { name: "Life Context",    href: "/life-context" },
   { name: "Integrations",    href: "/integrations" },
   { name: "Beta Feedback",   href: "/feedback" },
+  { name: "Account",         href: "/account" },
 ];
 
 // ── Packages config ────────────────────────────────────────────────────────
 
 const PACKAGES = [
   {
-    id: "reset" as const,
-    label: "The Dating Reset",
-    tagline: "Rebuild your dating signal from the ground up",
+    id: "start" as const,
+    label: "Start Here",
+    tagline: "Your first 3 minutes — get a real read",
     color: "hsl(268 52% 68%)",
+    icon: Sparkles,
+    tools: START_HERE_TOOLS,
+    more: START_HERE_MORE,
+    hubHref: "/start",
+    hubLabel: "Begin your Signal Audit",
+    activeHrefs: ["/start", "/signal-check", "/scan", "/quiz", "/diagnosis", "/profile-reader"],
+  },
+  {
+    id: "blueprint" as const,
+    label: "Your Blueprint",
+    tagline: "Build a profile that actually reads as you",
+    color: "hsl(43 65% 65%)",
     icon: BookOpen,
-    tools: RESET_TOOLS,
-    more: RESET_MORE,
-    hubHref: "/diagnosis",
-    hubLabel: "View all Reset tools",
+    tools: BLUEPRINT_TOOLS,
+    more: BLUEPRINT_MORE,
+    hubHref: "/blueprint",
+    hubLabel: "Build your Blueprint",
     activeHrefs: [
-      "/blueprint", "/signal-check", "/diagnosis", "/glow-up", "/mirror",
-      "/profile-reader", "/archetype", "/connection-style", "/compatibility-compass",
-      "/reflection", "/quiz", "/gallery", "/scan",
+      "/blueprint", "/glow-up", "/mirror", "/gallery",
+      "/archetype", "/connection-style", "/compatibility-compass",
     ],
   },
   {
     id: "messages" as const,
-    label: "Message Lab",
+    label: "Message Tools",
     tagline: "Write better messages, connect faster",
     color: "hsl(190 55% 60%)",
     icon: MessageSquare,
     tools: MESSAGES_TOOLS,
     more: MESSAGES_MORE,
     hubHref: "/lab",
-    hubLabel: "View all Message Lab tools",
+    hubLabel: "View all Message tools",
     activeHrefs: ["/coach", "/lab", "/next-message", "/insights", "/style-map", "/copilot"],
   },
   {
@@ -117,26 +143,38 @@ const PACKAGES = [
     more: GROWTH_MORE,
     hubHref: "/progress/timeline",
     hubLabel: "View all Growth tools",
-    activeHrefs: ["/progress", "/copilot/weekly-plan", "/copilot/what-changed", "/copilot/debrief"],
+    activeHrefs: ["/progress", "/copilot/weekly-plan", "/copilot/what-changed", "/copilot/debrief", "/reflection"],
   },
   {
-    id: "context" as const,
-    label: "Context + Trust",
+    id: "offers" as const,
+    label: "Offers",
+    tagline: "Plans, podcast discount, and waitlist",
+    color: "hsl(285 45% 62%)",
+    icon: Tag,
+    tools: OFFERS_TOOLS,
+    more: OFFERS_MORE,
+    hubHref: "/pricing",
+    hubLabel: "See all plans",
+    activeHrefs: ["/pricing", "/waitlist"],
+  },
+  {
+    id: "trust" as const,
+    label: "Settings/Trust",
     tagline: "What we know about you — and what you control",
     color: "hsl(228 30% 62%)",
     icon: Shield,
     tools: TRUST_TOOLS,
     more: TRUST_MORE,
     hubHref: "/wellness",
-    hubLabel: "View all Context + Trust",
+    hubLabel: "View all Settings & Trust",
     activeHrefs: [
       "/wellness", "/vault", "/connections", "/life-context",
-      "/user-control", "/integrations", "/privacy", "/feedback",
+      "/user-control", "/integrations", "/privacy", "/feedback", "/account",
     ],
   },
 ] as const;
 
-type DropdownId = "reset" | "messages" | "growth" | "context" | null;
+type DropdownId = "start" | "blueprint" | "messages" | "growth" | "offers" | "trust" | null;
 
 export function Navbar() {
   const [location] = useLocation();
@@ -189,7 +227,7 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-0.5 [&_button]:whitespace-nowrap [&_a]:whitespace-nowrap">
+        <nav className="hidden lg:flex items-center gap-0.5 [&_button]:whitespace-nowrap [&_a]:whitespace-nowrap">
 
           {PACKAGES.map(pkg => {
             const active = activeMenu === pkg.id || isActive(pkg.activeHrefs);
@@ -197,20 +235,25 @@ export function Navbar() {
               <div key={pkg.id} className="relative">
                 <button
                   onClick={() => toggle(pkg.id)}
-                  className={`flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+                  aria-haspopup="menu"
+                  aria-expanded={activeMenu === pkg.id}
+                  aria-controls={`pkg-menu-${pkg.id}`}
+                  className={`flex items-center gap-1.5 text-[13px] font-medium px-2.5 py-2 rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[hsl(268_52%_68%)] ${
                     active
                       ? "bg-white/5"
                       : "text-muted-foreground hover:text-foreground hover:bg-white/4"
                   }`}
                   style={active ? { color: pkg.color } : undefined}
                 >
-                  <pkg.icon className="w-3.5 h-3.5" />
+                  <pkg.icon className="w-3.5 h-3.5" aria-hidden="true" />
                   {pkg.label}
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${activeMenu === pkg.id ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${activeMenu === pkg.id ? "rotate-180" : ""}`} aria-hidden="true" />
                 </button>
 
                 {activeMenu === pkg.id && (
                   <div
+                    id={`pkg-menu-${pkg.id}`}
+                    role="menu"
                     className="absolute top-12 left-1/2 -translate-x-1/2 w-80 glass-strong rounded-2xl shadow-[0_20px_60px_rgb(0_0_0/0.55)] animate-in fade-in-0 zoom-in-95 z-50 overflow-hidden"
                     style={{ border: `1px solid ${pkg.color.replace(")", " / 0.2)")}` }}
                   >
@@ -224,7 +267,7 @@ export function Navbar() {
                           className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
                           style={{ background: pkg.color.replace(")", " / 0.18)") }}
                         >
-                          <pkg.icon className="w-3.5 h-3.5" style={{ color: pkg.color }} />
+                          <pkg.icon className="w-3.5 h-3.5" style={{ color: pkg.color }} aria-hidden="true" />
                         </div>
                         <span className="text-sm font-semibold text-foreground">{pkg.label}</span>
                       </div>
@@ -238,6 +281,7 @@ export function Navbar() {
                           key={t.href}
                           href={t.href}
                           onClick={closeAll}
+                          role="menuitem"
                           className="flex flex-col gap-0.5 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors"
                         >
                           <span className="text-xs font-semibold text-foreground leading-tight">{t.name}</span>
@@ -246,15 +290,36 @@ export function Navbar() {
                       ))}
                     </div>
 
+                    {/* More — every existing route reachable on desktop */}
+                    {pkg.more.length > 0 && (
+                      <div className="px-2 pb-2 pt-1 border-t border-white/6">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 px-3 pt-2 pb-1">More</p>
+                        <div className="grid grid-cols-2 gap-x-1">
+                          {pkg.more.map(t => (
+                            <Link
+                              key={t.href}
+                              href={t.href}
+                              onClick={closeAll}
+                              role="menuitem"
+                              className="text-[11px] text-muted-foreground/80 hover:text-foreground px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors leading-tight"
+                            >
+                              {t.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Footer — View all */}
                     <div className="px-4 py-2.5 border-t border-white/6">
                       <Link
                         href={pkg.hubHref}
                         onClick={closeAll}
+                        role="menuitem"
                         className="flex items-center gap-1 text-xs font-medium transition-colors hover:opacity-80"
                         style={{ color: pkg.color }}
                       >
-                        {pkg.hubLabel} <ArrowRight className="w-3 h-3" />
+                        {pkg.hubLabel} <ArrowRight className="w-3 h-3" aria-hidden="true" />
                       </Link>
                     </div>
                   </div>
@@ -263,31 +328,18 @@ export function Navbar() {
             );
           })}
 
-          {/* Plans — plain link */}
-          <Link
-            href="/pricing"
-            onClick={closeAll}
-            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors whitespace-nowrap ${
-              location === "/pricing" || location === "/waitlist"
-                ? "text-[hsl(43_65%_72%)] bg-white/5"
-                : "text-muted-foreground hover:text-foreground hover:bg-white/4"
-            }`}
-          >
-            <Tag className="w-3.5 h-3.5" />
-            Plans
-          </Link>
-
           <div className="w-px h-5 bg-white/10 mx-1" />
 
           <Link
             href="/dashboard"
             onClick={closeAll}
-            className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+            className={`flex items-center gap-1.5 text-[13px] font-medium px-2.5 py-2 rounded-lg transition-colors ${
               location === "/dashboard"
                 ? "text-[hsl(268_52%_78%)] bg-white/5"
                 : "text-muted-foreground hover:text-foreground hover:bg-white/4"
             }`}
           >
+            <Compass className="w-3.5 h-3.5" aria-hidden="true" />
             Dashboard
           </Link>
 
@@ -295,24 +347,24 @@ export function Navbar() {
             <Link
               href="/account"
               onClick={closeAll}
-              className={`flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+              className={`flex items-center gap-1.5 text-[13px] font-medium px-2.5 py-2 rounded-lg transition-colors ${
                 location === "/account"
                   ? "text-[hsl(268_52%_78%)] bg-white/5"
                   : "text-muted-foreground hover:text-foreground hover:bg-white/4"
               }`}
               data-testid="link-account"
             >
-              <UserIcon className="w-3.5 h-3.5" />
+              <UserIcon className="w-3.5 h-3.5" aria-hidden="true" />
               <span className="max-w-[120px] truncate">{user?.firstName || user?.email || "Account"}</span>
             </Link>
           ) : (
             <button
               type="button"
               onClick={() => { closeAll(); login(); }}
-              className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors text-muted-foreground hover:text-foreground hover:bg-white/4"
+              className="flex items-center gap-1.5 text-[13px] font-medium px-2.5 py-2 rounded-lg transition-colors text-muted-foreground hover:text-foreground hover:bg-white/4"
               data-testid="button-login"
             >
-              <LogIn className="w-3.5 h-3.5" /> Sign In
+              <LogIn className="w-3.5 h-3.5" aria-hidden="true" /> Sign In
             </button>
           )}
 
@@ -326,8 +378,10 @@ export function Navbar() {
 
         {/* Mobile Toggle */}
         <button
-          className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
+          className="lg:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
           onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileOpen}
         >
           {mobileOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
@@ -335,40 +389,47 @@ export function Navbar() {
 
       {/* Mobile Nav */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-foreground/8 bg-background/98 backdrop-blur-xl animate-in slide-in-from-top-2 max-h-[85vh] overflow-y-auto">
+        <div className="lg:hidden border-t border-foreground/8 bg-background/98 backdrop-blur-xl animate-in slide-in-from-top-2 max-h-[85vh] overflow-y-auto">
 
           {PACKAGES.map(pkg => (
             <div key={pkg.id} className="border-b border-foreground/8">
               <button
                 onClick={() => setMobileSection(prev => prev === pkg.id ? null : pkg.id)}
+                aria-expanded={mobileSection === pkg.id}
+                aria-controls={`mobile-pkg-${pkg.id}`}
                 className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-foreground/5 transition-colors"
               >
                 <span
                   className="flex items-center gap-2.5 text-sm font-medium"
                   style={{ color: mobileSection === pkg.id ? pkg.color : undefined }}
                 >
-                  <span style={{ color: pkg.color }}><pkg.icon className="w-3.5 h-3.5" /></span>
+                  <span style={{ color: pkg.color }}><pkg.icon className="w-3.5 h-3.5" aria-hidden="true" /></span>
                   {pkg.label}
                 </span>
                 <ChevronDown
                   className="w-3.5 h-3.5 transition-transform text-muted-foreground/40"
                   style={{ transform: mobileSection === pkg.id ? "rotate(180deg)" : "rotate(0deg)" }}
+                  aria-hidden="true"
                 />
               </button>
 
               {mobileSection === pkg.id && (
-                <div className="pb-3 px-5">
+                <div id={`mobile-pkg-${pkg.id}`} className="pb-3 px-5">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/35 pt-1 pb-2">Featured</p>
-                  {pkg.tools.map(t => (
-                    <Link
-                      key={t.href}
-                      href={t.href}
-                      onClick={closeAll}
-                      className="block text-sm text-muted-foreground hover:text-foreground py-2 transition-colors leading-tight"
-                    >
-                      {t.name}
-                    </Link>
-                  ))}
+                  {pkg.tools.map(t => {
+                    const active = location === t.href;
+                    return (
+                      <Link
+                        key={t.href}
+                        href={t.href}
+                        onClick={closeAll}
+                        aria-current={active ? "page" : undefined}
+                        className={`block text-sm py-2 transition-colors leading-tight ${active ? "text-foreground font-medium border-l-2 border-[hsl(268_52%_68%)] pl-2 -ml-2" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        {t.name}
+                      </Link>
+                    );
+                  })}
                   {pkg.more.length > 0 && (
                     <>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/35 pt-3 pb-2">More</p>
@@ -394,20 +455,15 @@ export function Navbar() {
                     className="flex items-center gap-1 text-xs font-medium mt-3 pt-2 border-t border-white/6 transition-colors"
                     style={{ color: pkg.color }}
                   >
-                    {pkg.hubLabel} <ArrowRight className="w-3 h-3" />
+                    {pkg.hubLabel} <ArrowRight className="w-3 h-3" aria-hidden="true" />
                   </Link>
                 </div>
               )}
             </div>
           ))}
 
-          {/* Bottom: Plans, Dashboard, auth, CTA */}
+          {/* Bottom: Dashboard, auth, CTA */}
           <div className="px-5 py-4 flex flex-col gap-1.5">
-            <Link href="/pricing" onClick={closeAll}
-              aria-current={location === "/pricing" ? "page" : undefined}
-              className={`text-sm font-medium py-1.5 transition-colors ${location === "/pricing" ? "text-foreground border-l-2 border-[hsl(268_52%_68%)] pl-2 -ml-2" : "text-muted-foreground hover:text-foreground"}`}>
-              Plans &amp; Pricing
-            </Link>
             <Link href="/dashboard" onClick={closeAll}
               aria-current={location === "/dashboard" ? "page" : undefined}
               className={`text-sm font-medium py-1.5 transition-colors ${location === "/dashboard" ? "text-foreground border-l-2 border-[hsl(268_52%_68%)] pl-2 -ml-2" : "text-muted-foreground hover:text-foreground"}`}>
@@ -420,7 +476,7 @@ export function Navbar() {
                 className="text-left text-sm font-medium text-muted-foreground hover:text-foreground py-1.5 flex items-center gap-2"
                 data-testid="button-logout-mobile"
               >
-                <LogOut className="w-4 h-4" /> Sign Out
+                <LogOut className="w-4 h-4" aria-hidden="true" /> Sign Out
                 <span className="ml-auto text-[11px] text-muted-foreground/70 truncate max-w-[140px]">
                   {user?.firstName || user?.email}
                 </span>
@@ -432,7 +488,7 @@ export function Navbar() {
                 className="text-left text-sm font-medium text-muted-foreground hover:text-foreground py-1.5 flex items-center gap-2"
                 data-testid="button-login-mobile"
               >
-                <LogIn className="w-4 h-4" /> Sign In
+                <LogIn className="w-4 h-4" aria-hidden="true" /> Sign In
               </button>
             )}
             <Button
