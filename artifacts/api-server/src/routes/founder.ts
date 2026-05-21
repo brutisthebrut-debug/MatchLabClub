@@ -802,8 +802,22 @@ router.get("/founder/ocr-rule-review-log", requireFounder, async (req, res): Pro
   });
 });
 
-router.post("/founder/ocr-learn", requireFounder, async (_req, res): Promise<void> => {
-  const result = await learnFromCorrections();
+router.post("/founder/ocr-learn", requireFounder, async (req, res): Promise<void> => {
+  const sinceRaw = req.body?.since;
+  let since: Date | undefined;
+  if (sinceRaw !== undefined && sinceRaw !== null && sinceRaw !== "") {
+    if (typeof sinceRaw !== "string" && typeof sinceRaw !== "number") {
+      res.status(400).json({ error: "Invalid 'since' value." });
+      return;
+    }
+    const parsed = new Date(sinceRaw);
+    if (Number.isNaN(parsed.getTime())) {
+      res.status(400).json({ error: "Invalid 'since' value." });
+      return;
+    }
+    since = parsed;
+  }
+  const result = await learnFromCorrections(since ? { since } : undefined);
   res.json({
     scannedAudits: result.scannedAudits,
     candidates: result.candidates,
