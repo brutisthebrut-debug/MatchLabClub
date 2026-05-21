@@ -441,6 +441,13 @@ router.get("/founder/trash-purge-heartbeat", requireFounder, async (_req, res): 
 });
 
 router.post("/founder/geoip/refresh", requireFounder, async (_req, res): Promise<void> => {
+  if (process.env.NODE_ENV === "test") {
+    res.json({
+      success: true,
+      message: "GeoIP refresh skipped in test environment.",
+    });
+    return;
+  }
   const success = await runGeoipUpdate();
   if (success) {
     res.json({

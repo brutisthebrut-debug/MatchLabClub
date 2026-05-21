@@ -247,7 +247,7 @@ test("AI Reliability drill-in: focus clears automatically when tool has no data 
   await expect(page.locator('[data-testid="trend-focus-summary"]')).toBeVisible({ timeout: 10_000 });
 
   // ── 4. Switch to 30d — primary tool drops out of the window ─────────────
-  await page.locator('button', { hasText: "30d" }).click();
+  await page.getByRole('button', { name: '30d', exact: true }).click();
 
   // ── 5. Focus should clear automatically ──────────────────────────────────
   await expect(focusSelect).toHaveValue("", { timeout: 10_000 });
