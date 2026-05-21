@@ -154,11 +154,11 @@ export default function Landing() {
           <p className="text-[10px] font-bold uppercase tracking-widest text-center text-muted-foreground/40 mb-5">How the path works</p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             {[
-              { n: "1", label: "Paste your profile",    href: "/start",         color: "hsl(268 52% 68%)" },
-              { n: "2", label: "Get your Signal Check", href: "/signal-check",  color: "hsl(43 65% 65%)"  },
-              { n: "3", label: "Read your report",      href: "/sample-report", color: "hsl(142 55% 60%)" },
-              { n: "4", label: "Choose your offer",     href: "/pricing",       color: "hsl(190 55% 60%)" },
-              { n: "5", label: "Own your dashboard",    href: "/dashboard",     color: "hsl(285 45% 65%)" },
+              { n: "1", label: "Check your signal",         href: "/start",         color: "hsl(268 52% 68%)" },
+              { n: "2", label: "Get your Signal Score",  href: "/signal-check",  color: "hsl(43 65% 65%)"  },
+              { n: "3", label: "Read your report",       href: "/sample-report", color: "hsl(142 55% 60%)" },
+              { n: "4", label: "Pick your plan",         href: "/pricing",       color: "hsl(190 55% 60%)" },
+              { n: "5", label: "Track your progress",    href: "/dashboard",     color: "hsl(285 45% 65%)" },
             ].map((step, i) => (
               <span key={step.n} className="flex items-center gap-2">
                 <Link href={step.href} className="flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-white/8 hover:border-white/18 transition-all group">

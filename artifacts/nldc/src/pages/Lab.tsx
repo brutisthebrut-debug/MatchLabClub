@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
@@ -126,6 +127,31 @@ export default function Lab() {
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">What does your message actually say?</h1>
             <p className="text-muted-foreground leading-relaxed">Paste a message or conversation. Get tone analysis, your recommended next action, and 5 styled reply options — each with a different approach.</p>
           </motion.div>
+
+          {/* ── Package Hub Strip — Message Lab ── */}
+          <div className="glass border rounded-xl px-4 py-3 mb-7 flex flex-wrap items-center gap-x-4 gap-y-2"
+            style={{ borderColor: "hsl(190 55% 60% / 0.2)" }}>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-[hsl(190_55%_60%)]" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-[hsl(190_55%_75%)]">Message Lab</span>
+              <span className="hidden sm:inline text-[11px] text-muted-foreground/55">— turn conversations into connections</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5 items-center">
+              <span className="text-[10px] text-muted-foreground/40 font-semibold uppercase tracking-wider mr-0.5 hidden sm:inline">Also in this package:</span>
+              {[
+                { name: "Message Coach",   href: "/coach"          },
+                { name: "Next Message",    href: "/next-message"   },
+                { name: "Flirt Coach",     href: "/copilot/flirt"  },
+                { name: "Style Map",       href: "/style-map"      },
+                { name: "Import Patterns", href: "/insights"       },
+              ].map(t => (
+                <Link key={t.href} href={t.href}
+                  className="text-[11px] px-2.5 py-0.5 rounded-full border border-white/10 text-muted-foreground/70 hover:text-foreground hover:border-white/20 transition-colors whitespace-nowrap">
+                  {t.name}
+                </Link>
+              ))}
+            </div>
+          </div>
 
           {isBrandNewUser && (
             <WelcomePanel

@@ -15,7 +15,7 @@ const TIERS = [
     period: "",
     popular: false,
     badge: null,
-    desc: "Instant clarity on where you stand — with honesty, not flattery.",
+    desc: "3 minutes. No card. Walk away knowing your Signal Score, your archetype, and the one thing most likely to change your results.",
     cta: "Get My Free Audit",
     href: "/start",
     accentColor: "hsl(228 18% 60%)",

@@ -181,6 +181,31 @@ export default function Diagnosis() {
             <p className="text-muted-foreground leading-relaxed">Get a personalised diagnosis of your dating profile — your category, what's working, what's not, and exactly what to fix first.</p>
           </motion.div>
 
+          {/* ── Package Hub Strip — The Dating Reset ── */}
+          <div className="glass border rounded-xl px-4 py-3 mb-7 flex flex-wrap items-center gap-x-4 gap-y-2"
+            style={{ borderColor: "hsl(268 52% 68% / 0.2)" }}>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-[hsl(268_52%_68%)]" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-[hsl(268_52%_78%)]">The Dating Reset</span>
+              <span className="hidden sm:inline text-[11px] text-muted-foreground/55">— full profile signal rebuild</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5 items-center">
+              <span className="text-[10px] text-muted-foreground/40 font-semibold uppercase tracking-wider mr-0.5 hidden sm:inline">Also in this package:</span>
+              {[
+                { name: "Signal Check",   href: "/signal-check" },
+                { name: "Blueprint",      href: "/blueprint"    },
+                { name: "Profile Glow-Up",href: "/glow-up"      },
+                { name: "Mirror Profile", href: "/mirror"       },
+                { name: "Signal Quiz",    href: "/quiz"         },
+              ].map(t => (
+                <Link key={t.href} href={t.href}
+                  className="text-[11px] px-2.5 py-0.5 rounded-full border border-white/10 text-muted-foreground/70 hover:text-foreground hover:border-white/20 transition-colors whitespace-nowrap">
+                  {t.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+
           {isBrandNewUser && (
             <WelcomePanel
               icon={<Sparkles className="w-6 h-6 text-primary" />}

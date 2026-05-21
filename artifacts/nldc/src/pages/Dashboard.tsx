@@ -261,7 +261,9 @@ const WINGMAN_NOTES = [
 const PACKAGE_CARDS = [
   {
     name: "The Dating Reset",
-    tagline: "Rebuild your profile signal from the ground up",
+    tagline: "Find exactly what to fix — score, bio rewrite, and 7-day plan.",
+    hint: "Start with a free Signal Check →",
+    hintHref: "/signal-check",
     color: "hsl(268 52% 68%)",
     icon: BookOpen,
     hubHref: "/diagnosis",
@@ -273,7 +275,9 @@ const PACKAGE_CARDS = [
   },
   {
     name: "Message Lab",
-    tagline: "Write better messages, connect faster",
+    tagline: "Turn any conversation into a clear next move — replies ready to copy.",
+    hint: "Start with Chemistry Lab →",
+    hintHref: "/lab",
     color: "hsl(190 55% 60%)",
     icon: MessageSquare,
     hubHref: "/lab",
@@ -285,7 +289,9 @@ const PACKAGE_CARDS = [
   },
   {
     name: "Growth Tracker",
-    tagline: "Track what's actually changing over time",
+    tagline: "Log wins, spot patterns, and break the habits holding you back.",
+    hint: "Start with Wins Log →",
+    hintHref: "/progress/wins",
     color: "hsl(142 55% 60%)",
     icon: TrendingUp,
     hubHref: "/progress/timeline",
@@ -297,7 +303,9 @@ const PACKAGE_CARDS = [
   },
   {
     name: "Context + Trust",
-    tagline: "What we know about you — and what you control",
+    tagline: "Control what we know — your data, wellness, and privacy on your terms.",
+    hint: "Start with Wellness Check →",
+    hintHref: "/wellness",
     color: "hsl(228 30% 62%)",
     icon: Shield,
     hubHref: "/wellness",
@@ -1334,14 +1342,17 @@ export default function Dashboard() {
                     ))}
                   </div>
 
-                  <Link href={pkg.hubHref}>
-                    <div
-                      className="flex items-center justify-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-xl border border-white/8 hover:bg-white/5 transition-colors"
-                      style={{ color: pkg.color }}
-                    >
-                      Explore package <ArrowRight className="w-3 h-3" />
-                    </div>
-                  </Link>
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5 flex-wrap">
+                    <Link href={pkg.hintHref}
+                      className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-xl transition-all hover:opacity-90"
+                      style={{ background: pkg.color.replace(")", " / 0.14)"), color: pkg.color, border: `1px solid ${pkg.color.replace(")", " / 0.2)")}` }}>
+                      {pkg.hint}
+                    </Link>
+                    <Link href={pkg.hubHref}
+                      className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1 py-1.5 whitespace-nowrap">
+                      All tools <ArrowRight className="w-2.5 h-2.5" />
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>
