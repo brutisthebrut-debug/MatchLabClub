@@ -96,6 +96,7 @@ import type {
   ScreenshotExtractResult,
   TestAiParams,
   TrashPurgeHeartbeat,
+  TrashPurgeResult,
   UnregisterPushTokenParams,
   UnregisterPushTokenResult,
   WaitlistEntry,
@@ -4946,6 +4947,81 @@ export const useTestAi = <TError = ErrorType<AiError>,
         TContext
       > => {
       return useMutation(getTestAiMutationOptions(options));
+    }
+
+export const getPurgeTrashNowUrl = () => {
+
+
+
+
+  return `/api/founder/purge-trash`
+}
+
+/**
+ * Runs `purgeExpiredTrashedAudits()` synchronously and returns the number
+of records deleted. Useful after adjusting the retention window or to
+confirm the purge job is working without waiting for the timer.
+Requires founder key.
+
+ * @summary Manually trigger an immediate audit trash purge
+ */
+export const purgeTrashNow = async ( options?: RequestInit): Promise<TrashPurgeResult> => {
+
+  return customFetch<TrashPurgeResult>(getPurgeTrashNowUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getPurgeTrashNowMutationOptions = <TError = ErrorType<AiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purgeTrashNow>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof purgeTrashNow>>, TError,void, TContext> => {
+
+const mutationKey = ['purgeTrashNow'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof purgeTrashNow>>, void> = () => {
+
+
+          return  purgeTrashNow(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PurgeTrashNowMutationResult = NonNullable<Awaited<ReturnType<typeof purgeTrashNow>>>
+
+    export type PurgeTrashNowMutationError = ErrorType<AiError>
+
+    /**
+ * @summary Manually trigger an immediate audit trash purge
+ */
+export const usePurgeTrashNow = <TError = ErrorType<AiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purgeTrashNow>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof purgeTrashNow>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getPurgeTrashNowMutationOptions(options));
     }
 
 export const getGetTrashPurgeHeartbeatUrl = () => {

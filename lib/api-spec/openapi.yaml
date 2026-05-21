@@ -1580,6 +1580,36 @@ paths:
               schema:
                 $ref: "#/components/schemas/AiError"
 
+  /founder/purge-trash:
+    post:
+      operationId: purgeTrashNow
+      tags: [founder]
+      summary: Manually trigger an immediate audit trash purge
+      description: |
+        Runs `purgeExpiredTrashedAudits()` synchronously and returns the number
+        of records deleted. Useful after adjusting the retention window or to
+        confirm the purge job is working without waiting for the timer.
+        Requires founder key.
+      parameters:
+        - name: x-founder-key
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Purge result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrashPurgeResult"
+        "401":
+          description: Founder key required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiError"
+
   /founder/trash-purge-heartbeat:
     get:
       operationId: getTrashPurgeHeartbeat
@@ -3110,6 +3140,14 @@ components:
         attempts:
           type: integer
           description: Number of model attempts made (1 = no retry, 2 = one retry).
+
+    TrashPurgeResult:
+      type: object
+      required: [deleted]
+      properties:
+        deleted:
+          type: integer
+          description: Number of soft-deleted audit rows permanently removed by this purge run.
 
     TrashPurgeHeartbeat:
       type: object

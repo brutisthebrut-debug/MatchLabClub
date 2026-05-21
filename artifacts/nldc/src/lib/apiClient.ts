@@ -185,6 +185,22 @@ export interface RollupHeartbeatResponse {
 export const getRollupHeartbeat = (founderKey: string) =>
   get<RollupHeartbeatResponse>("/founder/rollup-heartbeat", { headers: { "x-founder-key": founderKey } });
 
+export interface PurgeTrashResponse {
+  deleted: number;
+}
+
+export const purgeTrashNow = (founderKey: string) =>
+  fetch(`${BASE}/founder/purge-trash`, {
+    method: "POST",
+    headers: { "x-founder-key": founderKey },
+  }).then(async (res) => {
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(text || `HTTP ${res.status}`);
+    }
+    return (await res.json()) as PurgeTrashResponse;
+  });
+
 export interface BackgroundJobStatus {
   jobName: string;
   lastSuccessAt: string | null;

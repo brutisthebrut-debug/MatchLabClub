@@ -1124,6 +1124,11 @@ export interface AiTestResult {
   attempts?: number;
 }
 
+export interface TrashPurgeResult {
+  /** Number of soft-deleted audit rows permanently removed by this purge run. */
+  deleted: number;
+}
+
 export interface TrashPurgeHeartbeat {
   /**
      * ISO-8601 timestamp of the last successful audit_trash_purge run, or null if it has never run.

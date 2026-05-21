@@ -2160,6 +2160,23 @@ export const TestAiResponse = zod.object({
 
 
 /**
+ * Runs `purgeExpiredTrashedAudits()` synchronously and returns the number
+of records deleted. Useful after adjusting the retention window or to
+confirm the purge job is working without waiting for the timer.
+Requires founder key.
+
+ * @summary Manually trigger an immediate audit trash purge
+ */
+export const PurgeTrashNowHeader = zod.object({
+  "x-founder-key": zod.string()
+})
+
+export const PurgeTrashNowResponse = zod.object({
+  "deleted": zod.number().describe('Number of soft-deleted audit rows permanently removed by this purge run.')
+})
+
+
+/**
  * Returns the timestamp of the last successful `audit_trash_purge` job run,
 together with the elapsed time and a staleness flag. Requires founder key.
 

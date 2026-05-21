@@ -39,6 +39,7 @@ import {
 import {
   getTrashPurgeHeartbeat,
   getTrashPurgeStaleThresholdMs,
+  purgeExpiredTrashedAudits,
 } from "../lib/auditTrashPurge";
 import { KNOWN_JOB_NAMES, getStaleThresholdMs } from "../lib/jobHeartbeat";
 import {
@@ -410,6 +411,11 @@ router.get("/founder/rollup-heartbeat", requireFounder, async (_req, res): Promi
     staleThresholdMs,
     stale: ageMs > staleThresholdMs,
   });
+});
+
+router.post("/founder/purge-trash", requireFounder, async (_req, res): Promise<void> => {
+  const deleted = await purgeExpiredTrashedAudits();
+  res.json({ deleted });
 });
 
 router.get("/founder/trash-purge-heartbeat", requireFounder, async (_req, res): Promise<void> => {

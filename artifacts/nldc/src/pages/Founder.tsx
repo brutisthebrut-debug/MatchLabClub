@@ -4,7 +4,7 @@ import { useMeta } from "@/hooks/useMeta";
 import {
   getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
   getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges, undoAiThresholdChange,
-  getRollupHeartbeat, getOcrMismatches, getBackgroundJobs,
+  getRollupHeartbeat, getOcrMismatches, getBackgroundJobs, purgeTrashNow,
   getOcrLearnedRules, runOcrLearn, clearOcrLearnedRules, deleteOcrRule, patchOcrRule, getOcrMismatchesTrends,
   getOcrPendingRules, approveOcrRule, rejectOcrRule, getOcrRuleReviewLog,
   getAlertSettings, updateAlertSettings, resetAlertSettings,
@@ -23,6 +23,7 @@ import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianG
 import { useListAudits, useGetWaitlistStats, useGetCoachFollowUpTimeline } from "@workspace/api-client-react";
 import { Lock, LogOut, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
+import { toast } from "@/hooks/use-toast";
 
 type AiMode = "live" | "fallback" | "setup-needed";
 interface AiStatusData {
@@ -945,6 +946,101 @@ function RollupHeartbeatPanel({ refreshKey, founderKey }: { refreshKey: number; 
               {" "}Alerts when older than ~{thresholdHours} hours.
             </p>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TrashPurgePanel({ founderKey, onPurged }: { founderKey: string; onPurged: () => void }) {
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<{ deleted: number } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const run = async () => {
+    if (running) return;
+    setRunning(true);
+    setResult(null);
+    setErr(null);
+    try {
+      const res = await purgeTrashNow(founderKey);
+      setResult(res);
+      onPurged();
+      toast({
+        title: "Trash purge complete",
+        description: `${res.deleted} ${res.deleted === 1 ? "audit was" : "audits were"} permanently deleted.`,
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to purge trash";
+      setErr(message);
+      toast({
+        title: "Trash purge failed",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div
+      className="glass rounded-2xl p-6 space-y-3"
+      data-testid="trash-purge-panel"
+    >
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
+            Manual Trash Purge
+          </p>
+          <p className="text-base font-semibold text-foreground">
+            Permanently delete soft-deleted audits past retention
+          </p>
+          <p className="text-xs text-muted-foreground/80 mt-1">
+            Runs the same job as the scheduled timer, immediately. Useful after tuning the retention window.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={run}
+          disabled={running}
+          data-testid="button-purge-trash-now"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-[hsl(348_55%_58%/0.2)] text-[hsl(348_55%_78%)] border border-[hsl(348_55%_58%/0.4)] hover:bg-[hsl(348_55%_58%/0.3)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+        >
+          {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+          {running ? "Purging…" : "Purge now"}
+        </button>
+      </div>
+
+      {result && (
+        <div
+          className="rounded-xl p-3 border flex items-start gap-2 text-sm"
+          style={{
+            background: "hsl(142 55% 60% / 0.10)",
+            borderColor: "hsl(142 55% 60% / 0.40)",
+            color: "hsl(142 55% 70%)",
+          }}
+          data-testid="trash-purge-success"
+        >
+          <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>
+            Purge complete — {result.deleted} {result.deleted === 1 ? "audit" : "audits"} permanently deleted.
+          </span>
+        </div>
+      )}
+
+      {err && (
+        <div
+          className="rounded-xl p-3 border flex items-start gap-2 text-sm"
+          style={{
+            background: "hsl(348 55% 58% / 0.10)",
+            borderColor: "hsl(348 55% 58% / 0.40)",
+            color: "hsl(348 55% 78%)",
+          }}
+          data-testid="trash-purge-error"
+        >
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>Could not purge trash: {err}</span>
         </div>
       )}
     </div>
@@ -3074,6 +3170,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
         <div className="space-y-8">
           <AiStatusPanel />
           <BackgroundJobsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
+          <TrashPurgePanel founderKey={FOUNDER_KEY} onPurged={() => setRefreshKey((k) => k + 1)} />
           <OcrMismatchesPanel refreshKey={refreshKey} />
           <AiMetricsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
           <AiReliabilityTrendsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
