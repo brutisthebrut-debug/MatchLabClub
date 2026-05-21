@@ -10,6 +10,7 @@ import {
   emailInsightsTable,
   sessionsTable,
   dataExportTokensTable,
+  lifePulsesTable,
 } from "@workspace/db";
 import {
   ExportMyDataResponse,
@@ -543,6 +544,10 @@ router.delete("/account", async (req, res): Promise<void> => {
       .where(eq(emailInsightsTable.userId, userId))
       .returning({ id: emailInsightsTable.id }),
   ]);
+
+  // Wellness self-ratings (Life Pulse) are first-party personal data and must
+  // also be hard-deleted when the user closes their account.
+  await db.delete(lifePulsesTable).where(eq(lifePulsesTable.userId, userId));
 
   // Delete every active session belonging to this user (session JSONB
   // payload stores `user.id`).

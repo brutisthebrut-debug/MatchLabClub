@@ -682,6 +682,76 @@ export const UnregisterPushTokenResponse = zod.object({
 
 
 /**
+ * Persists a single daily life pulse for the current user (or anonymous
+claim token scope). Each call inserts a new row; there is no upsert —
+users may pulse multiple times a day if they want to.
+
+ * @summary Record a daily life pulse (5 quick self-ratings)
+ */
+export const RecordLifePulseHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const recordLifePulseBodySleepMax = 5;
+
+export const recordLifePulseBodyEnergyMax = 5;
+
+export const recordLifePulseBodySocialMax = 5;
+
+export const recordLifePulseBodyMoneyMax = 5;
+
+export const recordLifePulseBodyHeadspaceMax = 5;
+
+export const recordLifePulseBodyNoteMax = 500;
+
+
+
+export const RecordLifePulseBody = zod.object({
+  "sleep": zod.number().min(1).max(recordLifePulseBodySleepMax).describe('Subjective sleep quality last night (1 worst, 5 best).'),
+  "energy": zod.number().min(1).max(recordLifePulseBodyEnergyMax).describe('Subjective energy right now (1 depleted, 5 charged).'),
+  "social": zod.number().min(1).max(recordLifePulseBodySocialMax).describe('Social fuel — how much capacity for connection (1 drained, 5 lit up).'),
+  "money": zod.number().min(1).max(recordLifePulseBodyMoneyMax).describe('Money headspace (1 stressed, 5 unbothered).'),
+  "headspace": zod.number().min(1).max(recordLifePulseBodyHeadspaceMax).describe('General mental clarity (1 foggy, 5 sharp).'),
+  "note": zod.string().max(recordLifePulseBodyNoteMax).nullish().describe('Optional short note about today.')
+})
+
+
+/**
+ * Returns the most recent life pulses (up to 30, newest first) along
+with a convenient `latest` pointer, for the current user or anonymous
+claim scope. Returns an empty array + null `latest` when none exist.
+
+ * @summary Recent life pulses for the current scope
+ */
+export const GetRecentLifePulsesHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetRecentLifePulsesResponse = zod.object({
+  "pulses": zod.array(zod.object({
+  "id": zod.number(),
+  "sleep": zod.number(),
+  "energy": zod.number(),
+  "social": zod.number(),
+  "money": zod.number(),
+  "headspace": zod.number(),
+  "note": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})).describe('Most recent pulses for the current user\/anon scope, newest first, capped at 30.'),
+  "latest": zod.union([zod.object({
+  "id": zod.number(),
+  "sleep": zod.number(),
+  "energy": zod.number(),
+  "social": zod.number(),
+  "money": zod.number(),
+  "headspace": zod.number(),
+  "note": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}),zod.null()]).describe('The single most recent pulse, or null when the user has never logged one.')
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */

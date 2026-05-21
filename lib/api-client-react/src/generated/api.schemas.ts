@@ -1176,6 +1176,64 @@ export interface TrashPurgeHeartbeat {
   stale: boolean;
 }
 
+export interface LifePulseInput {
+  /**
+     * Subjective sleep quality last night (1 worst, 5 best).
+     * @minimum 1
+     * @maximum 5
+     */
+  sleep: number;
+  /**
+     * Subjective energy right now (1 depleted, 5 charged).
+     * @minimum 1
+     * @maximum 5
+     */
+  energy: number;
+  /**
+     * Social fuel — how much capacity for connection (1 drained, 5 lit up).
+     * @minimum 1
+     * @maximum 5
+     */
+  social: number;
+  /**
+     * Money headspace (1 stressed, 5 unbothered).
+     * @minimum 1
+     * @maximum 5
+     */
+  money: number;
+  /**
+     * General mental clarity (1 foggy, 5 sharp).
+     * @minimum 1
+     * @maximum 5
+     */
+  headspace: number;
+  /**
+     * Optional short note about today.
+     * @maxLength 500
+     * @nullable
+     */
+  note?: string | null;
+}
+
+export interface LifePulse {
+  id: number;
+  sleep: number;
+  energy: number;
+  social: number;
+  money: number;
+  headspace: number;
+  /** @nullable */
+  note?: string | null;
+  createdAt: string;
+}
+
+export interface LifePulseRecent {
+  /** Most recent pulses for the current user/anon scope, newest first, capped at 30. */
+  pulses: LifePulse[];
+  /** The single most recent pulse, or null when the user has never logged one. */
+  latest: LifePulse | null;
+}
+
 /**
  * Opaque session token — `Bearer <sid>`.
  */

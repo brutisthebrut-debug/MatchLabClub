@@ -77,6 +77,9 @@ import type {
   HandleBrowserLoginCallbackParams,
   HealthStatus,
   InsightsRollup,
+  LifePulse,
+  LifePulseInput,
+  LifePulseRecent,
   ListAuditReportVersions404,
   ListAuditsParams,
   ListExpiringTrashedAuditsParams,
@@ -1675,6 +1678,162 @@ export const useUnregisterPushToken = <TError = ErrorType<AuthErrorEnvelope>,
       > => {
       return useMutation(getUnregisterPushTokenMutationOptions(options));
     }
+
+export const getRecordLifePulseUrl = () => {
+
+
+
+
+  return `/api/life-pulse`
+}
+
+/**
+ * Persists a single daily life pulse for the current user (or anonymous
+claim token scope). Each call inserts a new row; there is no upsert —
+users may pulse multiple times a day if they want to.
+
+ * @summary Record a daily life pulse (5 quick self-ratings)
+ */
+export const recordLifePulse = async (lifePulseInput: LifePulseInput, options?: RequestInit): Promise<LifePulse> => {
+
+  return customFetch<LifePulse>(getRecordLifePulseUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      lifePulseInput,)
+  }
+);}
+
+
+
+
+export const getRecordLifePulseMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordLifePulse>>, TError,{data: BodyType<LifePulseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordLifePulse>>, TError,{data: BodyType<LifePulseInput>}, TContext> => {
+
+const mutationKey = ['recordLifePulse'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordLifePulse>>, {data: BodyType<LifePulseInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  recordLifePulse(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordLifePulseMutationResult = NonNullable<Awaited<ReturnType<typeof recordLifePulse>>>
+    export type RecordLifePulseMutationBody = BodyType<LifePulseInput>
+    export type RecordLifePulseMutationError = ErrorType<void>
+
+    /**
+ * @summary Record a daily life pulse (5 quick self-ratings)
+ */
+export const useRecordLifePulse = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordLifePulse>>, TError,{data: BodyType<LifePulseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recordLifePulse>>,
+        TError,
+        {data: BodyType<LifePulseInput>},
+        TContext
+      > => {
+      return useMutation(getRecordLifePulseMutationOptions(options));
+    }
+
+export const getGetRecentLifePulsesUrl = () => {
+
+
+
+
+  return `/api/life-pulse`
+}
+
+/**
+ * Returns the most recent life pulses (up to 30, newest first) along
+with a convenient `latest` pointer, for the current user or anonymous
+claim scope. Returns an empty array + null `latest` when none exist.
+
+ * @summary Recent life pulses for the current scope
+ */
+export const getRecentLifePulses = async ( options?: RequestInit): Promise<LifePulseRecent> => {
+
+  return customFetch<LifePulseRecent>(getGetRecentLifePulsesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRecentLifePulsesQueryKey = () => {
+    return [
+    `/api/life-pulse`
+    ] as const;
+    }
+
+
+export const getGetRecentLifePulsesQueryOptions = <TData = Awaited<ReturnType<typeof getRecentLifePulses>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRecentLifePulses>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRecentLifePulsesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecentLifePulses>>> = ({ signal }) => getRecentLifePulses({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRecentLifePulses>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRecentLifePulsesQueryResult = NonNullable<Awaited<ReturnType<typeof getRecentLifePulses>>>
+export type GetRecentLifePulsesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Recent life pulses for the current scope
+ */
+
+export function useGetRecentLifePulses<TData = Awaited<ReturnType<typeof getRecentLifePulses>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRecentLifePulses>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRecentLifePulsesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getHealthCheckUrl = () => {
 

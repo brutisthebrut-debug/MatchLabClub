@@ -8,6 +8,7 @@ import {
   emailInsightsTable,
   coachFollowUpsTable,
   handoffTokenRedemptionsTable,
+  lifePulsesTable,
 } from "@workspace/db";
 import {
   ClaimAnonymousDataBody,
@@ -158,6 +159,19 @@ async function claimByAnonToken(
           .returning({ id: coachFollowUpsTable.id })
       : Promise.resolve([]),
   ]);
+
+  // Life pulses are not tracked by ID on the client (they're auto-collected
+  // background signals), so claim them in bulk by anon token instead of by
+  // explicit ID list. The token check is the same IDOR-safe filter used above.
+  await db
+    .update(lifePulsesTable)
+    .set({ userId, anonymousClaimToken: null })
+    .where(
+      and(
+        isNull(lifePulsesTable.userId),
+        eq(lifePulsesTable.anonymousClaimToken, anonToken),
+      ),
+    );
 
   return {
     audits: audits.length,

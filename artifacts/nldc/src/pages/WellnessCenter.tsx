@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Heart, Activity, Users, BookOpen, Sparkles, Briefcase, DollarSign, Trees, ArrowRight, Shield } from "lucide-react";
+import { LifePulseCard, dimensionScoreFromPulse } from "@/components/wellness/LifePulseCard";
+import { useGetRecentLifePulses } from "@workspace/api-client-react";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -120,6 +122,9 @@ export default function WellnessCenter() {
     "Eight dimensions of wellness mapped to your dating readiness — strengths, friction points, and small experiments you can try this week.",
   );
 
+  const { data: pulseData } = useGetRecentLifePulses();
+  const latestPulse = pulseData?.latest ?? null;
+
   return (
     <AppLayout>
       <div className="min-h-screen pt-20 pb-32 px-4 sm:px-6 lg:px-8 relative">
@@ -170,9 +175,12 @@ export default function WellnessCenter() {
             </div>
           </div>
 
+          <LifePulseCard />
+
           <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-4">
             {DIMENSIONS.map((d, i) => {
               const Icon = d.icon;
+              const signal = dimensionScoreFromPulse(d.key, latestPulse);
               return (
                 <motion.div
                   key={d.key}
@@ -185,7 +193,19 @@ export default function WellnessCenter() {
                       <Icon className="w-5 h-5" style={{ color: d.color }} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-serif text-xl font-semibold leading-tight">{d.name}</h3>
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-serif text-xl font-semibold leading-tight">{d.name}</h3>
+                        {signal.value !== null && (
+                          <div
+                            className="flex flex-col items-end flex-shrink-0"
+                            data-testid={`signal-wellness-${d.key}`}
+                            title={`Today's pulse · ${signal.sourceLabel}`}
+                          >
+                            <span className="text-base font-bold tabular-nums leading-none" style={{ color: d.color }}>{signal.value}/5</span>
+                            <span className="text-[9px] uppercase tracking-widest text-muted-foreground mt-0.5">Today</span>
+                          </div>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{d.blurb}</p>
                     </div>
                   </div>

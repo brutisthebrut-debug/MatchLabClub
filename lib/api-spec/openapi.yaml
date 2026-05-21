@@ -567,6 +567,52 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /life-pulse:
+    post:
+      tags: [LifePulse]
+      operationId: recordLifePulse
+      summary: Record a daily life pulse (5 quick self-ratings)
+      description: |
+        Persists a single daily life pulse for the current user (or anonymous
+        claim token scope). Each call inserts a new row; there is no upsert —
+        users may pulse multiple times a day if they want to.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LifePulseInput'
+      responses:
+        '201':
+          description: Pulse recorded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LifePulse'
+        '400':
+          description: Invalid pulse payload.
+    get:
+      tags: [LifePulse]
+      operationId: getRecentLifePulses
+      summary: Recent life pulses for the current scope
+      description: |
+        Returns the most recent life pulses (up to 30, newest first) along
+        with a convenient `latest` pointer, for the current user or anonymous
+        claim scope. Returns an empty array + null `latest` when none exist.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Recent pulses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LifePulseRecent'
+
   /healthz:
     get:
       operationId: healthCheck
@@ -3273,3 +3319,74 @@ components:
         stale:
           type: boolean
           description: True when the job has never run or last ran longer ago than staleThresholdMs.
+
+    LifePulseInput:
+      type: object
+      required: [sleep, energy, social, money, headspace]
+      properties:
+        sleep:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Subjective sleep quality last night (1 worst, 5 best).
+        energy:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Subjective energy right now (1 depleted, 5 charged).
+        social:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Social fuel — how much capacity for connection (1 drained, 5 lit up).
+        money:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Money headspace (1 stressed, 5 unbothered).
+        headspace:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: General mental clarity (1 foggy, 5 sharp).
+        note:
+          type: [string, 'null']
+          maxLength: 500
+          description: Optional short note about today.
+
+    LifePulse:
+      type: object
+      required: [id, sleep, energy, social, money, headspace, createdAt]
+      properties:
+        id:
+          type: integer
+        sleep:
+          type: integer
+        energy:
+          type: integer
+        social:
+          type: integer
+        money:
+          type: integer
+        headspace:
+          type: integer
+        note:
+          type: [string, 'null']
+        createdAt:
+          type: string
+          format: date-time
+
+    LifePulseRecent:
+      type: object
+      required: [pulses, latest]
+      properties:
+        pulses:
+          type: array
+          items:
+            $ref: '#/components/schemas/LifePulse'
+          description: Most recent pulses for the current user/anon scope, newest first, capped at 30.
+        latest:
+          oneOf:
+            - $ref: '#/components/schemas/LifePulse'
+            - type: 'null'
+          description: The single most recent pulse, or null when the user has never logged one.

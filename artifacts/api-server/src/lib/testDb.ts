@@ -187,6 +187,11 @@ export const jobHeartbeatsTable = makeTable("job_heartbeats");
 ensureStore("ai_request_metrics");
 ensureStore("profiles");
 ensureStore("coach_follow_ups");
+stores.life_pulses = {
+  rows: [],
+  nextId: 1,
+  defaults: { userId: null, anonymousClaimToken: null, note: null },
+};
 ensureStore("leads");
 ensureStore("waitlist");
 ensureStore("purchase_interest");
@@ -202,6 +207,7 @@ export const purchaseInterestTable = makeTable("purchase_interest");
 export const dataExportTokensTable = makeTable("data_export_tokens");
 export const usersTable = makeTable("users");
 export const sessionsTable = makeTable("sessions");
+export const lifePulsesTable = makeTable("life_pulses");
 
 // ---- Operators -----------------------------------------------------------
 
