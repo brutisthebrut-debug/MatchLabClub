@@ -114,11 +114,11 @@ const TIERS = [
     promoPrice: "$118",
     period: "per month",
     popular: false,
-    badge: "Podcast Listener Deal",
+    badge: "Launch Cohort Deal",
     desc: "Everything in The Dating Reset — plus a real human coach in your corner, every week.",
     cta: "Join the Wingman Club",
     href: "/waitlist",
-    nextStep: "→ Join the waitlist · invited in cohort order · podcast code locks today's price",
+    nextStep: "→ Join the waitlist · invited in cohort order · today's price locks in for life",
     accentColor: "hsl(43 65% 65%)",
     icon: Heart,
     features: [
@@ -164,18 +164,17 @@ export default function Pricing() {
 
         <div className="max-w-5xl mx-auto relative z-10">
 
-          {/* Podcast Banner */}
+          {/* Launch Cohort Banner */}
           <motion.div {...fadeUp(0)}
             className="relative rounded-2xl p-5 mb-12 text-center overflow-hidden shimmer"
             style={{ background: "linear-gradient(135deg, hsl(43 65% 62% / 0.15), hsl(43 65% 45% / 0.08))", border: "1px solid hsl(43 65% 62% / 0.25)" }}
-            data-testid="banner-podcast-promo"
+            data-testid="banner-launch-cohort"
           >
             <div className="flex items-center justify-center gap-3 flex-wrap">
-              <Headphones className="w-5 h-5 text-[hsl(43_65%_68%)]" />
-              <span className="font-semibold text-foreground">Podcast listener deal:</span>
-              <span className="text-muted-foreground">40% off Wingman Membership for life. Use code</span>
-              <code className="px-2.5 py-1 rounded-lg bg-[hsl(43_65%_62%/0.15)] text-[hsl(43_65%_72%)] font-bold text-sm border border-[hsl(43_65%_62%/0.3)]">PODCAST40</code>
-              <span className="text-xs text-muted-foreground px-2.5 py-1 rounded-full bg-[hsl(348_55%_65%/0.15)] border border-[hsl(348_55%_65%/0.2)] text-[hsl(348_55%_72%)] font-medium">Expires soon</span>
+              <Sparkles className="w-5 h-5 text-[hsl(43_65%_68%)]" />
+              <span className="font-semibold text-foreground">Launch cohort:</span>
+              <span className="text-muted-foreground">today's price locks in for life. Join the waitlist to claim your spot.</span>
+              <Link href="/waitlist" className="text-xs font-semibold text-[hsl(43_65%_72%)] px-2.5 py-1 rounded-full bg-[hsl(43_65%_62%/0.15)] border border-[hsl(43_65%_62%/0.3)] hover:bg-[hsl(43_65%_62%/0.22)] transition-colors">Reserve spot →</Link>
             </div>
           </motion.div>
 

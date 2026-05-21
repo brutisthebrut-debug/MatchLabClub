@@ -19,18 +19,6 @@ export default function Landing() {
   );
   return (
     <AppLayout>
-      {/* ── Podcast Banner ── */}
-      <div className="bg-gradient-to-r from-[hsl(268_52%_55%/0.08)] via-[hsl(285_45%_55%/0.05)] to-[hsl(43_65%_55%/0.07)] border-b border-foreground/8 py-2.5">
-        <div className="container mx-auto px-4 flex items-center justify-center gap-2.5 text-sm font-medium">
-          <Headphones className="w-4 h-4 text-[hsl(43_65%_62%)]" />
-          <span className="text-foreground/80">Launched alongside <strong className="text-foreground">The Love Reset Podcast</strong> — a launch partner</span>
-          <span className="hidden md:inline text-muted-foreground">—</span>
-          <Link href="/waitlist" className="hidden md:inline gradient-text-gold font-semibold hover:opacity-80 transition-opacity">
-            Claim 40% off with code PODCAST40 →
-          </Link>
-        </div>
-      </div>
-
       {/* ── Hero ── */}
       <section className="relative mesh-bg overflow-hidden pt-16 md:pt-32 pb-20 md:pb-36">
         {/* Decorative orbs */}
@@ -257,7 +245,7 @@ export default function Landing() {
             <div className="grid md:grid-cols-2 gap-10 items-center">
               <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
                 <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-[hsl(43_65%_62%/0.25)] text-xs font-semibold text-[hsl(43_65%_72%)] uppercase tracking-widest mb-5">
-                  <Headphones className="w-3.5 h-3.5" /> Free for Podcast Listeners
+                  <Sparkles className="w-3.5 h-3.5" /> Free · No Account Needed
                 </span>
                 <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
                   The 3-Minute<br />
@@ -386,7 +374,7 @@ export default function Landing() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
             {[
               { icon: Sparkles, title: "Dating Diagnosis", desc: "60-second triage. Paste your bio, get your profile category and the single thing to fix first. Best as a quick gut-check before going deeper.", href: "/diagnosis", badge: "Free", badgeColor: "hsl(142 55% 60%)", accentColor: "hsl(268 52% 68%)" },
-              { icon: TrendingUp, title: "3-Min Signal Check", desc: "Fastest entry point: paste your bio, get your Signal Strength score and one rewritten line — in 3 minutes flat.", href: "/signal-check", badge: "Free · Podcast", badgeColor: "hsl(43 65% 65%)", accentColor: "hsl(43 65% 65%)" },
+              { icon: TrendingUp, title: "3-Min Signal Check", desc: "Fastest entry point: paste your bio, get your Signal Strength score and one rewritten line — in 3 minutes flat.", href: "/signal-check", badge: "Free · 3 min", badgeColor: "hsl(43 65% 65%)", accentColor: "hsl(43 65% 65%)" },
               { icon: CheckCircle, title: "Profile Signal Audit", desc: "The full audit. Signal Score, 8-dimension Signal Spectrum, complete bio + prompt rewrites, photo guidance, and a 7-day action plan you can start tomorrow.", href: "/start", badge: "Free to Start", badgeColor: "hsl(268 52% 68%)", accentColor: "hsl(142 55% 60%)" },
               { icon: MessageSquare, title: "Chemistry Lab", desc: "Paste any message or conversation. Get tone analysis, your recommended next action, and 5 reply options — Warm, Playful, Direct, Date Ask, Graceful Exit.", href: "/lab", badge: "Free", badgeColor: "hsl(190 55% 60%)", accentColor: "hsl(190 55% 60%)" },
               { icon: MessageSquare, title: "Message Coach", desc: "Deeper session coaching: paste a full conversation, choose your goal, and receive 3 tailored reply options with rationale.", href: "/coach", badge: "Free", badgeColor: "hsl(285 45% 65%)", accentColor: "hsl(285 45% 65%)" },
@@ -510,85 +498,29 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── Podcast Launch Block ── */}
+      {/* ── Why We Built This ── */}
       <section className="py-20 md:py-28 relative overflow-hidden border-t border-white/5">
         <div className="orb orb-violet absolute w-[500px] h-[500px] -right-40 top-0 opacity-60 pointer-events-none" />
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-5xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <motion.div initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass border border-[hsl(43_65%_62%/0.25)] text-xs font-semibold text-[hsl(43_65%_72%)] uppercase tracking-widest mb-6">
-                  <Headphones className="w-3.5 h-3.5" /> Podcast Launch
-                </span>
-                <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-5 leading-tight">
-                  Why we built this<br />
-                  <span className="gradient-text-gold italic">(and why now.)</span>
-                </h2>
-                <p className="text-muted-foreground leading-relaxed mb-5">
-                  Most dating advice is designed for the average person having average problems. It's vague on purpose — vague advice can't be wrong.
-                </p>
-                <p className="text-muted-foreground leading-relaxed mb-5">
-                  We built Next Level Dating Club for people who are emotionally available, self-aware, and genuinely ready — but whose profiles don't show any of that. The technology isn't the point. Honest reflection is.
-                </p>
-                <p className="text-foreground/70 text-sm leading-relaxed mb-8 border-l-2 border-[hsl(268_52%_68%/0.4)] pl-4 italic">
-                  "We launched alongside The Love Reset Podcast because we wanted to meet people who were already doing the work — and give them better tools."
-                </p>
-                <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold glow-pulse">
-                  <Link href="/waitlist">Join the Early Cohort <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                </Button>
-              </motion.div>
-
-              <motion.div
-                className="space-y-4"
-                initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
-              >
-                {/* Shebangs partner card */}
-                <div className="glass border border-white/8 rounded-3xl p-5 flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm text-white" style={{ background: "linear-gradient(135deg, hsl(43 65% 55%), hsl(348 55% 55%))" }}>S</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <a href="https://shebangs.club" target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground text-sm hover:text-[hsl(43_65%_68%)] transition-colors">Shebangs.club</a>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-[hsl(43_65%_62%/0.12)] text-[hsl(43_65%_68%)] border border-[hsl(43_65%_62%/0.2)] font-semibold">Launch Partner</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">Exclusive member perks for NLDC users — available after signup.</p>
-                  </div>
-                </div>
-
-                {/* Podcast card */}
-                <div className="glass border-gold-glow rounded-3xl p-6 shimmer">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[hsl(43_65%_55%)] to-[hsl(43_65%_40%)] flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_hsl(43_65%_55%/0.3)]">
-                      <Headphones className="w-7 h-7 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground text-sm">The Love Reset Podcast</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Official coaching partner</p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Listener-exclusive offer: 40% off Monthly Coaching for life. Use code <strong className="text-[hsl(43_65%_70%)] font-semibold">PODCAST40</strong> at checkout.
-                  </p>
-                </div>
-
-                {/* Perks */}
-                <div className="glass border border-white/8 rounded-3xl p-6">
-                  <p className="font-semibold text-foreground text-sm mb-4">Podcast listener perks</p>
-                  <div className="space-y-3">
-                    {[
-                      "40% off Monthly Coaching — locked in forever",
-                      "First access before public launch",
-                      "Free Full Dating Reset (first 50 members)",
-                      "Priority invite to members-only community",
-                    ].map((perk, i) => (
-                      <div key={i} className="flex items-start gap-3 text-sm">
-                        <CheckCircle className="w-4 h-4 text-[hsl(268_52%_68%)] flex-shrink-0 mt-0.5" />
-                        <span className="text-muted-foreground">{perk}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            </div>
+          <div className="max-w-3xl mx-auto text-center">
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass border border-[hsl(268_52%_68%/0.25)] text-xs font-semibold text-[hsl(268_52%_78%)] uppercase tracking-widest mb-6">
+                <Sparkles className="w-3.5 h-3.5" /> Why we built this
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-5 leading-tight">
+                For people doing the work —<br />
+                <span className="gradient-text-violet italic">not chasing tricks.</span>
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-5">
+                Most dating advice is designed for the average person having average problems. It's vague on purpose — vague advice can't be wrong.
+              </p>
+              <p className="text-muted-foreground leading-relaxed mb-8">
+                We built Next Level Dating Club for people who are emotionally available, self-aware, and genuinely ready — but whose profiles don't show any of that yet. The technology isn't the point. Honest reflection is.
+              </p>
+              <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold glow-pulse">
+                <Link href="/waitlist">Join the Early Cohort <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+            </motion.div>
           </div>
         </div>
       </section>

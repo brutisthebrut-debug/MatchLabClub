@@ -505,7 +505,7 @@ export default function Roadmap() {
                 { icon: Sparkles, title: "Dating Diagnosis", desc: "Profile category, strengths, and what to fix first", href: "/diagnosis", label: "Live" },
                 { icon: FileText, title: "Full Profile Audit", desc: "Score, rewrite, prompts, photos, action plan", href: "/start", label: "Live" },
                 { icon: MessageSquare, title: "Message Lab", desc: "Tone analysis + 4 reply options with rationale", href: "/lab", label: "Live" },
-                { icon: Headphones, title: "3-Min Signal Check", desc: "Free podcast listener check — score + 1 fix", href: "/signal-check", label: "Live" },
+                { icon: Headphones, title: "3-Min Signal Check", desc: "Free 3-minute check — score + 1 fix", href: "/signal-check", label: "Live" },
                 { icon: BarChart3, title: "Dating Blueprint", desc: "Progress dashboard, score history, dimensions", href: "/dashboard", label: "Live" },
                 { icon: Layers, title: "Integrations Roadmap", desc: "Consent-first data connection preview", href: "/integrations", label: "Preview" },
               ].map((module, i) => (

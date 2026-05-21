@@ -198,7 +198,7 @@ export default function SignalCheck() {
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8 text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[hsl(43_65%_62%/0.25)] text-sm font-medium text-[hsl(43_65%_72%)] mb-5">
-              <Headphones className="w-4 h-4" /> Free for Podcast Listeners · 3 Minutes
+              <Sparkles className="w-4 h-4" /> Free · No Account · 3 Minutes
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">Your 3-Minute Signal Check</h1>
             <p className="text-muted-foreground leading-relaxed max-w-md mx-auto">
@@ -462,7 +462,6 @@ export default function SignalCheck() {
 
                 <div className="pt-1 space-y-2">
                   <p className="text-xs text-muted-foreground text-center font-medium">Free · No account · No credit card · Instant results</p>
-                  <p className="text-xs text-muted-foreground text-center">Podcast listeners get 40% off the Full Audit — use code <strong className="text-[hsl(43_65%_68%)]">PODCAST40</strong></p>
                 </div>
               </motion.div>
             )}

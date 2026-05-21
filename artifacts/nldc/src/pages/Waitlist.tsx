@@ -12,13 +12,13 @@ import { Headphones, Users, CheckCircle, ArrowRight, Share2, Loader2, Clock, Quo
 import { Link } from "wouter";
 import { TrustBadge } from "@/components/TrustBadge";
 
-const PODCAST_SOURCES = ["The Love Reset Podcast", "Modern Romance", "Dates & Mates", "Word of Mouth", "Social Media", "Other"];
+const REFERRAL_SOURCES = ["A podcast", "A friend", "Word of mouth", "Social media", "Search", "Other"];
 const INTERESTS = ["Profile audit", "Message coaching", "Full dating reset", "Monthly coaching", "Just curious"];
 
 type WaitlistEntry = { id: number; email: string; firstName: string; position: number; createdAt: string };
 
 export default function Waitlist() {
-  useMeta("Podcast Listener Waitlist — NLDC Early Access", "Join the NLDC waitlist. Early access, 40% off coaching, and priority support — exclusive to podcast listeners.");
+  useMeta("Early Access Waitlist — NLDC", "Join the NLDC waitlist. Early access to the limited launch cohort, lifetime founding-member pricing, and priority support.");
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [source, setSource] = useState("");
@@ -52,18 +52,18 @@ export default function Waitlist() {
         <div className="orb orb-violet fixed w-[300px] h-[300px] bottom-20 -left-20 opacity-40 pointer-events-none" />
         <div className="max-w-2xl mx-auto relative z-10">
 
-          {/* Podcast badge */}
+          {/* Early access badge */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[hsl(43_65%_62%/0.25)] text-sm font-medium text-[hsl(43_65%_72%)] mb-6">
-              <Headphones className="w-4 h-4" />
-              Podcast Launch — Early Listener Access
+              <Sparkles className="w-4 h-4" />
+              Early Access · Limited Cohort
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight">
               Get in before<br />
               <span className="gradient-text italic">everyone else.</span>
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Next Level Dating Club is opening to a limited early cohort. Podcast listeners get lifetime 40% off Monthly Coaching and first access to every feature.
+              Next Level Dating Club is opening to a limited early cohort. Founding members get lifetime 40% off Monthly Coaching and first access to every feature.
             </p>
           </motion.div>
 
@@ -113,7 +113,7 @@ export default function Waitlist() {
                   You're <span className="gradient-text-violet">#{submitted.position}</span> on the list.
                 </h2>
                 <p className="text-muted-foreground mb-8 max-w-sm mx-auto leading-relaxed text-sm">
-                  We'll email you at {submitted.email} when your spot opens. Early listeners get 40% off Monthly Coaching — locked in forever.
+                  We'll email you at {submitted.email} when your spot opens. Founding members get 40% off Monthly Coaching — locked in forever.
                 </p>
 
                 <div className="glass border border-white/8 rounded-2xl p-5 text-left mb-6 space-y-3">
@@ -121,7 +121,7 @@ export default function Waitlist() {
                   {[
                     "Confirmation email on its way now",
                     "Early access opens within 48 hours for most",
-                    "Your PODCAST40 discount is locked in automatically",
+                    "Your founding-member discount is locked in automatically",
                     "First to try every new feature before public launch",
                   ].map((step, i) => (
                     <div key={i} className="flex items-start gap-3 text-sm">
@@ -171,7 +171,7 @@ export default function Waitlist() {
                   <div className="space-y-2">
                     <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Where did you hear about us? <span className="text-muted-foreground font-normal">(optional)</span></Label>
                     <div className="flex flex-wrap gap-2">
-                      {PODCAST_SOURCES.map(s => (
+                      {REFERRAL_SOURCES.map(s => (
                         <button key={s} data-testid={`button-source-${s.toLowerCase().replace(/ /g, "-")}`}
                           onClick={() => setSource(prev => prev === s ? "" : s)}
                           className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${source === s ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}
@@ -215,15 +215,15 @@ export default function Waitlist() {
                 "Most dating advice is vague by design — vague advice can't be wrong. We built this for people who are emotionally ready and self-aware, but whose profiles don't show any of that. The technology isn't the point. Honest reflection is."
               </p>
             </div>
-            <p className="text-xs text-muted-foreground font-medium">— The NLDC Team, launched with The Love Reset Podcast</p>
+            <p className="text-xs text-muted-foreground font-medium">— The NLDC Team</p>
           </motion.div>
 
-          {/* Early Listener Perks */}
+          {/* Early Access Perks */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-6 space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center">Early listener perks</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center">Early access perks</p>
             <div className="grid sm:grid-cols-3 gap-4">
               {[
-                { badge: "40% off", title: "Lifetime podcast discount", desc: "Locked in forever — never expires", color: "hsl(43 65% 65%)" },
+                { badge: "40% off", title: "Lifetime founding-member discount", desc: "Locked in forever — never expires", color: "hsl(43 65% 65%)" },
                 { badge: "First in", title: "Priority access", desc: "Before public launch, guaranteed", color: "hsl(268 52% 68%)" },
                 { badge: "Bonus", title: "Free Full Dating Reset", desc: "First 50 members who complete an audit", color: "hsl(142 55% 60%)" },
               ].map((perk, i) => (

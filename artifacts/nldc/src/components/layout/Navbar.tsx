@@ -70,7 +70,7 @@ const GROWTH_MORE = [
 ];
 
 const OFFERS_TOOLS = [
-  { name: "Plans & Pricing",     href: "/pricing",       desc: "Three tiers, podcast discount, no surprises" },
+  { name: "Plans & Pricing",     href: "/pricing",       desc: "Three tiers, launch perks, no surprises" },
   { name: "Sample Report",       href: "/sample-report", desc: "See a full real-structure Dating Reset Report" },
   { name: "Join the Waitlist",   href: "/waitlist",      desc: "Be first when paid tiers open" },
 ];
@@ -149,7 +149,7 @@ const PACKAGES = [
   {
     id: "offers" as const,
     label: "Offers",
-    tagline: "Plans, podcast discount, and waitlist",
+    tagline: "Plans, perks, and waitlist",
     color: "hsl(285 45% 62%)",
     icon: Tag,
     tools: OFFERS_TOOLS,

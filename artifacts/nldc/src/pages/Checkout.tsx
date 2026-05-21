@@ -221,7 +221,7 @@ function PaidForm({ product }: { product: Product }) {
         </Label>
         <Input
           id="promoCode"
-          placeholder="e.g. PODCAST40"
+          placeholder="Enter code"
           value={form.promoCode}
           onChange={(e) => setForm((f) => ({ ...f, promoCode: e.target.value.toUpperCase().slice(0, 64) }))}
           className="bg-white/5 border-white/10 text-foreground font-mono tracking-wider"
