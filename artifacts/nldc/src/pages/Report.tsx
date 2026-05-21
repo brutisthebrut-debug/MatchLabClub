@@ -501,15 +501,15 @@ export default function Report() {
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                     {audit?.firstName ?? "Your"} · Profile Signal Audit
                   </p>
-                  {audit ? (
+                  {audit && (sourceAppCorrected ? pendingSourceApp : audit.sourceApp) ? (
                     <span className="inline-flex items-center gap-1">
                       <span
                         className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.12)] text-[hsl(268_60%_78%)] border border-[hsl(268_52%_68%/0.3)]"
                         data-testid="badge-source-app"
                       >
                         {sourceAppCorrected
-                          ? (pendingSourceApp ?? "Unknown")
-                          : (audit.sourceApp ?? "Unknown")}
+                          ? pendingSourceApp
+                          : audit.sourceApp}
                       </span>
                       {auditId && !sourceAppPickerOpen ? (
                         <button
