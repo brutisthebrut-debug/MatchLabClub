@@ -182,14 +182,14 @@ export default function Pricing() {
           >
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Launch partner</span>
-              <div className="h-4 w-px bg-foreground/10" />
+              <div className="h-4 w-px bg-foreground/10 hidden sm:block" />
               <a href="https://shebangs.club" target="_blank" rel="noopener noreferrer"
                 className="font-semibold text-foreground text-sm hover:text-[hsl(43_65%_68%)] transition-colors">
                 Shebangs.club
               </a>
               <span className="text-sm text-muted-foreground">— exclusive member perks for NLDC users</span>
               <a href="https://shebangs.club" target="_blank" rel="noopener noreferrer"
-                className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 sm:ml-auto">
                 Learn more <ArrowRight className="w-3 h-3" />
               </a>
             </div>
@@ -226,7 +226,7 @@ export default function Pricing() {
                   </div>
                 )}
 
-                <div className={`flex-1 flex flex-col rounded-3xl p-7 pt-8 ${tier.popular ? "mirror-card" : "glass border border-white/8"}`}
+                <div className={`flex-1 flex flex-col rounded-3xl p-5 pt-6 sm:p-7 sm:pt-8 ${tier.popular ? "mirror-card" : "glass border border-white/8"}`}
                   style={tier.popular ? { border: "1px solid hsl(268 52% 68% / 0.35)", boxShadow: "0 0 60px hsl(268 52% 68% / 0.12), 0 20px 50px rgb(0 0 0 / 0.4)" } : {}}>
 
                   {tier.popular && <div className="line-accent mb-6" />}

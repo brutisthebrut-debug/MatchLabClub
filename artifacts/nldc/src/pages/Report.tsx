@@ -125,7 +125,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), COPY_DURATION_MS[copyDuration]); }}
-      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[hsl(268_52%_68%)] transition-colors flex-shrink-0"
+      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[hsl(268_52%_68%)] transition-colors flex-shrink-0 min-h-[36px] px-2"
       data-testid="button-copy-text"
     >
       {copied ? <Check className="w-3.5 h-3.5 text-[hsl(142_55%_60%)]" /> : <Copy className="w-3.5 h-3.5" />}
@@ -252,7 +252,7 @@ function SourceAppPicker({
         <button
           key={app}
           onClick={() => onSelect(app)}
-          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border transition-colors ${
+          className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border transition-colors ${
             current === app
               ? "bg-[hsl(268_52%_68%/0.25)] text-[hsl(268_60%_78%)] border-[hsl(268_52%_68%/0.6)]"
               : "bg-white/4 text-muted-foreground border-white/10 hover:border-white/25 hover:text-foreground"
@@ -264,7 +264,7 @@ function SourceAppPicker({
       ))}
       <button
         onClick={() => onSelect(null)}
-        className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border transition-colors ${
+        className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border transition-colors ${
           current === null
             ? "bg-[hsl(268_52%_68%/0.25)] text-[hsl(268_60%_78%)] border-[hsl(268_52%_68%/0.6)]"
             : "bg-white/4 text-muted-foreground border-white/10 hover:border-white/25 hover:text-foreground"
@@ -276,7 +276,7 @@ function SourceAppPicker({
       <button
         onClick={onConfirm}
         disabled={saving}
-        className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[hsl(268_52%_55%/0.8)] text-white border border-[hsl(268_52%_68%/0.4)] hover:bg-[hsl(268_52%_55%)] disabled:opacity-50 transition-colors"
+        className="text-xs font-semibold px-3 py-1 rounded-full bg-[hsl(268_52%_55%/0.8)] text-white border border-[hsl(268_52%_68%/0.4)] hover:bg-[hsl(268_52%_55%)] disabled:opacity-50 transition-colors"
         data-testid="button-confirm-source-app"
       >
         {saving ? "Saving…" : "Save"}
@@ -284,7 +284,7 @@ function SourceAppPicker({
       <button
         onClick={onCancel}
         disabled={saving}
-        className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+        className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
         data-testid="button-cancel-source-app"
       >
         Cancel

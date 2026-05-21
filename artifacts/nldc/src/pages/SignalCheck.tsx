@@ -271,7 +271,7 @@ export default function SignalCheck() {
                 <div className="glass border border-white/8 rounded-3xl p-7" data-testid="card-signal-opener">
                   <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">One Opening Message to Try</p>
                   <div className="flex justify-end">
-                    <div className="max-w-sm text-sm px-4 py-3 rounded-2xl rounded-br-sm text-white font-medium" style={{ background: "linear-gradient(135deg, hsl(268 52% 65%), hsl(285 45% 58%))" }}>
+                    <div className="max-w-[min(100%,22rem)] text-sm px-4 py-3 rounded-2xl rounded-br-sm text-white font-medium break-words" style={{ background: "linear-gradient(135deg, hsl(268 52% 65%), hsl(285 45% 58%))" }}>
                       {result.suggestedOpener}
                     </div>
                   </div>
@@ -294,7 +294,7 @@ export default function SignalCheck() {
                             placeholder="your@email.com"
                             value={leadEmail}
                             onChange={(e) => setLeadEmail(e.target.value)}
-                            className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-[hsl(268_52%_68%/0.5)] transition-colors"
+                            className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-[hsl(268_52%_68%/0.5)] transition-colors"
                           />
                           <button
                             onClick={async () => {
@@ -310,7 +310,7 @@ export default function SignalCheck() {
                               } catch { /* silent — still show success */ }
                               setLeadSaved(true);
                             }}
-                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_55%)] text-white text-sm font-semibold hover:opacity-90 transition-opacity flex-shrink-0"
+                            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_55%)] text-white text-sm font-semibold hover:opacity-90 transition-opacity flex-shrink-0 whitespace-nowrap"
                           >
                             Save
                           </button>

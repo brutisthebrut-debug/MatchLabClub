@@ -1218,7 +1218,7 @@ export default function Dashboard() {
                   ].map(step => {
                     const Icon = step.icon;
                     return (
-                      <Link key={step.n} href={step.href} className="glass border border-white/8 rounded-2xl p-4 hover:border-white/15 transition-all block card-hover">
+                      <Link key={step.n} href={step.href} className="glass border border-white/8 rounded-2xl p-5 hover:border-white/15 transition-all block card-hover">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: step.color }}>Step {step.n}</span>
                           <Icon className="w-3.5 h-3.5" style={{ color: step.color }} />
@@ -1428,7 +1428,7 @@ export default function Dashboard() {
                       <Link
                         key={tool.href}
                         href={tool.href}
-                        className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground py-1 transition-colors group"
+                        className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground py-1.5 transition-colors group"
                       >
                         <span
                           className="w-1.5 h-1.5 rounded-full flex-shrink-0"

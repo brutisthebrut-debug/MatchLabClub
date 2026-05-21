@@ -32,7 +32,7 @@ export default function Landing() {
       </div>
 
       {/* ── Hero ── */}
-      <section className="relative mesh-bg overflow-hidden pt-20 md:pt-32 pb-24 md:pb-36">
+      <section className="relative mesh-bg overflow-hidden pt-16 md:pt-32 pb-20 md:pb-36">
         {/* Decorative orbs */}
         <div className="orb orb-violet absolute w-[600px] h-[600px] -top-60 -right-60 opacity-80 pointer-events-none" />
         <div className="orb orb-gold absolute w-[400px] h-[400px] bottom-0 left-1/4 opacity-60 pointer-events-none" />
@@ -167,7 +167,7 @@ export default function Landing() {
               { n: "5", label: "Track your progress",    href: "/dashboard",     color: "hsl(285 45% 65%)" },
             ].map((step, i) => (
               <span key={step.n} className="flex items-center gap-2">
-                <Link href={step.href} className="flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-white/8 hover:border-white/18 transition-all group">
+                <Link href={step.href} className="flex items-center gap-2 px-3 py-2 rounded-full glass border border-white/8 hover:border-white/18 transition-all group">
                   <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
                     style={{ background: step.color.replace(")", " / 0.18)"), color: step.color }}>{step.n}</span>
                   <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap">{step.label}</span>

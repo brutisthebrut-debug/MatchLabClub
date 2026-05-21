@@ -309,7 +309,7 @@ export default function GlowUp() {
               <div className="flex flex-wrap gap-2">
                 {GOALS.map(g => (
                   <button key={g} onClick={() => setGoal(prev => prev === g ? "" : g)}
-                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${goal === g ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
+                    className={`px-3 py-2 rounded-full border text-xs font-medium transition-all ${goal === g ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
                     {g}
                   </button>
                 ))}
@@ -349,7 +349,7 @@ export default function GlowUp() {
               <div className="flex flex-wrap gap-2 mb-4">
                 {FILTER_OPTS.map(f => (
                   <button key={f.key} onClick={() => setFilter(prev => prev.includes(f.key) ? prev.filter(x => x !== f.key) : [...prev, f.key])}
-                    className={`px-2.5 py-1 rounded-full border text-xs transition-all ${filter.includes(f.key) ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20"}`}>
+                    className={`px-2.5 py-1.5 rounded-full border text-xs transition-all ${filter.includes(f.key) ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20"}`}>
                     {f.label}
                   </button>
                 ))}
