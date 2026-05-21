@@ -109,11 +109,12 @@ export default function UserControl() {
 
           {/* Proposed (preview-before-save) */}
           <motion.div {...fadeUp(0.1)} className="glass-strong rounded-2xl p-5 sm:p-6 border border-[hsl(43_65%_65%/0.25)]">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <AlertTriangle className="w-4 h-4 text-[hsl(43_65%_72%)]" />
-              <h2 className="font-serif text-xl font-semibold">Proposed insights — preview before saving</h2>
+              <h2 className="font-serif text-xl font-semibold">Proposed insights</h2>
+              <span className="status-pill status-warning">Preview before saving</span>
             </div>
-            <p className="text-xs text-muted-foreground mb-4">These were generated from your activity. None are saved to your profile until you approve.</p>
+            <p className="text-xs text-muted-foreground mb-4">These were generated from your activity. Nothing here is saved to your profile until you approve it.</p>
             {proposed.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">No proposed insights right now.</p>
             ) : (
@@ -125,8 +126,8 @@ export default function UserControl() {
                       <p className="text-[11px] text-muted-foreground mt-1">From {i.source} · {i.updated} · {i.category}</p>
                     </div>
                     <div className="flex gap-2 flex-shrink-0">
-                      <Button size="sm" onClick={() => setStatus(i.id, "approved", "Insight approved and saved.")} className="rounded-full bg-[hsl(142_55%_60%/0.15)] text-[hsl(142_55%_72%)] hover:bg-[hsl(142_55%_60%/0.25)] border border-[hsl(142_55%_60%/0.3)]"><Check className="w-3.5 h-3.5 mr-1" />Approve</Button>
-                      <Button size="sm" variant="outline" onClick={() => setStatus(i.id, "ignored", "Insight ignored — won't be used.")} className="rounded-full"><X className="w-3.5 h-3.5 mr-1" />Ignore</Button>
+                      <Button size="sm" onClick={() => setStatus(i.id, "approved", "Insight approved and saved.")} className="tap-target rounded-full bg-[hsl(142_55%_60%/0.15)] text-[hsl(142_55%_72%)] hover:bg-[hsl(142_55%_60%/0.25)] border border-[hsl(142_55%_60%/0.3)]"><Check className="w-3.5 h-3.5 mr-1" />Approve</Button>
+                      <Button size="sm" variant="outline" onClick={() => setStatus(i.id, "ignored", "Insight ignored — won't be used.")} className="tap-target rounded-full"><X className="w-3.5 h-3.5 mr-1" />Ignore</Button>
                     </div>
                   </div>
                 ))}

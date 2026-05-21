@@ -143,11 +143,12 @@ const FUTURE_CARDS: FutureCard[] = [
 
 function SensitivityBadge({ level }: { level: Sensitivity }) {
   const s = SENSITIVITY_LABELS[level];
+  const variant = level === "low" ? "status-success" : level === "medium" ? "status-warning" : "status-rose";
   return (
-    <div className="flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: s.color }}>
+    <span className={`status-pill ${variant}`}>
       <Lock className="w-3 h-3" />
       {s.label}
-    </div>
+    </span>
   );
 }
 
@@ -204,11 +205,11 @@ function ImportCardUI({ card, index }: { card: ImportCard; index: number }) {
           </div>
         </div>
 
-        <div className="mt-3 flex items-center justify-between">
+        <div className="mt-3 flex items-center justify-between gap-2 flex-wrap">
           <SensitivityBadge level={card.sensitivity} />
-          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/40">
+          <span className="status-pill status-info">
             <Eye className="w-3 h-3" /> Preview before save
-          </div>
+          </span>
         </div>
         <p className="text-[11px] text-muted-foreground/45 mt-1.5 leading-relaxed">
           <strong className="text-muted-foreground/60">Helps with:</strong> {card.what}
