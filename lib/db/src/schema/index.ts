@@ -13,6 +13,7 @@ export * from "./ai_alert_thresholds";
 export * from "./ai_alert_threshold_changes";
 export * from "./dataExportTokens";
 export * from "./handoffTokenRedemptions";
+export * from "./handoff_rate_limit_hits";
 export * from "./loginNotifications";
 export * from "./ocr_learned_rules";
 export * from "./ocr_rule_review_log";

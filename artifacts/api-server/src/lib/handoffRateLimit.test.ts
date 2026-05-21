@@ -5,79 +5,94 @@ import {
   HANDOFF_RATE_LIMIT_MAX,
   HANDOFF_RATE_LIMIT_WINDOW_MS,
   _resetRateLimitState,
+  InMemoryRateLimitStore,
+  setHandoffRateLimitStore,
 } from "./handoffRateLimit";
 
-beforeEach(() => {
-  _resetRateLimitState();
+beforeEach(async () => {
+  // Force the in-memory store for unit tests so they stay hermetic and don't
+  // touch the database. The exported API is exercised through this store.
+  setHandoffRateLimitStore(new InMemoryRateLimitStore());
+  await _resetRateLimitState();
 });
 
 describe("checkHandoffRateLimit", () => {
-  it("allows requests up to the max within a window", () => {
+  it("allows requests up to the max within a window", async () => {
     const now = 1_000_000;
     for (let i = 0; i < HANDOFF_RATE_LIMIT_MAX; i++) {
-      expect(checkHandoffRateLimit("test-key", now + i)).toBe(true);
+      expect(await checkHandoffRateLimit("test-key", now + i)).toBe(true);
     }
   });
 
-  it("blocks the request that exceeds the max", () => {
+  it("blocks the request that exceeds the max", async () => {
     const now = 1_000_000;
     for (let i = 0; i < HANDOFF_RATE_LIMIT_MAX; i++) {
-      checkHandoffRateLimit("test-key", now + i);
+      await checkHandoffRateLimit("test-key", now + i);
     }
-    expect(checkHandoffRateLimit("test-key", now + HANDOFF_RATE_LIMIT_MAX)).toBe(false);
+    expect(
+      await checkHandoffRateLimit("test-key", now + HANDOFF_RATE_LIMIT_MAX),
+    ).toBe(false);
   });
 
-  it("does not count blocked requests against the window", () => {
+  it("does not count blocked requests against the window", async () => {
     const now = 1_000_000;
     for (let i = 0; i < HANDOFF_RATE_LIMIT_MAX; i++) {
-      checkHandoffRateLimit("test-key", now + i);
+      await checkHandoffRateLimit("test-key", now + i);
     }
     // Blocked call
-    expect(checkHandoffRateLimit("test-key", now + HANDOFF_RATE_LIMIT_MAX)).toBe(false);
+    expect(
+      await checkHandoffRateLimit("test-key", now + HANDOFF_RATE_LIMIT_MAX),
+    ).toBe(false);
     // Still blocked on a follow-up
-    expect(checkHandoffRateLimit("test-key", now + HANDOFF_RATE_LIMIT_MAX + 1)).toBe(false);
+    expect(
+      await checkHandoffRateLimit("test-key", now + HANDOFF_RATE_LIMIT_MAX + 1),
+    ).toBe(false);
   });
 
-  it("allows requests again after the window expires", () => {
+  it("allows requests again after the window expires", async () => {
     const now = 1_000_000;
     for (let i = 0; i < HANDOFF_RATE_LIMIT_MAX; i++) {
-      checkHandoffRateLimit("test-key", now + i);
+      await checkHandoffRateLimit("test-key", now + i);
     }
     // Fully outside the window
     const later = now + HANDOFF_RATE_LIMIT_WINDOW_MS + 1;
-    expect(checkHandoffRateLimit("test-key", later)).toBe(true);
+    expect(await checkHandoffRateLimit("test-key", later)).toBe(true);
   });
 
-  it("tracks different keys independently", () => {
+  it("tracks different keys independently", async () => {
     const now = 1_000_000;
     for (let i = 0; i < HANDOFF_RATE_LIMIT_MAX; i++) {
-      checkHandoffRateLimit("key-A", now + i);
+      await checkHandoffRateLimit("key-A", now + i);
     }
     // key-A is exhausted
-    expect(checkHandoffRateLimit("key-A", now + HANDOFF_RATE_LIMIT_MAX)).toBe(false);
+    expect(
+      await checkHandoffRateLimit("key-A", now + HANDOFF_RATE_LIMIT_MAX),
+    ).toBe(false);
     // key-B is fresh
-    expect(checkHandoffRateLimit("key-B", now + HANDOFF_RATE_LIMIT_MAX)).toBe(true);
+    expect(
+      await checkHandoffRateLimit("key-B", now + HANDOFF_RATE_LIMIT_MAX),
+    ).toBe(true);
   });
 
-  it("supports a custom max and window for testing", () => {
+  it("supports a custom max and window for testing", async () => {
     const now = 2_000_000;
-    expect(checkHandoffRateLimit("custom", now, 2, 5_000)).toBe(true);
-    expect(checkHandoffRateLimit("custom", now + 1, 2, 5_000)).toBe(true);
-    expect(checkHandoffRateLimit("custom", now + 2, 2, 5_000)).toBe(false);
+    expect(await checkHandoffRateLimit("custom", now, 2, 5_000)).toBe(true);
+    expect(await checkHandoffRateLimit("custom", now + 1, 2, 5_000)).toBe(true);
+    expect(await checkHandoffRateLimit("custom", now + 2, 2, 5_000)).toBe(false);
   });
 
-  it("slides the window: old hits age out as time advances", () => {
+  it("slides the window: old hits age out as time advances", async () => {
     const now = 3_000_000;
     const window = 10_000;
     // Fill the bucket (max=3) at t=now
-    checkHandoffRateLimit("slide", now, 3, window);
-    checkHandoffRateLimit("slide", now + 1, 3, window);
-    checkHandoffRateLimit("slide", now + 2, 3, window);
+    await checkHandoffRateLimit("slide", now, 3, window);
+    await checkHandoffRateLimit("slide", now + 1, 3, window);
+    await checkHandoffRateLimit("slide", now + 2, 3, window);
     // Bucket full
-    expect(checkHandoffRateLimit("slide", now + 3, 3, window)).toBe(false);
+    expect(await checkHandoffRateLimit("slide", now + 3, 3, window)).toBe(false);
     // Advance past the window so all three original hits are evicted
     const later = now + window + 1;
-    expect(checkHandoffRateLimit("slide", later, 3, window)).toBe(true);
+    expect(await checkHandoffRateLimit("slide", later, 3, window)).toBe(true);
   });
 });
 

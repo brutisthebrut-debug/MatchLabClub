@@ -271,7 +271,7 @@ router.post("/claim-anonymous", async (req, res): Promise<void> => {
   res.json(ClaimAnonymousDataResponse.parse({ claimed: counts }));
 });
 
-router.post("/claim-anonymous/handoff/issue", (req, res): void => {
+router.post("/claim-anonymous/handoff/issue", async (req, res): Promise<void> => {
   const anonToken = getAnonClaimToken(req);
   if (!anonToken) {
     res.status(400).json({
@@ -281,7 +281,7 @@ router.post("/claim-anonymous/handoff/issue", (req, res): void => {
   }
 
   const rlKey = handoffRateLimitKey(req.ip, anonToken);
-  if (!checkHandoffRateLimit(rlKey)) {
+  if (!(await checkHandoffRateLimit(rlKey))) {
     res.status(429).json({
       error:
         "Too many handoff link requests. Please wait a minute before trying again.",

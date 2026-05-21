@@ -73,8 +73,8 @@ beforeAll(() => {
 // Reset the in-memory rate-limit buckets between tests so each test starts
 // with a clean slate and cannot be affected by prior requests made in the
 // same process.
-beforeEach(() => {
-  _resetRateLimitState();
+beforeEach(async () => {
+  await _resetRateLimitState();
 });
 
 afterAll(async () => {
