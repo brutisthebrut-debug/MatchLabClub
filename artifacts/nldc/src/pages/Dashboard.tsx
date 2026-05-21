@@ -211,7 +211,7 @@ const ACTION_GROUPS = [
     ],
   },
   {
-    label: "Message Tools", color: "hsl(190 55% 60%)",
+    label: "Message Lab", color: "hsl(190 55% 60%)",
     items: [
       { icon: FlaskConical,  label: "Chemistry Lab",     desc: "Analyse a message",                href: "/lab"            },
       { icon: MessageSquare, label: "Message Coach",     desc: "5 styled reply options",           href: "/coach"          },

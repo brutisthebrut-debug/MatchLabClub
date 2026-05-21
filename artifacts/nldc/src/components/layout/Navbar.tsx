@@ -7,8 +7,8 @@ import {
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@workspace/replit-auth-web";
 
-// ── Six-section taxonomy (Start Here, Your Blueprint, Message Tools,
-// Growth Tracker, Offers, Settings/Trust). Every existing route is preserved.
+// ── Six-section taxonomy (Start Here, The Reset, Message Lab,
+// Growth Tracker, Offers, Context & Trust). Every existing route is preserved.
 
 const START_HERE_TOOLS = [
   { name: "Get your Signal Audit", href: "/start",         desc: "Begin here — 3-min intake wizard" },
@@ -109,7 +109,7 @@ const PACKAGES = [
   },
   {
     id: "blueprint" as const,
-    label: "Your Blueprint",
+    label: "The Reset",
     tagline: "Build a profile that actually reads as you",
     color: "hsl(43 65% 65%)",
     icon: BookOpen,
@@ -124,7 +124,7 @@ const PACKAGES = [
   },
   {
     id: "messages" as const,
-    label: "Message Tools",
+    label: "Message Lab",
     tagline: "Write better messages, connect faster",
     color: "hsl(190 55% 60%)",
     icon: MessageSquare,
@@ -160,7 +160,7 @@ const PACKAGES = [
   },
   {
     id: "trust" as const,
-    label: "Settings/Trust",
+    label: "Context & Trust",
     tagline: "What we know about you — and what you control",
     color: "hsl(228 30% 62%)",
     icon: Shield,

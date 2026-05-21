@@ -1,0 +1,36 @@
+Run a full product design system and UX/UI redesign pass. Preserve all existing pages, routes, features, data flows, checkout behavior, founder dashboard, generated-content behavior, current dark theme direction, tests, and mobile functionality. Do not reset the theme. Do not add major new features. The goal is to make the app feel like one seamless premium product with simplified tool packaging and clear user flow.
+
+Review from a founder/product perspective first, then walk through the main pages and components. Make the visible app structure simpler by packaging existing tools into clear sections:
+
+- Start Here: free check, quiz, sample report
+- The Reset: blueprint, profile improvement, compatibility, weekly plan, beta review
+- Message Lab: reply help, message style, reader, direct reply, clean exit
+- Growth Tracker: wins, pattern breaker, what changed, reflection, weekly plan
+- Context and Trust: connection center, vault, wellness/context, user control, privacy/terms
+- Founder/Beta: founder dashboard, feedback, templates, testing checklist
+
+Keep underlying routes intact, but the navigation, dashboard, and tool hubs should feel organized around these packages instead of a large route inventory.
+
+Improve navigation and dashboard. Navigation should be elegant, less dense, and easy to use on desktop and mobile. Dashboard should lead with one clear primary action, one continue/recent-work card, and packaged product cards below. New users should know where to start. Returning users should know what to continue. Advanced tools should be available but visually secondary.
+
+Improve the color system and visual consistency. Keep dark navy/ink blue, violet/plum gradients, champagne/gold highlights, pearl text, and subtle rose accents. Make action colors, trust/status colors, sample labels, beta labels, success states, and warnings consistent. Improve contrast and readability. Remove accidental light areas, muddy gradients, mismatched borders, inconsistent badge colors, and visual noise.
+
+Normalize shared UI patterns. Cards, report cards, package cards, buttons, inputs, dropdowns, tabs, dialogs, badges, pills, score rings, copy buttons, tone controls, empty states, pricing cards, trust cards, and founder cards should feel like one design system. Fix inconsistent padding, spacing, radius, border opacity, shadows, hover/focus states, and typography scale.
+
+Redesign the homepage around product clarity. The first screen should explain the product in five seconds: understand how you come across, improve profile/messages, and get a clear next plan. Use two main CTAs: Start Free Check and See Sample Report. Keep partner content secondary. Avoid clutter, duplicate CTAs, and generic AI-sounding claims.
+
+Redesign pricing and offers around clear packages. Make Free Signal Check, Profile Signal Audit, Dating Reset, Wingman Membership/waitlist, and Founder Reviewed Beta easy to compare. Each offer should state exactly what the user receives and what happens next. Preserve current CTA routes and promo-code checkout capture.
+
+Strengthen Sample Report as the main proof page. Make it scan cleanly: fictional user intro, starting input, what the app noticed, why it matters, improved copy, message strategy, weekly plan, founder note, and CTA. Label sample content clearly.
+
+Make generated-output pages feel designed. Key result/report/message/profile pages should use consistent sections: what was noticed, why it matters, what to change, and next action or example rewrite. Copy buttons and tone controls should feel integrated.
+
+Polish trust/context and founder pages. Connection Center, Vault, Wellness/Context, User Control, Privacy, Terms, and Founder should use consistent cards, labels, status badges, and readable layouts. Keep these areas calm and clear.
+
+Prioritize mobile. Test around 375px and common phone widths. Fix horizontal overflow, clipped text, cramped grids, hard-to-tap controls, dropdown issues, modal overflow, long headings, buried CTAs, and unreadable cards.
+
+Improve copy and labels. Replace vague platform language with concrete wording around what was noticed, what to improve, what to send next, and what to test this week. Clarify sample content, beta status, free vs paid paths, privacy/user control, and what happens after submission. Keep the voice warm, direct, inclusive, practical, and trustworthy.
+
+Fix small obvious gaps while reviewing: dead CTAs, duplicate labels, stale route names, missing links, unclear package names, weak empty states, inconsistent proof labels, missing copy buttons, and low-contrast controls. Do not create large new features.
+
+Run available verification if practical. Screenshot key pages if possible: homepage, dashboard, mobile dashboard, nav/menu, pricing, checkout, sample report, one output page, message area, connection/vault pages, and founder. Commit/checkpoint and report what changed, what passed, what remains, and what should be manually tested next.
