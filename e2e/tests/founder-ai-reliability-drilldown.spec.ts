@@ -187,6 +187,44 @@ test("AI Reliability trends: metric toggle is hidden when a tool is focused and 
   await expect(fallbackToggle).toBeVisible();
 });
 
+test("AI Reliability trends: Download CSV filename includes focused tool slug suffix", async ({ page }) => {
+  // ── 1. Sign in ───────────────────────────────────────────────────────────
+  await page.goto("/founder");
+
+  const keyInput = page.locator('input[type="password"]');
+  await expect(keyInput).toBeVisible();
+  await keyInput.fill(FOUNDER_KEY);
+  await page.locator('button:has-text("Unlock Dashboard")').click();
+
+  // ── 2. Wait for panel and data ────────────────────────────────────────────
+  const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
+  await expect(focusSelect).toBeVisible({ timeout: 20_000 });
+  await focusSelect.scrollIntoViewIfNeeded();
+  await expect(focusSelect.locator(`option[value="${SECONDARY_TOOL_NAME}"]`)).toBeAttached({ timeout: 20_000 });
+
+  // ── 3. Focus on the secondary tool so the CSV filename gets a slug suffix
+  await focusSelect.selectOption(SECONDARY_TOOL_NAME);
+  await expect(page.locator('[data-testid="trend-focus-summary"]')).toBeVisible({ timeout: 10_000 });
+
+  // ── 4. Download CSV ──────────────────────────────────────────────────────
+  const downloadBtn = page.locator('[data-testid="button-download-trends-csv"]');
+  await expect(downloadBtn).toBeEnabled({ timeout: 10_000 });
+
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    downloadBtn.click(),
+  ]);
+
+  // ── 5. Assert filename has the focused-tool slug suffix ──────────────────
+  // Generic shape: ai-reliability-trends-<window>d-<slug>.csv
+  const filename = download.suggestedFilename();
+  expect(filename).toMatch(/^ai-reliability-trends-90d-[a-z0-9-]+\.csv$/);
+  // And specifically, the slug matches the focused tool name (lowercased,
+  // non-alphanumeric collapsed to "-"). Guards against rename / slug bugs.
+  const expectedSlug = SECONDARY_TOOL_NAME.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+  expect(filename).toBe(`ai-reliability-trends-90d-${expectedSlug}.csv`);
+});
+
 test("AI Reliability drill-in: focus clears automatically when tool has no data in the active window", async ({ page }) => {
   // ── 1. Sign in ───────────────────────────────────────────────────────────
   await page.goto("/founder");
