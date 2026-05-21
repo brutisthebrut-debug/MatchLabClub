@@ -334,7 +334,7 @@ export default function Insights() {
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
             <p className="text-sm font-medium text-muted-foreground mb-1">Communication Analysis</p>
             <h1 className="text-3xl font-serif font-bold text-foreground">Email Insight Import</h1>
-            <p className="text-muted-foreground mt-2 max-w-xl">Paste exported message history and we'll identify your communication patterns, attachment style, and profile coaching tips.</p>
+            <p className="text-muted-foreground mt-2 max-w-xl">Paste exported message history. We'll surface your communication patterns, attachment style, and the profile tweaks most likely to lift your reply rate.</p>
           </motion.div>
 
           {isBrandNewUser && !insightsPossiblyOrphaned && (

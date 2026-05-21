@@ -307,9 +307,9 @@ export default function Coach() {
         <div className="max-w-3xl mx-auto relative z-10">
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <p className="text-sm font-medium text-muted-foreground mb-1">AI-Powered</p>
+            <p className="text-sm font-medium text-muted-foreground mb-1">Communication Tools</p>
             <h1 className="text-3xl font-bold text-foreground">Message Coach</h1>
-            <p className="text-muted-foreground mt-2">Paste a conversation, get 3 expertly-crafted reply options — each with coaching rationale.</p>
+            <p className="text-muted-foreground mt-2">Paste a conversation. Get 3 reply drafts — Playful, Direct, Warm — with the why behind each pick.</p>
           </motion.div>
 
           {isBrandNewUser && (
@@ -319,7 +319,7 @@ export default function Coach() {
               icon={<MessageSquare className="w-6 h-6" />}
               eyebrow="Welcome to Message Coach"
               title="Coach your first message"
-              description="Paste any dating app conversation below and we'll deliver three calibrated reply options — Playful, Direct, and Warm — each with the rationale a real coach would give."
+              description="Paste any dating app conversation below and we'll draft three reply options — Playful, Direct, and Warm — with the reasoning behind each one so you can pick what fits."
               testId="coach-empty-state"
             />
           )}
