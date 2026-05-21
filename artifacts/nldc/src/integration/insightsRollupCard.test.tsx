@@ -17,6 +17,13 @@ vi.mock("@/hooks/useMeta", () => ({
 
 vi.mock("@/lib/anonymousIds", () => ({
   rememberAnonymousId: () => {},
+  readAnonymousIds: () => ({
+    auditIds: [],
+    profileIds: [],
+    messageSessionIds: [],
+    insightIds: [],
+    followUpIds: [],
+  }),
 }));
 
 type RollupData = {

@@ -92,6 +92,13 @@ vi.mock("@/hooks/useMeta", () => ({ useMeta: () => {} }));
 
 vi.mock("@/lib/anonymousIds", () => ({
   rememberAnonymousId: () => {},
+  readAnonymousIds: () => ({
+    auditIds: [],
+    profileIds: [],
+    messageSessionIds: [],
+    insightIds: [],
+    followUpIds: [],
+  }),
 }));
 
 vi.mock("@/lib/apiClient", () => ({

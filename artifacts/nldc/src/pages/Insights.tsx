@@ -21,8 +21,8 @@ import {
 import type { EmailInsight } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
-import { rememberAnonymousId } from "@/lib/anonymousIds";
-import { Shield, Loader2, Mail, TrendingUp, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, X, Filter, Trash2, RefreshCw } from "lucide-react";
+import { rememberAnonymousId, readAnonymousIds } from "@/lib/anonymousIds";
+import { Shield, Loader2, Mail, TrendingUp, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, X, Filter, Trash2, RefreshCw, LogIn } from "lucide-react";
 import { WelcomePanel } from "@/components/WelcomePanel";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
@@ -122,7 +122,7 @@ export default function Insights() {
     sourceApp || detectSourceFromText(`${sourceLabel}\n${content}`) || "";
   const queryClient = useQueryClient();
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading, login } = useAuth();
   const { toast } = useToast();
   const { data: insights, isLoading: insightsLoading } = useListInsights();
   const { data: rollup } = useGetInsightsRollup();
@@ -229,6 +229,45 @@ export default function Insights() {
   const hasInsights = !!(insights && insights.length > 0);
   const isBrandNewUser = isAuthenticated && !insightsLoading && !hasInsights && !analysis;
 
+  // Track whether the anonymous user has insight IDs sitting in localStorage
+  // that aren't yet attached to an account. If they clear cookies before
+  // signing in (or never sign in), the analysis becomes orphaned. We surface
+  // a banner + browser unload warning so they can take action proactively.
+  const [hasUnsavedAnonInsights, setHasUnsavedAnonInsights] = useState(false);
+  useEffect(() => {
+    if (isAuthLoading) return;
+    function refresh() {
+      if (isAuthenticated) {
+        setHasUnsavedAnonInsights(false);
+        return;
+      }
+      const ids = readAnonymousIds();
+      setHasUnsavedAnonInsights(ids.insightIds.length > 0);
+    }
+    refresh();
+    if (typeof window === "undefined") return;
+    function onStorage(e: StorageEvent) {
+      if (!e.key || e.key === "nldc:anon:insightIds") refresh();
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [isAuthenticated, isAuthLoading, insights]);
+
+  // Warn anonymous users before they close/navigate away if they have
+  // analysis stored locally that hasn't been claimed to an account yet.
+  useEffect(() => {
+    if (!hasUnsavedAnonInsights) return;
+    if (typeof window === "undefined") return;
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+      // Modern browsers ignore the custom string but require returnValue set.
+      e.returnValue = "";
+      return "";
+    }
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [hasUnsavedAnonInsights]);
+
   // Detect the cookie-loss orphan scenario: the client had insight IDs in
   // localStorage when signing in, but the server couldn't match them because
   // the anon_claim cookie was already gone. useClaimAnonymousOnLogin stores a
@@ -306,6 +345,30 @@ export default function Insights() {
               description="Paste any message history below and we'll surface your communication patterns, attachment style, and the profile tweaks most likely to lift your results."
               testId="insights-empty-state"
             />
+          )}
+
+          {hasUnsavedAnonInsights && !isAuthenticated && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 flex flex-col sm:flex-row gap-4 sm:items-center"
+              data-testid="banner-anon-insights-unsaved"
+            >
+              <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold text-amber-900 text-sm mb-1">Sign in now to save your analysis</p>
+                <p className="text-sm text-amber-800 leading-relaxed">
+                  Your Email Insights analysis is currently stored on this device only. If you clear your browser cookies or switch devices before signing in, it can't be linked to your account.
+                </p>
+              </div>
+              <Button
+                onClick={() => login()}
+                className="rounded-full h-10 font-semibold sm:flex-shrink-0"
+                data-testid="button-anon-insights-sign-in"
+              >
+                <LogIn className="w-4 h-4 mr-2" /> Sign in to save
+              </Button>
+            </motion.div>
           )}
 
           {insightsPossiblyOrphaned && (
