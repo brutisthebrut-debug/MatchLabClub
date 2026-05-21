@@ -1202,8 +1202,8 @@ function AiMetricsPanel({ refreshKey, founderKey }: { refreshKey: number; founde
       .finally(() => setLoading(false));
   }, [refreshKey, bump, founderKey]);
 
-  const hasActiveCooldowns = (data?.cooldownStates ?? []).some(
-    (c) => !c.rebreachedDuringCooldown && c.cooldownRemainingMs > 0,
+  const hasActiveCooldowns = (data?.perTool ?? []).some(
+    (t) => t.inCooldown && (t.cooldownRemainingMs ?? 0) > 0,
   );
 
   useEffect(() => {
