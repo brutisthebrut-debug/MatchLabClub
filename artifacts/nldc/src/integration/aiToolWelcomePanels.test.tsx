@@ -49,6 +49,7 @@ vi.mock("@workspace/api-client-react", () => ({
   useEnhanceAi: () => ({ mutateAsync: enhanceMutateAsync, isPending: false }),
   useCreateAudit: () => ({ mutateAsync: createAuditMutateAsync, isPending: false }),
   useGenerateAuditReport: () => ({ mutateAsync: generateReportMutateAsync, isPending: false }),
+  useListAudits: () => ({ data: [], isLoading: false }),
   getListAuditsQueryKey: () => ["list-audits"],
   useGetAiFallbackRate: () => ({ data: null, isLoading: false }),
   getGetAiFallbackRateQueryKey: () => ["ai-fallback-rate"],

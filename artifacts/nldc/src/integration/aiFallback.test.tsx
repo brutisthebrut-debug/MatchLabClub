@@ -38,6 +38,10 @@ vi.mock("@workspace/api-client-react", () => ({
   }),
   useGetAiFallbackRate: () => ({ data: null, isLoading: false }),
   getGetAiFallbackRateQueryKey: () => ["ai-fallback-rate"],
+  useListAudits: () => ({ data: [], isLoading: false }),
+  useListMessageCoachingSessions: () => ({ data: [], isLoading: false }),
+  getListAuditsQueryKey: () => ["list-audits"],
+  getListMessageCoachingSessionsQueryKey: () => ["list-coaching-sessions"],
 }));
 
 // AppLayout pulls in Navbar/Footer which depend on auth + routing — pass through
