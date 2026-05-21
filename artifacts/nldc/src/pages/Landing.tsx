@@ -148,6 +148,31 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── Product Journey ── */}
+      <section className="py-8 border-t border-white/5 bg-[hsl(232_28%_9%/0.5)]">
+        <div className="container mx-auto px-4">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-center text-muted-foreground/40 mb-5">How the path works</p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {[
+              { n: "1", label: "Paste your profile",    href: "/start",         color: "hsl(268 52% 68%)" },
+              { n: "2", label: "Get your Signal Check", href: "/signal-check",  color: "hsl(43 65% 65%)"  },
+              { n: "3", label: "Read your report",      href: "/sample-report", color: "hsl(142 55% 60%)" },
+              { n: "4", label: "Choose your offer",     href: "/pricing",       color: "hsl(190 55% 60%)" },
+              { n: "5", label: "Own your dashboard",    href: "/dashboard",     color: "hsl(285 45% 65%)" },
+            ].map((step, i) => (
+              <span key={step.n} className="flex items-center gap-2">
+                <Link href={step.href} className="flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-white/8 hover:border-white/18 transition-all group">
+                  <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                    style={{ background: step.color.replace(")", " / 0.18)"), color: step.color }}>{step.n}</span>
+                  <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap">{step.label}</span>
+                </Link>
+                {i < 4 && <ArrowRight className="w-3 h-3 text-muted-foreground/25 hidden sm:block flex-shrink-0" />}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Before / After ── */}
       <section className="py-20 md:py-28 relative overflow-hidden">
         <div className="orb orb-plum absolute w-80 h-80 -left-40 top-20 opacity-50 pointer-events-none" />

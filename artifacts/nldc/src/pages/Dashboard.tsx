@@ -237,7 +237,7 @@ const ACTION_GROUPS = [
     ],
   },
   {
-    label: "Settings & Trust", color: "hsl(228 18% 55%)",
+    label: "Context & Trust", color: "hsl(228 18% 55%)",
     items: [
       { icon: Heart,         label: "Wellness Center",   desc: "8 dimensions of readiness",        href: "/wellness"        },
       { icon: Layers,        label: "Connection Center", desc: "Bring in context on your terms",   href: "/connections"     },
