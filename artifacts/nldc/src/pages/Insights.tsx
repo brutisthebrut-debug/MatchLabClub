@@ -803,9 +803,17 @@ export default function Insights() {
                                     className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30"
                                     data-testid={`badge-insight-source-${insight.id}`}
                                   >
-                                    {insight.sourceApp}
+                                    Tuned to {insight.sourceApp}
                                   </span>
-                                ) : null}
+                                ) : (
+                                  <span
+                                    className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border"
+                                    data-testid={`badge-insight-source-unknown-${insight.id}`}
+                                    title="Select a source platform to personalize future analyses"
+                                  >
+                                    General analysis
+                                  </span>
+                                )}
                               </div>
                               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                                 <Clock className="w-3 h-3" />
