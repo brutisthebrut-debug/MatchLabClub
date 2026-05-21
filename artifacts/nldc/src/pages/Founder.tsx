@@ -771,7 +771,13 @@ function formatAge(ms: number): string {
   return `${days}d ago`;
 }
 
+const JOB_NAME_OVERRIDES: Record<string, string> = {
+  geoip_update: "GeoIP data",
+};
+
 function formatJobName(jobName: string): string {
+  const override = JOB_NAME_OVERRIDES[jobName];
+  if (override) return override;
   return jobName
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
