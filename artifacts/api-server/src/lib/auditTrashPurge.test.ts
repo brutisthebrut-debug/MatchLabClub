@@ -9,7 +9,7 @@ import {
 } from "vitest";
 import express, { type Express } from "express";
 import request from "supertest";
-import { and, isNotNull, sql } from "drizzle-orm";
+import { and, isNotNull, inArray, sql } from "drizzle-orm";
 import {
   db,
   pool,
@@ -20,8 +20,17 @@ import {
 import { eq } from "drizzle-orm";
 import { purgeExpiredTrashedAudits } from "./auditTrashPurge";
 
+// Track only the IDs seeded by THIS test file so cleanup never touches rows
+// owned by concurrently-running test files (e.g. claim.test.ts).
+const seededAuditIds: number[] = [];
+
 async function clearAudits(): Promise<void> {
-  await db.execute(sql`delete from audits`);
+  if (seededAuditIds.length > 0) {
+    await db
+      .delete(auditsTable)
+      .where(inArray(auditsTable.id, [...seededAuditIds]));
+    seededAuditIds.length = 0;
+  }
 }
 
 async function clearHeartbeat(): Promise<void> {
@@ -54,7 +63,9 @@ async function seedAudit(opts: SeedAuditOpts = {}): Promise<number> {
       deletedAt: opts.deletedAt ?? null,
     })
     .returning({ id: auditsTable.id });
-  return id as number;
+  const numId = id as number;
+  seededAuditIds.push(numId);
+  return numId;
 }
 
 async function setDeletedAt(id: number, date: Date): Promise<void> {
@@ -137,7 +148,8 @@ describe("purgeExpiredTrashedAudits", () => {
 
     const remaining = await db
       .select({ id: auditsTable.id })
-      .from(auditsTable);
+      .from(auditsTable)
+      .where(inArray(auditsTable.id, [id1, id2]));
     expect(remaining).toHaveLength(2);
   });
 
