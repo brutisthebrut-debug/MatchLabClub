@@ -23,7 +23,7 @@ export default function Landing() {
       <div className="bg-gradient-to-r from-[hsl(268_52%_55%/0.08)] via-[hsl(285_45%_55%/0.05)] to-[hsl(43_65%_55%/0.07)] border-b border-foreground/8 py-2.5">
         <div className="container mx-auto px-4 flex items-center justify-center gap-2.5 text-sm font-medium">
           <Headphones className="w-4 h-4 text-[hsl(43_65%_62%)]" />
-          <span className="text-foreground/80">As heard on <strong className="text-foreground">The Love Reset Podcast</strong></span>
+          <span className="text-foreground/80">Launched alongside <strong className="text-foreground">The Love Reset Podcast</strong> — a launch partner</span>
           <span className="hidden md:inline text-muted-foreground">—</span>
           <Link href="/waitlist" className="hidden md:inline gradient-text-gold font-semibold hover:opacity-80 transition-opacity">
             Claim 40% off with code PODCAST40 →
@@ -94,12 +94,18 @@ export default function Landing() {
               </Button>
             </motion.div>
 
-            {/* Sample report nudge */}
-            <motion.div className="flex justify-center mt-4" {...fadeUp(0.28)}>
-              <Link href="/sample-report" className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors flex items-center gap-1.5 group">
-                <span>See a sample Dating Reset Report</span>
-                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            {/* Sample report nudge — promoted */}
+            <motion.div className="flex flex-wrap items-center justify-center gap-3 mt-5" {...fadeUp(0.28)}>
+              <Link
+                href="/sample-report"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[hsl(268_52%_68%/0.3)] hover:border-[hsl(268_52%_68%/0.55)] hover:bg-[hsl(268_52%_68%/0.08)] transition-all group"
+                data-testid="link-landing-sample-report"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[hsl(268_52%_78%)]" />
+                <span className="text-xs font-semibold text-foreground">See a real sample report first</span>
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
               </Link>
+              <span className="text-xs text-muted-foreground/50">No signup · 30 second read</span>
             </motion.div>
 
             {/* Social proof avatars */}

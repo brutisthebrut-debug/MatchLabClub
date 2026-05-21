@@ -3010,7 +3010,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
     Promise.all([
       getFounderStats(FOUNDER_KEY).then(setStats).catch(() => {}),
       getLeads().then(setLeads).catch(() => {}),
-      getPurchaseInterestList().then(setPurchases).catch(() => {}),
+      getPurchaseInterestList(FOUNDER_KEY).then(setPurchases).catch(() => {}),
     ]).finally(() => setLoading(false));
   }, [refreshKey]);
 
@@ -3172,10 +3172,11 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
         <div className="glass rounded-2xl p-6 space-y-4">
           <h2 className="font-semibold text-foreground">Purchase interest ({purchases.length})</h2>
           <TableShell
-            headers={["ID", "Name", "Email", "Product", "Amount", "Source", "Status", "Date"]}
+            headers={["ID", "Name", "Email", "Product", "Amount", "Promo", "Source", "Status", "Date"]}
             rows={purchases.map((p) => [
               p.id, p.firstName, p.email, p.product,
               p.amountCents ? `$${(p.amountCents / 100).toFixed(0)}` : "Free",
+              p.promoCode ?? "—",
               p.source, p.status, fmtDate(p.createdAt),
             ])}
           />

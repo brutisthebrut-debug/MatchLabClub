@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, purchaseInterestTable } from "@workspace/db";
 import { z } from "zod/v4";
 import { desc } from "drizzle-orm";
+import { requireFounder } from "../middlewares/founderAuth";
 
 const router: IRouter = Router();
 
@@ -11,6 +12,7 @@ const PurchaseInterestBody = z.object({
   product: z.enum(["signal-audit", "dating-reset", "wingman"]),
   amountCents: z.number().int().min(0),
   source: z.string().optional().nullable(),
+  promoCode: z.string().max(64).optional().nullable(),
 });
 
 router.post("/purchase-interest", async (req, res): Promise<void> => {
@@ -26,7 +28,7 @@ router.post("/purchase-interest", async (req, res): Promise<void> => {
   });
 });
 
-router.get("/purchase-interest", async (req, res): Promise<void> => {
+router.get("/purchase-interest", requireFounder, async (req, res): Promise<void> => {
   const entries = await db
     .select()
     .from(purchaseInterestTable)

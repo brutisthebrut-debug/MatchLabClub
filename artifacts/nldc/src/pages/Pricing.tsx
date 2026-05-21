@@ -47,7 +47,7 @@ const TIERS = [
     badge: null,
     desc: "Complete audit with full bio rewrite, all prompt rewrites, photo checklist, and your 7-day action plan. One payment, done.",
     cta: "Get My Audit — $29",
-    href: "/start",
+    href: "/checkout/signal-audit",
     accentColor: "hsl(190 75% 40%)",
     icon: Star,
     features: [
@@ -81,7 +81,7 @@ const TIERS = [
     badge: "Most Popular",
     desc: "A complete rebuild of how you present yourself — profile, prompts, messaging, photos, and a 7-day action plan.",
     cta: "Begin My Reset",
-    href: "/start",
+    href: "/checkout/dating-reset",
     accentColor: "hsl(268 52% 68%)",
     icon: Zap,
     features: [

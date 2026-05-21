@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMeta } from "@/hooks/useMeta";
-import { captureLead, capturePurchaseInterest } from "@/lib/apiClient";
+import { capturePurchaseInterest } from "@/lib/apiClient";
 import {
   CheckCircle2, Sparkles, Lock, ArrowRight, ExternalLink,
-  Zap, Star, Crown, AlertTriangle
+  Zap, Star, Crown, AlertTriangle, Tag
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -33,44 +33,44 @@ interface ProductConfig {
 const PRODUCTS: Record<Product, ProductConfig> = {
   "signal-audit": {
     name: "Profile Signal Audit",
-    price: "Free",
-    priceDetail: "No credit card. No catch.",
-    badge: "Start here",
-    badgeColor: "hsl(268 52% 68%)",
+    price: "$29",
+    priceDetail: "One-time. No subscription.",
+    badge: "One-time audit",
+    badgeColor: "hsl(190 75% 50%)",
     description:
-      "Find out exactly what your profile is communicating — and get it rewritten. Takes 3 minutes.",
+      "Your full Profile Signal Audit with bio rewrite, all prompts rewritten, photo checklist, and your 7-day action plan. One payment, everything delivered.",
     features: [
-      "Signal Score (0–100 with full breakdown)",
-      "Signal Spectrum — 8 dimensions scored",
-      "Full bio critique in plain English",
-      "AI-rewritten bio you can copy instantly",
-      "Prompt rewrites (if you provided them)",
-      "Photo guidance checklist",
-      "7-day action plan",
+      "Your full Signal Score (0–100) + 8-dimension Spectrum",
+      "Bio rewritten to actually sound like you",
+      "Every prompt rewritten with coach notes",
+      "Photo checklist across 5 categories",
+      "Dating Diagnosis — pattern review",
+      "Personalised 7-day action plan",
+      "Founder review note during beta (within 48h)",
     ],
-    cta: "Start My Free Audit",
+    cta: "Get My Audit — $29",
     icon: Zap,
-    gradient: "from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)]",
-    amountCents: 0,
-    stripeEnvKey: null,
-    successCopy: "Your free audit is ready to begin.",
+    gradient: "from-[hsl(190_75%_50%)] to-[hsl(190_75%_38%)]",
+    amountCents: 2900,
+    stripeEnvKey: "VITE_STRIPE_SIGNAL_AUDIT_LINK",
+    successCopy: "Your Profile Signal Audit is confirmed.",
   },
   "dating-reset": {
     name: "The Dating Reset",
     price: "$97",
     priceDetail: "One-time. No subscription.",
-    badge: "Best value",
-    badgeColor: "hsl(348 55% 58%)",
+    badge: "Most Popular",
+    badgeColor: "hsl(268 52% 68%)",
     description:
-      "A complete profile and messaging rebuild. Walk away with a profile that's finally working.",
+      "A complete rebuild of how you present yourself — profile, prompts, messaging, photos, and a 7-day action plan. Walk away with a profile that's finally working.",
     features: [
-      "Everything in Signal Audit",
-      "In-depth Signal Spectrum deep-dive",
-      "Dating Diagnosis with category breakdown",
-      "Chemistry Lab — unlimited message coaching",
-      "Conversation pattern analysis",
-      "30-day progress check-in session",
-      "Priority support",
+      "Everything in the $29 Signal Audit, plus:",
+      "Unlimited future Signal Audits (re-run after every change)",
+      "Chemistry Lab — 10 message coaching sessions",
+      "Communication pattern import (full)",
+      "Score history + progress tracking",
+      "Founder review note during beta (within 48h)",
+      "Priority access to new features",
     ],
     cta: "Get The Dating Reset — $97",
     icon: Star,
@@ -105,82 +105,13 @@ const PRODUCTS: Record<Product, ProductConfig> = {
   },
 };
 
-function FreeAuditForm({ product }: { product: "signal-audit" }) {
-  const [, navigate] = useLocation();
-  const [form, setForm] = useState({ firstName: "", email: "" });
-  const [loading, setLoading] = useState(false);
-  const config = PRODUCTS[product];
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      if (form.email) {
-        await captureLead({
-          firstName: form.firstName || null,
-          email: form.email,
-          source: "checkout-signal-audit",
-          interest: "signal-audit",
-        }).catch(() => {});
-      }
-    } finally {
-      navigate("/start");
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="firstName" className="text-sm text-muted-foreground">First name (optional)</Label>
-        <Input
-          id="firstName"
-          placeholder="Alex"
-          value={form.firstName}
-          onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
-          className="bg-white/5 border-white/10 text-foreground"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="email" className="text-sm text-muted-foreground">Email — save your result (optional)</Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="you@example.com"
-          value={form.email}
-          onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-          className="bg-white/5 border-white/10 text-foreground"
-        />
-      </div>
-      <Button
-        type="submit"
-        disabled={loading}
-        className={`w-full bg-gradient-to-r ${config.gradient} text-white font-semibold rounded-xl h-12 text-base hover:opacity-90 transition-opacity`}
-      >
-        {loading ? "Starting…" : config.cta}
-        <ArrowRight className="w-4 h-4 ml-2" />
-      </Button>
-      <button
-        type="button"
-        onClick={() => navigate("/start")}
-        className="w-full text-center text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors py-1"
-      >
-        Skip and start without saving →
-      </button>
-      <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground/50">
-        <Lock className="w-3 h-3" />
-        Free forever. No card needed.
-      </div>
-    </form>
-  );
-}
-
-function PaidForm({ product }: { product: "dating-reset" | "wingman" }) {
+function PaidForm({ product }: { product: Product }) {
   const config = PRODUCTS[product];
   const stripeLink = config.stripeEnvKey
     ? (import.meta.env as Record<string, string>)[config.stripeEnvKey]
     : null;
 
-  const [form, setForm] = useState({ firstName: "", email: "" });
+  const [form, setForm] = useState({ firstName: "", email: "", promoCode: "" });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
@@ -215,11 +146,17 @@ function PaidForm({ product }: { product: "dating-reset" | "wingman" }) {
           <CheckCircle2 className="w-6 h-6 text-green-400" />
         </div>
         <div>
-          <p className="font-semibold text-foreground">You're on the early list.</p>
+          <p className="font-semibold text-foreground">You're on the early list for {config.name}.</p>
           <p className="text-sm text-muted-foreground mt-1">
-            We'll email you as soon as checkout opens — and you'll get first access.
+            We'll email you the moment checkout opens — you'll get first access{form.promoCode ? ", and your promo code will be applied during follow-up" : ""}.
           </p>
         </div>
+        <Link
+          href="/sample-report"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[hsl(268_52%_78%)] hover:text-[hsl(268_52%_88%)] transition-colors"
+        >
+          See a real sample report while you wait <ArrowRight className="w-3 h-3" />
+        </Link>
       </motion.div>
     );
   }
@@ -236,6 +173,7 @@ function PaidForm({ product }: { product: "dating-reset" | "wingman" }) {
         product,
         amountCents: config.amountCents,
         source: `checkout-${product}`,
+        promoCode: form.promoCode.trim() || null,
       });
       setSubmitted(true);
     } catch {
@@ -249,9 +187,10 @@ function PaidForm({ product }: { product: "dating-reset" | "wingman" }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/8 border border-amber-500/20">
         <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
-        <p className="text-xs text-amber-300/80 leading-relaxed">
-          <strong>Coming soon.</strong> Checkout isn't live yet — but you can join the early list and we'll notify you the moment it opens.
-        </p>
+        <div className="text-xs text-amber-300/80 leading-relaxed space-y-1.5">
+          <p><strong>Beta — payment opens shortly.</strong> Save your spot now and we'll email you the moment checkout opens, at the locked-in beta price.</p>
+          <p className="text-amber-300/60">No charge today. Beta orders get the founder review note. You can also start your free Signal Check at <Link href="/start" className="underline hover:text-amber-200">/start</Link>.</p>
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="firstName" className="text-sm text-muted-foreground">First name (optional)</Label>
@@ -276,12 +215,30 @@ function PaidForm({ product }: { product: "dating-reset" | "wingman" }) {
         />
         {error && <p className="text-xs text-red-400">{error}</p>}
       </div>
+      <div className="space-y-2">
+        <Label htmlFor="promoCode" className="text-sm text-muted-foreground flex items-center gap-1.5">
+          <Tag className="w-3.5 h-3.5" /> Promo code (optional)
+        </Label>
+        <Input
+          id="promoCode"
+          placeholder="e.g. PODCAST40"
+          value={form.promoCode}
+          onChange={(e) => setForm((f) => ({ ...f, promoCode: e.target.value.toUpperCase().slice(0, 64) }))}
+          className="bg-white/5 border-white/10 text-foreground font-mono tracking-wider"
+          data-testid="input-checkout-promo-code"
+          autoCapitalize="characters"
+        />
+        <p className="text-[11px] text-muted-foreground/50 leading-relaxed">
+          Promo codes are handled personally during beta follow-up — we'll apply yours when we email you.
+        </p>
+      </div>
       <Button
         type="submit"
         disabled={loading}
         className={`w-full bg-gradient-to-r ${config.gradient} text-white font-semibold rounded-xl h-12 text-base hover:opacity-90 transition-opacity`}
+        data-testid="button-checkout-submit"
       >
-        {loading ? "Saving…" : `Notify me when ${config.name} opens`}
+        {loading ? "Saving…" : `Save my spot for ${config.name}`}
       </Button>
       <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground/50">
         <Lock className="w-3 h-3" />
@@ -361,51 +318,69 @@ export default function Checkout({ product }: { product: string }) {
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-[hsl(268_52%_68%)]" />
               <h2 className="font-semibold text-foreground">
-                {resolvedProduct === "signal-audit" ? "Start your free audit" : "Complete your order"}
+                {resolvedProduct === "wingman" ? "Save your spot" : "Complete your order"}
               </h2>
             </div>
 
-            {resolvedProduct === "signal-audit" ? (
-              <FreeAuditForm product="signal-audit" />
-            ) : (
-              <PaidForm product={resolvedProduct as "dating-reset" | "wingman"} />
-            )}
+            <PaidForm product={resolvedProduct} />
 
-            {resolvedProduct !== "signal-audit" && (
-              <div className="pt-2 space-y-2">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
-                  <CheckCircle2 className="w-3 h-3" />
-                  14-day money-back guarantee
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Cancel anytime, no penalty
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Your data is never shared or sold
-                </div>
+            <div className="pt-2 space-y-2">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
+                <CheckCircle2 className="w-3 h-3" />
+                30-day guarantee — we'll redo it or refund it
               </div>
-            )}
+              <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
+                <CheckCircle2 className="w-3 h-3" />
+                Cancel anytime, no penalty
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
+                <CheckCircle2 className="w-3 h-3" />
+                Your data is never shared or sold
+              </div>
+              <div className="pt-2 text-center">
+                <Link href="/sample-report" className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors inline-flex items-center gap-1.5">
+                  See a real sample report <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Cross-sell */}
         {resolvedProduct === "signal-audit" && (
           <div className="mt-12 text-center">
-            <p className="text-sm text-muted-foreground mb-4">Want more than a free audit?</p>
+            <p className="text-sm text-muted-foreground mb-4">Want the full rebuild instead?</p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link
                 href="/checkout/dating-reset"
-                className="px-5 py-2.5 glass rounded-xl text-sm font-medium text-[hsl(348_55%_68%)] hover:bg-white/5 transition-colors border border-[hsl(348_55%_58%/0.2)]"
+                className="px-5 py-2.5 glass rounded-xl text-sm font-medium text-[hsl(268_52%_78%)] hover:bg-white/5 transition-colors border border-[hsl(268_52%_68%/0.25)]"
               >
                 The Dating Reset — $97 →
               </Link>
               <Link
-                href="/checkout/wingman"
-                className="px-5 py-2.5 glass rounded-xl text-sm font-medium text-[hsl(43_65%_62%)] hover:bg-white/5 transition-colors border border-[hsl(43_65%_52%/0.2)]"
+                href="/start"
+                className="px-5 py-2.5 glass rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/5 transition-colors border border-white/10"
               >
-                Monthly Wingman — $197/mo →
+                Start free Signal Check instead →
+              </Link>
+            </div>
+          </div>
+        )}
+        {resolvedProduct === "dating-reset" && (
+          <div className="mt-12 text-center">
+            <p className="text-sm text-muted-foreground mb-4">Just need the one-time audit?</p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link
+                href="/checkout/signal-audit"
+                className="px-5 py-2.5 glass rounded-xl text-sm font-medium text-[hsl(190_75%_60%)] hover:bg-white/5 transition-colors border border-[hsl(190_75%_50%/0.25)]"
+              >
+                Profile Signal Audit — $29 →
+              </Link>
+              <Link
+                href="/start"
+                className="px-5 py-2.5 glass rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/5 transition-colors border border-white/10"
+              >
+                Start free Signal Check instead →
               </Link>
             </div>
           </div>

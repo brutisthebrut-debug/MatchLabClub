@@ -33,6 +33,7 @@ export interface PurchaseInterestInput {
   product: string;
   amountCents: number;
   source?: string | null;
+  promoCode?: string | null;
 }
 
 export interface FounderStats {
@@ -62,6 +63,7 @@ export interface PurchaseInterest {
   product: string;
   amountCents: number;
   source: string | null;
+  promoCode: string | null;
   status: string;
   createdAt: string;
 }
@@ -529,8 +531,8 @@ export const getOcrMismatchesTrends = (
 export const getLeads = () =>
   get<Lead[]>("/leads");
 
-export const getPurchaseInterestList = () =>
-  get<PurchaseInterest[]>("/purchase-interest");
+export const getPurchaseInterestList = (founderKey: string) =>
+  get<PurchaseInterest[]>("/purchase-interest", { headers: { "x-founder-key": founderKey } });
 
 export type OcrCorrectionField = OcrCorrectionFieldName;
 

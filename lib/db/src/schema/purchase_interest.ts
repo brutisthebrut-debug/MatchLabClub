@@ -9,6 +9,7 @@ export const purchaseInterestTable = pgTable("purchase_interest", {
   product: text("product").notNull(),
   amountCents: integer("amount_cents").notNull().default(0),
   source: text("source"),
+  promoCode: text("promo_code"),
   stripeSessionId: text("stripe_session_id"),
   status: text("status").notNull().default("interest"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

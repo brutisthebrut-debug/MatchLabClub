@@ -1,0 +1,21 @@
+Run a focused commercial readiness and clarity fix pass. Preserve all existing features, routes, styling, dashboard functionality, founder tools, generated-content behavior, current dark theme, navigation grouping, and mobile responsiveness. Do not add new major features and do not redesign the theme.
+
+Fix Pricing CTAs: route the $29 Profile Signal Audit CTA to /checkout/signal-audit instead of /start, and route the $97 Dating Reset CTA to /checkout/dating-reset instead of /start. Keep the free tier on the free start/check flow. Keep the membership tier honest with the existing waitlist or interest fallback.
+
+Add an optional promo code field to the checkout/interest form. Store the entered code with the submitted interest if possible. If a small schema/data update is needed, add it safely. Mention that promo codes will be handled during beta follow-up. No live payment processing in this pass.
+
+Make /sample-report more visible. Add a clear link or CTA from the homepage hero or near-hero area to /sample-report, and make sure pricing/proof areas also link to it where appropriate.
+
+Fix saved context so returning-user tools use the most recent audit/result, not the oldest one. Review the saved-context helper and related query logic. Select by latest createdAt or correct ordering. Ensure saved-profile chips and context payloads use the latest item.
+
+Reduce dashboard above-the-fold clutter without removing tools. Lead with one clear primary action for new users and one continue action for returning users. Move or group secondary widgets lower. The first screen should make the next step obvious.
+
+Clarify the main path across homepage, dashboard, pricing, and result pages: start, free check or quiz, result, contact capture, sample report, paid interest, founder follow-up. Improve copy and CTA hierarchy only; keep advanced tools available.
+
+Clean up placeholder proof claims. If any partner or media-style claim lacks a real link/context, make the language safer and more accurate, such as launch partner or partner feature. Keep partner content secondary to the main brand.
+
+Make offer copy concrete. Each paid offer should clearly list what the user receives and what happens after they submit interest. Avoid vague benefit-only language.
+
+Verify checkout interest submissions still work and include product, contact fields, and promo code/source if practical. Make sure founder views can show the relevant product and code/source if feasible.
+
+Run available verification, including typecheck/build/tests if available. Check /pricing, /checkout/signal-audit, /checkout/dating-reset, /sample-report, homepage, dashboard, and founder area. Screenshot key changed pages if possible. Commit/checkpoint and report what changed, what passed, what remains, and what should be manually tested next.
