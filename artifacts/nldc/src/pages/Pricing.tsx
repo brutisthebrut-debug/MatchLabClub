@@ -18,6 +18,7 @@ const TIERS = [
     desc: "3 minutes. No card. Walk away knowing your Signal Score, your archetype, and the one thing most likely to change your results.",
     cta: "Get My Free Audit",
     href: "/start",
+    nextStep: "→ 3-minute intake wizard · no credit card · instant report",
     accentColor: "hsl(228 18% 60%)",
     icon: Sparkles,
     features: [
@@ -48,6 +49,7 @@ const TIERS = [
     desc: "Complete audit with full bio rewrite, all prompt rewrites, photo checklist, and your 7-day action plan. One payment, done.",
     cta: "Get My Audit — $29",
     href: "/checkout/signal-audit",
+    nextStep: "→ Secure Stripe checkout · report delivered instantly after intake",
     accentColor: "hsl(190 75% 40%)",
     icon: Star,
     features: [
@@ -82,6 +84,7 @@ const TIERS = [
     desc: "A complete rebuild of how you present yourself — profile, prompts, messaging, photos, and a 7-day action plan.",
     cta: "Begin My Reset",
     href: "/checkout/dating-reset",
+    nextStep: "→ Secure checkout · founder-reviewed within 48 hours · start Day 1 immediately",
     accentColor: "hsl(268 52% 68%)",
     icon: Zap,
     features: [
@@ -115,6 +118,7 @@ const TIERS = [
     desc: "Everything in The Dating Reset — plus a real human coach in your corner, every week.",
     cta: "Join the Wingman Club",
     href: "/waitlist",
+    nextStep: "→ Join the waitlist · invited in cohort order · podcast code locks today's price",
     accentColor: "hsl(43 65% 65%)",
     icon: Heart,
     features: [
@@ -295,8 +299,9 @@ export default function Pricing() {
                       {tier.cta} <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
+                  <p className="text-center text-[11px] text-foreground/75 mt-2.5 leading-snug px-1">{tier.nextStep}</p>
                   {tier.price !== "$0" && (
-                    <p className="text-center text-[10px] text-muted-foreground/40 mt-2">30-day guarantee — we'll redo it or refund it</p>
+                    <p className="text-center text-[11px] text-muted-foreground mt-1.5">30-day guarantee — we'll redo it or refund it</p>
                   )}
                 </div>
               </motion.div>

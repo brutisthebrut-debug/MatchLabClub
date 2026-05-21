@@ -158,18 +158,25 @@ function VersionCard({ v, original }: { v: GlowVersion; original: string }) {
           </button>
         </div>
       </div>
-      {/* Before */}
+      {/* What you came in with */}
       {open && original && (
-        <div className="px-5 py-4 bg-[hsl(232_28%_11%)] border-b border-white/5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/40 mb-2">Before</p>
-          <p className="text-xs text-muted-foreground/60 leading-relaxed whitespace-pre-line">{original}</p>
+        <div className="px-5 py-4 output-noticed border-b border-white/5">
+          <p className="section-label mb-2" style={{ color: "hsl(190 55% 70% / 0.85)" }}>What you came in with</p>
+          <p className="text-xs text-muted-foreground/70 leading-relaxed whitespace-pre-line">{original}</p>
         </div>
       )}
-      {/* After */}
+      {/* What to use instead */}
       <div className="px-5 py-4">
-        {open && <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/40 mb-2">After</p>}
+        {open && <p className="section-label mb-2" style={{ color: `${v.color.replace(")", " / 0.85)")}` }}>What to use instead</p>}
         <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-line">{v.bio}</p>
-        <p className="text-xs text-muted-foreground/50 mt-3 italic">{v.tip}</p>
+        {open && <p className="section-label mt-4 mb-1.5" style={{ color: "hsl(285 45% 72% / 0.75)" }}>Why this version works</p>}
+        <p className={`text-xs text-muted-foreground/60 leading-relaxed ${open ? "" : "mt-3 italic"}`}>{v.tip}</p>
+        {open && (
+          <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between gap-3">
+            <p className="text-[11px] text-muted-foreground/55">Next: copy this into your live profile and run a Signal Check again in 7 days.</p>
+            <CopyBtn text={v.bio} />
+          </div>
+        )}
       </div>
     </div>
   );
