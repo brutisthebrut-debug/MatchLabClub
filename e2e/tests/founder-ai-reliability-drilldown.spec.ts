@@ -154,6 +154,39 @@ test("AI Reliability trends: Download CSV button is enabled once data loads and 
   expect(download.suggestedFilename()).toMatch(/^ai-reliability-trends-90d\.csv$/);
 });
 
+test("AI Reliability trends: metric toggle is hidden when a tool is focused and reappears after clearing focus", async ({ page }) => {
+  // ── 1. Sign in ───────────────────────────────────────────────────────────
+  await page.goto("/founder");
+
+  const keyInput = page.locator('input[type="password"]');
+  await expect(keyInput).toBeVisible();
+  await keyInput.fill(FOUNDER_KEY);
+  await page.locator('button:has-text("Unlock Dashboard")').click();
+
+  // ── 2. Wait for the panel and seeded tool to be available ────────────────
+  const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
+  await expect(focusSelect).toBeVisible({ timeout: 20_000 });
+  await focusSelect.scrollIntoViewIfNeeded();
+  await expect(focusSelect.locator(`option[value="${TOOL_NAME}"]`)).toBeAttached({ timeout: 20_000 });
+
+  // ── 3. With no focus, the metric toggle (both buttons) should be visible ──
+  const firstTryToggle = page.locator('button', { hasText: "First-try %" });
+  const fallbackToggle = page.locator('button', { hasText: "Fallback %" });
+  await expect(firstTryToggle).toBeVisible();
+  await expect(fallbackToggle).toBeVisible();
+
+  // ── 4. Focus a tool — toggle should disappear ────────────────────────────
+  await focusSelect.selectOption(TOOL_NAME);
+  await expect(page.locator('[data-testid="trend-focus-summary"]')).toBeVisible({ timeout: 10_000 });
+  await expect(firstTryToggle).not.toBeVisible();
+  await expect(fallbackToggle).not.toBeVisible();
+
+  // ── 5. Click "Back to all tools" — toggle should reappear ────────────────
+  await page.locator('[data-testid="button-trend-clear-focus"]').click();
+  await expect(firstTryToggle).toBeVisible();
+  await expect(fallbackToggle).toBeVisible();
+});
+
 test("AI Reliability drill-in: focus clears automatically when tool has no data in the active window", async ({ page }) => {
   // ── 1. Sign in ───────────────────────────────────────────────────────────
   await page.goto("/founder");
