@@ -466,6 +466,30 @@ export async function checkAiReliabilityAlerts(
   return { breached, cleared };
 }
 
+/**
+ * Run a reliability check and record the job heartbeat on success.
+ *
+ * Pass `jobName` to write the heartbeat under a different key.
+ * Production scheduler omits it (uses `AI_RELIABILITY_ALERTS_JOB`);
+ * tests pass a unique per-test key so parallel workers never share the
+ * same heartbeat row.
+ */
+export async function runAiReliabilityAlertsCheck(options?: {
+  toolNames?: readonly string[];
+  jobName?: string;
+}): Promise<AlertCheckResult> {
+  const heartbeatJobName = options?.jobName ?? AI_RELIABILITY_ALERTS_JOB;
+  const res = await checkAiReliabilityAlerts({ toolNames: options?.toolNames });
+  if (res.breached.length > 0 || res.cleared.length > 0) {
+    logger.info(
+      { breached: res.breached, cleared: res.cleared },
+      "AI reliability alert state transitions",
+    );
+  }
+  await recordJobHeartbeat(heartbeatJobName);
+  return res;
+}
+
 let scheduledTimer: NodeJS.Timeout | null = null;
 
 export function startAiReliabilityAlertsJob(): void {
@@ -477,22 +501,12 @@ export function startAiReliabilityAlertsJob(): void {
   const intervalMs = intervalMinutes * 60 * 1000;
 
   const run = (): void => {
-    checkAiReliabilityAlerts()
-      .then((res) => {
-        if (res.breached.length > 0 || res.cleared.length > 0) {
-          logger.info(
-            { breached: res.breached, cleared: res.cleared },
-            "AI reliability alert state transitions",
-          );
-        }
-        void recordJobHeartbeat(AI_RELIABILITY_ALERTS_JOB);
-      })
-      .catch((err: unknown) => {
-        logger.warn(
-          { err: err instanceof Error ? err.message : String(err) },
-          "AI reliability alerts check failed",
-        );
-      });
+    runAiReliabilityAlertsCheck().catch((err: unknown) => {
+      logger.warn(
+        { err: err instanceof Error ? err.message : String(err) },
+        "AI reliability alerts check failed",
+      );
+    });
   };
 
   run();

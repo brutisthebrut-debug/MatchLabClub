@@ -25,7 +25,9 @@ export function getGraceMinutes(): number {
 
 export async function pruneExpiredExportTokens(
   graceMinutes: number = getGraceMinutes(),
+  options?: { jobName?: string },
 ): Promise<number> {
+  const heartbeatJobName = options?.jobName ?? EXPORT_TOKEN_CLEANUP_JOB;
   const cutoff = new Date(Date.now() - graceMinutes * 60 * 1000);
   try {
     const result = await db
@@ -52,7 +54,7 @@ export async function pruneExpiredExportTokens(
         "No expired data_export_tokens rows to prune",
       );
     }
-    await recordJobHeartbeat(EXPORT_TOKEN_CLEANUP_JOB);
+    await recordJobHeartbeat(heartbeatJobName);
     return deleted;
   } catch (err) {
     logger.warn(

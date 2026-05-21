@@ -59,7 +59,10 @@ function isDue(lastSuccessAt: Date | null, intervalDays: number): boolean {
   return Date.now() - lastSuccessAt.getTime() >= intervalMs;
 }
 
-export async function runGeoipUpdate(): Promise<boolean> {
+export async function runGeoipUpdate(options?: {
+  jobName?: string;
+}): Promise<boolean> {
+  const heartbeatJobName = options?.jobName ?? GEOIP_UPDATE_JOB;
   const licenseKey = process.env["MAXMIND_LICENSE_KEY"]?.trim();
   if (!licenseKey) {
     logger.warn(
@@ -90,7 +93,7 @@ export async function runGeoipUpdate(): Promise<boolean> {
     if (stdout) logger.info({ stdout }, "GeoIP updater stdout");
     if (stderr) logger.warn({ stderr }, "GeoIP updater stderr");
 
-    await recordJobHeartbeat(GEOIP_UPDATE_JOB);
+    await recordJobHeartbeat(heartbeatJobName);
 
     logger.info("GeoIP database update completed successfully");
 

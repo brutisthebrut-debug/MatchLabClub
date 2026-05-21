@@ -25,7 +25,9 @@ export function getRetentionDays(): number {
 
 export async function purgeExpiredTrashedAudits(
   retentionDays: number = getRetentionDays(),
+  options?: { jobName?: string },
 ): Promise<number> {
+  const heartbeatJobName = options?.jobName ?? AUDIT_TRASH_PURGE_JOB;
   const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
   try {
     const result = await db
@@ -49,7 +51,7 @@ export async function purgeExpiredTrashedAudits(
         "No soft-deleted audits past retention window",
       );
     }
-    await recordJobHeartbeat(AUDIT_TRASH_PURGE_JOB);
+    await recordJobHeartbeat(heartbeatJobName);
     return deleted;
   } catch (err) {
     logger.warn(

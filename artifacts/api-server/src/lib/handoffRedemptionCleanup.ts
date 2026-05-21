@@ -31,7 +31,9 @@ export function getGraceMinutes(): number {
 
 export async function pruneExpiredHandoffRedemptions(
   graceMinutes: number = getGraceMinutes(),
+  options?: { jobName?: string },
 ): Promise<number> {
+  const heartbeatJobName = options?.jobName ?? HANDOFF_REDEMPTION_CLEANUP_JOB;
   const cutoff = new Date(Date.now() - graceMinutes * 60 * 1000);
   try {
     const result = await db
@@ -45,7 +47,7 @@ export async function pruneExpiredHandoffRedemptions(
         "Pruned expired handoff_token_redemptions rows",
       );
     }
-    await recordJobHeartbeat(HANDOFF_REDEMPTION_CLEANUP_JOB);
+    await recordJobHeartbeat(heartbeatJobName);
     return deleted;
   } catch (err) {
     logger.warn(

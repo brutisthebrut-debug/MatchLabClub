@@ -9,7 +9,8 @@ import {
 } from "vitest";
 import express, { type Express } from "express";
 import request from "supertest";
-import { and, isNotNull, inArray, sql } from "drizzle-orm";
+import crypto from "crypto";
+import { and, inArray, isNotNull, sql } from "drizzle-orm";
 import {
   db,
   pool,
@@ -24,6 +25,14 @@ import { purgeExpiredTrashedAudits } from "./auditTrashPurge";
 // owned by concurrently-running test files (e.g. claim.test.ts).
 const seededAuditIds: number[] = [];
 
+const usedHeartbeatJobNames: string[] = [];
+
+function uniqueHeartbeatJob(label: string): string {
+  const name = `test-trash-purge-${label}-${crypto.randomBytes(6).toString("hex")}`;
+  usedHeartbeatJobNames.push(name);
+  return name;
+}
+
 async function clearAudits(): Promise<void> {
   if (seededAuditIds.length > 0) {
     await db
@@ -34,9 +43,11 @@ async function clearAudits(): Promise<void> {
 }
 
 async function clearHeartbeat(): Promise<void> {
+  const names = [...usedHeartbeatJobNames, AUDIT_TRASH_PURGE_JOB];
   await db
     .delete(jobHeartbeatsTable)
-    .where(eq(jobHeartbeatsTable.jobName, AUDIT_TRASH_PURGE_JOB));
+    .where(inArray(jobHeartbeatsTable.jobName, names));
+  usedHeartbeatJobNames.length = 0;
 }
 
 interface SeedAuditOpts {
@@ -95,8 +106,10 @@ describe("purgeExpiredTrashedAudits", () => {
     vi.useFakeTimers();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.useRealTimers();
+    await clearAudits();
+    await clearHeartbeat();
   });
 
   afterAll(async () => {
@@ -239,14 +252,15 @@ describe("purgeExpiredTrashedAudits", () => {
     await setDeletedAt(id, new Date("2026-04-01T00:00:00.000Z"));
 
     vi.useRealTimers();
+    const jobName = uniqueHeartbeatJob("records");
     const before = Date.now();
-    await purgeExpiredTrashedAudits(30);
+    await purgeExpiredTrashedAudits(30, { jobName });
     const after = Date.now();
 
     const rows = await db
       .select()
       .from(jobHeartbeatsTable)
-      .where(eq(jobHeartbeatsTable.jobName, AUDIT_TRASH_PURGE_JOB));
+      .where(eq(jobHeartbeatsTable.jobName, jobName));
     expect(rows).toHaveLength(1);
     const ts =
       rows[0].lastSuccessAt instanceof Date

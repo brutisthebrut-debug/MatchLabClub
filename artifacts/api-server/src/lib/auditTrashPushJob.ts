@@ -75,7 +75,10 @@ async function sendExpoPushNotifications(
   }
 }
 
-export async function sendExpiringAuditPushNotifications(): Promise<number> {
+export async function sendExpiringAuditPushNotifications(options?: {
+  jobName?: string;
+}): Promise<number> {
+  const heartbeatJobName = options?.jobName ?? AUDIT_TRASH_PUSH_JOB;
   const retentionDays = getRetentionDays();
   const now = Date.now();
   const dayMs = 24 * 60 * 60 * 1000;
@@ -92,7 +95,7 @@ export async function sendExpiringAuditPushNotifications(): Promise<number> {
       .from(pushTokensTable);
 
     if (tokenRows.length === 0) {
-      await recordJobHeartbeat(AUDIT_TRASH_PUSH_JOB);
+      await recordJobHeartbeat(heartbeatJobName);
       return 0;
     }
 
@@ -140,7 +143,7 @@ export async function sendExpiringAuditPushNotifications(): Promise<number> {
     }
 
     if (expiringByUser.size === 0) {
-      await recordJobHeartbeat(AUDIT_TRASH_PUSH_JOB);
+      await recordJobHeartbeat(heartbeatJobName);
       logger.debug(
         { retentionDays, withinDays: WITHIN_DAYS },
         "No expiring audits to notify about",
@@ -183,7 +186,7 @@ export async function sendExpiringAuditPushNotifications(): Promise<number> {
     }
 
     await sendExpoPushNotifications(messages);
-    await recordJobHeartbeat(AUDIT_TRASH_PUSH_JOB);
+    await recordJobHeartbeat(heartbeatJobName);
 
     logger.info(
       { notifiedUsers: expiringByUser.size, messagesSent: messages.length },

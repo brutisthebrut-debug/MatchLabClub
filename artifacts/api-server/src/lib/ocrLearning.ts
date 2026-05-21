@@ -254,12 +254,14 @@ export async function refreshLearnedRulesCache(): Promise<LearnedRules> {
 export async function learnFromCorrections(options?: {
   limitToAuditIds?: number[];
   since?: Date;
+  jobName?: string;
 }): Promise<{
   scannedAudits: number;
   candidates: RuleCandidate[];
   persisted: number;
 }> {
   const { limitToAuditIds, since } = options ?? {};
+  const heartbeatJobName = options?.jobName ?? OCR_LEARNING_JOB;
   const scopeFilter =
     limitToAuditIds && limitToAuditIds.length > 0
       ? inArray(auditsTable.id, limitToAuditIds)
@@ -308,7 +310,7 @@ export async function learnFromCorrections(options?: {
   }
 
   await refreshLearnedRulesCache();
-  await recordJobHeartbeat(OCR_LEARNING_JOB);
+  await recordJobHeartbeat(heartbeatJobName);
 
   return { scannedAudits: rows.length, candidates, persisted };
 }
