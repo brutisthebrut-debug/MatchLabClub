@@ -6,7 +6,8 @@ AI-powered dating profile and messaging coaching web app that audits profiles, r
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
 - `pnpm --filter @workspace/nldc run dev` — run the frontend (dynamic port via $PORT)
-- `pnpm run typecheck` — full typecheck across all packages
+- `pnpm run typecheck` — full typecheck across all packages (blocking CI check; see `CI.md`)
+- `pnpm --filter @workspace/api-server run test` — API server test suite (blocking CI check; see `CI.md`)
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
