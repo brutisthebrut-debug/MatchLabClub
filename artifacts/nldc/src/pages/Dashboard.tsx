@@ -258,6 +258,57 @@ const WINGMAN_NOTES = [
   { note: "Specificity is your superpower. The more specific your profile, the more specific the people who match you.", action: "Improve My Profile", href: "/copilot/profile" },
 ];
 
+const PACKAGE_CARDS = [
+  {
+    name: "The Dating Reset",
+    tagline: "Rebuild your profile signal from the ground up",
+    color: "hsl(268 52% 68%)",
+    icon: BookOpen,
+    hubHref: "/diagnosis",
+    tools: [
+      { label: "Signal Check",     href: "/signal-check" },
+      { label: "Dating Blueprint", href: "/blueprint"    },
+      { label: "Profile Glow-Up",  href: "/glow-up"      },
+    ],
+  },
+  {
+    name: "Message Lab",
+    tagline: "Write better messages, connect faster",
+    color: "hsl(190 55% 60%)",
+    icon: MessageSquare,
+    hubHref: "/lab",
+    tools: [
+      { label: "Message Coach", href: "/coach"       },
+      { label: "Next Message",  href: "/next-message" },
+      { label: "Style Map",     href: "/style-map"   },
+    ],
+  },
+  {
+    name: "Growth Tracker",
+    tagline: "Track what's actually changing over time",
+    color: "hsl(142 55% 60%)",
+    icon: TrendingUp,
+    hubHref: "/progress/timeline",
+    tools: [
+      { label: "Dating Wins Log",    href: "/progress/wins"            },
+      { label: "Pattern Breaker",    href: "/progress/pattern-breaker" },
+      { label: "Weekly Growth Plan", href: "/copilot/weekly-plan"      },
+    ],
+  },
+  {
+    name: "Context + Trust",
+    tagline: "What we know about you — and what you control",
+    color: "hsl(228 30% 62%)",
+    icon: Shield,
+    hubHref: "/wellness",
+    tools: [
+      { label: "Wellness Center", href: "/wellness"     },
+      { label: "Data Vault",      href: "/vault"        },
+      { label: "User Control",    href: "/user-control" },
+    ],
+  },
+] as const;
+
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -337,6 +388,8 @@ export default function Dashboard() {
 
   const rawSearch = useSearch();
   const [, navigate] = useLocation();
+
+  const [showAllTools, setShowAllTools] = useState(false);
 
   const [searchInput, setSearchInput] = useState<string>(
     () => parseAuditFiltersFromSearch(rawSearch).searchInput,
@@ -1232,36 +1285,90 @@ export default function Dashboard() {
           </div>
           </>)}
 
-          {/* Quick Actions — Grouped */}
+          {/* Package Cards */}
           <motion.div {...fadeUp(0.22)} className="mb-5">
             <div className="flex items-center justify-between mb-4">
-              <p className="font-semibold text-foreground text-sm">Your Tools</p>
-              <Link href="/copilot">
-                <span className="text-xs text-muted-foreground hover:text-[hsl(268_52%_68%)] transition-colors flex items-center gap-1">
-                  Wingman Studio <ArrowRight className="w-3 h-3" />
-                </span>
-              </Link>
+              <p className="font-semibold text-foreground text-sm">Explore by package</p>
+              <button
+                onClick={() => setShowAllTools(t => !t)}
+                className="text-xs text-muted-foreground hover:text-[hsl(268_52%_68%)] transition-colors flex items-center gap-1"
+              >
+                {showAllTools ? "Collapse" : "All tools"}
+                <ArrowRight className={`w-3 h-3 transition-transform ${showAllTools ? "rotate-90" : ""}`} />
+              </button>
             </div>
-            <div className="space-y-5">
-              {ACTION_GROUPS.map((group) => (
-                <div key={group.label}>
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5 px-0.5" style={{ color: group.color }}>{group.label}</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                    {group.items.map((action, i) => (
-                      <Link key={i} href={action.href} data-testid={`card-quick-action-${action.label.toLowerCase().replace(/ /g, "-")}`}>
-                        <div className="glass border border-white/8 rounded-2xl p-3 hover:border-[hsl(268_52%_68%/0.3)] hover:shadow-[0_8px_30px_rgb(0_0_0/0.35)] transition-all cursor-pointer h-full card-hover">
-                          <div className="w-7 h-7 rounded-xl flex items-center justify-center mb-2" style={{ background: `${group.color.replace(")", " / 0.12)")}` }}>
-                            <action.icon className="w-3.5 h-3.5" style={{ color: group.color }} />
-                          </div>
-                          <p className="font-semibold text-foreground text-xs leading-tight">{action.label}</p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight hidden sm:block">{action.desc}</p>
-                        </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {PACKAGE_CARDS.map(pkg => (
+                <div
+                  key={pkg.name}
+                  className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(268_52%_68%/0.22)] transition-all"
+                >
+                  <div className="flex items-start gap-3 mb-3">
+                    <div
+                      className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: pkg.color.replace(")", " / 0.14)") }}
+                    >
+                      <pkg.icon className="w-4 h-4" style={{ color: pkg.color }} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground text-sm leading-tight">{pkg.name}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{pkg.tagline}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-0.5 mb-3">
+                    {pkg.tools.map(tool => (
+                      <Link
+                        key={tool.href}
+                        href={tool.href}
+                        className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground py-1 transition-colors group"
+                      >
+                        <span
+                          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                          style={{ background: pkg.color.replace(")", " / 0.55)") }}
+                        />
+                        {tool.label}
+                        <ArrowRight className="w-2.5 h-2.5 ml-auto opacity-0 group-hover:opacity-50 transition-opacity" />
                       </Link>
                     ))}
                   </div>
+
+                  <Link href={pkg.hubHref}>
+                    <div
+                      className="flex items-center justify-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-xl border border-white/8 hover:bg-white/5 transition-colors"
+                      style={{ color: pkg.color }}
+                    >
+                      Explore package <ArrowRight className="w-3 h-3" />
+                    </div>
+                  </Link>
                 </div>
               ))}
             </div>
+
+            {/* All tools — expanded grid (hidden by default) */}
+            {showAllTools && (
+              <div className="mt-5 space-y-5">
+                {ACTION_GROUPS.map((group) => (
+                  <div key={group.label}>
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5 px-0.5" style={{ color: group.color }}>{group.label}</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {group.items.map((action, i) => (
+                        <Link key={i} href={action.href} data-testid={`card-quick-action-${action.label.toLowerCase().replace(/ /g, "-")}`}>
+                          <div className="glass border border-white/8 rounded-2xl p-3 hover:border-[hsl(268_52%_68%/0.3)] hover:shadow-[0_8px_30px_rgb(0_0_0/0.35)] transition-all cursor-pointer h-full card-hover">
+                            <div className="w-7 h-7 rounded-xl flex items-center justify-center mb-2" style={{ background: `${group.color.replace(")", " / 0.12)")}` }}>
+                              <action.icon className="w-3.5 h-3.5" style={{ color: group.color }} />
+                            </div>
+                            <p className="font-semibold text-foreground text-xs leading-tight">{action.label}</p>
+                            <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight hidden sm:block">{action.desc}</p>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {/* Recent Audits */}
