@@ -67,6 +67,16 @@ Like
 Pass
 `;
 
+export const CMB_OCR = `Coffee Meets Bagel
+Bagel of the day
+Olivia
+26
+Chicago, IL
+Graphic Designer
+Sun-chaser, dog-mom, and weekend baker. I make a mean cinnamon roll and I'm always chasing a new hiking trail.
+Connect
+`;
+
 export const UNREADABLE_OCR = `!!!
 ???
 ...
