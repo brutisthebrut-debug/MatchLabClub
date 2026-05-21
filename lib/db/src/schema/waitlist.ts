@@ -13,7 +13,3 @@ export const waitlistTable = pgTable("waitlist", {
   activatedAt: timestamp("activated_at"),
   activationEmailSentAt: timestamp("activation_email_sent_at"),
 });
-
-export const insertWaitlistSchema = createInsertSchema(waitlistTable).omit({ id: true, createdAt: true, userId: true });
-export type InsertWaitlist = z.infer<typeof insertWaitlistSchema>;
-export type WaitlistEntry = typeof waitlistTable.$inferSelect;
