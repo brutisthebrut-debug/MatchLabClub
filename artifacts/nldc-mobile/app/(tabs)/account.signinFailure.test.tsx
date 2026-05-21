@@ -538,3 +538,56 @@ describe("AccountScreen — sign-in failure: token-exchange 4xx", () => {
     expect(screen.queryByTestId("account-identity-card")).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Path 3: user cancels the OIDC browser flow
+// ---------------------------------------------------------------------------
+
+describe("AccountScreen — sign-in failure: user cancels", () => {
+  it("does not show an error banner and re-enables the sign-in button when the user cancels", async () => {
+    mockPromptAsync = vi.fn().mockResolvedValue({ type: "cancel" });
+
+    setFetchHandler((url) => {
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    const { rerender } = render(
+      <Wrap>
+        <AuthProvider>
+          <AccountScreen />
+        </AuthProvider>
+      </Wrap>,
+    );
+
+    const signinBtn = await screen.findByTestId("button-account-signin");
+
+    await act(async () => {
+      fireEvent.click(signinBtn);
+    });
+
+    // Inject the cancel response and rerender to trigger the response effect
+    // inside AuthProvider (mirrors the pattern used by the success/error paths).
+    mockAuthResponse = { type: "cancel" };
+    rerender(
+      <Wrap>
+        <AuthProvider>
+          <AccountScreen />
+        </AuthProvider>
+      </Wrap>,
+    );
+
+    // The cancel branch in AuthProvider resets isSigningIn to false without
+    // setting any error — so the sign-in button must be re-enabled and no
+    // account-auth-error banner should be visible.
+    await waitFor(() => {
+      const btn = screen.getByTestId(
+        "button-account-signin",
+      ) as HTMLButtonElement;
+      expect(btn.disabled).toBe(false);
+    });
+
+    expect(screen.queryByTestId("account-auth-error")).toBeNull();
+    expect(screen.getByTestId("account-signin-card")).toBeTruthy();
+    expect(screen.queryByTestId("account-identity-card")).toBeNull();
+  });
+});
