@@ -48,10 +48,19 @@ function QuoteCopy({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
-      onClick={() => { navigator.clipboard.writeText(`"${text}"`).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-      className="flex items-center gap-1.5 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors mt-2"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(`"${text}"`);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } catch {
+          window.prompt("Copy this quote:", `"${text}"`);
+        }
+      }}
+      aria-label={copied ? "Quote copied to clipboard" : "Copy quote to clipboard"}
+      className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors mt-2 min-h-[32px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)] rounded-md px-1 -mx-1"
     >
-      {copied ? <Check className="w-3 h-3 text-[hsl(142_55%_60%)]" /> : <Copy className="w-3 h-3" />}
+      {copied ? <Check className="w-3 h-3 text-[hsl(142_55%_60%)]" aria-hidden="true" /> : <Copy className="w-3 h-3" aria-hidden="true" />}
       {copied ? "Copied quote" : "Copy quote"}
     </button>
   );

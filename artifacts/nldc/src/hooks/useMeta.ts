@@ -1,8 +1,18 @@
 import { useEffect } from "react";
 
-export function useMeta(title: string, description: string) {
+const BRAND = "Next Level Dating Club";
+
+function normalize(title: string): string {
+  return title
+    .replace(/\s*[·—\-|]\s*NLDC.*$/i, "")
+    .replace(/\s*[·—\-|]\s*Next Level Dating Club.*$/i, "")
+    .trim();
+}
+
+export function useMeta(title: string, description: string, ogImage?: string) {
   useEffect(() => {
-    const fullTitle = `${title} | Next Level Dating Club`;
+    const clean = normalize(title);
+    const fullTitle = clean ? `${clean} | ${BRAND}` : BRAND;
     document.title = fullTitle;
 
     const setMeta = (selector: string, attr: string, value: string) => {
@@ -22,8 +32,14 @@ export function useMeta(title: string, description: string) {
     setMeta('meta[name="twitter:title"]', 'name=twitter:title', fullTitle);
     setMeta('meta[name="twitter:description"]', 'name=twitter:description', description);
 
+    if (ogImage) {
+      setMeta('meta[property="og:image"]', 'property=og:image', ogImage);
+      setMeta('meta[name="twitter:image"]', 'name=twitter:image', ogImage);
+      setMeta('meta[name="twitter:card"]', 'name=twitter:card', 'summary_large_image');
+    }
+
     return () => {
-      document.title = "Next Level Dating Club";
+      document.title = BRAND;
     };
-  }, [title, description]);
+  }, [title, description, ogImage]);
 }

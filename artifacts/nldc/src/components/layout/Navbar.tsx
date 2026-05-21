@@ -372,16 +372,20 @@ export function Navbar() {
                   {pkg.more.length > 0 && (
                     <>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/35 pt-3 pb-2">More</p>
-                      {pkg.more.map(t => (
-                        <Link
-                          key={t.href}
-                          href={t.href}
-                          onClick={closeAll}
-                          className="block text-sm text-muted-foreground/70 hover:text-foreground py-1.5 transition-colors leading-tight"
-                        >
-                          {t.name}
-                        </Link>
-                      ))}
+                      {pkg.more.map(t => {
+                        const active = location === t.href;
+                        return (
+                          <Link
+                            key={t.href}
+                            href={t.href}
+                            onClick={closeAll}
+                            aria-current={active ? "page" : undefined}
+                            className={`block text-sm py-1.5 transition-colors leading-tight ${active ? "text-foreground font-medium" : "text-muted-foreground/70 hover:text-foreground"}`}
+                          >
+                            {t.name}
+                          </Link>
+                        );
+                      })}
                     </>
                   )}
                   <Link
@@ -400,11 +404,13 @@ export function Navbar() {
           {/* Bottom: Plans, Dashboard, auth, CTA */}
           <div className="px-5 py-4 flex flex-col gap-1.5">
             <Link href="/pricing" onClick={closeAll}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground py-1.5 transition-colors">
+              aria-current={location === "/pricing" ? "page" : undefined}
+              className={`text-sm font-medium py-1.5 transition-colors ${location === "/pricing" ? "text-foreground border-l-2 border-[hsl(268_52%_68%)] pl-2 -ml-2" : "text-muted-foreground hover:text-foreground"}`}>
               Plans &amp; Pricing
             </Link>
             <Link href="/dashboard" onClick={closeAll}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground py-1.5 transition-colors">
+              aria-current={location === "/dashboard" ? "page" : undefined}
+              className={`text-sm font-medium py-1.5 transition-colors ${location === "/dashboard" ? "text-foreground border-l-2 border-[hsl(268_52%_68%)] pl-2 -ml-2" : "text-muted-foreground hover:text-foreground"}`}>
               Dashboard
             </Link>
             {isLoading ? null : isAuthenticated ? (

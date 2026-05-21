@@ -74,10 +74,15 @@ function FeedCardComp({ card, onRate }: { card: FeedCard; onRate: (id: string, h
   const [copied, setCopied] = useState(false);
   const cfg = CAT_CONFIG[card.category];
 
-  function copy() {
-    navigator.clipboard.writeText(`${card.headline}\n\n${card.body}`).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  async function copy() {
+    const text = `${card.headline}\n\n${card.body}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("Copy this observation:", text);
+    }
   }
 
   return (

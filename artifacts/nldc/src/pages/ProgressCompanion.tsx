@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
-import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Copy, Check, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { Users, Copy, Check, ChevronDown, ChevronUp, Search, X } from "lucide-react";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -45,7 +45,7 @@ const SCENARIOS: Scenario[] = [
     situation: "You've had a good exchange and want to move things off the app. You're not sure how to suggest it without over-committing or sounding over-eager.",
     guidance: "Keep it light and low-stakes. Make a specific suggestion rather than a vague 'we should meet.' A specific suggestion signals confidence; a vague one puts the work back on them.",
     options: [
-      { label: "Direct", tone: "Confident", message: "I've been enjoying this — want to grab coffee this weekend? There's a good place near [neighborhood] if that works for you." },
+      { label: "Direct", tone: "Confident", message: "I've been enjoying this — want to grab coffee this weekend? There's a good place near [your neighborhood] if that works for you." },
       { label: "Light", tone: "Easy", message: "We keep talking about [shared topic] — we should probably just meet up and finish this conversation properly." },
       { label: "Warm", tone: "Personal", message: "I'd like to actually meet you. I'm free [day] or [day] — either work for you?" },
     ],
@@ -124,14 +124,23 @@ const SCENARIOS: Scenario[] = [
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
-  function copy() {
-    navigator.clipboard.writeText(text).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard unavailable — surface a manual select fallback by selecting the message text
+      window.prompt("Copy this message:", text);
+    }
   }
   return (
-    <button onClick={copy} className="flex items-center gap-1.5 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">
-      {copied ? <><Check className="w-3 h-3 text-[hsl(142_55%_60%)]" />Copied</> : <><Copy className="w-3 h-3" />Copy</>}
+    <button
+      onClick={copy}
+      aria-label={copied ? "Copied to clipboard" : "Copy message to clipboard"}
+      className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors min-h-[36px] px-2 -mx-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)]"
+    >
+      {copied ? <><Check className="w-3.5 h-3.5 text-[hsl(142_55%_60%)]" aria-hidden="true" />Copied</> : <><Copy className="w-3.5 h-3.5" aria-hidden="true" />Copy</>}
     </button>
   );
 }
@@ -139,22 +148,32 @@ function CopyButton({ text }: { text: string }) {
 function ScenarioCard({ scenario, i }: { scenario: Scenario; i: number }) {
   const [open, setOpen] = useState(false);
   const cfg = CAT_CONFIG[scenario.category];
+  const panelId = `scenario-panel-${scenario.id}`;
 
   return (
     <motion.div {...fadeUp(0.04 + i * 0.04)} className="glass border border-white/8 rounded-2xl overflow-hidden hover:border-white/12 transition-all">
-      <button onClick={() => setOpen(o => !o)} className="w-full flex items-start justify-between gap-3 p-5 text-left">
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className="w-full flex items-start justify-between gap-3 p-5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)] focus-visible:ring-inset"
+      >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: cfg.color }}>{cfg.label}</span>
           </div>
           <p className="font-semibold text-sm text-foreground leading-snug">{scenario.title}</p>
         </div>
-        {open ? <ChevronUp className="w-4 h-4 text-muted-foreground/50 flex-shrink-0 mt-0.5" /> : <ChevronDown className="w-4 h-4 text-muted-foreground/50 flex-shrink-0 mt-0.5" />}
+        {open
+          ? <ChevronUp className="w-4 h-4 text-muted-foreground/50 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          : <ChevronDown className="w-4 h-4 text-muted-foreground/50 flex-shrink-0 mt-0.5" aria-hidden="true" />}
       </button>
 
       <AnimatePresence>
         {open && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+          <motion.div
+            id={panelId}
+            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden border-t border-white/6">
             <div className="p-5 space-y-4">
               <p className="text-sm text-muted-foreground leading-relaxed">{scenario.situation}</p>
@@ -172,7 +191,7 @@ function ScenarioCard({ scenario, i }: { scenario: Scenario; i: number }) {
                       </div>
                       <CopyButton text={opt.message} />
                     </div>
-                    <p className="px-4 py-3 text-sm text-muted-foreground leading-relaxed font-mono text-xs">{opt.message}</p>
+                    <p className="px-4 py-3 text-sm text-muted-foreground leading-relaxed font-mono">{opt.message}</p>
                   </div>
                 ))}
               </div>
@@ -185,9 +204,32 @@ function ScenarioCard({ scenario, i }: { scenario: Scenario; i: number }) {
 }
 
 export default function ProgressCompanion() {
-  useMeta("Companion Workspace · NLDC", "Scenario cards with copy-ready guidance for common dating situations.");
-  const [search, setSearch] = useState("");
-  const [catFilter, setCatFilter] = useState<ScenarioCategory | null>(null);
+  useMeta("Companion Workspace", "Scenario cards with copy-ready guidance for common dating situations.");
+  const [location, setLocation] = useLocation();
+
+  // Parse URL params on first render so refresh/back preserves filters
+  const initial = useMemo(() => {
+    const sp = new URLSearchParams(window.location.search);
+    return {
+      q:   sp.get("q") ?? "",
+      cat: (sp.get("cat") as ScenarioCategory | null) ?? null,
+    };
+  }, []);
+
+  const [search, setSearch] = useState(initial.q);
+  const [catFilter, setCatFilter] = useState<ScenarioCategory | null>(initial.cat);
+
+  // Sync state → URL (replaceState, not navigate, so back button still works)
+  useEffect(() => {
+    const sp = new URLSearchParams();
+    if (search.trim())  sp.set("q", search.trim());
+    if (catFilter)      sp.set("cat", catFilter);
+    const qs = sp.toString();
+    const target = qs ? `/progress/companion?${qs}` : "/progress/companion";
+    if (location !== target && (location.startsWith("/progress/companion"))) {
+      window.history.replaceState(null, "", target);
+    }
+  }, [search, catFilter, location, setLocation]);
 
   const filtered = SCENARIOS.filter(s => {
     const matchesCat  = catFilter ? s.category === catFilter : true;
@@ -197,15 +239,18 @@ export default function ProgressCompanion() {
 
   const categories = [...new Set(SCENARIOS.map(s => s.category))];
 
+  const hasFilters = search.trim().length > 0 || catFilter !== null;
+  const clearFilters = () => { setSearch(""); setCatFilter(null); };
+
   return (
     <AppLayout>
       <div className="min-h-screen mesh-bg py-10 px-4">
-        <div className="orb orb-violet fixed w-[300px] h-[300px] top-16 right-0 opacity-15 pointer-events-none" />
+        <div className="orb orb-violet fixed w-[260px] sm:w-[300px] h-[260px] sm:h-[300px] top-16 right-0 opacity-15 pointer-events-none" aria-hidden="true" />
         <div className="max-w-2xl mx-auto relative z-10">
 
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <Users className="w-4 h-4 text-[hsl(268_52%_68%)]" />
+              <Users className="w-4 h-4 text-[hsl(268_52%_68%)]" aria-hidden="true" />
               <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Progress Workspace</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Companion Workspace</h1>
@@ -214,20 +259,47 @@ export default function ProgressCompanion() {
 
           {/* Search */}
           <motion.div {...fadeUp(0.04)} className="relative mb-4">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search scenarios…"
-              className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-[hsl(268_52%_68%/0.4)]" />
+            <label htmlFor="scenario-search" className="sr-only">Search scenarios</label>
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 pointer-events-none" aria-hidden="true" />
+            <input
+              id="scenario-search"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search scenarios…"
+              aria-label="Search scenarios"
+              className="w-full pl-10 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-[hsl(268_52%_68%/0.4)] focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.5)]"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground/50 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)]"
+              >
+                <X className="w-3.5 h-3.5" aria-hidden="true" />
+              </button>
+            )}
           </motion.div>
 
           {/* Category filter */}
-          <motion.div {...fadeUp(0.06)} className="flex flex-wrap gap-2 mb-6">
-            <button onClick={() => setCatFilter(null)} className={`text-xs px-3 py-1 rounded-full border transition-all ${catFilter === null ? "border-white/25 bg-white/8 text-foreground" : "border-white/10 text-muted-foreground/50 hover:text-muted-foreground"}`}>All</button>
+          <motion.div {...fadeUp(0.06)} className="flex flex-wrap gap-2 mb-6" role="group" aria-label="Filter scenarios by category">
+            <button
+              onClick={() => setCatFilter(null)}
+              aria-pressed={catFilter === null}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)] ${catFilter === null ? "border-white/25 bg-white/8 text-foreground" : "border-white/10 text-muted-foreground/60 hover:text-muted-foreground"}`}
+            >
+              All
+            </button>
             {categories.map(cat => {
               const cfg = CAT_CONFIG[cat];
+              const active = catFilter === cat;
               return (
-                <button key={cat} onClick={() => setCatFilter(catFilter === cat ? null : cat)}
-                  className={`text-xs px-3 py-1 rounded-full border transition-all ${catFilter === cat ? "border-white/25 bg-white/8 text-foreground" : "border-white/10 text-muted-foreground/50 hover:text-muted-foreground"}`}
-                  style={catFilter === cat ? { color: cfg.color } : {}}>
+                <button
+                  key={cat}
+                  onClick={() => setCatFilter(active ? null : cat)}
+                  aria-pressed={active}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)] ${active ? "border-white/25 bg-white/8 text-foreground" : "border-white/10 text-muted-foreground/60 hover:text-muted-foreground"}`}
+                  style={active ? { color: cfg.color } : {}}
+                >
                   {cfg.label}
                 </button>
               );
@@ -239,12 +311,24 @@ export default function ProgressCompanion() {
               <ScenarioCard key={scenario.id} scenario={scenario} i={i} />
             ))}
             {filtered.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground/50 text-sm">No scenarios match your search.</div>
+              <div className="text-center py-12 px-4 rounded-2xl border border-white/8 bg-white/3">
+                <Search className="w-6 h-6 text-muted-foreground/30 mx-auto mb-3" aria-hidden="true" />
+                <p className="text-sm text-foreground/80 mb-1">No scenarios match your filters</p>
+                <p className="text-xs text-muted-foreground/60 mb-4">Try a different search or clear what you've selected.</p>
+                {hasFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-xs font-medium px-4 py-2 rounded-full border border-[hsl(268_52%_68%/0.3)] text-[hsl(268_52%_78%)] hover:bg-[hsl(268_52%_68%/0.1)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)]"
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
             )}
           </div>
 
           <motion.div {...fadeUp(0.3)} className="mt-8 text-center">
-            <p className="text-xs text-muted-foreground/40">Copy-ready messages are starting points — adapt them to your actual voice and situation.</p>
+            <p className="text-xs text-muted-foreground/40">Copy-ready messages are starting points — adapt the bracketed bits to your actual situation.</p>
           </motion.div>
         </div>
       </div>

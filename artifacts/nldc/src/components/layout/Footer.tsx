@@ -40,7 +40,7 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li><Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
               <li><Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
-              <li><Link href="/waitlist" className="text-muted-foreground hover:text-foreground transition-colors">Podcast Listeners</Link></li>
+              <li><Link href="/waitlist" className="text-muted-foreground hover:text-foreground transition-colors">Podcast Listener Waitlist</Link></li>
               <li><Link href="/partners/shebangs" className="text-muted-foreground hover:text-foreground transition-colors">Partner: Shebangs.club</Link></li>
             </ul>
           </div>

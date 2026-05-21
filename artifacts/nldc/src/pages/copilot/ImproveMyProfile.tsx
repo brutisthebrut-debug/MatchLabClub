@@ -99,9 +99,9 @@ function CopyBtn({ text }: { text: string }) {
   const { toast } = useToast();
   return (
     <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); toast({ title: "Copied!" }); setTimeout(() => setCopied(false), 2000); }}
-      className="flex items-center gap-1.5 text-xs font-medium transition-colors"
-      style={{ color: copied ? "hsl(142 55% 60%)" : undefined }}>
-      {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
+      aria-label={copied ? "Copied to clipboard" : "Copy to clipboard"}
+      className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${copied ? "tag-strength border-0 bg-transparent" : ""}`}>
+      {copied ? <Check className="w-3.5 h-3.5" aria-hidden="true" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />}
       <span className={copied ? "" : "text-muted-foreground"}>{copied ? "Copied" : "Copy"}</span>
     </button>
   );

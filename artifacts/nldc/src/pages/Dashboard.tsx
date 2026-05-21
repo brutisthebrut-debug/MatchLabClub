@@ -935,7 +935,7 @@ export default function Dashboard() {
   const showHandoffOffer = !isAuthenticated && hasAnyAnonymousIds();
   const displayAudits = hasRealAudits ? audits : showDemo ? DEMO_AUDITS : [];
   const EMPTY_SUMMARY = { totalAudits: 0, averageScore: 0, latestScore: 0, scoreHistory: [], topStrengths: [], topRisks: [] };
-  const displaySummary = hasRealAudits ? summary ?? DEMO_SUMMARY : showDemo ? DEMO_SUMMARY : EMPTY_SUMMARY;
+  const displaySummary = hasRealAudits ? summary ?? EMPTY_SUMMARY : showDemo ? DEMO_SUMMARY : EMPTY_SUMMARY;
   const latestScore = displaySummary.latestScore ?? 0;
   const grade = latestScore >= 85 ? "A" : latestScore >= 72 ? "B" : latestScore >= 58 ? "C" : latestScore >= 42 ? "D" : "F";
   const gradeColor = latestScore >= 75 ? "hsl(142 55% 60%)" : latestScore >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
@@ -1178,7 +1178,7 @@ export default function Dashboard() {
               <p className="text-5xl font-bold mt-3" style={{ color: gradeColor }} data-testid="grade-letter">{grade}</p>
               <p className="text-xs text-muted-foreground mt-1">Profile grade</p>
               {!hasRealAudits && (
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-muted-foreground/50 mt-2 inline-block">Example data</span>
+                <span className="sample-badge mt-2" aria-label="Sample data shown until your first audit">Sample data</span>
               )}
               {scoreDelta > 0 && (
                 <div className="flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full bg-[hsl(142_55%_45%/0.12)] border border-[hsl(142_55%_45%/0.2)]">
@@ -1194,7 +1194,7 @@ export default function Dashboard() {
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-foreground text-sm">Score History</p>
-                    {showDemo && <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-muted-foreground/50">Sample</span>}
+                    {showDemo && <span className="sample-badge" aria-label="Sample data shown until your first audit">Sample data</span>}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">Your progress over time</p>
                 </div>

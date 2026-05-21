@@ -145,9 +145,14 @@ function IntegrationCard({ integration }: { integration: Integration }) {
               <p className="text-sm text-muted-foreground leading-relaxed max-w-md">{integration.description}</p>
             </div>
           </div>
-          <Button size="sm" disabled className="rounded-full text-xs flex-shrink-0 border border-white/8 text-muted-foreground bg-transparent">
-            Coming Soon
-          </Button>
+          <Link
+            href="/waitlist"
+            className="rounded-full text-xs flex-shrink-0 border border-[hsl(268_52%_68%/0.25)] text-[hsl(268_52%_82%)] bg-[hsl(268_52%_68%/0.08)] hover:bg-[hsl(268_52%_68%/0.15)] transition-colors px-3 py-1.5 inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)]"
+            data-testid={`button-notify-${integration.title.toLowerCase().replace(/ /g, "-")}`}
+            aria-label={`Get notified when ${integration.title} integration launches`}
+          >
+            Notify me when live
+          </Link>
         </div>
         <div className="mt-4 rounded-xl p-3 text-sm" style={{ background: `${lvlColor.replace(")", " / 0.07)")}`, border: `1px solid ${lvlColor.replace(")", " / 0.15)")}` }}>
           <span className="font-semibold text-foreground/80">Benefit: </span>
