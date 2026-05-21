@@ -31,6 +31,8 @@ const PROTECTED_GET_ROUTES = [
   "/api/founder/background-jobs",
 ];
 
+const PROTECTED_POST_ROUTES = ["/api/founder/geoip/refresh"];
+
 describe("founder route auth", () => {
   describe.each(PROTECTED_GET_ROUTES)("%s", (route) => {
     it("returns 401 with no key", async () => {
@@ -61,6 +63,28 @@ describe("founder route auth", () => {
     it("passes auth with a valid query key", async () => {
       const sep = route.includes("?") ? "&" : "?";
       const res = await request(app).get(`${route}${sep}key=${VALID_KEY}`);
+      expect(res.status).not.toBe(401);
+    });
+  });
+
+  describe.each(PROTECTED_POST_ROUTES)("%s", (route) => {
+    it("returns 401 with no key", async () => {
+      const res = await request(app).post(route);
+      expect(res.status).toBe(401);
+      expect(res.body).toMatchObject({ error: expect.any(String) });
+    });
+
+    it("returns 401 with a wrong key", async () => {
+      const res = await request(app)
+        .post(route)
+        .set("x-founder-key", "not-the-right-key");
+      expect(res.status).toBe(401);
+    });
+
+    it("passes auth with a valid header key", async () => {
+      const res = await request(app)
+        .post(route)
+        .set("x-founder-key", VALID_KEY);
       expect(res.status).not.toBe(401);
     });
   });

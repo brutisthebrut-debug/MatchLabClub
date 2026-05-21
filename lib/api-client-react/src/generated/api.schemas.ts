@@ -1152,6 +1152,13 @@ export interface TrashPurgeResult {
   deleted: number;
 }
 
+export interface GeoipRefreshResult {
+  /** True when the GeoIP database was refreshed; false when the updater could not run (e.g. MAXMIND_LICENSE_KEY missing or download failed). */
+  success: boolean;
+  /** Human-readable summary of the refresh result. */
+  message: string;
+}
+
 export interface TrashPurgeHeartbeat {
   /**
      * ISO-8601 timestamp of the last successful audit_trash_purge run, or null if it has never run.
@@ -1294,6 +1301,10 @@ windowSize?: number;
 };
 
 export type TestAiParams = {
+key?: string;
+};
+
+export type RefreshGeoipParams = {
 key?: string;
 };
 

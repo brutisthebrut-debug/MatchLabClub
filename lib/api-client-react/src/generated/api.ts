@@ -71,6 +71,7 @@ import type {
   ExpiringTrashedAudits,
   ExtractMessageScreenshot400,
   ExtractScreenshot400,
+  GeoipRefreshResult,
   GetAiFallbackRateParams,
   GetAuditReportVersion404,
   HandleBrowserLoginCallbackParams,
@@ -88,6 +89,7 @@ import type {
   MySessionsResponse,
   ProfileRewrite,
   RedeemAnonymousClaimHandoffInput,
+  RefreshGeoipParams,
   RegisterPushTokenInput,
   RegisterPushTokenResult,
   RestoreAllTrashResult,
@@ -5103,6 +5105,87 @@ export const usePurgeTrashNow = <TError = ErrorType<AiError>,
         TContext
       > => {
       return useMutation(getPurgeTrashNowMutationOptions(options));
+    }
+
+export const getRefreshGeoipUrl = (params?: RefreshGeoipParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/founder/geoip/refresh?${stringifiedParams}` : `/api/founder/geoip/refresh`
+}
+
+/**
+ * Runs the GeoIP updater immediately (the same routine the monthly job calls).
+Useful after rotating the MaxMind license key or when the dataset is suspected
+to be stale. Requires founder key.
+
+ * @summary Trigger a manual GeoIP database refresh
+ */
+export const refreshGeoip = async (params?: RefreshGeoipParams, options?: RequestInit): Promise<GeoipRefreshResult> => {
+
+  return customFetch<GeoipRefreshResult>(getRefreshGeoipUrl(params),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRefreshGeoipMutationOptions = <TError = ErrorType<AiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshGeoip>>, TError,{params?: RefreshGeoipParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof refreshGeoip>>, TError,{params?: RefreshGeoipParams}, TContext> => {
+
+const mutationKey = ['refreshGeoip'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof refreshGeoip>>, {params?: RefreshGeoipParams}> = (props) => {
+          const {params} = props ?? {};
+
+          return  refreshGeoip(params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RefreshGeoipMutationResult = NonNullable<Awaited<ReturnType<typeof refreshGeoip>>>
+
+    export type RefreshGeoipMutationError = ErrorType<AiError>
+
+    /**
+ * @summary Trigger a manual GeoIP database refresh
+ */
+export const useRefreshGeoip = <TError = ErrorType<AiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshGeoip>>, TError,{params?: RefreshGeoipParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof refreshGeoip>>,
+        TError,
+        {params?: RefreshGeoipParams},
+        TContext
+      > => {
+      return useMutation(getRefreshGeoipMutationOptions(options));
     }
 
 export const getGetTrashPurgeHeartbeatUrl = () => {

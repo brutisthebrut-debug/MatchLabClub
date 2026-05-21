@@ -2204,6 +2204,27 @@ export const PurgeTrashNowResponse = zod.object({
 
 
 /**
+ * Runs the GeoIP updater immediately (the same routine the monthly job calls).
+Useful after rotating the MaxMind license key or when the dataset is suspected
+to be stale. Requires founder key.
+
+ * @summary Trigger a manual GeoIP database refresh
+ */
+export const RefreshGeoipQueryParams = zod.object({
+  "key": zod.coerce.string().optional()
+})
+
+export const RefreshGeoipHeader = zod.object({
+  "x-founder-key": zod.string().optional()
+})
+
+export const RefreshGeoipResponse = zod.object({
+  "success": zod.boolean().describe('True when the GeoIP database was refreshed; false when the updater could not run (e.g. MAXMIND_LICENSE_KEY missing or download failed).'),
+  "message": zod.string().describe('Human-readable summary of the refresh result.')
+})
+
+
+/**
  * Returns the timestamp of the last successful `audit_trash_purge` job run,
 together with the elapsed time and a staleness flag. Requires founder key.
 

@@ -4,7 +4,7 @@ import { useMeta } from "@/hooks/useMeta";
 import {
   getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
   getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges, undoAiThresholdChange,
-  getRollupHeartbeat, getOcrMismatches, getBackgroundJobs, purgeTrashNow,
+  getRollupHeartbeat, getOcrMismatches, getBackgroundJobs, purgeTrashNow, refreshGeoip,
   getOcrLearnedRules, runOcrLearn, clearOcrLearnedRules, deleteOcrRule, patchOcrRule, getOcrMismatchesTrends,
   getOcrPendingRules, approveOcrRule, rejectOcrRule, getOcrRuleReviewLog,
   getAlertSettings, updateAlertSettings, resetAlertSettings,
@@ -790,6 +790,87 @@ function formatThreshold(ms: number): string {
   const hr = Math.round(min / 60);
   if (hr < 48) return `${hr}h`;
   return `${Math.round(hr / 24)}d`;
+}
+
+function GeoipRefreshPanel({ founderKey }: { founderKey: string }) {
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleRefresh = async () => {
+    if (running) return;
+    setRunning(true);
+    setResult(null);
+    try {
+      const res = await refreshGeoip(founderKey);
+      setResult(res);
+    } catch (e) {
+      setResult({
+        success: false,
+        message: e instanceof Error ? e.message : "Refresh failed.",
+      });
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const okColor = "hsl(142 55% 60%)";
+  const warnColor = "hsl(348 65% 70%)";
+  const resultColor = result?.success ? okColor : warnColor;
+
+  return (
+    <div
+      className="glass rounded-2xl p-6 space-y-4"
+      data-testid="geoip-refresh-panel"
+    >
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
+            GeoIP Data
+          </p>
+          <p className="text-base font-semibold text-foreground">
+            Refresh sign-in location lookups
+          </p>
+          <p className="text-xs text-muted-foreground/70 mt-1 max-w-md">
+            Pulls the latest MaxMind GeoLite2 dataset and rewrites the local geoip-lite
+            files. Use after rotating the license key or if locations look stale.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleRefresh}
+          disabled={running}
+          data-testid="geoip-refresh-button"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-white/10 bg-white/5 text-foreground hover:bg-white/10 hover:border-white/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {running ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <RefreshCw className="w-4 h-4" />
+          )}
+          {running ? "Refreshing…" : "Refresh GeoIP data"}
+        </button>
+      </div>
+
+      {result && (
+        <div
+          className="rounded-xl p-3 border flex items-start gap-2 text-xs"
+          data-testid="geoip-refresh-result"
+          style={{
+            background: `${resultColor.replace(")", " / 0.07)")}`,
+            borderColor: `${resultColor.replace(")", " / 0.30)")}`,
+            color: resultColor,
+          }}
+        >
+          {result.success ? (
+            <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+          ) : (
+            <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+          )}
+          <span className="leading-snug">{result.message}</span>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function BackgroundJobsPanel({ refreshKey, founderKey }: { refreshKey: number; founderKey: string }) {
@@ -3177,6 +3258,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
           <AiStatusPanel />
           <BackgroundJobsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
           <TrashPurgePanel founderKey={FOUNDER_KEY} onPurged={() => setRefreshKey((k) => k + 1)} />
+          <GeoipRefreshPanel founderKey={FOUNDER_KEY} />
           <OcrMismatchesPanel refreshKey={refreshKey} />
           <AiMetricsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
           <AiReliabilityTrendsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />

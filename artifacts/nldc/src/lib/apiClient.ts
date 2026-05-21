@@ -216,6 +216,23 @@ export interface BackgroundJobsResponse {
 export const getBackgroundJobs = (founderKey: string) =>
   get<BackgroundJobsResponse>("/founder/background-jobs", { headers: { "x-founder-key": founderKey } });
 
+export interface GeoipRefreshResult {
+  success: boolean;
+  message: string;
+}
+
+export const refreshGeoip = async (founderKey: string): Promise<GeoipRefreshResult> => {
+  const res = await fetch("/api/founder/geoip/refresh", {
+    method: "POST",
+    headers: { "x-founder-key": founderKey },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `Request failed with status ${res.status}`);
+  }
+  return (await res.json()) as GeoipRefreshResult;
+};
+
 export interface AiMetricsTrendPoint {
   day: string;
   toolName: string;

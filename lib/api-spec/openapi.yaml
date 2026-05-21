@@ -1643,6 +1643,40 @@ paths:
               schema:
                 $ref: "#/components/schemas/AiError"
 
+  /founder/geoip/refresh:
+    post:
+      operationId: refreshGeoip
+      tags: [founder]
+      summary: Trigger a manual GeoIP database refresh
+      description: |
+        Runs the GeoIP updater immediately (the same routine the monthly job calls).
+        Useful after rotating the MaxMind license key or when the dataset is suspected
+        to be stale. Requires founder key.
+      parameters:
+        - name: x-founder-key
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: key
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: GeoIP refresh result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeoipRefreshResult"
+        "401":
+          description: Founder key required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiError"
+
   /founder/trash-purge-heartbeat:
     get:
       operationId: getTrashPurgeHeartbeat
@@ -3210,6 +3244,17 @@ components:
         deleted:
           type: integer
           description: Number of soft-deleted audit rows permanently removed by this purge run.
+
+    GeoipRefreshResult:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+          description: True when the GeoIP database was refreshed; false when the updater could not run (e.g. MAXMIND_LICENSE_KEY missing or download failed).
+        message:
+          type: string
+          description: Human-readable summary of the refresh result.
 
     TrashPurgeHeartbeat:
       type: object

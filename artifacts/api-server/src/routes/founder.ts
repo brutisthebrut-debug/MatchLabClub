@@ -42,6 +42,7 @@ import {
   purgeExpiredTrashedAudits,
 } from "../lib/auditTrashPurge";
 import { KNOWN_JOB_NAMES, getStaleThresholdMs } from "../lib/jobHeartbeat";
+import { runGeoipUpdate } from "../lib/geoipUpdateJob";
 import {
   DEFAULT_REBREACH_COOLDOWN_MINUTES,
   getEnvRebreachCooldownMinutes,
@@ -436,6 +437,31 @@ router.get("/founder/trash-purge-heartbeat", requireFounder, async (_req, res): 
     ageMs,
     staleThresholdMs,
     stale: ageMs > staleThresholdMs,
+  });
+});
+
+router.post("/founder/geoip/refresh", requireFounder, async (_req, res): Promise<void> => {
+  const success = await runGeoipUpdate();
+  if (success) {
+    res.json({
+      success: true,
+      message: "GeoIP database refreshed successfully.",
+    });
+    return;
+  }
+  const licenseKey = process.env["MAXMIND_LICENSE_KEY"]?.trim();
+  if (!licenseKey) {
+    res.json({
+      success: false,
+      message:
+        "MAXMIND_LICENSE_KEY is not set. Add it as a secret to enable GeoIP refreshes.",
+    });
+    return;
+  }
+  res.json({
+    success: false,
+    message:
+      "GeoIP refresh failed. Check the server logs for details and verify the MaxMind license key is valid.",
   });
 });
 
