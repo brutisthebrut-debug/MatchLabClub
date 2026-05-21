@@ -37,6 +37,22 @@ vi.mock("expo-clipboard", () => ({
   setStringAsync: vi.fn(async (_text: string) => {}),
 }));
 
+// CopyButton imports expo-haptics, which loads expo-modules-core and trips
+// over jsdom-incompatible internals (TurboModuleRegistry / EventEmitter).
+// Stub expo-haptics; the CopyButton itself still renders for real so the
+// copy-to-clipboard behavior under test is exercised.
+vi.mock("expo-haptics", () => ({
+  selectionAsync: vi.fn(async () => {}),
+  impactAsync: vi.fn(async () => {}),
+  notificationAsync: vi.fn(async () => {}),
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
+  NotificationFeedbackType: {
+    Success: "success",
+    Warning: "warning",
+    Error: "error",
+  },
+}));
+
 vi.mock("react-native", () => {
   const rn = {
     View: ({

@@ -217,6 +217,16 @@ vi.mock("@/lib/auditTrashNotifications", () => ({
   saveTrashReminderPrefs: vi.fn(async () => {}),
 }));
 
+// account.tsx imports HandoffQrCard, which pulls in expo-media-library +
+// expo-file-system + react-native-view-shot. Those expo modules load
+// expo-modules-core which can't initialize under jsdom (TurboModuleRegistry
+// is undefined on the mocked react-native). This test only verifies the
+// "Devices & sign-ins" navigation path; the QR card is irrelevant here, so
+// replace it with an inert stub.
+vi.mock("@/components/HandoffQrCard", () => ({
+  HandoffQrCard: () => null,
+}));
+
 vi.mock("@/components/ScreenHeader", () => ({
   ScreenHeader: ({
     title,

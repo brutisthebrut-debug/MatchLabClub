@@ -1068,7 +1068,7 @@ export default function Dashboard() {
           {!trashBannerDismissed &&
             loadTrashReminderPref() &&
             expiringTrashedData &&
-            expiringTrashedData.audits.length > 0 &&
+            (expiringTrashedData.audits?.length ?? 0) > 0 &&
             (() => {
               const earliest = expiringTrashedData.audits[0]?.deletedAt;
               const left = earliest

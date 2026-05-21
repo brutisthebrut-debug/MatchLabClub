@@ -109,7 +109,11 @@ test("dashboard renders authenticated UI when user is logged in", async ({
     route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
   );
 
-  await page.route("**/api/message-coaching**", (route) =>
+  // The "list coaching sessions" hook is generated at /api/messages, not
+  // /api/message-coaching. Mocking the wrong path lets the real API server
+  // answer (typically with a 401 redirect or empty), which can keep the
+  // Dashboard's accountDataLoading gate true and hide the empty-state panel.
+  await page.route("**/api/messages**", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
   );
 
@@ -118,7 +122,11 @@ test("dashboard renders authenticated UI when user is logged in", async ({
   );
 
   await page.route("**/api/trash**", (route) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ audits: [], retentionDays: 30 }),
+    }),
   );
 
   await page.goto("/dashboard");

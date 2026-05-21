@@ -30,6 +30,57 @@ vi.mock("@/components/layout/AppLayout", () => ({
 
 vi.mock("@/hooks/useMeta", () => ({ useMeta: () => {} }));
 
+// Replace the shadcn/Radix-based Toaster with a minimal render of the toast
+// queue. The real Toaster mounts @radix-ui/react-toast which schedules
+// internal timers (animation/duration/use-callback-ref) that can fire after
+// the test exits, after vitest has torn down the jsdom environment — that
+// surfaces as "ReferenceError: document is not defined" unhandled errors and
+// fails the suite even when every assertion passes. Rendering the toast
+// action directly is enough for these tests; they only need to find and
+// click `button-undo-delete-<id>`.
+vi.mock("@/components/ui/toaster", async () => {
+  const { useToast } = await import("@/hooks/use-toast");
+  return {
+    Toaster: () => {
+      const { toasts } = useToast();
+      return (
+        <div data-testid="__test-toaster">
+          {toasts.map((t) => (
+            <div key={t.id}>{t.action}</div>
+          ))}
+        </div>
+      );
+    },
+  };
+});
+
+// ToastAction in shadcn wraps Radix's Action primitive; rendering it inside
+// our minimal Toaster (no ToastProvider above it) would throw. Swap it for a
+// plain button that still carries the data-testid the test clicks on.
+vi.mock("@/components/ui/toast", async () => {
+  const actual =
+    await vi.importActual<typeof import("@/components/ui/toast")>(
+      "@/components/ui/toast",
+    );
+  return {
+    ...actual,
+    ToastAction: ({
+      children,
+      onClick,
+      ...rest
+    }: {
+      children: React.ReactNode;
+      onClick?: () => void;
+      altText?: string;
+      [key: string]: unknown;
+    }) => (
+      <button onClick={onClick} {...rest}>
+        {children}
+      </button>
+    ),
+  };
+});
+
 // IntersectionObserver doesn't exist in jsdom; stub it so the load-more
 // sentinel effect is a no-op.
 class FakeIntersectionObserver {

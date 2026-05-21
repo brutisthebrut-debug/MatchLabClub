@@ -22,6 +22,10 @@ vi.mock("./signInPushToken", () => ({
   getSigningInDevicePushToken: vi.fn(async () => null),
 }));
 
+// auth.tsx pulls in ./auditTrashNotifications, which transitively imports
+// expo-notifications -> expo -> ./ImportMetaRegistry. That import chain is
+// unresolvable under vitest's jsdom env. We don't exercise push registration
+// here, so stub it out to avoid loading the expo runtime.
 vi.mock("./auditTrashNotifications", () => ({
   registerPushTokenWithServer: vi.fn(async () => {}),
   deregisterPushTokenFromServer: vi.fn(async () => {}),
