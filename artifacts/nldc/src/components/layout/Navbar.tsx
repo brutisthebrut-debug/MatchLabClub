@@ -70,8 +70,9 @@ const GROWTH_MORE = [
 ];
 
 const OFFERS_TOOLS = [
-  { name: "Plans & Pricing",     href: "/pricing",  desc: "Three tiers, podcast discount, no surprises" },
-  { name: "Join the Waitlist",   href: "/waitlist", desc: "Be first when paid tiers open" },
+  { name: "Plans & Pricing",     href: "/pricing",       desc: "Three tiers, podcast discount, no surprises" },
+  { name: "Sample Report",       href: "/sample-report", desc: "See a full real-structure Dating Reset Report" },
+  { name: "Join the Waitlist",   href: "/waitlist",      desc: "Be first when paid tiers open" },
 ];
 
 const OFFERS_MORE: { name: string; href: string }[] = [];
@@ -155,7 +156,7 @@ const PACKAGES = [
     more: OFFERS_MORE,
     hubHref: "/pricing",
     hubLabel: "See all plans",
-    activeHrefs: ["/pricing", "/waitlist"],
+    activeHrefs: ["/pricing", "/waitlist", "/sample-report"],
   },
   {
     id: "trust" as const,

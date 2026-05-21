@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { ArrowRight, CheckCircle, Shield, Sparkles, Headphones, Star, TrendingUp, Play, Quote, MessageSquare } from "lucide-react";
+import { ArrowRight, CheckCircle, Shield, Sparkles, Headphones, Star, TrendingUp, Eye, Quote, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMeta } from "@/hooks/useMeta";
 import { TrustBadge } from "@/components/TrustBadge";
@@ -40,14 +40,6 @@ export default function Landing() {
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            {/* Badge */}
-            <motion.div {...fadeUp(0)}>
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border border-[hsl(268_52%_68%/0.3)] text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_80%)] mb-8">
-                <span className="w-1.5 h-1.5 rounded-full bg-[hsl(268_52%_68%)] animate-pulse" />
-                Podcast Launch — Limited Early Access
-              </span>
-            </motion.div>
-
             {/* Headline */}
             <motion.h1
               className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.05] mb-6"
@@ -62,12 +54,12 @@ export default function Landing() {
 
             {/* Subhead */}
             <motion.p
-              className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-10"
+              className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed mb-10"
               {...fadeUp(0.15)}
             >
-              Your profile is saying something right now — with or without your input.
-              We show you exactly what it's communicating, rewrite what isn't working,
-              coach your conversations, and hand you a practical action plan to see real results.
+              Your profile is already saying something. We show you exactly what,
+              rewrite what isn't working, and coach your conversations.
+              Most members see results within 48 hours.
             </motion.p>
 
             {/* CTAs */}
@@ -87,25 +79,26 @@ export default function Landing() {
                 size="lg"
                 variant="ghost"
                 className="h-14 px-8 text-base font-medium rounded-full border border-foreground/12 hover:bg-foreground/5 text-muted-foreground hover:text-foreground transition-all"
+                data-testid="button-hero-sample-report"
               >
-                <Link href="#how-it-works">
-                  <Play className="mr-2 h-4 w-4" /> See How It Works
+                <Link href="/sample-report">
+                  <Eye className="mr-2 h-4 w-4" /> See Sample Report
                 </Link>
               </Button>
             </motion.div>
 
-            {/* Sample report nudge — promoted */}
+            {/* Free entry nudge */}
             <motion.div className="flex flex-wrap items-center justify-center gap-3 mt-5" {...fadeUp(0.28)}>
               <Link
-                href="/sample-report"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[hsl(268_52%_68%/0.3)] hover:border-[hsl(268_52%_68%/0.55)] hover:bg-[hsl(268_52%_68%/0.08)] transition-all group"
+                href="/signal-check"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[hsl(43_65%_62%/0.3)] hover:border-[hsl(43_65%_62%/0.55)] hover:bg-[hsl(43_65%_62%/0.06)] transition-all group"
                 data-testid="link-landing-sample-report"
               >
-                <Sparkles className="w-3.5 h-3.5 text-[hsl(268_52%_78%)]" />
-                <span className="text-xs font-semibold text-foreground">See a real sample report first</span>
+                <Headphones className="w-3.5 h-3.5 text-[hsl(43_65%_68%)]" />
+                <span className="text-xs font-semibold text-foreground">Free 3-min Signal Check</span>
                 <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
               </Link>
-              <span className="text-xs text-muted-foreground/50">No signup · 30 second read</span>
+              <span className="text-xs text-muted-foreground/50">No account needed</span>
             </motion.div>
 
             {/* Social proof avatars */}

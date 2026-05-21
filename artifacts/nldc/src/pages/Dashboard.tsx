@@ -193,7 +193,7 @@ const HOW_YOU_COME_ACROSS = [
 
 const ACTION_GROUPS = [
   {
-    label: "Start Here", color: "hsl(268 52% 68%)",
+    label: "Core Tools", color: "hsl(268 52% 68%)",
     items: [
       { icon: FileText,      label: "New Audit",         desc: "Full profile audit + 7-day plan",  href: "/start"          },
       { icon: Camera,        label: "Scan a Profile",    desc: "Screenshot → instant mini-audit",  href: "/scan"           },
@@ -342,7 +342,7 @@ const fadeUp = (delay = 0) => ({
 function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
   if (!hasRealAudits) {
     return {
-      label: "Start Here",
+      label: "Your Move",
       title: "Get your free Signal Audit",
       desc: "Takes 3 minutes. Get your Signal Score, bio rewrite, and a 7-day action plan.",
       href: "/start",
@@ -1209,7 +1209,7 @@ export default function Dashboard() {
               </div>
             ) : (
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">Start here — 3 steps to your baseline</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">Three steps to your baseline</p>
                 <div className="grid sm:grid-cols-3 gap-3">
                   {[
                     { n: "1", title: "Get your Signal Audit", desc: "3 minutes · Free · Instant score", href: "/start", color: "hsl(268 52% 68%)", icon: Sparkles },

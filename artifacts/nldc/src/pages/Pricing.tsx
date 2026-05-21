@@ -199,9 +199,15 @@ export default function Pricing() {
           <motion.div {...fadeUp(0.07)} className="text-center mb-14">
             <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-3">Invest in clarity</p>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Simple, honest pricing.</h1>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed">
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed mb-5">
               Start free. Upgrade when you see the quality. Cancel or delete anytime.
             </p>
+            <Link href="/sample-report"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[hsl(268_52%_68%/0.25)] hover:border-[hsl(268_52%_68%/0.5)] hover:bg-[hsl(268_52%_68%/0.06)] transition-all group text-xs font-semibold text-muted-foreground hover:text-foreground">
+              <Sparkles className="w-3.5 h-3.5 text-[hsl(268_52%_68%)]" />
+              Not sure yet? See a full sample report first
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
           </motion.div>
 
           {/* Pricing Cards */}

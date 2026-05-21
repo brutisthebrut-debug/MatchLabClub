@@ -102,10 +102,46 @@ export default function SampleReport() {
           </motion.div>
 
           {/* Report header */}
-          <motion.div {...fadeUp(0.04)} className="mb-8">
+          <motion.div {...fadeUp(0.04)} className="mb-6">
             <p className="text-xs font-bold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-2">Dating Reset Report</p>
             <h1 className="text-4xl font-bold text-foreground mb-2">Jordan's Report</h1>
             <p className="text-muted-foreground text-sm">31 · Hinge · Looking for a long-term relationship</p>
+          </motion.div>
+
+          {/* What Jordan came in with */}
+          <motion.div {...fadeUp(0.06)} className="glass border border-white/8 rounded-2xl overflow-hidden mb-5">
+            <div className="px-5 py-4 border-b border-white/5 flex items-center gap-2.5">
+              <div className="w-2 h-2 rounded-full bg-[hsl(348_55%_65%)]" />
+              <p className="font-semibold text-foreground text-sm">What Jordan came in with</p>
+              <span className="ml-auto text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border border-[hsl(348_55%_65%/0.3)] bg-[hsl(348_55%_65%/0.1)] text-[hsl(348_55%_65%)]">Before</span>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2">Bio — as submitted</p>
+                <p className="text-sm text-muted-foreground/70 leading-relaxed italic">
+                  "Marketing manager. I like good food, music, and getting outdoors when I can. Looking for someone genuine who knows what they want."
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-5 pt-3 border-t border-white/5">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/35 mb-1">Goal</p>
+                  <p className="text-xs text-muted-foreground">Long-term relationship</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/35 mb-1">Platform</p>
+                  <p className="text-xs text-muted-foreground">Hinge</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/35 mb-1">Biggest challenge</p>
+                  <p className="text-xs text-muted-foreground">Not getting enough matches</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {["⚠ Generic opener", "⚠ No personality hook", "⚠ Could be anyone", "⚠ No conversation starter"].map(tag => (
+                  <span key={tag} className="px-2.5 py-1 rounded-full text-xs bg-[hsl(348_55%_60%/0.1)] text-[hsl(348_55%_68%)] border border-[hsl(348_55%_60%/0.2)]">{tag}</span>
+                ))}
+              </div>
+            </div>
           </motion.div>
 
           {/* Signal Score */}
