@@ -77,6 +77,39 @@ The updater fetches current GeoLite2 CSV files directly from MaxMind, converts t
 - **Pricing** — 3-tier pricing with podcast discount, FAQ accordion
 - **Waitlist** — live count, signup form, early listener perks
 
+## Stripe checkout operations
+
+Checkout (`/checkout/:product`) renders a Stripe Payment Link button when the corresponding env var is set, and falls back to a "save your spot" purchase-interest form when it isn't. Wiring is in `artifacts/nldc/src/pages/Checkout.tsx` (`PaidForm` reads `import.meta.env[config.stripeEnvKey]`).
+
+### Required env vars (frontend, `shared` environment, prefixed `VITE_` so Vite exposes them)
+
+| Product | Price | Env var | Stripe URL shape |
+| --- | --- | --- | --- |
+| `signal-audit` | $29 one-time | `VITE_STRIPE_SIGNAL_AUDIT_LINK` | `https://buy.stripe.com/...` |
+| `dating-reset` | $97 one-time | `VITE_STRIPE_DATING_RESET_LINK` | `https://buy.stripe.com/...` |
+| `wingman` | $197/mo | `VITE_STRIPE_WINGMAN_LINK` | `https://buy.stripe.com/...` |
+
+When all three are present, customers go straight to Stripe-hosted checkout. When any are missing, that product silently falls back to the email-capture form — safe to ship partially configured.
+
+### Creating the Payment Links in Stripe
+
+1. Stripe Dashboard → Products → create one product per row above (one-time for the first two, monthly subscription for Wingman).
+2. Products → product → "Create payment link". Set quantity = 1, allow promotion codes, collect customer name + email.
+3. Under "After payment", set the success URL to `https://<your-domain>/checkout/success?product=<slug>` and (optionally) a cancel URL to `https://<your-domain>/checkout/cancel?product=<slug>` (use the `signal-audit` / `dating-reset` / `wingman` slug).
+4. Copy the resulting `https://buy.stripe.com/...` URL into the matching env var on Replit (Secrets → Environment variables, "shared").
+5. Restart the `artifacts/nldc: web` workflow so Vite re-reads the env.
+
+### Reconciliation today (manual, intentional)
+
+There is **no Stripe webhook**. The `purchase_interest` table tracks early-list signups only. Real Stripe orders show up in the Stripe Dashboard. To match a paid customer to an NLDC account during beta:
+
+1. In the Stripe Dashboard, copy the customer's email from the successful payment.
+2. In `/founder` → Purchase interest, search that email (rows here will be `interest`-status leads who clicked "save my spot" without paying — usually empty for paid customers).
+3. If the email matches a real user, mark the account as paid manually (founder-side note for now); if not, send them the onboarding email with a link to `/start` and the founder review note.
+4. Refunds and disputes are handled entirely in the Stripe Dashboard — nothing in this app needs to change.
+
+If/when we move beyond beta, add a Stripe webhook → set `purchase_interest.status = "paid"` and stamp `stripe_session_id` (columns already exist in `lib/db/src/schema/purchase_interest.ts`). The schema is intentionally pre-wired for this.
+
 ## User preferences
 
 _Populate as you build — explicit user instructions worth remembering across sessions._

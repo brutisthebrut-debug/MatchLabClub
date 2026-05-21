@@ -54,7 +54,7 @@ const LEVELS = [
   },
   {
     num: 2,
-    status: "dev" as LevelStatus,
+    status: "live" as LevelStatus,
     title: "User-Uploaded Presence Audit",
     tagline: "Show us how you look online. We'll tell you what it's saying.",
     icon: Camera,
@@ -64,16 +64,16 @@ const LEVELS = [
       "Public-facing content you want reviewed",
     ],
     what_you_get: [
+      "Screenshot OCR — text and signals extracted from your app screens",
       "Cross-platform presence consistency analysis",
       "Photo composition and selection coaching",
-      "Brand clarity report: who do you look like online vs who you actually are?",
-      "Platform-specific optimisation recommendations",
+      "Match-library review — patterns across the people you're matching with",
       "Visual vs verbal alignment score",
     ],
-    modules: ["Screenshot Upload", "Presence Audit", "Visual Coach"],
-    module_links: ["/start", "/start", "/start"],
-    insight: "Most people present differently across Hinge, LinkedIn, and Instagram without realising it. This level maps the gaps — so the right people recognise you everywhere.",
-    technical: "Computer vision + structured prompt engine. No passive screen capture. You control what's uploaded.",
+    modules: ["Screenshot Upload", "Profile Reader", "Presence Audit"],
+    module_links: ["/start", "/profile-reader", "/start"],
+    insight: "Most people present differently across Hinge, LinkedIn, and Instagram without realising it. This level maps the gaps — and reads what's actually in your screenshots — so the right people recognise you everywhere.",
+    technical: "On-device-style OCR, structured extraction, and deterministic coaching. No passive screen capture. You upload only what you approve.",
     accentColor: "hsl(268 52% 72%)",
   },
   {
@@ -97,33 +97,33 @@ const LEVELS = [
     ],
     modules: ["Gmail Snippets", "Calendar Context", "App Export", "Pattern Engine"],
     module_links: ["/integrations", "/integrations", "/integrations", "/integrations"],
-    insight: "The step change from manual to automatic insight. Every connection here is explicit, previewed before analysis, and revocable instantly. Your data is never transferred — only processed under your active consent.",
-    technical: "OAuth read-only scopes, field-level consent controls, preview-before-process architecture, per-source revocation.",
+    insight: "The step change from manual to automatic insight. Every connection here will be explicit, previewed before analysis, and revocable instantly. We're shipping the consent-first UI first — the OAuth integrations land once we're confident the trust controls are right.",
+    technical: "Planned: OAuth read-only scopes, field-level consent controls, preview-before-process architecture, per-source revocation. The Integrations page today is a consent preview — no live connections yet.",
     accentColor: "hsl(43 65% 67%)",
   },
   {
     num: 4,
-    status: "phase3" as LevelStatus,
+    status: "dev" as LevelStatus,
     title: "Private Personal Intelligence Layer",
-    tagline: "A living mirror of who you are in relationships — owned by you, seen only by you.",
+    tagline: "A living mirror of who you are in relationships — owned by you, seen only on your account.",
     icon: Brain,
     what_you_provide: [
-      "Everything from Levels 1–3 (opt-in)",
+      "Everything from Levels 1–2 (and Level 3 once it ships)",
       "Reflective journal prompts you choose to answer",
       "Post-date notes and outcome tracking",
     ],
     what_you_get: [
-      "Your personal communication style map (how you actually show up)",
-      "Dating pattern recognition across time (what you repeat, what shifts)",
-      "Values and confidence blocker analysis",
-      "Mismatch risk profiles (the types of people who consistently don't work for you)",
-      "Relationship-readiness signal dashboard",
-      "Longitudinal growth curve across all audits",
+      "Score history and growth timeline across every audit (live)",
+      "Signal Spectrum — your 8 dimensions tracked over time (live)",
+      "Send-through trends — what your messaging is actually doing (live)",
+      "Cross-audit pattern recognition — what you repeat, what shifts (coming next)",
+      "Reflective journal + post-date notes (coming next)",
+      "Mismatch risk profiles and readiness signals (coming)",
     ],
-    modules: ["Intelligence Layer", "Pattern Dashboard", "Growth Timeline", "Readiness Map"],
+    modules: ["Score History", "Signal Spectrum", "Send-Through Trends", "Pattern Mirror (next)"],
     module_links: ["/dashboard", "/dashboard", "/dashboard", "/dashboard"],
-    insight: "This is your private psychological asset — a living record of your dating self that nobody else sees. Not a therapist. Not a social graph. Not a data broker. Just you, seeing yourself clearly over time.",
-    technical: "Fully encrypted personal store. Zero knowledge of content by NLDC employees. User holds the only decryption key.",
+    insight: "This is your private psychological asset — a living record of your dating self, scoped to your account, never sold, never used for advertising. Some pieces are already in your dashboard today; the deeper pattern mirror and journal layers are the next things we ship.",
+    technical: "Private to your authenticated account. Data is stored on NLDC infrastructure, never sold or shared with third parties, and can be exported or permanently deleted at any time from Settings → Privacy.",
     accentColor: "hsl(285 45% 68%)",
   },
   {
@@ -155,7 +155,7 @@ const PRIVACY_PRINCIPLES = [
   { icon: Eye, title: "Preview before analysis", desc: "At Levels 3+, you see exactly what data will be processed before we touch it. Line by line if you want.", color: "hsl(268 52% 68%)" },
   { icon: CheckCircle, title: "Consent at every level", desc: "Each data source requires its own explicit opt-in. Approving Gmail doesn't mean approving Calendar. Each switch is separate.", color: "hsl(142 55% 60%)" },
   { icon: Trash2, title: "Delete everything, permanently", desc: "One click removes your account, all audits, all stored intelligence, and all preferences — no 30-day hold, no 'we keep anonymised data' loophole.", color: "hsl(43 65% 65%)" },
-  { icon: Lock, title: "Private intelligence stays private", desc: "Your Level 4 intelligence layer is encrypted with a key only you hold. NLDC employees cannot access it. Not operationally, not legally compelled.", color: "hsl(285 45% 65%)" },
+  { icon: Lock, title: "Private intelligence stays private", desc: "Your Level 4 intelligence layer is scoped to your account, never sold, never used to train external models, and never shared with third parties. You can export or permanently delete it from Settings → Privacy at any time.", color: "hsl(285 45% 65%)" },
   { icon: Database, title: "We never sell raw personal content", desc: "Not your messages. Not your profile. Not your photos. Not your conversation history. Not your journal. Nothing individual, ever.", color: "hsl(348 55% 65%)" },
   { icon: BarChart3, title: "Aggregate intelligence is earned, not extracted", desc: "Level 5 only exists because individuals opt in to anonymous benchmarking. The business model is consent infrastructure — not surveillance.", color: "hsl(190 55% 60%)" },
 ];
@@ -494,9 +494,9 @@ export default function Roadmap() {
           <div className="max-w-4xl mx-auto">
             <motion.div {...fadeUp(0)} className="text-center mb-12">
               <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(142_55%_65%)] mb-3">Available Right Now</p>
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground">Level 1 is fully live.</h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">Levels 1 and 2 are live.</h2>
               <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
-                All five modules are functional, demo-ready, and free to start. The rest of the roadmap is being built on this foundation.
+                Every module below is shipped, demo-ready, and free to try. Level 4 has its first pieces in your dashboard today — the deeper pattern mirror lands next.
               </p>
             </motion.div>
 
@@ -506,7 +506,10 @@ export default function Roadmap() {
                 { icon: FileText, title: "Full Profile Audit", desc: "Score, rewrite, prompts, photos, action plan", href: "/start", label: "Live" },
                 { icon: MessageSquare, title: "Message Lab", desc: "Tone analysis + 4 reply options with rationale", href: "/lab", label: "Live" },
                 { icon: Headphones, title: "3-Min Signal Check", desc: "Free 3-minute check — score + 1 fix", href: "/signal-check", label: "Live" },
-                { icon: BarChart3, title: "Dating Blueprint", desc: "Progress dashboard, score history, dimensions", href: "/dashboard", label: "Live" },
+                { icon: Camera, title: "Profile Reader (OCR)", desc: "Upload a screenshot — we extract the signals", href: "/profile-reader", label: "Live" },
+                { icon: BarChart3, title: "Dating Blueprint", desc: "Score history, signal spectrum, send-through trends", href: "/dashboard", label: "Live" },
+                { icon: Brain, title: "Mirror & Archetype", desc: "Your communication style and profile archetype", href: "/mirror", label: "Live" },
+                { icon: MessageSquare, title: "Next Message", desc: "AI-assisted reply for an in-flight conversation", href: "/next-message", label: "Live" },
                 { icon: Layers, title: "Integrations Roadmap", desc: "Consent-first data connection preview", href: "/integrations", label: "Preview" },
               ].map((module, i) => (
                 <motion.div key={i} {...fadeUp(i * 0.07)}>
