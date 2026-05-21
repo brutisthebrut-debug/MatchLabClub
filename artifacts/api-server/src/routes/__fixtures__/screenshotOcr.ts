@@ -54,6 +54,19 @@ Coffee
 Live Music
 `;
 
+export const OKCUPID_OCR = `OkCupid
+Jordan, 27
+92% Match
+Brooklyn, NY
+Software engineer by day, amateur baker by night. I make a mean sourdough and I'm always chasing a new hiking trail.
+My self-summary
+Curious, easygoing, and probably overcaffeinated. Big fan of farmers markets and slow Sunday mornings.
+You should message me if
+You can recommend a great taco spot or want to debate the best Wes Anderson film.
+Like
+Pass
+`;
+
 export const UNREADABLE_OCR = `!!!
 ???
 ...

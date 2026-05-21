@@ -7,6 +7,7 @@ import {
   HINGE_OCR,
   BUMBLE_OCR,
   TINDER_OCR,
+  OKCUPID_OCR,
   UNREADABLE_OCR,
 } from "./__fixtures__/screenshotOcr";
 
@@ -150,6 +151,22 @@ describe("POST /api/audits/from-screenshot", () => {
     expect(row.sourceApp).toBe("Tinder");
     expect(row.firstName).toBe("Mia");
     expect(row.age).toBe(24);
+  });
+
+  it("happy path: extracts an OkCupid profile", async () => {
+    const res = await request(app)
+      .post("/api/audits/from-screenshot")
+      .send({ imageBase64: toBase64(OKCUPID_OCR) });
+
+    expect(res.status).toBe(200);
+    expect(() => AuditFromScreenshotResponse.parse(res.body)).not.toThrow();
+
+    const { dumpTable } = await import("../lib/testDb");
+    const row = dumpTable("audits")[0];
+    expect(row.sourceApp).toBe("OkCupid");
+    expect(row.firstName).toBe("Jordan");
+    expect(row.age).toBe(27);
+    expect(row.bio.toLowerCase()).toMatch(/sourdough|hiking|engineer|baker/);
   });
 
   it("corrected-text path: skips OCR when `bio` is provided and records OCR corrections", async () => {
