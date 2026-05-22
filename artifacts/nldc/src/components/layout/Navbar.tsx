@@ -2,13 +2,13 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
   Menu, X, Sparkles, ChevronDown, TrendingUp, BookOpen,
-  MessageSquare, Shield, LogIn, LogOut, User as UserIcon, ArrowRight, Tag, Compass,
+  MessageSquare, Shield, LogIn, LogOut, User as UserIcon, ArrowRight, FlaskConical, Compass,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@workspace/replit-auth-web";
 
 // ── Six-section taxonomy (Start Here, The Reset, Message Lab,
-// Growth Tracker, Offers, Context & Trust). Every existing route is preserved.
+// Growth Tracker, Context & Trust, Founder & Beta). Every existing route is preserved.
 
 const START_HERE_TOOLS = [
   { name: "Get your Signal Audit", href: "/start",         desc: "Begin here — 3-min intake wizard" },
@@ -69,13 +69,16 @@ const GROWTH_MORE = [
   { name: "Debrief",              href: "/copilot/debrief" },
 ];
 
-const OFFERS_TOOLS = [
-  { name: "Plans & Pricing",     href: "/pricing",       desc: "Three tiers, launch perks, no surprises" },
-  { name: "Sample Report",       href: "/sample-report", desc: "See a full real-structure Dating Reset Report" },
-  { name: "Join the Waitlist",   href: "/waitlist",      desc: "Be first when paid tiers open" },
+const FOUNDER_BETA_TOOLS = [
+  { name: "Plans & Pricing",    href: "/pricing",       desc: "Three tiers, launch perks, no surprises" },
+  { name: "Sample Report",      href: "/sample-report", desc: "See a full Dating Reset Report before you decide" },
+  { name: "Join the Waitlist",  href: "/waitlist",      desc: "Be first when new paid tiers open" },
+  { name: "Beta Feedback",      href: "/feedback",      desc: "Tell us what's working and what isn't" },
 ];
 
-const OFFERS_MORE: { name: string; href: string }[] = [];
+const FOUNDER_BETA_MORE = [
+  { name: "Product Roadmap", href: "/roadmap" },
+];
 
 const TRUST_TOOLS = [
   { name: "Wellness Center",    href: "/wellness",      desc: "8 dimensions of your readiness" },
@@ -88,7 +91,6 @@ const TRUST_TOOLS = [
 const TRUST_MORE = [
   { name: "Life Context",    href: "/life-context" },
   { name: "Integrations",    href: "/integrations" },
-  { name: "Beta Feedback",   href: "/feedback" },
   { name: "Account",         href: "/account" },
 ];
 
@@ -147,16 +149,16 @@ const PACKAGES = [
     activeHrefs: ["/progress", "/copilot/weekly-plan", "/copilot/what-changed", "/copilot/debrief", "/reflection"],
   },
   {
-    id: "offers" as const,
-    label: "Offers",
-    tagline: "Plans, perks, and waitlist",
+    id: "founder" as const,
+    label: "Founder & Beta",
+    tagline: "Plans, sample report, waitlist, and how to help us shape the beta",
     color: "hsl(285 45% 62%)",
-    icon: Tag,
-    tools: OFFERS_TOOLS,
-    more: OFFERS_MORE,
+    icon: FlaskConical,
+    tools: FOUNDER_BETA_TOOLS,
+    more: FOUNDER_BETA_MORE,
     hubHref: "/pricing",
-    hubLabel: "See all plans",
-    activeHrefs: ["/pricing", "/waitlist", "/sample-report"],
+    hubLabel: "See plans & founder offer",
+    activeHrefs: ["/pricing", "/waitlist", "/sample-report", "/feedback", "/roadmap"],
   },
   {
     id: "trust" as const,
@@ -175,7 +177,7 @@ const PACKAGES = [
   },
 ] as const;
 
-type DropdownId = "start" | "blueprint" | "messages" | "growth" | "offers" | "trust" | null;
+type DropdownId = "start" | "blueprint" | "messages" | "growth" | "founder" | "trust" | null;
 
 export function Navbar() {
   const [location] = useLocation();
