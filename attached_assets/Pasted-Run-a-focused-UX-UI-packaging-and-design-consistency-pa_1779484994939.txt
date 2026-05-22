@@ -1,0 +1,23 @@
+Run a focused UX/UI packaging and design consistency pass. Preserve all existing routes, features, data behavior, founder tools, current dark theme, checkout-interest behavior, and mobile functionality. Do not add major new features and do not reset the theme.
+
+Goal: make the app feel like one organized product instead of a large list of tools.
+
+Group the visible navigation and dashboard around six clear sections: Start Here, The Reset, Message Lab, Growth Tracker, Context and Trust, and Founder/Beta. Keep all existing routes available, but make the top-level experience simpler and less dense.
+
+Improve dashboard hierarchy. Above the fold, show one primary next step, one continue/recent-work card, and a simple package grid. Move secondary widgets and tool inventory lower or into grouped sections. Make it obvious what a new user should do first and what a returning user should continue.
+
+Improve homepage hierarchy. The first screen should explain the product quickly and use two main actions: Start Free Check and See Sample Report. Keep secondary partner or launch content lower on the page.
+
+Improve pricing and offer cards so each offer clearly lists what the user receives and what happens next. Preserve current button routes and promo-code checkout-interest behavior.
+
+Improve the sample report page so it feels like the main proof page. Make it easy to scan with clear sections for starting input, observations, improved copy, plan, note, and next action. Label sample content clearly.
+
+Make result and report pages feel consistent. Use repeated section patterns such as: what was noticed, why it matters, what to change, and next action or example. Make copy buttons and tone controls feel integrated.
+
+Normalize visual components across the app: cards, buttons, badges, inputs, dropdowns, tabs, dialogs, pricing cards, trust cards, empty states, copy buttons, and labels. Fix inconsistent spacing, border radius, low contrast, muddy gradients, accidental light areas, awkward shadows, clipped text, horizontal overflow, cramped mobile grids, and hard-to-tap controls.
+
+Prioritize 375px mobile usability. The mobile experience should feel intentional and easy to scan.
+
+Improve labels and small copy where needed. Use concrete, practical language. Clarify beta status, sample content, privacy/user control, free vs paid paths, and what happens after submission.
+
+Run available verification, screenshot key pages if possible, commit/checkpoint, and report what changed, what passed, what remains, and what should be manually tested next.
