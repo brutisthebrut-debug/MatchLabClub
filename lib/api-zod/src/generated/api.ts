@@ -218,6 +218,10 @@ export const ExportMyDataHeader = zod.object({
   "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
 })
 
+export const exportMyDataResponseJournalEntriesItemMoodMax = 5;
+
+
+
 export const ExportMyDataResponse = zod.object({
   "exportedAt": zod.string().describe('ISO timestamp of when the export was generated.'),
   "user": zod.object({
@@ -360,23 +364,26 @@ export const ExportMyDataResponse = zod.object({
 })),
   "journalEntries": zod.array(zod.object({
   "id": zod.number(),
-  "title": zod.string().nullish(),
+  "prompt": zod.string().nullish(),
   "body": zod.string(),
-  "mood": zod.string().nullish(),
-  "tag": zod.string().nullish(),
+  "tags": zod.array(zod.string()),
+  "mood": zod.number().min(1).max(exportMyDataResponseJournalEntriesItemMoodMax).nullish(),
+  "linkedAuditId": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "deletedAt": zod.coerce.date().nullish()
 })),
   "postDateNotes": zod.array(zod.object({
   "id": zod.number(),
-  "matchName": zod.string().nullish(),
-  "whatHappened": zod.string(),
-  "feltGood": zod.array(zod.string()),
-  "feltOff": zod.array(zod.string()),
-  "outcome": zod.string().nullish(),
-  "patternRead": zod.string().nullish(),
-  "coachInsight": zod.string().nullish(),
+  "dateAt": zod.coerce.date().nullish(),
+  "personLabel": zod.string().nullish(),
+  "platform": zod.string().nullish(),
+  "summary": zod.string(),
+  "whatWentWell": zod.string(),
+  "whatDidnt": zod.string(),
+  "followUpPlanned": zod.boolean(),
+  "outcome": zod.union([zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']),zod.null()]).optional(),
+  "linkedAuditId": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "deletedAt": zod.coerce.date().nullish()
@@ -435,6 +442,10 @@ after being created.
 export const DownloadEmailedExportParams = zod.object({
   "token": zod.coerce.string()
 })
+
+export const downloadEmailedExportResponseJournalEntriesItemMoodMax = 5;
+
+
 
 export const DownloadEmailedExportResponse = zod.object({
   "exportedAt": zod.string().describe('ISO timestamp of when the export was generated.'),
@@ -578,23 +589,26 @@ export const DownloadEmailedExportResponse = zod.object({
 })),
   "journalEntries": zod.array(zod.object({
   "id": zod.number(),
-  "title": zod.string().nullish(),
+  "prompt": zod.string().nullish(),
   "body": zod.string(),
-  "mood": zod.string().nullish(),
-  "tag": zod.string().nullish(),
+  "tags": zod.array(zod.string()),
+  "mood": zod.number().min(1).max(downloadEmailedExportResponseJournalEntriesItemMoodMax).nullish(),
+  "linkedAuditId": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "deletedAt": zod.coerce.date().nullish()
 })),
   "postDateNotes": zod.array(zod.object({
   "id": zod.number(),
-  "matchName": zod.string().nullish(),
-  "whatHappened": zod.string(),
-  "feltGood": zod.array(zod.string()),
-  "feltOff": zod.array(zod.string()),
-  "outcome": zod.string().nullish(),
-  "patternRead": zod.string().nullish(),
-  "coachInsight": zod.string().nullish(),
+  "dateAt": zod.coerce.date().nullish(),
+  "personLabel": zod.string().nullish(),
+  "platform": zod.string().nullish(),
+  "summary": zod.string(),
+  "whatWentWell": zod.string(),
+  "whatDidnt": zod.string(),
+  "followUpPlanned": zod.boolean(),
+  "outcome": zod.union([zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']),zod.null()]).optional(),
+  "linkedAuditId": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "deletedAt": zod.coerce.date().nullish()
@@ -811,31 +825,54 @@ export const GetRecentLifePulsesResponse = zod.object({
  * Returns the current user's (or anonymous-claim-scoped) journal entries.
 Active entries by default. Pass `view=trash` to list soft-deleted
 entries, or `view=all` to include both. Ordered newest first.
+Supports paging via `limit` + `offset`, and filtering by `tag` (any
+match) and by `dateFrom` / `dateTo` (inclusive bounds on
+`createdAt`, ISO-8601 timestamps).
 
  * @summary List journal entries for the current scope
  */
 export const listJournalEntriesQueryViewDefault = `active`;
+export const listJournalEntriesQueryTagMax = 40;
+
+export const listJournalEntriesQueryLimitDefault = 50;
+export const listJournalEntriesQueryLimitMax = 200;
+
+export const listJournalEntriesQueryOffsetDefault = 0;
+export const listJournalEntriesQueryOffsetMin = 0;
+
+
 
 export const ListJournalEntriesQueryParams = zod.object({
   "view": zod.enum(['active', 'trash', 'all']).default(listJournalEntriesQueryViewDefault),
-  "q": zod.coerce.string().optional().describe('Optional case-insensitive substring filter on title + body.')
+  "q": zod.coerce.string().optional().describe('Optional case-insensitive substring filter on prompt + body.'),
+  "tag": zod.coerce.string().max(listJournalEntriesQueryTagMax).optional().describe('Filter to entries that carry this tag.'),
+  "dateFrom": zod.coerce.string().optional().describe('ISO-8601 inclusive lower bound on `createdAt`. Parsed server-side via `new Date(...)`.'),
+  "dateTo": zod.coerce.string().optional().describe('ISO-8601 inclusive upper bound on `createdAt`. Parsed server-side via `new Date(...)`.'),
+  "limit": zod.coerce.number().min(1).max(listJournalEntriesQueryLimitMax).default(listJournalEntriesQueryLimitDefault),
+  "offset": zod.coerce.number().min(listJournalEntriesQueryOffsetMin).default(listJournalEntriesQueryOffsetDefault)
 })
 
 export const ListJournalEntriesHeader = zod.object({
   "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
 })
 
+export const listJournalEntriesResponseEntriesItemMoodMax = 5;
+
+
+
 export const ListJournalEntriesResponse = zod.object({
   "entries": zod.array(zod.object({
   "id": zod.number(),
-  "title": zod.string().nullish(),
+  "prompt": zod.string().nullish(),
   "body": zod.string(),
-  "mood": zod.string().nullish(),
-  "tag": zod.string().nullish(),
+  "tags": zod.array(zod.string()),
+  "mood": zod.number().min(1).max(listJournalEntriesResponseEntriesItemMoodMax).nullish(),
+  "linkedAuditId": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "deletedAt": zod.coerce.date().nullish()
-}))
+})),
+  "total": zod.number().describe('Total matching rows across all pages.')
 })
 
 
@@ -846,21 +883,26 @@ export const CreateJournalEntryHeader = zod.object({
   "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
 })
 
-export const createJournalEntryBodyTitleMax = 200;
+export const createJournalEntryBodyPromptMax = 500;
 
 export const createJournalEntryBodyBodyMax = 20000;
 
-export const createJournalEntryBodyMoodMax = 32;
+export const createJournalEntryBodyTagsItemMax = 40;
 
-export const createJournalEntryBodyTagMax = 32;
+export const createJournalEntryBodyTagsDefault = [];
+export const createJournalEntryBodyTagsMax = 20;
+
+export const createJournalEntryBodyMoodMax = 5;
+
 
 
 
 export const CreateJournalEntryBody = zod.object({
-  "title": zod.string().max(createJournalEntryBodyTitleMax).nullish(),
+  "prompt": zod.string().max(createJournalEntryBodyPromptMax).nullish().describe('Optional curated prompt the entry answers. Null = freeform.'),
   "body": zod.string().min(1).max(createJournalEntryBodyBodyMax),
-  "mood": zod.string().max(createJournalEntryBodyMoodMax).nullish().describe('Optional short mood tag (e.g. \"energized\", \"anxious\", \"clear\").'),
-  "tag": zod.string().max(createJournalEntryBodyTagMax).nullish().describe('Optional bucket tag (e.g. \"weekly\", \"intention\", \"reflection\").')
+  "tags": zod.array(zod.string().min(1).max(createJournalEntryBodyTagsItemMax)).max(createJournalEntryBodyTagsMax).default(createJournalEntryBodyTagsDefault).describe('Free-form tags (e.g. \"weekly\", \"intention\", \"reflection\").'),
+  "mood": zod.number().min(1).max(createJournalEntryBodyMoodMax).nullish().describe('Self-reported mood, 1 (low) to 5 (high). Null = not provided.'),
+  "linkedAuditId": zod.number().min(1).nullish().describe('Optional cross-reference to an audit this entry reflects on.')
 })
 
 
@@ -878,30 +920,39 @@ export const UpdateJournalEntryHeader = zod.object({
   "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
 })
 
-export const updateJournalEntryBodyTitleMax = 200;
+export const updateJournalEntryBodyPromptMax = 500;
 
 export const updateJournalEntryBodyBodyMax = 20000;
 
-export const updateJournalEntryBodyMoodMax = 32;
+export const updateJournalEntryBodyTagsItemMax = 40;
 
-export const updateJournalEntryBodyTagMax = 32;
+export const updateJournalEntryBodyTagsMax = 20;
+
+export const updateJournalEntryBodyMoodMax = 5;
+
 
 
 
 export const UpdateJournalEntryBody = zod.object({
-  "title": zod.string().max(updateJournalEntryBodyTitleMax).nullish(),
+  "prompt": zod.string().max(updateJournalEntryBodyPromptMax).nullish(),
   "body": zod.string().min(1).max(updateJournalEntryBodyBodyMax).optional(),
-  "mood": zod.string().max(updateJournalEntryBodyMoodMax).nullish(),
-  "tag": zod.string().max(updateJournalEntryBodyTagMax).nullish(),
+  "tags": zod.array(zod.string().min(1).max(updateJournalEntryBodyTagsItemMax)).max(updateJournalEntryBodyTagsMax).optional(),
+  "mood": zod.number().min(1).max(updateJournalEntryBodyMoodMax).nullish(),
+  "linkedAuditId": zod.number().min(1).nullish(),
   "restore": zod.boolean().optional().describe('If true, clears `deletedAt` so the entry leaves the trash.')
 })
 
+export const updateJournalEntryResponseMoodMax = 5;
+
+
+
 export const UpdateJournalEntryResponse = zod.object({
   "id": zod.number(),
-  "title": zod.string().nullish(),
+  "prompt": zod.string().nullish(),
   "body": zod.string(),
-  "mood": zod.string().nullish(),
-  "tag": zod.string().nullish(),
+  "tags": zod.array(zod.string()),
+  "mood": zod.number().min(1).max(updateJournalEntryResponseMoodMax).nullish(),
+  "linkedAuditId": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "deletedAt": zod.coerce.date().nullish()
@@ -926,17 +977,67 @@ export const DeleteJournalEntryResponse = zod.object({
 
 
 /**
+ * Clears `deletedAt` on the entry so it returns to the active list.
+Only the entry owner can restore. Idempotent — calling on an
+already-active entry succeeds and returns the entry unchanged.
+
+ * @summary Restore a soft-deleted journal entry
+ */
+export const RestoreJournalEntryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const RestoreJournalEntryHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const restoreJournalEntryResponseMoodMax = 5;
+
+
+
+export const RestoreJournalEntryResponse = zod.object({
+  "id": zod.number(),
+  "prompt": zod.string().nullish(),
+  "body": zod.string(),
+  "tags": zod.array(zod.string()),
+  "mood": zod.number().min(1).max(restoreJournalEntryResponseMoodMax).nullish(),
+  "linkedAuditId": zod.number().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullish()
+})
+
+
+/**
  * Returns the current user's (or anonymous-claim-scoped) post-date
 notes. Active notes by default. Pass `view=trash` for trashed,
-`view=all` for both. Ordered newest first.
+`view=all` for both. Ordered by `dateAt` desc (fallback to
+`createdAt`). Supports paging via `limit` + `offset`, filtering by
+`outcome`, `platform`, and `dateFrom` / `dateTo` (inclusive bounds
+on `dateAt` when present, otherwise `createdAt`).
 
  * @summary List post-date notes for the current scope
  */
 export const listPostDateNotesQueryViewDefault = `active`;
+export const listPostDateNotesQueryPlatformMax = 40;
+
+export const listPostDateNotesQueryLimitDefault = 50;
+export const listPostDateNotesQueryLimitMax = 200;
+
+export const listPostDateNotesQueryOffsetDefault = 0;
+export const listPostDateNotesQueryOffsetMin = 0;
+
+
 
 export const ListPostDateNotesQueryParams = zod.object({
   "view": zod.enum(['active', 'trash', 'all']).default(listPostDateNotesQueryViewDefault),
-  "q": zod.coerce.string().optional()
+  "q": zod.coerce.string().optional(),
+  "outcome": zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']).optional(),
+  "platform": zod.coerce.string().max(listPostDateNotesQueryPlatformMax).optional(),
+  "dateFrom": zod.coerce.string().optional().describe('ISO-8601 inclusive lower bound. Parsed server-side via `new Date(...)`.'),
+  "dateTo": zod.coerce.string().optional().describe('ISO-8601 inclusive upper bound. Parsed server-side via `new Date(...)`.'),
+  "limit": zod.coerce.number().min(1).max(listPostDateNotesQueryLimitMax).default(listPostDateNotesQueryLimitDefault),
+  "offset": zod.coerce.number().min(listPostDateNotesQueryOffsetMin).default(listPostDateNotesQueryOffsetDefault)
 })
 
 export const ListPostDateNotesHeader = zod.object({
@@ -946,17 +1047,20 @@ export const ListPostDateNotesHeader = zod.object({
 export const ListPostDateNotesResponse = zod.object({
   "notes": zod.array(zod.object({
   "id": zod.number(),
-  "matchName": zod.string().nullish(),
-  "whatHappened": zod.string(),
-  "feltGood": zod.array(zod.string()),
-  "feltOff": zod.array(zod.string()),
-  "outcome": zod.string().nullish(),
-  "patternRead": zod.string().nullish(),
-  "coachInsight": zod.string().nullish(),
+  "dateAt": zod.coerce.date().nullish(),
+  "personLabel": zod.string().nullish(),
+  "platform": zod.string().nullish(),
+  "summary": zod.string(),
+  "whatWentWell": zod.string(),
+  "whatDidnt": zod.string(),
+  "followUpPlanned": zod.boolean(),
+  "outcome": zod.union([zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']),zod.null()]).optional(),
+  "linkedAuditId": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "deletedAt": zod.coerce.date().nullish()
-}))
+})),
+  "total": zod.number()
 })
 
 
@@ -967,34 +1071,31 @@ export const CreatePostDateNoteHeader = zod.object({
   "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
 })
 
-export const createPostDateNoteBodyMatchNameMax = 120;
+export const createPostDateNoteBodyPersonLabelMax = 120;
 
-export const createPostDateNoteBodyWhatHappenedMax = 20000;
+export const createPostDateNoteBodyPlatformMax = 40;
 
-export const createPostDateNoteBodyFeltGoodItemMax = 120;
+export const createPostDateNoteBodySummaryMax = 20000;
 
-export const createPostDateNoteBodyFeltGoodMax = 50;
+export const createPostDateNoteBodyWhatWentWellDefault = ``;
+export const createPostDateNoteBodyWhatWentWellMax = 20000;
 
-export const createPostDateNoteBodyFeltOffItemMax = 120;
+export const createPostDateNoteBodyWhatDidntDefault = ``;
+export const createPostDateNoteBodyWhatDidntMax = 20000;
 
-export const createPostDateNoteBodyFeltOffMax = 50;
-
-export const createPostDateNoteBodyOutcomeMax = 80;
-
-export const createPostDateNoteBodyPatternReadMax = 4000;
-
-export const createPostDateNoteBodyCoachInsightMax = 4000;
-
+export const createPostDateNoteBodyFollowUpPlannedDefault = false;
 
 
 export const CreatePostDateNoteBody = zod.object({
-  "matchName": zod.string().max(createPostDateNoteBodyMatchNameMax).nullish(),
-  "whatHappened": zod.string().min(1).max(createPostDateNoteBodyWhatHappenedMax),
-  "feltGood": zod.array(zod.string().max(createPostDateNoteBodyFeltGoodItemMax)).max(createPostDateNoteBodyFeltGoodMax).optional(),
-  "feltOff": zod.array(zod.string().max(createPostDateNoteBodyFeltOffItemMax)).max(createPostDateNoteBodyFeltOffMax).optional(),
-  "outcome": zod.string().max(createPostDateNoteBodyOutcomeMax).nullish(),
-  "patternRead": zod.string().max(createPostDateNoteBodyPatternReadMax).nullish(),
-  "coachInsight": zod.string().max(createPostDateNoteBodyCoachInsightMax).nullish()
+  "dateAt": zod.coerce.date().nullish().describe('When the date itself happened. Null = unspecified.'),
+  "personLabel": zod.string().max(createPostDateNoteBodyPersonLabelMax).nullish().describe('Free-form label for the person. Copy encourages first-name-only.'),
+  "platform": zod.string().max(createPostDateNoteBodyPlatformMax).nullish().describe('Origin platform (e.g. \"hinge\", \"bumble\", \"tinder\").'),
+  "summary": zod.string().min(1).max(createPostDateNoteBodySummaryMax),
+  "whatWentWell": zod.string().max(createPostDateNoteBodyWhatWentWellMax).default(createPostDateNoteBodyWhatWentWellDefault),
+  "whatDidnt": zod.string().max(createPostDateNoteBodyWhatDidntMax).default(createPostDateNoteBodyWhatDidntDefault),
+  "followUpPlanned": zod.boolean().default(createPostDateNoteBodyFollowUpPlannedDefault),
+  "outcome": zod.union([zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']),zod.null()]).optional(),
+  "linkedAuditId": zod.number().min(1).nullish()
 })
 
 
@@ -1012,46 +1113,43 @@ export const UpdatePostDateNoteHeader = zod.object({
   "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
 })
 
-export const updatePostDateNoteBodyMatchNameMax = 120;
+export const updatePostDateNoteBodyPersonLabelMax = 120;
 
-export const updatePostDateNoteBodyWhatHappenedMax = 20000;
+export const updatePostDateNoteBodyPlatformMax = 40;
 
-export const updatePostDateNoteBodyFeltGoodItemMax = 120;
+export const updatePostDateNoteBodySummaryMax = 20000;
 
-export const updatePostDateNoteBodyFeltGoodMax = 50;
+export const updatePostDateNoteBodyWhatWentWellMax = 20000;
 
-export const updatePostDateNoteBodyFeltOffItemMax = 120;
+export const updatePostDateNoteBodyWhatDidntMax = 20000;
 
-export const updatePostDateNoteBodyFeltOffMax = 50;
-
-export const updatePostDateNoteBodyOutcomeMax = 80;
-
-export const updatePostDateNoteBodyPatternReadMax = 4000;
-
-export const updatePostDateNoteBodyCoachInsightMax = 4000;
 
 
 
 export const UpdatePostDateNoteBody = zod.object({
-  "matchName": zod.string().max(updatePostDateNoteBodyMatchNameMax).nullish(),
-  "whatHappened": zod.string().min(1).max(updatePostDateNoteBodyWhatHappenedMax).optional(),
-  "feltGood": zod.array(zod.string().max(updatePostDateNoteBodyFeltGoodItemMax)).max(updatePostDateNoteBodyFeltGoodMax).optional(),
-  "feltOff": zod.array(zod.string().max(updatePostDateNoteBodyFeltOffItemMax)).max(updatePostDateNoteBodyFeltOffMax).optional(),
-  "outcome": zod.string().max(updatePostDateNoteBodyOutcomeMax).nullish(),
-  "patternRead": zod.string().max(updatePostDateNoteBodyPatternReadMax).nullish(),
-  "coachInsight": zod.string().max(updatePostDateNoteBodyCoachInsightMax).nullish(),
+  "dateAt": zod.coerce.date().nullish(),
+  "personLabel": zod.string().max(updatePostDateNoteBodyPersonLabelMax).nullish(),
+  "platform": zod.string().max(updatePostDateNoteBodyPlatformMax).nullish(),
+  "summary": zod.string().min(1).max(updatePostDateNoteBodySummaryMax).optional(),
+  "whatWentWell": zod.string().max(updatePostDateNoteBodyWhatWentWellMax).optional(),
+  "whatDidnt": zod.string().max(updatePostDateNoteBodyWhatDidntMax).optional(),
+  "followUpPlanned": zod.boolean().optional(),
+  "outcome": zod.union([zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']),zod.null()]).optional(),
+  "linkedAuditId": zod.number().min(1).nullish(),
   "restore": zod.boolean().optional()
 })
 
 export const UpdatePostDateNoteResponse = zod.object({
   "id": zod.number(),
-  "matchName": zod.string().nullish(),
-  "whatHappened": zod.string(),
-  "feltGood": zod.array(zod.string()),
-  "feltOff": zod.array(zod.string()),
-  "outcome": zod.string().nullish(),
-  "patternRead": zod.string().nullish(),
-  "coachInsight": zod.string().nullish(),
+  "dateAt": zod.coerce.date().nullish(),
+  "personLabel": zod.string().nullish(),
+  "platform": zod.string().nullish(),
+  "summary": zod.string(),
+  "whatWentWell": zod.string(),
+  "whatDidnt": zod.string(),
+  "followUpPlanned": zod.boolean(),
+  "outcome": zod.union([zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']),zod.null()]).optional(),
+  "linkedAuditId": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "deletedAt": zod.coerce.date().nullish()
@@ -1072,6 +1170,34 @@ export const DeletePostDateNoteHeader = zod.object({
 export const DeletePostDateNoteResponse = zod.object({
   "success": zod.boolean(),
   "deletedId": zod.number()
+})
+
+
+/**
+ * @summary Restore a soft-deleted post-date note
+ */
+export const RestorePostDateNoteParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const RestorePostDateNoteHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const RestorePostDateNoteResponse = zod.object({
+  "id": zod.number(),
+  "dateAt": zod.coerce.date().nullish(),
+  "personLabel": zod.string().nullish(),
+  "platform": zod.string().nullish(),
+  "summary": zod.string(),
+  "whatWentWell": zod.string(),
+  "whatDidnt": zod.string(),
+  "followUpPlanned": zod.boolean(),
+  "outcome": zod.union([zod.enum(['another_date', 'no_more', 'unsure', 'ghosted']),zod.null()]).optional(),
+  "linkedAuditId": zod.number().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullish()
 })
 
 

@@ -8,25 +8,32 @@
 
 export interface JournalEntryInput {
   /**
-     * @maxLength 200
+     * Optional curated prompt the entry answers. Null = freeform.
+     * @maxLength 500
      * @nullable
      */
-  title?: string | null;
+  prompt?: string | null;
   /**
      * @minLength 1
      * @maxLength 20000
      */
   body: string;
   /**
-     * Optional short mood tag (e.g. "energized", "anxious", "clear").
-     * @maxLength 32
-     * @nullable
+     * Free-form tags (e.g. "weekly", "intention", "reflection").
+     * @maxItems 20
      */
-  mood?: string | null;
+  tags?: string[];
   /**
-     * Optional bucket tag (e.g. "weekly", "intention", "reflection").
-     * @maxLength 32
+     * Self-reported mood, 1 (low) to 5 (high). Null = not provided.
+     * @minimum 1
+     * @maximum 5
      * @nullable
      */
-  tag?: string | null;
+  mood?: number | null;
+  /**
+     * Optional cross-reference to an audit this entry reflects on.
+     * @minimum 1
+     * @nullable
+     */
+  linkedAuditId?: number | null;
 }

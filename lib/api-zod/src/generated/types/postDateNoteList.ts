@@ -9,4 +9,5 @@ import type { PostDateNote } from './postDateNote';
 
 export interface PostDateNoteList {
   notes: PostDateNote[];
+  total: number;
 }

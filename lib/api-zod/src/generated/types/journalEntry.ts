@@ -9,12 +9,17 @@
 export interface JournalEntry {
   id: number;
   /** @nullable */
-  title?: string | null;
+  prompt?: string | null;
   body: string;
+  tags: string[];
+  /**
+     * @minimum 1
+     * @maximum 5
+     * @nullable
+     */
+  mood?: number | null;
   /** @nullable */
-  mood?: string | null;
-  /** @nullable */
-  tag?: string | null;
+  linkedAuditId?: number | null;
   createdAt: Date;
   updatedAt: Date;
   /** @nullable */

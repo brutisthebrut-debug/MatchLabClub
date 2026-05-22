@@ -970,31 +970,48 @@ export interface AccountExportUser {
 export interface JournalEntry {
   id: number;
   /** @nullable */
-  title?: string | null;
+  prompt?: string | null;
   body: string;
+  tags: string[];
+  /**
+     * @minimum 1
+     * @maximum 5
+     * @nullable
+     */
+  mood?: number | null;
   /** @nullable */
-  mood?: string | null;
-  /** @nullable */
-  tag?: string | null;
+  linkedAuditId?: number | null;
   createdAt: string;
   updatedAt: string;
   /** @nullable */
   deletedAt?: string | null;
 }
 
+export type PostDateOutcome = typeof PostDateOutcome[keyof typeof PostDateOutcome];
+
+
+export const PostDateOutcome = {
+  another_date: 'another_date',
+  no_more: 'no_more',
+  unsure: 'unsure',
+  ghosted: 'ghosted',
+} as const;
+
 export interface PostDateNote {
   id: number;
   /** @nullable */
-  matchName?: string | null;
-  whatHappened: string;
-  feltGood: string[];
-  feltOff: string[];
+  dateAt?: string | null;
   /** @nullable */
-  outcome?: string | null;
+  personLabel?: string | null;
   /** @nullable */
-  patternRead?: string | null;
+  platform?: string | null;
+  summary: string;
+  whatWentWell: string;
+  whatDidnt: string;
+  followUpPlanned: boolean;
+  outcome?: PostDateOutcome | null;
   /** @nullable */
-  coachInsight?: string | null;
+  linkedAuditId?: number | null;
   createdAt: string;
   updatedAt: string;
   /** @nullable */
@@ -1385,56 +1402,68 @@ export interface MirrorTrendReport {
 
 export interface JournalEntryInput {
   /**
-     * @maxLength 200
+     * Optional curated prompt the entry answers. Null = freeform.
+     * @maxLength 500
      * @nullable
      */
-  title?: string | null;
+  prompt?: string | null;
   /**
      * @minLength 1
      * @maxLength 20000
      */
   body: string;
   /**
-     * Optional short mood tag (e.g. "energized", "anxious", "clear").
-     * @maxLength 32
-     * @nullable
+     * Free-form tags (e.g. "weekly", "intention", "reflection").
+     * @maxItems 20
      */
-  mood?: string | null;
+  tags?: string[];
   /**
-     * Optional bucket tag (e.g. "weekly", "intention", "reflection").
-     * @maxLength 32
+     * Self-reported mood, 1 (low) to 5 (high). Null = not provided.
+     * @minimum 1
+     * @maximum 5
      * @nullable
      */
-  tag?: string | null;
+  mood?: number | null;
+  /**
+     * Optional cross-reference to an audit this entry reflects on.
+     * @minimum 1
+     * @nullable
+     */
+  linkedAuditId?: number | null;
 }
 
 export interface JournalEntryPatch {
   /**
-     * @maxLength 200
+     * @maxLength 500
      * @nullable
      */
-  title?: string | null;
+  prompt?: string | null;
   /**
      * @minLength 1
      * @maxLength 20000
      */
   body?: string;
+  /** @maxItems 20 */
+  tags?: string[];
   /**
-     * @maxLength 32
+     * @minimum 1
+     * @maximum 5
      * @nullable
      */
-  mood?: string | null;
+  mood?: number | null;
   /**
-     * @maxLength 32
+     * @minimum 1
      * @nullable
      */
-  tag?: string | null;
+  linkedAuditId?: number | null;
   /** If true, clears `deletedAt` so the entry leaves the trash. */
   restore?: boolean;
 }
 
 export interface JournalEntryList {
   entries: JournalEntry[];
+  /** Total matching rows across all pages. */
+  total: number;
 }
 
 export interface DeleteJournalEntryResult {
@@ -1444,71 +1473,75 @@ export interface DeleteJournalEntryResult {
 
 export interface PostDateNoteInput {
   /**
+     * When the date itself happened. Null = unspecified.
+     * @nullable
+     */
+  dateAt?: string | null;
+  /**
+     * Free-form label for the person. Copy encourages first-name-only.
      * @maxLength 120
      * @nullable
      */
-  matchName?: string | null;
+  personLabel?: string | null;
+  /**
+     * Origin platform (e.g. "hinge", "bumble", "tinder").
+     * @maxLength 40
+     * @nullable
+     */
+  platform?: string | null;
   /**
      * @minLength 1
      * @maxLength 20000
      */
-  whatHappened: string;
-  /** @maxItems 50 */
-  feltGood?: string[];
-  /** @maxItems 50 */
-  feltOff?: string[];
+  summary: string;
+  /** @maxLength 20000 */
+  whatWentWell?: string;
+  /** @maxLength 20000 */
+  whatDidnt?: string;
+  followUpPlanned?: boolean;
+  outcome?: PostDateOutcome | null;
   /**
-     * @maxLength 80
+     * @minimum 1
      * @nullable
      */
-  outcome?: string | null;
-  /**
-     * @maxLength 4000
-     * @nullable
-     */
-  patternRead?: string | null;
-  /**
-     * @maxLength 4000
-     * @nullable
-     */
-  coachInsight?: string | null;
+  linkedAuditId?: number | null;
 }
 
 export interface PostDateNotePatch {
+  /** @nullable */
+  dateAt?: string | null;
   /**
      * @maxLength 120
      * @nullable
      */
-  matchName?: string | null;
+  personLabel?: string | null;
+  /**
+     * @maxLength 40
+     * @nullable
+     */
+  platform?: string | null;
   /**
      * @minLength 1
      * @maxLength 20000
      */
-  whatHappened?: string;
-  /** @maxItems 50 */
-  feltGood?: string[];
-  /** @maxItems 50 */
-  feltOff?: string[];
+  summary?: string;
+  /** @maxLength 20000 */
+  whatWentWell?: string;
+  /** @maxLength 20000 */
+  whatDidnt?: string;
+  followUpPlanned?: boolean;
+  outcome?: PostDateOutcome | null;
   /**
-     * @maxLength 80
+     * @minimum 1
      * @nullable
      */
-  outcome?: string | null;
-  /**
-     * @maxLength 4000
-     * @nullable
-     */
-  patternRead?: string | null;
-  /**
-     * @maxLength 4000
-     * @nullable
-     */
-  coachInsight?: string | null;
+  linkedAuditId?: number | null;
   restore?: boolean;
 }
 
 export interface PostDateNoteList {
   notes: PostDateNote[];
+  total: number;
 }
 
 export interface DeletePostDateNoteResult {
@@ -1538,9 +1571,31 @@ token: string;
 export type ListJournalEntriesParams = {
 view?: ListJournalEntriesView;
 /**
- * Optional case-insensitive substring filter on title + body.
+ * Optional case-insensitive substring filter on prompt + body.
  */
 q?: string;
+/**
+ * Filter to entries that carry this tag.
+ * @maxLength 40
+ */
+tag?: string;
+/**
+ * ISO-8601 inclusive lower bound on `createdAt`. Parsed server-side via `new Date(...)`.
+ */
+dateFrom?: string;
+/**
+ * ISO-8601 inclusive upper bound on `createdAt`. Parsed server-side via `new Date(...)`.
+ */
+dateTo?: string;
+/**
+ * @minimum 1
+ * @maximum 200
+ */
+limit?: number;
+/**
+ * @minimum 0
+ */
+offset?: number;
 };
 
 export type ListJournalEntriesView = typeof ListJournalEntriesView[keyof typeof ListJournalEntriesView];
@@ -1555,6 +1610,28 @@ export const ListJournalEntriesView = {
 export type ListPostDateNotesParams = {
 view?: ListPostDateNotesView;
 q?: string;
+outcome?: ListPostDateNotesOutcome;
+/**
+ * @maxLength 40
+ */
+platform?: string;
+/**
+ * ISO-8601 inclusive lower bound. Parsed server-side via `new Date(...)`.
+ */
+dateFrom?: string;
+/**
+ * ISO-8601 inclusive upper bound. Parsed server-side via `new Date(...)`.
+ */
+dateTo?: string;
+/**
+ * @minimum 1
+ * @maximum 200
+ */
+limit?: number;
+/**
+ * @minimum 0
+ */
+offset?: number;
 };
 
 export type ListPostDateNotesView = typeof ListPostDateNotesView[keyof typeof ListPostDateNotesView];
@@ -1564,6 +1641,16 @@ export const ListPostDateNotesView = {
   active: 'active',
   trash: 'trash',
   all: 'all',
+} as const;
+
+export type ListPostDateNotesOutcome = typeof ListPostDateNotesOutcome[keyof typeof ListPostDateNotesOutcome];
+
+
+export const ListPostDateNotesOutcome = {
+  another_date: 'another_date',
+  no_more: 'no_more',
+  unsure: 'unsure',
+  ghosted: 'ghosted',
 } as const;
 
 export type ListAuditsParams = {

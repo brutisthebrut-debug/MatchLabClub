@@ -5,9 +5,32 @@
  * Next Level Dating Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { ListPostDateNotesOutcome } from './listPostDateNotesOutcome';
 import type { ListPostDateNotesView } from './listPostDateNotesView';
 
 export type ListPostDateNotesParams = {
 view?: ListPostDateNotesView;
 q?: string;
+outcome?: ListPostDateNotesOutcome;
+/**
+ * @maxLength 40
+ */
+platform?: string;
+/**
+ * ISO-8601 inclusive lower bound. Parsed server-side via `new Date(...)`.
+ */
+dateFrom?: string;
+/**
+ * ISO-8601 inclusive upper bound. Parsed server-side via `new Date(...)`.
+ */
+dateTo?: string;
+/**
+ * @minimum 1
+ * @maximum 200
+ */
+limit?: number;
+/**
+ * @minimum 0
+ */
+offset?: number;
 };

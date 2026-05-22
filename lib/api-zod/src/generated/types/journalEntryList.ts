@@ -9,4 +9,6 @@ import type { JournalEntry } from './journalEntry';
 
 export interface JournalEntryList {
   entries: JournalEntry[];
+  /** Total matching rows across all pages. */
+  total: number;
 }

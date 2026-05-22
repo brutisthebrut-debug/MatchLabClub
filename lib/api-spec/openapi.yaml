@@ -622,6 +622,9 @@ paths:
         Returns the current user's (or anonymous-claim-scoped) journal entries.
         Active entries by default. Pass `view=trash` to list soft-deleted
         entries, or `view=all` to include both. Ordered newest first.
+        Supports paging via `limit` + `offset`, and filtering by `tag` (any
+        match) and by `dateFrom` / `dateTo` (inclusive bounds on
+        `createdAt`, ISO-8601 timestamps).
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -635,9 +638,43 @@ paths:
         - name: q
           in: query
           required: false
-          description: Optional case-insensitive substring filter on title + body.
+          description: Optional case-insensitive substring filter on prompt + body.
           schema:
             type: string
+        - name: tag
+          in: query
+          required: false
+          description: Filter to entries that carry this tag.
+          schema:
+            type: string
+            maxLength: 40
+        - name: dateFrom
+          in: query
+          required: false
+          description: ISO-8601 inclusive lower bound on `createdAt`. Parsed server-side via `new Date(...)`.
+          schema:
+            type: string
+        - name: dateTo
+          in: query
+          required: false
+          description: ISO-8601 inclusive upper bound on `createdAt`. Parsed server-side via `new Date(...)`.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
       responses:
         "200":
           description: Journal entries
@@ -723,6 +760,33 @@ paths:
         "404":
           description: Not found
 
+  /journal/{id}/restore:
+    post:
+      tags: [mirror]
+      operationId: restoreJournalEntry
+      summary: Restore a soft-deleted journal entry
+      description: |
+        Clears `deletedAt` on the entry so it returns to the active list.
+        Only the entry owner can restore. Idempotent — calling on an
+        already-active entry succeeds and returns the entry unchanged.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Restored entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntry"
+        "404":
+          description: Not found
+
   /post-date-notes:
     get:
       tags: [mirror]
@@ -731,7 +795,10 @@ paths:
       description: |
         Returns the current user's (or anonymous-claim-scoped) post-date
         notes. Active notes by default. Pass `view=trash` for trashed,
-        `view=all` for both. Ordered newest first.
+        `view=all` for both. Ordered by `dateAt` desc (fallback to
+        `createdAt`). Supports paging via `limit` + `offset`, filtering by
+        `outcome`, `platform`, and `dateFrom` / `dateTo` (inclusive bounds
+        on `dateAt` when present, otherwise `createdAt`).
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -747,6 +814,45 @@ paths:
           required: false
           schema:
             type: string
+        - name: outcome
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [another_date, no_more, unsure, ghosted]
+        - name: platform
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 40
+        - name: dateFrom
+          in: query
+          required: false
+          description: ISO-8601 inclusive lower bound. Parsed server-side via `new Date(...)`.
+          schema:
+            type: string
+        - name: dateTo
+          in: query
+          required: false
+          description: ISO-8601 inclusive upper bound. Parsed server-side via `new Date(...)`.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
       responses:
         "200":
           description: Post-date notes
@@ -829,6 +935,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DeletePostDateNoteResult"
+        "404":
+          description: Not found
+
+  /post-date-notes/{id}/restore:
+    post:
+      tags: [mirror]
+      operationId: restorePostDateNote
+      summary: Restore a soft-deleted post-date note
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Restored note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostDateNote"
         "404":
           description: Not found
 
@@ -3818,60 +3947,89 @@ components:
         engineVersion:
           type: string
 
+    PostDateOutcome:
+      type: string
+      enum: [another_date, no_more, unsure, ghosted]
+
     JournalEntryInput:
       type: object
       required: [body]
       properties:
-        title:
+        prompt:
           type: [string, "null"]
-          maxLength: 200
+          maxLength: 500
+          description: Optional curated prompt the entry answers. Null = freeform.
         body:
           type: string
           minLength: 1
           maxLength: 20000
+        tags:
+          type: array
+          maxItems: 20
+          default: []
+          items:
+            type: string
+            minLength: 1
+            maxLength: 40
+          description: Free-form tags (e.g. "weekly", "intention", "reflection").
         mood:
-          type: [string, "null"]
-          maxLength: 32
-          description: Optional short mood tag (e.g. "energized", "anxious", "clear").
-        tag:
-          type: [string, "null"]
-          maxLength: 32
-          description: Optional bucket tag (e.g. "weekly", "intention", "reflection").
+          type: [integer, "null"]
+          minimum: 1
+          maximum: 5
+          description: Self-reported mood, 1 (low) to 5 (high). Null = not provided.
+        linkedAuditId:
+          type: [integer, "null"]
+          minimum: 1
+          description: Optional cross-reference to an audit this entry reflects on.
 
     JournalEntryPatch:
       type: object
       properties:
-        title:
+        prompt:
           type: [string, "null"]
-          maxLength: 200
+          maxLength: 500
         body:
           type: string
           minLength: 1
           maxLength: 20000
+        tags:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 40
         mood:
-          type: [string, "null"]
-          maxLength: 32
-        tag:
-          type: [string, "null"]
-          maxLength: 32
+          type: [integer, "null"]
+          minimum: 1
+          maximum: 5
+        linkedAuditId:
+          type: [integer, "null"]
+          minimum: 1
         restore:
           type: boolean
           description: If true, clears `deletedAt` so the entry leaves the trash.
 
     JournalEntry:
       type: object
-      required: [id, body, createdAt, updatedAt]
+      required: [id, body, tags, createdAt, updatedAt]
       properties:
         id:
           type: integer
-        title:
+        prompt:
           type: [string, "null"]
         body:
           type: string
+        tags:
+          type: array
+          items:
+            type: string
         mood:
-          type: [string, "null"]
-        tag:
-          type: [string, "null"]
+          type: [integer, "null"]
+          minimum: 1
+          maximum: 5
+        linkedAuditId:
+          type: [integer, "null"]
         createdAt:
           type: string
           format: date-time
@@ -3884,12 +4042,15 @@ components:
 
     JournalEntryList:
       type: object
-      required: [entries]
+      required: [entries, total]
       properties:
         entries:
           type: array
           items:
             $ref: "#/components/schemas/JournalEntry"
+        total:
+          type: integer
+          description: Total matching rows across all pages.
 
     DeleteJournalEntryResult:
       type: object
@@ -3903,95 +4064,104 @@ components:
 
     PostDateNoteInput:
       type: object
-      required: [whatHappened]
+      required: [summary]
       properties:
-        matchName:
+        dateAt:
+          type: [string, "null"]
+          format: date-time
+          description: When the date itself happened. Null = unspecified.
+        personLabel:
           type: [string, "null"]
           maxLength: 120
-        whatHappened:
+          description: Free-form label for the person. Copy encourages first-name-only.
+        platform:
+          type: [string, "null"]
+          maxLength: 40
+          description: Origin platform (e.g. "hinge", "bumble", "tinder").
+        summary:
           type: string
           minLength: 1
           maxLength: 20000
-        feltGood:
-          type: array
-          maxItems: 50
-          items:
-            type: string
-            maxLength: 120
-        feltOff:
-          type: array
-          maxItems: 50
-          items:
-            type: string
-            maxLength: 120
+        whatWentWell:
+          type: string
+          maxLength: 20000
+          default: ""
+        whatDidnt:
+          type: string
+          maxLength: 20000
+          default: ""
+        followUpPlanned:
+          type: boolean
+          default: false
         outcome:
-          type: [string, "null"]
-          maxLength: 80
-        patternRead:
-          type: [string, "null"]
-          maxLength: 4000
-        coachInsight:
-          type: [string, "null"]
-          maxLength: 4000
+          oneOf:
+            - $ref: "#/components/schemas/PostDateOutcome"
+            - type: "null"
+        linkedAuditId:
+          type: [integer, "null"]
+          minimum: 1
 
     PostDateNotePatch:
       type: object
       properties:
-        matchName:
+        dateAt:
+          type: [string, "null"]
+          format: date-time
+        personLabel:
           type: [string, "null"]
           maxLength: 120
-        whatHappened:
+        platform:
+          type: [string, "null"]
+          maxLength: 40
+        summary:
           type: string
           minLength: 1
           maxLength: 20000
-        feltGood:
-          type: array
-          maxItems: 50
-          items:
-            type: string
-            maxLength: 120
-        feltOff:
-          type: array
-          maxItems: 50
-          items:
-            type: string
-            maxLength: 120
+        whatWentWell:
+          type: string
+          maxLength: 20000
+        whatDidnt:
+          type: string
+          maxLength: 20000
+        followUpPlanned:
+          type: boolean
         outcome:
-          type: [string, "null"]
-          maxLength: 80
-        patternRead:
-          type: [string, "null"]
-          maxLength: 4000
-        coachInsight:
-          type: [string, "null"]
-          maxLength: 4000
+          oneOf:
+            - $ref: "#/components/schemas/PostDateOutcome"
+            - type: "null"
+        linkedAuditId:
+          type: [integer, "null"]
+          minimum: 1
         restore:
           type: boolean
 
     PostDateNote:
       type: object
-      required: [id, whatHappened, feltGood, feltOff, createdAt, updatedAt]
+      required: [id, summary, whatWentWell, whatDidnt, followUpPlanned, createdAt, updatedAt]
       properties:
         id:
           type: integer
-        matchName:
+        dateAt:
           type: [string, "null"]
-        whatHappened:
+          format: date-time
+        personLabel:
+          type: [string, "null"]
+        platform:
+          type: [string, "null"]
+        summary:
           type: string
-        feltGood:
-          type: array
-          items:
-            type: string
-        feltOff:
-          type: array
-          items:
-            type: string
+        whatWentWell:
+          type: string
+        whatDidnt:
+          type: string
+        followUpPlanned:
+          type: boolean
         outcome:
-          type: [string, "null"]
-        patternRead:
-          type: [string, "null"]
-        coachInsight:
-          type: [string, "null"]
+          oneOf:
+            - $ref: "#/components/schemas/PostDateOutcome"
+            - type: "null"
+        linkedAuditId:
+          type: [integer, "null"]
         createdAt:
           type: string
           format: date-time
@@ -4004,12 +4174,14 @@ components:
 
     PostDateNoteList:
       type: object
-      required: [notes]
+      required: [notes, total]
       properties:
         notes:
           type: array
           items:
             $ref: "#/components/schemas/PostDateNote"
+        total:
+          type: integer
 
     DeletePostDateNoteResult:
       type: object

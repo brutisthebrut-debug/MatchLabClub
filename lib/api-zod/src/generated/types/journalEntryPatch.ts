@@ -8,25 +8,28 @@
 
 export interface JournalEntryPatch {
   /**
-     * @maxLength 200
+     * @maxLength 500
      * @nullable
      */
-  title?: string | null;
+  prompt?: string | null;
   /**
      * @minLength 1
      * @maxLength 20000
      */
   body?: string;
+  /** @maxItems 20 */
+  tags?: string[];
   /**
-     * @maxLength 32
+     * @minimum 1
+     * @maximum 5
      * @nullable
      */
-  mood?: string | null;
+  mood?: number | null;
   /**
-     * @maxLength 32
+     * @minimum 1
      * @nullable
      */
-  tag?: string | null;
+  linkedAuditId?: number | null;
   /** If true, clears `deletedAt` so the entry leaves the trash. */
   restore?: boolean;
 }

@@ -1,5 +1,5 @@
 {
-  "id": "03305b9b-a756-4708-bd85-672d320342ea",
+  "id": "ba7bacb9-a5be-4f8d-a93b-5341275d3512",
   "prevId": "ceac0a76-1e99-455a-9efd-1ed669f26c53",
   "version": "7",
   "dialect": "postgresql",
@@ -2112,9 +2112,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "title": {
-          "name": "title",
-          "type": "varchar(200)",
+        "prompt": {
+          "name": "prompt",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -2124,15 +2124,22 @@
           "primaryKey": false,
           "notNull": true
         },
+        "tags": {
+          "name": "tags",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::text[]"
+        },
         "mood": {
           "name": "mood",
-          "type": "varchar(32)",
+          "type": "smallint",
           "primaryKey": false,
           "notNull": false
         },
-        "tag": {
-          "name": "tag",
-          "type": "varchar(32)",
+        "linked_audit_id": {
+          "name": "linked_audit_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -2230,47 +2237,60 @@
           "primaryKey": false,
           "notNull": false
         },
-        "match_name": {
-          "name": "match_name",
+        "date_at": {
+          "name": "date_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "person_label": {
+          "name": "person_label",
           "type": "varchar(120)",
           "primaryKey": false,
           "notNull": false
         },
-        "what_happened": {
-          "name": "what_happened",
+        "platform": {
+          "name": "platform",
+          "type": "varchar(40)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "summary": {
+          "name": "summary",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "felt_good": {
-          "name": "felt_good",
-          "type": "text[]",
+        "what_went_well": {
+          "name": "what_went_well",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'{}'"
+          "default": "''"
         },
-        "felt_off": {
-          "name": "felt_off",
-          "type": "text[]",
+        "what_didnt": {
+          "name": "what_didnt",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'{}'"
+          "default": "''"
+        },
+        "follow_up_planned": {
+          "name": "follow_up_planned",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "outcome": {
           "name": "outcome",
-          "type": "varchar(80)",
+          "type": "varchar(32)",
           "primaryKey": false,
           "notNull": false
         },
-        "pattern_read": {
-          "name": "pattern_read",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "coach_insight": {
-          "name": "coach_insight",
-          "type": "text",
+        "linked_audit_id": {
+          "name": "linked_audit_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -2328,6 +2348,27 @@
             },
             {
               "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "post_date_notes_user_date_idx": {
+          "name": "post_date_notes_user_date_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "date_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

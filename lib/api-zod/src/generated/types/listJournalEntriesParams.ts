@@ -10,7 +10,29 @@ import type { ListJournalEntriesView } from './listJournalEntriesView';
 export type ListJournalEntriesParams = {
 view?: ListJournalEntriesView;
 /**
- * Optional case-insensitive substring filter on title + body.
+ * Optional case-insensitive substring filter on prompt + body.
  */
 q?: string;
+/**
+ * Filter to entries that carry this tag.
+ * @maxLength 40
+ */
+tag?: string;
+/**
+ * ISO-8601 inclusive lower bound on `createdAt`. Parsed server-side via `new Date(...)`.
+ */
+dateFrom?: string;
+/**
+ * ISO-8601 inclusive upper bound on `createdAt`. Parsed server-side via `new Date(...)`.
+ */
+dateTo?: string;
+/**
+ * @minimum 1
+ * @maximum 200
+ */
+limit?: number;
+/**
+ * @minimum 0
+ */
+offset?: number;
 };

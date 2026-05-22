@@ -5,20 +5,23 @@
  * Next Level Dating Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { PostDateOutcome } from './postDateOutcome';
 
 export interface PostDateNote {
   id: number;
   /** @nullable */
-  matchName?: string | null;
-  whatHappened: string;
-  feltGood: string[];
-  feltOff: string[];
+  dateAt?: Date | null;
   /** @nullable */
-  outcome?: string | null;
+  personLabel?: string | null;
   /** @nullable */
-  patternRead?: string | null;
+  platform?: string | null;
+  summary: string;
+  whatWentWell: string;
+  whatDidnt: string;
+  followUpPlanned: boolean;
+  outcome?: PostDateOutcome | null;
   /** @nullable */
-  coachInsight?: string | null;
+  linkedAuditId?: number | null;
   createdAt: Date;
   updatedAt: Date;
   /** @nullable */

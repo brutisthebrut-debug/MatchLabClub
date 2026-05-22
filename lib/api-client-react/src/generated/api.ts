@@ -1867,6 +1867,9 @@ export const getListJournalEntriesUrl = (params?: ListJournalEntriesParams,) => 
  * Returns the current user's (or anonymous-claim-scoped) journal entries.
 Active entries by default. Pass `view=trash` to list soft-deleted
 entries, or `view=all` to include both. Ordered newest first.
+Supports paging via `limit` + `offset`, and filtering by `tag` (any
+match) and by `dateFrom` / `dateTo` (inclusive bounds on
+`createdAt`, ISO-8601 timestamps).
 
  * @summary List journal entries for the current scope
  */
@@ -2152,6 +2155,80 @@ export const useDeleteJournalEntry = <TError = ErrorType<void>,
       return useMutation(getDeleteJournalEntryMutationOptions(options));
     }
 
+export const getRestoreJournalEntryUrl = (id: number,) => {
+
+
+
+
+  return `/api/journal/${id}/restore`
+}
+
+/**
+ * Clears `deletedAt` on the entry so it returns to the active list.
+Only the entry owner can restore. Idempotent — calling on an
+already-active entry succeeds and returns the entry unchanged.
+
+ * @summary Restore a soft-deleted journal entry
+ */
+export const restoreJournalEntry = async (id: number, options?: RequestInit): Promise<JournalEntry> => {
+
+  return customFetch<JournalEntry>(getRestoreJournalEntryUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRestoreJournalEntryMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreJournalEntry>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restoreJournalEntry>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['restoreJournalEntry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreJournalEntry>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  restoreJournalEntry(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreJournalEntryMutationResult = NonNullable<Awaited<ReturnType<typeof restoreJournalEntry>>>
+
+    export type RestoreJournalEntryMutationError = ErrorType<void>
+
+    /**
+ * @summary Restore a soft-deleted journal entry
+ */
+export const useRestoreJournalEntry = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreJournalEntry>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restoreJournalEntry>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getRestoreJournalEntryMutationOptions(options));
+    }
+
 export const getListPostDateNotesUrl = (params?: ListPostDateNotesParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -2170,7 +2247,10 @@ export const getListPostDateNotesUrl = (params?: ListPostDateNotesParams,) => {
 /**
  * Returns the current user's (or anonymous-claim-scoped) post-date
 notes. Active notes by default. Pass `view=trash` for trashed,
-`view=all` for both. Ordered newest first.
+`view=all` for both. Ordered by `dateAt` desc (fallback to
+`createdAt`). Supports paging via `limit` + `offset`, filtering by
+`outcome`, `platform`, and `dateFrom` / `dateTo` (inclusive bounds
+on `dateAt` when present, otherwise `createdAt`).
 
  * @summary List post-date notes for the current scope
  */
@@ -2454,6 +2534,76 @@ export const useDeletePostDateNote = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeletePostDateNoteMutationOptions(options));
+    }
+
+export const getRestorePostDateNoteUrl = (id: number,) => {
+
+
+
+
+  return `/api/post-date-notes/${id}/restore`
+}
+
+/**
+ * @summary Restore a soft-deleted post-date note
+ */
+export const restorePostDateNote = async (id: number, options?: RequestInit): Promise<PostDateNote> => {
+
+  return customFetch<PostDateNote>(getRestorePostDateNoteUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRestorePostDateNoteMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restorePostDateNote>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restorePostDateNote>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['restorePostDateNote'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restorePostDateNote>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  restorePostDateNote(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestorePostDateNoteMutationResult = NonNullable<Awaited<ReturnType<typeof restorePostDateNote>>>
+
+    export type RestorePostDateNoteMutationError = ErrorType<void>
+
+    /**
+ * @summary Restore a soft-deleted post-date note
+ */
+export const useRestorePostDateNote = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restorePostDateNote>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restorePostDateNote>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getRestorePostDateNoteMutationOptions(options));
     }
 
 export const getHealthCheckUrl = () => {
