@@ -852,7 +852,7 @@ export function analyzeAuditTrends(params: {
       riskLastSeen.set(k, auditId);
     }
   }
-  const minRepeat = total >= 2 ? 2 : 1;
+  const minRepeat = 2;
   const toList = (
     m: Map<string, number>,
     firstSeen: Map<string, number | null>,

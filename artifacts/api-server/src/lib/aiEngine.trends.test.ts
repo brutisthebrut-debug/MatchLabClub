@@ -46,6 +46,8 @@ describe("analyzeAuditTrends", () => {
     });
     expect(r.totalAudits).toBe(1);
     expect(r.hasEnoughData).toBe(false);
+    expect(r.repeatedStrengths).toEqual([]);
+    expect(r.recurringRisks).toEqual([]);
     expect(r.scoreDelta.first).toBe(64);
     expect(r.scoreDelta.latest).toBe(64);
     expect(r.scoreDelta.delta).toBe(0);
