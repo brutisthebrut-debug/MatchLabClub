@@ -1,8 +1,10 @@
 import { Feather } from "@expo/vector-icons";
 import {
   getGetCoachFollowUpStatsQueryKey,
+  getGetMirrorTrendsQueryKey,
   useGetAuditSummary,
   useGetCoachFollowUpStats,
+  useGetMirrorTrends,
 } from "@workspace/api-client-react";
 import React, { useMemo } from "react";
 import {
@@ -95,6 +97,10 @@ export default function ScoreScreen() {
   );
   const { data: sendStats } = useGetCoachFollowUpStats({
     query: { queryKey: followUpStatsQueryKey, enabled: isAuthenticated },
+  });
+  const mirrorTrendsQueryKey = useMemo(() => getGetMirrorTrendsQueryKey(), []);
+  const { data: mirror } = useGetMirrorTrends({
+    query: { queryKey: mirrorTrendsQueryKey, enabled: isAuthenticated },
   });
 
   const sendThroughRate =
@@ -368,6 +374,99 @@ export default function ScoreScreen() {
           )}
         </View>
 
+        {mirror && mirror.hasEnoughData ? (
+          <View
+            style={[
+              styles.section,
+              { backgroundColor: colors.card, borderColor: colors.cardBorder },
+            ]}
+          >
+            <View style={styles.sectionHeader}>
+              <View
+                style={[styles.iconBubble, { backgroundColor: `${colors.gold}22` }]}
+              >
+                <Feather name="eye" size={16} color={colors.gold} />
+              </View>
+              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                Your Mirror
+              </Text>
+            </View>
+            <Text style={[styles.mirrorHeadline, { color: colors.foreground }]}>
+              {mirror.headlineInsight}
+            </Text>
+            <View style={styles.mirrorMetaRow}>
+              <View style={styles.mirrorMetaItem}>
+                <Text
+                  style={[styles.sendStatValue, { color: colors.foreground }]}
+                >
+                  {mirror.scoreDelta.delta > 0 ? "+" : ""}
+                  {mirror.scoreDelta.delta}
+                </Text>
+                <Text
+                  style={[
+                    styles.sendStatLabel,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  Score delta
+                </Text>
+              </View>
+              <View style={styles.mirrorMetaItem}>
+                <Text
+                  style={[styles.sendStatValue, { color: colors.foreground }]}
+                >
+                  {mirror.repeatedStrengths.length}
+                </Text>
+                <Text
+                  style={[
+                    styles.sendStatLabel,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  Repeat strengths
+                </Text>
+              </View>
+              <View style={styles.mirrorMetaItem}>
+                <Text
+                  style={[styles.sendStatValue, { color: colors.foreground }]}
+                >
+                  {mirror.recurringRisks.length}
+                </Text>
+                <Text
+                  style={[
+                    styles.sendStatLabel,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  Recurring risks
+                </Text>
+              </View>
+            </View>
+            {mirror.readinessSignals.slice(0, 2).map((sig, i) => (
+              <View key={`sig-${i}`} style={styles.item}>
+                <View
+                  style={[
+                    styles.bullet,
+                    {
+                      backgroundColor:
+                        sig.tone === "positive"
+                          ? colors.success
+                          : sig.tone === "watch"
+                          ? colors.rose
+                          : colors.mutedForeground,
+                    },
+                  ]}
+                />
+                <Text
+                  style={[styles.itemText, { color: colors.foreground }]}
+                >
+                  {sig.label}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
         <View
           style={[
             styles.footerCard,
@@ -511,5 +610,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "PlusJakartaSans_500Medium",
     lineHeight: 19,
+  },
+  mirrorHeadline: {
+    fontSize: 14,
+    fontFamily: "PlusJakartaSans_500Medium",
+    lineHeight: 20,
+    marginBottom: 6,
+  },
+  mirrorMetaRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginVertical: 6,
+  },
+  mirrorMetaItem: {
+    flex: 1,
+    alignItems: "center",
+    gap: 2,
   },
 });

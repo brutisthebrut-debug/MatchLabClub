@@ -1234,6 +1234,88 @@ export interface LifePulseRecent {
   latest: LifePulse | null;
 }
 
+export interface MirrorTrendTheme {
+  key: string;
+  label: string;
+  count: number;
+}
+
+export type MirrorTrendThemeShiftDirection = typeof MirrorTrendThemeShiftDirection[keyof typeof MirrorTrendThemeShiftDirection];
+
+
+export const MirrorTrendThemeShiftDirection = {
+  emerged: 'emerged',
+  faded: 'faded',
+  steady: 'steady',
+} as const;
+
+export interface MirrorTrendThemeShift {
+  key: string;
+  label: string;
+  from: number;
+  to: number;
+  direction: MirrorTrendThemeShiftDirection;
+}
+
+export type MirrorTrendScoreDeltaDirection = typeof MirrorTrendScoreDeltaDirection[keyof typeof MirrorTrendScoreDeltaDirection];
+
+
+export const MirrorTrendScoreDeltaDirection = {
+  up: 'up',
+  down: 'down',
+  flat: 'flat',
+} as const;
+
+export interface MirrorTrendScoreDelta {
+  /** @nullable */
+  first: number | null;
+  /** @nullable */
+  latest: number | null;
+  delta: number;
+  direction: MirrorTrendScoreDeltaDirection;
+}
+
+export interface MirrorTrendEngagementWindow {
+  /** @nullable */
+  firstAuditAt: string | null;
+  /** @nullable */
+  latestAuditAt: string | null;
+  /** @nullable */
+  avgGapDays: number | null;
+  /** @nullable */
+  mostActiveDay: string | null;
+  /** @nullable */
+  daysSinceLatest: number | null;
+}
+
+export type MirrorTrendSignalTone = typeof MirrorTrendSignalTone[keyof typeof MirrorTrendSignalTone];
+
+
+export const MirrorTrendSignalTone = {
+  positive: 'positive',
+  watch: 'watch',
+  neutral: 'neutral',
+} as const;
+
+export interface MirrorTrendSignal {
+  label: string;
+  tone: MirrorTrendSignalTone;
+}
+
+export interface MirrorTrendReport {
+  hasEnoughData: boolean;
+  totalAudits: number;
+  spanDays: number;
+  repeatedStrengths: MirrorTrendTheme[];
+  recurringRisks: MirrorTrendTheme[];
+  scoreDelta: MirrorTrendScoreDelta;
+  themeShifts: MirrorTrendThemeShift[];
+  engagementWindow: MirrorTrendEngagementWindow;
+  readinessSignals: MirrorTrendSignal[];
+  headlineInsight: string;
+  engineVersion: string;
+}
+
 /**
  * Opaque session token — `Bearer <sid>`.
  */

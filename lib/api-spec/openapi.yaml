@@ -1405,6 +1405,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/CoachFollowUpTimeline"
 
+  /mirror/trends:
+    get:
+      operationId: getMirrorTrends
+      tags: [audits]
+      summary: Cross-audit pattern and growth-trend report for the current scope
+      description: |
+        Aggregates the current user's (or anonymous-claim-scoped) audits, coach
+        follow-up send-through stats, and recent life-pulses into a deterministic
+        trend report — repeated strengths/risks, score delta, theme shifts,
+        engagement window, and readiness signals. Computed by `analyzeAuditTrends`
+        in `aiEngine.ts`; no external AI.
+      responses:
+        "200":
+          description: Trend report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MirrorTrendReport"
+
   /insights:
     get:
       operationId: listInsights
@@ -3390,3 +3409,117 @@ components:
             - $ref: '#/components/schemas/LifePulse'
             - type: 'null'
           description: The single most recent pulse, or null when the user has never logged one.
+
+    MirrorTrendTheme:
+      type: object
+      required: [key, label, count]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        count:
+          type: integer
+
+    MirrorTrendThemeShift:
+      type: object
+      required: [key, label, from, to, direction]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        from:
+          type: integer
+        to:
+          type: integer
+        direction:
+          type: string
+          enum: [emerged, faded, steady]
+
+    MirrorTrendScoreDelta:
+      type: object
+      required: [first, latest, delta, direction]
+      properties:
+        first:
+          type: [integer, "null"]
+        latest:
+          type: [integer, "null"]
+        delta:
+          type: integer
+        direction:
+          type: string
+          enum: [up, down, flat]
+
+    MirrorTrendEngagementWindow:
+      type: object
+      required: [firstAuditAt, latestAuditAt, avgGapDays, mostActiveDay, daysSinceLatest]
+      properties:
+        firstAuditAt:
+          type: [string, "null"]
+          format: date-time
+        latestAuditAt:
+          type: [string, "null"]
+          format: date-time
+        avgGapDays:
+          type: [number, "null"]
+        mostActiveDay:
+          type: [string, "null"]
+        daysSinceLatest:
+          type: [integer, "null"]
+
+    MirrorTrendSignal:
+      type: object
+      required: [label, tone]
+      properties:
+        label:
+          type: string
+        tone:
+          type: string
+          enum: [positive, watch, neutral]
+
+    MirrorTrendReport:
+      type: object
+      required:
+        - hasEnoughData
+        - totalAudits
+        - spanDays
+        - repeatedStrengths
+        - recurringRisks
+        - scoreDelta
+        - themeShifts
+        - engagementWindow
+        - readinessSignals
+        - headlineInsight
+        - engineVersion
+      properties:
+        hasEnoughData:
+          type: boolean
+        totalAudits:
+          type: integer
+        spanDays:
+          type: integer
+        repeatedStrengths:
+          type: array
+          items:
+            $ref: '#/components/schemas/MirrorTrendTheme'
+        recurringRisks:
+          type: array
+          items:
+            $ref: '#/components/schemas/MirrorTrendTheme'
+        scoreDelta:
+          $ref: '#/components/schemas/MirrorTrendScoreDelta'
+        themeShifts:
+          type: array
+          items:
+            $ref: '#/components/schemas/MirrorTrendThemeShift'
+        engagementWindow:
+          $ref: '#/components/schemas/MirrorTrendEngagementWindow'
+        readinessSignals:
+          type: array
+          items:
+            $ref: '#/components/schemas/MirrorTrendSignal'
+        headlineInsight:
+          type: string
+        engineVersion:
+          type: string

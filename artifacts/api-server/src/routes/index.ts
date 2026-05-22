@@ -16,6 +16,7 @@ import accountRouter from "./account";
 import coachFollowUpsRouter from "./coachFollowUps";
 import pushTokensRouter from "./push_tokens";
 import lifePulseRouter from "./lifePulse";
+import mirrorRouter from "./mirror";
 
 const router: IRouter = Router();
 
@@ -36,5 +37,6 @@ router.use(accountRouter);
 router.use(coachFollowUpsRouter);
 router.use(pushTokensRouter);
 router.use(lifePulseRouter);
+router.use(mirrorRouter);
 
 export default router;

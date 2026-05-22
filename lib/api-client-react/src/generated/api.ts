@@ -87,6 +87,7 @@ import type {
   MessageCoachingInput,
   MessageCoachingResponse,
   MessageCoachingSession,
+  MirrorTrendReport,
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
   MySessionsResponse,
@@ -4346,6 +4347,89 @@ export function useGetCoachFollowUpTimeline<TData = Awaited<ReturnType<typeof ge
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetCoachFollowUpTimelineQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetMirrorTrendsUrl = () => {
+
+
+
+
+  return `/api/mirror/trends`
+}
+
+/**
+ * Aggregates the current user's (or anonymous-claim-scoped) audits, coach
+follow-up send-through stats, and recent life-pulses into a deterministic
+trend report — repeated strengths/risks, score delta, theme shifts,
+engagement window, and readiness signals. Computed by `analyzeAuditTrends`
+in `aiEngine.ts`; no external AI.
+
+ * @summary Cross-audit pattern and growth-trend report for the current scope
+ */
+export const getMirrorTrends = async ( options?: RequestInit): Promise<MirrorTrendReport> => {
+
+  return customFetch<MirrorTrendReport>(getGetMirrorTrendsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMirrorTrendsQueryKey = () => {
+    return [
+    `/api/mirror/trends`
+    ] as const;
+    }
+
+
+export const getGetMirrorTrendsQueryOptions = <TData = Awaited<ReturnType<typeof getMirrorTrends>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMirrorTrends>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMirrorTrendsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMirrorTrends>>> = ({ signal }) => getMirrorTrends({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMirrorTrends>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMirrorTrendsQueryResult = NonNullable<Awaited<ReturnType<typeof getMirrorTrends>>>
+export type GetMirrorTrendsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Cross-audit pattern and growth-trend report for the current scope
+ */
+
+export function useGetMirrorTrends<TData = Awaited<ReturnType<typeof getMirrorTrends>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMirrorTrends>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMirrorTrendsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

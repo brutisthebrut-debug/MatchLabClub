@@ -651,3 +651,379 @@ export function generateEmailInsightAnalysis(params: {
     sourceApp: source,
   };
 }
+
+// ============================================================================
+// Cross-audit trend analysis ("Build the Mirror") — task #547
+//
+// Deterministic aggregate of the user's audit history, send-through stats, and
+// life-pulses into a single TrendReport. No external AI. Output shape is part
+// of the API contract (see MirrorTrendReport in openapi.yaml).
+// ============================================================================
+
+export interface AuditTrendInputAudit {
+  readinessScore: number | null;
+  strengths?: string[] | null;
+  risks?: string[] | null;
+  createdAt: string;
+  currentApps?: string[] | null;
+  biggestChallenge?: string | null;
+}
+
+export interface TrendReportTheme {
+  key: string;
+  label: string;
+  count: number;
+}
+
+export interface TrendReportThemeShift {
+  key: string;
+  label: string;
+  from: number;
+  to: number;
+  direction: "emerged" | "faded" | "steady";
+}
+
+export interface TrendReportScoreDelta {
+  first: number | null;
+  latest: number | null;
+  delta: number;
+  direction: "up" | "down" | "flat";
+}
+
+export interface TrendReportEngagement {
+  firstAuditAt: string | null;
+  latestAuditAt: string | null;
+  avgGapDays: number | null;
+  mostActiveDay: string | null;
+  daysSinceLatest: number | null;
+}
+
+export interface TrendReportSignal {
+  label: string;
+  tone: "positive" | "watch" | "neutral";
+}
+
+export interface TrendReport {
+  hasEnoughData: boolean;
+  totalAudits: number;
+  spanDays: number;
+  repeatedStrengths: TrendReportTheme[];
+  recurringRisks: TrendReportTheme[];
+  scoreDelta: TrendReportScoreDelta;
+  themeShifts: TrendReportThemeShift[];
+  engagementWindow: TrendReportEngagement;
+  readinessSignals: TrendReportSignal[];
+  headlineInsight: string;
+  engineVersion: string;
+}
+
+const TREND_THEMES: { key: string; label: string; words: string[] }[] = [
+  { key: "warmth", label: "Warmth", words: ["warm", "warmth", "genuine", "kind"] },
+  { key: "specificity", label: "Specificity", words: ["specific", "vivid", "detail", "concrete", "particular"] },
+  { key: "intention", label: "Clarity of intention", words: ["intent", "clear sense", "purpose", "direct", "looking for"] },
+  { key: "playfulness", label: "Playfulness", words: ["playful", "fun", "humor", "humour", "laugh", "wit", "light"] },
+  { key: "depth", label: "Emotional depth", words: ["depth", "vulnerab", "honest", "open ", "real "] },
+  { key: "generic", label: "Generic phrasing", words: ["generic", "vague", "common", "cliché", "cliche", "platitude", "dilute"] },
+  { key: "opener", label: "Opener strength", words: ["opener", "opening", "first message", "hook"] },
+  { key: "photos", label: "Photo set", words: ["photo", "picture", "image"] },
+  { key: "consistency", label: "Follow-through", words: ["consisten", "follow-through", "reliab", "steady"] },
+  { key: "confidence", label: "Confidence", words: ["confiden", "self-assur"] },
+];
+
+function tagThemes(lines: string[]): Set<string> {
+  const matched = new Set<string>();
+  for (const raw of lines) {
+    const text = (raw || "").toLowerCase();
+    if (!text.trim()) continue;
+    for (const t of TREND_THEMES) {
+      if (t.words.some((w) => text.includes(w))) matched.add(t.key);
+    }
+  }
+  return matched;
+}
+
+function themeLabel(key: string): string {
+  return TREND_THEMES.find((t) => t.key === key)?.label ?? key;
+}
+
+function dayOfWeek(iso: string): string | null {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][d.getUTCDay()];
+}
+
+export function analyzeAuditTrends(params: {
+  audits: AuditTrendInputAudit[];
+  sendStats?: { totalPrompts: number; sentCount: number } | null;
+  lifePulses?: { energy: number; headspace: number; createdAt: string }[] | null;
+  now?: Date;
+}): TrendReport {
+  const now = params.now ?? new Date();
+  const audits = [...(params.audits ?? [])]
+    .filter((a) => a && !Number.isNaN(Date.parse(a.createdAt)))
+    .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+
+  const total = audits.length;
+  const scored = audits.filter(
+    (a): a is AuditTrendInputAudit & { readinessScore: number } =>
+      typeof a.readinessScore === "number",
+  );
+
+  const firstAuditAt = audits[0]?.createdAt ?? null;
+  const latestAuditAt = audits[audits.length - 1]?.createdAt ?? null;
+  const spanDays =
+    firstAuditAt && latestAuditAt
+      ? Math.max(
+          0,
+          Math.round(
+            (Date.parse(latestAuditAt) - Date.parse(firstAuditAt)) / 86_400_000,
+          ),
+        )
+      : 0;
+
+  const gaps: number[] = [];
+  for (let i = 1; i < audits.length; i++) {
+    const d =
+      (Date.parse(audits[i].createdAt) - Date.parse(audits[i - 1].createdAt)) /
+      86_400_000;
+    if (Number.isFinite(d) && d >= 0) gaps.push(d);
+  }
+  const avgGapDays = gaps.length
+    ? Math.round((gaps.reduce((s, x) => s + x, 0) / gaps.length) * 10) / 10
+    : null;
+
+  const dayCounts = new Map<string, number>();
+  for (const a of audits) {
+    const dow = dayOfWeek(a.createdAt);
+    if (!dow) continue;
+    dayCounts.set(dow, (dayCounts.get(dow) ?? 0) + 1);
+  }
+  let mostActiveDay: string | null = null;
+  let mostActiveCount = 0;
+  for (const [day, c] of dayCounts.entries()) {
+    if (c > mostActiveCount) {
+      mostActiveDay = day;
+      mostActiveCount = c;
+    }
+  }
+  const daysSinceLatest = latestAuditAt
+    ? Math.max(
+        0,
+        Math.round((now.getTime() - Date.parse(latestAuditAt)) / 86_400_000),
+      )
+    : null;
+
+  const strengthCounts = new Map<string, number>();
+  const riskCounts = new Map<string, number>();
+  const auditThemes: { strengths: Set<string>; risks: Set<string> }[] = [];
+  for (const a of audits) {
+    const sTags = tagThemes(a.strengths ?? []);
+    const rTags = tagThemes(a.risks ?? []);
+    auditThemes.push({ strengths: sTags, risks: rTags });
+    for (const k of sTags) strengthCounts.set(k, (strengthCounts.get(k) ?? 0) + 1);
+    for (const k of rTags) riskCounts.set(k, (riskCounts.get(k) ?? 0) + 1);
+  }
+  const minRepeat = total >= 2 ? 2 : 1;
+  const toList = (m: Map<string, number>): TrendReportTheme[] =>
+    [...m.entries()]
+      .filter(([, c]) => c >= minRepeat)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 5)
+      .map(([key, count]) => ({ key, label: themeLabel(key), count }));
+  const repeatedStrengths = toList(strengthCounts);
+  const recurringRisks = toList(riskCounts);
+
+  const themeShifts: TrendReportThemeShift[] = [];
+  if (audits.length >= 2) {
+    const mid = Math.ceil(audits.length / 2);
+    const firstHalf = auditThemes.slice(0, mid);
+    const secondHalf = auditThemes.slice(mid);
+    const tally = (slice: typeof auditThemes, kind: "strengths" | "risks") => {
+      const m = new Map<string, number>();
+      for (const t of slice) for (const k of t[kind]) m.set(k, (m.get(k) ?? 0) + 1);
+      return m;
+    };
+    const fhS = tally(firstHalf, "strengths");
+    const shS = tally(secondHalf, "strengths");
+    const fhR = tally(firstHalf, "risks");
+    const shR = tally(secondHalf, "risks");
+    const keys = new Set<string>([
+      ...fhS.keys(), ...shS.keys(), ...fhR.keys(), ...shR.keys(),
+    ]);
+    for (const key of keys) {
+      const from = (fhS.get(key) ?? 0) + (fhR.get(key) ?? 0);
+      const to = (shS.get(key) ?? 0) + (shR.get(key) ?? 0);
+      if (from === to) continue;
+      const dir: TrendReportThemeShift["direction"] =
+        from === 0 ? "emerged" : to === 0 ? "faded" : "steady";
+      themeShifts.push({ key, label: themeLabel(key), from, to, direction: dir });
+    }
+    themeShifts.sort(
+      (a, b) =>
+        Math.abs(b.to - b.from) - Math.abs(a.to - a.from) ||
+        a.key.localeCompare(b.key),
+    );
+  }
+
+  const firstScore = scored[0]?.readinessScore ?? null;
+  const latestScore = scored[scored.length - 1]?.readinessScore ?? null;
+  const delta =
+    firstScore !== null && latestScore !== null ? latestScore - firstScore : 0;
+  const direction: TrendReportScoreDelta["direction"] =
+    delta >= 5 ? "up" : delta <= -5 ? "down" : "flat";
+
+  const signals: TrendReportSignal[] = [];
+  if (firstScore !== null && latestScore !== null && scored.length >= 2) {
+    if (direction === "up") {
+      signals.push({
+        label: `+${delta} point score lift since your first audit`,
+        tone: "positive",
+      });
+    } else if (direction === "down") {
+      signals.push({
+        label: `${delta} point dip since your first audit — worth a closer look`,
+        tone: "watch",
+      });
+    } else {
+      signals.push({
+        label: `Score is steady within ${Math.abs(delta)} pt — small wins still count`,
+        tone: "neutral",
+      });
+    }
+  }
+  if (params.sendStats && params.sendStats.totalPrompts >= 3) {
+    const rate = params.sendStats.sentCount / params.sendStats.totalPrompts;
+    const pct = Math.round(rate * 100);
+    if (rate >= 0.6) {
+      signals.push({
+        label: `${pct}% send-through on coached replies — momentum is real`,
+        tone: "positive",
+      });
+    } else if (rate <= 0.25) {
+      signals.push({
+        label: `${pct}% send-through — drafts piling up faster than they go out`,
+        tone: "watch",
+      });
+    } else {
+      signals.push({
+        label: `${pct}% send-through on coached replies`,
+        tone: "neutral",
+      });
+    }
+  }
+  if (avgGapDays !== null) {
+    if (avgGapDays <= 14) {
+      signals.push({
+        label: `Showing up every ~${Math.round(avgGapDays)} days — consistent rhythm`,
+        tone: "positive",
+      });
+    } else if (avgGapDays > 30) {
+      signals.push({
+        label: `~${Math.round(avgGapDays)}-day gaps between audits — easy to lose the thread`,
+        tone: "watch",
+      });
+    }
+  }
+  if (daysSinceLatest !== null && daysSinceLatest > 45 && total >= 2) {
+    signals.push({
+      label: `Last audit was ${daysSinceLatest} days ago — time for a fresh read`,
+      tone: "watch",
+    });
+  }
+  if (recurringRisks.length > 0 && recurringRisks[0].count >= 2) {
+    signals.push({
+      label: `"${recurringRisks[0].label}" keeps coming up — that's the one to fix first`,
+      tone: "watch",
+    });
+  }
+  if (params.lifePulses && params.lifePulses.length >= 3) {
+    const recent = params.lifePulses.slice(0, 7);
+    const avgEnergy =
+      recent.reduce((s, p) => s + (p.energy ?? 0), 0) / recent.length;
+    const avgHeadspace =
+      recent.reduce((s, p) => s + (p.headspace ?? 0), 0) / recent.length;
+    if (avgEnergy >= 4) {
+      signals.push({
+        label: "Energy is trending steady — good fuel for the work",
+        tone: "positive",
+      });
+    }
+    if (avgHeadspace <= 2.5) {
+      signals.push({
+        label: "Headspace is running low — keep moves small this week",
+        tone: "watch",
+      });
+    }
+  }
+
+  const hasEnoughData =
+    total >= 2 ||
+    (total >= 1 &&
+      ((params.sendStats?.totalPrompts ?? 0) >= 3 ||
+        (params.lifePulses?.length ?? 0) >= 3));
+
+  let headlineInsight: string;
+  if (total === 0) {
+    headlineInsight =
+      "Your Mirror will start filling in once you complete your first audit — patterns need at least one data point to begin.";
+  } else if (!hasEnoughData) {
+    headlineInsight =
+      "One audit in. Run a second pass after you've made a change or two — that's when patterns start to show.";
+  } else {
+    const pieces: string[] = [];
+    pieces.push(
+      `${total} audit${total === 1 ? "" : "s"}${spanDays > 0 ? ` across ${spanDays} day${spanDays === 1 ? "" : "s"}` : ""}.`,
+    );
+    if (direction === "up") {
+      pieces.push(
+        `Your score is up ${delta} points since you started — that's real movement.`,
+      );
+    } else if (direction === "down") {
+      pieces.push(
+        `Your score has slipped ${Math.abs(delta)} points — worth understanding why before pushing harder.`,
+      );
+    } else if (firstScore !== null && latestScore !== null && scored.length >= 2) {
+      pieces.push(
+        "Your score is holding steady — the next move is sharpening one specific thing.",
+      );
+    }
+    if (repeatedStrengths.length > 0) {
+      pieces.push(
+        `${repeatedStrengths[0].label} keeps showing up as a real strength — lean into it.`,
+      );
+    }
+    if (recurringRisks.length > 0) {
+      pieces.push(
+        `The pattern to break: ${recurringRisks[0].label.toLowerCase()}.`,
+      );
+    } else {
+      const emerged = themeShifts.find((s) => s.direction === "emerged");
+      if (emerged) {
+        pieces.push(
+          `${emerged.label} has started to emerge — keep building on it.`,
+        );
+      }
+    }
+    headlineInsight = pieces.join(" ");
+  }
+
+  return {
+    hasEnoughData,
+    totalAudits: total,
+    spanDays,
+    repeatedStrengths,
+    recurringRisks,
+    scoreDelta: { first: firstScore, latest: latestScore, delta, direction },
+    themeShifts,
+    engagementWindow: {
+      firstAuditAt,
+      latestAuditAt,
+      avgGapDays,
+      mostActiveDay,
+      daysSinceLatest,
+    },
+    readinessSignals: signals,
+    headlineInsight,
+    engineVersion: ENGINE_VERSION,
+  };
+}

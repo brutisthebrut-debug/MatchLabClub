@@ -243,6 +243,7 @@ const ACTION_GROUPS = [
   {
     label: "Growth Tracker", color: "hsl(142 55% 60%)",
     items: [
+      { icon: Sparkles,      label: "Your Mirror",       desc: "Patterns across every audit",      href: "/your-mirror"             },
       { icon: Trophy,        label: "Dating Wins Log",   desc: "Log moments of courage + wins",    href: "/progress/wins"           },
       { icon: Zap,           label: "Pattern Breaker",   desc: "5 actions to shift this week",     href: "/progress/pattern-breaker"},
       { icon: Clock,         label: "My Timeline",       desc: "Log wins, patterns, questions",    href: "/progress/timeline"       },

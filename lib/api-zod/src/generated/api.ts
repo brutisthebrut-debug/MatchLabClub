@@ -2019,6 +2019,58 @@ export const GetCoachFollowUpTimelineResponse = zod.object({
 
 
 /**
+ * Aggregates the current user's (or anonymous-claim-scoped) audits, coach
+follow-up send-through stats, and recent life-pulses into a deterministic
+trend report — repeated strengths/risks, score delta, theme shifts,
+engagement window, and readiness signals. Computed by `analyzeAuditTrends`
+in `aiEngine.ts`; no external AI.
+
+ * @summary Cross-audit pattern and growth-trend report for the current scope
+ */
+export const GetMirrorTrendsResponse = zod.object({
+  "hasEnoughData": zod.boolean(),
+  "totalAudits": zod.number(),
+  "spanDays": zod.number(),
+  "repeatedStrengths": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "count": zod.number()
+})),
+  "recurringRisks": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "count": zod.number()
+})),
+  "scoreDelta": zod.object({
+  "first": zod.number().nullable(),
+  "latest": zod.number().nullable(),
+  "delta": zod.number(),
+  "direction": zod.enum(['up', 'down', 'flat'])
+}),
+  "themeShifts": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "from": zod.number(),
+  "to": zod.number(),
+  "direction": zod.enum(['emerged', 'faded', 'steady'])
+})),
+  "engagementWindow": zod.object({
+  "firstAuditAt": zod.coerce.date().nullable(),
+  "latestAuditAt": zod.coerce.date().nullable(),
+  "avgGapDays": zod.number().nullable(),
+  "mostActiveDay": zod.string().nullable(),
+  "daysSinceLatest": zod.number().nullable()
+}),
+  "readinessSignals": zod.array(zod.object({
+  "label": zod.string(),
+  "tone": zod.enum(['positive', 'watch', 'neutral'])
+})),
+  "headlineInsight": zod.string(),
+  "engineVersion": zod.string()
+})
+
+
+/**
  * @summary List email insight imports
  */
 export const ListInsightsResponseItem = zod.object({

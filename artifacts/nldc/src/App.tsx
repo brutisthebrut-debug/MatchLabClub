@@ -25,6 +25,7 @@ import Founder from "@/pages/Founder";
 import ShebangsPartner from "@/pages/ShebangsPartner";
 import Blueprint from "@/pages/Blueprint";
 import MirrorProfile from "@/pages/MirrorProfile";
+import YourMirror from "@/pages/YourMirror";
 import Archetype from "@/pages/Archetype";
 import Reflection from "@/pages/Reflection";
 import ProfileReader from "@/pages/ProfileReader";
@@ -108,6 +109,7 @@ function Router() {
       {/* New coaching modules */}
       <Route path="/blueprint" component={Blueprint} />
       <Route path="/mirror" component={MirrorProfile} />
+      <Route path="/your-mirror" component={YourMirror} />
       <Route path="/archetype" component={Archetype} />
       <Route path="/reflection" component={Reflection} />
       <Route path="/profile-reader" component={ProfileReader} />
