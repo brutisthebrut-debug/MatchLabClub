@@ -613,6 +613,225 @@ paths:
               schema:
                 $ref: '#/components/schemas/LifePulseRecent'
 
+  /journal:
+    get:
+      tags: [mirror]
+      operationId: listJournalEntries
+      summary: List journal entries for the current scope
+      description: |
+        Returns the current user's (or anonymous-claim-scoped) journal entries.
+        Active entries by default. Pass `view=trash` to list soft-deleted
+        entries, or `view=all` to include both. Ordered newest first.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: view
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, trash, all]
+            default: active
+        - name: q
+          in: query
+          required: false
+          description: Optional case-insensitive substring filter on title + body.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Journal entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntryList"
+    post:
+      tags: [mirror]
+      operationId: createJournalEntry
+      summary: Create a journal entry
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JournalEntryInput"
+      responses:
+        "201":
+          description: Created journal entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntry"
+        "400":
+          description: Invalid payload
+
+  /journal/{id}:
+    patch:
+      tags: [mirror]
+      operationId: updateJournalEntry
+      summary: Edit a journal entry (or restore from trash)
+      description: |
+        Partial-update of a journal entry. Pass `restore: true` to clear
+        `deletedAt`. Only the entry owner can update.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JournalEntryPatch"
+      responses:
+        "200":
+          description: Updated entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JournalEntry"
+        "400":
+          description: Invalid payload
+        "404":
+          description: Not found
+    delete:
+      tags: [mirror]
+      operationId: deleteJournalEntry
+      summary: Soft-delete a journal entry
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Soft-deleted entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteJournalEntryResult"
+        "404":
+          description: Not found
+
+  /post-date-notes:
+    get:
+      tags: [mirror]
+      operationId: listPostDateNotes
+      summary: List post-date notes for the current scope
+      description: |
+        Returns the current user's (or anonymous-claim-scoped) post-date
+        notes. Active notes by default. Pass `view=trash` for trashed,
+        `view=all` for both. Ordered newest first.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: view
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, trash, all]
+            default: active
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Post-date notes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostDateNoteList"
+    post:
+      tags: [mirror]
+      operationId: createPostDateNote
+      summary: Create (persist) a post-date debrief
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostDateNoteInput"
+      responses:
+        "201":
+          description: Created post-date note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostDateNote"
+        "400":
+          description: Invalid payload
+
+  /post-date-notes/{id}:
+    patch:
+      tags: [mirror]
+      operationId: updatePostDateNote
+      summary: Edit a post-date note (or restore from trash)
+      description: |
+        Partial-update of a post-date note. Pass `restore: true` to clear
+        `deletedAt`. Only the note owner can update.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostDateNotePatch"
+      responses:
+        "200":
+          description: Updated note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostDateNote"
+        "400":
+          description: Invalid payload
+        "404":
+          description: Not found
+    delete:
+      tags: [mirror]
+      operationId: deletePostDateNote
+      summary: Soft-delete a post-date note
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Soft-deleted note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeletePostDateNoteResult"
+        "404":
+          description: Not found
+
   /healthz:
     get:
       operationId: healthCheck
@@ -1880,6 +2099,14 @@ components:
           type: array
           items:
             type: integer
+        journalEntryIds:
+          type: array
+          items:
+            type: integer
+        postDateNoteIds:
+          type: array
+          items:
+            type: integer
     AnonymousClaimHandoff:
       type: object
       required: [handoff, expiresAt]
@@ -1938,13 +2165,21 @@ components:
           type: array
           items:
             type: integer
+        journalEntryIds:
+          type: array
+          items:
+            type: integer
+        postDateNoteIds:
+          type: array
+          items:
+            type: integer
     ClaimAnonymousResult:
       type: object
       required: [claimed]
       properties:
         claimed:
           type: object
-          required: [audits, profiles, messages, insights, followUps]
+          required: [audits, profiles, messages, insights, followUps, journalEntries, postDateNotes]
           properties:
             audits:
               type: integer
@@ -1955,6 +2190,10 @@ components:
             insights:
               type: integer
             followUps:
+              type: integer
+            journalEntries:
+              type: integer
+            postDateNotes:
               type: integer
     HealthStatus:
       type: object
@@ -2997,7 +3236,7 @@ components:
 
     AccountSummary:
       type: object
-      required: [audits, profiles, messages, insights]
+      required: [audits, profiles, messages, insights, journalEntries, postDateNotes]
       properties:
         audits:
           type: integer
@@ -3007,10 +3246,14 @@ components:
           type: integer
         insights:
           type: integer
+        journalEntries:
+          type: integer
+        postDateNotes:
+          type: integer
 
     AccountExport:
       type: object
-      required: [exportedAt, user, audits, profiles, messages, insights]
+      required: [exportedAt, user, audits, profiles, messages, insights, journalEntries, postDateNotes]
       properties:
         exportedAt:
           type: string
@@ -3033,6 +3276,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EmailInsight'
+        journalEntries:
+          type: array
+          items:
+            $ref: '#/components/schemas/JournalEntry'
+        postDateNotes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostDateNote'
 
     AccountExportUser:
       type: object
@@ -3566,3 +3817,206 @@ components:
           type: string
         engineVersion:
           type: string
+
+    JournalEntryInput:
+      type: object
+      required: [body]
+      properties:
+        title:
+          type: [string, "null"]
+          maxLength: 200
+        body:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        mood:
+          type: [string, "null"]
+          maxLength: 32
+          description: Optional short mood tag (e.g. "energized", "anxious", "clear").
+        tag:
+          type: [string, "null"]
+          maxLength: 32
+          description: Optional bucket tag (e.g. "weekly", "intention", "reflection").
+
+    JournalEntryPatch:
+      type: object
+      properties:
+        title:
+          type: [string, "null"]
+          maxLength: 200
+        body:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        mood:
+          type: [string, "null"]
+          maxLength: 32
+        tag:
+          type: [string, "null"]
+          maxLength: 32
+        restore:
+          type: boolean
+          description: If true, clears `deletedAt` so the entry leaves the trash.
+
+    JournalEntry:
+      type: object
+      required: [id, body, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: [string, "null"]
+        body:
+          type: string
+        mood:
+          type: [string, "null"]
+        tag:
+          type: [string, "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: [string, "null"]
+          format: date-time
+
+    JournalEntryList:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/JournalEntry"
+
+    DeleteJournalEntryResult:
+      type: object
+      required: [success, deletedId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        deletedId:
+          type: integer
+
+    PostDateNoteInput:
+      type: object
+      required: [whatHappened]
+      properties:
+        matchName:
+          type: [string, "null"]
+          maxLength: 120
+        whatHappened:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        feltGood:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+            maxLength: 120
+        feltOff:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+            maxLength: 120
+        outcome:
+          type: [string, "null"]
+          maxLength: 80
+        patternRead:
+          type: [string, "null"]
+          maxLength: 4000
+        coachInsight:
+          type: [string, "null"]
+          maxLength: 4000
+
+    PostDateNotePatch:
+      type: object
+      properties:
+        matchName:
+          type: [string, "null"]
+          maxLength: 120
+        whatHappened:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        feltGood:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+            maxLength: 120
+        feltOff:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+            maxLength: 120
+        outcome:
+          type: [string, "null"]
+          maxLength: 80
+        patternRead:
+          type: [string, "null"]
+          maxLength: 4000
+        coachInsight:
+          type: [string, "null"]
+          maxLength: 4000
+        restore:
+          type: boolean
+
+    PostDateNote:
+      type: object
+      required: [id, whatHappened, feltGood, feltOff, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        matchName:
+          type: [string, "null"]
+        whatHappened:
+          type: string
+        feltGood:
+          type: array
+          items:
+            type: string
+        feltOff:
+          type: array
+          items:
+            type: string
+        outcome:
+          type: [string, "null"]
+        patternRead:
+          type: [string, "null"]
+        coachInsight:
+          type: [string, "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: [string, "null"]
+          format: date-time
+
+    PostDateNoteList:
+      type: object
+      required: [notes]
+      properties:
+        notes:
+          type: array
+          items:
+            $ref: "#/components/schemas/PostDateNote"
+
+    DeletePostDateNoteResult:
+      type: object
+      required: [success, deletedId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        deletedId:
+          type: integer

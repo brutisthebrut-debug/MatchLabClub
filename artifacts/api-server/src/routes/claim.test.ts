@@ -293,6 +293,8 @@ describe("POST /api/claim-anonymous", () => {
           messages: 1,
           insights: 1,
           followUps: 1,
+          journalEntries: 0,
+          postDateNotes: 0,
         },
       });
 
@@ -451,6 +453,8 @@ describe("POST /api/claim-anonymous", () => {
           messages: 0,
           insights: 0,
           followUps: 0,
+          journalEntries: 0,
+          postDateNotes: 0,
         },
       });
 
@@ -655,6 +659,8 @@ describe("POST /api/claim-anonymous/handoff/redeem", () => {
           messages: 1,
           insights: 1,
           followUps: 1,
+          journalEntries: 0,
+          postDateNotes: 0,
         },
       });
 

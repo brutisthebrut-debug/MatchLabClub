@@ -62,6 +62,8 @@ export interface ClaimAnonymousInput {
   messageSessionIds?: number[];
   insightIds?: number[];
   followUpIds?: number[];
+  journalEntryIds?: number[];
+  postDateNoteIds?: number[];
 }
 
 export interface AnonymousClaimHandoff {
@@ -92,6 +94,8 @@ export interface RedeemAnonymousClaimHandoffInput {
   messageSessionIds?: number[];
   insightIds?: number[];
   followUpIds?: number[];
+  journalEntryIds?: number[];
+  postDateNoteIds?: number[];
 }
 
 export type ClaimAnonymousResultClaimed = {
@@ -100,6 +104,8 @@ export type ClaimAnonymousResultClaimed = {
   messages: number;
   insights: number;
   followUps: number;
+  journalEntries: number;
+  postDateNotes: number;
 };
 
 export interface ClaimAnonymousResult {
@@ -944,6 +950,8 @@ export interface AccountSummary {
   profiles: number;
   messages: number;
   insights: number;
+  journalEntries: number;
+  postDateNotes: number;
 }
 
 export interface AccountExportUser {
@@ -959,6 +967,40 @@ export interface AccountExportUser {
   createdAt: string;
 }
 
+export interface JournalEntry {
+  id: number;
+  /** @nullable */
+  title?: string | null;
+  body: string;
+  /** @nullable */
+  mood?: string | null;
+  /** @nullable */
+  tag?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  /** @nullable */
+  deletedAt?: string | null;
+}
+
+export interface PostDateNote {
+  id: number;
+  /** @nullable */
+  matchName?: string | null;
+  whatHappened: string;
+  feltGood: string[];
+  feltOff: string[];
+  /** @nullable */
+  outcome?: string | null;
+  /** @nullable */
+  patternRead?: string | null;
+  /** @nullable */
+  coachInsight?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  /** @nullable */
+  deletedAt?: string | null;
+}
+
 export interface AccountExport {
   /** ISO timestamp of when the export was generated. */
   exportedAt: string;
@@ -967,6 +1009,8 @@ export interface AccountExport {
   profiles: DatingProfile[];
   messages: MessageCoachingSession[];
   insights: EmailInsight[];
+  journalEntries: JournalEntry[];
+  postDateNotes: PostDateNote[];
 }
 
 export interface BulkDeleteAuditsInput {
@@ -1339,6 +1383,139 @@ export interface MirrorTrendReport {
   engineVersion: string;
 }
 
+export interface JournalEntryInput {
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  title?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 20000
+     */
+  body: string;
+  /**
+     * Optional short mood tag (e.g. "energized", "anxious", "clear").
+     * @maxLength 32
+     * @nullable
+     */
+  mood?: string | null;
+  /**
+     * Optional bucket tag (e.g. "weekly", "intention", "reflection").
+     * @maxLength 32
+     * @nullable
+     */
+  tag?: string | null;
+}
+
+export interface JournalEntryPatch {
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  title?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 20000
+     */
+  body?: string;
+  /**
+     * @maxLength 32
+     * @nullable
+     */
+  mood?: string | null;
+  /**
+     * @maxLength 32
+     * @nullable
+     */
+  tag?: string | null;
+  /** If true, clears `deletedAt` so the entry leaves the trash. */
+  restore?: boolean;
+}
+
+export interface JournalEntryList {
+  entries: JournalEntry[];
+}
+
+export interface DeleteJournalEntryResult {
+  success: true;
+  deletedId: number;
+}
+
+export interface PostDateNoteInput {
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  matchName?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 20000
+     */
+  whatHappened: string;
+  /** @maxItems 50 */
+  feltGood?: string[];
+  /** @maxItems 50 */
+  feltOff?: string[];
+  /**
+     * @maxLength 80
+     * @nullable
+     */
+  outcome?: string | null;
+  /**
+     * @maxLength 4000
+     * @nullable
+     */
+  patternRead?: string | null;
+  /**
+     * @maxLength 4000
+     * @nullable
+     */
+  coachInsight?: string | null;
+}
+
+export interface PostDateNotePatch {
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  matchName?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 20000
+     */
+  whatHappened?: string;
+  /** @maxItems 50 */
+  feltGood?: string[];
+  /** @maxItems 50 */
+  feltOff?: string[];
+  /**
+     * @maxLength 80
+     * @nullable
+     */
+  outcome?: string | null;
+  /**
+     * @maxLength 4000
+     * @nullable
+     */
+  patternRead?: string | null;
+  /**
+     * @maxLength 4000
+     * @nullable
+     */
+  coachInsight?: string | null;
+  restore?: boolean;
+}
+
+export interface PostDateNoteList {
+  notes: PostDateNote[];
+}
+
+export interface DeletePostDateNoteResult {
+  success: true;
+  deletedId: number;
+}
+
 /**
  * Opaque session token — `Bearer <sid>`.
  */
@@ -1357,6 +1534,37 @@ iss?: string;
 export type UnregisterPushTokenParams = {
 token: string;
 };
+
+export type ListJournalEntriesParams = {
+view?: ListJournalEntriesView;
+/**
+ * Optional case-insensitive substring filter on title + body.
+ */
+q?: string;
+};
+
+export type ListJournalEntriesView = typeof ListJournalEntriesView[keyof typeof ListJournalEntriesView];
+
+
+export const ListJournalEntriesView = {
+  active: 'active',
+  trash: 'trash',
+  all: 'all',
+} as const;
+
+export type ListPostDateNotesParams = {
+view?: ListPostDateNotesView;
+q?: string;
+};
+
+export type ListPostDateNotesView = typeof ListPostDateNotesView[keyof typeof ListPostDateNotesView];
+
+
+export const ListPostDateNotesView = {
+  active: 'active',
+  trash: 'trash',
+  all: 'all',
+} as const;
 
 export type ListAuditsParams = {
 source?: ListAuditsSource;

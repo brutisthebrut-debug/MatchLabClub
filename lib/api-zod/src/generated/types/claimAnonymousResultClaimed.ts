@@ -12,4 +12,6 @@ export type ClaimAnonymousResultClaimed = {
   messages: number;
   insights: number;
   followUps: number;
+  journalEntries: number;
+  postDateNotes: number;
 };

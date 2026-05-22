@@ -17,6 +17,8 @@ import coachFollowUpsRouter from "./coachFollowUps";
 import pushTokensRouter from "./push_tokens";
 import lifePulseRouter from "./lifePulse";
 import mirrorRouter from "./mirror";
+import journalRouter from "./journal";
+import postDateNotesRouter from "./postDateNotes";
 
 const router: IRouter = Router();
 
@@ -38,5 +40,7 @@ router.use(coachFollowUpsRouter);
 router.use(pushTokensRouter);
 router.use(lifePulseRouter);
 router.use(mirrorRouter);
+router.use(journalRouter);
+router.use(postDateNotesRouter);
 
 export default router;

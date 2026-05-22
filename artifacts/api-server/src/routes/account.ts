@@ -11,6 +11,8 @@ import {
   sessionsTable,
   dataExportTokensTable,
   lifePulsesTable,
+  journalEntriesTable,
+  postDateNotesTable,
 } from "@workspace/db";
 import {
   ExportMyDataResponse,
@@ -188,7 +190,7 @@ router.get("/account/summary", async (req, res): Promise<void> => {
 
   const userId = req.user.id;
 
-  const [audits, profiles, messages, insights] = await Promise.all([
+  const [audits, profiles, messages, insights, journalEntries, postDateNotes] = await Promise.all([
     db
       .select({ n: sql<number>`count(*)::int` })
       .from(auditsTable)
@@ -205,10 +207,20 @@ router.get("/account/summary", async (req, res): Promise<void> => {
       .select({ n: sql<number>`count(*)::int` })
       .from(emailInsightsTable)
       .where(eq(emailInsightsTable.userId, userId)),
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(journalEntriesTable)
+      .where(eq(journalEntriesTable.userId, userId)),
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(postDateNotesTable)
+      .where(eq(postDateNotesTable.userId, userId)),
   ]);
 
   res.json(
     GetAccountSummaryResponse.parse({
+      journalEntries: journalEntries[0]?.n ?? 0,
+      postDateNotes: postDateNotes[0]?.n ?? 0,
       audits: audits[0]?.n ?? 0,
       profiles: profiles[0]?.n ?? 0,
       messages: messages[0]?.n ?? 0,
@@ -218,7 +230,7 @@ router.get("/account/summary", async (req, res): Promise<void> => {
 });
 
 async function buildExportPayload(userId: string) {
-  const [userRow, audits, profiles, messages, insights] = await Promise.all([
+  const [userRow, audits, profiles, messages, insights, journalEntries, postDateNotes] = await Promise.all([
     db.select().from(usersTable).where(eq(usersTable.id, userId)),
     db
       .select()
@@ -240,6 +252,16 @@ async function buildExportPayload(userId: string) {
       .from(emailInsightsTable)
       .where(eq(emailInsightsTable.userId, userId))
       .orderBy(emailInsightsTable.createdAt),
+    db
+      .select()
+      .from(journalEntriesTable)
+      .where(eq(journalEntriesTable.userId, userId))
+      .orderBy(journalEntriesTable.createdAt),
+    db
+      .select()
+      .from(postDateNotesTable)
+      .where(eq(postDateNotesTable.userId, userId))
+      .orderBy(postDateNotesTable.createdAt),
   ]);
 
   const u = userRow[0];
@@ -259,6 +281,20 @@ async function buildExportPayload(userId: string) {
     profiles: profiles.map((p) => ({ ...p, createdAt: toIso(p.createdAt) })),
     messages: messages.map((m) => ({ ...m, createdAt: toIso(m.createdAt) })),
     insights: insights.map((i) => ({ ...i, createdAt: toIso(i.createdAt) })),
+    journalEntries: journalEntries.map((j) => ({
+      ...j,
+      createdAt: toIso(j.createdAt),
+      updatedAt: toIso(j.updatedAt),
+      deletedAt: j.deletedAt ? toIso(j.deletedAt) : null,
+    })),
+    postDateNotes: postDateNotes.map((p) => ({
+      ...p,
+      feltGood: p.feltGood ?? [],
+      feltOff: p.feltOff ?? [],
+      createdAt: toIso(p.createdAt),
+      updatedAt: toIso(p.updatedAt),
+      deletedAt: p.deletedAt ? toIso(p.deletedAt) : null,
+    })),
   });
 }
 
@@ -548,6 +584,14 @@ router.delete("/account", async (req, res): Promise<void> => {
   // Wellness self-ratings (Life Pulse) are first-party personal data and must
   // also be hard-deleted when the user closes their account.
   await db.delete(lifePulsesTable).where(eq(lifePulsesTable.userId, userId));
+
+  // Mirror retention surfaces (journal entries + post-date notes) are also
+  // first-party personal reflections and must be hard-deleted, including any
+  // soft-deleted rows still sitting in the user's trash.
+  await Promise.all([
+    db.delete(journalEntriesTable).where(eq(journalEntriesTable.userId, userId)),
+    db.delete(postDateNotesTable).where(eq(postDateNotesTable.userId, userId)),
+  ]);
 
   // Delete every active session belonging to this user (session JSONB
   // payload stores `user.id`).

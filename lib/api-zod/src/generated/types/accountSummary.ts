@@ -11,4 +11,6 @@ export interface AccountSummary {
   profiles: number;
   messages: number;
   insights: number;
+  journalEntries: number;
+  postDateNotes: number;
 }

@@ -60,7 +60,9 @@ import type {
   DatingProfileUpdate,
   DeleteAuditResult,
   DeleteInsightResult,
+  DeleteJournalEntryResult,
   DeleteMyAccountResult,
+  DeletePostDateNoteResult,
   DeleteProfileResult,
   EmailInsight,
   EmailInsightAnalysis,
@@ -77,12 +79,18 @@ import type {
   HandleBrowserLoginCallbackParams,
   HealthStatus,
   InsightsRollup,
+  JournalEntry,
+  JournalEntryInput,
+  JournalEntryList,
+  JournalEntryPatch,
   LifePulse,
   LifePulseInput,
   LifePulseRecent,
   ListAuditReportVersions404,
   ListAuditsParams,
   ListExpiringTrashedAuditsParams,
+  ListJournalEntriesParams,
+  ListPostDateNotesParams,
   LogoutSuccess,
   MessageCoachingInput,
   MessageCoachingResponse,
@@ -91,6 +99,10 @@ import type {
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
   MySessionsResponse,
+  PostDateNote,
+  PostDateNoteInput,
+  PostDateNoteList,
+  PostDateNotePatch,
   ProfileRewrite,
   RedeemAnonymousClaimHandoffInput,
   RefreshGeoipParams,
@@ -1835,6 +1847,614 @@ export function useGetRecentLifePulses<TData = Awaited<ReturnType<typeof getRece
 
 
 
+
+export const getListJournalEntriesUrl = (params?: ListJournalEntriesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/journal?${stringifiedParams}` : `/api/journal`
+}
+
+/**
+ * Returns the current user's (or anonymous-claim-scoped) journal entries.
+Active entries by default. Pass `view=trash` to list soft-deleted
+entries, or `view=all` to include both. Ordered newest first.
+
+ * @summary List journal entries for the current scope
+ */
+export const listJournalEntries = async (params?: ListJournalEntriesParams, options?: RequestInit): Promise<JournalEntryList> => {
+
+  return customFetch<JournalEntryList>(getListJournalEntriesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListJournalEntriesQueryKey = (params?: ListJournalEntriesParams,) => {
+    return [
+    `/api/journal`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListJournalEntriesQueryOptions = <TData = Awaited<ReturnType<typeof listJournalEntries>>, TError = ErrorType<unknown>>(params?: ListJournalEntriesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listJournalEntries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListJournalEntriesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJournalEntries>>> = ({ signal }) => listJournalEntries(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listJournalEntries>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListJournalEntriesQueryResult = NonNullable<Awaited<ReturnType<typeof listJournalEntries>>>
+export type ListJournalEntriesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List journal entries for the current scope
+ */
+
+export function useListJournalEntries<TData = Awaited<ReturnType<typeof listJournalEntries>>, TError = ErrorType<unknown>>(
+ params?: ListJournalEntriesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listJournalEntries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListJournalEntriesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateJournalEntryUrl = () => {
+
+
+
+
+  return `/api/journal`
+}
+
+/**
+ * @summary Create a journal entry
+ */
+export const createJournalEntry = async (journalEntryInput: JournalEntryInput, options?: RequestInit): Promise<JournalEntry> => {
+
+  return customFetch<JournalEntry>(getCreateJournalEntryUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      journalEntryInput,)
+  }
+);}
+
+
+
+
+export const getCreateJournalEntryMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJournalEntry>>, TError,{data: BodyType<JournalEntryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createJournalEntry>>, TError,{data: BodyType<JournalEntryInput>}, TContext> => {
+
+const mutationKey = ['createJournalEntry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createJournalEntry>>, {data: BodyType<JournalEntryInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createJournalEntry(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateJournalEntryMutationResult = NonNullable<Awaited<ReturnType<typeof createJournalEntry>>>
+    export type CreateJournalEntryMutationBody = BodyType<JournalEntryInput>
+    export type CreateJournalEntryMutationError = ErrorType<void>
+
+    /**
+ * @summary Create a journal entry
+ */
+export const useCreateJournalEntry = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJournalEntry>>, TError,{data: BodyType<JournalEntryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createJournalEntry>>,
+        TError,
+        {data: BodyType<JournalEntryInput>},
+        TContext
+      > => {
+      return useMutation(getCreateJournalEntryMutationOptions(options));
+    }
+
+export const getUpdateJournalEntryUrl = (id: number,) => {
+
+
+
+
+  return `/api/journal/${id}`
+}
+
+/**
+ * Partial-update of a journal entry. Pass `restore: true` to clear
+`deletedAt`. Only the entry owner can update.
+
+ * @summary Edit a journal entry (or restore from trash)
+ */
+export const updateJournalEntry = async (id: number,
+    journalEntryPatch: JournalEntryPatch, options?: RequestInit): Promise<JournalEntry> => {
+
+  return customFetch<JournalEntry>(getUpdateJournalEntryUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      journalEntryPatch,)
+  }
+);}
+
+
+
+
+export const getUpdateJournalEntryMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateJournalEntry>>, TError,{id: number;data: BodyType<JournalEntryPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateJournalEntry>>, TError,{id: number;data: BodyType<JournalEntryPatch>}, TContext> => {
+
+const mutationKey = ['updateJournalEntry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateJournalEntry>>, {id: number;data: BodyType<JournalEntryPatch>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateJournalEntry(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateJournalEntryMutationResult = NonNullable<Awaited<ReturnType<typeof updateJournalEntry>>>
+    export type UpdateJournalEntryMutationBody = BodyType<JournalEntryPatch>
+    export type UpdateJournalEntryMutationError = ErrorType<void>
+
+    /**
+ * @summary Edit a journal entry (or restore from trash)
+ */
+export const useUpdateJournalEntry = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateJournalEntry>>, TError,{id: number;data: BodyType<JournalEntryPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateJournalEntry>>,
+        TError,
+        {id: number;data: BodyType<JournalEntryPatch>},
+        TContext
+      > => {
+      return useMutation(getUpdateJournalEntryMutationOptions(options));
+    }
+
+export const getDeleteJournalEntryUrl = (id: number,) => {
+
+
+
+
+  return `/api/journal/${id}`
+}
+
+/**
+ * @summary Soft-delete a journal entry
+ */
+export const deleteJournalEntry = async (id: number, options?: RequestInit): Promise<DeleteJournalEntryResult> => {
+
+  return customFetch<DeleteJournalEntryResult>(getDeleteJournalEntryUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteJournalEntryMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteJournalEntry>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteJournalEntry>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteJournalEntry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteJournalEntry>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteJournalEntry(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteJournalEntryMutationResult = NonNullable<Awaited<ReturnType<typeof deleteJournalEntry>>>
+
+    export type DeleteJournalEntryMutationError = ErrorType<void>
+
+    /**
+ * @summary Soft-delete a journal entry
+ */
+export const useDeleteJournalEntry = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteJournalEntry>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteJournalEntry>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteJournalEntryMutationOptions(options));
+    }
+
+export const getListPostDateNotesUrl = (params?: ListPostDateNotesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/post-date-notes?${stringifiedParams}` : `/api/post-date-notes`
+}
+
+/**
+ * Returns the current user's (or anonymous-claim-scoped) post-date
+notes. Active notes by default. Pass `view=trash` for trashed,
+`view=all` for both. Ordered newest first.
+
+ * @summary List post-date notes for the current scope
+ */
+export const listPostDateNotes = async (params?: ListPostDateNotesParams, options?: RequestInit): Promise<PostDateNoteList> => {
+
+  return customFetch<PostDateNoteList>(getListPostDateNotesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPostDateNotesQueryKey = (params?: ListPostDateNotesParams,) => {
+    return [
+    `/api/post-date-notes`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPostDateNotesQueryOptions = <TData = Awaited<ReturnType<typeof listPostDateNotes>>, TError = ErrorType<unknown>>(params?: ListPostDateNotesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPostDateNotes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPostDateNotesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPostDateNotes>>> = ({ signal }) => listPostDateNotes(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPostDateNotes>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPostDateNotesQueryResult = NonNullable<Awaited<ReturnType<typeof listPostDateNotes>>>
+export type ListPostDateNotesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List post-date notes for the current scope
+ */
+
+export function useListPostDateNotes<TData = Awaited<ReturnType<typeof listPostDateNotes>>, TError = ErrorType<unknown>>(
+ params?: ListPostDateNotesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPostDateNotes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPostDateNotesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreatePostDateNoteUrl = () => {
+
+
+
+
+  return `/api/post-date-notes`
+}
+
+/**
+ * @summary Create (persist) a post-date debrief
+ */
+export const createPostDateNote = async (postDateNoteInput: PostDateNoteInput, options?: RequestInit): Promise<PostDateNote> => {
+
+  return customFetch<PostDateNote>(getCreatePostDateNoteUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      postDateNoteInput,)
+  }
+);}
+
+
+
+
+export const getCreatePostDateNoteMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPostDateNote>>, TError,{data: BodyType<PostDateNoteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPostDateNote>>, TError,{data: BodyType<PostDateNoteInput>}, TContext> => {
+
+const mutationKey = ['createPostDateNote'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPostDateNote>>, {data: BodyType<PostDateNoteInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPostDateNote(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePostDateNoteMutationResult = NonNullable<Awaited<ReturnType<typeof createPostDateNote>>>
+    export type CreatePostDateNoteMutationBody = BodyType<PostDateNoteInput>
+    export type CreatePostDateNoteMutationError = ErrorType<void>
+
+    /**
+ * @summary Create (persist) a post-date debrief
+ */
+export const useCreatePostDateNote = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPostDateNote>>, TError,{data: BodyType<PostDateNoteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPostDateNote>>,
+        TError,
+        {data: BodyType<PostDateNoteInput>},
+        TContext
+      > => {
+      return useMutation(getCreatePostDateNoteMutationOptions(options));
+    }
+
+export const getUpdatePostDateNoteUrl = (id: number,) => {
+
+
+
+
+  return `/api/post-date-notes/${id}`
+}
+
+/**
+ * Partial-update of a post-date note. Pass `restore: true` to clear
+`deletedAt`. Only the note owner can update.
+
+ * @summary Edit a post-date note (or restore from trash)
+ */
+export const updatePostDateNote = async (id: number,
+    postDateNotePatch: PostDateNotePatch, options?: RequestInit): Promise<PostDateNote> => {
+
+  return customFetch<PostDateNote>(getUpdatePostDateNoteUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      postDateNotePatch,)
+  }
+);}
+
+
+
+
+export const getUpdatePostDateNoteMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePostDateNote>>, TError,{id: number;data: BodyType<PostDateNotePatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePostDateNote>>, TError,{id: number;data: BodyType<PostDateNotePatch>}, TContext> => {
+
+const mutationKey = ['updatePostDateNote'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePostDateNote>>, {id: number;data: BodyType<PostDateNotePatch>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updatePostDateNote(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePostDateNoteMutationResult = NonNullable<Awaited<ReturnType<typeof updatePostDateNote>>>
+    export type UpdatePostDateNoteMutationBody = BodyType<PostDateNotePatch>
+    export type UpdatePostDateNoteMutationError = ErrorType<void>
+
+    /**
+ * @summary Edit a post-date note (or restore from trash)
+ */
+export const useUpdatePostDateNote = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePostDateNote>>, TError,{id: number;data: BodyType<PostDateNotePatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePostDateNote>>,
+        TError,
+        {id: number;data: BodyType<PostDateNotePatch>},
+        TContext
+      > => {
+      return useMutation(getUpdatePostDateNoteMutationOptions(options));
+    }
+
+export const getDeletePostDateNoteUrl = (id: number,) => {
+
+
+
+
+  return `/api/post-date-notes/${id}`
+}
+
+/**
+ * @summary Soft-delete a post-date note
+ */
+export const deletePostDateNote = async (id: number, options?: RequestInit): Promise<DeletePostDateNoteResult> => {
+
+  return customFetch<DeletePostDateNoteResult>(getDeletePostDateNoteUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeletePostDateNoteMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePostDateNote>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePostDateNote>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deletePostDateNote'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePostDateNote>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deletePostDateNote(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePostDateNoteMutationResult = NonNullable<Awaited<ReturnType<typeof deletePostDateNote>>>
+
+    export type DeletePostDateNoteMutationError = ErrorType<void>
+
+    /**
+ * @summary Soft-delete a post-date note
+ */
+export const useDeletePostDateNote = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePostDateNote>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePostDateNote>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeletePostDateNoteMutationOptions(options));
+    }
 
 export const getHealthCheckUrl = () => {
 

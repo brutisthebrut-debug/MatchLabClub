@@ -22,3 +22,5 @@ export * from "./geoip_alert_state";
 export * from "./founder_settings";
 export * from "./push_tokens";
 export * from "./life_pulses";
+export * from "./journal_entries";
+export * from "./post_date_notes";

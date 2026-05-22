@@ -12,4 +12,6 @@ export interface ClaimAnonymousInput {
   messageSessionIds?: number[];
   insightIds?: number[];
   followUpIds?: number[];
+  journalEntryIds?: number[];
+  postDateNoteIds?: number[];
 }

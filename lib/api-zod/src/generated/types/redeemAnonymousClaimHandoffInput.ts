@@ -14,4 +14,6 @@ export interface RedeemAnonymousClaimHandoffInput {
   messageSessionIds?: number[];
   insightIds?: number[];
   followUpIds?: number[];
+  journalEntryIds?: number[];
+  postDateNoteIds?: number[];
 }

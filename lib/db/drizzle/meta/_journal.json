@@ -15,6 +15,13 @@
       "when": 1779370860614,
       "tag": "0001_overrated_shatterstar",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779476965707,
+      "tag": "0002_familiar_william_stryker",
+      "breakpoints": true
     }
   ]
 }

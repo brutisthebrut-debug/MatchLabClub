@@ -9,6 +9,8 @@ import {
   coachFollowUpsTable,
   handoffTokenRedemptionsTable,
   lifePulsesTable,
+  journalEntriesTable,
+  postDateNotesTable,
 } from "@workspace/db";
 import {
   ClaimAnonymousDataBody,
@@ -57,6 +59,8 @@ interface ClaimIds {
   messageSessionIds?: number[];
   insightIds?: number[];
   followUpIds?: number[];
+  journalEntryIds?: number[];
+  postDateNoteIds?: number[];
 }
 
 interface ClaimedCounts {
@@ -65,6 +69,8 @@ interface ClaimedCounts {
   messages: number;
   insights: number;
   followUps: number;
+  journalEntries: number;
+  postDateNotes: number;
 }
 
 function dedup(xs: number[] | undefined): number[] {
@@ -91,8 +97,10 @@ async function claimByAnonToken(
   const m = dedup(ids.messageSessionIds);
   const i = dedup(ids.insightIds);
   const f = dedup(ids.followUpIds);
+  const j = dedup(ids.journalEntryIds);
+  const pd = dedup(ids.postDateNoteIds);
 
-  const [audits, profiles, messages, insights, followUps] = await Promise.all([
+  const [audits, profiles, messages, insights, followUps, journalEntries, postDateNotes] = await Promise.all([
     a.length
       ? db
           .update(auditsTable)
@@ -158,6 +166,32 @@ async function claimByAnonToken(
           )
           .returning({ id: coachFollowUpsTable.id })
       : Promise.resolve([]),
+    j.length
+      ? db
+          .update(journalEntriesTable)
+          .set({ userId, anonymousClaimToken: null })
+          .where(
+            and(
+              inArray(journalEntriesTable.id, j),
+              isNull(journalEntriesTable.userId),
+              eq(journalEntriesTable.anonymousClaimToken, anonToken),
+            ),
+          )
+          .returning({ id: journalEntriesTable.id })
+      : Promise.resolve([]),
+    pd.length
+      ? db
+          .update(postDateNotesTable)
+          .set({ userId, anonymousClaimToken: null })
+          .where(
+            and(
+              inArray(postDateNotesTable.id, pd),
+              isNull(postDateNotesTable.userId),
+              eq(postDateNotesTable.anonymousClaimToken, anonToken),
+            ),
+          )
+          .returning({ id: postDateNotesTable.id })
+      : Promise.resolve([]),
   ]);
 
   // Life pulses are not tracked by ID on the client (they're auto-collected
@@ -179,6 +213,8 @@ async function claimByAnonToken(
     messages: messages.length,
     insights: insights.length,
     followUps: followUps.length,
+    journalEntries: journalEntries.length,
+    postDateNotes: postDateNotes.length,
   };
 }
 
@@ -194,13 +230,17 @@ function logIfShortfall(
     dedup(ids.profileIds).length +
     dedup(ids.messageSessionIds).length +
     dedup(ids.insightIds).length +
-    dedup(ids.followUpIds).length;
+    dedup(ids.followUpIds).length +
+    dedup(ids.journalEntryIds).length +
+    dedup(ids.postDateNoteIds).length;
   const claimed =
     counts.audits +
     counts.profiles +
     counts.messages +
     counts.insights +
-    counts.followUps;
+    counts.followUps +
+    counts.journalEntries +
+    counts.postDateNotes;
   if (requested > claimed) {
     req.log.warn(
       { userId, requested, claimed, via },
@@ -271,6 +311,8 @@ router.post("/claim-anonymous", async (req, res): Promise<void> => {
           messages: 0,
           insights: 0,
           followUps: 0,
+          journalEntries: 0,
+          postDateNotes: 0,
         },
       }),
     );
