@@ -111,6 +111,7 @@ export * from './mirrorTrendEngagementWindow';
 export * from './mirrorTrendReport';
 export * from './mirrorTrendScoreDelta';
 export * from './mirrorTrendScoreDeltaDirection';
+export * from './mirrorTrendScorePoint';
 export * from './mirrorTrendSignal';
 export * from './mirrorTrendSignalTone';
 export * from './mirrorTrendTheme';

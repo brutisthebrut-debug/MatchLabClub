@@ -17,9 +17,16 @@ describe("analyzeAuditTrends", () => {
     expect(r.scoreDelta).toEqual({
       first: null,
       latest: null,
+      previous: null,
       delta: 0,
+      currentVsPrevious: 0,
+      rolling30Delta: 0,
       direction: "flat",
     });
+    expect(r.readinessScore).toBe(50);
+    expect(r.scoreHistory).toEqual([]);
+    expect(r.engagementWindow.auditsPerMonth).toBe(0);
+    expect(r.engagementWindow.dormancyGapCount).toBe(0);
     expect(r.engagementWindow.firstAuditAt).toBeNull();
     expect(r.headlineInsight).toMatch(/first audit/i);
     expect(r.engineVersion).toBe(ENGINE_VERSION);

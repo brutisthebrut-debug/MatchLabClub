@@ -17,4 +17,6 @@ export interface MirrorTrendEngagementWindow {
   mostActiveDay: string | null;
   /** @nullable */
   daysSinceLatest: number | null;
+  auditsPerMonth: number;
+  dormancyGapCount: number;
 }

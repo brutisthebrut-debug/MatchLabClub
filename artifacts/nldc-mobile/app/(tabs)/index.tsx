@@ -9,7 +9,9 @@ import {
 import React, { useMemo } from "react";
 import {
   ActivityIndicator,
+  Linking,
   Platform,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -375,7 +377,8 @@ export default function ScoreScreen() {
         </View>
 
         {mirror && mirror.hasEnoughData ? (
-          <View
+          <Pressable
+            onPress={() => openWeb("/your-mirror")}
             style={[
               styles.section,
               { backgroundColor: colors.card, borderColor: colors.cardBorder },
@@ -390,11 +393,41 @@ export default function ScoreScreen() {
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
                 Your Mirror
               </Text>
+              <View style={styles.mirrorOpen}>
+                <Text
+                  style={[
+                    styles.mirrorOpenText,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  Open
+                </Text>
+                <Feather
+                  name="external-link"
+                  size={12}
+                  color={colors.mutedForeground}
+                />
+              </View>
             </View>
             <Text style={[styles.mirrorHeadline, { color: colors.foreground }]}>
               {mirror.headlineInsight}
             </Text>
             <View style={styles.mirrorMetaRow}>
+              <View style={styles.mirrorMetaItem}>
+                <Text
+                  style={[styles.sendStatValue, { color: colors.foreground }]}
+                >
+                  {mirror.readinessScore}
+                </Text>
+                <Text
+                  style={[
+                    styles.sendStatLabel,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  Readiness
+                </Text>
+              </View>
               <View style={styles.mirrorMetaItem}>
                 <Text
                   style={[styles.sendStatValue, { color: colors.foreground }]}
@@ -415,21 +448,6 @@ export default function ScoreScreen() {
                 <Text
                   style={[styles.sendStatValue, { color: colors.foreground }]}
                 >
-                  {mirror.repeatedStrengths.length}
-                </Text>
-                <Text
-                  style={[
-                    styles.sendStatLabel,
-                    { color: colors.mutedForeground },
-                  ]}
-                >
-                  Repeat strengths
-                </Text>
-              </View>
-              <View style={styles.mirrorMetaItem}>
-                <Text
-                  style={[styles.sendStatValue, { color: colors.foreground }]}
-                >
                   {mirror.recurringRisks.length}
                 </Text>
                 <Text
@@ -438,7 +456,7 @@ export default function ScoreScreen() {
                     { color: colors.mutedForeground },
                   ]}
                 >
-                  Recurring risks
+                  Risks to fix
                 </Text>
               </View>
             </View>
@@ -464,7 +482,7 @@ export default function ScoreScreen() {
                 </Text>
               </View>
             ))}
-          </View>
+          </Pressable>
         ) : null}
 
         <View
@@ -627,4 +645,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 2,
   },
+  mirrorOpen: {
+    marginLeft: "auto",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  mirrorOpenText: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
+  },
 });
+
+function openWeb(path: string): void {
+  const domain = process.env.EXPO_PUBLIC_DOMAIN;
+  if (!domain) return;
+  const base = domain.startsWith("http") ? domain : `https://${domain}`;
+  Linking.openURL(`${base}${path}`).catch(() => {
+    /* user dismissed or no handler — no-op */
+  });
+}

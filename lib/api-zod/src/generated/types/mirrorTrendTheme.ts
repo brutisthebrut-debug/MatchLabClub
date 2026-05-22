@@ -10,4 +10,8 @@ export interface MirrorTrendTheme {
   key: string;
   label: string;
   count: number;
+  /** @nullable */
+  firstSeenAuditId: number | null;
+  /** @nullable */
+  lastSeenAuditId: number | null;
 }

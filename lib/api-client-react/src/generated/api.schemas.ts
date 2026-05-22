@@ -1238,6 +1238,10 @@ export interface MirrorTrendTheme {
   key: string;
   label: string;
   count: number;
+  /** @nullable */
+  firstSeenAuditId: number | null;
+  /** @nullable */
+  lastSeenAuditId: number | null;
 }
 
 export type MirrorTrendThemeShiftDirection = typeof MirrorTrendThemeShiftDirection[keyof typeof MirrorTrendThemeShiftDirection];
@@ -1271,7 +1275,11 @@ export interface MirrorTrendScoreDelta {
   first: number | null;
   /** @nullable */
   latest: number | null;
+  /** @nullable */
+  previous: number | null;
   delta: number;
+  currentVsPrevious: number;
+  rolling30Delta: number;
   direction: MirrorTrendScoreDeltaDirection;
 }
 
@@ -1286,6 +1294,15 @@ export interface MirrorTrendEngagementWindow {
   mostActiveDay: string | null;
   /** @nullable */
   daysSinceLatest: number | null;
+  auditsPerMonth: number;
+  dormancyGapCount: number;
+}
+
+export interface MirrorTrendScorePoint {
+  /** @nullable */
+  auditId: number | null;
+  score: number;
+  createdAt: string;
 }
 
 export type MirrorTrendSignalTone = typeof MirrorTrendSignalTone[keyof typeof MirrorTrendSignalTone];
@@ -1312,6 +1329,12 @@ export interface MirrorTrendReport {
   themeShifts: MirrorTrendThemeShift[];
   engagementWindow: MirrorTrendEngagementWindow;
   readinessSignals: MirrorTrendSignal[];
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  readinessScore: number;
+  scoreHistory: MirrorTrendScorePoint[];
   headlineInsight: string;
   engineVersion: string;
 }

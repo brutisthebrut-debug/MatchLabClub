@@ -661,6 +661,7 @@ export function generateEmailInsightAnalysis(params: {
 // ============================================================================
 
 export interface AuditTrendInputAudit {
+  id?: number | null;
   readinessScore: number | null;
   strengths?: string[] | null;
   risks?: string[] | null;
@@ -673,6 +674,8 @@ export interface TrendReportTheme {
   key: string;
   label: string;
   count: number;
+  firstSeenAuditId: number | null;
+  lastSeenAuditId: number | null;
 }
 
 export interface TrendReportThemeShift {
@@ -686,7 +689,10 @@ export interface TrendReportThemeShift {
 export interface TrendReportScoreDelta {
   first: number | null;
   latest: number | null;
+  previous: number | null;
   delta: number;
+  currentVsPrevious: number;
+  rolling30Delta: number;
   direction: "up" | "down" | "flat";
 }
 
@@ -696,11 +702,19 @@ export interface TrendReportEngagement {
   avgGapDays: number | null;
   mostActiveDay: string | null;
   daysSinceLatest: number | null;
+  auditsPerMonth: number;
+  dormancyGapCount: number;
 }
 
 export interface TrendReportSignal {
   label: string;
   tone: "positive" | "watch" | "neutral";
+}
+
+export interface TrendReportScorePoint {
+  auditId: number | null;
+  score: number;
+  createdAt: string;
 }
 
 export interface TrendReport {
@@ -713,6 +727,8 @@ export interface TrendReport {
   themeShifts: TrendReportThemeShift[];
   engagementWindow: TrendReportEngagement;
   readinessSignals: TrendReportSignal[];
+  readinessScore: number;
+  scoreHistory: TrendReportScorePoint[];
   headlineInsight: string;
   engineVersion: string;
 }
@@ -815,23 +831,50 @@ export function analyzeAuditTrends(params: {
 
   const strengthCounts = new Map<string, number>();
   const riskCounts = new Map<string, number>();
+  const strengthFirstSeen = new Map<string, number | null>();
+  const strengthLastSeen = new Map<string, number | null>();
+  const riskFirstSeen = new Map<string, number | null>();
+  const riskLastSeen = new Map<string, number | null>();
   const auditThemes: { strengths: Set<string>; risks: Set<string> }[] = [];
   for (const a of audits) {
+    const auditId = typeof a.id === "number" ? a.id : null;
     const sTags = tagThemes(a.strengths ?? []);
     const rTags = tagThemes(a.risks ?? []);
     auditThemes.push({ strengths: sTags, risks: rTags });
-    for (const k of sTags) strengthCounts.set(k, (strengthCounts.get(k) ?? 0) + 1);
-    for (const k of rTags) riskCounts.set(k, (riskCounts.get(k) ?? 0) + 1);
+    for (const k of sTags) {
+      strengthCounts.set(k, (strengthCounts.get(k) ?? 0) + 1);
+      if (!strengthFirstSeen.has(k)) strengthFirstSeen.set(k, auditId);
+      strengthLastSeen.set(k, auditId);
+    }
+    for (const k of rTags) {
+      riskCounts.set(k, (riskCounts.get(k) ?? 0) + 1);
+      if (!riskFirstSeen.has(k)) riskFirstSeen.set(k, auditId);
+      riskLastSeen.set(k, auditId);
+    }
   }
   const minRepeat = total >= 2 ? 2 : 1;
-  const toList = (m: Map<string, number>): TrendReportTheme[] =>
+  const toList = (
+    m: Map<string, number>,
+    firstSeen: Map<string, number | null>,
+    lastSeen: Map<string, number | null>,
+  ): TrendReportTheme[] =>
     [...m.entries()]
       .filter(([, c]) => c >= minRepeat)
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .slice(0, 5)
-      .map(([key, count]) => ({ key, label: themeLabel(key), count }));
-  const repeatedStrengths = toList(strengthCounts);
-  const recurringRisks = toList(riskCounts);
+      .map(([key, count]) => ({
+        key,
+        label: themeLabel(key),
+        count,
+        firstSeenAuditId: firstSeen.get(key) ?? null,
+        lastSeenAuditId: lastSeen.get(key) ?? null,
+      }));
+  const repeatedStrengths = toList(
+    strengthCounts,
+    strengthFirstSeen,
+    strengthLastSeen,
+  );
+  const recurringRisks = toList(riskCounts, riskFirstSeen, riskLastSeen);
 
   const themeShifts: TrendReportThemeShift[] = [];
   if (audits.length >= 2) {
@@ -867,10 +910,43 @@ export function analyzeAuditTrends(params: {
 
   const firstScore = scored[0]?.readinessScore ?? null;
   const latestScore = scored[scored.length - 1]?.readinessScore ?? null;
+  const previousScore =
+    scored.length >= 2 ? scored[scored.length - 2].readinessScore : null;
   const delta =
     firstScore !== null && latestScore !== null ? latestScore - firstScore : 0;
+  const currentVsPrevious =
+    previousScore !== null && latestScore !== null
+      ? latestScore - previousScore
+      : 0;
+  const cutoff30 = now.getTime() - 30 * 86_400_000;
+  const inWindow30 = scored.filter((a) => Date.parse(a.createdAt) >= cutoff30);
+  const olderBeforeWindow = scored.filter(
+    (a) => Date.parse(a.createdAt) < cutoff30,
+  );
+  const rolling30Delta =
+    inWindow30.length >= 1 && olderBeforeWindow.length >= 1
+      ? inWindow30[inWindow30.length - 1].readinessScore -
+        olderBeforeWindow[olderBeforeWindow.length - 1].readinessScore
+      : inWindow30.length >= 2
+      ? inWindow30[inWindow30.length - 1].readinessScore -
+        inWindow30[0].readinessScore
+      : 0;
   const direction: TrendReportScoreDelta["direction"] =
     delta >= 5 ? "up" : delta <= -5 ? "down" : "flat";
+
+  const auditsPerMonth =
+    spanDays > 0
+      ? Math.round((total / Math.max(spanDays, 1)) * 30 * 10) / 10
+      : total > 0
+      ? total
+      : 0;
+  const dormancyGapCount = gaps.filter((g) => g > 30).length;
+
+  const scoreHistory: TrendReportScorePoint[] = scored.map((a) => ({
+    auditId: typeof a.id === "number" ? a.id : null,
+    score: a.readinessScore,
+    createdAt: a.createdAt,
+  }));
 
   const signals: TrendReportSignal[] = [];
   if (firstScore !== null && latestScore !== null && scored.length >= 2) {
@@ -1007,13 +1083,44 @@ export function analyzeAuditTrends(params: {
     headlineInsight = pieces.join(" ");
   }
 
+  let readinessScore = latestScore ?? 50;
+  readinessScore +=
+    direction === "up" ? 5 : direction === "down" ? -5 : 0;
+  if (params.sendStats && params.sendStats.totalPrompts >= 3) {
+    const rate = params.sendStats.sentCount / params.sendStats.totalPrompts;
+    readinessScore += rate >= 0.6 ? 5 : rate <= 0.25 ? -5 : 0;
+  }
+  if (avgGapDays !== null) {
+    if (avgGapDays <= 14) readinessScore += 3;
+    else if (avgGapDays > 30) readinessScore -= 3;
+  }
+  if (daysSinceLatest !== null && daysSinceLatest > 45 && total >= 2) {
+    readinessScore -= 5;
+  }
+  if (dormancyGapCount >= 2) readinessScore -= 3;
+  if (params.lifePulses && params.lifePulses.length >= 3) {
+    const recent = params.lifePulses.slice(0, 7);
+    const avgHeadspace =
+      recent.reduce((s, p) => s + (p.headspace ?? 0), 0) / recent.length;
+    if (avgHeadspace <= 2.5) readinessScore -= 3;
+  }
+  readinessScore = Math.max(0, Math.min(100, Math.round(readinessScore)));
+
   return {
     hasEnoughData,
     totalAudits: total,
     spanDays,
     repeatedStrengths,
     recurringRisks,
-    scoreDelta: { first: firstScore, latest: latestScore, delta, direction },
+    scoreDelta: {
+      first: firstScore,
+      latest: latestScore,
+      previous: previousScore,
+      delta,
+      currentVsPrevious,
+      rolling30Delta,
+      direction,
+    },
     themeShifts,
     engagementWindow: {
       firstAuditAt,
@@ -1021,8 +1128,12 @@ export function analyzeAuditTrends(params: {
       avgGapDays,
       mostActiveDay,
       daysSinceLatest,
+      auditsPerMonth,
+      dormancyGapCount,
     },
     readinessSignals: signals,
+    readinessScore,
+    scoreHistory,
     headlineInsight,
     engineVersion: ENGINE_VERSION,
   };

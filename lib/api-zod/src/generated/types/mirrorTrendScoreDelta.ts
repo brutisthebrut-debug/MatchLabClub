@@ -12,6 +12,10 @@ export interface MirrorTrendScoreDelta {
   first: number | null;
   /** @nullable */
   latest: number | null;
+  /** @nullable */
+  previous: number | null;
   delta: number;
+  currentVsPrevious: number;
+  rolling30Delta: number;
   direction: MirrorTrendScoreDeltaDirection;
 }

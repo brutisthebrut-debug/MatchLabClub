@@ -3412,7 +3412,7 @@ components:
 
     MirrorTrendTheme:
       type: object
-      required: [key, label, count]
+      required: [key, label, count, firstSeenAuditId, lastSeenAuditId]
       properties:
         key:
           type: string
@@ -3420,6 +3420,10 @@ components:
           type: string
         count:
           type: integer
+        firstSeenAuditId:
+          type: [integer, "null"]
+        lastSeenAuditId:
+          type: [integer, "null"]
 
     MirrorTrendThemeShift:
       type: object
@@ -3439,13 +3443,19 @@ components:
 
     MirrorTrendScoreDelta:
       type: object
-      required: [first, latest, delta, direction]
+      required: [first, latest, previous, delta, currentVsPrevious, rolling30Delta, direction]
       properties:
         first:
           type: [integer, "null"]
         latest:
           type: [integer, "null"]
+        previous:
+          type: [integer, "null"]
         delta:
+          type: integer
+        currentVsPrevious:
+          type: integer
+        rolling30Delta:
           type: integer
         direction:
           type: string
@@ -3453,7 +3463,14 @@ components:
 
     MirrorTrendEngagementWindow:
       type: object
-      required: [firstAuditAt, latestAuditAt, avgGapDays, mostActiveDay, daysSinceLatest]
+      required:
+        - firstAuditAt
+        - latestAuditAt
+        - avgGapDays
+        - mostActiveDay
+        - daysSinceLatest
+        - auditsPerMonth
+        - dormancyGapCount
       properties:
         firstAuditAt:
           type: [string, "null"]
@@ -3467,6 +3484,22 @@ components:
           type: [string, "null"]
         daysSinceLatest:
           type: [integer, "null"]
+        auditsPerMonth:
+          type: number
+        dormancyGapCount:
+          type: integer
+
+    MirrorTrendScorePoint:
+      type: object
+      required: [auditId, score, createdAt]
+      properties:
+        auditId:
+          type: [integer, "null"]
+        score:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
 
     MirrorTrendSignal:
       type: object
@@ -3490,6 +3523,8 @@ components:
         - themeShifts
         - engagementWindow
         - readinessSignals
+        - readinessScore
+        - scoreHistory
         - headlineInsight
         - engineVersion
       properties:
@@ -3519,6 +3554,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MirrorTrendSignal'
+        readinessScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        scoreHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/MirrorTrendScorePoint'
         headlineInsight:
           type: string
         engineVersion:

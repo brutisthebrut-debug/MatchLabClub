@@ -2027,6 +2027,11 @@ in `aiEngine.ts`; no external AI.
 
  * @summary Cross-audit pattern and growth-trend report for the current scope
  */
+export const getMirrorTrendsResponseReadinessScoreMin = 0;
+export const getMirrorTrendsResponseReadinessScoreMax = 100;
+
+
+
 export const GetMirrorTrendsResponse = zod.object({
   "hasEnoughData": zod.boolean(),
   "totalAudits": zod.number(),
@@ -2034,17 +2039,24 @@ export const GetMirrorTrendsResponse = zod.object({
   "repeatedStrengths": zod.array(zod.object({
   "key": zod.string(),
   "label": zod.string(),
-  "count": zod.number()
+  "count": zod.number(),
+  "firstSeenAuditId": zod.number().nullable(),
+  "lastSeenAuditId": zod.number().nullable()
 })),
   "recurringRisks": zod.array(zod.object({
   "key": zod.string(),
   "label": zod.string(),
-  "count": zod.number()
+  "count": zod.number(),
+  "firstSeenAuditId": zod.number().nullable(),
+  "lastSeenAuditId": zod.number().nullable()
 })),
   "scoreDelta": zod.object({
   "first": zod.number().nullable(),
   "latest": zod.number().nullable(),
+  "previous": zod.number().nullable(),
   "delta": zod.number(),
+  "currentVsPrevious": zod.number(),
+  "rolling30Delta": zod.number(),
   "direction": zod.enum(['up', 'down', 'flat'])
 }),
   "themeShifts": zod.array(zod.object({
@@ -2059,11 +2071,19 @@ export const GetMirrorTrendsResponse = zod.object({
   "latestAuditAt": zod.coerce.date().nullable(),
   "avgGapDays": zod.number().nullable(),
   "mostActiveDay": zod.string().nullable(),
-  "daysSinceLatest": zod.number().nullable()
+  "daysSinceLatest": zod.number().nullable(),
+  "auditsPerMonth": zod.number(),
+  "dormancyGapCount": zod.number()
 }),
   "readinessSignals": zod.array(zod.object({
   "label": zod.string(),
   "tone": zod.enum(['positive', 'watch', 'neutral'])
+})),
+  "readinessScore": zod.number().min(getMirrorTrendsResponseReadinessScoreMin).max(getMirrorTrendsResponseReadinessScoreMax),
+  "scoreHistory": zod.array(zod.object({
+  "auditId": zod.number().nullable(),
+  "score": zod.number(),
+  "createdAt": zod.coerce.date()
 })),
   "headlineInsight": zod.string(),
   "engineVersion": zod.string()

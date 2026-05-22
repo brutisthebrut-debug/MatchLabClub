@@ -10,12 +10,59 @@ import {
   CheckCircle2,
   Calendar,
   ArrowUpRight,
+  FileText,
+  Heart,
 } from "lucide-react";
+import {
+  Area,
+  AreaChart,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { useGetMirrorTrends } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+
+function ReadinessGauge({ score }: { score: number }) {
+  const radius = 56;
+  const circ = 2 * Math.PI * radius;
+  const offset = circ - (score / 100) * circ;
+  const tone =
+    score >= 75 ? "hsl(142 55% 60%)" : score >= 50 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
+  return (
+    <div className="relative flex h-32 w-32 items-center justify-center">
+      <svg viewBox="0 0 140 140" className="h-32 w-32 -rotate-90">
+        <circle
+          cx="70"
+          cy="70"
+          r={radius}
+          stroke="hsl(var(--muted))"
+          strokeWidth="10"
+          fill="none"
+        />
+        <circle
+          cx="70"
+          cy="70"
+          r={radius}
+          stroke={tone}
+          strokeWidth="10"
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="font-serif text-3xl font-bold">{score}</span>
+        <span className="text-xs text-muted-foreground">/ 100</span>
+      </div>
+    </div>
+  );
+}
 
 function ScoreDirectionIcon({
   direction,
@@ -93,9 +140,12 @@ export default function YourMirror() {
           <div className="space-y-6">
             <Card data-testid="card-headline" className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
               <CardContent className="py-6">
-                <div className="flex items-start gap-4">
-                  <div className="rounded-xl bg-primary/15 p-3">
-                    <Sparkles className="h-6 w-6 text-primary" />
+                <div className="flex flex-col items-start gap-6 md:flex-row">
+                  <div data-testid="readiness-gauge" className="flex flex-col items-center gap-2">
+                    <ReadinessGauge score={data.readinessScore} />
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Readiness
+                    </p>
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
@@ -111,8 +161,8 @@ export default function YourMirror() {
                         {data.spanDays > 0
                           ? ` across ${data.spanDays} day${data.spanDays === 1 ? "" : "s"}`
                           : ""}
-                        {data.engagementWindow.avgGapDays !== null
-                          ? ` · avg ${data.engagementWindow.avgGapDays.toFixed(1)}-day gap`
+                        {data.engagementWindow.auditsPerMonth > 0
+                          ? ` · ~${data.engagementWindow.auditsPerMonth}/mo`
                           : ""}
                         {data.engagementWindow.mostActiveDay
                           ? ` · most active on ${data.engagementWindow.mostActiveDay}s`
@@ -123,6 +173,117 @@ export default function YourMirror() {
                 </div>
               </CardContent>
             </Card>
+
+            {data.scoreHistory.length >= 2 && (
+              <Card data-testid="card-sparkline">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center justify-between text-base">
+                    <span className="flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-emerald-500" />
+                      Score history
+                    </span>
+                    <span className="text-xs font-normal text-muted-foreground">
+                      latest vs previous:{" "}
+                      {data.scoreDelta.currentVsPrevious > 0 ? "+" : ""}
+                      {data.scoreDelta.currentVsPrevious}
+                      {" · "}30-day:{" "}
+                      {data.scoreDelta.rolling30Delta > 0 ? "+" : ""}
+                      {data.scoreDelta.rolling30Delta}
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-32 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={data.scoreHistory.map((p) => ({
+                          score: p.score,
+                          date: new Date(p.createdAt).toLocaleDateString(
+                            undefined,
+                            { month: "short", day: "numeric" },
+                          ),
+                        }))}
+                        margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+                      >
+                        <defs>
+                          <linearGradient id="mirrorScoreFill" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="hsl(268 52% 68%)" stopOpacity={0.4} />
+                            <stop offset="100%" stopColor="hsl(268 52% 68%)" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis
+                          dataKey="date"
+                          tick={{ fontSize: 11 }}
+                          stroke="hsl(var(--muted-foreground))"
+                        />
+                        <YAxis
+                          domain={[0, 100]}
+                          tick={{ fontSize: 11 }}
+                          stroke="hsl(var(--muted-foreground))"
+                          width={32}
+                        />
+                        <RechartsTooltip
+                          contentStyle={{
+                            background: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: 8,
+                            fontSize: 12,
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="score"
+                          stroke="hsl(268 52% 68%)"
+                          strokeWidth={2}
+                          fill="url(#mirrorScoreFill)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {data.scoreHistory.length > 0 && (
+              <Card data-testid="card-timeline">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Calendar className="h-5 w-5 text-violet-500" />
+                    Growth timeline
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {data.scoreHistory.map((p, i) => (
+                      <Link
+                        key={`pt-${p.auditId ?? i}`}
+                        href={p.auditId ? `/report/${p.auditId}` : "/your-mirror"}
+                      >
+                        <Badge
+                          variant="secondary"
+                          className="cursor-pointer gap-1.5 text-xs"
+                          data-testid={`timeline-chip-${i}`}
+                        >
+                          <FileText className="h-3 w-3" />
+                          {new Date(p.createdAt).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                          <span className="font-mono opacity-75">· {p.score}</span>
+                        </Badge>
+                      </Link>
+                    ))}
+                    {data.engagementWindow.dormancyGapCount > 0 && (
+                      <Badge variant="outline" className="gap-1.5 text-xs">
+                        <Heart className="h-3 w-3" />
+                        {data.engagementWindow.dormancyGapCount} dormancy gap
+                        {data.engagementWindow.dormancyGapCount === 1 ? "" : "s"} &gt;30 days
+                      </Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="grid gap-6 md:grid-cols-3">
               <Card data-testid="card-score-delta">

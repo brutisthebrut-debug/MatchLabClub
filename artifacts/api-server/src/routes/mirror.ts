@@ -75,6 +75,7 @@ router.get("/mirror/trends", async (req, res): Promise<void> => {
         )
       : [];
     return {
+      id: a.id,
       readinessScore: a.readinessScore,
       strengths,
       risks,

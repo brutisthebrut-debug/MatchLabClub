@@ -7,6 +7,7 @@
  */
 import type { MirrorTrendEngagementWindow } from './mirrorTrendEngagementWindow';
 import type { MirrorTrendScoreDelta } from './mirrorTrendScoreDelta';
+import type { MirrorTrendScorePoint } from './mirrorTrendScorePoint';
 import type { MirrorTrendSignal } from './mirrorTrendSignal';
 import type { MirrorTrendTheme } from './mirrorTrendTheme';
 import type { MirrorTrendThemeShift } from './mirrorTrendThemeShift';
@@ -21,6 +22,12 @@ export interface MirrorTrendReport {
   themeShifts: MirrorTrendThemeShift[];
   engagementWindow: MirrorTrendEngagementWindow;
   readinessSignals: MirrorTrendSignal[];
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  readinessScore: number;
+  scoreHistory: MirrorTrendScorePoint[];
   headlineInsight: string;
   engineVersion: string;
 }
