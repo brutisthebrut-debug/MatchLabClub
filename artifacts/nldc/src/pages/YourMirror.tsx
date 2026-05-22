@@ -21,11 +21,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useGetMirrorTrends } from "@workspace/api-client-react";
+import {
+  useGetMirrorTrends,
+  useListJournalEntries,
+  useListPostDateNotes,
+} from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BookOpen } from "lucide-react";
 
 function ReadinessGauge({ score }: { score: number }) {
   const radius = 56;
@@ -83,8 +88,22 @@ function ToneIcon({ tone }: { tone: "positive" | "watch" | "neutral" }) {
   return <Sparkles className="h-4 w-4 text-muted-foreground" />;
 }
 
+function fmtShort(iso: string): string {
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  } catch {
+    return "";
+  }
+}
+
 export default function YourMirror() {
   const { data, isLoading, isError } = useGetMirrorTrends();
+  const { data: journalData } = useListJournalEntries({ view: "active", limit: 3 });
+  const { data: notesData } = useListPostDateNotes({ view: "active", limit: 3 });
+  const recentReflections = journalData?.entries ?? [];
+  const recentDates = notesData?.notes ?? [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -478,6 +497,111 @@ export default function YourMirror() {
                 </CardContent>
               </Card>
             )}
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card data-testid="card-recent-reflections">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center justify-between gap-2 text-base">
+                    <span className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5 text-violet-500" />
+                      Recent reflections
+                    </span>
+                    <Link
+                      href="/mirror/journal"
+                      className="text-xs font-medium text-violet-500 hover:text-violet-400"
+                      data-testid="link-all-journal"
+                    >
+                      View all →
+                    </Link>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {recentReflections.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No reflections yet. Build a{" "}
+                      <Link href="/copilot/weekly-plan" className="text-violet-400 underline-offset-2 hover:underline">
+                        Weekly Growth Plan
+                      </Link>{" "}
+                      to start your journal.
+                    </p>
+                  ) : (
+                    <ul className="space-y-3">
+                      {recentReflections.map((e) => (
+                        <li
+                          key={e.id}
+                          data-testid={`row-recent-journal-${e.id}`}
+                          className="rounded-lg border bg-card/40 p-3"
+                        >
+                          <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <span>{fmtShort(e.createdAt)}</span>
+                            {e.tags?.slice(0, 2).map((t) => (
+                              <Badge key={t} variant="secondary" className="text-[10px]">
+                                {t}
+                              </Badge>
+                            ))}
+                          </div>
+                          {e.prompt ? (
+                            <p className="text-xs font-semibold text-foreground line-clamp-1">
+                              {e.prompt}
+                            </p>
+                          ) : null}
+                          <p className="line-clamp-2 text-xs text-muted-foreground">{e.body}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card data-testid="card-last-dates">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center justify-between gap-2 text-base">
+                    <span className="flex items-center gap-2">
+                      <Heart className="h-5 w-5 text-rose-500" />
+                      Last 3 dates
+                    </span>
+                    <Link
+                      href="/mirror/dates"
+                      className="text-xs font-medium text-rose-500 hover:text-rose-400"
+                      data-testid="link-all-dates"
+                    >
+                      View all →
+                    </Link>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {recentDates.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No post-date notes yet. After your next date, run a{" "}
+                      <Link href="/copilot/debrief" className="text-rose-400 underline-offset-2 hover:underline">
+                        Debrief
+                      </Link>{" "}
+                      to capture what happened.
+                    </p>
+                  ) : (
+                    <ul className="space-y-3">
+                      {recentDates.map((n) => (
+                        <li
+                          key={n.id}
+                          data-testid={`row-recent-date-${n.id}`}
+                          className="rounded-lg border bg-card/40 p-3"
+                        >
+                          <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <span>{fmtShort(n.dateAt ?? n.createdAt)}</span>
+                            {n.personLabel ? (
+                              <Badge variant="secondary" className="text-[10px]">
+                                {n.personLabel}
+                              </Badge>
+                            ) : null}
+                          </div>
+                          <p className="line-clamp-2 text-xs text-muted-foreground">{n.summary}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
 
             <Card className="bg-muted/30">
               <CardContent className="flex flex-col items-start gap-4 py-6 md:flex-row md:items-center md:justify-between">

@@ -166,6 +166,8 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="audit/[id]" options={{ title: "Mini-report" }} />
         <Stack.Screen name="trash" options={{ title: "Recently deleted" }} />
+        <Stack.Screen name="journal" options={{ title: "Your journal" }} />
+        <Stack.Screen name="dates" options={{ title: "Post-date notes" }} />
         <Stack.Screen
           name="sessions"
           options={{ title: "Devices & sign-ins" }}

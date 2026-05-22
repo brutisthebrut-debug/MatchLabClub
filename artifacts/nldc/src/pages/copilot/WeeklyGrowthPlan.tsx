@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEnhanceAi } from "@workspace/api-client-react";
+import { useEnhanceAi, useCreateJournalEntry } from "@workspace/api-client-react";
 import { BarChart2, CheckCircle2, Circle, Loader2, Sparkles, RefreshCw, ArrowLeft } from "lucide-react";
 
 const fadeUp = (delay = 0) => ({
@@ -97,6 +97,21 @@ export default function WeeklyGrowthPlan() {
   const [plan,      setPlan]      = useState<WeeklyPlan | null>(null);
   const [step,      setStep]      = useState(0);
   const enhance = useEnhanceAi();
+  const createJournal = useCreateJournalEntry();
+  const savedRef = useRef(false);
+
+  function serializePlan(p: WeeklyPlan, f: string, w: string, c: string): string {
+    const lines: string[] = [`Weekly Growth Plan — Week of ${p.weekOf}`];
+    if (f) lines.push(`Focus: ${f}`);
+    if (w.trim()) lines.push(`Recent win: ${w.trim()}`);
+    if (c.trim()) lines.push(`Current challenge: ${c.trim()}`);
+    lines.push("", "Actions:");
+    p.actions.forEach((a, i) => {
+      lines.push(`${i + 1}. ${a.action}${a.tool ? ` — ${a.tool}` : ""}`);
+    });
+    lines.push("", `Wingman note: ${p.wingmanNote}`);
+    return lines.join("\n").slice(0, 20000);
+  }
 
   useEffect(() => {
     const saved = loadPlan();
@@ -115,6 +130,19 @@ export default function WeeklyGrowthPlan() {
   function handleGenerate() {
     const fb = buildFallback(focus, wins, challenge);
     setPlan(fb); savePlan(fb); setStep(1);
+    if (!savedRef.current) {
+      savedRef.current = true;
+      createJournal.mutate(
+        {
+          data: {
+            prompt: `Weekly Growth Plan — ${fb.weekOf}`,
+            body: serializePlan(fb, focus, wins, challenge),
+            tags: ["weekly"],
+          },
+        },
+        { onError: () => { savedRef.current = false; } },
+      );
+    }
     const prompt = [
       focus      && `Focus area this week: ${focus}`,
       wins.trim()      && `Recent win: ${wins}`,
@@ -130,7 +158,7 @@ export default function WeeklyGrowthPlan() {
     });
   }
 
-  function reset() { setPlan(null); setFocus(""); setWins(""); setChallenge(""); setStep(0); enhance.reset(); localStorage.removeItem(STORAGE_KEY); }
+  function reset() { setPlan(null); setFocus(""); setWins(""); setChallenge(""); setStep(0); enhance.reset(); localStorage.removeItem(STORAGE_KEY); savedRef.current = false; }
 
   const doneCount = plan?.actions.filter(a => a.done).length ?? 0;
 

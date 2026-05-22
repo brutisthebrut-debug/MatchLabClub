@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEnhanceAi } from "@workspace/api-client-react";
+import {
+  useEnhanceAi,
+  useCreatePostDateNote,
+  PostDateOutcome,
+} from "@workspace/api-client-react";
 import { Heart, Loader2, Sparkles, RefreshCw, ArrowLeft, ArrowRight } from "lucide-react";
 
 const fadeUp = (delay = 0) => ({
@@ -86,6 +90,16 @@ export default function DebriefWhatHappened() {
   const [result,   setResult]   = useState<DebriefResult | null>(null);
   const [step,     setStep]     = useState(0);
   const enhance = useEnhanceAi();
+  const createNote = useCreatePostDateNote();
+  const savedRef = useRef(false);
+
+  function mapOutcome(o: string): PostDateOutcome | undefined {
+    if (!o) return undefined;
+    if (o.includes("continuing")) return PostDateOutcome.another_date;
+    if (o.includes("they ended")) return PostDateOutcome.ghosted;
+    if (o.includes("ended it") || o.includes("fizzled")) return PostDateOutcome.no_more;
+    return PostDateOutcome.unsure;
+  }
 
   function toggleChip(arr: string[], setArr: (a: string[]) => void, v: string) {
     setArr(arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]);
@@ -95,6 +109,22 @@ export default function DebriefWhatHappened() {
     const fb = buildFallback(what, feltGood, feltOff, outcome);
     setResult(fb);
     setStep(1);
+    if (!savedRef.current) {
+      savedRef.current = true;
+      const summary = what.trim() || "Debrief captured from chip selections.";
+      const mappedOutcome = mapOutcome(outcome);
+      createNote.mutate(
+        {
+          data: {
+            summary: summary.slice(0, 20000),
+            whatWentWell: feltGood.join(", ").slice(0, 20000),
+            whatDidnt: feltOff.join(", ").slice(0, 20000),
+            ...(mappedOutcome ? { outcome: mappedOutcome } : {}),
+          },
+        },
+        { onError: () => { savedRef.current = false; } },
+      );
+    }
     const prompt = [
       what.trim()         && `What happened:\n${what}`,
       feltGood.length > 0 && `What felt good: ${feltGood.join(", ")}`,
@@ -107,7 +137,7 @@ export default function DebriefWhatHappened() {
     });
   }
 
-  function reset() { setResult(null); setWhat(""); setFeltGood([]); setFeltOff([]); setOutcome(""); setStep(0); enhance.reset(); }
+  function reset() { setResult(null); setWhat(""); setFeltGood([]); setFeltOff([]); setOutcome(""); setStep(0); enhance.reset(); savedRef.current = false; }
 
   const show = result ?? buildFallback("", [], [], "");
   const canGenerate = what.trim().length > 0 || feltGood.length > 0 || feltOff.length > 0;

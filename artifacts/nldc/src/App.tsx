@@ -70,6 +70,8 @@ import Feedback from "@/pages/Feedback";
 import SampleReport from "@/pages/SampleReport";
 import Scan from "@/pages/Scan";
 import Trash from "@/pages/Trash";
+import JournalPage from "@/pages/mirror/JournalPage";
+import DatesPage from "@/pages/mirror/DatesPage";
 
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 
@@ -110,6 +112,8 @@ function Router() {
       <Route path="/blueprint" component={Blueprint} />
       <Route path="/mirror" component={MirrorProfile} />
       <Route path="/your-mirror" component={YourMirror} />
+      <Route path="/mirror/journal" component={JournalPage} />
+      <Route path="/mirror/dates" component={DatesPage} />
       <Route path="/archetype" component={Archetype} />
       <Route path="/reflection" component={Reflection} />
       <Route path="/profile-reader" component={ProfileReader} />

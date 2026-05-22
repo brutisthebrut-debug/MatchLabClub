@@ -5,7 +5,12 @@ import {
   useGetAuditSummary,
   useGetCoachFollowUpStats,
   useGetMirrorTrends,
+  useListJournalEntries,
+  useListPostDateNotes,
+  getListJournalEntriesQueryKey,
+  getListPostDateNotesQueryKey,
 } from "@workspace/api-client-react";
+import { useRouter, type Href } from "expo-router";
 import React, { useMemo } from "react";
 import {
   ActivityIndicator,
@@ -104,6 +109,25 @@ export default function ScoreScreen() {
   const { data: mirror } = useGetMirrorTrends({
     query: { queryKey: mirrorTrendsQueryKey, enabled: isAuthenticated },
   });
+  const router = useRouter();
+  const journalParams = useMemo(() => ({ view: "active" as const, limit: 3 }), []);
+  const journalKey = useMemo(
+    () => getListJournalEntriesQueryKey(journalParams),
+    [journalParams],
+  );
+  const { data: journalList } = useListJournalEntries(journalParams, {
+    query: { queryKey: journalKey, enabled: isAuthenticated },
+  });
+  const datesParams = useMemo(() => ({ view: "active" as const, limit: 3 }), []);
+  const datesKey = useMemo(
+    () => getListPostDateNotesQueryKey(datesParams),
+    [datesParams],
+  );
+  const { data: datesList } = useListPostDateNotes(datesParams, {
+    query: { queryKey: datesKey, enabled: isAuthenticated },
+  });
+  const recentReflections = journalList?.entries ?? [];
+  const recentDates = datesList?.notes ?? [];
 
   const sendThroughRate =
     sendStats && sendStats.totalPrompts > 0
@@ -484,6 +508,117 @@ export default function ScoreScreen() {
             ))}
           </Pressable>
         ) : null}
+
+        <Pressable
+          testID="card-recent-reflections"
+          onPress={() => router.push("/journal" as Href)}
+          style={[
+            styles.section,
+            { backgroundColor: colors.card, borderColor: colors.cardBorder },
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <View
+              style={[styles.iconBubble, { backgroundColor: `${colors.gold}22` }]}
+            >
+              <Feather name="book-open" size={16} color={colors.gold} />
+            </View>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+              Recent reflections
+            </Text>
+            <View style={styles.mirrorOpen}>
+              <Text
+                style={[
+                  styles.mirrorOpenText,
+                  { color: colors.mutedForeground },
+                ]}
+              >
+                View all
+              </Text>
+              <Feather
+                name="chevron-right"
+                size={14}
+                color={colors.mutedForeground}
+              />
+            </View>
+          </View>
+          {recentReflections.length === 0 ? (
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+              Build a Weekly Growth Plan on the web to start your journal.
+            </Text>
+          ) : (
+            recentReflections.map((e) => (
+              <View key={e.id} style={styles.item} testID={`row-recent-journal-${e.id}`}>
+                <View
+                  style={[styles.bullet, { backgroundColor: colors.gold }]}
+                />
+                <Text
+                  style={[styles.itemText, { color: colors.foreground }]}
+                  numberOfLines={2}
+                >
+                  {e.prompt ? `${e.prompt} — ` : ""}
+                  {e.body}
+                </Text>
+              </View>
+            ))
+          )}
+        </Pressable>
+
+        <Pressable
+          testID="card-last-dates"
+          onPress={() => router.push("/dates" as Href)}
+          style={[
+            styles.section,
+            { backgroundColor: colors.card, borderColor: colors.cardBorder },
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <View
+              style={[styles.iconBubble, { backgroundColor: `${colors.rose}22` }]}
+            >
+              <Feather name="heart" size={16} color={colors.rose} />
+            </View>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+              Last 3 dates
+            </Text>
+            <View style={styles.mirrorOpen}>
+              <Text
+                style={[
+                  styles.mirrorOpenText,
+                  { color: colors.mutedForeground },
+                ]}
+              >
+                View all
+              </Text>
+              <Feather
+                name="chevron-right"
+                size={14}
+                color={colors.mutedForeground}
+              />
+            </View>
+          </View>
+          {recentDates.length === 0 ? (
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+              Run a Debrief on the web after your next date to capture what
+              happened.
+            </Text>
+          ) : (
+            recentDates.map((n) => (
+              <View key={n.id} style={styles.item} testID={`row-recent-date-${n.id}`}>
+                <View
+                  style={[styles.bullet, { backgroundColor: colors.rose }]}
+                />
+                <Text
+                  style={[styles.itemText, { color: colors.foreground }]}
+                  numberOfLines={2}
+                >
+                  {n.personLabel ? `${n.personLabel} — ` : ""}
+                  {n.summary}
+                </Text>
+              </View>
+            ))
+          )}
+        </Pressable>
 
         <View
           style={[
