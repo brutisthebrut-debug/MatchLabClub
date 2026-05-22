@@ -117,8 +117,8 @@ const TIERS = [
     badge: "Launch Cohort Deal",
     desc: "Everything in The Dating Reset — plus a real human coach in your corner, every week.",
     cta: "Join the Wingman Club",
-    href: "/waitlist",
-    nextStep: "→ Join the waitlist · invited in cohort order · today's price locks in for life",
+    href: "/checkout/wingman",
+    nextStep: "→ Reserve your cohort spot · today's launch price locks in for life",
     accentColor: "hsl(43 65% 65%)",
     icon: Heart,
     features: [

@@ -298,7 +298,8 @@ function ShareReportBtn() {
   return (
     <button
       onClick={() => {
-        navigator.clipboard.writeText(window.location.href).catch(() => {});
+        const href = typeof window !== "undefined" ? window.location.href : "";
+        navigator.clipboard.writeText(href).catch(() => {});
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }}
