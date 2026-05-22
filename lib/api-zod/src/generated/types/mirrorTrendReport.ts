@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { MirrorTrendEngagementWindow } from './mirrorTrendEngagementWindow';
+import type { MirrorTrendJournalingStreak } from './mirrorTrendJournalingStreak';
+import type { MirrorTrendMoodTrend } from './mirrorTrendMoodTrend';
+import type { MirrorTrendOutcomeStreak } from './mirrorTrendOutcomeStreak';
 import type { MirrorTrendScoreDelta } from './mirrorTrendScoreDelta';
 import type { MirrorTrendScorePoint } from './mirrorTrendScorePoint';
 import type { MirrorTrendSignal } from './mirrorTrendSignal';
@@ -29,5 +32,8 @@ export interface MirrorTrendReport {
   readinessScore: number;
   scoreHistory: MirrorTrendScorePoint[];
   headlineInsight: string;
+  outcomeStreak: MirrorTrendOutcomeStreak;
+  journalingStreak: MirrorTrendJournalingStreak;
+  moodTrend: MirrorTrendMoodTrend;
   engineVersion: string;
 }

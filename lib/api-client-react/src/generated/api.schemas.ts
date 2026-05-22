@@ -1380,6 +1380,51 @@ export interface MirrorTrendSignal {
   tone: MirrorTrendSignalTone;
 }
 
+export interface MirrorTrendOutcomeStreak {
+  /**
+     * Consecutive most-recent post-date notes whose outcome is "another_date".
+     * @minimum 0
+     */
+  positiveStreak: number;
+  /**
+     * Most recent recorded outcome, or null if no notes have one.
+     * @nullable
+     */
+  latestOutcome: string | null;
+  /** @minimum 0 */
+  totalWithOutcome: number;
+}
+
+export interface MirrorTrendJournalingStreak {
+  /** @minimum 0 */
+  currentStreakDays: number;
+  /**
+     * @minimum 0
+     * @maximum 14
+     */
+  daysInLast14: number;
+  /** @minimum 0 */
+  totalEntries: number;
+}
+
+export type MirrorTrendMoodTrendDirection = typeof MirrorTrendMoodTrendDirection[keyof typeof MirrorTrendMoodTrendDirection];
+
+
+export const MirrorTrendMoodTrendDirection = {
+  rising: 'rising',
+  falling: 'falling',
+  steady: 'steady',
+  unknown: 'unknown',
+} as const;
+
+export interface MirrorTrendMoodTrend {
+  /** @minimum 0 */
+  recentCount: number;
+  /** @nullable */
+  averageMood: number | null;
+  direction: MirrorTrendMoodTrendDirection;
+}
+
 export interface MirrorTrendReport {
   hasEnoughData: boolean;
   totalAudits: number;
@@ -1397,6 +1442,9 @@ export interface MirrorTrendReport {
   readinessScore: number;
   scoreHistory: MirrorTrendScorePoint[];
   headlineInsight: string;
+  outcomeStreak: MirrorTrendOutcomeStreak;
+  journalingStreak: MirrorTrendJournalingStreak;
+  moodTrend: MirrorTrendMoodTrend;
   engineVersion: string;
 }
 

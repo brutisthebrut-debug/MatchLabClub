@@ -188,6 +188,102 @@ describe("analyzeAuditTrends", () => {
     expect(r.readinessSignals.some((s) => s.tone === "positive" && /lift/.test(s.label))).toBe(true);
   });
 
+  it("Fixture 7 — journals + dated outcomes power streak, mood and outcome signals", () => {
+    const r = analyzeAuditTrends({
+      audits: [
+        {
+          readinessScore: 70,
+          strengths: ["Genuine warmth"],
+          risks: ["Opener could be sharper"],
+          createdAt: daysAgo(14),
+        },
+        {
+          readinessScore: 78,
+          strengths: ["Specific bio detail"],
+          risks: ["Photo selection"],
+          createdAt: daysAgo(2),
+        },
+      ],
+      journalEntries: [
+        { createdAt: daysAgo(0), mood: 5 },
+        { createdAt: daysAgo(1), mood: 4 },
+        { createdAt: daysAgo(2), mood: 4 },
+        { createdAt: daysAgo(3), mood: 5 },
+        { createdAt: daysAgo(20), mood: 2 },
+        { createdAt: daysAgo(25), mood: 3 },
+      ],
+      postDateNotes: [
+        { dateAt: daysAgo(1), createdAt: daysAgo(1), outcome: "another_date" },
+        { dateAt: daysAgo(5), createdAt: daysAgo(5), outcome: "another_date" },
+        { dateAt: daysAgo(12), createdAt: daysAgo(12), outcome: "no_more" },
+      ],
+      now: NOW,
+    });
+    expect(r.journalingStreak.currentStreakDays).toBe(4);
+    expect(r.journalingStreak.daysInLast14).toBe(4);
+    expect(r.journalingStreak.totalEntries).toBe(6);
+    expect(r.moodTrend.recentCount).toBe(4);
+    expect(r.moodTrend.averageMood).toBe(4.5);
+    expect(r.moodTrend.direction).toBe("rising");
+    expect(r.outcomeStreak.positiveStreak).toBe(2);
+    expect(r.outcomeStreak.latestOutcome).toBe("another_date");
+    expect(r.outcomeStreak.totalWithOutcome).toBe(3);
+    expect(
+      r.readinessSignals.some(
+        (s) => s.tone === "positive" && /Journaling 4 days/.test(s.label),
+      ),
+    ).toBe(true);
+    expect(
+      r.readinessSignals.some(
+        (s) => s.tone === "positive" && /Mood is trending up/.test(s.label),
+      ),
+    ).toBe(true);
+    expect(
+      r.readinessSignals.some(
+        (s) => s.tone === "positive" && /2 dates in a row/.test(s.label),
+      ),
+    ).toBe(true);
+  });
+
+  it("clamps daysInLast14 to 14 when journaling every day across the boundary (regression)", () => {
+    const entries = Array.from({ length: 20 }, (_, i) => ({
+      createdAt: daysAgo(i),
+      mood: 4,
+    }));
+    const r = analyzeAuditTrends({
+      audits: [],
+      journalEntries: entries,
+      now: NOW,
+    });
+    expect(r.journalingStreak.daysInLast14).toBeLessThanOrEqual(14);
+    expect(r.journalingStreak.daysInLast14).toBe(14);
+    expect(r.journalingStreak.currentStreakDays).toBe(20);
+  });
+
+  it("Fixture 8 — empty journals + notes leave new fields in safe defaults", () => {
+    const r = analyzeAuditTrends({
+      audits: [],
+      journalEntries: [],
+      postDateNotes: [],
+      now: NOW,
+    });
+    expect(r.journalingStreak).toEqual({
+      currentStreakDays: 0,
+      daysInLast14: 0,
+      totalEntries: 0,
+    });
+    expect(r.outcomeStreak).toEqual({
+      positiveStreak: 0,
+      latestOutcome: null,
+      totalWithOutcome: 0,
+    });
+    expect(r.moodTrend).toEqual({
+      recentCount: 0,
+      averageMood: null,
+      direction: "unknown",
+    });
+  });
+
   it("treats invalid createdAt timestamps as no-ops without throwing", () => {
     const r = analyzeAuditTrends({
       audits: [

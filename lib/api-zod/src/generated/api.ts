@@ -2480,6 +2480,19 @@ in `aiEngine.ts`; no external AI.
 export const getMirrorTrendsResponseReadinessScoreMin = 0;
 export const getMirrorTrendsResponseReadinessScoreMax = 100;
 
+export const getMirrorTrendsResponseOutcomeStreakPositiveStreakMin = 0;
+
+export const getMirrorTrendsResponseOutcomeStreakTotalWithOutcomeMin = 0;
+
+export const getMirrorTrendsResponseJournalingStreakCurrentStreakDaysMin = 0;
+
+export const getMirrorTrendsResponseJournalingStreakDaysInLast14Min = 0;
+export const getMirrorTrendsResponseJournalingStreakDaysInLast14Max = 14;
+
+export const getMirrorTrendsResponseJournalingStreakTotalEntriesMin = 0;
+
+export const getMirrorTrendsResponseMoodTrendRecentCountMin = 0;
+
 
 
 export const GetMirrorTrendsResponse = zod.object({
@@ -2536,6 +2549,21 @@ export const GetMirrorTrendsResponse = zod.object({
   "createdAt": zod.coerce.date()
 })),
   "headlineInsight": zod.string(),
+  "outcomeStreak": zod.object({
+  "positiveStreak": zod.number().min(getMirrorTrendsResponseOutcomeStreakPositiveStreakMin).describe('Consecutive most-recent post-date notes whose outcome is \"another_date\".'),
+  "latestOutcome": zod.string().nullable().describe('Most recent recorded outcome, or null if no notes have one.'),
+  "totalWithOutcome": zod.number().min(getMirrorTrendsResponseOutcomeStreakTotalWithOutcomeMin)
+}),
+  "journalingStreak": zod.object({
+  "currentStreakDays": zod.number().min(getMirrorTrendsResponseJournalingStreakCurrentStreakDaysMin),
+  "daysInLast14": zod.number().min(getMirrorTrendsResponseJournalingStreakDaysInLast14Min).max(getMirrorTrendsResponseJournalingStreakDaysInLast14Max),
+  "totalEntries": zod.number().min(getMirrorTrendsResponseJournalingStreakTotalEntriesMin)
+}),
+  "moodTrend": zod.object({
+  "recentCount": zod.number().min(getMirrorTrendsResponseMoodTrendRecentCountMin),
+  "averageMood": zod.number().nullable(),
+  "direction": zod.enum(['rising', 'falling', 'steady', 'unknown'])
+}),
   "engineVersion": zod.string()
 })
 

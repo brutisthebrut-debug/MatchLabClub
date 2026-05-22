@@ -3905,6 +3905,9 @@ components:
         - readinessSignals
         - readinessScore
         - scoreHistory
+        - outcomeStreak
+        - journalingStreak
+        - moodTrend
         - headlineInsight
         - engineVersion
       properties:
@@ -3944,8 +3947,57 @@ components:
             $ref: '#/components/schemas/MirrorTrendScorePoint'
         headlineInsight:
           type: string
+        outcomeStreak:
+          $ref: '#/components/schemas/MirrorTrendOutcomeStreak'
+        journalingStreak:
+          $ref: '#/components/schemas/MirrorTrendJournalingStreak'
+        moodTrend:
+          $ref: '#/components/schemas/MirrorTrendMoodTrend'
         engineVersion:
           type: string
+
+    MirrorTrendOutcomeStreak:
+      type: object
+      required: [positiveStreak, latestOutcome, totalWithOutcome]
+      properties:
+        positiveStreak:
+          type: integer
+          minimum: 0
+          description: Consecutive most-recent post-date notes whose outcome is "another_date".
+        latestOutcome:
+          type: [string, "null"]
+          description: Most recent recorded outcome, or null if no notes have one.
+        totalWithOutcome:
+          type: integer
+          minimum: 0
+
+    MirrorTrendJournalingStreak:
+      type: object
+      required: [currentStreakDays, daysInLast14, totalEntries]
+      properties:
+        currentStreakDays:
+          type: integer
+          minimum: 0
+        daysInLast14:
+          type: integer
+          minimum: 0
+          maximum: 14
+        totalEntries:
+          type: integer
+          minimum: 0
+
+    MirrorTrendMoodTrend:
+      type: object
+      required: [recentCount, averageMood, direction]
+      properties:
+        recentCount:
+          type: integer
+          minimum: 0
+        averageMood:
+          type: [number, "null"]
+        direction:
+          type: string
+          enum: [rising, falling, steady, unknown]
 
     PostDateOutcome:
       type: string

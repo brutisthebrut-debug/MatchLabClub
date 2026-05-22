@@ -5,6 +5,8 @@ import {
   auditsTable,
   coachFollowUpsTable,
   lifePulsesTable,
+  journalEntriesTable,
+  postDateNotesTable,
 } from "@workspace/db";
 import { GetMirrorTrendsResponse } from "@workspace/api-zod";
 import {
@@ -50,6 +52,30 @@ function followUpScope(req: Request): SQL {
     return and(
       isNull(coachFollowUpsTable.userId),
       eq(coachFollowUpsTable.anonymousClaimToken, anon),
+    ) as SQL;
+  }
+  return sql`false`;
+}
+
+function journalScope(req: Request): SQL {
+  if (req.user?.id) return eq(journalEntriesTable.userId, req.user.id);
+  const anon = getAnonClaimToken(req);
+  if (anon) {
+    return and(
+      isNull(journalEntriesTable.userId),
+      eq(journalEntriesTable.anonymousClaimToken, anon),
+    ) as SQL;
+  }
+  return sql`false`;
+}
+
+function postDateScope(req: Request): SQL {
+  if (req.user?.id) return eq(postDateNotesTable.userId, req.user.id);
+  const anon = getAnonClaimToken(req);
+  if (anon) {
+    return and(
+      isNull(postDateNotesTable.userId),
+      eq(postDateNotesTable.anonymousClaimToken, anon),
     ) as SQL;
   }
   return sql`false`;
@@ -117,10 +143,49 @@ router.get("/mirror/trends", async (req, res): Promise<void> => {
         : String(p.createdAt),
   }));
 
+  const journalRows = await db
+    .select({
+      createdAt: journalEntriesTable.createdAt,
+      mood: journalEntriesTable.mood,
+    })
+    .from(journalEntriesTable)
+    .where(and(journalScope(req), isNull(journalEntriesTable.deletedAt)));
+  const journalEntries = journalRows.map((j) => ({
+    createdAt:
+      j.createdAt instanceof Date
+        ? j.createdAt.toISOString()
+        : String(j.createdAt),
+    mood: j.mood ?? null,
+  }));
+
+  const postDateRows = await db
+    .select({
+      dateAt: postDateNotesTable.dateAt,
+      createdAt: postDateNotesTable.createdAt,
+      outcome: postDateNotesTable.outcome,
+    })
+    .from(postDateNotesTable)
+    .where(and(postDateScope(req), isNull(postDateNotesTable.deletedAt)));
+  const postDateNotes = postDateRows.map((n) => ({
+    dateAt:
+      n.dateAt instanceof Date
+        ? n.dateAt.toISOString()
+        : n.dateAt
+          ? String(n.dateAt)
+          : null,
+    createdAt:
+      n.createdAt instanceof Date
+        ? n.createdAt.toISOString()
+        : String(n.createdAt),
+    outcome: n.outcome ?? null,
+  }));
+
   const report = analyzeAuditTrends({
     audits: inputs,
     sendStats,
     lifePulses,
+    journalEntries,
+    postDateNotes,
   });
 
   res.json(GetMirrorTrendsResponse.parse(report));

@@ -4,7 +4,7 @@
 // Bump this string whenever the deterministic engine's output changes in a
 // user-visible way. Stored reports tagged with an older version will be
 // flagged as stale on the client so the user can re-run with the latest.
-export const ENGINE_VERSION = "2026-05-20";
+export const ENGINE_VERSION = "2026-05-22";
 
 export interface AuditReportOutput {
   readinessScore: number;
@@ -717,6 +717,33 @@ export interface TrendReportScorePoint {
   createdAt: string;
 }
 
+export interface TrendReportOutcomeStreak {
+  /** Consecutive most-recent post-date notes whose outcome is "another_date". */
+  positiveStreak: number;
+  /** Most recent recorded outcome, or null if no notes have one. */
+  latestOutcome: string | null;
+  /** Total post-date notes with a recorded outcome. */
+  totalWithOutcome: number;
+}
+
+export interface TrendReportMoodTrend {
+  /** Recent journal entries considered (last ~14 days, capped at 7). */
+  recentCount: number;
+  /** Mean mood across recent entries, rounded to 0.1; null if no moods. */
+  averageMood: number | null;
+  /** "rising" | "falling" | "steady" | "unknown" based on recent vs older avg. */
+  direction: "rising" | "falling" | "steady" | "unknown";
+}
+
+export interface TrendReportJournalingStreak {
+  /** Consecutive UTC days with at least one journal entry, ending today/yesterday. */
+  currentStreakDays: number;
+  /** Distinct UTC days journaled within the last 14 days. */
+  daysInLast14: number;
+  /** Total journal entries. */
+  totalEntries: number;
+}
+
 export interface TrendReport {
   hasEnoughData: boolean;
   totalAudits: number;
@@ -729,8 +756,22 @@ export interface TrendReport {
   readinessSignals: TrendReportSignal[];
   readinessScore: number;
   scoreHistory: TrendReportScorePoint[];
+  outcomeStreak: TrendReportOutcomeStreak;
+  journalingStreak: TrendReportJournalingStreak;
+  moodTrend: TrendReportMoodTrend;
   headlineInsight: string;
   engineVersion: string;
+}
+
+export interface JournalTrendInput {
+  createdAt: string;
+  mood?: number | null;
+}
+
+export interface PostDateNoteTrendInput {
+  dateAt?: string | null;
+  createdAt: string;
+  outcome?: string | null;
 }
 
 const TREND_THEMES: { key: string; label: string; words: string[] }[] = [
@@ -772,6 +813,8 @@ export function analyzeAuditTrends(params: {
   audits: AuditTrendInputAudit[];
   sendStats?: { totalPrompts: number; sentCount: number } | null;
   lifePulses?: { energy: number; headspace: number; createdAt: string }[] | null;
+  journalEntries?: JournalTrendInput[] | null;
+  postDateNotes?: PostDateNoteTrendInput[] | null;
   now?: Date;
 }): TrendReport {
   const now = params.now ?? new Date();
@@ -1083,6 +1126,140 @@ export function analyzeAuditTrends(params: {
     headlineInsight = pieces.join(" ");
   }
 
+  const postDateNotes = [...(params.postDateNotes ?? [])]
+    .map((n) => {
+      const refIso = n.dateAt ?? n.createdAt;
+      const ref = Date.parse(refIso);
+      return { ref, outcome: n.outcome ?? null };
+    })
+    .filter((n) => Number.isFinite(n.ref))
+    .sort((a, b) => b.ref - a.ref);
+  let positiveStreak = 0;
+  let latestOutcome: string | null = null;
+  let totalWithOutcome = 0;
+  for (const n of postDateNotes) {
+    if (n.outcome) {
+      totalWithOutcome += 1;
+      if (latestOutcome === null) latestOutcome = n.outcome;
+    }
+  }
+  for (const n of postDateNotes) {
+    if (!n.outcome) continue;
+    if (n.outcome === "another_date") positiveStreak += 1;
+    else break;
+  }
+  const outcomeStreak: TrendReportOutcomeStreak = {
+    positiveStreak,
+    latestOutcome,
+    totalWithOutcome,
+  };
+
+  const journalEntries = [...(params.journalEntries ?? [])]
+    .map((j) => ({
+      ts: Date.parse(j.createdAt),
+      mood: typeof j.mood === "number" ? j.mood : null,
+    }))
+    .filter((j) => Number.isFinite(j.ts))
+    .sort((a, b) => b.ts - a.ts);
+  const dayKey = (ts: number): string => {
+    const d = new Date(ts);
+    return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
+  };
+  const todayKey = dayKey(now.getTime());
+  const yesterdayKey = dayKey(now.getTime() - 86_400_000);
+  const journaledDays = new Set<string>();
+  for (const j of journalEntries) journaledDays.add(dayKey(j.ts));
+  let currentStreakDays = 0;
+  if (journaledDays.has(todayKey) || journaledDays.has(yesterdayKey)) {
+    const startOffset = journaledDays.has(todayKey) ? 0 : 1;
+    for (let i = startOffset; i < 365; i++) {
+      if (journaledDays.has(dayKey(now.getTime() - i * 86_400_000))) {
+        currentStreakDays += 1;
+      } else {
+        break;
+      }
+    }
+  }
+  // "Last 14 days" = today + the 13 prior UTC days (max 14 distinct days),
+  // matching the contract's `daysInLast14 <= 14` cap.
+  const cutoff14 = now.getTime() - 13 * 86_400_000;
+  const recent14Days = new Set<string>();
+  for (const j of journalEntries) {
+    if (j.ts >= cutoff14) recent14Days.add(dayKey(j.ts));
+  }
+  const daysInLast14 = Math.min(14, recent14Days.size);
+  const journalingStreak: TrendReportJournalingStreak = {
+    currentStreakDays,
+    daysInLast14,
+    totalEntries: journalEntries.length,
+  };
+
+  const recentMoodEntries = journalEntries
+    .filter((j) => j.ts >= cutoff14 && j.mood !== null)
+    .slice(0, 7) as { ts: number; mood: number }[];
+  const olderMoodEntries = journalEntries
+    .filter((j) => j.ts < cutoff14 && j.mood !== null)
+    .slice(0, 7) as { ts: number; mood: number }[];
+  const avg = (xs: number[]) =>
+    xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null;
+  const recentMoodAvg = avg(recentMoodEntries.map((j) => j.mood));
+  const olderMoodAvg = avg(olderMoodEntries.map((j) => j.mood));
+  let moodDirection: TrendReportMoodTrend["direction"] = "unknown";
+  if (recentMoodAvg !== null && olderMoodAvg !== null) {
+    const diff = recentMoodAvg - olderMoodAvg;
+    moodDirection = diff >= 0.5 ? "rising" : diff <= -0.5 ? "falling" : "steady";
+  } else if (recentMoodAvg !== null) {
+    moodDirection = "steady";
+  }
+  const moodTrend: TrendReportMoodTrend = {
+    recentCount: recentMoodEntries.length,
+    averageMood:
+      recentMoodAvg !== null ? Math.round(recentMoodAvg * 10) / 10 : null,
+    direction: moodDirection,
+  };
+
+  if (journalingStreak.currentStreakDays >= 3) {
+    signals.push({
+      label: `Journaling ${journalingStreak.currentStreakDays} days in a row — reflection is compounding`,
+      tone: "positive",
+    });
+  } else if (
+    journalingStreak.totalEntries >= 2 &&
+    journalingStreak.daysInLast14 === 0
+  ) {
+    signals.push({
+      label: "Journaling has gone quiet — a short entry resets the rhythm",
+      tone: "watch",
+    });
+  }
+  if (moodTrend.recentCount >= 2 && moodTrend.averageMood !== null) {
+    if (moodTrend.direction === "rising") {
+      signals.push({
+        label: `Mood is trending up (avg ${moodTrend.averageMood.toFixed(1)}/5) — ride it`,
+        tone: "positive",
+      });
+    } else if (moodTrend.direction === "falling") {
+      signals.push({
+        label: `Mood is sliding (avg ${moodTrend.averageMood.toFixed(1)}/5) — protect headspace this week`,
+        tone: "watch",
+      });
+    }
+  }
+  if (outcomeStreak.positiveStreak >= 2) {
+    signals.push({
+      label: `${outcomeStreak.positiveStreak} dates in a row led to another — something is clicking`,
+      tone: "positive",
+    });
+  } else if (
+    outcomeStreak.latestOutcome === "ghosted" &&
+    outcomeStreak.totalWithOutcome >= 2
+  ) {
+    signals.push({
+      label: "Last date ended in a ghost — pattern worth revisiting in Coach",
+      tone: "watch",
+    });
+  }
+
   let readinessScore = latestScore ?? 50;
   readinessScore +=
     direction === "up" ? 5 : direction === "down" ? -5 : 0;
@@ -1134,6 +1311,9 @@ export function analyzeAuditTrends(params: {
     readinessSignals: signals,
     readinessScore,
     scoreHistory,
+    outcomeStreak,
+    journalingStreak,
+    moodTrend,
     headlineInsight,
     engineVersion: ENGINE_VERSION,
   };
