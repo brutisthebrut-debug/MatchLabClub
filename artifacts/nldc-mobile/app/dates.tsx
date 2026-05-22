@@ -4,6 +4,7 @@ import {
   useCreatePostDateNote,
   useDeletePostDateNote,
   useRestorePostDateNote,
+  useUpdatePostDateNote,
   getListPostDateNotesQueryKey,
   type PostDateNote,
 } from "@workspace/api-client-react";
@@ -90,6 +91,7 @@ export default function DatesScreen() {
   const del = useDeletePostDateNote();
   const restore = useRestorePostDateNote();
   const create = useCreatePostDateNote();
+  const update = useUpdatePostDateNote();
 
   const [createOpen, setCreateOpen] = React.useState(false);
   const [draftPerson, setDraftPerson] = React.useState("");
@@ -100,9 +102,61 @@ export default function DatesScreen() {
     "another_date" | "no_more" | "unsure" | "ghosted" | null
   >(null);
 
+  const [editingId, setEditingId] = React.useState<number | null>(null);
+  const [editPerson, setEditPerson] = React.useState("");
+  const [editSummary, setEditSummary] = React.useState("");
+  const [editWentWell, setEditWentWell] = React.useState("");
+  const [editDidntWork, setEditDidntWork] = React.useState("");
+  const [editOutcome, setEditOutcome] = React.useState<
+    "another_date" | "no_more" | "unsure" | "ghosted" | null
+  >(null);
+
+  const openEdit = React.useCallback((n: PostDateNote) => {
+    setEditingId(n.id);
+    setEditPerson(n.personLabel ?? "");
+    setEditSummary(n.summary);
+    setEditWentWell(n.whatWentWell ?? "");
+    setEditDidntWork(n.whatDidnt ?? "");
+    setEditOutcome(
+      (n.outcome as "another_date" | "no_more" | "unsure" | "ghosted" | null) ??
+        null,
+    );
+  }, []);
+
+  const closeEdit = React.useCallback(() => {
+    setEditingId(null);
+  }, []);
+
   const invalidate = React.useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ["/api/post-date-notes"] });
   }, [queryClient]);
+
+  function submitEdit() {
+    if (editingId == null) return;
+    const summary = editSummary.trim();
+    if (!summary) return;
+    const person = editPerson.trim();
+    update.mutate(
+      {
+        id: editingId,
+        data: {
+          summary,
+          personLabel: person ? person : null,
+          whatWentWell: editWentWell.trim(),
+          whatDidnt: editDidntWork.trim(),
+          outcome: editOutcome,
+        },
+      },
+      {
+        onSuccess: () => {
+          invalidate();
+          setEditingId(null);
+        },
+        onError: () =>
+          Alert.alert("Couldn't save", "Try again in a moment."),
+      },
+    );
+  }
 
   const handleDelete = React.useCallback(
     (n: PostDateNote) => {
@@ -335,12 +389,18 @@ export default function DatesScreen() {
           </View>
         ) : (
           notes.map((n) => (
-            <View
+            <Pressable
               key={n.id}
               testID={`row-date-${n.id}`}
-              style={[
+              onPress={view === "active" ? () => openEdit(n) : undefined}
+              disabled={view !== "active"}
+              style={({ pressed }) => [
                 styles.card,
-                { borderColor: colors.border, backgroundColor: colors.card },
+                {
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
+                  opacity: pressed && view === "active" ? 0.85 : 1,
+                },
               ]}
             >
               <View style={styles.cardHeader}>
@@ -432,7 +492,7 @@ export default function DatesScreen() {
                   {n.whatDidnt}
                 </Text>
               ) : null}
-            </View>
+            </Pressable>
           ))
         )}
       </ScrollView>
@@ -595,6 +655,170 @@ export default function DatesScreen() {
               onPress={submitCreate}
               loading={create.isPending}
               disabled={!draftSummary.trim()}
+              icon="check"
+            />
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={editingId != null}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={closeEdit}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1, backgroundColor: colors.background }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <View
+            style={[styles.modalHeader, { borderBottomColor: colors.border }]}
+          >
+            <Pressable
+              testID="button-cancel-edit-date"
+              onPress={closeEdit}
+              hitSlop={10}
+            >
+              <Text style={{ color: colors.mutedForeground, fontSize: 15 }}>
+                Cancel
+              </Text>
+            </Pressable>
+            <Text
+              style={{ color: colors.foreground, fontWeight: "700", fontSize: 15 }}
+            >
+              Edit post-date note
+            </Text>
+            <View style={{ width: 56 }} />
+          </View>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ padding: 20, gap: 12 }}
+          >
+            <Text style={[styles.label, { color: colors.mutedForeground }]}>
+              Who was it with? (optional)
+            </Text>
+            <TextInput
+              testID="input-edit-date-person"
+              value={editPerson}
+              onChangeText={setEditPerson}
+              placeholder="First name or nickname"
+              placeholderTextColor={colors.mutedForeground}
+              style={[
+                styles.input,
+                {
+                  color: colors.foreground,
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
+                },
+              ]}
+            />
+            <Text style={[styles.label, { color: colors.mutedForeground }]}>
+              Summary
+            </Text>
+            <TextInput
+              testID="input-edit-date-summary"
+              value={editSummary}
+              onChangeText={setEditSummary}
+              placeholder="A sentence or two about how it went."
+              placeholderTextColor={colors.mutedForeground}
+              multiline
+              textAlignVertical="top"
+              style={[
+                styles.input,
+                {
+                  minHeight: 90,
+                  color: colors.foreground,
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
+                },
+              ]}
+            />
+            <Text style={[styles.label, { color: colors.mutedForeground }]}>
+              What went well
+            </Text>
+            <TextInput
+              testID="input-edit-date-went-well"
+              value={editWentWell}
+              onChangeText={setEditWentWell}
+              placeholder="The good stuff."
+              placeholderTextColor={colors.mutedForeground}
+              multiline
+              textAlignVertical="top"
+              style={[
+                styles.input,
+                {
+                  minHeight: 70,
+                  color: colors.foreground,
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
+                },
+              ]}
+            />
+            <Text style={[styles.label, { color: colors.mutedForeground }]}>
+              What didn't work
+            </Text>
+            <TextInput
+              testID="input-edit-date-didnt-work"
+              value={editDidntWork}
+              onChangeText={setEditDidntWork}
+              placeholder="Friction, mismatches, or red flags."
+              placeholderTextColor={colors.mutedForeground}
+              multiline
+              textAlignVertical="top"
+              style={[
+                styles.input,
+                {
+                  minHeight: 70,
+                  color: colors.foreground,
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
+                },
+              ]}
+            />
+            <Text style={[styles.label, { color: colors.mutedForeground }]}>
+              Outcome
+            </Text>
+            <View style={[styles.row, { flexWrap: "wrap" }]}>
+              {OUTCOMES.map((o) => {
+                const active = editOutcome === o.value;
+                return (
+                  <Pressable
+                    key={o.value}
+                    testID={`chip-edit-outcome-${o.value}`}
+                    onPress={() =>
+                      setEditOutcome(active ? null : o.value)
+                    }
+                    style={[
+                      styles.tab,
+                      {
+                        borderColor: active ? colors.primary : colors.border,
+                        backgroundColor: active
+                          ? colors.primary
+                          : colors.card,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        color: active
+                          ? colors.primaryForeground
+                          : colors.foreground,
+                        fontSize: 13,
+                        fontWeight: "600",
+                      }}
+                    >
+                      {o.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <View style={{ height: 8 }} />
+            <PrimaryButton
+              label={update.isPending ? "Saving…" : "Save changes"}
+              onPress={submitEdit}
+              loading={update.isPending}
+              disabled={!editSummary.trim()}
               icon="check"
             />
           </ScrollView>

@@ -4,6 +4,7 @@ import {
   useCreateJournalEntry,
   useDeleteJournalEntry,
   useRestoreJournalEntry,
+  useUpdateJournalEntry,
   getListJournalEntriesQueryKey,
   type JournalEntry,
 } from "@workspace/api-client-react";
@@ -73,11 +74,58 @@ export default function JournalScreen() {
   const del = useDeleteJournalEntry();
   const restore = useRestoreJournalEntry();
   const create = useCreateJournalEntry();
+  const update = useUpdateJournalEntry();
 
   const [createOpen, setCreateOpen] = React.useState(false);
   const [draftPrompt, setDraftPrompt] = React.useState("");
   const [draftBody, setDraftBody] = React.useState("");
   const [draftTags, setDraftTags] = React.useState("");
+
+  const [editingId, setEditingId] = React.useState<number | null>(null);
+  const [editPrompt, setEditPrompt] = React.useState("");
+  const [editBody, setEditBody] = React.useState("");
+  const [editTags, setEditTags] = React.useState("");
+
+  const openEdit = React.useCallback((entry: JournalEntry) => {
+    setEditingId(entry.id);
+    setEditPrompt(entry.prompt ?? "");
+    setEditBody(entry.body);
+    setEditTags((entry.tags ?? []).join(", "));
+  }, []);
+
+  const closeEdit = React.useCallback(() => {
+    setEditingId(null);
+  }, []);
+
+  function submitEdit() {
+    if (editingId == null) return;
+    const body = editBody.trim();
+    if (!body) return;
+    const tags = editTags
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .slice(0, 20);
+    const promptTrimmed = editPrompt.trim();
+    update.mutate(
+      {
+        id: editingId,
+        data: {
+          body,
+          prompt: promptTrimmed ? promptTrimmed : null,
+          tags,
+        },
+      },
+      {
+        onSuccess: () => {
+          invalidate();
+          setEditingId(null);
+        },
+        onError: () =>
+          Alert.alert("Couldn't save", "Try again in a moment."),
+      },
+    );
+  }
 
   const invalidate = React.useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ["/api/journal"] });
@@ -319,12 +367,18 @@ export default function JournalScreen() {
           </View>
         ) : (
           entries.map((e) => (
-            <View
+            <Pressable
               key={e.id}
               testID={`row-journal-${e.id}`}
-              style={[
+              onPress={view === "active" ? () => openEdit(e) : undefined}
+              disabled={view !== "active"}
+              style={({ pressed }) => [
                 styles.card,
-                { borderColor: colors.border, backgroundColor: colors.card },
+                {
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
+                  opacity: pressed && view === "active" ? 0.85 : 1,
+                },
               ]}
             >
               <View style={styles.cardHeader}>
@@ -387,7 +441,7 @@ export default function JournalScreen() {
               >
                 {e.body}
               </Text>
-            </View>
+            </Pressable>
           ))
         )}
       </ScrollView>
@@ -496,6 +550,116 @@ export default function JournalScreen() {
               onPress={submitCreate}
               loading={create.isPending}
               disabled={!draftBody.trim()}
+              icon="check"
+            />
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={editingId != null}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={closeEdit}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1, backgroundColor: colors.background }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <View
+            style={[
+              styles.modalHeader,
+              { borderBottomColor: colors.border },
+            ]}
+          >
+            <Pressable
+              testID="button-cancel-edit-journal"
+              onPress={closeEdit}
+              hitSlop={10}
+            >
+              <Text style={{ color: colors.mutedForeground, fontSize: 15 }}>
+                Cancel
+              </Text>
+            </Pressable>
+            <Text
+              style={{
+                color: colors.foreground,
+                fontWeight: "700",
+                fontSize: 15,
+              }}
+            >
+              Edit reflection
+            </Text>
+            <View style={{ width: 56 }} />
+          </View>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ padding: 20, gap: 12 }}
+          >
+            <Text style={[styles.label, { color: colors.mutedForeground }]}>
+              Prompt (optional)
+            </Text>
+            <TextInput
+              testID="input-edit-journal-prompt"
+              value={editPrompt}
+              onChangeText={setEditPrompt}
+              placeholder="What were you reflecting on?"
+              placeholderTextColor={colors.mutedForeground}
+              style={[
+                styles.input,
+                {
+                  color: colors.foreground,
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
+                },
+              ]}
+            />
+            <Text style={[styles.label, { color: colors.mutedForeground }]}>
+              Reflection
+            </Text>
+            <TextInput
+              testID="input-edit-journal-body"
+              value={editBody}
+              onChangeText={setEditBody}
+              placeholder="Write it out — what's coming up for you?"
+              placeholderTextColor={colors.mutedForeground}
+              multiline
+              textAlignVertical="top"
+              style={[
+                styles.input,
+                {
+                  minHeight: 160,
+                  color: colors.foreground,
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
+                },
+              ]}
+            />
+            <Text style={[styles.label, { color: colors.mutedForeground }]}>
+              Tags (comma-separated)
+            </Text>
+            <TextInput
+              testID="input-edit-journal-tags"
+              value={editTags}
+              onChangeText={setEditTags}
+              placeholder="weekly, intention"
+              placeholderTextColor={colors.mutedForeground}
+              autoCapitalize="none"
+              style={[
+                styles.input,
+                {
+                  color: colors.foreground,
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
+                },
+              ]}
+            />
+            <View style={{ height: 8 }} />
+            <PrimaryButton
+              label={update.isPending ? "Saving…" : "Save changes"}
+              onPress={submitEdit}
+              loading={update.isPending}
+              disabled={!editBody.trim()}
               icon="check"
             />
           </ScrollView>
