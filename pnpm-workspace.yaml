@@ -44,6 +44,8 @@ onlyBuiltDependencies:
   - unrs-resolver
 
 overrides:
+  uuid: '^11.1.1'
+  qs: '^6.15.2'
   postcss: '^8.5.10'
   '@esbuild-kit/esm-loader': npm:tsx@^4.21.0
   '@types/react': 'catalog:'
