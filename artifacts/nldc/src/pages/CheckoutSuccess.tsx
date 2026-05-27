@@ -126,7 +126,7 @@ const PRODUCT_COPY: Record<string, ProductCopy> = {
 
 const EXPLORE_CARDS = [
   { icon: Zap,           label: "Run your Signal Audit",    href: "/start",      color: "hsl(190 75% 50%)" },
-  { icon: MessageCircle, label: "Chemistry Lab",            href: "/lab",        color: "hsl(268 52% 68%)" },
+  { icon: MessageCircle, label: "Chemistry Lab",            href: "/lab",        color: "hsl(248 62% 52%)" },
   { icon: Heart,         label: "Compatibility Profile",    href: "/wellness",   color: "hsl(348 55% 65%)" },
   { icon: Sparkles,      label: "View Dashboard",           href: "/dashboard",  color: "hsl(43 65% 65%)"  },
 ];
@@ -169,7 +169,7 @@ export default function CheckoutSuccess() {
 
           <Link
             href={copy.nextHref}
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity text-base"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity text-base"
           >
             {copy.nextLabel}
             <ArrowRight className="w-4 h-4" />
@@ -184,8 +184,8 @@ export default function CheckoutSuccess() {
               const Icon = step.icon;
               return (
                 <div key={i} className="glass border border-white/8 rounded-2xl p-4 flex items-start gap-4">
-                  <div className="w-9 h-9 rounded-xl bg-[hsl(268_52%_68%/0.12)] flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Icon className="w-4 h-4 text-[hsl(268_52%_72%)]" />
+                  <div className="w-9 h-9 rounded-xl bg-[hsl(248_62%_52%/0.12)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Icon className="w-4 h-4 text-[hsl(248_62%_58%)]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 flex-wrap mb-1">

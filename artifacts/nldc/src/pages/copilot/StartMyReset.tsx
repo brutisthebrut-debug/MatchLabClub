@@ -34,7 +34,7 @@ const STEPS: ResetStep[] = [
     tagline: "Your 3-minute baseline",
     why: "Gives you a starting score so every other step has something to compare against. Most people skip this and then don't know if anything's working.",
     href: "/signal-check",
-    color: "hsl(268 52% 68%)",
+    color: "hsl(248 62% 52%)",
     time: "3 min",
   },
   {
@@ -64,7 +64,7 @@ const STEPS: ResetStep[] = [
     tagline: "Coached replies for a real conversation",
     why: "Paste a thread you're actually in. You'll get 3 styled reply options (Playful / Direct / Warm) plus a coaching note on how to approach it.",
     href: "/coach",
-    color: "hsl(285 45% 65%)",
+    color: "hsl(326 100% 65%)",
     time: "3 min",
   },
   {
@@ -139,8 +139,8 @@ export default function StartMyReset() {
           {/* Header */}
           <motion.div {...fadeUp(0.03)} className="mb-6">
             <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Wingman Studio</p>
+              <Zap className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Wingman Studio</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Start My Reset</h1>
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
@@ -158,7 +158,7 @@ export default function StartMyReset() {
                   <button key={g} onClick={() => setGoal(prev => prev === g ? "" : g)}
                     className={`px-3 py-2 rounded-full border text-sm font-medium transition-all ${
                       goal === g
-                        ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]"
+                        ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)] border-[hsl(248_62%_52%/0.4)]"
                         : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"
                     }`}>
                     {g}
@@ -170,7 +170,7 @@ export default function StartMyReset() {
                   Got it. The tools below are ordered to help with that specifically.
                 </p>
               )}
-              <Button onClick={() => setPhase("journey")} className="rounded-full w-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0">
+              <Button onClick={() => setPhase("journey")} className="rounded-full w-full h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0">
                 {goal ? "Start My Journey →" : "Skip & Start"}
               </Button>
             </motion.div>
@@ -183,7 +183,7 @@ export default function StartMyReset() {
                   <CheckCircle2 className="w-8 h-8 text-[hsl(142_55%_60%)] mx-auto mb-2" />
                   <p className="font-semibold text-foreground mb-1">Reset complete — nice work.</p>
                   <p className="text-sm text-muted-foreground mb-4">Your Dashboard now has your baseline. From here, work on whatever your score and blueprint suggest.</p>
-                  <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0">
+                  <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0">
                     <Link href="/dashboard">Go to Dashboard <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link>
                   </Button>
                 </motion.div>
@@ -220,7 +220,7 @@ export default function StartMyReset() {
                         <p className="text-xs text-muted-foreground/65 leading-relaxed mb-3">{step.why}</p>
                         <div className="flex items-center gap-3">
                           <Button asChild size="sm" className="rounded-full text-xs px-4 border-0 font-semibold"
-                            style={{ background: step.color, color: "hsl(232 38% 7%)" }}>
+                            style={{ background: step.color, color: "hsl(248 45% 165%)" }}>
                             <Link href={step.href}>Open Tool <ArrowRight className="ml-1 h-3 w-3" /></Link>
                           </Button>
                           <button onClick={() => isDone ? unmark(step.id) : markDone(step.id)}

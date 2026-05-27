@@ -164,8 +164,8 @@ export default function ProfileReader() {
         <div className="max-w-3xl mx-auto relative z-10">
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <Eye className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Profile Tools</p>
+              <Eye className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Profile Tools</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Profile Reader</h1>
             <p className="text-muted-foreground mt-2">Paste someone's public profile text. Get likely signals, fit clues, questions worth asking, and a suggested opener.<br />
@@ -188,16 +188,16 @@ export default function ProfileReader() {
                 <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Their profile text or note</Label>
                 <Textarea placeholder="Paste their bio, prompts, or the message they sent you…"
                   value={text} onChange={e => setText(e.target.value)}
-                  className="min-h-[160px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
+                  className="min-h-[160px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
               </div>
               <div className="space-y-2">
                 <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Any context? <span className="font-normal normal-case text-muted-foreground/50">(optional)</span></Label>
                 <Textarea placeholder="e.g. We matched on Hinge, they're 34, seem career-focused, asked me a question in their opener…"
                   value={context} onChange={e => setContext(e.target.value)}
-                  className="min-h-[64px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
+                  className="min-h-[64px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
               </div>
               <Button onClick={handleAnalyze} disabled={loading || !text.trim()}
-                className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50">
+                className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-50">
                 {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Reading…</> : <><Sparkles className="mr-2 h-4 w-4" />Read the Profile</>}
               </Button>
             </motion.div>
@@ -239,7 +239,7 @@ export default function ProfileReader() {
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="glass border border-white/8 rounded-2xl p-5">
                     <p className="font-semibold text-foreground text-sm mb-3 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-[hsl(268_52%_68%)]" />Likely signals
+                      <span className="w-2 h-2 rounded-full bg-[hsl(248_62%_52%)]" />Likely signals
                     </p>
                     <ul className="space-y-2.5">
                       {show.likelySignals.map((s, i) => <li key={i} className="text-xs text-muted-foreground leading-relaxed">{s}</li>)}
@@ -289,7 +289,7 @@ export default function ProfileReader() {
                     <p className="font-semibold text-foreground text-sm">Suggested opener</p>
                     <CopyBtn text={show.suggestedOpener} />
                   </div>
-                  <div className="bg-[hsl(268_52%_68%/0.08)] border border-[hsl(268_52%_68%/0.2)] rounded-xl px-4 py-3">
+                  <div className="bg-[hsl(248_62%_52%/0.08)] border border-[hsl(248_62%_52%/0.2)] rounded-xl px-4 py-3">
                     <p className="text-sm text-foreground/80 italic">"{show.suggestedOpener}"</p>
                   </div>
                   <p className="text-xs text-muted-foreground/50 mt-2">Fill in the [brackets] with something specific from their actual profile.</p>

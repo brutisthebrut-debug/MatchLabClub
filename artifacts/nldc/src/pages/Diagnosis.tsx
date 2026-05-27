@@ -49,9 +49,9 @@ function getCategory(score: number, goal: string): DiagnosisCategory {
   if (score >= 60) return {
     label: "The Hidden Gem",
     tagline: "Real depth that isn't translating to your profile yet.",
-    color: "hsl(268 52% 72%)",
-    bg: "hsl(268 52% 68% / 0.1)",
-    border: "hsl(268 52% 68% / 0.25)",
+    color: "hsl(248 62% 58%)",
+    bg: "hsl(248 62% 52% / 0.1)",
+    border: "hsl(248 62% 52% / 0.25)",
     summary: isRelationship
       ? "You have the kind of substance someone serious would deeply appreciate — but your profile isn't showing it yet. You're using language that could apply to anyone, which means the people who'd actually be excited by you are scrolling past without knowing what they're missing."
       : "Your profile has interesting material underneath generic packaging. The people who are right for what you're looking for can't find you through the surface presentation. That's fixable."
@@ -174,7 +174,7 @@ export default function Diagnosis() {
         <div className="max-w-2xl mx-auto relative z-10">
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-[hsl(285_45%_60%/0.25)] text-xs font-semibold text-[hsl(285_55%_78%)] uppercase tracking-widest mb-5">
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-[hsl(326_100%_59%/0.25)] text-xs font-semibold text-[hsl(285_55%_78%)] uppercase tracking-widest mb-5">
               <Sparkles className="w-3.5 h-3.5" /> Dating Diagnosis Engine
             </span>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">What's your profile really saying?</h1>
@@ -183,10 +183,10 @@ export default function Diagnosis() {
 
           {/* ── Package Hub Strip — The Dating Reset ── */}
           <div className="glass border rounded-xl px-4 py-3 mb-7 flex flex-wrap items-center gap-x-4 gap-y-2"
-            style={{ borderColor: "hsl(268 52% 68% / 0.2)" }}>
+            style={{ borderColor: "hsl(248 62% 52% / 0.2)" }}>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-[hsl(268_52%_68%)]" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-[hsl(268_52%_78%)]">The Dating Reset</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[hsl(248_62%_52%)]" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-[hsl(248_62%_62%)]">The Dating Reset</span>
               <span className="hidden sm:inline text-[11px] text-muted-foreground/55">— full profile signal rebuild</span>
             </div>
             <div className="flex flex-wrap gap-1.5 items-center">
@@ -242,7 +242,7 @@ export default function Diagnosis() {
                 {/* Honest Audit */}
                 <div className="glass border border-white/8 rounded-3xl p-7">
                   <div className="flex items-center gap-2.5 mb-4">
-                    <Eye className="w-5 h-5 text-[hsl(268_52%_68%)]" />
+                    <Eye className="w-5 h-5 text-[hsl(248_62%_52%)]" />
                     <h3 className="font-bold text-foreground">Profile Read</h3>
                   </div>
                   <p className="text-muted-foreground text-sm leading-relaxed">{result.report.bioAudit}</p>
@@ -278,12 +278,12 @@ export default function Diagnosis() {
                 <div className="glass border border-white/8 rounded-3xl p-7">
                   <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">One Line, Rewritten ✦</p>
                   <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="rounded-2xl p-4 bg-[hsl(232_28%_14%)] border border-white/8">
+                    <div className="rounded-2xl p-4 bg-[hsl(248_40%_95%)] border border-white/8">
                       <p className="text-xs text-muted-foreground font-medium mb-2">Before</p>
                       <p className="text-sm text-muted-foreground italic">{bio.slice(0, 120) || "Your bio text would appear here."}{bio.length > 120 ? "..." : ""}</p>
                     </div>
-                    <div className="rounded-2xl p-4 bg-[hsl(268_52%_68%/0.07)] border border-[hsl(268_52%_68%/0.25)]">
-                      <p className="text-xs text-[hsl(268_60%_78%)] font-semibold mb-2">After ✦</p>
+                    <div className="rounded-2xl p-4 bg-[hsl(248_62%_52%/0.07)] border border-[hsl(248_62%_52%/0.25)]">
+                      <p className="text-xs text-[hsl(248_62%_62%)] font-semibold mb-2">After ✦</p>
                       <p className="text-sm text-foreground">{result.report.rewrittenBio.slice(0, 180)}{result.report.rewrittenBio.length > 180 ? "..." : ""}</p>
                     </div>
                   </div>
@@ -292,20 +292,20 @@ export default function Diagnosis() {
                 {/* 3-Step Action Plan */}
                 <div className="glass border border-white/8 rounded-3xl p-7">
                   <div className="flex items-center gap-2.5 mb-5">
-                    <TrendingUp className="w-5 h-5 text-[hsl(268_52%_68%)]" />
+                    <TrendingUp className="w-5 h-5 text-[hsl(248_62%_52%)]" />
                     <h3 className="font-bold text-foreground">Your Next 3 Moves</h3>
                   </div>
                   <div className="space-y-4">
                     {result.report.actionPlan.slice(0, 3).map((item, i) => (
-                      <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-[hsl(232_28%_14%/0.5)] border border-white/6">
+                      <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-[hsl(248_40%_95%/0.5)] border border-white/6">
                         <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                          style={{ background: "linear-gradient(135deg, hsl(268 52% 65%), hsl(285 45% 58%))" }}>
+                          style={{ background: "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))" }}>
                           {item.priority}
                         </div>
                         <div>
                           <p className="font-semibold text-foreground text-sm">{item.title}</p>
                           <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{item.description}</p>
-                          <p className="text-xs text-[hsl(268_52%_72%)] font-medium mt-1.5">{item.timeframe}</p>
+                          <p className="text-xs text-[hsl(248_62%_58%)] font-medium mt-1.5">{item.timeframe}</p>
                         </div>
                       </div>
                     ))}
@@ -315,14 +315,14 @@ export default function Diagnosis() {
                 {/* CTAs */}
                 <div
                   className="relative rounded-3xl p-8 text-center overflow-hidden shimmer"
-                  style={{ background: "linear-gradient(135deg, hsl(268 52% 68% / 0.12), hsl(285 45% 60% / 0.08))", border: "1px solid hsl(268 52% 68% / 0.2)" }}
+                  style={{ background: "linear-gradient(135deg, hsl(248 62% 52% / 0.12), hsl(326 100% 59% / 0.08))", border: "1px solid hsl(248 62% 52% / 0.2)" }}
                 >
                   <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_60%_80%)] mb-3">Want the full picture?</p>
                   <h3 className="text-2xl font-bold text-foreground mb-3">Get your complete Dating Blueprint</h3>
                   <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">Full score breakdown, complete bio rewrite, all prompts rewritten, photo checklist, messaging analysis, and a 5-step action plan.</p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     {result.auditId > 0 && (
-                      <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold glow-pulse">
+                      <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 font-semibold glow-pulse">
                         <Link href={`/report/${result.auditId}`}>View Full Report <ArrowRight className="ml-2 h-4 w-4" /></Link>
                       </Button>
                     )}
@@ -343,8 +343,8 @@ export default function Diagnosis() {
             ) : loading ? (
               /* Loading */
               <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass border border-white/8 rounded-3xl p-16 text-center">
-                <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: "hsl(268 52% 68% / 0.15)", border: "1px solid hsl(268 52% 68% / 0.3)", animation: "glow-pulse 2s ease-in-out infinite" }}>
-                  <Loader2 className="w-8 h-8 text-[hsl(268_52%_68%)] animate-spin" />
+                <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: "hsl(248 62% 52% / 0.15)", border: "1px solid hsl(248 62% 52% / 0.3)", animation: "glow-pulse 2s ease-in-out infinite" }}>
+                  <Loader2 className="w-8 h-8 text-[hsl(248_62%_52%)] animate-spin" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-2">Running your diagnosis...</h3>
                 <p className="text-muted-foreground text-sm">{loadingMsg}</p>
@@ -357,12 +357,12 @@ export default function Diagnosis() {
                 <div className="flex items-center gap-3 mb-8">
                   {STEP_LABELS.map((label, i) => (
                     <div key={i} className="flex items-center gap-2 flex-1">
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${i <= step ? "text-white" : "text-muted-foreground bg-[hsl(232_28%_16%)]"}`}
-                        style={i <= step ? { background: "linear-gradient(135deg, hsl(268 52% 65%), hsl(285 45% 58%))" } : {}}>
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${i <= step ? "text-white" : "text-muted-foreground bg-[hsl(248_40%_94%)]"}`}
+                        style={i <= step ? { background: "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))" } : {}}>
                         {i < step ? <CheckCircle className="w-4 h-4" /> : i + 1}
                       </div>
                       <span className={`text-xs font-medium hidden sm:block ${i === step ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
-                      {i < 2 && <div className={`flex-1 h-px ${i < step ? "bg-[hsl(268_52%_68%/0.5)]" : "bg-white/8"}`} />}
+                      {i < 2 && <div className={`flex-1 h-px ${i < step ? "bg-[hsl(248_62%_52%/0.5)]" : "bg-white/8"}`} />}
                     </div>
                   ))}
                 </div>
@@ -380,7 +380,7 @@ export default function Diagnosis() {
                             key={g.value}
                             data-testid={`button-goal-${g.value.replace(/ /g, "-")}`}
                             onClick={() => setGoal(g.value)}
-                            className={`p-5 rounded-2xl border text-left transition-all ${goal === g.value ? "border-[hsl(268_52%_68%/0.5)] bg-[hsl(268_52%_68%/0.1)]" : "border-white/8 bg-[hsl(232_28%_14%/0.5)] hover:border-white/15"}`}
+                            className={`p-5 rounded-2xl border text-left transition-all ${goal === g.value ? "border-[hsl(248_62%_52%/0.5)] bg-[hsl(248_62%_52%/0.1)]" : "border-white/8 bg-[hsl(248_40%_95%/0.5)] hover:border-white/15"}`}
                           >
                             <p className="text-xl mb-2">{g.emoji}</p>
                             <p className="font-semibold text-foreground text-sm">{g.label}</p>
@@ -390,7 +390,7 @@ export default function Diagnosis() {
                       <Button
                         onClick={() => setStep(1)}
                         disabled={!goal}
-                        className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 disabled:opacity-40"
+                        className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 disabled:opacity-40"
                         data-testid="button-goal-next"
                       >
                         Continue <ArrowRight className="ml-2 h-4 w-4" />
@@ -405,13 +405,13 @@ export default function Diagnosis() {
                         <p className="text-sm text-muted-foreground">Your bio is required. Prompts and a conversation sample make the diagnosis significantly more accurate.</p>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Your bio <span className="text-[hsl(268_52%_68%)]">*</span></Label>
+                        <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Your bio <span className="text-[hsl(248_62%_52%)]">*</span></Label>
                         <Textarea
                           data-testid="textarea-diagnosis-bio"
                           placeholder={"Software engineer who loves hiking and cooking. Big foodie. Looking for someone who is adventurous and loves to have fun..."}
                           value={bio}
                           onChange={e => setBio(e.target.value)}
-                          className="min-h-[120px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40 text-sm"
+                          className="min-h-[120px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40 text-sm"
                         />
                       </div>
                       <div className="space-y-2">
@@ -421,7 +421,7 @@ export default function Diagnosis() {
                           placeholder={"Prompt: The way to win me over is...\nAnswer: remembering the small things\n\nPrompt: I'll never shut up about...\nAnswer: good food and travel"}
                           value={prompts}
                           onChange={e => setPrompts(e.target.value)}
-                          className="min-h-[100px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40 text-sm font-mono"
+                          className="min-h-[100px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40 text-sm font-mono"
                         />
                       </div>
                       <div className="space-y-2">
@@ -431,7 +431,7 @@ export default function Diagnosis() {
                           placeholder={"Them: I love that little ramen place on 5th\nMe: Oh nice, which one?\nThem: The one with the black garlic broth!\nMe: I've been meaning to try it"}
                           value={convo}
                           onChange={e => setConvo(e.target.value)}
-                          className="min-h-[100px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40 text-sm font-mono"
+                          className="min-h-[100px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40 text-sm font-mono"
                         />
                       </div>
                       <div className="flex gap-3">
@@ -439,7 +439,7 @@ export default function Diagnosis() {
                         <Button
                           onClick={runDiagnosis}
                           disabled={!bio.trim() || bio.trim().length < 10}
-                          className="flex-1 rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-40"
+                          className="flex-1 rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-40"
                           data-testid="button-run-diagnosis"
                         >
                           <Sparkles className="mr-2 h-4 w-4" /> Run My Diagnosis
@@ -463,7 +463,7 @@ export default function Diagnosis() {
                         { icon: ArrowRight, label: "Link to your full audit report" },
                       ].map((item, i) => (
                         <div key={i} className="flex items-center gap-3 text-sm text-muted-foreground">
-                          <item.icon className="w-4 h-4 text-[hsl(268_52%_68%)] flex-shrink-0" />
+                          <item.icon className="w-4 h-4 text-[hsl(248_62%_52%)] flex-shrink-0" />
                           {item.label}
                         </div>
                       ))}

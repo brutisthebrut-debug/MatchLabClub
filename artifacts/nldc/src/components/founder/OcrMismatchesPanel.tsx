@@ -51,7 +51,7 @@ export function OcrMismatchesPanel({
     >
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
-          <ScanLine className="w-4 h-4 text-[hsl(268_52%_78%)]" />
+          <ScanLine className="w-4 h-4 text-[hsl(248_62%_62%)]" />
           <div>
             <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
               OCR Mismatches
@@ -122,7 +122,7 @@ export function OcrMismatchesPanel({
                       </span>
                     </div>
                     <span
-                      className="text-sm font-mono text-[hsl(268_52%_78%)]"
+                      className="text-sm font-mono text-[hsl(248_62%_62%)]"
                       data-testid={`ocr-field-count-${f.field}`}
                     >
                       {f.correctionsCount}

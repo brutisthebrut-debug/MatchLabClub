@@ -55,7 +55,7 @@ export default function Landing() {
               <Button
                 asChild
                 size="lg"
-                className="h-14 px-9 text-base font-semibold rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse hover:opacity-90 transition-opacity shadow-[0_4px_24px_hsl(268_52%_68%/0.4)]"
+                className="h-14 px-9 text-base font-semibold rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 glow-pulse hover:opacity-90 transition-opacity shadow-[0_4px_24px_hsl(248_62%_52%/0.4)]"
                 data-testid="button-hero-cta"
               >
                 <Link href="/start">
@@ -91,7 +91,7 @@ export default function Landing() {
 
             {/* Beta badge */}
             <motion.div className="flex items-center justify-center gap-3 mt-6" {...fadeUp(0.3)}>
-              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass border border-[hsl(268_52%_68%/0.25)]">
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass border border-[hsl(248_62%_52%/0.25)]">
                 <span className="w-2 h-2 rounded-full bg-[hsl(142_55%_60%)] animate-pulse flex-shrink-0" />
                 <span className="text-sm text-muted-foreground">Private beta · Founder reviews every report · Built on real dating science</span>
               </div>
@@ -106,7 +106,7 @@ export default function Landing() {
             transition={{ duration: 0.7, delay: 0.35 }}
           >
             {[
-              { value: "8", label: "dimensions of your dating signal — scored and explained", color: "hsl(268 52% 68%)" },
+              { value: "8", label: "dimensions of your dating signal — scored and explained", color: "hsl(248 62% 52%)" },
               { value: "3 min", label: "to get your Signal Score, bio critique, and action items", color: "hsl(43 65% 65%)" },
               { value: "7-day", label: "personalised action plan included in every full audit", color: "hsl(348 55% 65%)" },
             ].map((stat, i) => (
@@ -124,16 +124,16 @@ export default function Landing() {
       </section>
 
       {/* ── Product Journey ── */}
-      <section className="py-8 border-t border-white/5 bg-[hsl(232_28%_9%/0.5)]">
+      <section className="py-8 border-t border-white/5 bg-[hsl(248_40%_96%/0.5)]">
         <div className="container mx-auto px-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-center text-muted-foreground/40 mb-5">How the path works</p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             {[
-              { n: "1", label: "Check your signal",         href: "/start",         color: "hsl(268 52% 68%)" },
+              { n: "1", label: "Check your signal",         href: "/start",         color: "hsl(248 62% 52%)" },
               { n: "2", label: "Get your Signal Score",  href: "/signal-check",  color: "hsl(43 65% 65%)"  },
               { n: "3", label: "Read your report",       href: "/sample-report", color: "hsl(142 55% 60%)" },
               { n: "4", label: "Pick your plan",         href: "/pricing",       color: "hsl(190 55% 60%)" },
-              { n: "5", label: "Track your progress",    href: "/dashboard",     color: "hsl(285 45% 65%)" },
+              { n: "5", label: "Track your progress",    href: "/dashboard",     color: "hsl(326 100% 65%)" },
             ].map((step, i) => (
               <span key={step.n} className="flex items-center gap-2">
                 <Link href={step.href} className="flex items-center gap-2 px-3 py-2 rounded-full glass border border-white/8 hover:border-white/18 transition-all group">
@@ -154,7 +154,7 @@ export default function Landing() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-14">
             <motion.p
-              className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-3"
+              className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-3"
               initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
             >The Transformation
             </motion.p>
@@ -178,12 +178,12 @@ export default function Landing() {
               initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
             >
               <div className="absolute -top-3 left-6">
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[hsl(232_34%_16%)] text-muted-foreground border border-white/8">
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[hsl(248_40%_94%)] text-muted-foreground border border-white/8">
                   Before Your Audit
                 </span>
               </div>
               <div className="flex items-center gap-3 mb-5 mt-3">
-                <div className="w-10 h-10 rounded-full bg-[hsl(232_28%_20%)] flex items-center justify-center text-sm font-bold text-muted-foreground">J</div>
+                <div className="w-10 h-10 rounded-full bg-[hsl(248_40%_92%)] flex items-center justify-center text-sm font-bold text-muted-foreground">J</div>
                 <div>
                   <p className="font-semibold text-foreground/70 text-sm">Jordan, 31</p>
                   <p className="text-xs text-muted-foreground/60">Signal Score: 42/100</p>
@@ -205,12 +205,12 @@ export default function Landing() {
               initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
             >
               <div className="absolute -top-3 left-6">
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(285_45%_58%)] text-white shadow-[0_2px_12px_hsl(268_52%_68%/0.4)]">
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] text-white shadow-[0_2px_12px_hsl(248_62%_52%/0.4)]">
                   ✦ After Your Audit
                 </span>
               </div>
               <div className="flex items-center gap-3 mb-5 mt-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] flex items-center justify-center text-sm font-bold text-white shadow-[0_0_12px_hsl(268_52%_68%/0.4)]">J</div>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] flex items-center justify-center text-sm font-bold text-white shadow-[0_0_12px_hsl(248_62%_52%/0.4)]">J</div>
                 <div>
                   <p className="font-semibold text-foreground text-sm">Jordan, 31</p>
                   <p className="text-xs text-[hsl(43_65%_68%)] font-medium">Signal Score: 78/100 ↑</p>
@@ -275,12 +275,12 @@ export default function Landing() {
               >
                 <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-5">Example Signal Check Result</p>
                 <div className="flex items-center gap-5 mb-5">
-                  <div className="w-20 h-20 rounded-2xl flex flex-col items-center justify-center flex-shrink-0 font-bold" style={{ background: "hsl(268 52% 68% / 0.12)", border: "1px solid hsl(268 52% 68% / 0.3)", boxShadow: "0 0 20px hsl(268 52% 68% / 0.2)" }}>
-                    <span className="text-3xl font-bold text-[hsl(268_52%_72%)]">64</span>
+                  <div className="w-20 h-20 rounded-2xl flex flex-col items-center justify-center flex-shrink-0 font-bold" style={{ background: "hsl(248 62% 52% / 0.12)", border: "1px solid hsl(248 62% 52% / 0.3)", boxShadow: "0 0 20px hsl(248 62% 52% / 0.2)" }}>
+                    <span className="text-3xl font-bold text-[hsl(248_62%_58%)]">64</span>
                     <span className="text-xs text-muted-foreground">/ 100</span>
                   </div>
                   <div>
-                    <span className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-2" style={{ background: "hsl(268 52% 68% / 0.12)", color: "hsl(268 52% 72%)", border: "1px solid hsl(268 52% 68% / 0.3)" }}>The Hidden Gem</span>
+                    <span className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-2" style={{ background: "hsl(248 62% 52% / 0.12)", color: "hsl(248 62% 58%)", border: "1px solid hsl(248 62% 52% / 0.3)" }}>The Hidden Gem</span>
                     <p className="text-sm text-muted-foreground">Real depth that isn't translating to your profile yet.</p>
                   </div>
                 </div>
@@ -290,12 +290,12 @@ export default function Landing() {
                     <p className="text-sm text-muted-foreground leading-relaxed">Generic language is masking your actual personality — replace 'loves hiking and cooking' with a specific scene only you'd describe.</p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-xl p-3 bg-[hsl(232_28%_14%)] border border-white/8">
+                    <div className="rounded-xl p-3 bg-[hsl(248_40%_95%)] border border-white/8">
                       <p className="text-xs text-muted-foreground mb-1">Before</p>
                       <p className="text-xs text-muted-foreground/60 italic">"Easy to talk to, loves hiking..."</p>
                     </div>
-                    <div className="rounded-xl p-3 bg-[hsl(268_52%_68%/0.07)] border border-[hsl(268_52%_68%/0.25)]">
-                      <p className="text-xs text-[hsl(268_60%_78%)] mb-1">After ✦</p>
+                    <div className="rounded-xl p-3 bg-[hsl(248_62%_52%/0.07)] border border-[hsl(248_62%_52%/0.25)]">
+                      <p className="text-xs text-[hsl(248_62%_62%)] mb-1">After ✦</p>
                       <p className="text-xs text-foreground italic">"I make a genuinely great first date..."</p>
                     </div>
                   </div>
@@ -310,7 +310,7 @@ export default function Landing() {
       <section id="how-it-works" className="py-20 md:py-28 border-t border-white/5">
         <div className="container mx-auto px-4">
           <div className="text-center mb-14">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-3">The Process</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-3">The Process</p>
             <h2 className="text-3xl md:text-5xl font-bold text-foreground">
               Honest. Specific. <span className="gradient-text italic">Yours.</span>
             </h2>
@@ -324,7 +324,7 @@ export default function Landing() {
                 step: "01",
                 title: "Paste your profile",
                 desc: "Drop in your bio, prompts, and optionally a conversation sample. Takes 3 minutes. No account required to start.",
-                color: "hsl(268 52% 68%)",
+                color: "hsl(248 62% 52%)",
               },
               {
                 step: "02",
@@ -357,7 +357,7 @@ export default function Landing() {
       <section className="py-20 md:py-24 border-t border-white/5">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-3">The Toolkit</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-3">The Toolkit</p>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground">
               Every tool you need. <span className="gradient-text italic">All in one place.</span>
             </h2>
@@ -365,11 +365,11 @@ export default function Landing() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
             {[
-              { icon: Sparkles, title: "Dating Diagnosis", desc: "60-second triage. Paste your bio, get your profile category and the single thing to fix first. Best as a quick gut-check before going deeper.", href: "/diagnosis", badge: "Free", badgeColor: "hsl(142 55% 60%)", accentColor: "hsl(268 52% 68%)" },
+              { icon: Sparkles, title: "Dating Diagnosis", desc: "60-second triage. Paste your bio, get your profile category and the single thing to fix first. Best as a quick gut-check before going deeper.", href: "/diagnosis", badge: "Free", badgeColor: "hsl(142 55% 60%)", accentColor: "hsl(248 62% 52%)" },
               { icon: TrendingUp, title: "3-Min Signal Check", desc: "Fastest entry point: paste your bio, get your Signal Strength score and one rewritten line — in 3 minutes flat.", href: "/signal-check", badge: "Free · 3 min", badgeColor: "hsl(43 65% 65%)", accentColor: "hsl(43 65% 65%)" },
-              { icon: CheckCircle, title: "Profile Signal Audit", desc: "The full audit. Signal Score, 8-dimension Signal Spectrum, complete bio + prompt rewrites, photo guidance, and a 7-day action plan you can start tomorrow.", href: "/start", badge: "Free to Start", badgeColor: "hsl(268 52% 68%)", accentColor: "hsl(142 55% 60%)" },
+              { icon: CheckCircle, title: "Profile Signal Audit", desc: "The full audit. Signal Score, 8-dimension Signal Spectrum, complete bio + prompt rewrites, photo guidance, and a 7-day action plan you can start tomorrow.", href: "/start", badge: "Free to Start", badgeColor: "hsl(248 62% 52%)", accentColor: "hsl(142 55% 60%)" },
               { icon: MessageSquare, title: "Chemistry Lab", desc: "Paste any message or conversation. Get tone analysis, your recommended next action, and 5 reply options — Warm, Playful, Direct, Date Ask, Graceful Exit.", href: "/lab", badge: "Free", badgeColor: "hsl(190 55% 60%)", accentColor: "hsl(190 55% 60%)" },
-              { icon: MessageSquare, title: "Message Coach", desc: "Deeper session coaching: paste a full conversation, choose your goal, and receive 3 tailored reply options with rationale.", href: "/coach", badge: "Free", badgeColor: "hsl(285 45% 65%)", accentColor: "hsl(285 45% 65%)" },
+              { icon: MessageSquare, title: "Message Coach", desc: "Deeper session coaching: paste a full conversation, choose your goal, and receive 3 tailored reply options with rationale.", href: "/coach", badge: "Free", badgeColor: "hsl(326 100% 65%)", accentColor: "hsl(326 100% 65%)" },
               { icon: BookOpen, title: "The MatchLab Journal", desc: "Dating science, profile psychology, and message coaching insights — written for people who want to understand what's actually happening.", href: "/blog", badge: "Read Free", badgeColor: "hsl(43 65% 65%)", accentColor: "hsl(43 65% 65%)" },
             ].map((tool, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
@@ -399,14 +399,14 @@ export default function Landing() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <motion.div className="text-center mb-10" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-3">Four things we fix</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-3">Four things we fix</p>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">
                 Most dating problems come from the same four places.
               </h2>
             </motion.div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { num: "01", title: "What you're projecting", desc: "We show you what your profile is actually communicating — and how it reads to someone swiping.", color: "hsl(268 52% 68%)", bg: "hsl(268 52% 68% / 0.07)", border: "hsl(268 52% 68% / 0.2)" },
+                { num: "01", title: "What you're projecting", desc: "We show you what your profile is actually communicating — and how it reads to someone swiping.", color: "hsl(248 62% 52%)", bg: "hsl(248 62% 52% / 0.07)", border: "hsl(248 62% 52% / 0.2)" },
                 { num: "02", title: "Your profile text", desc: "Your bio and prompts, rewritten to sound genuinely like you — specific, memorable, and worth responding to.", color: "hsl(43 65% 65%)", bg: "hsl(43 65% 65% / 0.07)", border: "hsl(43 65% 65% / 0.2)" },
                 { num: "03", title: "Your conversations", desc: "Tone analysis and 5 tailored reply options — from warm to direct to date invitation — for every situation.", color: "hsl(190 55% 60%)", bg: "hsl(190 55% 60% / 0.07)", border: "hsl(190 55% 60% / 0.2)" },
                 { num: "04", title: "Your action plan", desc: "A concrete, prioritised 7-day plan built around your specific audit — not generic advice.", color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.07)", border: "hsl(142 55% 60% / 0.2)" },
@@ -442,7 +442,7 @@ export default function Landing() {
                 icon: "🔬",
                 title: "Founder-reviewed",
                 desc: "Every audit during private beta is reviewed by the founders personally. You're not getting a generic output — you're getting our full attention on your specific situation.",
-                color: "hsl(268 52% 68%)",
+                color: "hsl(248 62% 52%)",
               },
               {
                 icon: "🤝",
@@ -472,7 +472,7 @@ export default function Landing() {
             className="text-center mt-10"
             initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }}
           >
-            <Link href="/waitlist" className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass border border-[hsl(268_52%_68%/0.3)] text-sm font-semibold text-[hsl(268_52%_78%)] hover:border-[hsl(268_52%_68%/0.55)] transition-all">
+            <Link href="/waitlist" className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass border border-[hsl(248_62%_52%/0.3)] text-sm font-semibold text-[hsl(248_62%_62%)] hover:border-[hsl(248_62%_52%/0.55)] transition-all">
               Join the early cohort <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>
@@ -485,7 +485,7 @@ export default function Landing() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-5">Why we exist</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-5">Why we exist</p>
               <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-7 leading-tight">
                 Most people don't know<br />
                 <span className="gradient-text-violet italic">what they're communicating.</span>
@@ -498,7 +498,7 @@ export default function Landing() {
                 We believe everyone deserves to understand what they're communicating — and to feel genuinely confident in how they show up. Not through flattery, not through generic advice, but through honest, specific reflection that shows you what to change and why.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold glow-pulse">
+                <Button asChild className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 font-semibold glow-pulse">
                   <Link href="/start">Get My Free Signal Audit <ArrowRight className="ml-2 h-4 w-4" /></Link>
                 </Button>
                 <Button asChild variant="ghost" className="rounded-full border border-foreground/12 text-muted-foreground hover:text-foreground hover:bg-foreground/5">
@@ -516,7 +516,7 @@ export default function Landing() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass border border-[hsl(268_52%_68%/0.25)] text-xs font-semibold text-[hsl(268_52%_78%)] uppercase tracking-widest mb-6">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass border border-[hsl(248_62%_52%/0.25)] text-xs font-semibold text-[hsl(248_62%_62%)] uppercase tracking-widest mb-6">
                 <Sparkles className="w-3.5 h-3.5" /> Why we built this
               </span>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-5 leading-tight">
@@ -529,7 +529,7 @@ export default function Landing() {
               <p className="text-muted-foreground leading-relaxed mb-8">
                 We built MatchLab Club for people who are emotionally available, self-aware, and genuinely ready — but whose profiles don't show any of that yet. The technology isn't the point. Honest reflection is.
               </p>
-              <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold glow-pulse">
+              <Button asChild className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 font-semibold glow-pulse">
                 <Link href="/waitlist">Join the Early Cohort <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
             </motion.div>
@@ -544,7 +544,7 @@ export default function Landing() {
           <div className="max-w-4xl mx-auto">
             <div className="grid md:grid-cols-5 gap-8 items-center">
               <motion.div className="md:col-span-2" initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-                <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-3">Platform Vision</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-3">Platform Vision</p>
                 <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
                   You Control<br />
                   <span className="gradient-text-violet italic">the Mirror.</span>
@@ -560,12 +560,12 @@ export default function Landing() {
                 <div className="space-y-2.5">
                   {[
                     { num: 1, title: "User-Entered Dating Audit", status: "Live Today", statusColor: "hsl(142 55% 62%)", desc: "Bio, prompts, messages → Score, rewrite, coaching", live: true },
-                    { num: 2, title: "User-Uploaded Presence Audit", status: "In Development", statusColor: "hsl(268 52% 72%)", desc: "Screenshots, profile links → Cross-platform analysis", live: false },
+                    { num: 2, title: "User-Uploaded Presence Audit", status: "In Development", statusColor: "hsl(248 62% 58%)", desc: "Screenshots, profile links → Cross-platform analysis", live: false },
                     { num: 3, title: "Opt-In Connected Analysis", status: "Roadmap", statusColor: "hsl(43 65% 67%)", desc: "User-approved imports → Automatic pattern insights", live: false },
-                    { num: 4, title: "Private Intelligence Layer", status: "Phase 3", statusColor: "hsl(285 45% 68%)", desc: "Private compounding profile of your dating self", live: false },
+                    { num: 4, title: "Private Intelligence Layer", status: "Phase 3", statusColor: "hsl(326 100% 65%)", desc: "Private compounding profile of your dating self", live: false },
                     { num: 5, title: "Aggregate Insight Business", status: "Vision", statusColor: "hsl(348 55% 67%)", desc: "Anonymised trends → B2B insight, no individual exposed", live: false },
                   ].map((level, i) => (
-                    <div key={i} className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${level.live ? "border-[hsl(142_55%_45%/0.25)] bg-[hsl(142_55%_45%/0.06)]" : "border-white/5 bg-[hsl(232_28%_12%/0.5)]"}`} style={{ opacity: level.live ? 1 : 0.6 + i * 0.08 }}>
+                    <div key={i} className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${level.live ? "border-[hsl(142_55%_45%/0.25)] bg-[hsl(142_55%_45%/0.06)]" : "border-foreground/5 bg-[hsl(248_40%_96%/0.5)]"}`} style={{ opacity: level.live ? 1 : 0.6 + i * 0.08 }}>
                       <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0" style={{ background: `${level.statusColor.replace(")", " / 0.12)")}`, color: level.statusColor, border: `1px solid ${level.statusColor.replace(")", " / 0.25)")}` }}>{level.num}</div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -588,7 +588,7 @@ export default function Landing() {
       <section className="py-20 border-t border-white/5">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center mb-12">
-            <Shield className="w-10 h-10 text-[hsl(268_52%_68%)] mx-auto mb-5" />
+            <Shield className="w-10 h-10 text-[hsl(248_62%_52%)] mx-auto mb-5" />
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Your private sanctuary.
             </h2>
@@ -619,11 +619,11 @@ export default function Landing() {
 
       {/* ── Final CTA ── */}
       <section className="py-24 md:py-32 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(268_52%_68%/0.12)] via-[hsl(285_45%_60%/0.08)] to-[hsl(43_65%_62%/0.06)]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(248_62%_52%/0.12)] via-[hsl(326_100%_59%/0.08)] to-[hsl(43_65%_62%/0.06)]" />
         <div className="orb orb-violet absolute w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-80" />
         <div className="container mx-auto px-4 text-center relative z-10">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
-            <Sparkles className="w-10 h-10 text-[hsl(268_52%_78%)] mx-auto mb-6" />
+            <Sparkles className="w-10 h-10 text-[hsl(248_62%_62%)] mx-auto mb-6" />
             <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-5 leading-tight">
               Ready to be seen<br />
               <span className="gradient-text italic">for who you actually are?</span>
@@ -635,7 +635,7 @@ export default function Landing() {
               <Button
                 asChild
                 size="lg"
-                className="h-14 px-10 text-base font-semibold rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse shadow-[0_4px_30px_hsl(268_52%_68%/0.5)]"
+                className="h-14 px-10 text-base font-semibold rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 glow-pulse shadow-[0_4px_30px_hsl(248_62%_52%/0.5)]"
                 data-testid="button-final-cta"
               >
                 <Link href="/start">

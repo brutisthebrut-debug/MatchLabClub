@@ -28,7 +28,7 @@ const WORKFLOWS = [
     title: "Start My Reset",
     tagline: "Guided onboarding through your 5 core tools",
     steps: 5,
-    color: "hsl(268 52% 68%)",
+    color: "hsl(248 62% 52%)",
     href: "/copilot/reset",
     desc: "Signal Check → Blueprint → Profile → Messaging → Your Plan",
   },
@@ -73,7 +73,7 @@ const WORKFLOWS = [
     title: "Prepare for a Date",
     tagline: "Practical prep card for any meetup",
     steps: 2,
-    color: "hsl(285 45% 65%)",
+    color: "hsl(326 100% 65%)",
     href: "/copilot/prep",
     desc: "Mindset, questions to ask, boundaries to know, follow-up plan",
   },
@@ -109,10 +109,10 @@ export default function Copilot() {
           {/* Hero */}
           <motion.div {...fadeUp(0)} className="mb-8">
             <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] flex items-center justify-center shadow-[0_0_18px_hsl(268_52%_68%/0.4)]">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] flex items-center justify-center shadow-[0_0_18px_hsl(248_62%_52%/0.4)]">
                 <Sparkles className="w-4.5 h-4.5 text-white" />
               </div>
-              <p className="text-sm font-semibold text-[hsl(268_52%_78%)]">Wingman Studio</p>
+              <p className="text-sm font-semibold text-[hsl(248_62%_62%)]">Wingman Studio</p>
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">Your AI Copilot</h1>
             <p className="text-muted-foreground max-w-xl leading-relaxed text-sm sm:text-base">

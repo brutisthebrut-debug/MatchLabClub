@@ -157,14 +157,14 @@ function AiStatusPanel() {
           onChange={(e) => setSample(e.target.value)}
           rows={3}
           maxLength={2000}
-          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm outline-none focus:border-[hsl(268_52%_68%/0.5)] transition-colors resize-none font-mono"
+          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm outline-none focus:border-[hsl(248_62%_52%/0.5)] transition-colors resize-none font-mono"
           placeholder="Type a short sample message…"
         />
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <button
             onClick={runTest}
             disabled={testing || !sample.trim()}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {testing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
             {testing ? "Sending…" : "Run safe AI test"}
@@ -412,7 +412,7 @@ function AlertThresholdEditor({
                   max={10000}
                   value={globalWindow}
                   onChange={(e) => setGlobalWindow(Math.max(1, Number(e.target.value) || 1))}
-                  className="w-full mt-1 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-foreground outline-none focus:border-[hsl(268_52%_68%/0.5)]"
+                  className="w-full mt-1 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-foreground outline-none focus:border-[hsl(248_62%_52%/0.5)]"
                 />
               </label>
               <label className="block">
@@ -423,7 +423,7 @@ function AlertThresholdEditor({
                   max={10000}
                   value={globalMin}
                   onChange={(e) => setGlobalMin(Math.max(1, Number(e.target.value) || 1))}
-                  className="w-full mt-1 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-foreground outline-none focus:border-[hsl(268_52%_68%/0.5)]"
+                  className="w-full mt-1 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-foreground outline-none focus:border-[hsl(248_62%_52%/0.5)]"
                 />
               </label>
               <label className="block">
@@ -434,7 +434,7 @@ function AlertThresholdEditor({
                   max={100}
                   value={globalRate}
                   onChange={(e) => setGlobalRate(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
-                  className="w-full mt-1 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-foreground outline-none focus:border-[hsl(268_52%_68%/0.5)]"
+                  className="w-full mt-1 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-foreground outline-none focus:border-[hsl(248_62%_52%/0.5)]"
                 />
               </label>
             </div>
@@ -455,14 +455,14 @@ function AlertThresholdEditor({
                   max={1440}
                   value={cooldownMinutes}
                   onChange={(e) => setCooldownMinutes(Math.max(1, Math.min(1440, Number(e.target.value) || 1)))}
-                  className="w-24 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-foreground outline-none focus:border-[hsl(268_52%_68%/0.5)]"
+                  className="w-24 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-foreground outline-none focus:border-[hsl(248_62%_52%/0.5)]"
                 />
                 <span className="text-xs text-muted-foreground/70">minutes</span>
               </label>
               <button
                 onClick={() => void saveCooldown()}
                 disabled={savingCooldown}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 {savingCooldown && <Loader2 className="w-3 h-3 animate-spin" />}
                 {cooldownSaved ? "Saved!" : "Save"}
@@ -585,7 +585,7 @@ function AlertThresholdEditor({
             <button
               onClick={save}
               disabled={saving}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {saving && <Loader2 className="w-3 h-3 animate-spin" />}
               Save thresholds
@@ -1537,7 +1537,7 @@ type TrendDays = (typeof TREND_DAY_OPTIONS)[number];
 type TrendMetric = "firstTrySuccessRate" | "fallbackRate";
 
 const TREND_COLORS = [
-  "hsl(268 52% 68%)",
+  "hsl(248 62% 52%)",
   "hsl(142 55% 60%)",
   "hsl(43 65% 65%)",
   "hsl(190 55% 60%)",
@@ -1744,7 +1744,7 @@ function AiReliabilityTrendsPanel({ refreshKey, founderKey }: { refreshKey: numb
             value={focusedTool ?? ""}
             onChange={(e) => setFocusedTool(e.target.value === "" ? null : e.target.value)}
             data-testid="select-trend-focus-tool"
-            className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-medium text-foreground outline-none focus:border-[hsl(268_52%_68%/0.5)] max-w-[180px]"
+            className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-medium text-foreground outline-none focus:border-[hsl(248_62%_52%/0.5)] max-w-[180px]"
           >
             <option value="">All tools</option>
             {toolNames.map((name) => (
@@ -1760,7 +1760,7 @@ function AiReliabilityTrendsPanel({ refreshKey, founderKey }: { refreshKey: numb
                   onClick={() => setMetric(m)}
                   className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                     metric === m
-                      ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_52%_78%)]"
+                      ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_62%)]"
                       : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                   }`}
                 >
@@ -1777,7 +1777,7 @@ function AiReliabilityTrendsPanel({ refreshKey, founderKey }: { refreshKey: numb
                 onClick={() => setDays(d)}
                 className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                   days === d
-                    ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_52%_78%)]"
+                    ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_62%)]"
                     : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                 }`}
               >
@@ -2004,7 +2004,7 @@ const OCR_FIELD_LABELS: Record<string, string> = {
 const OCR_FILTER_FIELDS: OcrCorrectionField[] = ["firstName", "age", "sourceApp", "bio", "prompts"];
 
 const OCR_FIELD_COLORS: Record<string, string> = {
-  firstName: "hsl(268 52% 68%)",
+  firstName: "hsl(248 62% 52%)",
   age:        "hsl(142 55% 60%)",
   sourceApp:  "hsl(43 65% 65%)",
   bio:        "hsl(190 55% 60%)",
@@ -2386,7 +2386,7 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
                   data-testid="ocr-filter-chip-all"
                   className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border transition-colors ${
                     filter === "all"
-                      ? "border-[hsl(268_52%_68%/0.5)] bg-[hsl(268_52%_68%/0.15)] text-[hsl(268_52%_78%)]"
+                      ? "border-[hsl(248_62%_52%/0.5)] bg-[hsl(248_62%_52%/0.15)] text-[hsl(248_62%_62%)]"
                       : "border-white/10 text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -2402,7 +2402,7 @@ function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
                       data-testid={`ocr-filter-chip-${field}`}
                       className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border transition-colors ${
                         filter === field
-                          ? "border-[hsl(268_52%_68%/0.5)] bg-[hsl(268_52%_68%/0.15)] text-[hsl(268_52%_78%)]"
+                          ? "border-[hsl(248_62%_52%/0.5)] bg-[hsl(248_62%_52%/0.15)] text-[hsl(248_62%_62%)]"
                           : "border-white/10 text-muted-foreground hover:text-foreground"
                       }`}
                     >
@@ -2592,7 +2592,7 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
                 disabled={running || clearing}
                 className={`px-2 py-1 rounded-md border text-[10px] uppercase tracking-widest disabled:opacity-50 ${
                   sincePreset === preset
-                    ? "border-[hsl(268_52%_68%/0.5)] bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_52%_82%)]"
+                    ? "border-[hsl(248_62%_52%/0.5)] bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)]"
                     : "border-white/10 bg-transparent text-muted-foreground hover:border-white/20"
                 }`}
               >
@@ -2614,7 +2614,7 @@ function OcrRulesPanel({ refreshKey }: { refreshKey: number }) {
             data-testid="btn-ocr-learn-run"
             onClick={handleRun}
             disabled={running || clearing}
-            className="text-xs px-3 py-1.5 rounded-lg border border-[hsl(268_52%_68%/0.3)] bg-[hsl(268_52%_68%/0.15)] text-[hsl(268_52%_78%)] hover:bg-[hsl(268_52%_68%/0.25)] disabled:opacity-50 flex items-center gap-1.5"
+            className="text-xs px-3 py-1.5 rounded-lg border border-[hsl(248_62%_52%/0.3)] bg-[hsl(248_62%_52%/0.15)] text-[hsl(248_62%_62%)] hover:bg-[hsl(248_62%_52%/0.25)] disabled:opacity-50 flex items-center gap-1.5"
           >
             {running ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
             Run learning now
@@ -2969,7 +2969,7 @@ const LEAD_STATUS_OPTIONS = [
 type LeadStatus = (typeof LEAD_STATUS_OPTIONS)[number];
 
 const STATUS_COLORS: Record<LeadStatus, { color: string; bg: string }> = {
-  "New":                  { color: "hsl(268 52% 68%)", bg: "hsl(268 52% 68% / 0.12)" },
+  "New":                  { color: "hsl(248 62% 52%)", bg: "hsl(248 62% 52% / 0.12)" },
   "Needs Review":         { color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.12)"  },
   "Reviewed":             { color: "hsl(190 55% 60%)", bg: "hsl(190 55% 60% / 0.12)" },
   "Follow-Up Sent":       { color: "hsl(228 40% 65%)", bg: "hsl(228 40% 65% / 0.12)" },
@@ -3024,7 +3024,7 @@ function LeadsStatusTable({ leads }: { leads: Lead[] }) {
               <select
                 value={currentStatus}
                 onChange={e => setStatus(l.id, e.target.value as LeadStatus)}
-                className="text-xs rounded-lg border border-white/10 bg-white/5 text-muted-foreground px-2 py-1.5 outline-none focus:border-[hsl(268_52%_68%/0.4)] cursor-pointer"
+                className="text-xs rounded-lg border border-white/10 bg-white/5 text-muted-foreground px-2 py-1.5 outline-none focus:border-[hsl(248_62%_52%/0.4)] cursor-pointer"
               >
                 {LEAD_STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -3193,8 +3193,8 @@ function LockedView({ onSubmit }: { onSubmit: (key: string) => void }) {
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
       <div className="glass rounded-2xl p-10 max-w-sm w-full text-center space-y-6">
-        <div className="w-14 h-14 rounded-full bg-[hsl(268_52%_68%/0.15)] flex items-center justify-center mx-auto">
-          <Lock className="w-7 h-7 text-[hsl(268_52%_68%)]" />
+        <div className="w-14 h-14 rounded-full bg-[hsl(248_62%_52%/0.15)] flex items-center justify-center mx-auto">
+          <Lock className="w-7 h-7 text-[hsl(248_62%_52%)]" />
         </div>
         <div>
           <h1 className="font-serif text-xl font-bold text-foreground">Founder Dashboard</h1>
@@ -3206,12 +3206,12 @@ function LockedView({ onSubmit }: { onSubmit: (key: string) => void }) {
             value={value}
             onChange={(e) => { setValue(e.target.value); setError(false); }}
             placeholder="Founder key"
-            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm outline-none focus:border-[hsl(268_52%_68%/0.5)] transition-colors"
+            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm outline-none focus:border-[hsl(248_62%_52%/0.5)] transition-colors"
           />
           {error && <p className="text-xs text-red-400">Incorrect key.</p>}
           <button
             type="submit"
-            className="w-full py-3 bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] text-white font-semibold rounded-xl text-sm hover:opacity-90 transition-opacity"
+            className="w-full py-3 bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] text-white font-semibold rounded-xl text-sm hover:opacity-90 transition-opacity"
           >
             Unlock Dashboard
           </button>
@@ -3292,7 +3292,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
             onClick={() => setTab(id)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
               tab === id
-                ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_52%_78%)] border border-[hsl(268_52%_68%/0.3)]"
+                ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)]"
                 : "text-muted-foreground hover:text-foreground hover:bg-white/5"
             }`}
           >
@@ -3316,7 +3316,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
           <OcrPendingRulesPanel refreshKey={refreshKey} onApproved={() => setRefreshKey((k) => k + 1)} />
           <OcrRulesPanel refreshKey={refreshKey} />
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <StatCard label="Leads captured" value={stats?.leads ?? "—"} icon={Inbox} color="hsl(268 52% 68%)" />
+            <StatCard label="Leads captured" value={stats?.leads ?? "—"} icon={Inbox} color="hsl(248 62% 52%)" />
             <StatCard label="Purchase interest" value={stats?.purchaseInterest ?? "—"} icon={ShoppingBag} color="hsl(348 55% 58%)" />
             <StatCard label="Audits completed" value={stats?.audits ?? "—"} icon={ListChecks} color="hsl(142 55% 50%)" />
             <StatCard label="Waitlist signups" value={stats?.waitlist ?? "—"} icon={Users} color="hsl(43 65% 52%)" />
@@ -3900,7 +3900,7 @@ const TEST_FLOWS: TestFlow[] = [
 ];
 
 const AREA_COLORS: Record<string, string> = {
-  "Onboarding":      "hsl(268 52% 68%)",
+  "Onboarding":      "hsl(248 62% 52%)",
   "Core Tools":      "hsl(190 55% 60%)",
   "Wingman Studio":  "hsl(348 55% 65%)",
   "Data & Trust":    "hsl(142 55% 60%)",
@@ -3954,7 +3954,7 @@ function WellnessCompletionPanel({ founderKey }: { founderKey: string }) {
         <>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: "Total answers",     value: stats.totalAnswers          ?? 0, color: "hsl(268 52% 68%)" },
+              { label: "Total answers",     value: stats.totalAnswers          ?? 0, color: "hsl(248 62% 52%)" },
               { label: "Insight tags",      value: stats.totalTags             ?? 0, color: "hsl(43 65% 65%)"  },
               { label: "Users with profile",value: stats.usersWithAnswers      ?? 0, color: "hsl(190 55% 60%)" },
               { label: "Approved matching", value: stats.usersApprovedMatching ?? 0, color: "hsl(142 55% 60%)" },
@@ -3969,11 +3969,11 @@ function WellnessCompletionPanel({ founderKey }: { founderKey: string }) {
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <p className="text-xs text-muted-foreground/50">Dimensions answered across all users</p>
-              <p className="text-xs font-bold tabular-nums text-[hsl(268_52%_68%)]">{stats.dimensionsAnswered ?? 0}/{TOTAL_DIMENSIONS}</p>
+              <p className="text-xs font-bold tabular-nums text-[hsl(248_62%_52%)]">{stats.dimensionsAnswered ?? 0}/{TOTAL_DIMENSIONS}</p>
             </div>
             <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(190_55%_60%)] transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(190_55%_60%)] transition-all duration-500"
                 style={{ width: `${pct}%` }}
               />
             </div>
@@ -3990,7 +3990,7 @@ function WellnessCompletionPanel({ founderKey }: { founderKey: string }) {
                       <p className="text-xs text-muted-foreground/60 w-36 flex-shrink-0 truncate capitalize">{d.dimension}</p>
                       <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-[hsl(268_52%_68%/0.6)]"
+                          className="h-full rounded-full bg-[hsl(248_62%_52%/0.6)]"
                           style={{ width: `${Math.round((d.count / max) * 100)}%` }}
                         />
                       </div>
@@ -4029,14 +4029,14 @@ function TestingChecklistPanel() {
       </div>
       <div className="h-1.5 bg-white/5 rounded-full overflow-hidden mb-2">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(142_55%_60%)] transition-all duration-500"
+          className="h-full rounded-full bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(142_55%_60%)] transition-all duration-500"
           style={{ width: `${(doneCount / totalCount) * 100}%` }}
         />
       </div>
       <div className="space-y-3">
         {TEST_FLOWS.map(flow => {
           const done = checked.has(flow.id);
-          const color = AREA_COLORS[flow.area] ?? "hsl(268 52% 68%)";
+          const color = AREA_COLORS[flow.area] ?? "hsl(248 62% 52%)";
           return (
             <div key={flow.id}
               className={`glass border rounded-2xl overflow-hidden transition-all ${done ? "border-[hsl(142_55%_60%/0.3)] opacity-60" : "border-white/8"}`}
@@ -4077,7 +4077,7 @@ function TestingChecklistPanel() {
 }
 
 export default function Founder() {
-  useMeta("Founder Dashboard", "NLDC Founder Dashboard — live app data.");
+  useMeta("Founder Dashboard", "MatchLab Club Founder Dashboard — live app data.");
 
   const params = new URLSearchParams(
     typeof window !== "undefined" ? window.location.search : ""

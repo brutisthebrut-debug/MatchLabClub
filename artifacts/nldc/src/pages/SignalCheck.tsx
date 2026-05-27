@@ -81,7 +81,7 @@ function AnimatedScore({ target, color }: { target: number; color: string }) {
   return (
     <div className="relative w-48 h-48 mx-auto" data-testid="signal-score-ring">
       <svg className="w-full h-full -rotate-90" viewBox="0 0 160 160" style={{ filter: `drop-shadow(0 0 18px ${color}50)` }}>
-        <circle cx="80" cy="80" r={radius} strokeWidth="12" stroke="hsl(232 28% 18%)" fill="none" />
+        <circle cx="80" cy="80" r={radius} strokeWidth="12" stroke="hsl(248 40% 154%)" fill="none" />
         <circle
           cx="80" cy="80" r={radius} strokeWidth="12"
           stroke={color} fill="none"
@@ -176,8 +176,8 @@ export default function SignalCheck() {
   }
 
   const scoreColor = result
-    ? result.score >= 75 ? "hsl(142 55% 60%)" : result.score >= 55 ? "hsl(268 52% 68%)" : "hsl(43 65% 65%)"
-    : "hsl(268 52% 68%)";
+    ? result.score >= 75 ? "hsl(142 55% 60%)" : result.score >= 55 ? "hsl(248 62% 52%)" : "hsl(43 65% 65%)"
+    : "hsl(248 62% 52%)";
 
   const LOCKED_ITEMS = [
     "Complete bio rewrite (not just one line)",
@@ -256,12 +256,12 @@ export default function SignalCheck() {
                 <div className="glass border border-white/8 rounded-3xl p-7" data-testid="card-signal-rewrite">
                   <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">One Line, Rewritten ✦</p>
                   <div className="space-y-3">
-                    <div className="rounded-2xl p-4 bg-[hsl(232_28%_14%)] border border-white/8">
+                    <div className="rounded-2xl p-4 bg-[hsl(248_40%_95%)] border border-white/8">
                       <p className="text-xs text-muted-foreground font-medium mb-1.5">Your original</p>
                       <p className="text-sm text-muted-foreground/80 italic">"{result.originalLine || "Your bio text..."}"</p>
                     </div>
-                    <div className="rounded-2xl p-4 border border-[hsl(268_52%_68%/0.3)] bg-[hsl(268_52%_68%/0.07)]">
-                      <p className="text-xs text-[hsl(268_60%_78%)] font-semibold mb-1.5">Rewritten ✦</p>
+                    <div className="rounded-2xl p-4 border border-[hsl(248_62%_52%/0.3)] bg-[hsl(248_62%_52%/0.07)]">
+                      <p className="text-xs text-[hsl(248_62%_62%)] font-semibold mb-1.5">Rewritten ✦</p>
                       <p className="text-sm text-foreground">{result.rewrittenLine}</p>
                     </div>
                   </div>
@@ -271,7 +271,7 @@ export default function SignalCheck() {
                 <div className="glass border border-white/8 rounded-3xl p-7" data-testid="card-signal-opener">
                   <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">One Opening Message to Try</p>
                   <div className="flex justify-end">
-                    <div className="max-w-[min(100%,22rem)] text-sm px-4 py-3 rounded-2xl rounded-br-sm text-white font-medium break-words" style={{ background: "linear-gradient(135deg, hsl(268 52% 65%), hsl(285 45% 58%))" }}>
+                    <div className="max-w-[min(100%,22rem)] text-sm px-4 py-3 rounded-2xl rounded-br-sm text-white font-medium break-words" style={{ background: "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))" }}>
                       {result.suggestedOpener}
                     </div>
                   </div>
@@ -280,10 +280,10 @@ export default function SignalCheck() {
 
                 {/* Email lead capture */}
                 {!leadSaved ? (
-                  <div className="glass border border-[hsl(268_52%_68%/0.2)] rounded-3xl p-6" data-testid="card-signal-lead-capture">
+                  <div className="glass border border-[hsl(248_62%_52%/0.2)] rounded-3xl p-6" data-testid="card-signal-lead-capture">
                     <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-[hsl(268_52%_68%/0.12)] flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Mail className="w-4 h-4 text-[hsl(268_52%_68%)]" />
+                      <div className="w-8 h-8 rounded-xl bg-[hsl(248_62%_52%/0.12)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Mail className="w-4 h-4 text-[hsl(248_62%_52%)]" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-foreground mb-0.5">Save your result</p>
@@ -294,7 +294,7 @@ export default function SignalCheck() {
                             placeholder="your@email.com"
                             value={leadEmail}
                             onChange={(e) => setLeadEmail(e.target.value)}
-                            className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-[hsl(268_52%_68%/0.5)] transition-colors"
+                            className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-[hsl(248_62%_52%/0.5)] transition-colors"
                           />
                           <button
                             onClick={async () => {
@@ -310,7 +310,7 @@ export default function SignalCheck() {
                               } catch { /* silent — still show success */ }
                               setLeadSaved(true);
                             }}
-                            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_55%)] text-white text-sm font-semibold hover:opacity-90 transition-opacity flex-shrink-0 whitespace-nowrap"
+                            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_55%)] text-white text-sm font-semibold hover:opacity-90 transition-opacity flex-shrink-0 whitespace-nowrap"
                           >
                             Save
                           </button>
@@ -333,15 +333,15 @@ export default function SignalCheck() {
 
                 {/* Locked Preview */}
                 <div className="relative glass border border-white/8 rounded-3xl p-7 overflow-hidden" data-testid="card-signal-locked">
-                  <div className="absolute inset-0 bg-gradient-to-t from-[hsl(232_38%_7%/0.97)] via-[hsl(232_38%_7%/0.8)] to-transparent z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[hsl(248_45%_97%/0.97)] via-[hsl(248_45%_97%/0.8)] to-transparent z-10" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center z-20 text-center px-6">
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 bg-[hsl(268_52%_68%/0.15)] border border-[hsl(268_52%_68%/0.3)]">
-                      <Lock className="w-6 h-6 text-[hsl(268_52%_68%)]" />
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 bg-[hsl(248_62%_52%/0.15)] border border-[hsl(248_62%_52%/0.3)]">
+                      <Lock className="w-6 h-6 text-[hsl(248_62%_52%)]" />
                     </div>
                     <p className="font-bold text-foreground text-lg mb-2">Full Audit includes all of this</p>
                     <p className="text-xs text-muted-foreground mb-5 max-w-xs leading-relaxed">Your Signal Check is just the surface. The Full Dating Blueprint goes 6× deeper.</p>
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold glow-pulse" data-testid="button-signal-full-audit">
+                      <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 font-semibold glow-pulse" data-testid="button-signal-full-audit">
                         <Link href="/start">Start My Full Audit <ArrowRight className="ml-2 h-4 w-4" /></Link>
                       </Button>
                       <Button asChild variant="ghost" className="rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5" data-testid="button-signal-waitlist">
@@ -355,7 +355,7 @@ export default function SignalCheck() {
                     <div className="space-y-3">
                       {LOCKED_ITEMS.map((item, i) => (
                         <div key={i} className="flex items-center gap-3 text-sm text-muted-foreground">
-                          <CheckCircle className="w-4 h-4 text-[hsl(268_52%_68%)] flex-shrink-0" />
+                          <CheckCircle className="w-4 h-4 text-[hsl(248_62%_52%)] flex-shrink-0" />
                           {item}
                         </div>
                       ))}
@@ -380,14 +380,14 @@ export default function SignalCheck() {
             {/* LOADING */}
             {loading && (
               <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass border border-white/8 rounded-3xl p-16 text-center">
-                <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center bg-[hsl(268_52%_68%/0.15)] border border-[hsl(268_52%_68%/0.3)]" style={{ animation: "glow-pulse 2s ease-in-out infinite" }}>
-                  <Loader2 className="w-8 h-8 text-[hsl(268_52%_68%)] animate-spin" />
+                <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center bg-[hsl(248_62%_52%/0.15)] border border-[hsl(248_62%_52%/0.3)]" style={{ animation: "glow-pulse 2s ease-in-out infinite" }}>
+                  <Loader2 className="w-8 h-8 text-[hsl(248_62%_52%)] animate-spin" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-2">Checking your signal...</h3>
                 <p className="text-muted-foreground text-sm">{LOADING_STEPS[loadingStep]}</p>
                 <div className="flex justify-center gap-1.5 mt-5">
                   {LOADING_STEPS.map((_, i) => (
-                    <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i <= loadingStep ? "w-6 bg-[hsl(268_52%_68%)]" : "w-2 bg-[hsl(232_28%_22%)]"}`} />
+                    <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i <= loadingStep ? "w-6 bg-[hsl(248_62%_52%)]" : "w-2 bg-[hsl(248_40%_150%)]"}`} />
                   ))}
                 </div>
               </motion.div>
@@ -418,18 +418,18 @@ export default function SignalCheck() {
                     placeholder="Jordan"
                     value={firstName}
                     onChange={e => setFirstName(e.target.value)}
-                    className="bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/50"
+                    className="bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/50"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Your bio <span className="text-[hsl(268_52%_68%)]">*</span></Label>
+                  <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Your bio <span className="text-[hsl(248_62%_52%)]">*</span></Label>
                   <Textarea
                     data-testid="textarea-signal-bio"
                     placeholder={"Paste your dating profile bio here — just the text, no formatting needed.\n\nEven a first draft or a rough version works. The more honest, the better your Signal Check."}
                     value={bio}
                     onChange={e => setBio(e.target.value)}
-                    className="min-h-[140px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40 text-sm"
+                    className="min-h-[140px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40 text-sm"
                   />
                   <p className="text-xs text-muted-foreground">No account required. Your bio is never stored longer than needed to generate your result.</p>
                 </div>
@@ -442,7 +442,7 @@ export default function SignalCheck() {
                         key={g.value}
                         data-testid={`button-signal-goal-${g.value.replace(/ /g, "-")}`}
                         onClick={() => setGoal(g.value)}
-                        className={`p-3 rounded-xl border text-left transition-all ${goal === g.value ? "border-[hsl(268_52%_68%/0.5)] bg-[hsl(268_52%_68%/0.1)]" : "border-white/8 bg-[hsl(232_28%_14%/0.5)] hover:border-white/15"}`}
+                        className={`p-3 rounded-xl border text-left transition-all ${goal === g.value ? "border-[hsl(248_62%_52%/0.5)] bg-[hsl(248_62%_52%/0.1)]" : "border-white/8 bg-[hsl(248_40%_95%/0.5)] hover:border-white/15"}`}
                       >
                         <span className="text-base block mb-1">{g.emoji}</span>
                         <span className="text-xs font-medium text-foreground">{g.label}</span>
@@ -454,7 +454,7 @@ export default function SignalCheck() {
                 <Button
                   onClick={runCheck}
                   disabled={!bio.trim() || bio.trim().length < 15}
-                  className="w-full rounded-full h-12 text-base font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-40"
+                  className="w-full rounded-full h-12 text-base font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-40"
                   data-testid="button-run-signal-check"
                 >
                   <Sparkles className="mr-2 h-5 w-5" /> Check My Signal

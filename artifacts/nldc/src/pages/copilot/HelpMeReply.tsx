@@ -24,7 +24,7 @@ interface ReplyOption { style: string; text: string; rationale: string; color: s
 interface ReplyResult { options: ReplyOption[]; coachNote: string; }
 
 const PALETTE: { color: string; bg: string }[] = [
-  { color: "hsl(268 52% 68%)", bg: "hsl(268 52% 68% / 0.08)" },
+  { color: "hsl(248 62% 52%)", bg: "hsl(248 62% 52% / 0.08)" },
   { color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.08)"  },
   { color: "hsl(190 55% 60%)", bg: "hsl(190 55% 60% / 0.08)" },
   { color: "hsl(348 55% 65%)", bg: "hsl(348 55% 65% / 0.08)" },
@@ -198,7 +198,7 @@ export default function HelpMeReply() {
                   </Label>
                   <Textarea value={context} onChange={e => setContext(e.target.value)}
                     placeholder={"Alex: I love that little wine bar on Oak Street\nMe: The one with exposed brick? I've been wanting to go\nAlex: Yes! We should go sometime\n\n...or just describe what's happened so far"}
-                    className="min-h-[130px] resize-none font-mono text-xs bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/35" />
+                    className="min-h-[130px] resize-none font-mono text-xs bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/35" />
                 </div>
 
                 <div className="space-y-2">
@@ -226,7 +226,7 @@ export default function HelpMeReply() {
                 </div>
 
                 <Button onClick={handleGenerate} disabled={!context.trim()}
-                  className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(190_55%_55%)] to-[hsl(268_52%_65%)] border-0 glow-pulse disabled:opacity-50">
+                  className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(190_55%_55%)] to-[hsl(248_62%_55%)] border-0 glow-pulse disabled:opacity-50">
                   <Sparkles className="mr-2 h-4 w-4" /> Get My 5 Options
                 </Button>
               </motion.div>
@@ -258,7 +258,7 @@ export default function HelpMeReply() {
                       <div className="px-5 py-4">
                         <div className="flex justify-end mb-2">
                           <p className="text-sm px-4 py-3 rounded-2xl rounded-br-md text-white font-medium max-w-sm"
-                            style={{ background: `linear-gradient(135deg, ${opt.color}, hsl(285 45% 55%))` }}>
+                            style={{ background: `linear-gradient(135deg, ${opt.color}, hsl(326 100% 55%))` }}>
                             {opt.text}
                           </p>
                         </div>

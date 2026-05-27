@@ -5,7 +5,7 @@ import { Shield, Eye, Lock, Trash2, Mail, ExternalLink } from "lucide-react";
 const Section = ({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) => (
   <div className="glass rounded-2xl p-6 md:p-8 space-y-4">
     <div className="flex items-center gap-3">
-      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] flex items-center justify-center flex-shrink-0">
+      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] flex items-center justify-center flex-shrink-0">
         <Icon className="w-4.5 h-4.5 text-white" />
       </div>
       <h2 className="font-serif text-xl font-bold text-foreground">{title}</h2>
@@ -25,7 +25,7 @@ export default function Privacy() {
       <div className="container mx-auto px-4 md:px-6 py-16 max-w-3xl">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-semibold text-[hsl(268_52%_78%)] border border-[hsl(268_52%_68%/0.3)] mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-semibold text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)] mb-6">
             <Shield className="w-3.5 h-3.5" />
             Privacy Policy
           </div>
@@ -39,7 +39,7 @@ export default function Privacy() {
         </div>
 
         {/* Quick summary */}
-        <div className="glass-strong rounded-2xl p-6 mb-8 border border-[hsl(268_52%_68%/0.2)]">
+        <div className="glass-strong rounded-2xl p-6 mb-8 border border-[hsl(248_62%_52%/0.2)]">
           <h2 className="font-semibold text-foreground mb-3">The short version</h2>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2"><span className="text-green-400 mt-0.5">✓</span> You own your content. We just process it to generate your coaching.</li>
@@ -76,10 +76,10 @@ export default function Privacy() {
           <Section icon={ExternalLink} title="Future integrations (always opt-in)">
             <p>Future versions of MatchLab Club may offer optional connections to Gmail, calendar apps, or dating platforms to unlock deeper coaching. These will always be:</p>
             <ul className="space-y-1 list-none">
-              <li className="flex items-start gap-2"><span className="text-[hsl(268_52%_68%)]">→</span> Entirely optional — you'll never be prompted to connect something you haven't asked for</li>
-              <li className="flex items-start gap-2"><span className="text-[hsl(268_52%_68%)]">→</span> Turned on only by you, with a clear consent step before any data is read</li>
-              <li className="flex items-start gap-2"><span className="text-[hsl(268_52%_68%)]">→</span> Revocable at any time from your settings</li>
-              <li className="flex items-start gap-2"><span className="text-[hsl(268_52%_68%)]">→</span> Never enabled by default</li>
+              <li className="flex items-start gap-2"><span className="text-[hsl(248_62%_52%)]">→</span> Entirely optional — you'll never be prompted to connect something you haven't asked for</li>
+              <li className="flex items-start gap-2"><span className="text-[hsl(248_62%_52%)]">→</span> Turned on only by you, with a clear consent step before any data is read</li>
+              <li className="flex items-start gap-2"><span className="text-[hsl(248_62%_52%)]">→</span> Revocable at any time from your settings</li>
+              <li className="flex items-start gap-2"><span className="text-[hsl(248_62%_52%)]">→</span> Never enabled by default</li>
             </ul>
             <p>When an integration is enabled, we access only what's needed for the specific feature you've turned on. We read the minimum. We never write to your accounts without explicit confirmation.</p>
           </Section>

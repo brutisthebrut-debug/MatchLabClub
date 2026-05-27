@@ -89,17 +89,17 @@ function FollowUpCard({ fu, onAnswer, onSkip }: {
 
         {fu.status === "pending" && (
           <div className="mt-3">
-            <button onClick={() => setOpen(o => !o)} className="flex items-center gap-1.5 text-xs text-[hsl(268_52%_68%)] hover:text-[hsl(268_52%_80%)] transition-colors font-medium">
+            <button onClick={() => setOpen(o => !o)} className="flex items-center gap-1.5 text-xs text-[hsl(248_62%_52%)] hover:text-[hsl(248_62%_80%)] transition-colors font-medium">
               {open ? <><ChevronUp className="w-3 h-3" />Hide</>  : <><ChevronDown className="w-3 h-3" />Answer this</>}
             </button>
             <AnimatePresence>
               {open && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
                   <textarea value={draft} onChange={e => setDraft(e.target.value)} placeholder="Write your answer here — even a few words…"
-                    className="mt-3 w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-[hsl(268_52%_68%/0.4)] resize-none h-24" />
+                    className="mt-3 w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-[hsl(248_62%_52%/0.4)] resize-none h-24" />
                   <div className="flex gap-2 mt-2">
                     <Button onClick={() => { onAnswer(fu.id, draft); setOpen(false); }} disabled={!draft.trim()} size="sm"
-                      className="rounded-full px-4 h-7 text-xs font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 disabled:opacity-40">
+                      className="rounded-full px-4 h-7 text-xs font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 disabled:opacity-40">
                       <CheckCircle2 className="w-3 h-3 mr-1" />Save answer
                     </Button>
                     <Button onClick={() => { onSkip(fu.id); setOpen(false); }} size="sm" variant="ghost" className="rounded-full h-7 text-xs text-muted-foreground">
@@ -141,8 +141,8 @@ export default function ProgressFollowUp() {
 
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <MessageCircle className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Progress Workspace</p>
+              <MessageCircle className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Progress Workspace</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Follow-Up Check</h1>
             <p className="text-muted-foreground mt-2 leading-relaxed">Short questions tied to your notes and suggestions. Answering them builds a record of what's actually changing.</p>

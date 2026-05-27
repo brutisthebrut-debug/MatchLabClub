@@ -28,12 +28,12 @@ interface TimelineEntry {
 }
 
 const TAG_CONFIG: Record<EntryTag, { label: string; color: string; bg: string }> = {
-  insight:  { label: "Insight",  color: "hsl(268 52% 68%)", bg: "hsl(268 52% 68% / 0.12)" },
+  insight:  { label: "Insight",  color: "hsl(248 62% 52%)", bg: "hsl(248 62% 52% / 0.12)" },
   win:      { label: "Win",      color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.12)" },
   pattern:  { label: "Pattern",  color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.12)"  },
   growth:   { label: "Growth",   color: "hsl(190 55% 60%)", bg: "hsl(190 55% 60% / 0.12)" },
   setback:  { label: "Setback",  color: "hsl(348 55% 65%)", bg: "hsl(348 55% 65% / 0.12)" },
-  question: { label: "Question", color: "hsl(285 45% 65%)", bg: "hsl(285 45% 65% / 0.12)" },
+  question: { label: "Question", color: "hsl(326 100% 65%)", bg: "hsl(326 100% 65% / 0.12)" },
 };
 
 const STATUS_CONFIG: Record<EntryStatus, { label: string; icon: typeof Circle; color: string }> = {
@@ -169,8 +169,8 @@ export default function ProgressTimeline() {
         <div className="max-w-2xl mx-auto relative z-10">
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <Clock className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Progress Workspace</p>
+              <Clock className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Progress Workspace</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">My Timeline</h1>
             <p className="text-muted-foreground mt-2">A personal log of your observations, wins, patterns, and questions — sorted by date. Tap a status chip to cycle through stages.</p>
@@ -216,7 +216,7 @@ export default function ProgressTimeline() {
             <span className="text-xs text-muted-foreground/50 font-semibold uppercase tracking-wider mr-1">Filter:</span>
             {ALL_TAGS.map(t => (
               <button key={t} onClick={() => setFilterTag(filterTag === t ? null : t)}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-all ${filterTag === t ? "border-[hsl(268_52%_68%/0.4)] bg-[hsl(268_52%_68%/0.15)] text-[hsl(268_60%_82%)]" : "border-white/10 text-muted-foreground hover:border-white/20"}`}>
+                className={`text-xs px-2.5 py-1 rounded-full border transition-all ${filterTag === t ? "border-[hsl(248_62%_52%/0.4)] bg-[hsl(248_62%_52%/0.15)] text-[hsl(248_62%_65%)]" : "border-white/10 text-muted-foreground hover:border-white/20"}`}>
                 {TAG_CONFIG[t].label}
               </button>
             ))}
@@ -230,7 +230,7 @@ export default function ProgressTimeline() {
               className="text-xs text-muted-foreground/40 hover:text-muted-foreground ml-1 transition-colors">clear</button>
             <div className="ml-auto">
               <Button onClick={() => setAdding(a => !a)} size="sm"
-                className="rounded-full px-4 h-8 text-xs font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0">
+                className="rounded-full px-4 h-8 text-xs font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0">
                 <Plus className="w-3.5 h-3.5 mr-1" />Add entry
               </Button>
             </div>
@@ -240,15 +240,15 @@ export default function ProgressTimeline() {
           <AnimatePresence>
             {adding && (
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                className="glass border border-[hsl(268_52%_68%/0.25)] rounded-2xl p-5 mb-5 space-y-4">
+                className="glass border border-[hsl(248_62%_52%/0.25)] rounded-2xl p-5 mb-5 space-y-4">
                 <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">What's on your mind?</Label>
                 <Textarea placeholder="A pattern you noticed, a win, an observation, a question you're sitting with…"
                   value={newNote} onChange={e => setNewNote(e.target.value)}
-                  className="min-h-[90px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
+                  className="min-h-[90px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
                 <div className="flex flex-wrap gap-2">
                   {ALL_TAGS.map(t => (
                     <button key={t} onClick={() => toggleTag(t)}
-                      className={`text-xs px-2.5 py-1 rounded-full border transition-all ${newTags.includes(t) ? "border-[hsl(268_52%_68%/0.4)] bg-[hsl(268_52%_68%/0.15)] text-[hsl(268_60%_82%)]" : "border-white/10 text-muted-foreground"}`}>
+                      className={`text-xs px-2.5 py-1 rounded-full border transition-all ${newTags.includes(t) ? "border-[hsl(248_62%_52%/0.4)] bg-[hsl(248_62%_52%/0.15)] text-[hsl(248_62%_65%)]" : "border-white/10 text-muted-foreground"}`}>
                       <Tag className="w-2.5 h-2.5 inline mr-1" />{TAG_CONFIG[t].label}
                     </button>
                   ))}
@@ -264,7 +264,7 @@ export default function ProgressTimeline() {
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={handleAdd} disabled={!newNote.trim()} size="sm"
-                    className="rounded-full px-5 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 disabled:opacity-40">
+                    className="rounded-full px-5 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 disabled:opacity-40">
                     Save entry
                   </Button>
                   <Button onClick={() => setAdding(false)} size="sm" variant="ghost" className="rounded-full text-muted-foreground">
@@ -288,7 +288,7 @@ export default function ProgressTimeline() {
                 <div className="text-center py-12 text-muted-foreground text-sm">No entries match your filter.</div>
               ) : sorted.map((entry, i) => (
                 <motion.div key={entry.id} {...fadeUp(0.04 * i)} className="flex gap-4">
-                  <div className="w-5 h-5 rounded-full bg-[hsl(268_52%_68%/0.2)] border border-[hsl(268_52%_68%/0.4)] flex-shrink-0 mt-4 z-10" />
+                  <div className="w-5 h-5 rounded-full bg-[hsl(248_62%_52%/0.2)] border border-[hsl(248_62%_52%/0.4)] flex-shrink-0 mt-4 z-10" />
                   <div className="flex-1 min-w-0">
                     <EntryCard entry={entry} onStatusChange={handleStatusChange} onDelete={handleDelete} />
                   </div>

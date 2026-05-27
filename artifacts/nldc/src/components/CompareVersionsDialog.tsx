@@ -170,12 +170,12 @@ export function CompareVersionsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[hsl(232_28%_10%)] border-white/10"
+        className="max-w-4xl max-h-[90vh] overflow-y-auto bg-[hsl(248_40%_96%)] border-white/10"
         data-testid="dialog-compare-versions"
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-foreground">
-            <GitCompare className="w-5 h-5 text-[hsl(268_60%_78%)]" />
+            <GitCompare className="w-5 h-5 text-[hsl(248_62%_62%)]" />
             Version comparison
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
@@ -186,7 +186,7 @@ export function CompareVersionsDialog({
         <div className="space-y-5 mt-2">
           {/* ── Score comparison ── */}
           <div
-            className="rounded-2xl border border-white/10 bg-[hsl(232_28%_12%)] p-5"
+            className="rounded-2xl border border-white/10 bg-[hsl(248_40%_160%)] p-5"
             data-testid="compare-score-section"
           >
             <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-4">
@@ -231,10 +231,10 @@ export function CompareVersionsDialog({
 
           {/* ── Strengths diff ── */}
           <div
-            className="rounded-2xl border border-white/10 bg-[hsl(232_28%_12%)] p-5"
+            className="rounded-2xl border border-white/10 bg-[hsl(248_40%_160%)] p-5"
             data-testid="compare-strengths-section"
           >
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[hsl(268_52%_72%)] mb-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[hsl(248_62%_58%)] mb-3">
               Strengths
             </p>
             {strengthsDiff.length > 0 ? (
@@ -250,7 +250,7 @@ export function CompareVersionsDialog({
 
           {/* ── Risks diff ── */}
           <div
-            className="rounded-2xl border border-white/10 bg-[hsl(232_28%_12%)] p-5"
+            className="rounded-2xl border border-white/10 bg-[hsl(248_40%_160%)] p-5"
             data-testid="compare-risks-section"
           >
             <p className="text-[11px] font-bold uppercase tracking-wider text-[hsl(43_65%_67%)] mb-3">
@@ -270,7 +270,7 @@ export function CompareVersionsDialog({
           {/* ── Bio word-level diff ── */}
           {bioTokens ? (
             <div
-              className="rounded-2xl border border-white/10 bg-[hsl(232_28%_12%)] p-5"
+              className="rounded-2xl border border-white/10 bg-[hsl(248_40%_160%)] p-5"
               data-testid="compare-bio-section"
             >
               <div className="flex items-center justify-between mb-4 flex-wrap gap-2">

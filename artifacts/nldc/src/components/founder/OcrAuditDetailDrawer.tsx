@@ -82,7 +82,7 @@ export function OcrAuditDetailDrawer({
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-3">
-            <ScanLine className="w-4 h-4 text-[hsl(268_52%_78%)]" />
+            <ScanLine className="w-4 h-4 text-[hsl(248_62%_62%)]" />
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
                 OCR Audit Detail
@@ -211,7 +211,7 @@ export function OcrAuditDetailDrawer({
 function SectionHeading({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
     <div className="flex items-center gap-2 mb-3">
-      <span className="text-[hsl(268_52%_78%)]">{icon}</span>
+      <span className="text-[hsl(248_62%_62%)]">{icon}</span>
       <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">{title}</p>
     </div>
   );

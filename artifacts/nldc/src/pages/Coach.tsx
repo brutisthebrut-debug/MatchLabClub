@@ -81,7 +81,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[hsl(268_52%_68%)] transition-colors flex-shrink-0"
+      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[hsl(248_62%_52%)] transition-colors flex-shrink-0"
       data-testid="button-copy-reply"
     >
       {copied ? <Check className="w-3.5 h-3.5 text-[hsl(142_55%_60%)]" /> : <Copy className="w-3.5 h-3.5" />}
@@ -91,13 +91,13 @@ function CopyButton({ text }: { text: string }) {
 }
 
 const STYLE_COLORS: Record<string, string> = {
-  Playful: "hsl(268 52% 68%)",
+  Playful: "hsl(248 62% 52%)",
   Direct: "hsl(190 55% 60%)",
   Warm: "hsl(43 65% 65%)",
 };
 
 const STYLE_BG: Record<string, string> = {
-  Playful: "hsl(268 52% 68% / 0.1)",
+  Playful: "hsl(248 62% 52% / 0.1)",
   Direct: "hsl(190 55% 60% / 0.1)",
   Warm: "hsl(43 65% 62% / 0.1)",
 };
@@ -338,7 +338,7 @@ export default function Coach() {
                 const file = e.dataTransfer.files?.[0];
                 if (file) void processScreenshotFile(file);
               }}
-              className={`glass border rounded-3xl p-5 transition-colors ${isDragOver ? "border-[hsl(268_52%_68%/0.6)] bg-[hsl(268_52%_68%/0.06)]" : "border-white/8"}`}
+              className={`glass border rounded-3xl p-5 transition-colors ${isDragOver ? "border-[hsl(248_62%_52%/0.6)] bg-[hsl(248_62%_52%/0.06)]" : "border-white/8"}`}
               data-testid="card-coach-screenshot"
             >
               <input
@@ -379,7 +379,7 @@ export default function Coach() {
                 </div>
               ) : (
                 <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[hsl(285_45%_62%)] to-[hsl(268_52%_58%)] flex items-center justify-center shrink-0">
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[hsl(326_100%_62%)] to-[hsl(248_62%_58%)] flex items-center justify-center shrink-0">
                     <Upload className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1 space-y-1">
@@ -429,7 +429,7 @@ export default function Coach() {
                     placeholder="Alex"
                     value={matchName}
                     onChange={e => setMatchName(e.target.value)}
-                    className="bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/50"
+                    className="bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/50"
                   />
                 </div>
                 <div className="space-y-2">
@@ -440,7 +440,7 @@ export default function Coach() {
                         key={g}
                         data-testid={`button-goal-${g.toLowerCase().replace(/ /g, "-")}`}
                         onClick={() => setGoal(prev => prev === g ? "" : g)}
-                        className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${goal === g ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}
+                        className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${goal === g ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)] border-[hsl(248_62%_52%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}
                       >
                         {g}
                       </button>
@@ -464,7 +464,7 @@ export default function Coach() {
                       type="button"
                       data-testid={`button-source-app-${a.toLowerCase()}`}
                       onClick={() => setSourceApp(prev => prev === a ? "" : a)}
-                      className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${sourceApp === a ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}
+                      className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${sourceApp === a ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)] border-[hsl(248_62%_52%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}
                     >
                       {a}
                     </button>
@@ -491,12 +491,12 @@ export default function Coach() {
                   placeholder={"Alex: I love that little ramen place on 5th\nMe: Oh nice, which one?\nAlex: The one with the black garlic broth!\nMe: I've been meaning to try it"}
                   value={context}
                   onChange={e => setContext(e.target.value)}
-                  className="min-h-[140px] resize-none font-mono text-xs bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40"
+                  className="min-h-[140px] resize-none font-mono text-xs bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40"
                 />
                 <p className="text-xs text-muted-foreground">
                   Format: Name: message — each on a new line. Use "Me:" for your messages.
                   {screenshotTurns && screenshotTurns.length > 0 && (
-                    <span className="ml-1 text-[hsl(268_52%_68%)]">Speaker order auto-detected — tap "Flip" if the first message is yours.</span>
+                    <span className="ml-1 text-[hsl(248_62%_52%)]">Speaker order auto-detected — tap "Flip" if the first message is yours.</span>
                   )}
                 </p>
               </div>
@@ -507,13 +507,13 @@ export default function Coach() {
                   placeholder="Not yet but I've been meaning to"
                   value={lastMessage}
                   onChange={e => setLastMessage(e.target.value)}
-                  className="bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/50"
+                  className="bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/50"
                 />
               </div>
               <Button
                 onClick={handleCoach}
                 disabled={isLoading || !lastMessage.trim()}
-                className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50"
+                className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-50"
                 data-testid="button-get-coaching"
               >
                 {isLoading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Analyzing...</> : <><Sparkles className="mr-2 h-4 w-4" /> Get Coaching Advice</>}
@@ -555,7 +555,7 @@ export default function Coach() {
                       if (weeksWithData < 2) {
                         return (
                           <div
-                            className="mb-3 rounded-2xl border border-dashed border-white/10 bg-[hsl(232_28%_14%/0.5)] px-3 py-3 text-center"
+                            className="mb-3 rounded-2xl border border-dashed border-white/10 bg-[hsl(248_40%_95%/0.5)] px-3 py-3 text-center"
                             data-testid="timeline-empty-state"
                           >
                             <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Weekly trend</p>
@@ -610,7 +610,7 @@ export default function Coach() {
                           ? { color: "hsl(142 55% 70%)", background: "hsl(142 55% 60% / 0.12)" }
                           : callout?.tone === "down"
                             ? { color: "hsl(0 65% 72%)", background: "hsl(0 55% 60% / 0.12)" }
-                            : { color: "hsl(0 0% 75%)", background: "hsl(232 28% 22%)" };
+                            : { color: "hsl(0 0% 75%)", background: "hsl(248 40% 150%)" };
                       const ToneIcon = callout?.tone === "up" ? TrendingUp : callout?.tone === "down" ? TrendingDown : Minus;
                       return (
                         <div className="mb-3" data-testid="timeline-chart">
@@ -641,9 +641,9 @@ export default function Coach() {
                                 />
                                 <YAxis hide domain={[0, 100]} />
                                 <Tooltip
-                                  cursor={{ fill: "hsl(232 28% 22% / 0.5)" }}
+                                  cursor={{ fill: "hsl(248 40% 150% / 0.5)" }}
                                   contentStyle={{
-                                    background: "hsl(232 28% 12%)",
+                                    background: "hsl(248 40% 160%)",
                                     border: "1px solid hsl(0 0% 100% / 0.08)",
                                     borderRadius: "0.5rem",
                                     fontSize: "11px",
@@ -693,7 +693,7 @@ export default function Coach() {
                           <span
                             className="text-xs font-semibold px-2 py-0.5 rounded-full"
                             style={{
-                              background: followUpStats.lastAnswer === "sent" ? "hsl(142 55% 60% / 0.15)" : "hsl(232 28% 22%)",
+                              background: followUpStats.lastAnswer === "sent" ? "hsl(142 55% 60% / 0.15)" : "hsl(248 40% 150%)",
                               color: followUpStats.lastAnswer === "sent" ? "hsl(142 55% 70%)" : "hsl(0 0% 70%)",
                             }}
                             data-testid="stats-last-answer"
@@ -724,12 +724,12 @@ export default function Coach() {
               ) : (
               <div className="space-y-3">
                 {displaySessions.slice().reverse().slice(0, 5).map((s) => (
-                  <div key={s.id} className="p-3 rounded-xl border border-white/8 bg-[hsl(232_28%_14%/0.5)]" data-testid={`card-session-${s.id}`}>
+                  <div key={s.id} className="p-3 rounded-xl border border-white/8 bg-[hsl(248_40%_95%/0.5)]" data-testid={`card-session-${s.id}`}>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="font-semibold text-sm text-foreground">{s.matchName}</p>
                       {s.sourceApp ? (
                         <span
-                          className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.12)] text-[hsl(268_60%_78%)] border border-[hsl(268_52%_68%/0.3)]"
+                          className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[hsl(248_62%_52%/0.12)] text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)]"
                           data-testid={`badge-session-${s.id}-app`}
                         >
                           {s.sourceApp}
@@ -755,7 +755,7 @@ export default function Coach() {
               data-testid="card-nudge-settings"
             >
               <div className="flex items-center gap-2 mb-3">
-                <Moon className="w-4 h-4 text-[hsl(268_52%_68%)]" />
+                <Moon className="w-4 h-4 text-[hsl(248_62%_52%)]" />
                 <p className="font-semibold text-foreground text-xs uppercase tracking-wider">Nudge hours</p>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed mb-3">
@@ -772,7 +772,7 @@ export default function Coach() {
                     onChange={(e) =>
                       updateNudgePrefs({ ...nudgePrefs, tonightHour: Number(e.target.value) })
                     }
-                    className="bg-[hsl(232_28%_14%)] border border-white/10 rounded-md px-2 py-1 text-xs text-foreground"
+                    className="bg-[hsl(248_40%_95%)] border border-white/10 rounded-md px-2 py-1 text-xs text-foreground"
                     data-testid="select-tonight-hour"
                   >
                     {tonightHourOptions.map((opt) => (
@@ -792,7 +792,7 @@ export default function Coach() {
                     onChange={(e) =>
                       updateNudgePrefs({ ...nudgePrefs, tomorrowMorningHour: Number(e.target.value) })
                     }
-                    className="bg-[hsl(232_28%_14%)] border border-white/10 rounded-md px-2 py-1 text-xs text-foreground"
+                    className="bg-[hsl(248_40%_95%)] border border-white/10 rounded-md px-2 py-1 text-xs text-foreground"
                     data-testid="select-tomorrow-morning-hour"
                   >
                     {tomorrowMorningHourOptions.map((opt) => (
@@ -836,7 +836,7 @@ export default function Coach() {
                     <h2 className="text-lg font-bold text-foreground">Conversation Analysis</h2>
                     {(result ? resultApp : (DEMO_SESSION.sourceApp as SourceApp)) ? (
                       <span
-                        className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.12)] text-[hsl(268_60%_78%)] border border-[hsl(268_52%_68%/0.3)]"
+                        className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(248_62%_52%/0.12)] text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)]"
                         data-testid="badge-source-app"
                       >
                         {result ? resultApp : DEMO_SESSION.sourceApp}
@@ -844,8 +844,8 @@ export default function Coach() {
                     ) : null}
                   </div>
                   <p className="text-muted-foreground leading-relaxed text-sm" data-testid="text-coaching-analysis">{showResult.analysis}</p>
-                  <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(232_28%_16%)] border border-white/8 text-sm font-medium text-foreground">
-                    <span className="w-2 h-2 rounded-full bg-[hsl(268_52%_68%)]" />
+                  <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(248_40%_94%)] border border-white/8 text-sm font-medium text-foreground">
+                    <span className="w-2 h-2 rounded-full bg-[hsl(248_62%_52%)]" />
                     Tone: {showResult.tone}
                   </div>
                 </div>
@@ -859,10 +859,10 @@ export default function Coach() {
                         key={i}
                         className="border border-white/8 rounded-2xl overflow-hidden card-hover"
                         data-testid={`card-reply-${i}`}
-                        style={{ borderColor: `${STYLE_COLORS[reply.style] || "hsl(268 52% 68%)"} / 0.2` }}
+                        style={{ borderColor: `${STYLE_COLORS[reply.style] || "hsl(248 62% 52%)"} / 0.2` }}
                       >
-                        <div className="flex items-center justify-between px-5 py-3" style={{ background: STYLE_BG[reply.style] || "hsl(268 52% 68% / 0.08)" }}>
-                          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: STYLE_COLORS[reply.style] || "hsl(268 52% 68%)" }}>
+                        <div className="flex items-center justify-between px-5 py-3" style={{ background: STYLE_BG[reply.style] || "hsl(248 62% 52% / 0.08)" }}>
+                          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: STYLE_COLORS[reply.style] || "hsl(248 62% 52%)" }}>
                             {reply.style}
                           </span>
                           <CopyButton text={reply.text} />
@@ -872,7 +872,7 @@ export default function Coach() {
                           <div className="flex justify-end mb-3">
                             <div
                               className="max-w-xs text-sm px-4 py-3 rounded-2xl rounded-br-md text-white font-medium"
-                              style={{ background: `linear-gradient(135deg, ${STYLE_COLORS[reply.style] || "hsl(268 52% 68%)"}, hsl(285 45% 55%))` }}
+                              style={{ background: `linear-gradient(135deg, ${STYLE_COLORS[reply.style] || "hsl(248 62% 52%)"}, hsl(326 100% 55%))` }}
                               data-testid={`text-reply-${i}`}
                             >
                               {reply.text}
@@ -946,7 +946,7 @@ export default function Coach() {
                                 onChange={(e) =>
                                   updateNudgePrefs({ ...nudgePrefs, tonightHour: Number(e.target.value) })
                                 }
-                                className="ml-1 bg-[hsl(232_28%_14%)] border border-white/10 rounded-md px-2 py-0.5 text-xs text-foreground"
+                                className="ml-1 bg-[hsl(248_40%_95%)] border border-white/10 rounded-md px-2 py-0.5 text-xs text-foreground"
                                 data-testid="select-tonight-hour"
                               >
                                 {tonightHourOptions.map((opt) => (
@@ -964,7 +964,7 @@ export default function Coach() {
                                 onChange={(e) =>
                                   updateNudgePrefs({ ...nudgePrefs, tomorrowMorningHour: Number(e.target.value) })
                                 }
-                                className="ml-1 bg-[hsl(232_28%_14%)] border border-white/10 rounded-md px-2 py-0.5 text-xs text-foreground"
+                                className="ml-1 bg-[hsl(248_40%_95%)] border border-white/10 rounded-md px-2 py-0.5 text-xs text-foreground"
                                 data-testid="select-tomorrow-morning-hour"
                               >
                                 {tomorrowMorningHourOptions.map((opt) => (
@@ -1039,9 +1039,9 @@ export default function Coach() {
                       ))}
                     </ul>
                   </div>
-                  <div className="rounded-3xl p-6 border" style={{ background: "hsl(268 52% 68% / 0.07)", borderColor: "hsl(268 52% 68% / 0.2)" }} data-testid="card-coach-tip">
+                  <div className="rounded-3xl p-6 border" style={{ background: "hsl(248 62% 52% / 0.07)", borderColor: "hsl(248 62% 52% / 0.2)" }} data-testid="card-coach-tip">
                     <div className="flex items-center gap-2 mb-4">
-                      <Lightbulb className="w-5 h-5 text-[hsl(268_52%_68%)]" />
+                      <Lightbulb className="w-5 h-5 text-[hsl(248_62%_52%)]" />
                       <p className="font-semibold text-foreground text-sm">Coach Tip</p>
                     </div>
                     <p className="text-sm text-foreground/85 leading-relaxed">{showResult.coachTip}</p>

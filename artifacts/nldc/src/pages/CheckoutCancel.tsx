@@ -38,7 +38,7 @@ export default function CheckoutCancel() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href={`/checkout/${product}`}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
             >
               <RefreshCw className="w-4 h-4" />
               Try again
@@ -53,7 +53,7 @@ export default function CheckoutCancel() {
 
           <div className="mt-12 glass rounded-2xl p-6 text-left">
             <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <MessageCircle className="w-4 h-4 text-[hsl(268_52%_68%)]" />
+              <MessageCircle className="w-4 h-4 text-[hsl(248_62%_52%)]" />
               Free tools, no card needed
             </p>
             <ul className="space-y-2 text-sm text-muted-foreground">

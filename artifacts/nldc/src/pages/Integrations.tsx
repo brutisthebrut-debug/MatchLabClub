@@ -106,15 +106,15 @@ const INTEGRATIONS: Integration[] = [
 ];
 
 const STATUS_CONFIG: Record<IntegrationStatus, { label: string; color: string; bg: string; border: string }> = {
-  not_connected: { label: "Not Connected", color: "hsl(228 18% 55%)", bg: "hsl(232 28% 16%)", border: "hsl(232 28% 22%)" },
-  coming_soon:   { label: "Coming Soon",   color: "hsl(268 52% 72%)", bg: "hsl(268 52% 68% / 0.1)", border: "hsl(268 52% 68% / 0.25)" },
+  not_connected: { label: "Not Connected", color: "hsl(228 18% 55%)", bg: "hsl(248 40% 94%)", border: "hsl(248 40% 150%)" },
+  coming_soon:   { label: "Coming Soon",   color: "hsl(248 62% 58%)", bg: "hsl(248 62% 52% / 0.1)", border: "hsl(248 62% 52% / 0.25)" },
   beta:          { label: "Beta — Available", color: "hsl(142 55% 62%)", bg: "hsl(142 55% 45% / 0.1)", border: "hsl(142 55% 45% / 0.25)" },
 };
 
 const LEVEL_COLORS: Record<number, string> = {
-  2: "hsl(268 52% 72%)",
+  2: "hsl(248 62% 58%)",
   3: "hsl(43 65% 65%)",
-  4: "hsl(285 45% 65%)",
+  4: "hsl(326 100% 65%)",
 };
 
 function IntegrationCard({ integration }: { integration: Integration }) {
@@ -122,7 +122,7 @@ function IntegrationCard({ integration }: { integration: Integration }) {
   const [consented, setConsented] = useState(false);
   const [previewEnabled, setPreviewEnabled] = useState(true);
   const status = STATUS_CONFIG[integration.status];
-  const lvlColor = LEVEL_COLORS[integration.level] || "hsl(268 52% 68%)";
+  const lvlColor = LEVEL_COLORS[integration.level] || "hsl(248 62% 52%)";
 
   return (
     <div
@@ -140,18 +140,18 @@ function IntegrationCard({ integration }: { integration: Integration }) {
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 <h3 className="font-semibold text-foreground">{integration.title}</h3>
                 <span className="text-xs font-bold px-2.5 py-0.5 rounded-full" style={{ background: status.bg, color: status.color, border: `1px solid ${status.border}` }}>{status.label}</span>
-                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[hsl(232_28%_16%)] text-muted-foreground border border-white/6">Level {integration.level}</span>
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">Level {integration.level}</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-md">{integration.description}</p>
             </div>
           </div>
           <Link
             href="/waitlist"
-            className="rounded-full text-xs flex-shrink-0 border border-[hsl(268_52%_68%/0.25)] text-[hsl(268_52%_82%)] bg-[hsl(268_52%_68%/0.08)] hover:bg-[hsl(268_52%_68%/0.15)] transition-colors px-3 py-1.5 inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)]"
+            className="rounded-full text-xs flex-shrink-0 border border-[hsl(248_62%_52%/0.25)] text-[hsl(248_62%_65%)] bg-[hsl(248_62%_52%/0.08)] hover:bg-[hsl(248_62%_52%/0.15)] transition-colors px-3 py-1.5 inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(248_62%_52%/0.6)]"
             data-testid={`button-notify-${integration.title.toLowerCase().replace(/ /g, "-")}`}
-            aria-label={`Get notified when ${integration.title} integration launches`}
+            aria-label={`Join the interest list for ${integration.title} integration`}
           >
-            Notify me when live
+            Join the interest list →
           </Link>
         </div>
         <div className="mt-4 rounded-xl p-3 text-sm" style={{ background: `${lvlColor.replace(")", " / 0.07)")}`, border: `1px solid ${lvlColor.replace(")", " / 0.15)")}` }}>
@@ -203,7 +203,7 @@ function IntegrationCard({ integration }: { integration: Integration }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-foreground flex items-center gap-2">
-                    <Eye className="w-4 h-4 text-[hsl(268_52%_68%)]" /> Preview before analysis
+                    <Eye className="w-4 h-4 text-[hsl(248_62%_52%)]" /> Preview before analysis
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">Review exactly what will be analysed before we process anything</p>
                 </div>
@@ -213,7 +213,7 @@ function IntegrationCard({ integration }: { integration: Integration }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-[hsl(268_52%_68%)]" /> I consent to this analysis
+                  <Shield className="w-4 h-4 text-[hsl(248_62%_52%)]" /> I consent to this analysis
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">You can revoke this consent and delete your data anytime</p>
               </div>
@@ -259,8 +259,8 @@ export default function Integrations() {
           {/* Privacy Promise */}
           <motion.div {...fadeUp(0.05)} className="glass border border-white/8 rounded-3xl p-6 mb-7" data-testid="card-privacy-promise">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[hsl(268_52%_68%/0.12)] border border-[hsl(268_52%_68%/0.2)]">
-                <Shield className="w-5 h-5 text-[hsl(268_52%_68%)]" />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[hsl(248_62%_52%/0.12)] border border-[hsl(248_62%_52%/0.2)]">
+                <Shield className="w-5 h-5 text-[hsl(248_62%_52%)]" />
               </div>
               <h2 className="font-bold text-foreground">Your Privacy Promise</h2>
             </div>
@@ -283,9 +283,9 @@ export default function Integrations() {
           </motion.div>
 
           {/* Available Now: Email Insight Demo */}
-          <motion.div {...fadeUp(0.1)} className="rounded-3xl p-6 mb-7 flex items-start gap-4" style={{ background: "hsl(268 52% 68% / 0.08)", border: "1px solid hsl(268 52% 68% / 0.25)" }}>
-            <div className="w-10 h-10 rounded-xl bg-[hsl(268_52%_68%/0.15)] flex items-center justify-center flex-shrink-0 border border-[hsl(268_52%_68%/0.2)]">
-              <Mail className="w-5 h-5 text-[hsl(268_52%_68%)]" />
+          <motion.div {...fadeUp(0.1)} className="rounded-3xl p-6 mb-7 flex items-start gap-4" style={{ background: "hsl(248 62% 52% / 0.08)", border: "1px solid hsl(248 62% 52% / 0.25)" }}>
+            <div className="w-10 h-10 rounded-xl bg-[hsl(248_62%_52%/0.15)] flex items-center justify-center flex-shrink-0 border border-[hsl(248_62%_52%/0.2)]">
+              <Mail className="w-5 h-5 text-[hsl(248_62%_52%)]" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -295,7 +295,7 @@ export default function Integrations() {
               <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
                 No email login required. Paste exported message snippets and get full communication pattern analysis. This is the privacy-first version of what full Gmail integration will look like.
               </p>
-              <Button asChild size="sm" className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold" data-testid="button-try-email-insights">
+              <Button asChild size="sm" className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 font-semibold" data-testid="button-try-email-insights">
                 <Link href="/insights">Try Email Insights <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link>
               </Button>
             </div>
@@ -328,7 +328,7 @@ export default function Integrations() {
                 { icon: BarChart3, level: 3, title: "Dating App Export Analysis", desc: "Where apps allow it, import your conversation and match history directly for the deepest pattern analysis possible.", status: "Roadmap" },
                 { icon: Users, level: 3, title: "Multi-Platform Presence Sync", desc: "Cross-platform analysis of how you present on Hinge, LinkedIn, and Instagram — and whether they're telling the same story.", status: "Roadmap" },
               ].map((future, i) => {
-                const col = LEVEL_COLORS[future.level] || "hsl(268 52% 68%)";
+                const col = LEVEL_COLORS[future.level] || "hsl(248 62% 52%)";
                 return (
                   <div key={i} className="rounded-2xl p-5" style={{ background: `${col.replace(")", " / 0.06)")}`, border: `1px solid ${col.replace(")", " / 0.15)")}` }}>
                     <div className="flex items-start gap-3 mb-2">
@@ -349,17 +349,17 @@ export default function Integrations() {
           <motion.div
             {...fadeUp(0.38)}
             className="relative rounded-3xl p-7 text-center overflow-hidden"
-            style={{ background: "linear-gradient(135deg, hsl(268 52% 68% / 0.1), hsl(285 45% 60% / 0.07))", border: "1px solid hsl(268 52% 68% / 0.2)" }}
+            style={{ background: "linear-gradient(135deg, hsl(248 62% 52% / 0.1), hsl(326 100% 59% / 0.07))", border: "1px solid hsl(248 62% 52% / 0.2)" }}
           >
             <div className="orb orb-violet absolute w-52 h-52 -right-16 -top-16 opacity-60 pointer-events-none" />
             <div className="relative z-10">
-              <Map className="w-8 h-8 text-[hsl(268_52%_68%)] mx-auto mb-3" />
+              <Map className="w-8 h-8 text-[hsl(248_62%_52%)] mx-auto mb-3" />
               <h3 className="font-bold text-foreground mb-2">See the full 5-Level platform vision</h3>
               <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto leading-relaxed">
                 The integrations roadmap is one piece of a larger consent-based intelligence platform. See all five levels — from free audit to private personal intelligence to aggregate insights.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold glow-pulse" data-testid="button-view-roadmap">
+                <Button asChild className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 font-semibold glow-pulse" data-testid="button-view-roadmap">
                   <Link href="/roadmap">View Platform Roadmap <ArrowRight className="ml-2 h-4 w-4" /></Link>
                 </Button>
                 <Button asChild variant="ghost" className="rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5">

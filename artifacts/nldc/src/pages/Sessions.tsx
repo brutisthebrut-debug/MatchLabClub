@@ -145,7 +145,7 @@ export default function Sessions() {
         </div>
 
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-semibold text-[hsl(268_52%_78%)] border border-[hsl(268_52%_68%/0.3)] mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-semibold text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)] mb-6">
             <Shield className="w-3.5 h-3.5" />
             Devices & sign-ins
           </div>
@@ -168,7 +168,7 @@ export default function Sessions() {
             className="glass rounded-2xl p-8 md:p-10 text-center space-y-5"
             data-testid="sessions-signed-out"
           >
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] flex items-center justify-center">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] flex items-center justify-center">
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div className="space-y-2">
@@ -182,7 +182,7 @@ export default function Sessions() {
             </div>
             <Button
               onClick={() => login()}
-              className="rounded-full px-6 h-10 text-sm font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 hover:opacity-90"
+              className="rounded-full px-6 h-10 text-sm font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 hover:opacity-90"
               data-testid="button-sessions-login"
             >
               <LogIn className="w-4 h-4 mr-2" /> Sign in
@@ -235,12 +235,12 @@ export default function Sessions() {
                     key={s.sid}
                     className={`glass rounded-2xl p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-4 ${
                       s.current
-                        ? "border border-[hsl(268_52%_68%/0.4)]"
+                        ? "border border-[hsl(248_62%_52%/0.4)]"
                         : ""
                     }`}
                     data-testid={`session-row-${s.sid}`}
                   >
-                    <div className="w-11 h-11 shrink-0 rounded-xl bg-[hsl(268_52%_68%/0.12)] border border-[hsl(268_52%_68%/0.25)] flex items-center justify-center text-[hsl(268_52%_78%)]">
+                    <div className="w-11 h-11 shrink-0 rounded-xl bg-[hsl(248_62%_52%/0.12)] border border-[hsl(248_62%_52%/0.25)] flex items-center justify-center text-[hsl(248_62%_62%)]">
                       <ChannelIcon channel={s.channel} />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -253,7 +253,7 @@ export default function Sessions() {
                         </span>
                         {s.current ? (
                           <span
-                            className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[hsl(268_52%_68%/0.18)] text-[hsl(268_52%_82%)] border border-[hsl(268_52%_68%/0.35)]"
+                            className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[hsl(248_62%_52%/0.18)] text-[hsl(248_62%_65%)] border border-[hsl(248_62%_52%/0.35)]"
                             data-testid={`session-current-badge-${s.sid}`}
                           >
                             This device

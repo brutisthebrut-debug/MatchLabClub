@@ -146,7 +146,7 @@ export default function Wizard() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_hsl(268_52%_68%/0.45)]">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_hsl(248_62%_52%/0.45)]">
               <Sparkles className="w-10 h-10 text-white animate-pulse" />
             </div>
             <h2 className="text-2xl font-bold mb-2 text-foreground">Building your audit…</h2>
@@ -161,7 +161,7 @@ export default function Wizard() {
                   <div key={i} className={`flex items-center gap-3 transition-opacity duration-500 ${done || active ? "opacity-100" : "opacity-25"}`}>
                     <div className="w-4 h-4 flex-shrink-0">
                       {done   ? <CheckCircle className="w-4 h-4 text-[hsl(142_55%_60%)]" /> :
-                       active ? <Loader2 className="w-4 h-4 text-[hsl(268_52%_68%)] animate-spin" /> :
+                       active ? <Loader2 className="w-4 h-4 text-[hsl(248_62%_52%)] animate-spin" /> :
                                 <div className="w-4 h-4 rounded-full border border-white/15" />}
                     </div>
                     <p className={`text-sm leading-snug ${done ? "text-muted-foreground/50 line-through" : active ? "text-foreground font-medium" : "text-muted-foreground/35"}`}>

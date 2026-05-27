@@ -95,9 +95,9 @@ const ARCHETYPES: Record<ArchetypeKey, {
   slowBurn: {
     name: "The Slow Burn",
     emoji: "🕯️",
-    color: "hsl(268 52% 68%)",
-    bg: "hsl(268 52% 68% / 0.08)",
-    border: "hsl(268 52% 68% / 0.25)",
+    color: "hsl(248 62% 52%)",
+    bg: "hsl(248 62% 52% / 0.08)",
+    border: "hsl(248 62% 52% / 0.25)",
     meaning: "You are someone who opens gradually, whose depth appears over time, and whose loyalty — once given — is extraordinary. The challenge is that early dating rewards speed and visibility, and you tend to show up fully only after the early window has closed.",
     strengths: ["Deeply loyal once trust is established", "Relationships with you tend to get better over time", "You don't perform — what people see is real", "Your depth is genuine, not rehearsed"],
     riskLoop: "The loop: slow reveal → person interprets caution as disinterest or unavailability → they pull back or move on → you assume it wasn't right → actually it just needed more time than the format allows. The exit point: one small earlier signal of genuine interest changes the dynamic significantly.",
@@ -131,9 +131,9 @@ const ARCHETYPES: Record<ArchetypeKey, {
   guardedRomantic: {
     name: "The Guarded Romantic",
     emoji: "🗝️",
-    color: "hsl(285 45% 65%)",
-    bg: "hsl(285 45% 65% / 0.08)",
-    border: "hsl(285 45% 65% / 0.25)",
+    color: "hsl(326 100% 65%)",
+    bg: "hsl(326 100% 65% / 0.08)",
+    border: "hsl(326 100% 65% / 0.25)",
     meaning: "You want real connection — deeply. And you've learned, through experience, to protect the part of you that wants it. The result is a push-pull pattern: you move toward connection and then, as it gets real, something protective activates. You're not cold — you're careful.",
     strengths: ["The depth you're protecting is real and worth knowing", "Your loyalty, when earned, is extraordinary", "You read situations well — your self-protection instinct has valuable signal", "You bring real intensity once the walls come down"],
     riskLoop: "The loop: something real starts forming → it starts to feel like it might actually matter → protection activates → you create distance → they misread it as disinterest → they pull back → you interpret their pull-back as confirmation you were right to protect → connection ends. The exit: catch the protection instinct before it shapes behavior.",
@@ -191,9 +191,9 @@ const ARCHETYPES: Record<ArchetypeKey, {
   lowTrustDater: {
     name: "The Low-Trust Dater",
     emoji: "🔒",
-    color: "hsl(285 45% 65%)",
-    bg: "hsl(285 45% 65% / 0.08)",
-    border: "hsl(285 45% 65% / 0.25)",
+    color: "hsl(326 100% 65%)",
+    bg: "hsl(326 100% 65% / 0.08)",
+    border: "hsl(326 100% 65% / 0.25)",
     meaning: "You've been burned enough times that trust doesn't come easily — and you approach early dating with a significant amount of skepticism and self-monitoring. This isn't a flaw; it's adaptation. The challenge is that the protective system can make it genuinely hard for trustworthy people to reach you.",
     strengths: ["You don't give your trust cheaply — which means it means something when you do", "You read situations carefully and accurately", "You're not easily manipulated by charm or performance", "Your self-awareness is high — you've done the work"],
     riskLoop: "The loop: promising person appears → skepticism activates → you test (consciously or not) → person doesn't know what they're being tested for → they respond imperfectly → you take it as confirmation → exit. The problem: good people fail low-trust tests not because they're not trustworthy, but because they don't know the test is happening.",
@@ -257,8 +257,8 @@ export default function Archetype() {
         <div className="max-w-2xl mx-auto relative z-10">
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Self-Insight</p>
+              <Sparkles className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Self-Insight</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Dating Archetype</h1>
             <p className="text-muted-foreground mt-2">Six questions. A shareable result that actually says something true about how you connect.</p>
@@ -285,7 +285,7 @@ export default function Archetype() {
                     <div className="space-y-2">
                       {q.opts.map((opt, oi) => (
                         <button key={oi} onClick={() => handleAnswer(qi, oi)}
-                          className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all ${answers[qi] === oi ? "bg-[hsl(268_52%_68%/0.15)] border-[hsl(268_52%_68%/0.4)] text-[hsl(268_60%_82%)]" : "border-white/8 text-muted-foreground hover:border-white/15 hover:text-foreground"}`}>
+                          className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all ${answers[qi] === oi ? "bg-[hsl(248_62%_52%/0.15)] border-[hsl(248_62%_52%/0.4)] text-[hsl(248_62%_65%)]" : "border-white/8 text-muted-foreground hover:border-white/15 hover:text-foreground"}`}>
                           {opt.label}
                         </button>
                       ))}
@@ -295,7 +295,7 @@ export default function Archetype() {
                 <div className="flex items-center justify-between pt-2">
                   <p className="text-xs text-muted-foreground">{answered} of {QUESTIONS.length} answered</p>
                   <Button onClick={handleSubmit} disabled={answered < QUESTIONS.length}
-                    className="rounded-full px-8 h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-40">
+                    className="rounded-full px-8 h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-40">
                     <Sparkles className="mr-2 h-4 w-4" />Reveal My Archetype
                   </Button>
                 </div>

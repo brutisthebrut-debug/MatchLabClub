@@ -160,8 +160,8 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     name: "The Deep Diver",
     emoji: "🌊",
     tagline: "You want something real — or nothing at all",
-    color: "hsl(268 52% 68%)",
-    bg: "hsl(268 52% 68% / 0.12)",
+    color: "hsl(248 62% 52%)",
+    bg: "hsl(248 62% 52% / 0.12)",
     description: "Surface-level doesn't do it for you. You feel things intensely, you're drawn to people who have substance, and when you find something worth caring about, you care completely. That intensity is your gift. The challenge: it can make the dating process exhausting, because most of it isn't there yet.",
     strengths: ["High emotional intelligence", "Committed when committed", "Goes beneath the surface fast", "Remembers what matters"],
     edges: ["Easily overwhelmed by superficiality", "Can fall hard and fast before it's earned", "Struggles with uncertainty in between"],
@@ -244,7 +244,7 @@ export default function Quiz() {
   }
 
   function share() {
-    const text = archetype ? `I got "${archetype.name}" on the NLDC Dating Signal Type Quiz — ${archetype.tagline}. Take yours at nextleveldating.club/quiz` : "";
+    const text = archetype ? `I got "${archetype.name}" on the MatchLab Club Dating Signal Type Quiz — ${archetype.tagline}. Take yours at matchlab.club/quiz` : "";
     navigator.clipboard.writeText(text);
     setShared(true);
     toast({ title: "Copied to clipboard", description: "Share it wherever feels right." });
@@ -264,7 +264,7 @@ export default function Quiz() {
             {step === "intro" && (
               <motion.div key="intro" {...fadeUp(0)} className="space-y-6">
                 <div className="text-center space-y-4 pt-8 pb-2">
-                  <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(348_55%_65%)] flex items-center justify-center shadow-[0_0_40px_hsl(268_52%_68%/0.4)]">
+                  <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(348_55%_65%)] flex items-center justify-center shadow-[0_0_40px_hsl(248_62%_52%/0.4)]">
                     <Sparkles className="w-7 h-7 text-white" />
                   </div>
                   <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Dating Signal Type</h1>
@@ -290,7 +290,7 @@ export default function Quiz() {
                 </div>
 
                 <Button onClick={() => setStep("quiz")}
-                  className="w-full h-12 rounded-full font-semibold bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(348_55%_65%)] border-0 text-white glow-pulse">
+                  className="w-full h-12 rounded-full font-semibold bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(348_55%_65%)] border-0 text-white glow-pulse">
                   Start the quiz <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
 
@@ -307,7 +307,7 @@ export default function Quiz() {
                 <div className="flex items-center gap-3">
                   <div className="flex-1 h-1.5 rounded-full bg-white/8 overflow-hidden">
                     <motion.div
-                      className="h-full rounded-full bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(348_55%_65%)]"
+                      className="h-full rounded-full bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(348_55%_65%)]"
                       animate={{ width: `${progress * 100}%` }}
                       transition={{ duration: 0.4 }}
                     />
@@ -330,7 +330,7 @@ export default function Quiz() {
                         onClick={() => selectOption(i)}
                         className={`w-full text-left px-4 py-3.5 rounded-xl border text-sm transition-all leading-snug ${
                           selected === i
-                            ? "border-[hsl(268_52%_68%/0.6)] bg-[hsl(268_52%_68%/0.12)] text-foreground"
+                            ? "border-[hsl(248_62%_52%/0.6)] bg-[hsl(248_62%_52%/0.12)] text-foreground"
                             : "border-white/8 text-muted-foreground hover:border-white/20 hover:text-foreground hover:bg-white/3"
                         }`}
                       >
@@ -343,7 +343,7 @@ export default function Quiz() {
                 <Button
                   onClick={next}
                   disabled={selected === null}
-                  className="w-full h-11 rounded-full font-semibold bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(348_55%_65%)] border-0 disabled:opacity-40"
+                  className="w-full h-11 rounded-full font-semibold bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(348_55%_65%)] border-0 disabled:opacity-40"
                 >
                   {qIdx < QUESTIONS.length - 1 ? "Next →" : "See my type →"}
                 </Button>
@@ -404,7 +404,7 @@ export default function Quiz() {
                 {/* CTA */}
                 <Button onClick={() => navigate(archetype.cta.href)}
                   className="w-full h-12 rounded-full font-semibold border-0"
-                  style={{ background: `linear-gradient(135deg, ${archetype.color}, hsl(268 52% 55%))` }}>
+                  style={{ background: `linear-gradient(135deg, ${archetype.color}, hsl(248 62% 55%))` }}>
                   {archetype.cta.label}
                 </Button>
 

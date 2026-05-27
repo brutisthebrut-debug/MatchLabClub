@@ -20,26 +20,26 @@ interface TintConfig {
 const TINT_CONFIGS: Record<ShimmerTint, TintConfig> = {
   violet: {
     gradient:
-      "linear-gradient(135deg, hsl(268 52% 68% / 0.12), hsl(285 45% 60% / 0.08), hsl(43 65% 62% / 0.06))",
-    borderColor: "hsl(268 52% 68% / 0.2)",
-    iconBg: "hsl(268 52% 68% / 0.15)",
-    iconBorder: "hsl(268 52% 68% / 0.25)",
-    iconColor: "hsl(268 52% 78%)",
-    eyebrowColor: "hsl(268 60% 82%)",
+      "linear-gradient(135deg, hsl(248 62% 52% / 0.12), hsl(326 100% 59% / 0.08), hsl(43 65% 62% / 0.06))",
+    borderColor: "hsl(248 62% 52% / 0.2)",
+    iconBg: "hsl(248 62% 52% / 0.15)",
+    iconBorder: "hsl(248 62% 52% / 0.25)",
+    iconColor: "hsl(248 62% 62%)",
+    eyebrowColor: "hsl(248 62% 65%)",
   },
   purple: {
     gradient:
-      "linear-gradient(135deg, hsl(268 52% 68% / 0.12), hsl(285 45% 60% / 0.08))",
-    borderColor: "hsl(268 52% 68% / 0.2)",
-    iconBg: "hsl(285 45% 62% / 0.15)",
-    iconBorder: "hsl(285 45% 62% / 0.25)",
-    iconColor: "hsl(285 52% 78%)",
-    eyebrowColor: "hsl(285 60% 82%)",
+      "linear-gradient(135deg, hsl(248 62% 52% / 0.12), hsl(326 100% 59% / 0.08))",
+    borderColor: "hsl(248 62% 52% / 0.2)",
+    iconBg: "hsl(326 100% 62% / 0.15)",
+    iconBorder: "hsl(326 100% 62% / 0.25)",
+    iconColor: "hsl(326 100% 62%)",
+    eyebrowColor: "hsl(326 100% 65%)",
   },
   "violet-green": {
     gradient:
-      "linear-gradient(135deg, hsl(268 52% 68% / 0.12), hsl(142 55% 60% / 0.08))",
-    borderColor: "hsl(268 52% 68% / 0.2)",
+      "linear-gradient(135deg, hsl(248 62% 52% / 0.12), hsl(142 55% 60% / 0.08))",
+    borderColor: "hsl(248 62% 52% / 0.2)",
     iconBg: "hsl(142 55% 60% / 0.15)",
     iconBorder: "hsl(142 55% 60% / 0.25)",
     iconColor: "hsl(142 55% 70%)",
@@ -47,7 +47,7 @@ const TINT_CONFIGS: Record<ShimmerTint, TintConfig> = {
   },
   gold: {
     gradient:
-      "linear-gradient(135deg, hsl(43 65% 65% / 0.12), hsl(268 52% 68% / 0.08))",
+      "linear-gradient(135deg, hsl(43 65% 65% / 0.12), hsl(248 62% 52% / 0.08))",
     borderColor: "hsl(43 65% 65% / 0.2)",
     iconBg: "hsl(43 65% 65% / 0.15)",
     iconBorder: "hsl(43 65% 65% / 0.25)",
@@ -56,12 +56,12 @@ const TINT_CONFIGS: Record<ShimmerTint, TintConfig> = {
   },
   "violet-teal": {
     gradient:
-      "linear-gradient(135deg, hsl(268 52% 68% / 0.12), hsl(190 55% 60% / 0.08))",
-    borderColor: "hsl(268 52% 68% / 0.2)",
-    iconBg: "hsl(268 52% 68% / 0.15)",
-    iconBorder: "hsl(268 52% 68% / 0.25)",
-    iconColor: "hsl(268 52% 78%)",
-    eyebrowColor: "hsl(268 60% 82%)",
+      "linear-gradient(135deg, hsl(248 62% 52% / 0.12), hsl(190 55% 60% / 0.08))",
+    borderColor: "hsl(248 62% 52% / 0.2)",
+    iconBg: "hsl(248 62% 52% / 0.15)",
+    iconBorder: "hsl(248 62% 52% / 0.25)",
+    iconColor: "hsl(248 62% 62%)",
+    eyebrowColor: "hsl(248 62% 65%)",
   },
 };
 

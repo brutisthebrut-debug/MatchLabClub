@@ -2,7 +2,7 @@ import { Link } from "wouter";
 
 export function Footer() {
   return (
-    <footer className="relative border-t border-white/5 bg-[hsl(232_38%_5%)] overflow-hidden">
+    <footer className="relative border-t border-border bg-[hsl(248_45%_97%)] overflow-hidden">
       {/* Decorative orb */}
       <div className="orb orb-violet absolute w-96 h-96 -bottom-32 -left-32 opacity-60 pointer-events-none" />
 

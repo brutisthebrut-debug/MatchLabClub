@@ -23,7 +23,7 @@ interface RoadmapItem {
 
 const STATUS_CONFIG: Record<RoadmapStatus, { label: string; color: string; bg: string; border: string; icon: typeof Clock }> = {
   "live":        { label: "Live",         color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.12)", border: "hsl(142 55% 60% / 0.3)", icon: CheckCircle2 },
-  "coming-soon": { label: "Coming soon",  color: "hsl(268 52% 68%)", bg: "hsl(268 52% 68% / 0.12)", border: "hsl(268 52% 68% / 0.3)", icon: Clock        },
+  "coming-soon": { label: "Coming soon",  color: "hsl(248 62% 52%)", bg: "hsl(248 62% 52% / 0.12)", border: "hsl(248 62% 52% / 0.3)", icon: Clock        },
   "planned":     { label: "Planned",      color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.12)",  border: "hsl(43 65% 65% / 0.3)",  icon: TrendingUp   },
   "concept":     { label: "Concept",      color: "hsl(228 18% 60%)", bg: "hsl(228 18% 60% / 0.1)",  border: "hsl(228 18% 60% / 0.25)", icon: Lightbulb   },
 };
@@ -97,8 +97,8 @@ function RoadmapCard({ item, i }: { item: RoadmapItem; i: number }) {
   return (
     <motion.div {...fadeUp(0.04 + i * 0.04)} className="glass border border-white/8 rounded-2xl overflow-hidden hover:border-white/12 transition-all">
       <div className="flex items-start gap-4 p-5">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[hsl(268_52%_68%/0.12)]">
-          <Icon className="w-4 h-4 text-[hsl(268_52%_68%)]" />
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[hsl(248_62%_52%/0.12)]">
+          <Icon className="w-4 h-4 text-[hsl(248_62%_52%)]" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3 mb-2">
@@ -135,8 +135,8 @@ export default function ProgressInsightsRoadmap() {
 
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <Map className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Progress Workspace</p>
+              <Map className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Progress Workspace</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Insights Roadmap</h1>
             <p className="text-muted-foreground mt-2 leading-relaxed">What's being built into the Living AI Brain — with full transparency about what each feature learns, uses, and who controls it.</p>
@@ -176,8 +176,8 @@ export default function ProgressInsightsRoadmap() {
               return (
                 <div key={cat}>
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[hsl(268_52%_68%)]" />
-                    <p className="text-xs font-bold uppercase tracking-wider text-[hsl(268_52%_78%)]">{cat}</p>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[hsl(248_62%_52%)]" />
+                    <p className="text-xs font-bold uppercase tracking-wider text-[hsl(248_62%_62%)]">{cat}</p>
                   </div>
                   <div className="space-y-3">
                     {items.map(item => <RoadmapCard key={item.id} item={item} i={gi++} />)}

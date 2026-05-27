@@ -45,7 +45,7 @@ const INITIAL_SECTIONS: ControlSection[] = [
     id: "personalization",
     icon: Settings,
     title: "Personalization",
-    color: "hsl(268 52% 68%)",
+    color: "hsl(248 62% 52%)",
     footer: "Personalization uses only what you've entered in this session. No profile is built without your logged data.",
     toggles: [
       { id: "suggest-experiments", label: "Suggest experiments from my entries", desc: "Generate relevant experiment ideas based on your Timeline patterns", enabled: true },
@@ -70,7 +70,7 @@ function ToggleSwitch({ enabled, onChange }: { enabled: boolean; onChange: (v: b
   return (
     <button
       onClick={() => onChange(!enabled)}
-      className={`relative w-10 h-5.5 rounded-full transition-colors flex-shrink-0 ${enabled ? "bg-[hsl(268_52%_58%)]" : "bg-white/15"}`}
+      className={`relative w-10 h-5.5 rounded-full transition-colors flex-shrink-0 ${enabled ? "bg-[hsl(248_62%_58%)]" : "bg-white/15"}`}
       style={{ width: "40px", height: "22px" }}>
       <span className={`absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-transform ${enabled ? "translate-x-[18px]" : "translate-x-0"}`} />
     </button>
@@ -100,8 +100,8 @@ export default function ProgressControl() {
 
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <Settings className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Progress Workspace</p>
+              <Settings className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Progress Workspace</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Control Center</h1>
             <p className="text-muted-foreground mt-2 leading-relaxed">You decide what's saved, what's used for personalization, and what (if anything) contributes to broader learning. Every toggle defaults to what protects you.</p>

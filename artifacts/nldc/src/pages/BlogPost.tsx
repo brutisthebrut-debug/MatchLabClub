@@ -3,7 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { motion } from "framer-motion";
 import { Clock, ArrowLeft, ArrowRight, Sparkles, BookOpen } from "lucide-react";
-import { ARTICLES } from "./Blog";
+import { ARTICLES } from "@/lib/blogArticles";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -346,7 +346,7 @@ function Prose({ children }: { children: React.ReactNode }) {
       prose-p:text-muted-foreground prose-p:leading-[1.85] prose-p:mb-5
       prose-h2:font-serif prose-h2:text-foreground prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-10 prose-h2:mb-4
       prose-strong:text-foreground
-      prose-blockquote:border-l-[hsl(268_52%_68%)] prose-blockquote:text-muted-foreground prose-blockquote:italic prose-blockquote:not-italic
+      prose-blockquote:border-l-[hsl(248_62%_52%)] prose-blockquote:text-muted-foreground prose-blockquote:italic prose-blockquote:not-italic
       prose-ul:text-muted-foreground prose-li:mb-1.5
     ">
       {children}
@@ -365,7 +365,7 @@ export default function BlogPost({ slug }: { slug: string }) {
       <AppLayout>
         <div className="container mx-auto px-4 py-24 max-w-2xl text-center">
           <h1 className="font-serif text-3xl font-bold text-foreground mb-4">Article not found</h1>
-          <Link href="/blog" className="text-[hsl(268_52%_78%)] hover:opacity-80 transition-opacity">
+          <Link href="/blog" className="text-[hsl(248_62%_62%)] hover:opacity-80 transition-opacity">
             ← Back to the blog
           </Link>
         </div>
@@ -417,7 +417,7 @@ export default function BlogPost({ slug }: { slug: string }) {
           </motion.div>
 
           {/* CTA */}
-          <motion.div {...fadeUp(0.2)} className="mt-14 glass border border-[hsl(268_52%_68%/0.2)] rounded-2xl p-6 text-center">
+          <motion.div {...fadeUp(0.2)} className="mt-14 glass border border-[hsl(248_62%_52%/0.2)] rounded-2xl p-6 text-center">
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 mb-2">Put this into practice</p>
             <h3 className="font-serif text-xl font-bold text-foreground mb-3">Get your free Profile Signal Audit</h3>
             <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">
@@ -425,7 +425,7 @@ export default function BlogPost({ slug }: { slug: string }) {
             </p>
             <Link
               href="/start"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity text-sm"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity text-sm"
             >
               <Sparkles className="w-4 h-4" /> Start free audit — takes 3 minutes
             </Link>

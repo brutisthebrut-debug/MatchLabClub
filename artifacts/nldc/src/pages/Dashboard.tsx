@@ -140,7 +140,7 @@ function ScoreRing({ score }: { score: number }) {
   return (
     <div className="relative w-36 h-36 mx-auto" data-testid="score-ring">
       <svg className="w-full h-full -rotate-90" viewBox="0 0 128 128" style={{ filter: `drop-shadow(0 0 18px ${glowColor})` }}>
-        <circle cx="64" cy="64" r={radius} strokeWidth="10" stroke="hsl(232 28% 20%)" fill="none" />
+        <circle cx="64" cy="64" r={radius} strokeWidth="10" stroke="hsl(248 40% 92%)" fill="none" />
         <circle cx="64" cy="64" r={radius} strokeWidth="10" stroke={color} fill="none"
           strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
           strokeLinecap="round" style={{ transition: "stroke-dashoffset 1.4s cubic-bezier(0.16, 1, 0.3, 1)" }} />
@@ -155,8 +155,8 @@ function ScoreRing({ score }: { score: number }) {
 
 const SIGNAL_BARS = [
   { label: "Warmth",      value: 78, color: "hsl(348 55% 65%)" },
-  { label: "Confidence",  value: 72, color: "hsl(268 52% 68%)" },
-  { label: "Specificity", value: 50, color: "hsl(285 45% 65%)" },
+  { label: "Confidence",  value: 72, color: "hsl(248 62% 52%)" },
+  { label: "Specificity", value: 50, color: "hsl(326 100% 65%)" },
   { label: "Playfulness", value: 55, color: "hsl(43 65% 65%)"  },
 ];
 
@@ -193,7 +193,7 @@ const HOW_YOU_COME_ACROSS = [
 
 const ACTION_GROUPS = [
   {
-    label: "Core Tools", color: "hsl(268 52% 68%)",
+    label: "Core Tools", color: "hsl(248 62% 52%)",
     items: [
       { icon: FileText,      label: "New Audit",         desc: "Full profile audit + 7-day plan",  href: "/start"          },
       { icon: Camera,        label: "Scan a Profile",    desc: "Screenshot → instant mini-audit",  href: "/scan"           },
@@ -221,7 +221,7 @@ const ACTION_GROUPS = [
     ],
   },
   {
-    label: "Self-Insight", color: "hsl(285 45% 65%)",
+    label: "Self-Insight", color: "hsl(326 100% 65%)",
     items: [
       { icon: Sparkles,      label: "Signal Type Quiz",  desc: "8 questions → your archetype",     href: "/quiz"                   },
       { icon: BookOpen,      label: "Blueprint",         desc: "Your personalized action plan",    href: "/blueprint"              },
@@ -281,7 +281,7 @@ const PACKAGE_CARDS = [
     tagline: "Find exactly what to fix — score, bio rewrite, and 7-day plan.",
     hint: "Start with a free Signal Check →",
     hintHref: "/signal-check",
-    color: "hsl(268 52% 68%)",
+    color: "hsl(248 62% 52%)",
     icon: BookOpen,
     hubHref: "/diagnosis",
     tools: [
@@ -348,7 +348,7 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
       title: "Get your free Signal Audit",
       desc: "Takes 3 minutes. Get your Signal Score, bio rewrite, and a 7-day action plan.",
       href: "/start",
-      color: "hsl(268 52% 68%)",
+      color: "hsl(248 62% 52%)",
       cta: "Start My Audit",
     };
   }
@@ -1040,7 +1040,7 @@ export default function Dashboard() {
                 <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{nextAction.desc}</p>
               </div>
               <Button asChild size="sm" className="rounded-full px-5 font-semibold border-0 flex-shrink-0 self-start sm:self-auto"
-                style={{ background: nextAction.color, color: "hsl(232 38% 7%)" }}>
+                style={{ background: nextAction.color, color: "hsl(248 45% 165%)" }}>
                 <Link href={nextAction.href}>{nextAction.cta} <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link>
               </Button>
             </div>
@@ -1120,10 +1120,10 @@ export default function Dashboard() {
                 <div className="grid sm:grid-cols-3 gap-3">
                   {/* Latest audit slot */}
                   {latestRealAudit ? (
-                    <Link href={`/report/${latestRealAudit.id}`} className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(268_52%_68%/0.3)] transition-all block card-hover">
+                    <Link href={`/report/${latestRealAudit.id}`} className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(248_62%_52%/0.3)] transition-all block card-hover">
                       <div className="flex items-center gap-2 mb-1">
-                        <FileText className="w-3.5 h-3.5 text-[hsl(268_52%_68%)]" />
-                        <span className="text-xs font-semibold text-[hsl(268_52%_78%)]">Latest Report</span>
+                        <FileText className="w-3.5 h-3.5 text-[hsl(248_62%_52%)]" />
+                        <span className="text-xs font-semibold text-[hsl(248_62%_62%)]">Latest Report</span>
                       </div>
                       <p className="text-sm font-medium text-foreground truncate">{latestRealAudit.firstName}'s Audit</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
@@ -1131,10 +1131,10 @@ export default function Dashboard() {
                       </p>
                     </Link>
                   ) : (
-                    <Link href="/start" className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(268_52%_68%/0.3)] transition-all block card-hover">
+                    <Link href="/start" className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(248_62%_52%/0.3)] transition-all block card-hover">
                       <div className="flex items-center gap-2 mb-1">
-                        <FileText className="w-3.5 h-3.5 text-[hsl(268_52%_68%)]" />
-                        <span className="text-xs font-semibold text-[hsl(268_52%_78%)]">Signal Audit</span>
+                        <FileText className="w-3.5 h-3.5 text-[hsl(248_62%_52%)]" />
+                        <span className="text-xs font-semibold text-[hsl(248_62%_62%)]">Signal Audit</span>
                       </div>
                       <p className="text-sm font-medium text-foreground">Run your first audit</p>
                       <p className="text-xs text-muted-foreground mt-0.5">3 minutes · Free · Instant score</p>
@@ -1143,19 +1143,19 @@ export default function Dashboard() {
 
                   {/* Latest message session slot */}
                   {latestMessageSession ? (
-                    <Link href="/coach" className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(285_45%_62%/0.3)] transition-all block card-hover">
+                    <Link href="/coach" className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(326_100%_62%/0.3)] transition-all block card-hover">
                       <div className="flex items-center gap-2 mb-1">
-                        <MessageSquare className="w-3.5 h-3.5 text-[hsl(285_45%_65%)]" />
-                        <span className="text-xs font-semibold text-[hsl(285_52%_78%)]">Last Coached Reply</span>
+                        <MessageSquare className="w-3.5 h-3.5 text-[hsl(326_100%_65%)]" />
+                        <span className="text-xs font-semibold text-[hsl(326_100%_62%)]">Last Coached Reply</span>
                       </div>
                       <p className="text-sm font-medium text-foreground truncate">Pick up where you left off</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{formatRelativeTimestamp(latestMessageSession.createdAt)}</p>
                     </Link>
                   ) : (
-                    <Link href="/coach" className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(285_45%_62%/0.3)] transition-all block card-hover">
+                    <Link href="/coach" className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(326_100%_62%/0.3)] transition-all block card-hover">
                       <div className="flex items-center gap-2 mb-1">
-                        <MessageSquare className="w-3.5 h-3.5 text-[hsl(285_45%_65%)]" />
-                        <span className="text-xs font-semibold text-[hsl(285_52%_78%)]">Message Coach</span>
+                        <MessageSquare className="w-3.5 h-3.5 text-[hsl(326_100%_65%)]" />
+                        <span className="text-xs font-semibold text-[hsl(326_100%_62%)]">Message Coach</span>
                       </div>
                       <p className="text-sm font-medium text-foreground">Coach a reply</p>
                       <p className="text-xs text-muted-foreground mt-0.5">Paste a conversation → 3 styled options</p>
@@ -1194,7 +1194,7 @@ export default function Dashboard() {
                 <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">Three steps to your baseline</p>
                 <div className="grid sm:grid-cols-3 gap-3">
                   {[
-                    { n: "1", title: "Get your Signal Audit", desc: "3 minutes · Free · Instant score", href: "/start", color: "hsl(268 52% 68%)", icon: Sparkles },
+                    { n: "1", title: "Get your Signal Audit", desc: "3 minutes · Free · Instant score", href: "/start", color: "hsl(248 62% 52%)", icon: Sparkles },
                     { n: "2", title: "Build your Blueprint", desc: "Self-insight in 4 questions", href: "/blueprint", color: "hsl(43 65% 65%)", icon: BookOpen },
                     { n: "3", title: "Check your Wellness", desc: "8 dimensions of readiness", href: "/wellness", color: "hsl(142 55% 60%)", icon: Heart },
                   ].map(step => {
@@ -1229,7 +1229,7 @@ export default function Dashboard() {
               delay={0.1}
               wrapperClassName="mb-5"
             >
-              <Button asChild className="rounded-full px-8 bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold" data-testid="button-empty-state-start-audit">
+              <Button asChild className="rounded-full px-8 bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 font-semibold" data-testid="button-empty-state-start-audit">
                 <Link href="/start">Start My First Audit <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <p className="text-[11px] text-muted-foreground/70 mt-4">Free · No credit card · Takes 3 minutes</p>
@@ -1242,7 +1242,7 @@ export default function Dashboard() {
               <p className="font-semibold text-foreground text-sm">Explore by package</p>
               <button
                 onClick={() => setShowAllTools(t => !t)}
-                className="text-xs text-muted-foreground hover:text-[hsl(268_52%_68%)] transition-colors flex items-center gap-1"
+                className="text-xs text-muted-foreground hover:text-[hsl(248_62%_52%)] transition-colors flex items-center gap-1"
               >
                 {showAllTools ? "Collapse" : "All tools"}
                 <ArrowRight className={`w-3 h-3 transition-transform ${showAllTools ? "rotate-90" : ""}`} />
@@ -1253,7 +1253,7 @@ export default function Dashboard() {
               {PACKAGE_CARDS.map(pkg => (
                 <div
                   key={pkg.name}
-                  className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(268_52%_68%/0.22)] transition-all"
+                  className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(248_62%_52%/0.22)] transition-all"
                 >
                   <div className="flex items-start gap-3 mb-3">
                     <div
@@ -1309,7 +1309,7 @@ export default function Dashboard() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                       {group.items.map((action, i) => (
                         <Link key={i} href={action.href} data-testid={`card-quick-action-${action.label.toLowerCase().replace(/ /g, "-")}`}>
-                          <div className="glass border border-white/8 rounded-2xl p-3 hover:border-[hsl(268_52%_68%/0.3)] hover:shadow-[0_8px_30px_rgb(0_0_0/0.35)] transition-all cursor-pointer h-full card-hover">
+                          <div className="glass border border-white/8 rounded-2xl p-3 hover:border-[hsl(248_62%_52%/0.3)] hover:shadow-[0_8px_30px_rgb(0_0_0/0.35)] transition-all cursor-pointer h-full card-hover">
                             <div className="w-7 h-7 rounded-xl flex items-center justify-center mb-2" style={{ background: `${group.color.replace(")", " / 0.12)")}` }}>
                               <action.icon className="w-3.5 h-3.5" style={{ color: group.color }} />
                             </div>
@@ -1333,7 +1333,7 @@ export default function Dashboard() {
                 <span className="w-1.5 h-1.5 rounded-full bg-[hsl(43_65%_65%)] inline-block flex-shrink-0" />
                 <span>You're looking at <strong className="text-foreground/70">sample data</strong> — your real score appears after your first Signal Audit.</span>
               </div>
-              <Link href="/signal-check" className="text-xs font-semibold text-[hsl(268_52%_68%)] hover:text-[hsl(268_52%_78%)] transition-colors whitespace-nowrap flex-shrink-0">Get my score →</Link>
+              <Link href="/signal-check" className="text-xs font-semibold text-[hsl(248_62%_52%)] hover:text-[hsl(248_62%_62%)] transition-colors whitespace-nowrap flex-shrink-0">Get my score →</Link>
             </motion.div>
           )}
           <div className="grid md:grid-cols-3 gap-5 mb-5">
@@ -1377,9 +1377,9 @@ export default function Dashboard() {
                 <ResponsiveContainer width="100%" height={120}>
                   <LineChart data={displaySummary.scoreHistory} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
                     <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(228 18% 55%)" }} tickLine={false} axisLine={false} />
-                    <Tooltip contentStyle={{ background: "hsl(232 34% 11%)", border: "1px solid hsl(232 28% 22%)", borderRadius: "12px", fontSize: "12px", color: "hsl(220 30% 94%)" }} />
-                    <Line type="monotone" dataKey="score" stroke="hsl(268 52% 68%)" strokeWidth={3}
-                      dot={{ r: 5, fill: "hsl(268 52% 68%)", stroke: "hsl(232 38% 7%)", strokeWidth: 2 }} />
+                    <Tooltip contentStyle={{ background: "hsl(232 34% 11%)", border: "1px solid hsl(248 40% 150%)", borderRadius: "12px", fontSize: "12px", color: "hsl(220 30% 94%)" }} />
+                    <Line type="monotone" dataKey="score" stroke="hsl(248 62% 52%)" strokeWidth={3}
+                      dot={{ r: 5, fill: "hsl(248 62% 52%)", stroke: "hsl(248 45% 165%)", strokeWidth: 2 }} />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -1408,7 +1408,7 @@ export default function Dashboard() {
           {/* How You're Coming Across */}
           <motion.div {...fadeUp(0.13)} className="glass border border-white/8 rounded-3xl p-5 sm:p-6 mb-5">
             <div className="flex items-center gap-2.5 mb-4">
-              <Eye className="w-4 h-4 text-[hsl(268_52%_68%)]" />
+              <Eye className="w-4 h-4 text-[hsl(248_62%_52%)]" />
               <h2 className="font-semibold text-foreground text-sm">How You're Coming Across</h2>
               <span className="ml-auto text-xs text-muted-foreground">Based on latest audit</span>
             </div>
@@ -1467,14 +1467,14 @@ export default function Dashboard() {
             const note = WINGMAN_NOTES[new Date().getDay()];
             return (
               <motion.div {...fadeUp(0.22)} className="mb-5">
-                <div className="rounded-2xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3 bg-[hsl(268_52%_68%/0.07)] border border-[hsl(268_52%_68%/0.18)]">
-                  <Sparkles className="w-4 h-4 text-[hsl(268_52%_72%)] flex-shrink-0 hidden sm:block" />
+                <div className="rounded-2xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3 bg-[hsl(248_62%_52%/0.07)] border border-[hsl(248_62%_52%/0.18)]">
+                  <Sparkles className="w-4 h-4 text-[hsl(248_62%_58%)] flex-shrink-0 hidden sm:block" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(268_52%_68%)] mb-0.5">Today's Wingman Note</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-0.5">Today's Wingman Note</p>
                     <p className="text-xs text-muted-foreground leading-relaxed">{note.note}</p>
                   </div>
                   <Link href={note.href}
-                    className="flex-shrink-0 text-xs font-semibold text-[hsl(268_52%_78%)] hover:text-[hsl(268_52%_88%)] transition-colors whitespace-nowrap self-end sm:self-auto">
+                    className="flex-shrink-0 text-xs font-semibold text-[hsl(248_62%_62%)] hover:text-[hsl(248_62%_88%)] transition-colors whitespace-nowrap self-end sm:self-auto">
                     {note.action} →
                   </Link>
                 </div>
@@ -1621,7 +1621,7 @@ export default function Dashboard() {
                         onClick={() => setSort(value)}
                         className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border transition-colors ${
                           active
-                            ? "bg-[hsl(268_52%_68%/0.18)] border-[hsl(268_52%_68%/0.5)] text-[hsl(268_52%_88%)]"
+                            ? "bg-[hsl(248_62%_52%/0.18)] border-[hsl(248_62%_52%/0.5)] text-[hsl(248_62%_88%)]"
                             : "bg-white/3 border-white/8 text-muted-foreground hover:text-foreground hover:bg-white/5"
                         }`}
                         aria-pressed={active}
@@ -1658,7 +1658,7 @@ export default function Dashboard() {
                           active
                             ? tone
                               ? ""
-                              : "bg-[hsl(268_52%_68%/0.18)] border-[hsl(268_52%_68%/0.5)] text-[hsl(268_52%_88%)]"
+                              : "bg-[hsl(248_62%_52%/0.18)] border-[hsl(248_62%_52%/0.5)] text-[hsl(248_62%_88%)]"
                             : "bg-white/3 border-white/8 text-muted-foreground hover:text-foreground hover:bg-white/5"
                         }`}
                         style={activeStyle}
@@ -1696,12 +1696,12 @@ export default function Dashboard() {
               </div>
             ) : !hasRealAudits ? (
               <div className="text-center py-10" data-testid="audits-empty-state">
-                <div className="w-14 h-14 rounded-full bg-[hsl(268_52%_68%/0.1)] mx-auto mb-3 flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-[hsl(268_52%_78%)]" />
+                <div className="w-14 h-14 rounded-full bg-[hsl(248_62%_52%/0.1)] mx-auto mb-3 flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-[hsl(248_62%_62%)]" />
                 </div>
                 <p className="font-semibold text-foreground mb-1">No audits yet</p>
                 <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto leading-relaxed">Your first audit sets the baseline — Signal Score, bio critique, and a 7-day action plan.</p>
-                <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold" data-testid="button-start-first-audit">
+                <Button asChild className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 font-semibold" data-testid="button-start-first-audit">
                   <Link href="/start">Get My Free Signal Audit <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
                 </Button>
               </div>
@@ -1737,8 +1737,8 @@ export default function Dashboard() {
                         }}
                         className={`flex items-center justify-between p-3 sm:p-4 rounded-2xl border transition-all cursor-pointer card-hover gap-3 ${
                           isSelected
-                            ? "border-[hsl(268_52%_68%/0.6)] bg-[hsl(268_52%_68%/0.08)]"
-                            : "border-white/6 hover:border-[hsl(268_52%_68%/0.25)] hover:bg-white/2"
+                            ? "border-[hsl(248_62%_52%/0.6)] bg-[hsl(248_62%_52%/0.08)]"
+                            : "border-white/6 hover:border-[hsl(248_62%_52%/0.25)] hover:bg-white/2"
                         }`}
                         data-testid={`row-audit-${audit.id}`}
                       >
@@ -1766,7 +1766,7 @@ export default function Dashboard() {
                               <span className="hidden sm:inline">· {audit.currentApps?.join(", ")}</span>
                               {audit.sourceApp ? (
                                 <span
-                                  className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.12)] text-[hsl(268_60%_78%)] border border-[hsl(268_52%_68%/0.3)]"
+                                  className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[hsl(248_62%_52%/0.12)] text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)]"
                                   data-testid={`badge-source-app-${audit.id}`}
                                 >
                                   {audit.sourceApp}
@@ -1782,7 +1782,7 @@ export default function Dashboard() {
                   return (
                     <div
                       key={audit.id}
-                      className="flex items-center justify-between p-3 sm:p-4 rounded-2xl border border-white/6 hover:border-[hsl(268_52%_68%/0.25)] hover:bg-white/2 transition-all card-hover gap-3"
+                      className="flex items-center justify-between p-3 sm:p-4 rounded-2xl border border-white/6 hover:border-[hsl(248_62%_52%/0.25)] hover:bg-white/2 transition-all card-hover gap-3"
                       data-testid={`row-audit-${audit.id}`}
                     >
                       <Link href={`/report/${audit.id}`} className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer">
@@ -1796,7 +1796,7 @@ export default function Dashboard() {
                             <span className="hidden sm:inline">· {audit.currentApps?.join(", ")}</span>
                             {audit.sourceApp ? (
                               <span
-                                className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.12)] text-[hsl(268_60%_78%)] border border-[hsl(268_52%_68%/0.3)]"
+                                className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[hsl(248_62%_52%/0.12)] text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)]"
                                 data-testid={`badge-source-app-${audit.id}`}
                               >
                                 {audit.sourceApp}
@@ -1827,7 +1827,7 @@ export default function Dashboard() {
                             ) : null}
                             {debouncedQuery.length > 0 && audit.matchContext ? (
                               <span
-                                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[hsl(268_52%_55%/0.35)] bg-[hsl(268_52%_55%/0.1)] text-[hsl(268_52%_78%)]"
+                                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[hsl(248_62%_55%/0.35)] bg-[hsl(248_62%_55%/0.1)] text-[hsl(248_62%_62%)]"
                                 data-testid={`badge-match-${audit.id}`}
                                 title={audit.matchContext.snippet ?? undefined}
                               >
@@ -1875,18 +1875,18 @@ export default function Dashboard() {
           {/* Upgrade CTA */}
           <motion.div {...fadeUp(0.3)}
             className="relative rounded-3xl p-6 sm:p-8 text-center overflow-hidden shimmer"
-            style={{ background: "linear-gradient(135deg, hsl(268 52% 68% / 0.15), hsl(285 45% 60% / 0.1), hsl(43 65% 62% / 0.08))" }}
+            style={{ background: "linear-gradient(135deg, hsl(248 62% 52% / 0.15), hsl(326 100% 59% / 0.1), hsl(43 65% 62% / 0.08))" }}
             data-testid="card-upgrade-cta">
-            <div className="absolute inset-0 border border-[hsl(268_52%_68%/0.2)] rounded-3xl pointer-events-none" />
+            <div className="absolute inset-0 border border-[hsl(248_62%_52%/0.2)] rounded-3xl pointer-events-none" />
             <div className="orb orb-violet absolute w-64 h-64 -right-20 -top-20 opacity-60 pointer-events-none" />
             <div className="relative z-10">
               <div className="line-accent max-w-xs mx-auto mb-4" />
-              <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_60%_82%)] mb-2">Unlock Everything</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_65%)] mb-2">Unlock Everything</p>
               <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-3">Ready for The Dating Reset?</h3>
               <p className="text-muted-foreground mb-5 max-w-lg mx-auto text-sm leading-relaxed">
                 Complete profile rewrite, Signal Spectrum, Dating Diagnosis, Chemistry Lab, and a 7-day action plan. One payment.
               </p>
-              <Button asChild className="rounded-full px-8 bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold glow-pulse" data-testid="button-upgrade-cta">
+              <Button asChild className="rounded-full px-8 bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 font-semibold glow-pulse" data-testid="button-upgrade-cta">
                 <Link href="/pricing">The Dating Reset — $97 <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
             </div>
@@ -1968,7 +1968,7 @@ export default function Dashboard() {
                 data-testid={`button-refresh-picker-sort-${opt}`}
                 className={`px-2 py-0.5 rounded-full border text-xs transition-colors ${
                   pickerSort === opt
-                    ? "border-[hsl(268_52%_68%/0.6)] bg-[hsl(268_52%_68%/0.15)] text-foreground"
+                    ? "border-[hsl(248_62%_52%/0.6)] bg-[hsl(248_62%_52%/0.15)] text-foreground"
                     : "border-white/10 hover:border-white/20 hover:bg-white/4"
                 }`}
               >
@@ -1985,7 +1985,7 @@ export default function Dashboard() {
                   key={audit.id}
                   className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition-colors ${
                     checked
-                      ? "border-[hsl(268_52%_68%/0.5)] bg-[hsl(268_52%_68%/0.08)]"
+                      ? "border-[hsl(248_62%_52%/0.5)] bg-[hsl(248_62%_52%/0.08)]"
                       : "border-white/6 hover:bg-white/2"
                   }`}
                   data-testid={`row-refresh-picker-${audit.id}`}

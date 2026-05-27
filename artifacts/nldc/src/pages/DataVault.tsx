@@ -37,7 +37,7 @@ const DATA_ENTRIES: DataEntry[] = [
     icon: Activity,
     label: "Signal Audits",
     desc: "Your profile audit results — scores, feedback, bio critique, action items.",
-    color: "hsl(268 52% 68%)",
+    color: "hsl(248 62% 52%)",
     count: 3,
     sampleKeys: ["Score history", "Bio feedback", "Action items", "Audit date"],
     retentionNote: "Kept until you delete. Used to show score history on your dashboard.",
@@ -81,7 +81,7 @@ const DATA_ENTRIES: DataEntry[] = [
     icon: Image,
     label: "Profile Screenshots",
     desc: "Screenshots or text extractions of profiles shared for context.",
-    color: "hsl(285 45% 65%)",
+    color: "hsl(326 100% 65%)",
     count: 1,
     sampleKeys: ["Extracted text", "Source platform", "Date added"],
     retentionNote: "Session-only. Images are never stored — only extracted text.",
@@ -232,8 +232,8 @@ function WellnessDataSection() {
     <motion.div {...fadeUp(0.05)} className="glass border border-white/8 rounded-2xl overflow-hidden mb-3">
       <div className="p-5">
         <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[hsl(268_52%_68%/0.12)]">
-            <Heart className="w-4 h-4 text-[hsl(268_52%_68%)]" />
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[hsl(248_62%_52%/0.12)]">
+            <Heart className="w-4 h-4 text-[hsl(248_62%_52%)]" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
@@ -265,7 +265,7 @@ function WellnessDataSection() {
               return (
                 <div key={dim} className="rounded-xl bg-white/2 border border-white/5 p-3">
                   <p className="text-[10px] font-bold uppercase tracking-widest mb-2"
-                    style={{ color: meta?.color ?? "hsl(268 52% 68%)" }}>
+                    style={{ color: meta?.color ?? "hsl(248 62% 52%)" }}>
                     {meta?.label ?? dim}
                   </p>
                   <div className="space-y-2">
@@ -332,10 +332,10 @@ export default function DataVault() {
           {/* Header */}
           <motion.div {...fadeUp(0)} className="mb-6">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-xl bg-[hsl(268_52%_68%/0.15)] flex items-center justify-center">
-                <Lock className="w-4 h-4 text-[hsl(268_52%_68%)]" />
+              <div className="w-8 h-8 rounded-xl bg-[hsl(248_62%_52%/0.15)] flex items-center justify-center">
+                <Lock className="w-4 h-4 text-[hsl(248_62%_52%)]" />
               </div>
-              <p className="text-sm font-semibold text-[hsl(268_52%_78%)]">Personal Data Vault</p>
+              <p className="text-sm font-semibold text-[hsl(248_62%_62%)]">Personal Data Vault</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Your data. Your call.</h1>
             <p className="text-muted-foreground text-sm leading-relaxed mt-2">
@@ -377,7 +377,7 @@ export default function DataVault() {
               </div>
               <p className="text-sm font-semibold text-foreground">Vault cleared</p>
               <p className="text-xs text-muted-foreground/50 leading-relaxed">All stored data has been removed. Your coaching session starts fresh.</p>
-              <Link href="/connections" className="text-xs text-[hsl(268_52%_68%)] hover:text-[hsl(268_52%_78%)] transition-colors">
+              <Link href="/connections" className="text-xs text-[hsl(248_62%_52%)] hover:text-[hsl(248_62%_62%)] transition-colors">
                 Add new context →
               </Link>
             </motion.div>

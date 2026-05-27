@@ -102,7 +102,7 @@ const PACKAGES = [
     id: "start" as const,
     label: "Start Here",
     tagline: "Your first 3 minutes — get a real read",
-    color: "hsl(268 52% 68%)",
+    color: "hsl(248 62% 52%)",
     icon: Sparkles,
     tools: START_HERE_TOOLS,
     more: START_HERE_MORE,
@@ -153,7 +153,7 @@ const PACKAGES = [
     id: "founder" as const,
     label: "Founder & Beta",
     tagline: "Plans, sample report, waitlist, and how to help us shape the beta",
-    color: "hsl(285 45% 62%)",
+    color: "hsl(326 100% 62%)",
     icon: FlaskConical,
     tools: FOUNDER_BETA_TOOLS,
     more: FOUNDER_BETA_MORE,
@@ -226,7 +226,7 @@ export function Navbar() {
             src="/matchlab-logo.png"
             alt="MatchLab Club"
             className="h-10 w-auto transition-opacity group-hover:opacity-85"
-            style={{ filter: "drop-shadow(0 0 8px hsl(285 45% 68% / 0.5))" }}
+            style={{ filter: "drop-shadow(0 0 8px hsl(326 100% 65% / 0.5))" }}
           />
         </Link>
 
@@ -242,7 +242,7 @@ export function Navbar() {
                   aria-haspopup="menu"
                   aria-expanded={activeMenu === pkg.id}
                   aria-controls={`pkg-menu-${pkg.id}`}
-                  className={`flex items-center gap-1.5 text-[13px] font-medium px-2.5 py-2 rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[hsl(268_52%_68%)] ${
+                  className={`flex items-center gap-1.5 text-[13px] font-medium px-2.5 py-2 rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[hsl(248_62%_52%)] ${
                     active
                       ? "bg-white/5"
                       : "text-muted-foreground hover:text-foreground hover:bg-white/4"
@@ -258,7 +258,7 @@ export function Navbar() {
                   <div
                     id={`pkg-menu-${pkg.id}`}
                     role="menu"
-                    className="absolute top-12 left-1/2 -translate-x-1/2 w-80 glass-strong rounded-2xl shadow-[0_20px_60px_rgb(0_0_0/0.55)] animate-in fade-in-0 zoom-in-95 z-50 overflow-hidden"
+                    className="absolute top-12 left-1/2 -translate-x-1/2 w-80 glass-strong rounded-2xl shadow-[0_16px_48px_rgba(61,53,204,0.13)] animate-in fade-in-0 zoom-in-95 z-50 overflow-hidden"
                     style={{ border: `1px solid ${pkg.color.replace(")", " / 0.2)")}` }}
                   >
                     {/* Package header */}
@@ -339,7 +339,7 @@ export function Navbar() {
             onClick={closeAll}
             className={`flex items-center gap-1.5 text-[13px] font-medium px-2.5 py-2 rounded-lg transition-colors ${
               location === "/dashboard"
-                ? "text-[hsl(268_52%_78%)] bg-white/5"
+                ? "text-[hsl(248_62%_62%)] bg-white/5"
                 : "text-muted-foreground hover:text-foreground hover:bg-white/4"
             }`}
           >
@@ -353,7 +353,7 @@ export function Navbar() {
               onClick={closeAll}
               className={`flex items-center gap-1.5 text-[13px] font-medium px-2.5 py-2 rounded-lg transition-colors ${
                 location === "/account"
-                  ? "text-[hsl(268_52%_78%)] bg-white/5"
+                  ? "text-[hsl(248_62%_62%)] bg-white/5"
                   : "text-muted-foreground hover:text-foreground hover:bg-white/4"
               }`}
               data-testid="link-account"
@@ -374,7 +374,7 @@ export function Navbar() {
 
           <Button
             asChild
-            className="ml-2 rounded-full px-5 h-9 text-sm font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse hover:opacity-90 transition-opacity"
+            className="ml-2 rounded-full px-5 h-9 text-sm font-semibold bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 glow-pulse hover:opacity-90 transition-opacity text-white"
           >
             <Link href="/start" onClick={closeAll}>Start Here →</Link>
           </Button>
@@ -428,7 +428,7 @@ export function Navbar() {
                         href={t.href}
                         onClick={closeAll}
                         aria-current={active ? "page" : undefined}
-                        className={`block text-sm py-2 transition-colors leading-tight ${active ? "text-foreground font-medium border-l-2 border-[hsl(268_52%_68%)] pl-2 -ml-2" : "text-muted-foreground hover:text-foreground"}`}
+                        className={`block text-sm py-2 transition-colors leading-tight ${active ? "text-foreground font-medium border-l-2 border-[hsl(248_62%_52%)] pl-2 -ml-2" : "text-muted-foreground hover:text-foreground"}`}
                       >
                         {t.name}
                       </Link>
@@ -470,7 +470,7 @@ export function Navbar() {
           <div className="px-5 py-4 flex flex-col gap-1.5">
             <Link href="/dashboard" onClick={closeAll}
               aria-current={location === "/dashboard" ? "page" : undefined}
-              className={`text-sm font-medium py-1.5 transition-colors ${location === "/dashboard" ? "text-foreground border-l-2 border-[hsl(268_52%_68%)] pl-2 -ml-2" : "text-muted-foreground hover:text-foreground"}`}>
+              className={`text-sm font-medium py-1.5 transition-colors ${location === "/dashboard" ? "text-foreground border-l-2 border-[hsl(248_62%_52%)] pl-2 -ml-2" : "text-muted-foreground hover:text-foreground"}`}>
               Dashboard
             </Link>
             {isLoading ? null : isAuthenticated ? (
@@ -497,7 +497,7 @@ export function Navbar() {
             )}
             <Button
               asChild
-              className="mt-2 w-full rounded-full h-10 text-sm font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0"
+              className="mt-2 w-full rounded-full h-10 text-sm font-semibold bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white"
             >
               <Link href="/start" onClick={closeAll}>Start Here →</Link>
             </Button>

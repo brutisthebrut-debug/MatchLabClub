@@ -68,7 +68,7 @@ const ACTIONS: ActionItem[] = [
 ];
 
 const CATEGORY_COLORS: Record<ActionItem["category"], string> = {
-  "profile":    "hsl(268 52% 68%)",
+  "profile":    "hsl(248 62% 52%)",
   "message":    "hsl(190 55% 60%)",
   "mindset":    "hsl(43 65% 65%)",
   "real-world": "hsl(142 55% 60%)",
@@ -168,10 +168,10 @@ export default function PatternBreaker() {
           {/* Hero */}
           <motion.div {...fadeUp(0)} className="mb-8">
             <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(190_55%_60%)] flex items-center justify-center shadow-[0_0_16px_hsl(268_52%_68%/0.4)]">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(190_55%_60%)] flex items-center justify-center shadow-[0_0_16px_hsl(248_62%_52%/0.4)]">
                 <Zap className="w-4 h-4 text-white" />
               </div>
-              <p className="text-sm font-semibold text-[hsl(268_52%_78%)]">Growth Tracker</p>
+              <p className="text-sm font-semibold text-[hsl(248_62%_62%)]">Growth Tracker</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground mb-2">Pattern Breaker</h1>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-lg">
@@ -210,7 +210,7 @@ export default function PatternBreaker() {
             </div>
             <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
               <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(142_55%_60%)]"
+                className="h-full rounded-full bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(142_55%_60%)]"
                 initial={{ width: 0 }}
                 animate={{ width: `${(doneCount / 5) * 100}%` }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}

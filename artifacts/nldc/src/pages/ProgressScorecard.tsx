@@ -24,7 +24,7 @@ interface Dimension {
 
 const DIMENSIONS: Dimension[] = [
   {
-    key: "clarity", label: "Clarity", score: 72, prev: 61, color: "hsl(268 52% 68%)",
+    key: "clarity", label: "Clarity", score: 72, prev: 61, color: "hsl(248 62% 52%)",
     note: "You've sharpened your sense of what you want. Earlier entries were exploratory; recent ones are more specific.",
     detail: "Clarity means knowing what you want and why — not just what you'll tolerate. You've moved from 'something real' to naming the specific dynamics, pacing, and qualities that matter. That precision matters in how you filter, communicate, and choose.",
   },
@@ -49,7 +49,7 @@ const DIMENSIONS: Dimension[] = [
     detail: "Readiness isn't about urgency — it's about being available enough to let something real develop. The protective habits you've noted (over-explaining, anxiety during quiet periods) are still present but you're naming them faster, which is exactly what shifts them.",
   },
   {
-    key: "awareness", label: "Awareness", score: 82, prev: 74, color: "hsl(285 45% 65%)",
+    key: "awareness", label: "Awareness", score: 82, prev: 74, color: "hsl(326 100% 65%)",
     note: "Your fastest-growing dimension. You're seeing your own patterns in real time.",
     detail: "You've logged more self-observations in the last 30 days than most people develop across years. Awareness precedes change — you can't shift a pattern you can't see. At this rate, you're building a genuinely useful internal map of how you work.",
   },
@@ -131,15 +131,15 @@ export default function ProgressScorecard() {
 
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <BarChart2 className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Progress Workspace</p>
+              <BarChart2 className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Progress Workspace</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Progress Scorecard</h1>
             <p className="text-muted-foreground mt-2 leading-relaxed">Seven dimensions of your dating growth — with trend arrows and coaching notes on what each one means.</p>
           </motion.div>
 
           {/* Overall */}
-          <motion.div {...fadeUp(0.04)} className="glass border border-[hsl(268_52%_68%/0.2)] rounded-2xl p-6 mb-6">
+          <motion.div {...fadeUp(0.04)} className="glass border border-[hsl(248_62%_52%/0.2)] rounded-2xl p-6 mb-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground/60 font-semibold uppercase tracking-wider mb-1">Overall Score</p>

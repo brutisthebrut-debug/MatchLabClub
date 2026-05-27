@@ -105,7 +105,7 @@ function ScoreRing({ score }: { score: number }) {
   return (
     <div className="relative w-36 h-36 flex-shrink-0" data-testid="report-score-ring">
       <svg className="w-full h-full -rotate-90" viewBox="0 0 128 128" style={{ filter: `drop-shadow(0 0 18px ${glow})` }}>
-        <circle cx="64" cy="64" r={radius} strokeWidth="10" stroke="hsl(232 28% 20%)" fill="none" />
+        <circle cx="64" cy="64" r={radius} strokeWidth="10" stroke="hsl(248 40% 92%)" fill="none" />
         <circle cx="64" cy="64" r={radius} strokeWidth="10" stroke={color} fill="none"
           strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
           strokeLinecap="round" style={{ transition: "stroke-dashoffset 1.4s cubic-bezier(0.16, 1, 0.3, 1)" }} />
@@ -125,7 +125,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), COPY_DURATION_MS[copyDuration]); }}
-      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[hsl(268_52%_68%)] transition-colors flex-shrink-0 min-h-[36px] px-2"
+      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[hsl(248_62%_52%)] transition-colors flex-shrink-0 min-h-[36px] px-2"
       data-testid="button-copy-text"
     >
       {copied ? <Check className="w-3.5 h-3.5 text-[hsl(142_55%_60%)]" /> : <Copy className="w-3.5 h-3.5" />}
@@ -164,10 +164,10 @@ function SpectrumBar({ dimension, value, color, desc, delay = 0 }: {
 const SIGNAL_SPECTRUM_DATA = [
   { dimension: "Warmth", value: 78, color: "hsl(348 55% 68%)", desc: "How emotionally open and inviting you come across" },
   { dimension: "Clarity", value: 62, color: "hsl(190 55% 62%)", desc: "How clearly your personality and intentions communicate" },
-  { dimension: "Confidence", value: 72, color: "hsl(268 52% 72%)", desc: "Whether you seem at ease with who you are" },
+  { dimension: "Confidence", value: 72, color: "hsl(248 62% 58%)", desc: "Whether you seem at ease with who you are" },
   { dimension: "Playfulness", value: 55, color: "hsl(43 65% 67%)", desc: "Whether you seem fun and light to be around" },
   { dimension: "Availability", value: 81, color: "hsl(142 55% 62%)", desc: "How emotionally open and ready you seem" },
-  { dimension: "Specificity", value: 50, color: "hsl(285 45% 67%)", desc: "How distinct and unique your profile feels vs generic" },
+  { dimension: "Specificity", value: 50, color: "hsl(326 100% 67%)", desc: "How distinct and unique your profile feels vs generic" },
   { dimension: "Energy", value: 68, color: "hsl(43 65% 67%)", desc: "The vitality and forward momentum in your presence" },
   { dimension: "Approachability", value: 75, color: "hsl(190 55% 62%)", desc: "How easy it feels to start a conversation with you" },
 ];
@@ -234,11 +234,11 @@ const fadeUp = (delay = 0) => ({
 });
 
 const REPLY_STYLES: Record<string, { gradient: string; emoji: string; border: string }> = {
-  "Warm":          { gradient: "linear-gradient(135deg, hsl(348 55% 58%), hsl(268 52% 55%))", emoji: "💜", border: "hsl(348 55% 58% / 0.3)" },
+  "Warm":          { gradient: "linear-gradient(135deg, hsl(348 55% 58%), hsl(248 62% 55%))", emoji: "💜", border: "hsl(348 55% 58% / 0.3)" },
   "Direct":        { gradient: "linear-gradient(135deg, hsl(43 65% 52%), hsl(43 55% 42%))",   emoji: "→",  border: "hsl(43 65% 52% / 0.3)" },
-  "Playful":       { gradient: "linear-gradient(135deg, hsl(285 45% 58%), hsl(268 52% 65%))", emoji: "😄", border: "hsl(285 45% 58% / 0.3)" },
+  "Playful":       { gradient: "linear-gradient(135deg, hsl(326 100% 59%), hsl(248 62% 55%))", emoji: "😄", border: "hsl(326 100% 59% / 0.3)" },
   "Date Ask":      { gradient: "linear-gradient(135deg, hsl(142 55% 42%), hsl(190 55% 48%))", emoji: "✦",  border: "hsl(142 55% 42% / 0.3)" },
-  "Graceful Exit": { gradient: "linear-gradient(135deg, hsl(228 25% 40%), hsl(232 28% 32%))", emoji: "🤍", border: "hsl(228 25% 50% / 0.25)" },
+  "Graceful Exit": { gradient: "linear-gradient(135deg, hsl(228 25% 40%), hsl(248 40% 32%))", emoji: "🤍", border: "hsl(228 25% 50% / 0.25)" },
 };
 
 const SOURCE_APPS = ["Hinge", "Bumble", "Tinder", "CoffeeMeetsBagel"] as const;
@@ -264,7 +264,7 @@ function SourceAppPicker({
           onClick={() => onSelect(app)}
           className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border transition-colors ${
             current === app
-              ? "bg-[hsl(268_52%_68%/0.25)] text-[hsl(268_60%_78%)] border-[hsl(268_52%_68%/0.6)]"
+              ? "bg-[hsl(248_62%_52%/0.25)] text-[hsl(248_62%_62%)] border-[hsl(248_62%_52%/0.6)]"
               : "bg-white/4 text-muted-foreground border-white/10 hover:border-white/25 hover:text-foreground"
           }`}
           data-testid={`picker-app-${app.toLowerCase()}`}
@@ -276,7 +276,7 @@ function SourceAppPicker({
         onClick={() => onSelect(null)}
         className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border transition-colors ${
           current === null
-            ? "bg-[hsl(268_52%_68%/0.25)] text-[hsl(268_60%_78%)] border-[hsl(268_52%_68%/0.6)]"
+            ? "bg-[hsl(248_62%_52%/0.25)] text-[hsl(248_62%_62%)] border-[hsl(248_62%_52%/0.6)]"
             : "bg-white/4 text-muted-foreground border-white/10 hover:border-white/25 hover:text-foreground"
         }`}
         data-testid="picker-app-unknown"
@@ -286,7 +286,7 @@ function SourceAppPicker({
       <button
         onClick={onConfirm}
         disabled={saving}
-        className="text-xs font-semibold px-3 py-1 rounded-full bg-[hsl(268_52%_55%/0.8)] text-white border border-[hsl(268_52%_68%/0.4)] hover:bg-[hsl(268_52%_55%)] disabled:opacity-50 transition-colors"
+        className="text-xs font-semibold px-3 py-1 rounded-full bg-[hsl(248_62%_55%/0.8)] text-white border border-[hsl(248_62%_52%/0.4)] hover:bg-[hsl(248_62%_55%)] disabled:opacity-50 transition-colors"
         data-testid="button-confirm-source-app"
       >
         {saving ? "Saving…" : "Save"}
@@ -515,7 +515,7 @@ export default function Report() {
                   {audit && (sourceAppCorrected ? pendingSourceApp : audit.sourceApp) ? (
                     <span className="inline-flex items-center gap-1">
                       <span
-                        className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.12)] text-[hsl(268_60%_78%)] border border-[hsl(268_52%_68%/0.3)]"
+                        className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[hsl(248_62%_52%/0.12)] text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)]"
                         data-testid="badge-source-app"
                       >
                         {sourceAppCorrected
@@ -601,7 +601,7 @@ export default function Report() {
                       <button
                         onClick={regenerate}
                         disabled={regenerating || generating}
-                        className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(268_52%_68%/0.3)] text-[hsl(268_60%_78%)] bg-[hsl(268_52%_68%/0.08)] hover:bg-[hsl(268_52%_68%/0.16)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(248_62%_52%/0.3)] text-[hsl(248_62%_62%)] bg-[hsl(248_62%_52%/0.08)] hover:bg-[hsl(248_62%_52%/0.16)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         data-testid="button-regenerate-report"
                       >
                         <RefreshCw className={`w-3.5 h-3.5 ${regenerating ? "animate-spin" : ""}`} />
@@ -655,7 +655,7 @@ export default function Report() {
                   data-testid="button-toggle-history"
                   aria-expanded={historyOpen}
                 >
-                  <History className="w-5 h-5 text-[hsl(268_52%_72%)]" />
+                  <History className="w-5 h-5 text-[hsl(248_62%_58%)]" />
                   <div className="flex-1">
                     <h2 className="text-base font-bold text-foreground">Regeneration history</h2>
                     <p className="text-xs text-muted-foreground">
@@ -679,7 +679,7 @@ export default function Report() {
                     }}
                     className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors flex-shrink-0 ${
                       compareMode
-                        ? "border-[hsl(268_52%_68%/0.5)] text-[hsl(268_60%_78%)] bg-[hsl(268_52%_68%/0.18)]"
+                        ? "border-[hsl(248_62%_52%/0.5)] text-[hsl(248_62%_62%)] bg-[hsl(248_62%_52%/0.18)]"
                         : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 bg-white/4"
                     }`}
                     data-testid="button-toggle-compare-mode"
@@ -692,14 +692,14 @@ export default function Report() {
               {historyOpen ? (
                 <>
                   {compareMode && compareIds.length === 2 ? (
-                    <div className="border-t border-white/8 px-4 py-3 flex items-center justify-between gap-3 flex-wrap bg-[hsl(268_52%_68%/0.06)]">
+                    <div className="border-t border-white/8 px-4 py-3 flex items-center justify-between gap-3 flex-wrap bg-[hsl(248_62%_52%/0.06)]">
                       <p className="text-xs text-muted-foreground">
                         2 versions selected — ready to compare
                       </p>
                       <button
                         type="button"
                         onClick={() => setCompareOpen(true)}
-                        className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] text-white border-0 hover:opacity-90 transition-opacity"
+                        className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-full bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] text-white border-0 hover:opacity-90 transition-opacity"
                         data-testid="button-open-compare"
                       >
                         <GitCompare className="w-3.5 h-3.5" />
@@ -707,7 +707,7 @@ export default function Report() {
                       </button>
                     </div>
                   ) : compareMode ? (
-                    <div className="border-t border-white/8 px-4 py-2.5 bg-[hsl(268_52%_68%/0.04)]">
+                    <div className="border-t border-white/8 px-4 py-2.5 bg-[hsl(248_62%_52%/0.04)]">
                       <p className="text-xs text-muted-foreground">
                         {compareIds.length === 0
                           ? "Select 2 versions to compare"
@@ -739,12 +739,12 @@ export default function Report() {
                               }
                             }}
                             className={`w-full flex items-start gap-3 p-4 text-left hover:bg-white/5 transition-colors ${
-                              isActive ? "bg-[hsl(268_52%_68%/0.06)]" : ""
-                            } ${isSelected ? "bg-[hsl(268_52%_68%/0.1)]" : ""}`}
+                              isActive ? "bg-[hsl(248_62%_52%/0.06)]" : ""
+                            } ${isSelected ? "bg-[hsl(248_62%_52%/0.1)]" : ""}`}
                             data-testid={`button-view-version-${v.id}`}
                           >
                             {compareMode ? (
-                              <div className="w-5 h-5 flex-shrink-0 mt-2.5 text-[hsl(268_52%_72%)]">
+                              <div className="w-5 h-5 flex-shrink-0 mt-2.5 text-[hsl(248_62%_58%)]">
                                 {isSelected
                                   ? <CheckSquare className="w-5 h-5" />
                                   : <Square className="w-5 h-5 text-muted-foreground" />}
@@ -814,11 +814,11 @@ export default function Report() {
           {showChangeSummary && changeSummary ? (
             <motion.div
               {...fadeUp(0.03)}
-              className="glass border border-[hsl(268_52%_68%/0.3)] rounded-3xl p-6 bg-[hsl(268_52%_68%/0.06)]"
+              className="glass border border-[hsl(248_62%_52%/0.3)] rounded-3xl p-6 bg-[hsl(248_62%_52%/0.06)]"
               data-testid="card-what-changed"
             >
               <div className="flex items-center gap-2.5 mb-4">
-                <Sparkles className="w-5 h-5 text-[hsl(268_60%_78%)]" />
+                <Sparkles className="w-5 h-5 text-[hsl(248_62%_62%)]" />
                 <h2 className="text-lg font-bold text-foreground">What changed since last run</h2>
                 {changeSummary.scoreDelta !== 0 ? (
                   <span
@@ -915,7 +915,7 @@ export default function Report() {
                   {audit?.previousReport ? (
                     <button
                       onClick={() => setShowPrevious(true)}
-                      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(268_52%_68%/0.3)] text-[hsl(268_60%_78%)] bg-[hsl(268_52%_68%/0.08)] hover:bg-[hsl(268_52%_68%/0.16)] transition-colors"
+                      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(248_62%_52%/0.3)] text-[hsl(248_62%_62%)] bg-[hsl(248_62%_52%/0.08)] hover:bg-[hsl(248_62%_52%/0.16)] transition-colors"
                       data-testid="button-view-previous-version"
                     >
                       <Eye className="w-3.5 h-3.5" />
@@ -931,13 +931,13 @@ export default function Report() {
               className="glass border border-white/8 rounded-2xl px-4 py-3 flex items-center gap-3 flex-wrap"
               data-testid="card-previous-version-link"
             >
-              <Eye className="w-4 h-4 text-[hsl(268_60%_78%)] flex-shrink-0" />
+              <Eye className="w-4 h-4 text-[hsl(248_62%_62%)] flex-shrink-0" />
               <p className="text-xs text-muted-foreground flex-1 min-w-0">
                 Previous version from {formatGeneratedAt(audit.previousReportGeneratedAt)} is available.
               </p>
               <button
                 onClick={() => setShowPrevious(true)}
-                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(268_52%_68%/0.3)] text-[hsl(268_60%_78%)] bg-[hsl(268_52%_68%/0.08)] hover:bg-[hsl(268_52%_68%/0.16)] transition-colors flex-shrink-0"
+                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(248_62%_52%/0.3)] text-[hsl(248_62%_62%)] bg-[hsl(248_62%_52%/0.08)] hover:bg-[hsl(248_62%_52%/0.16)] transition-colors flex-shrink-0"
                 data-testid="button-view-previous-version"
               >
                 View previous version
@@ -948,7 +948,7 @@ export default function Report() {
           {/* ── Signal Spectrum ── */}
           <motion.div {...fadeUp(0.05)} className="glass border border-white/8 rounded-3xl p-8" data-testid="card-signal-spectrum">
             <div className="flex items-center gap-2.5 mb-2">
-              <Zap className="w-5 h-5 text-[hsl(268_52%_68%)]" />
+              <Zap className="w-5 h-5 text-[hsl(248_62%_52%)]" />
               <h2 className="text-xl font-bold text-foreground">Signal Spectrum</h2>
               <span className="ml-auto text-xs text-muted-foreground">8 dimensions</span>
             </div>
@@ -981,14 +981,14 @@ export default function Report() {
           {/* ── What You're Showing / How It's Received / What to Improve ── */}
           <motion.div {...fadeUp(0.1)} className="glass border border-white/8 rounded-3xl p-8">
             <div className="flex items-center gap-2.5 mb-2">
-              <Eye className="w-5 h-5 text-[hsl(268_52%_68%)]" />
+              <Eye className="w-5 h-5 text-[hsl(248_62%_52%)]" />
               <h2 className="text-xl font-bold text-foreground">How You're Coming Across</h2>
             </div>
             <p className="text-xs text-muted-foreground mb-5">What your profile signals — and where the gap is.</p>
             <p className="text-muted-foreground leading-relaxed text-sm mb-7">{r.bioAudit}</p>
             <div className="grid sm:grid-cols-3 gap-4">
               <div className="panel-show rounded-2xl p-5">
-                <p className="text-xs font-bold uppercase tracking-wider text-[hsl(268_52%_72%)] mb-3">What you're showing</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-[hsl(248_62%_58%)] mb-3">What you're showing</p>
                 <div className="flex flex-wrap gap-1.5">
                   {r.strengths.map((s, i) => <span key={i} className="tag-strength border px-2.5 py-1 rounded-full text-xs" data-testid={`item-strength-${i}`}>{s}</span>)}
                 </div>
@@ -1005,7 +1005,7 @@ export default function Report() {
               </div>
             </div>
             <div className="mt-5 pt-4 border-t border-white/5 flex items-start gap-2">
-              <Lightbulb className="w-3.5 h-3.5 text-[hsl(268_52%_68%)] flex-shrink-0 mt-0.5" />
+              <Lightbulb className="w-3.5 h-3.5 text-[hsl(248_62%_52%)] flex-shrink-0 mt-0.5" />
               <p className="text-xs text-muted-foreground leading-relaxed">
                 <strong className="text-foreground">Next action:</strong>{" "}
                 The rewritten bio and prompts below address the gaps flagged above. Swap in the rewrite, then check your score again in 7 days.
@@ -1016,13 +1016,13 @@ export default function Report() {
           {/* ── Your Dating Blueprint — Bio ── */}
           <motion.div {...fadeUp(0.14)} className="glass border border-white/8 rounded-3xl p-8">
             <div className="flex items-center gap-2.5 mb-2">
-              <Sparkles className="w-5 h-5 text-[hsl(268_52%_68%)]" />
+              <Sparkles className="w-5 h-5 text-[hsl(248_62%_52%)]" />
               <h2 className="text-xl font-bold text-foreground">Your Dating Blueprint</h2>
             </div>
             <p className="text-xs text-muted-foreground mb-6">Before and after — your profile, rewritten with specificity and signal.</p>
 
             <div className="grid sm:grid-cols-2 gap-4 mb-8">
-              <div className="rounded-2xl p-5 bg-[hsl(232_28%_14%)] border border-white/6">
+              <div className="rounded-2xl p-5 bg-[hsl(248_40%_95%)] border border-white/6">
                 <p className="text-xs text-muted-foreground font-semibold mb-3 uppercase tracking-wider">Your original bio</p>
                 <p className="text-sm text-muted-foreground leading-relaxed italic">{audit?.bio || "Software engineer who loves hiking and cooking. Big foodie. Looking for someone who is adventurous and loves to have fun. I'm told I'm easy to talk to and have a great sense of humor."}</p>
                 <div className="flex flex-wrap gap-1.5 mt-3">
@@ -1031,9 +1031,9 @@ export default function Report() {
                   ))}
                 </div>
               </div>
-              <div className="rounded-2xl p-5 border border-[hsl(268_52%_68%/0.3)] bg-[hsl(268_52%_68%/0.07)] shimmer">
+              <div className="rounded-2xl p-5 border border-[hsl(248_62%_52%/0.3)] bg-[hsl(248_62%_52%/0.07)] shimmer">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs text-[hsl(268_60%_78%)] font-semibold uppercase tracking-wider">Rewritten ✦</p>
+                  <p className="text-xs text-[hsl(248_62%_62%)] font-semibold uppercase tracking-wider">Rewritten ✦</p>
                   <CopyButton text={r.rewrittenBio} />
                 </div>
                 <p className="text-sm text-foreground leading-relaxed" data-testid="text-rewritten-bio">{r.rewrittenBio}</p>
@@ -1054,14 +1054,14 @@ export default function Report() {
             <div className="space-y-4">
               {r.rewrittenPrompts.map((prompt, i) => (
                 <div key={i} className="border border-white/8 rounded-2xl overflow-hidden" data-testid={`card-prompt-rewrite-${i}`}>
-                  <div className="bg-[hsl(232_28%_14%)] px-5 py-3.5">
+                  <div className="bg-[hsl(248_40%_95%)] px-5 py-3.5">
                     <p className="text-xs text-muted-foreground font-medium mb-0.5">Prompt</p>
                     <p className="text-sm text-muted-foreground italic">{prompt.original}</p>
                   </div>
-                  <div className="bg-[hsl(268_52%_68%/0.07)] px-5 py-3.5 border-t border-white/5">
+                  <div className="bg-[hsl(248_62%_52%/0.07)] px-5 py-3.5 border-t border-white/5">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="text-xs text-[hsl(268_60%_78%)] font-semibold mb-1">Rewritten ✦</p>
+                        <p className="text-xs text-[hsl(248_62%_62%)] font-semibold mb-1">Rewritten ✦</p>
                         <p className="text-sm text-foreground">{prompt.rewritten}</p>
                       </div>
                       <CopyButton text={prompt.rewritten} />
@@ -1087,7 +1087,7 @@ export default function Report() {
             {/* Tone + Next Action */}
             <div className="grid sm:grid-cols-2 gap-4 mb-7">
               <div className="panel-show rounded-2xl p-5">
-                <p className="text-xs font-bold uppercase tracking-wider text-[hsl(268_52%_72%)] mb-2">Tone detected</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-[hsl(248_62%_58%)] mb-2">Tone detected</p>
                 <p className="text-sm text-foreground font-medium">{(r as typeof DEMO_REPORT).messageTone ?? DEMO_REPORT.messageTone}</p>
               </div>
               <div className="panel-improve rounded-2xl p-5">
@@ -1128,8 +1128,8 @@ export default function Report() {
                           {reply.text}
                         </div>
                       </div>
-                      <div className="flex items-start gap-2 bg-[hsl(232_28%_14%/0.5)] rounded-xl p-3">
-                        <Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5 text-[hsl(268_52%_68%)]" />
+                      <div className="flex items-start gap-2 bg-[hsl(248_40%_95%/0.5)] rounded-xl p-3">
+                        <Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5 text-[hsl(248_62%_52%)]" />
                         <p className="text-xs text-muted-foreground leading-relaxed">{reply.rationale}</p>
                       </div>
                     </div>
@@ -1143,22 +1143,22 @@ export default function Report() {
               <div className="mt-7 pt-6 border-t border-white/6">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Quick before / after</p>
                 <div className="grid sm:grid-cols-2 gap-3">
-                  <div className="rounded-2xl p-4 bg-[hsl(232_28%_14%)] border border-white/8">
+                  <div className="rounded-2xl p-4 bg-[hsl(248_40%_95%)] border border-white/8">
                     <p className="text-xs font-semibold text-muted-foreground mb-2">Original message</p>
-                    <div className="inline-block bg-[hsl(232_28%_20%)] text-muted-foreground text-sm px-4 py-2.5 rounded-2xl rounded-bl-md max-w-full">{r.messageExample.original}</div>
+                    <div className="inline-block bg-[hsl(248_40%_92%)] text-muted-foreground text-sm px-4 py-2.5 rounded-2xl rounded-bl-md max-w-full">{r.messageExample.original}</div>
                     <div className="flex flex-wrap gap-1.5 mt-3">
                       {["⚠ Passive", "⚠ No path forward"].map((t, i) => <span key={i} className="text-xs tag-risk border px-2 py-0.5 rounded-full">{t}</span>)}
                     </div>
                   </div>
-                  <div className="rounded-2xl p-4 bg-[hsl(268_52%_68%/0.06)] border border-[hsl(268_52%_68%/0.2)]">
-                    <p className="text-xs font-semibold text-[hsl(268_60%_78%)] mb-2">Coached version ✦</p>
-                    <div className="inline-block bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(285_45%_60%)] text-white text-sm px-4 py-2.5 rounded-2xl rounded-br-md max-w-full">{r.messageExample.coached}</div>
+                  <div className="rounded-2xl p-4 bg-[hsl(248_62%_52%/0.06)] border border-[hsl(248_62%_52%/0.2)]">
+                    <p className="text-xs font-semibold text-[hsl(248_62%_62%)] mb-2">Coached version ✦</p>
+                    <div className="inline-block bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(326_100%_59%)] text-white text-sm px-4 py-2.5 rounded-2xl rounded-br-md max-w-full">{r.messageExample.coached}</div>
                     <div className="flex flex-wrap gap-1.5 mt-3">
                       {["✓ Specific", "✓ Date ask", "✓ Natural"].map((t, i) => <span key={i} className="text-xs tag-strength border px-2 py-0.5 rounded-full">{t}</span>)}
                     </div>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-3 leading-relaxed bg-[hsl(232_28%_14%)] p-3 rounded-xl border border-white/6">
+                <p className="text-xs text-muted-foreground mt-3 leading-relaxed bg-[hsl(248_40%_95%)] p-3 rounded-xl border border-white/6">
                   <span className="font-semibold text-foreground">Why this works: </span>{r.messageExample.rationale}
                 </p>
               </div>
@@ -1175,7 +1175,7 @@ export default function Report() {
               {r.photoGuidance.map((item, i) => {
                 const sl = statusLabel(item.status);
                 return (
-                  <div key={i} className="flex items-start gap-4 p-4 rounded-2xl border border-white/8 bg-[hsl(232_28%_14%/0.5)]" data-testid={`card-photo-guidance-${i}`}>
+                  <div key={i} className="flex items-start gap-4 p-4 rounded-2xl border border-white/8 bg-[hsl(248_40%_95%/0.5)]" data-testid={`card-photo-guidance-${i}`}>
                     <div className="mt-0.5">{statusIcon(item.status)}</div>
                     <div>
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -1193,14 +1193,14 @@ export default function Report() {
           {/* ── 7-Day Action Plan ── */}
           <motion.div {...fadeUp(0.26)} className="glass border border-white/8 rounded-3xl p-8">
             <div className="flex items-center gap-2.5 mb-5">
-              <Trophy className="w-5 h-5 text-[hsl(268_52%_68%)]" />
+              <Trophy className="w-5 h-5 text-[hsl(248_62%_52%)]" />
               <h2 className="text-xl font-bold text-foreground">Your 7-Day Action Plan</h2>
             </div>
             <div className="space-y-4">
               {r.actionPlan.map((item, i) => (
-                <div key={i} className="flex items-start gap-4 p-4 rounded-2xl border border-white/8 bg-[hsl(232_28%_14%/0.5)] card-hover" data-testid={`card-action-item-${i}`}>
+                <div key={i} className="flex items-start gap-4 p-4 rounded-2xl border border-white/8 bg-[hsl(248_40%_95%/0.5)] card-hover" data-testid={`card-action-item-${i}`}>
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 text-white"
-                    style={{ background: "linear-gradient(135deg, hsl(268 52% 65%), hsl(285 45% 58%))", boxShadow: "0 0 12px hsl(268 52% 68% / 0.35)" }}>
+                    style={{ background: "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))", boxShadow: "0 0 12px hsl(248 62% 52% / 0.35)" }}>
                     {item.priority}
                   </div>
                   <div className="flex-1">
@@ -1220,11 +1220,11 @@ export default function Report() {
 
           {/* ── CTA ── */}
           <motion.div {...fadeUp(0.3)} className="relative rounded-3xl p-8 text-center overflow-hidden shimmer" data-testid="card-report-cta"
-            style={{ background: "linear-gradient(135deg, hsl(268 52% 68% / 0.14), hsl(285 45% 60% / 0.1))" }}>
-            <div className="absolute inset-0 border border-[hsl(268_52%_68%/0.2)] rounded-3xl pointer-events-none" />
+            style={{ background: "linear-gradient(135deg, hsl(248 62% 52% / 0.14), hsl(326 100% 59% / 0.1))" }}>
+            <div className="absolute inset-0 border border-[hsl(248_62%_52%/0.2)] rounded-3xl pointer-events-none" />
             <div className="orb orb-violet absolute w-64 h-64 -right-20 -top-20 opacity-60 pointer-events-none" />
             <div className="relative z-10">
-              <Heart className="w-8 h-8 text-[hsl(268_52%_78%)] mx-auto mb-4" />
+              <Heart className="w-8 h-8 text-[hsl(248_62%_62%)] mx-auto mb-4" />
               <h3 className="text-2xl font-bold text-foreground mb-3">Ready to go further?</h3>
               <p className="text-muted-foreground mb-6 max-w-lg mx-auto text-sm leading-relaxed">{r.coachingCta}</p>
               <div className="grid sm:grid-cols-3 gap-3 mb-5 text-left">
@@ -1237,10 +1237,10 @@ export default function Report() {
                 </Link>
                 <Link href="/pricing"
                   className="relative rounded-2xl p-4 hover:opacity-90 transition-all block"
-                  style={{ background: "linear-gradient(135deg, hsl(268 52% 55% / 0.35), hsl(285 45% 48% / 0.25))", border: "1px solid hsl(268 52% 68% / 0.5)" }}
+                  style={{ background: "linear-gradient(135deg, hsl(248 62% 55% / 0.35), hsl(326 100% 48% / 0.25))", border: "1px solid hsl(248 62% 52% / 0.5)" }}
                   data-testid="button-view-pricing">
-                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[hsl(268_52%_65%)] text-white whitespace-nowrap">Most popular</span>
-                  <p className="text-xs font-bold uppercase tracking-wider text-[hsl(268_52%_78%)] mb-1">Dating Reset</p>
+                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[hsl(248_62%_55%)] text-white whitespace-nowrap">Most popular</span>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[hsl(248_62%_62%)] mb-1">Dating Reset</p>
                   <p className="text-2xl font-bold text-foreground mb-0.5">$97</p>
                   <p className="text-[11px] text-muted-foreground/70">Unlimited audits + coaching</p>
                 </Link>
@@ -1283,12 +1283,12 @@ export default function Report() {
 
       <Dialog open={showPrevious} onOpenChange={setShowPrevious}>
         <DialogContent
-          className="max-w-3xl max-h-[90vh] overflow-y-auto bg-[hsl(232_28%_10%)] border-white/10"
+          className="max-w-3xl max-h-[90vh] overflow-y-auto bg-[hsl(248_40%_96%)] border-white/10"
           data-testid="dialog-previous-version"
         >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-foreground">
-              <Eye className="w-5 h-5 text-[hsl(268_60%_78%)]" />
+              <Eye className="w-5 h-5 text-[hsl(248_62%_62%)]" />
               Previous version
             </DialogTitle>
             <DialogDescription className="text-muted-foreground" data-testid="text-previous-version-generated-at">
@@ -1334,7 +1334,7 @@ function PreviousReportView({
       : "F";
   return (
     <div className="space-y-5" data-testid="previous-version-content">
-      <div className="flex items-center gap-5 p-5 rounded-2xl border border-white/10 bg-[hsl(232_28%_12%)]">
+      <div className="flex items-center gap-5 p-5 rounded-2xl border border-white/10 bg-[hsl(248_40%_160%)]">
         <ScoreRing score={pr.readinessScore} />
         <div>
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-1">
@@ -1354,7 +1354,7 @@ function PreviousReportView({
 
       <div className="grid sm:grid-cols-2 gap-3">
         <div className="panel-show rounded-2xl p-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-[hsl(268_52%_72%)] mb-2">
+          <p className="text-xs font-bold uppercase tracking-wider text-[hsl(248_62%_58%)] mb-2">
             Strengths then
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -1379,16 +1379,16 @@ function PreviousReportView({
         </div>
       </div>
 
-      <div className="rounded-2xl p-4 border border-white/10 bg-[hsl(232_28%_12%)]">
+      <div className="rounded-2xl p-4 border border-white/10 bg-[hsl(248_40%_160%)]">
         <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
           Bio audit (previous)
         </p>
         <p className="text-sm text-muted-foreground leading-relaxed">{pr.bioAudit}</p>
       </div>
 
-      <div className="rounded-2xl p-4 border border-[hsl(268_52%_68%/0.25)] bg-[hsl(268_52%_68%/0.05)]">
+      <div className="rounded-2xl p-4 border border-[hsl(248_62%_52%/0.25)] bg-[hsl(248_62%_52%/0.05)]">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-bold uppercase tracking-wider text-[hsl(268_60%_78%)]">
+          <p className="text-xs font-bold uppercase tracking-wider text-[hsl(248_62%_62%)]">
             Previous rewritten bio
           </p>
           <CopyButton text={pr.rewrittenBio} />
@@ -1409,10 +1409,10 @@ function PreviousReportView({
               className="border border-white/8 rounded-2xl overflow-hidden"
               data-testid={`prev-prompt-${i}`}
             >
-              <div className="bg-[hsl(232_28%_14%)] px-4 py-3">
+              <div className="bg-[hsl(248_40%_95%)] px-4 py-3">
                 <p className="text-xs text-muted-foreground italic">{p.original}</p>
               </div>
-              <div className="px-4 py-3 bg-[hsl(268_52%_68%/0.06)]">
+              <div className="px-4 py-3 bg-[hsl(248_62%_52%/0.06)]">
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-sm text-foreground flex-1">{p.rewritten}</p>
                   <CopyButton text={p.rewritten} />
@@ -1431,13 +1431,13 @@ function PreviousReportView({
           {pr.actionPlan.map((item, i) => (
             <div
               key={i}
-              className="flex items-start gap-3 p-3 rounded-2xl border border-white/8 bg-[hsl(232_28%_12%)]"
+              className="flex items-start gap-3 p-3 rounded-2xl border border-white/8 bg-[hsl(248_40%_160%)]"
               data-testid={`prev-action-${i}`}
             >
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 text-white"
                 style={{
-                  background: "linear-gradient(135deg, hsl(268 52% 65%), hsl(285 45% 58%))",
+                  background: "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))",
                 }}
               >
                 {item.priority}

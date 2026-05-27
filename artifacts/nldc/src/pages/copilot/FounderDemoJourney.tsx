@@ -99,7 +99,7 @@ const STOPS: DemoStop[] = [
 ];
 
 export default function FounderDemoJourney() {
-  useMeta("Founder Demo Journey", "A guided walkthrough of NLDC for demos, partner previews, and early-user onboarding.");
+  useMeta("Founder Demo Journey", "A guided walkthrough of MatchLab Club for demos, partner previews, and early-user onboarding.");
   const [audience, setAudience] = useState("");
   const [phase, setPhase] = useState<"pick" | "journey">("pick");
   const [activeStop, setActiveStop] = useState(0);
@@ -143,14 +143,14 @@ export default function FounderDemoJourney() {
                 <div className="grid sm:grid-cols-2 gap-3 mb-6">
                   {AUDIENCE_TYPES.map(a => (
                     <button key={a.id} onClick={() => setAudience(a.id)}
-                      className={`text-left rounded-2xl border p-4 transition-all ${audience === a.id ? "border-[hsl(268_52%_68%/0.4)] bg-[hsl(268_52%_68%/0.08)]" : "border-white/8 hover:border-white/15"}`}>
+                      className={`text-left rounded-2xl border p-4 transition-all ${audience === a.id ? "border-[hsl(248_62%_52%/0.4)] bg-[hsl(248_62%_52%/0.08)]" : "border-white/8 hover:border-white/15"}`}>
                       <p className="text-sm font-semibold text-foreground mb-0.5">{a.label}</p>
                       <p className="text-[11px] text-muted-foreground/50">Focus: {a.focus}</p>
                     </button>
                   ))}
                 </div>
                 <Button onClick={() => setPhase("journey")} disabled={!audience}
-                  className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(228_18%_55%)] to-[hsl(268_52%_65%)] border-0 disabled:opacity-50">
+                  className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(228_18%_55%)] to-[hsl(248_62%_55%)] border-0 disabled:opacity-50">
                   Start Demo Journey <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </motion.div>
@@ -160,7 +160,7 @@ export default function FounderDemoJourney() {
                 <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
                   {STOPS.map((s, i) => (
                     <button key={s.id} onClick={() => setActiveStop(i)}
-                      className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${i === activeStop ? "border-[hsl(268_52%_68%/0.4)] bg-[hsl(268_52%_68%/0.12)] text-[hsl(268_52%_78%)]" : "border-white/8 text-muted-foreground/50 hover:border-white/15 hover:text-muted-foreground"}`}>
+                      className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all ${i === activeStop ? "border-[hsl(248_62%_52%/0.4)] bg-[hsl(248_62%_52%/0.12)] text-[hsl(248_62%_62%)]" : "border-white/8 text-muted-foreground/50 hover:border-white/15 hover:text-muted-foreground"}`}>
                       {i + 1}. {s.title.split(" ")[0]}
                     </button>
                   ))}
@@ -196,8 +196,8 @@ export default function FounderDemoJourney() {
                   </div>
 
                   {/* Audience note */}
-                  <div className="rounded-xl border border-[hsl(268_52%_68%/0.2)] bg-[hsl(268_52%_68%/0.06)] p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(268_52%_68%)] mb-1.5">For {audLabel}</p>
+                  <div className="rounded-xl border border-[hsl(248_62%_52%/0.2)] bg-[hsl(248_62%_52%/0.06)] p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-1.5">For {audLabel}</p>
                     <p className="text-xs text-muted-foreground/70 leading-relaxed">{audienceNote}</p>
                   </div>
                 </div>
@@ -211,7 +211,7 @@ export default function FounderDemoJourney() {
                   </Button>
                   {activeStop < STOPS.length - 1 ? (
                     <Button size="sm" onClick={() => setActiveStop(prev => prev + 1)}
-                      className="rounded-full bg-gradient-to-r from-[hsl(228_18%_50%)] to-[hsl(268_52%_65%)] border-0 text-xs">
+                      className="rounded-full bg-gradient-to-r from-[hsl(228_18%_50%)] to-[hsl(248_62%_55%)] border-0 text-xs">
                       Next stop <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                     </Button>
                   ) : (

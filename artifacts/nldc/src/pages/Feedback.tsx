@@ -58,7 +58,7 @@ function QuoteCopy({ text }: { text: string }) {
         }
       }}
       aria-label={copied ? "Quote copied to clipboard" : "Copy quote to clipboard"}
-      className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors mt-2 min-h-[32px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)] rounded-md px-1 -mx-1"
+      className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors mt-2 min-h-[32px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(248_62%_52%/0.6)] rounded-md px-1 -mx-1"
     >
       {copied ? <Check className="w-3 h-3 text-[hsl(142_55%_60%)]" aria-hidden="true" /> : <Copy className="w-3 h-3" aria-hidden="true" />}
       {copied ? "Copied quote" : "Copy quote"}
@@ -143,7 +143,7 @@ export default function Feedback() {
               )}
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link href="/signal-check"
-                  className="px-5 py-2.5 rounded-full text-sm font-semibold bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(348_55%_65%)] text-white">
+                  className="px-5 py-2.5 rounded-full text-sm font-semibold bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(348_55%_65%)] text-white">
                   Free Signal Check <ArrowRight className="inline w-3.5 h-3.5 ml-1" />
                 </Link>
                 <Link href="/gallery"
@@ -233,14 +233,14 @@ export default function Feedback() {
                   value={name}
                   onChange={e => setName(e.target.value)}
                   placeholder="First name"
-                  className="w-full h-10 rounded-xl px-3 text-sm bg-white/5 border border-white/10 text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-[hsl(268_52%_68%/0.4)]"
+                  className="w-full h-10 rounded-xl px-3 text-sm bg-white/5 border border-white/10 text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-[hsl(248_62%_52%/0.4)]"
                 />
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="Email (optional)"
-                  className="w-full h-10 rounded-xl px-3 text-sm bg-white/5 border border-white/10 text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-[hsl(268_52%_68%/0.4)]"
+                  className="w-full h-10 rounded-xl px-3 text-sm bg-white/5 border border-white/10 text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-[hsl(248_62%_52%/0.4)]"
                 />
               </div>
             </motion.div>
@@ -252,7 +252,7 @@ export default function Feedback() {
                   type="checkbox"
                   checked={quotePermission}
                   onChange={e => setQuotePermission(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border-white/20 accent-[hsl(268_52%_68%)] flex-shrink-0"
+                  className="mt-0.5 w-4 h-4 rounded border-white/20 accent-[hsl(248_62%_52%)] flex-shrink-0"
                 />
                 <div>
                   <p className="font-semibold text-foreground text-sm">You may use an anonymous quote from me</p>
@@ -277,7 +277,7 @@ export default function Feedback() {
               <Button
                 onClick={handleSubmit}
                 disabled={loading || !hasEnough}
-                className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(348_55%_60%)] border-0 disabled:opacity-40"
+                className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(348_55%_60%)] border-0 disabled:opacity-40"
               >
                 {loading ? "Saving…" : "Send feedback"}
               </Button>

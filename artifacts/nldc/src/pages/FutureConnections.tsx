@@ -95,7 +95,7 @@ function SampleMatchCard({ match, index }: { match: typeof SAMPLE_MATCHES[number
 
         <div className="flex flex-wrap gap-1 mb-3">
           {match.sharedTags.map(tag => (
-            <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.1)] border border-[hsl(268_52%_68%/0.2)] text-[hsl(268_52%_78%)]">
+            <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-[hsl(248_62%_52%/0.1)] border border-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_62%)]">
               {tag}
             </span>
           ))}
@@ -135,7 +135,7 @@ const HOW_IT_WORKS = [
     step: "1",
     title: "Build your compatibility profile",
     desc: "Answer across 18 dimensions at your own pace. No time limit, no pressure. Skip anything sensitive.",
-    color: "hsl(268 52% 68%)",
+    color: "hsl(248 62% 52%)",
     icon: Sparkles,
     href: "/wellness",
     cta: "Go to Profile Builder",
@@ -197,17 +197,17 @@ export default function FutureConnections() {
             <p className="text-muted-foreground max-w-2xl leading-relaxed mb-4">
               When compatibility matching opens, it'll be built on 18 dimensions of how you actually think, communicate, and live — not just photos and bios. Here's what that looks like with your profile today.
             </p>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(232_38%_15%)] border border-white/5 text-xs text-muted-foreground">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(248_45%_157%)] border border-white/5 text-xs text-muted-foreground">
               <Shield className="w-3 h-3 text-[hsl(142_55%_60%)]" />
               No live matching. This is a preview — no one sees your profile yet.
             </div>
           </motion.div>
 
           {/* Your signal strength panel */}
-          <motion.div {...fadeUp(0.06)} className="glass-strong rounded-2xl border border-[hsl(268_52%_68%/0.18)] p-5 sm:p-6 mb-6">
+          <motion.div {...fadeUp(0.06)} className="glass-strong rounded-2xl border border-[hsl(248_62%_52%/0.18)] p-5 sm:p-6 mb-6">
             <div className="flex items-start justify-between gap-4 mb-4">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-1">Your Signal Strength</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-1">Your Signal Strength</p>
                 <h3 className="font-serif text-lg font-semibold">
                   {ready ? "Profile ready for matching" : "Building your matching signal"}
                 </h3>
@@ -245,7 +245,7 @@ export default function FutureConnections() {
               <div className="text-center py-4 space-y-2">
                 <Lock className="w-5 h-5 mx-auto text-muted-foreground/25" />
                 <p className="text-xs text-muted-foreground/50">No profile answers yet. Start the Compatibility Profile Builder to see your signal strength.</p>
-                <Button asChild size="sm" className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0">
+                <Button asChild size="sm" className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0">
                   <Link href="/wellness">Build Profile <ArrowRight className="w-3.5 h-3.5 ml-1.5" /></Link>
                 </Button>
               </div>

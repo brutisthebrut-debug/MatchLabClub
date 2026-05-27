@@ -94,7 +94,7 @@ export default function UserControl() {
               { icon: Lock, c: "hsl(142 55% 60%)", t: "You control what's saved", d: "Approve before anything is kept." },
               { icon: Shield, c: "hsl(190 55% 60%)", t: "Private content is not sold", d: "Your inputs never leave your account." },
               { icon: Eye, c: "hsl(43 65% 65%)", t: "Future additions are opt-in", d: "New data sources stay off by default." },
-              { icon: EyeOff, c: "hsl(268 52% 68%)", t: "De-identification on request", d: "Strip your name and metadata anytime." },
+              { icon: EyeOff, c: "hsl(248 62% 52%)", t: "De-identification on request", d: "Strip your name and metadata anytime." },
             ].map((it, i) => {
               const Icon = it.icon;
               return (
@@ -120,7 +120,7 @@ export default function UserControl() {
             ) : (
               <div className="space-y-2">
                 {proposed.map(i => (
-                  <div key={i.id} className="rounded-xl p-4 bg-[hsl(232_38%_15%)] border border-white/5 flex flex-col sm:flex-row sm:items-center gap-3" data-testid={`proposed-${i.id}`}>
+                  <div key={i.id} className="rounded-xl p-4 bg-[hsl(248_45%_157%)] border border-white/5 flex flex-col sm:flex-row sm:items-center gap-3" data-testid={`proposed-${i.id}`}>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-foreground leading-relaxed">{i.text}</p>
                       <p className="text-[11px] text-muted-foreground mt-1">From {i.source} · {i.updated} · {i.category}</p>
@@ -149,7 +149,7 @@ export default function UserControl() {
             ) : (
               <div className="space-y-2">
                 {approved.map(i => (
-                  <div key={i.id} className="rounded-xl p-4 bg-[hsl(232_38%_15%)] border border-white/5 flex flex-col sm:flex-row sm:items-center gap-3" data-testid={`saved-${i.id}`}>
+                  <div key={i.id} className="rounded-xl p-4 bg-[hsl(248_45%_157%)] border border-white/5 flex flex-col sm:flex-row sm:items-center gap-3" data-testid={`saved-${i.id}`}>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-foreground leading-relaxed">{i.text}</p>
                       <p className="text-[11px] text-muted-foreground mt-1">
@@ -173,7 +173,7 @@ export default function UserControl() {
               <p className="text-xs text-muted-foreground mb-3">These won't be referenced by any tool. You can restore them anytime.</p>
               <div className="space-y-2">
                 {ignored.map(i => (
-                  <div key={i.id} className="rounded-xl p-3 bg-[hsl(232_38%_12%)] border border-white/5 flex items-center gap-3">
+                  <div key={i.id} className="rounded-xl p-3 bg-[hsl(248_45%_160%)] border border-white/5 flex items-center gap-3">
                     <p className="text-xs text-muted-foreground flex-1 leading-relaxed line-through">{i.text}</p>
                     <Button size="sm" variant="ghost" onClick={() => setStatus(i.id, "approved", "Insight restored.")} className="rounded-full text-xs">Restore</Button>
                   </div>
@@ -188,7 +188,7 @@ export default function UserControl() {
             <p className="text-xs text-muted-foreground mb-4">Choose which sources tools may reference. Off = the tool ignores it completely.</p>
             <div className="space-y-3">
               {OPT_INS.map(o => (
-                <div key={o.id} className="flex items-center justify-between gap-4 p-3 rounded-xl bg-[hsl(232_38%_15%)] border border-white/5">
+                <div key={o.id} className="flex items-center justify-between gap-4 p-3 rounded-xl bg-[hsl(248_45%_157%)] border border-white/5">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground">{o.label}</p>
                     <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{o.desc}</p>

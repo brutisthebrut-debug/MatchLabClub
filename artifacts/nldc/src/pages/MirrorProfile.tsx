@@ -142,14 +142,14 @@ const DEMO: MirrorResult = {
 };
 
 const SECTIONS = [
-  { key: "values",               title: "What You're Actually Optimizing For", color: "hsl(268 52% 68%)" },
+  { key: "values",               title: "What You're Actually Optimizing For", color: "hsl(248 62% 52%)" },
   { key: "protectiveHabits",     title: "Protective Habits",                   color: "hsl(43 65% 65%)" },
   { key: "signalsShown",         title: "Signals You're Broadcasting",          color: "hsl(190 55% 60%)" },
   { key: "understatedQualities", title: "Understated Qualities",                color: "hsl(142 55% 60%)" },
   { key: "overcompensation",     title: "Where You May Be Overcompensating",   color: "hsl(348 55% 65%)" },
-  { key: "likelyAudienceResponse", title: "How Different People Tend to Read You", color: "hsl(285 45% 65%)" },
+  { key: "likelyAudienceResponse", title: "How Different People Tend to Read You", color: "hsl(326 100% 65%)" },
   { key: "missingInformation",   title: "What's Not Coming Through",            color: "hsl(43 65% 65%)" },
-  { key: "emotionalImpression",  title: "Your Emotional Impression",            color: "hsl(268 52% 68%)" },
+  { key: "emotionalImpression",  title: "Your Emotional Impression",            color: "hsl(248 62% 52%)" },
   { key: "nextExperiment",       title: "Next Experiment",                      color: "hsl(142 55% 60%)" },
 ];
 
@@ -232,8 +232,8 @@ export default function MirrorProfile() {
         <div className="max-w-3xl mx-auto relative z-10">
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <ScanFace className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Self-Insight</p>
+              <ScanFace className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Self-Insight</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Mirror Profile</h1>
             <FallbackRateBadge toolName="Mirror Profile" className="mt-1" />
@@ -258,7 +258,7 @@ export default function MirrorProfile() {
                 placeholder="Paste your current dating profile bio, prompts, or just a few paragraphs about who you are and what you're looking for…"
                 value={bio}
                 onChange={e => setBio(e.target.value)}
-                className="min-h-[140px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40"
+                className="min-h-[140px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40"
               />
             </div>
             <div className="space-y-2">
@@ -267,11 +267,11 @@ export default function MirrorProfile() {
                 placeholder="e.g. That I'm serious but not intense. That I have my life together but I'm not boring."
                 value={want}
                 onChange={e => setWant(e.target.value)}
-                className="min-h-[64px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40"
+                className="min-h-[64px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40"
               />
             </div>
             <Button onClick={handleAnalyze} disabled={loading || !bio.trim()}
-              className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50">
+              className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-50">
               {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Reading your profile…</> : <><Sparkles className="mr-2 h-4 w-4" />Show Me My Mirror</>}
             </Button>
           </motion.div>

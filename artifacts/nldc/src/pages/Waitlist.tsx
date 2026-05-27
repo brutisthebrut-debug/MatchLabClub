@@ -74,8 +74,8 @@ export default function Waitlist() {
             data-testid="card-waitlist-stats"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "hsl(268 52% 68% / 0.12)" }}>
-                <Users className="w-5 h-5 text-[hsl(268_52%_68%)]" />
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "hsl(248 62% 52% / 0.12)" }}>
+                <Users className="w-5 h-5 text-[hsl(248_62%_52%)]" />
               </div>
               <div>
                 {statsLoading ? <Skeleton className="h-7 w-16" /> : <p className="text-2xl font-bold text-foreground" data-testid="stat-total-count">{displayStats.totalCount.toLocaleString()}</p>}
@@ -126,7 +126,7 @@ export default function Waitlist() {
                   ].map((step, i) => (
                     <div key={i} className="flex items-start gap-3 text-sm">
                       <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                        style={{ background: "linear-gradient(135deg, hsl(268 52% 65%), hsl(285 45% 58%))" }}>
+                        style={{ background: "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))" }}>
                         {i + 1}
                       </div>
                       <span className="text-muted-foreground">{step}</span>
@@ -135,7 +135,7 @@ export default function Waitlist() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold glow-pulse" data-testid="button-try-free-audit">
+                  <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 font-semibold glow-pulse" data-testid="button-try-free-audit">
                     <Link href="/start">Try the Free Audit Now <ArrowRight className="ml-2 h-4 w-4" /></Link>
                   </Button>
                   <Button
@@ -159,12 +159,12 @@ export default function Waitlist() {
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">First name <span className="text-[hsl(268_52%_68%)]">*</span></Label>
-                      <Input data-testid="input-waitlist-name" placeholder="Jordan" value={firstName} onChange={e => setFirstName(e.target.value)} className="bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/50" />
+                      <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">First name <span className="text-[hsl(248_62%_52%)]">*</span></Label>
+                      <Input data-testid="input-waitlist-name" placeholder="Jordan" value={firstName} onChange={e => setFirstName(e.target.value)} className="bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/50" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Email <span className="text-[hsl(268_52%_68%)]">*</span></Label>
-                      <Input data-testid="input-waitlist-email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} className="bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/50" />
+                      <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Email <span className="text-[hsl(248_62%_52%)]">*</span></Label>
+                      <Input data-testid="input-waitlist-email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} className="bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/50" />
                     </div>
                   </div>
 
@@ -174,7 +174,7 @@ export default function Waitlist() {
                       {REFERRAL_SOURCES.map(s => (
                         <button key={s} data-testid={`button-source-${s.toLowerCase().replace(/ /g, "-")}`}
                           onClick={() => setSource(prev => prev === s ? "" : s)}
-                          className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${source === s ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}
+                          className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${source === s ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)] border-[hsl(248_62%_52%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}
                         >{s}</button>
                       ))}
                     </div>
@@ -186,7 +186,7 @@ export default function Waitlist() {
                       {INTERESTS.map(item => (
                         <button key={item} data-testid={`button-interest-${item.toLowerCase().replace(/ /g, "-")}`}
                           onClick={() => setInterest(prev => prev === item ? "" : item)}
-                          className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${interest === item ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}
+                          className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${interest === item ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)] border-[hsl(248_62%_52%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}
                         >{item}</button>
                       ))}
                     </div>
@@ -195,7 +195,7 @@ export default function Waitlist() {
                   <Button
                     onClick={handleSubmit}
                     disabled={joinWaitlist.isPending || !firstName.trim() || !email.trim()}
-                    className="w-full rounded-full h-12 text-base font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50"
+                    className="w-full rounded-full h-12 text-base font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-50"
                     data-testid="button-join-waitlist"
                   >
                     {joinWaitlist.isPending ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Reserving...</> : <>Reserve My Spot <ArrowRight className="ml-2 h-5 w-5" /></>}
@@ -210,7 +210,7 @@ export default function Waitlist() {
           {/* Why This Exists */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-8 glass border border-white/8 rounded-3xl p-8">
             <div className="flex items-start gap-3 mb-5">
-              <Quote className="w-6 h-6 text-[hsl(268_52%_68%/0.5)] flex-shrink-0 mt-1" />
+              <Quote className="w-6 h-6 text-[hsl(248_62%_52%/0.5)] flex-shrink-0 mt-1" />
               <p className="text-foreground/70 text-sm leading-relaxed italic">
                 "Most dating advice is vague by design — vague advice can't be wrong. We built this for people who are emotionally ready and self-aware, but whose profiles don't show any of that. The technology isn't the point. Honest reflection is."
               </p>
@@ -224,7 +224,7 @@ export default function Waitlist() {
             <div className="grid sm:grid-cols-3 gap-4">
               {[
                 { badge: "40% off", title: "Lifetime founding-member discount", desc: "Locked in forever — never expires", color: "hsl(43 65% 65%)" },
-                { badge: "First in", title: "Priority access", desc: "Before public launch, guaranteed", color: "hsl(268 52% 68%)" },
+                { badge: "First in", title: "Priority access", desc: "Before public launch, guaranteed", color: "hsl(248 62% 52%)" },
                 { badge: "Bonus", title: "Free Full Dating Reset", desc: "First 50 members who complete an audit", color: "hsl(142 55% 60%)" },
               ].map((perk, i) => (
                 <div key={i} className="glass border border-white/8 rounded-2xl p-5 text-center card-hover" data-testid={`card-perk-${i}`}>

@@ -20,9 +20,9 @@ type LevelStatus = "live" | "dev" | "roadmap" | "phase3" | "vision";
 
 const STATUS_CONFIG: Record<LevelStatus, { label: string; color: string; bg: string; border: string; glow: string }> = {
   live:     { label: "Live Today",         color: "hsl(142 55% 62%)", bg: "hsl(142 55% 45% / 0.12)", border: "hsl(142 55% 45% / 0.3)", glow: "0 0 24px hsl(142 55% 60% / 0.35)" },
-  dev:      { label: "In Development",     color: "hsl(268 52% 72%)", bg: "hsl(268 52% 68% / 0.12)", border: "hsl(268 52% 68% / 0.3)", glow: "0 0 24px hsl(268 52% 68% / 0.3)" },
+  dev:      { label: "In Development",     color: "hsl(248 62% 58%)", bg: "hsl(248 62% 52% / 0.12)", border: "hsl(248 62% 52% / 0.3)", glow: "0 0 24px hsl(248 62% 52% / 0.3)" },
   roadmap:  { label: "On the Roadmap",     color: "hsl(43 65% 67%)",  bg: "hsl(43 65% 62% / 0.12)",  border: "hsl(43 65% 62% / 0.3)",  glow: "0 0 20px hsl(43 65% 62% / 0.25)" },
-  phase3:   { label: "Phase 3",            color: "hsl(285 45% 68%)", bg: "hsl(285 45% 60% / 0.12)", border: "hsl(285 45% 60% / 0.3)", glow: "0 0 20px hsl(285 45% 60% / 0.25)" },
+  phase3:   { label: "Phase 3",            color: "hsl(326 100% 65%)", bg: "hsl(326 100% 59% / 0.12)", border: "hsl(326 100% 59% / 0.3)", glow: "0 0 20px hsl(326 100% 59% / 0.25)" },
   vision:   { label: "The Vision",         color: "hsl(348 55% 67%)", bg: "hsl(348 55% 65% / 0.12)", border: "hsl(348 55% 65% / 0.3)", glow: "0 0 20px hsl(348 55% 65% / 0.2)" },
 };
 
@@ -74,7 +74,7 @@ const LEVELS = [
     module_links: ["/start", "/profile-reader", "/start"],
     insight: "Most people present differently across Hinge, LinkedIn, and Instagram without realising it. This level maps the gaps — and reads what's actually in your screenshots — so the right people recognise you everywhere.",
     technical: "On-device-style OCR, structured extraction, and deterministic coaching. No passive screen capture. You upload only what you approve.",
-    accentColor: "hsl(268 52% 72%)",
+    accentColor: "hsl(248 62% 58%)",
   },
   {
     num: 3,
@@ -125,7 +125,7 @@ const LEVELS = [
     module_links: ["/dashboard", "/style-map", "/insights", "/progress/patterns"],
     insight: "This is your private psychological asset — a living record of your dating self, scoped to your account, never sold, never used for advertising. Some pieces are already in your dashboard today; the deeper pattern mirror and journal layers are the next things we ship.",
     technical: "Private to your authenticated account. Data is stored on MatchLab Club infrastructure, never sold or shared with third parties, and can be exported or permanently deleted at any time from Settings → Privacy. True end-to-end encryption (keys held only by you) is a future option we'll add when paying users ask for it.",
-    accentColor: "hsl(285 45% 68%)",
+    accentColor: "hsl(326 100% 65%)",
   },
   {
     num: 5,
@@ -153,10 +153,10 @@ const LEVELS = [
 ];
 
 const PRIVACY_PRINCIPLES = [
-  { icon: Eye, title: "Preview before analysis", desc: "At Levels 3+, you see exactly what data will be processed before we touch it. Line by line if you want.", color: "hsl(268 52% 68%)" },
+  { icon: Eye, title: "Preview before analysis", desc: "At Levels 3+, you see exactly what data will be processed before we touch it. Line by line if you want.", color: "hsl(248 62% 52%)" },
   { icon: CheckCircle, title: "Consent at every level", desc: "Each data source requires its own explicit opt-in. Approving Gmail doesn't mean approving Calendar. Each switch is separate.", color: "hsl(142 55% 60%)" },
   { icon: Trash2, title: "Delete everything, permanently", desc: "One click removes your account, all audits, all stored intelligence, and all preferences — no 30-day hold, no 'we keep anonymised data' loophole.", color: "hsl(43 65% 65%)" },
-  { icon: Lock, title: "Private intelligence stays private", desc: "Your Level 4 intelligence layer is scoped to your account, never sold, never used to train external models, and never shared with third parties. You can export or permanently delete it from Settings → Privacy at any time.", color: "hsl(285 45% 65%)" },
+  { icon: Lock, title: "Private intelligence stays private", desc: "Your Level 4 intelligence layer is scoped to your account, never sold, never used to train external models, and never shared with third parties. You can export or permanently delete it from Settings → Privacy at any time.", color: "hsl(326 100% 65%)" },
   { icon: Database, title: "We never sell raw personal content", desc: "Not your messages. Not your profile. Not your photos. Not your conversation history. Not your journal. Nothing individual, ever.", color: "hsl(348 55% 65%)" },
   { icon: BarChart3, title: "Aggregate intelligence is earned, not extracted", desc: "Level 5 only exists because individuals opt in to anonymous benchmarking. The business model is consent infrastructure — not surveillance.", color: "hsl(190 55% 60%)" },
 ];
@@ -182,7 +182,7 @@ export default function Roadmap() {
         <section className="relative pt-20 md:pt-32 pb-20 px-4 overflow-hidden">
           <div className="max-w-4xl mx-auto text-center relative z-10">
             <motion.div {...fadeUp(0)}>
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border border-[hsl(268_52%_68%/0.25)] text-xs font-semibold uppercase tracking-widest text-[hsl(268_60%_82%)] mb-7">
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border border-[hsl(248_62%_52%/0.25)] text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_65%)] mb-7">
                 <Sparkles className="w-3.5 h-3.5" /> Product Vision · Investor Preview
               </span>
             </motion.div>
@@ -215,7 +215,7 @@ export default function Roadmap() {
             </motion.div>
 
             <motion.div {...fadeUp(0.25)} className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="h-13 px-9 rounded-full font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse">
+              <Button asChild size="lg" className="h-13 px-9 rounded-full font-semibold bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 glow-pulse">
                 <Link href="/signal-check"><Headphones className="mr-2 h-4 w-4" /> Free 3-Min Signal Check</Link>
               </Button>
               <Button asChild size="lg" variant="ghost" className="h-13 px-8 rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5">
@@ -229,7 +229,7 @@ export default function Roadmap() {
         <section className="py-16 md:py-24 px-4 border-t border-white/5">
           <div className="max-w-4xl mx-auto">
             <motion.div {...fadeUp(0)} className="text-center mb-16">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-3">The Platform Architecture</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-3">The Platform Architecture</p>
               <h2 className="text-3xl md:text-5xl font-bold text-foreground">Five levels of depth.</h2>
               <p className="text-muted-foreground mt-4 max-w-xl mx-auto leading-relaxed">
                 Start with what you can share in 3 minutes. Go as deep as your comfort, consent, and curiosity take you.
@@ -239,7 +239,7 @@ export default function Roadmap() {
             {/* Timeline */}
             <div className="relative">
               {/* Connecting line */}
-              <div className="absolute left-8 md:left-10 top-8 bottom-8 w-px" style={{ background: "linear-gradient(180deg, hsl(142 55% 60%) 0%, hsl(268 52% 68%) 25%, hsl(43 65% 62%) 50%, hsl(285 45% 60%) 75%, hsl(348 55% 65%) 100%)", opacity: 0.4 }} />
+              <div className="absolute left-8 md:left-10 top-8 bottom-8 w-px" style={{ background: "linear-gradient(180deg, hsl(142 55% 60%) 0%, hsl(248 62% 52%) 25%, hsl(43 65% 62%) 50%, hsl(326 100% 59%) 75%, hsl(348 55% 65%) 100%)", opacity: 0.4 }} />
 
               <div className="space-y-8">
                 {LEVELS.map((level, i) => {
@@ -356,7 +356,7 @@ export default function Roadmap() {
                           <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/6">
                             <p className="w-full text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Coming in future updates</p>
                             {level.modules.map((mod, j) => (
-                              <span key={j} className="text-xs font-medium px-3 py-1.5 rounded-full" style={{ background: "hsl(232 28% 16%)", color: "hsl(228 18% 55%)", border: "1px solid hsl(232 28% 22%)" }}>{mod}</span>
+                              <span key={j} className="text-xs font-medium px-3 py-1.5 rounded-full" style={{ background: "hsl(248 40% 94%)", color: "hsl(228 18% 55%)", border: "1px solid hsl(248 40% 150%)" }}>{mod}</span>
                             ))}
                           </div>
                         )}
@@ -374,10 +374,10 @@ export default function Roadmap() {
           <div className="orb orb-violet absolute w-[500px] h-[500px] top-0 right-0 opacity-30 pointer-events-none" />
           <div className="max-w-4xl mx-auto relative z-10">
             <motion.div {...fadeUp(0)} className="text-center mb-14">
-              <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{ background: "hsl(268 52% 68% / 0.15)", border: "1px solid hsl(268 52% 68% / 0.3)", boxShadow: "0 0 30px hsl(268 52% 68% / 0.2)" }}>
-                <Shield className="w-7 h-7 text-[hsl(268_52%_68%)]" />
+              <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{ background: "hsl(248 62% 52% / 0.15)", border: "1px solid hsl(248 62% 52% / 0.3)", boxShadow: "0 0 30px hsl(248 62% 52% / 0.2)" }}>
+                <Shield className="w-7 h-7 text-[hsl(248_62%_52%)]" />
               </div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-3">Non-Negotiable</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-3">Non-Negotiable</p>
               <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">The Privacy Pledge</h2>
               <p className="text-muted-foreground max-w-xl mx-auto leading-relaxed">
                 Every product decision at MatchLab Club is filtered through one question: does this respect the person trusting us with their most private self? If not, it doesn't ship.
@@ -439,8 +439,8 @@ export default function Roadmap() {
             <div className="grid sm:grid-cols-2 gap-5 mb-14">
               {MOAT_POINTS.map((point, i) => (
                 <motion.div key={i} {...fadeUp(i * 0.08)} className="glass border border-white/8 rounded-2xl p-7 card-hover">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-[hsl(268_52%_68%/0.12)] border border-[hsl(268_52%_68%/0.2)]">
-                    <point.icon className="w-5 h-5 text-[hsl(268_52%_68%)]" />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-[hsl(248_62%_52%/0.12)] border border-[hsl(248_62%_52%/0.2)]">
+                    <point.icon className="w-5 h-5 text-[hsl(248_62%_52%)]" />
                   </div>
                   <h3 className="font-bold text-foreground mb-2">{point.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{point.desc}</p>
@@ -456,7 +456,7 @@ export default function Roadmap() {
                   {
                     revenue: "Consumer Coaching",
                     tiers: ["Free Signal Check (acquisition)", "Full Dating Reset — $97 one-time", "Monthly Coaching — $197/mo"],
-                    color: "hsl(268 52% 68%)",
+                    color: "hsl(248 62% 52%)",
                     label: "Today",
                   },
                   {
@@ -468,7 +468,7 @@ export default function Roadmap() {
                   {
                     revenue: "B2B Insight Layer",
                     tiers: ["Anonymised trend reports for coaches & therapists", "Dating app aggregate benchmarks", "Research partner reports"],
-                    color: "hsl(285 45% 65%)",
+                    color: "hsl(326 100% 65%)",
                     label: "Phase 4–5",
                   },
                 ].map((bm, i) => (
@@ -534,11 +534,11 @@ export default function Roadmap() {
 
         {/* ── FINAL CTA ── */}
         <section className="py-24 md:py-32 px-4 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(268_52%_68%/0.1)] via-[hsl(285_45%_60%/0.07)] to-[hsl(43_65%_62%/0.06)]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(248_62%_52%/0.1)] via-[hsl(326_100%_59%/0.07)] to-[hsl(43_65%_62%/0.06)]" />
           <div className="orb orb-violet absolute w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-70 pointer-events-none" />
           <div className="max-w-2xl mx-auto text-center relative z-10">
             <motion.div {...fadeUp(0)}>
-              <Sparkles className="w-10 h-10 text-[hsl(268_52%_78%)] mx-auto mb-6" />
+              <Sparkles className="w-10 h-10 text-[hsl(248_62%_62%)] mx-auto mb-6" />
               <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight">
                 Start with what you<br />
                 <span className="gradient-text italic">can share in 3 minutes.</span>
@@ -548,7 +548,7 @@ export default function Roadmap() {
                 Level 1 is free, instant, and shows you exactly what's possible.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button asChild size="lg" className="h-14 px-10 rounded-full font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse shadow-[0_4px_30px_hsl(268_52%_68%/0.5)]">
+                <Button asChild size="lg" className="h-14 px-10 rounded-full font-semibold bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 glow-pulse shadow-[0_4px_30px_hsl(248_62%_52%/0.5)]">
                   <Link href="/signal-check">
                     <Headphones className="mr-2 h-5 w-5" /> Free Signal Check
                   </Link>

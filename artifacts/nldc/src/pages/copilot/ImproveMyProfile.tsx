@@ -173,7 +173,7 @@ export default function ImproveMyProfile() {
                   <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Your current bio or prompts</Label>
                   <Textarea value={bio} onChange={e => setBio(e.target.value)}
                     placeholder={"Paste your current profile bio, prompts, or anything you've written about yourself.\n\nDon't overthink it — even a rough draft works."}
-                    className="min-h-[140px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/35" />
+                    className="min-h-[140px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/35" />
                   <p className="text-[11px] text-muted-foreground/40">{bio.trim().split(/\s+/).filter(Boolean).length} words</p>
                 </div>
                 <div className="space-y-2">
@@ -210,7 +210,7 @@ export default function ImproveMyProfile() {
                   </div>
                 </div>
                 <Button onClick={handleGenerate} disabled={!bio.trim()}
-                  className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(43_65%_60%)] to-[hsl(268_52%_65%)] border-0 glow-pulse disabled:opacity-50">
+                  className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(43_65%_60%)] to-[hsl(248_62%_55%)] border-0 glow-pulse disabled:opacity-50">
                   <Sparkles className="mr-2 h-4 w-4" /> Analyse My Profile
                 </Button>
               </motion.div>

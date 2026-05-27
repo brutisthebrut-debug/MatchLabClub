@@ -314,7 +314,7 @@ export default function Scan() {
     <AppLayout>
       <div className="container mx-auto px-4 py-10 max-w-3xl">
         <motion.div {...fadeUp(0)} className="mb-8">
-          <div className="text-xs uppercase tracking-[0.2em] text-[hsl(285_45%_70%)] font-semibold mb-2">
+          <div className="text-xs uppercase tracking-[0.2em] text-[hsl(326_100%_70%)] font-semibold mb-2">
             Scan a Profile
           </div>
           <h1 className="font-display text-4xl md:text-5xl leading-tight mb-3">
@@ -332,7 +332,7 @@ export default function Scan() {
           {...fadeUp(0.05)}
           className={`glass border rounded-2xl p-6 mb-6 transition-colors ${
             isDragging
-              ? "border-[hsl(285_45%_70%)] bg-[hsl(285_45%_70%)]/10 ring-2 ring-[hsl(285_45%_70%)]/40"
+              ? "border-[hsl(326_100%_70%)] bg-[hsl(326_100%_70%)]/10 ring-2 ring-[hsl(326_100%_70%)]/40"
               : "border-white/8"
           }`}
           data-testid="card-upload"
@@ -383,7 +383,7 @@ export default function Scan() {
             </div>
           ) : (
             <div className="flex flex-col items-center text-center gap-4 py-6">
-              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[hsl(285_45%_62%)] to-[hsl(268_52%_58%)] flex items-center justify-center">
+              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[hsl(326_100%_62%)] to-[hsl(248_62%_58%)] flex items-center justify-center">
                 <Upload className="h-7 w-7 text-white" />
               </div>
               <div className="space-y-1">
@@ -459,7 +459,7 @@ export default function Scan() {
             data-testid="card-draft"
           >
             <div className="flex items-center gap-2 mb-1">
-              <Edit3 className="h-4 w-4 text-[hsl(285_45%_70%)]" />
+              <Edit3 className="h-4 w-4 text-[hsl(326_100%_70%)]" />
               <div className="font-semibold">
                 We read this from your screenshot
               </div>
@@ -603,7 +603,7 @@ export default function Scan() {
 
           <div className="glass border border-white/8 rounded-2xl p-6 flex items-center gap-5">
             <div
-              className="h-20 w-20 rounded-full flex items-center justify-center border-4 border-[hsl(285_45%_62%/0.4)] bg-[hsl(285_45%_62%/0.08)]"
+              className="h-20 w-20 rounded-full flex items-center justify-center border-4 border-[hsl(326_100%_62%/0.4)] bg-[hsl(326_100%_62%/0.08)]"
               data-testid="score-ring"
             >
               <div className="text-2xl font-display font-bold">
@@ -663,7 +663,7 @@ export default function Scan() {
 
           <Section
             title="Bio audit"
-            icon={<Edit3 className="h-4 w-4 text-[hsl(285_45%_70%)]" />}
+            icon={<Edit3 className="h-4 w-4 text-[hsl(326_100%_70%)]" />}
           >
             <p className="text-sm leading-relaxed">{display.report.bioAudit}</p>
             <div className="mt-3 rounded-xl border border-white/8 bg-black/20 p-3">

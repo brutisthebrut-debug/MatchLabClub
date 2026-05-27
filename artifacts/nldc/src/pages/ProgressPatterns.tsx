@@ -19,7 +19,7 @@ interface PatternCard {
 }
 
 const CATEGORY_CONFIG = {
-  theme:       { label: "Repeated Theme",      icon: Repeat,        color: "hsl(268 52% 68%)", bg: "hsl(268 52% 68% / 0.08)", border: "hsl(268 52% 68% / 0.2)" },
+  theme:       { label: "Repeated Theme",      icon: Repeat,        color: "hsl(248 62% 52%)", bg: "hsl(248 62% 52% / 0.08)", border: "hsl(248 62% 52% / 0.2)" },
   strength:    { label: "Strength",             icon: TrendingUp,    color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.08)", border: "hsl(142 55% 60% / 0.2)" },
   friction:    { label: "Friction Point",       icon: AlertTriangle, color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.08)",  border: "hsl(43 65% 65% / 0.2)"  },
   opportunity: { label: "Improvement Opp.",     icon: Target,        color: "hsl(190 55% 60%)", bg: "hsl(190 55% 60% / 0.08)", border: "hsl(190 55% 60% / 0.2)" },
@@ -105,8 +105,8 @@ function PatternCardComp({ card, i }: { card: PatternCard; i: number }) {
         <p className="text-sm text-muted-foreground leading-relaxed">{card.description}</p>
         {card.suggestedAction && (
           <div className="mt-3 flex items-start gap-2.5">
-            <Zap className="w-3.5 h-3.5 text-[hsl(268_52%_68%)] flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-[hsl(268_60%_78%)] leading-relaxed">{card.suggestedAction}</p>
+            <Zap className="w-3.5 h-3.5 text-[hsl(248_62%_52%)] flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-[hsl(248_62%_62%)] leading-relaxed">{card.suggestedAction}</p>
           </div>
         )}
       </div>
@@ -131,8 +131,8 @@ export default function ProgressPatterns() {
         <div className="max-w-3xl mx-auto relative z-10">
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <Repeat className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Progress Workspace</p>
+              <Repeat className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Progress Workspace</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Pattern Board</h1>
             <p className="text-muted-foreground mt-2">A summary of what keeps showing up across your logged entries — strengths worth building on, themes worth naming, friction points worth understanding, and opportunities worth acting on.</p>

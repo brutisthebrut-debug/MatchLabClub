@@ -270,8 +270,8 @@ export default function CompatibilityCompass() {
         <div className="max-w-3xl mx-auto relative z-10">
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <Compass className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Self-Insight</p>
+              <Compass className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Self-Insight</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Compatibility Compass</h1>
             <FallbackRateBadge toolName="Compatibility Compass" className="mt-1" />
@@ -295,7 +295,7 @@ export default function CompatibilityCompass() {
               <div className="flex flex-wrap gap-2">
                 {OWN_STYLES.map(s => (
                   <button key={s} onClick={() => setOwnStyle(prev => prev === s ? "" : s)}
-                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${ownStyle === s ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
+                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${ownStyle === s ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)] border-[hsl(248_62%_52%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
                     {s}
                   </button>
                 ))}
@@ -316,10 +316,10 @@ export default function CompatibilityCompass() {
               <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Anything else worth adding? <span className="font-normal normal-case text-muted-foreground/50">(optional)</span></Label>
               <Textarea placeholder="e.g. I tend to attract people who need a lot of reassurance. Or: I'm drawn to people I have to work for."
                 value={notes} onChange={e => setNotes(e.target.value)}
-                className="min-h-[72px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
+                className="min-h-[72px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
             </div>
             <Button onClick={handleAnalyze} disabled={loading || !ownStyle}
-              className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50">
+              className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-50">
               {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Reading your compass…</> : <><Compass className="mr-2 h-4 w-4" />Find My Compass</>}
             </Button>
           </motion.div>
@@ -367,7 +367,7 @@ export default function CompatibilityCompass() {
                   </ul>
                 </div>
 
-                <div className="rounded-2xl p-6 border border-[hsl(268_52%_68%/0.25)] bg-[hsl(268_52%_68%/0.07)]">
+                <div className="rounded-2xl p-6 border border-[hsl(248_62%_52%/0.25)] bg-[hsl(248_62%_52%/0.07)]">
                   <p className="font-semibold text-foreground text-sm mb-2">Best-supporting dynamic</p>
                   <p className="text-sm text-muted-foreground leading-relaxed">{show.bestDynamic}</p>
                 </div>

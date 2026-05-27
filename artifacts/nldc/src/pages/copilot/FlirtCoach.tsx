@@ -211,7 +211,7 @@ export default function FlirtCoach() {
                   </Label>
                   <Textarea value={situation} onChange={e => setSituation(e.target.value)}
                     placeholder={"Describe what's happened so far — just enough context.\n\nE.g. \"We've been texting for a week, good banter, she went quiet for 2 days and just came back. I want to ask her out but not seem desperate.\"\n\nOr leave blank for general options."}
-                    className="min-h-[110px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/35 text-sm" />
+                    className="min-h-[110px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/35 text-sm" />
                 </div>
 
                 <div className="space-y-2">
@@ -245,7 +245,7 @@ export default function FlirtCoach() {
                 </div>
 
                 <Button onClick={handleGenerate} disabled={!goal}
-                  className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(348_55%_60%)] to-[hsl(268_52%_65%)] border-0 disabled:opacity-40">
+                  className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(348_55%_60%)] to-[hsl(248_62%_55%)] border-0 disabled:opacity-40">
                   <Flame className="mr-2 h-4 w-4" /> Draft My Messages
                 </Button>
               </motion.div>

@@ -29,11 +29,11 @@ interface Scenario {
 }
 
 const CAT_CONFIG: Record<ScenarioCategory, { label: string; color: string }> = {
-  "first-date":    { label: "First Date",         color: "hsl(268 52% 68%)" },
+  "first-date":    { label: "First Date",         color: "hsl(248 62% 52%)" },
   "re-engaging":   { label: "Re-engaging",         color: "hsl(190 55% 60%)" },
   "rejection":     { label: "After Rejection",     color: "hsl(348 55% 65%)" },
   "slow-fade":     { label: "Slow Fade",           color: "hsl(43 65% 65%)"  },
-  "early-conflict":{ label: "Early Friction",      color: "hsl(285 45% 65%)" },
+  "early-conflict":{ label: "Early Friction",      color: "hsl(326 100% 65%)" },
   "exclusivity":   { label: "Exclusivity Talk",    color: "hsl(142 55% 60%)" },
   "ghosting":      { label: "Ghosting",            color: "hsl(228 18% 60%)" },
   "vulnerability": { label: "Showing Vulnerability", color: "hsl(43 65% 65%)" },
@@ -138,7 +138,7 @@ function CopyButton({ text }: { text: string }) {
     <button
       onClick={copy}
       aria-label={copied ? "Copied to clipboard" : "Copy message to clipboard"}
-      className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors min-h-[36px] px-2 -mx-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)]"
+      className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors min-h-[36px] px-2 -mx-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(248_62%_52%/0.6)]"
     >
       {copied ? <><Check className="w-3.5 h-3.5 text-[hsl(142_55%_60%)]" aria-hidden="true" />Copied</> : <><Copy className="w-3.5 h-3.5" aria-hidden="true" />Copy</>}
     </button>
@@ -156,7 +156,7 @@ function ScenarioCard({ scenario, i }: { scenario: Scenario; i: number }) {
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
         aria-controls={panelId}
-        className="w-full flex items-start justify-between gap-3 p-5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)] focus-visible:ring-inset"
+        className="w-full flex items-start justify-between gap-3 p-5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(248_62%_52%/0.6)] focus-visible:ring-inset"
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
@@ -250,8 +250,8 @@ export default function ProgressCompanion() {
 
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <Users className="w-4 h-4 text-[hsl(268_52%_68%)]" aria-hidden="true" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Progress Workspace</p>
+              <Users className="w-4 h-4 text-[hsl(248_62%_52%)]" aria-hidden="true" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Progress Workspace</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Companion Workspace</h1>
             <p className="text-muted-foreground mt-2 leading-relaxed">Common dating situations — with coaching guidance and copy-ready messages for each one. Expand any card to see your options.</p>
@@ -267,13 +267,13 @@ export default function ProgressCompanion() {
               onChange={e => setSearch(e.target.value)}
               placeholder="Search scenarios…"
               aria-label="Search scenarios"
-              className="w-full pl-10 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-[hsl(268_52%_68%/0.4)] focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.5)]"
+              className="w-full pl-10 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-[hsl(248_62%_52%/0.4)] focus-visible:ring-2 focus-visible:ring-[hsl(248_62%_52%/0.5)]"
             />
             {search && (
               <button
                 onClick={() => setSearch("")}
                 aria-label="Clear search"
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground/50 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground/50 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(248_62%_52%/0.6)]"
               >
                 <X className="w-3.5 h-3.5" aria-hidden="true" />
               </button>
@@ -285,7 +285,7 @@ export default function ProgressCompanion() {
             <button
               onClick={() => setCatFilter(null)}
               aria-pressed={catFilter === null}
-              className={`text-xs px-3 py-1.5 rounded-full border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)] ${catFilter === null ? "border-white/25 bg-white/8 text-foreground" : "border-white/10 text-muted-foreground/60 hover:text-muted-foreground"}`}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(248_62%_52%/0.6)] ${catFilter === null ? "border-white/25 bg-white/8 text-foreground" : "border-white/10 text-muted-foreground/60 hover:text-muted-foreground"}`}
             >
               All
             </button>
@@ -297,7 +297,7 @@ export default function ProgressCompanion() {
                   key={cat}
                   onClick={() => setCatFilter(active ? null : cat)}
                   aria-pressed={active}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)] ${active ? "border-white/25 bg-white/8 text-foreground" : "border-white/10 text-muted-foreground/60 hover:text-muted-foreground"}`}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(248_62%_52%/0.6)] ${active ? "border-white/25 bg-white/8 text-foreground" : "border-white/10 text-muted-foreground/60 hover:text-muted-foreground"}`}
                   style={active ? { color: cfg.color } : {}}
                 >
                   {cfg.label}
@@ -318,7 +318,7 @@ export default function ProgressCompanion() {
                 {hasFilters && (
                   <button
                     onClick={clearFilters}
-                    className="text-xs font-medium px-4 py-2 rounded-full border border-[hsl(268_52%_68%/0.3)] text-[hsl(268_52%_78%)] hover:bg-[hsl(268_52%_68%/0.1)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)]"
+                    className="text-xs font-medium px-4 py-2 rounded-full border border-[hsl(248_62%_52%/0.3)] text-[hsl(248_62%_62%)] hover:bg-[hsl(248_62%_52%/0.1)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(248_62%_52%/0.6)]"
                   >
                     Clear filters
                   </button>

@@ -84,7 +84,7 @@ export default function WhatChanged() {
           {/* Hero */}
           <motion.div {...fadeUp(0)} className="mb-8">
             <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(190_55%_60%)] to-[hsl(268_52%_68%)] flex items-center justify-center shadow-[0_0_16px_hsl(190_55%_60%/0.3)]">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(190_55%_60%)] to-[hsl(248_62%_52%)] flex items-center justify-center shadow-[0_0_16px_hsl(190_55%_60%/0.3)]">
                 <RefreshCw className="w-4 h-4 text-white" />
               </div>
               <p className="text-sm font-semibold text-[hsl(190_55%_70%)]">Copilot Check-In</p>
@@ -151,7 +151,7 @@ export default function WhatChanged() {
               <Button
                 onClick={handleSave}
                 disabled={!hasInput}
-                className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(190_55%_55%)] to-[hsl(268_52%_65%)] border-0 disabled:opacity-40"
+                className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(190_55%_55%)] to-[hsl(248_62%_55%)] border-0 disabled:opacity-40"
               >
                 Save this check-in
               </Button>
@@ -190,7 +190,7 @@ export default function WhatChanged() {
                 </Link>
                 <Link href="/progress/pattern-breaker"
                   className="glass border border-white/8 rounded-2xl p-4 hover:border-white/15 transition-colors group">
-                  <Zap className="w-5 h-5 text-[hsl(268_52%_68%)] mb-2" />
+                  <Zap className="w-5 h-5 text-[hsl(248_62%_52%)] mb-2" />
                   <p className="font-semibold text-foreground text-sm group-hover:text-white transition-colors">Pattern Breaker</p>
                   <p className="text-xs text-muted-foreground/60 mt-0.5">5 small actions for this week</p>
                 </Link>

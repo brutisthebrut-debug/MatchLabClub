@@ -24,10 +24,10 @@ export default function NotFound() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[hsl(268_52%_68%/0.2)] to-[hsl(285_45%_55%/0.15)] mx-auto mb-6 flex items-center justify-center border border-[hsl(268_52%_68%/0.2)]">
-              <Search className="w-7 h-7 text-[hsl(268_52%_78%)]" />
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[hsl(248_62%_52%/0.2)] to-[hsl(326_100%_55%/0.15)] mx-auto mb-6 flex items-center justify-center border border-[hsl(248_62%_52%/0.2)]">
+              <Search className="w-7 h-7 text-[hsl(248_62%_62%)]" />
             </div>
-            <p className="text-[hsl(268_52%_78%)] text-sm font-semibold tracking-widest uppercase mb-2">404</p>
+            <p className="text-[hsl(248_62%_62%)] text-sm font-semibold tracking-widest uppercase mb-2">404</p>
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">Page not found</h1>
             <p className="text-muted-foreground mb-8 max-w-sm mx-auto leading-relaxed">
               That link doesn't go anywhere. Try one of these instead — or head back to the dashboard.
@@ -36,7 +36,7 @@ export default function NotFound() {
             <div className="grid grid-cols-2 gap-3 mb-8 text-left">
               {SUGGESTIONS.map(s => (
                 <Link key={s.href} href={s.href}
-                  className="glass-strong rounded-xl p-3 border border-white/5 hover:border-[hsl(268_52%_68%/0.25)] transition-colors block">
+                  className="glass-strong rounded-xl p-3 border border-white/5 hover:border-[hsl(248_62%_52%/0.25)] transition-colors block">
                   <p className="text-sm font-semibold text-foreground">{s.label}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{s.desc}</p>
                 </Link>
@@ -47,7 +47,7 @@ export default function NotFound() {
               <Button asChild variant="outline" className="rounded-full gap-2">
                 <Link href="/"><ArrowLeft className="w-4 h-4" />Home</Link>
               </Button>
-              <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 gap-2">
+              <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 gap-2">
                 <Link href="/dashboard"><Sparkles className="w-4 h-4" />Dashboard</Link>
               </Button>
             </div>

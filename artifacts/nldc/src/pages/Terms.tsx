@@ -5,7 +5,7 @@ import { FileText, Heart, Star, AlertCircle, Ban, Mail } from "lucide-react";
 const Section = ({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) => (
   <div className="glass rounded-2xl p-6 md:p-8 space-y-4">
     <div className="flex items-center gap-3">
-      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] flex items-center justify-center flex-shrink-0">
+      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] flex items-center justify-center flex-shrink-0">
         <Icon className="w-4.5 h-4.5 text-white" />
       </div>
       <h2 className="font-serif text-xl font-bold text-foreground">{title}</h2>
@@ -25,7 +25,7 @@ export default function Terms() {
       <div className="container mx-auto px-4 md:px-6 py-16 max-w-3xl">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-semibold text-[hsl(268_52%_78%)] border border-[hsl(268_52%_68%/0.3)] mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-semibold text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)] mb-6">
             <FileText className="w-3.5 h-3.5" />
             Terms of Service
           </div>
@@ -43,10 +43,10 @@ export default function Terms() {
             <p><strong className="text-foreground">What it is:</strong> A dating coaching tool. MatchLab Club analyses your dating profile, messages, and communication style to give you personalised, actionable coaching. Think of it as an intelligent mirror — honest feedback and a path forward.</p>
             <p><strong className="text-foreground">What it isn't:</strong></p>
             <ul className="space-y-1.5 list-none">
-              <li className="flex items-start gap-2"><span className="text-[hsl(268_52%_68%)]">→</span> Not therapy or mental health counselling</li>
-              <li className="flex items-start gap-2"><span className="text-[hsl(268_52%_68%)]">→</span> Not a professional matchmaking service</li>
-              <li className="flex items-start gap-2"><span className="text-[hsl(268_52%_68%)]">→</span> Not a guarantee of any outcome — dates, relationships, or otherwise</li>
-              <li className="flex items-start gap-2"><span className="text-[hsl(268_52%_68%)]">→</span> Not a substitute for your own judgment in your relationships</li>
+              <li className="flex items-start gap-2"><span className="text-[hsl(248_62%_52%)]">→</span> Not therapy or mental health counselling</li>
+              <li className="flex items-start gap-2"><span className="text-[hsl(248_62%_52%)]">→</span> Not a professional matchmaking service</li>
+              <li className="flex items-start gap-2"><span className="text-[hsl(248_62%_52%)]">→</span> Not a guarantee of any outcome — dates, relationships, or otherwise</li>
+              <li className="flex items-start gap-2"><span className="text-[hsl(248_62%_52%)]">→</span> Not a substitute for your own judgment in your relationships</li>
             </ul>
             <p>If you're working through something that feels bigger than dating — anxiety, self-worth, past trauma — we'd gently suggest talking to a therapist alongside anything you do here.</p>
           </Section>

@@ -30,7 +30,7 @@ const PERKS = [
   },
 ];
 
-const WHAT_NLDC_DOES = [
+const WHAT_MATCHLAB_DOES = [
   "Tells you what your dating profile is actually communicating — not what you think it's saying",
   "Rewrites your bio to be specific, warm, and interesting (not try-hard)",
   "Scores your profile across 8 dimensions so you know exactly what to fix first",
@@ -83,7 +83,7 @@ export default function ShebangsPartner() {
               Shebangs.club
             </div>
             <span className="text-muted-foreground/40">×</span>
-            <div className="glass px-4 py-2 rounded-full text-sm font-semibold text-[hsl(268_52%_78%)] border border-[hsl(268_52%_68%/0.3)] flex items-center gap-1.5">
+            <div className="glass px-4 py-2 rounded-full text-sm font-semibold text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)] flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" />
               MatchLab Club
             </div>
@@ -109,9 +109,9 @@ export default function ShebangsPartner() {
         <div className="container mx-auto px-4 md:px-6 max-w-3xl">
           <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-widest text-center mb-8">What MatchLab Club actually does</p>
           <ul className="space-y-3">
-            {WHAT_NLDC_DOES.map((item) => (
+            {WHAT_MATCHLAB_DOES.map((item) => (
               <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground">
-                <CheckCircle2 className="w-4 h-4 text-[hsl(268_52%_68%)] mt-0.5 flex-shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-[hsl(248_62%_52%)] mt-0.5 flex-shrink-0" />
                 {item}
               </li>
             ))}
@@ -126,7 +126,7 @@ export default function ShebangsPartner() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-14">
             {PERKS.map(({ icon: Icon, title, desc }) => (
               <div key={title} className="glass rounded-2xl p-6 space-y-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] flex items-center justify-center">
                   <Icon className="w-5 h-5 text-white" />
                 </div>
                 <h3 className="font-semibold text-foreground text-sm">{title}</h3>
@@ -137,9 +137,9 @@ export default function ShebangsPartner() {
 
           {/* Lead capture */}
           <div className="max-w-md mx-auto">
-            <div className="glass-strong rounded-2xl p-8 border border-[hsl(268_52%_68%/0.2)] space-y-6">
+            <div className="glass-strong rounded-2xl p-8 border border-[hsl(248_62%_52%/0.2)] space-y-6">
               <div className="text-center">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-semibold text-[hsl(268_52%_78%)] border border-[hsl(268_52%_68%/0.3)] mb-4">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-semibold text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)] mb-4">
                   <Sparkles className="w-3.5 h-3.5" />
                   Shebangs exclusive
                 </div>
@@ -168,7 +168,7 @@ export default function ShebangsPartner() {
                     </div>
                     <button
                       onClick={() => navigate("/signal-check")}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity text-sm"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity text-sm"
                     >
                       Start your Signal Check
                       <ArrowRight className="w-4 h-4" />
@@ -208,7 +208,7 @@ export default function ShebangsPartner() {
                     <Button
                       type="submit"
                       disabled={loading}
-                      className="w-full bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] text-white font-semibold rounded-xl h-12 text-base hover:opacity-90"
+                      className="w-full bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] text-white font-semibold rounded-xl h-12 text-base hover:opacity-90"
                     >
                       {loading ? "Saving…" : "Get my Shebangs perks"}
                       <ArrowRight className="w-4 h-4 ml-2" />
@@ -242,7 +242,7 @@ export default function ShebangsPartner() {
         <div className="container mx-auto px-4 md:px-6 max-w-3xl text-center">
           <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-widest mb-4">About this partnership</p>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
-            MatchLab Club partnered with <a href="https://shebangs.club" target="_blank" rel="noopener noreferrer" className="text-[hsl(268_52%_78%)] hover:underline inline-flex items-center gap-1">Shebangs.club <ExternalLink className="w-3 h-3" /></a> because we share the same belief: dating should be approached with honesty, self-awareness, and a genuine desire to connect — not strategy and performance. Shebangs listeners already think this way. We're just here to help you show it.
+            MatchLab Club partnered with <a href="https://shebangs.club" target="_blank" rel="noopener noreferrer" className="text-[hsl(248_62%_62%)] hover:underline inline-flex items-center gap-1">Shebangs.club <ExternalLink className="w-3 h-3" /></a> because we share the same belief: dating should be approached with honesty, self-awareness, and a genuine desire to connect — not strategy and performance. Shebangs listeners already think this way. We're just here to help you show it.
           </p>
         </div>
       </section>

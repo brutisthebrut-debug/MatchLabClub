@@ -13,7 +13,8 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { useSavedContext } from "@/hooks/useSavedContext";
 import { SavedContextChip } from "@/components/SavedContextChip";
 import { nextMessageSchema, parseAiJson } from "@/lib/aiSchemas";
-import { ToneBar, ConfidenceLabel, getConfidenceLevel } from "@/components/ToneBar";
+import { ToneBar, ConfidenceLabel } from "@/components/ToneBar";
+import { getConfidenceLevel } from "@/lib/toneUtils";
 import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 
 const fadeUp = (delay = 0) => ({
@@ -88,8 +89,8 @@ function generateMessages(context: string, lastMsg: string, name: string, goal: 
         ? `I want to be honest with you — I've been a bit unsure about the direction here. Worth a conversation?`
         : `I'm going to say the thing nobody says: I'm actually interested in getting to know you properly. Let's do something about that.`,
       when: "When you've been dancing around the obvious thing. Clear, confident, attractive.",
-      color: "hsl(268 52% 68%)",
-      bg: "hsl(268 52% 68% / 0.08)",
+      color: "hsl(248 62% 52%)",
+      bg: "hsl(248 62% 52% / 0.08)",
     },
     {
       style: "Direct",
@@ -157,7 +158,7 @@ const DEMO: NextMessageResult = {
     { style: "Safe",       text: "I keep coming back to what you said about [thing from conversation]. What made you say that?",                                           when: "When you want to restart without pressure.",                                  color: "hsl(228 18% 65%)", bg: "hsl(228 18% 65% / 0.08)" },
     { style: "Warm",       text: "I really enjoy talking with you. This has been one of the better conversations I've had on here.",                                        when: "When there's real warmth and you want to signal genuine interest.",           color: "hsl(348 55% 65%)", bg: "hsl(348 55% 65% / 0.08)" },
     { style: "Playful",    text: "I feel like we've been building up to an actual conversation. When does that happen?",                                                    when: "When the vibe has been light. Keeps things easy.",                            color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.08)"  },
-    { style: "Bold",       text: "I'm going to say the thing nobody says: I'm actually interested in getting to know you properly. Let's do something about that.",          when: "When you've been dancing around the obvious thing.",                          color: "hsl(268 52% 68%)", bg: "hsl(268 52% 68% / 0.08)" },
+    { style: "Bold",       text: "I'm going to say the thing nobody says: I'm actually interested in getting to know you properly. Let's do something about that.",          when: "When you've been dancing around the obvious thing.",                          color: "hsl(248 62% 52%)", bg: "hsl(248 62% 52% / 0.08)" },
     { style: "Direct",     text: "What are you actually looking for right now? I'd rather know than guess.",                                                                when: "Works when you want real information fast.",                                 color: "hsl(190 55% 60%)", bg: "hsl(190 55% 60% / 0.08)" },
     { style: "Invitation", text: "This is the kind of conversation that's better in person. Want to find out if that's true?",                                             when: "Suggests something without making it a big ask.",                            color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.08)" },
     { style: "Clean Exit", text: "I've had a great time chatting — I just don't think I can give this what it deserves right now. I hope you find someone who can.",        when: "A kind, clean close. No ambiguity, no bridge burned.",                        color: "hsl(228 18% 55%)", bg: "hsl(228 18% 55% / 0.08)" },
@@ -280,8 +281,8 @@ export default function NextMessage() {
         <div className="max-w-3xl mx-auto relative z-10">
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <MessageCircle className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Communication Tools</p>
+              <MessageCircle className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Communication Tools</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Next Message</h1>
             <FallbackRateBadge toolName="Next Message" className="mt-1" />
@@ -304,14 +305,14 @@ export default function NextMessage() {
               <div className="space-y-2">
                 <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Their name <span className="font-normal normal-case text-muted-foreground/50">(optional)</span></Label>
                 <input value={name} onChange={e => setName(e.target.value)} placeholder="Alex"
-                  className="w-full h-10 rounded-xl px-3 text-sm bg-[hsl(232_28%_14%)] border border-white/10 text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-[hsl(268_52%_68%/0.4)]" />
+                  className="w-full h-10 rounded-xl px-3 text-sm bg-[hsl(248_40%_95%)] border border-white/10 text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-[hsl(248_62%_52%/0.4)]" />
               </div>
               <div className="space-y-2">
                 <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Your goal</Label>
                 <div className="flex flex-wrap gap-1.5">
                   {GOALS.map(g => (
                     <button key={g} onClick={() => setGoal(prev => prev === g ? "" : g)}
-                      className={`px-2.5 py-1.5 rounded-full border text-xs font-medium transition-all ${goal === g ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
+                      className={`px-2.5 py-1.5 rounded-full border text-xs font-medium transition-all ${goal === g ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)] border-[hsl(248_62%_52%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
                       {g}
                     </button>
                   ))}
@@ -322,15 +323,15 @@ export default function NextMessage() {
               <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Conversation context</Label>
               <Textarea placeholder={"Paste the conversation or describe what's been happening…\n\nAlex: I love that little wine bar on Oak Street\nMe: The one with the exposed brick? I've been wanting to go\nAlex: Yes! We should go sometime"}
                 value={context} onChange={e => setContext(e.target.value)}
-                className="min-h-[120px] resize-none font-mono text-xs bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
+                className="min-h-[120px] resize-none font-mono text-xs bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
             </div>
             <div className="space-y-2">
               <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Last message sent <span className="font-normal normal-case text-muted-foreground/50">(optional)</span></Label>
               <input value={lastMsg} onChange={e => setLastMsg(e.target.value)} placeholder="What was the last thing you said?"
-                className="w-full h-10 rounded-xl px-3 text-sm bg-[hsl(232_28%_14%)] border border-white/10 text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-[hsl(268_52%_68%/0.4)]" />
+                className="w-full h-10 rounded-xl px-3 text-sm bg-[hsl(248_40%_95%)] border border-white/10 text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-[hsl(248_62%_52%/0.4)]" />
             </div>
             <Button onClick={() => { void handleGenerate(); }} disabled={loading || (!context.trim() && !lastMsg.trim())}
-              className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50">
+              className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-50">
               {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Writing options…</> : <><Sparkles className="mr-2 h-4 w-4" />Get My 7 Options</>}
             </Button>
             {savedCtx.hasSavedContext && (
@@ -404,7 +405,7 @@ export default function NextMessage() {
                     <div className="px-5 py-4">
                       <div className="flex justify-end">
                         <div className="max-w-sm text-sm px-4 py-3 rounded-2xl rounded-br-md text-white font-medium"
-                          style={{ background: `linear-gradient(135deg, ${opt.color}, hsl(285 45% 55%))` }}>
+                          style={{ background: `linear-gradient(135deg, ${opt.color}, hsl(326 100% 55%))` }}>
                           {opt.text}
                         </div>
                       </div>
@@ -413,8 +414,8 @@ export default function NextMessage() {
                   </motion.div>
                 ))}
               </div>
-              <motion.div {...fadeUp(0.3)} className="mt-4 rounded-2xl border border-[hsl(268_52%_68%/0.2)] bg-[hsl(268_52%_68%/0.06)] px-5 py-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(268_52%_68%)] mb-1.5">Coach Note</p>
+              <motion.div {...fadeUp(0.3)} className="mt-4 rounded-2xl border border-[hsl(248_62%_52%/0.2)] bg-[hsl(248_62%_52%/0.06)] px-5 py-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(248_62%_52%)] mb-1.5">Coach Note</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">{show.coachNote}</p>
               </motion.div>
               {result && (

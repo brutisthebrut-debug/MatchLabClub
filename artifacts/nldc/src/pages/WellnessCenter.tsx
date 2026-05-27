@@ -59,7 +59,7 @@ type ConsentLevel = "coaching" | "matching" | "research";
 const CONSENT_META: Record<ConsentLevel, { label: string; color: string; blurb: string }> = {
   coaching:  { label: "Coaching only",  color: "hsl(190 55% 60%)",  blurb: "Used only for your personal coaching and readiness insights." },
   matching:  { label: "Matching",       color: "hsl(142 55% 60%)",  blurb: "May be used for compatibility matching when you opt in." },
-  research:  { label: "Research",       color: "hsl(268 52% 68%)",  blurb: "Anonymised contribution to product research." },
+  research:  { label: "Research",       color: "hsl(248 62% 52%)",  blurb: "Anonymised contribution to product research." },
 };
 
 function ConsentBadge({ level, onChange }: { level: ConsentLevel; onChange: (l: ConsentLevel) => void }) {
@@ -158,7 +158,7 @@ function QuestionCard({
             onChange={e => setText(e.target.value)}
             placeholder="Your answer..."
             rows={2}
-            className="w-full bg-white/4 border border-white/8 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/30 resize-none focus:outline-none focus:border-[hsl(268_52%_68%/0.4)] transition-colors"
+            className="w-full bg-white/4 border border-white/8 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/30 resize-none focus:outline-none focus:border-[hsl(248_62%_52%/0.4)] transition-colors"
           />
           <div className="flex items-center justify-between gap-3 mt-2">
             <div className="flex items-center gap-2">
@@ -173,7 +173,7 @@ function QuestionCard({
               size="sm"
               onClick={handleSave}
               disabled={!text.trim() || saving}
-              className="rounded-full text-xs h-7 px-4 bg-gradient-to-r from-[hsl(268_52%_55%)] to-[hsl(285_45%_50%)] border-0 disabled:opacity-40"
+              className="rounded-full text-xs h-7 px-4 bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_50%)] border-0 disabled:opacity-40"
             >
               {saving ? "Saving…" : "Save"}
             </Button>
@@ -318,10 +318,10 @@ function MatchingReadinessPanel({ profile }: { profile: WellnessProfile | undefi
   const color = pct >= 60 ? "hsl(142 55% 60%)" : pct >= 30 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
 
   return (
-    <motion.div {...fadeUp(0.2)} className="glass-strong rounded-2xl border border-[hsl(268_52%_68%/0.18)] p-5 mb-6">
+    <motion.div {...fadeUp(0.2)} className="glass-strong rounded-2xl border border-[hsl(248_62%_52%/0.18)] p-5 mb-6">
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-1">Matching Readiness</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-1">Matching Readiness</p>
           <h3 className="font-serif text-lg font-semibold text-foreground">
             {mr.readyForMatching ? "Profile ready for matching" : "Keep building your profile"}
           </h3>
@@ -443,7 +443,7 @@ export default function WellnessCenter() {
               Answer at your own pace across 18 wellness dimensions. Every answer stays private unless you explicitly approve it for matching. Skip anything that doesn't feel right.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(232_38%_15%)] border border-white/5 text-xs text-muted-foreground">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(248_45%_157%)] border border-white/5 text-xs text-muted-foreground">
                 <Shield className="w-3 h-3 text-[hsl(142_55%_60%)]" />
                 Coaching-only by default. You control what's used for matching.
               </div>
@@ -492,13 +492,13 @@ export default function WellnessCenter() {
 
           {/* Auth gate */}
           {!user && (
-            <motion.div {...fadeUp(0.12)} className="mb-6 glass-strong rounded-2xl border border-[hsl(268_52%_68%/0.2)] p-6 text-center space-y-3">
-              <Lock className="w-6 h-6 mx-auto text-[hsl(268_52%_68%)]" />
+            <motion.div {...fadeUp(0.12)} className="mb-6 glass-strong rounded-2xl border border-[hsl(248_62%_52%/0.2)] p-6 text-center space-y-3">
+              <Lock className="w-6 h-6 mx-auto text-[hsl(248_62%_52%)]" />
               <p className="text-sm font-semibold text-foreground">Sign in to save your answers</p>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 You can read the questions now. Saving requires an account so your profile persists across sessions.
               </p>
-              <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0">
+              <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0">
                 <Link href="/login">Sign in free <ArrowRight className="w-4 h-4 ml-1.5" /></Link>
               </Button>
             </motion.div>
@@ -535,8 +535,8 @@ export default function WellnessCenter() {
           )}
 
           {/* Footer CTAs */}
-          <motion.div {...fadeUp(0.4)} className="glass-strong rounded-2xl p-6 sm:p-7 border border-[hsl(268_52%_68%/0.2)] text-center space-y-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-[hsl(268_52%_78%)]">What happens next</p>
+          <motion.div {...fadeUp(0.4)} className="glass-strong rounded-2xl p-6 sm:p-7 border border-[hsl(248_62%_52%/0.2)] text-center space-y-4">
+            <p className="text-xs font-bold uppercase tracking-widest text-[hsl(248_62%_62%)]">What happens next</p>
             <h3 className="font-serif text-xl font-semibold">Compatibility matching is coming</h3>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
               When live matching opens, your completed profile will be used to surface people who are actually compatible with how you think, communicate, and live — not just photos and bios.

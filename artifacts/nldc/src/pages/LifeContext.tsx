@@ -27,7 +27,7 @@ const SECTIONS = [
     key: "blueprint",
     title: "From Dating Blueprint",
     icon: BookOpen,
-    color: "hsl(268 52% 68%)",
+    color: "hsl(248 62% 52%)",
     href: "/blueprint",
     insights: [
       { text: "Reflective–curious archetype; warm and slow to open up.", tag: "Identity" },
@@ -74,14 +74,14 @@ export default function LifeContext() {
 
         <div className="max-w-5xl mx-auto relative z-10">
           <motion.div {...fadeUp(0)} className="mb-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-strong border border-[hsl(268_52%_68%/0.2)] text-xs font-medium text-[hsl(268_52%_78%)] mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-strong border border-[hsl(248_62%_52%/0.2)] text-xs font-medium text-[hsl(248_62%_62%)] mb-3">
               <Layers className="w-3 h-3" /> Life Context Profile
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3">The picture of you — <span className="gradient-text-violet">as you've shared it.</span></h1>
             <p className="text-muted-foreground max-w-2xl leading-relaxed mb-4">
               One place to see every insight you've approved across the app. Nothing here appears until you say yes.
             </p>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(232_38%_15%)] border border-white/5 text-xs text-muted-foreground">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(248_45%_157%)] border border-white/5 text-xs text-muted-foreground">
               <Shield className="w-3 h-3 text-[hsl(142_55%_60%)]" />
               Based only on what you choose to share and approve.
             </div>
@@ -89,8 +89,8 @@ export default function LifeContext() {
 
           {total === 0 ? (
             <motion.div {...fadeUp(0.1)} className="glass-strong rounded-2xl p-8 sm:p-12 border border-white/5 text-center">
-              <div className="w-14 h-14 rounded-full bg-[hsl(268_52%_68%/0.15)] mx-auto mb-4 flex items-center justify-center">
-                <Plus className="w-6 h-6 text-[hsl(268_52%_78%)]" />
+              <div className="w-14 h-14 rounded-full bg-[hsl(248_62%_52%/0.15)] mx-auto mb-4 flex items-center justify-center">
+                <Plus className="w-6 h-6 text-[hsl(248_62%_62%)]" />
               </div>
               <h2 className="font-serif text-2xl font-semibold mb-2">Nothing here yet</h2>
               <p className="text-sm text-muted-foreground max-w-md mx-auto mb-5">
@@ -121,7 +121,7 @@ export default function LifeContext() {
                     </div>
                     <ul className="space-y-2">
                       {s.insights.map((it, idx) => (
-                        <li key={idx} className="rounded-xl bg-[hsl(232_38%_15%)] border border-white/5 p-3 flex flex-col sm:flex-row sm:items-center gap-2">
+                        <li key={idx} className="rounded-xl bg-[hsl(248_45%_157%)] border border-white/5 p-3 flex flex-col sm:flex-row sm:items-center gap-2">
                           <p className="text-sm text-foreground flex-1 leading-relaxed">{it.text}</p>
                           <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-white/5 text-muted-foreground flex-shrink-0 self-start sm:self-auto">{it.tag}</span>
                         </li>

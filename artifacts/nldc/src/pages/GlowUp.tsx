@@ -9,7 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, Wand2, Copy, Check, RefreshCw, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
-import { ConfidenceLabel, getConfidenceLevel } from "@/components/ToneBar";
+import { ConfidenceLabel } from "@/components/ToneBar";
+import { getConfidenceLevel } from "@/lib/toneUtils";
 import { FallbackNotice } from "@/components/FallbackNotice";
 import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 
@@ -49,7 +50,7 @@ function generateGlowUp(original: string, goal: string): GlowVersion[] {
       label: "Serious / Long-Term",
       bio: `I'm someone who ${core}. Not in a way that's trying to impress you — in a way that's just how I am. I ${detail}. I'm here because I want something real, which means I'm looking for someone who's also done pretending that doesn't matter. ${closing}`,
       tip: "Leads with character, not a list of attributes. States intention without desperation.",
-      color: "hsl(268 52% 68%)",
+      color: "hsl(248 62% 52%)",
     },
     {
       style: "playful",
@@ -70,7 +71,7 @@ function generateGlowUp(original: string, goal: string): GlowVersion[] {
       label: "Queer-Friendly",
       bio: `I'm ${core.replace("makes", "the one who makes").replace("builds", "someone who builds").replace("makes the", "making the").replace("pays", "paying")} — and I'm done with profiles that read like LinkedIn bios or therapy intake forms. I'm looking for someone real, wherever you are on whatever spectrum. I bring genuine presence, a low tolerance for small talk, and the ability to ${detail}. Let's skip the awkward part and get to the good part.`,
       tip: "Inclusive without over-signaling. Personality-forward. Invites engagement.",
-      color: "hsl(285 45% 65%)",
+      color: "hsl(326 100% 65%)",
     },
     {
       style: "lessgeneric",
@@ -121,7 +122,7 @@ Typical Sunday: ${hasHomebody ? "Slow morning, good coffee, cooking something wi
       label: "Feeld-Style",
       bio: `Curious, ${hasHumor ? "playful," : ""} and here with genuine interest in connection — whatever shape that takes. I ${core}. I value honesty about what we each want, low-pressure exploration, and people who show up as themselves. ${goal?.toLowerCase().includes("casual") ? "Not looking for anything heavy — just real." : "Open to where things go when people are honest from the start."} Tell me what brought you here.`,
       tip: "Feeld rewards openness, curiosity, and non-judgmental language over traditional dating copy.",
-      color: "hsl(285 45% 68%)",
+      color: "hsl(326 100% 65%)",
     },
   ];
 }
@@ -169,7 +170,7 @@ function VersionCard({ v, original }: { v: GlowVersion; original: string }) {
       <div className="px-5 py-4">
         {open && <p className="section-label mb-2" style={{ color: `${v.color.replace(")", " / 0.85)")}` }}>What to use instead</p>}
         <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-line">{v.bio}</p>
-        {open && <p className="section-label mt-4 mb-1.5" style={{ color: "hsl(285 45% 72% / 0.75)" }}>Why this version works</p>}
+        {open && <p className="section-label mt-4 mb-1.5" style={{ color: "hsl(326 100% 72% / 0.75)" }}>Why this version works</p>}
         <p className={`text-xs text-muted-foreground/60 leading-relaxed ${open ? "" : "mt-3 italic"}`}>{v.tip}</p>
         {open && (
           <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between gap-3">
@@ -285,8 +286,8 @@ export default function GlowUp() {
         <div className="max-w-3xl mx-auto relative z-10">
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <Wand2 className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Profile Tools</p>
+              <Wand2 className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Profile Tools</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Profile Glow-Up Studio</h1>
             <FallbackRateBadge toolName="Profile Glow-Up Studio" className="mt-1" />
@@ -309,21 +310,21 @@ export default function GlowUp() {
               <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Your current bio</Label>
               <Textarea placeholder="Paste your current dating profile bio here — even if you hate it. Especially if you hate it."
                 value={bio} onChange={e => setBio(e.target.value)}
-                className="min-h-[140px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
+                className="min-h-[140px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
             </div>
             <div className="space-y-2">
               <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">What are you looking for? <span className="font-normal normal-case text-muted-foreground/50">(optional)</span></Label>
               <div className="flex flex-wrap gap-2">
                 {GOALS.map(g => (
                   <button key={g} onClick={() => setGoal(prev => prev === g ? "" : g)}
-                    className={`px-3 py-2 rounded-full border text-xs font-medium transition-all ${goal === g ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
+                    className={`px-3 py-2 rounded-full border text-xs font-medium transition-all ${goal === g ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)] border-[hsl(248_62%_52%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
                     {g}
                   </button>
                 ))}
               </div>
             </div>
             <Button onClick={handleGenerate} disabled={loading || !bio.trim()}
-              className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50">
+              className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-50">
               {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Writing 10 versions…</> : <><Wand2 className="mr-2 h-4 w-4" />Glow Up My Profile</>}
             </Button>
           </motion.div>
@@ -356,7 +357,7 @@ export default function GlowUp() {
               <div className="flex flex-wrap gap-2 mb-4">
                 {FILTER_OPTS.map(f => (
                   <button key={f.key} onClick={() => setFilter(prev => prev.includes(f.key) ? prev.filter(x => x !== f.key) : [...prev, f.key])}
-                    className={`px-2.5 py-1.5 rounded-full border text-xs transition-all ${filter.includes(f.key) ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20"}`}>
+                    className={`px-2.5 py-1.5 rounded-full border text-xs transition-all ${filter.includes(f.key) ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)] border-[hsl(248_62%_52%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20"}`}>
                     {f.label}
                   </button>
                 ))}

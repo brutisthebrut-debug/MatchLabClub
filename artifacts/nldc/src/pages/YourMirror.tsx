@@ -226,8 +226,8 @@ export default function YourMirror() {
                       >
                         <defs>
                           <linearGradient id="mirrorScoreFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="hsl(268 52% 68%)" stopOpacity={0.4} />
-                            <stop offset="100%" stopColor="hsl(268 52% 68%)" stopOpacity={0} />
+                            <stop offset="0%" stopColor="hsl(248 62% 52%)" stopOpacity={0.4} />
+                            <stop offset="100%" stopColor="hsl(248 62% 52%)" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <XAxis
@@ -252,7 +252,7 @@ export default function YourMirror() {
                         <Area
                           type="monotone"
                           dataKey="score"
-                          stroke="hsl(268 52% 68%)"
+                          stroke="hsl(248 62% 52%)"
                           strokeWidth={2}
                           fill="url(#mirrorScoreFill)"
                         />

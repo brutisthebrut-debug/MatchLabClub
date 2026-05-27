@@ -25,7 +25,7 @@ function CopyBtn({ text }: { text: string }) {
         }
       }}
       aria-label={copied ? "Copied to clipboard" : "Copy to clipboard"}
-      className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors flex-shrink-0 min-h-[36px] px-2 -mx-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)]"
+      className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors flex-shrink-0 min-h-[36px] px-2 -mx-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(248_62%_52%/0.6)]"
     >
       {copied ? <Check className="w-3 h-3 text-[hsl(142_55%_60%)]" aria-hidden="true" /> : <Copy className="w-3 h-3" aria-hidden="true" />}
       {copied ? "Copied" : "Copy"}
@@ -95,15 +95,15 @@ export default function SampleReport() {
 
           {/* Sample disclaimer */}
           <motion.div {...fadeUp(0)} className="mb-5">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[hsl(268_52%_68%/0.3)] bg-[hsl(268_52%_68%/0.08)] text-xs text-[hsl(268_52%_78%)] font-semibold">
-              <Sparkles className="w-3.5 h-3.5 text-[hsl(268_52%_68%)]" />
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[hsl(248_62%_52%/0.3)] bg-[hsl(248_62%_52%/0.08)] text-xs text-[hsl(248_62%_62%)] font-semibold">
+              <Sparkles className="w-3.5 h-3.5 text-[hsl(248_62%_52%)]" />
               Sample report — fictional profile, real structure
             </div>
           </motion.div>
 
           {/* Report header */}
           <motion.div {...fadeUp(0.04)} className="mb-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-2">Dating Reset Report</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-2">Dating Reset Report</p>
             <h1 className="text-4xl font-bold text-foreground mb-2">Jordan's Report</h1>
             <p className="text-muted-foreground text-sm">31 · Hinge · Looking for a long-term relationship</p>
           </motion.div>
@@ -112,9 +112,9 @@ export default function SampleReport() {
           <motion.div {...fadeUp(0.055)} className="mb-6 flex items-center gap-1 flex-wrap text-[10px] font-bold uppercase tracking-wider select-none">
             {[
               { label: "Starting point", color: "hsl(348 55% 68%)" },
-              { label: "Score",          color: "hsl(268 52% 72%)" },
+              { label: "Score",          color: "hsl(248 62% 58%)" },
               { label: "Mirror",         color: "hsl(190 55% 65%)" },
-              { label: "Blueprint",      color: "hsl(268 52% 72%)" },
+              { label: "Blueprint",      color: "hsl(248 62% 58%)" },
               { label: "Rewrite",        color: "hsl(142 55% 65%)" },
               { label: "Messages",       color: "hsl(43 65% 68%)" },
               { label: "Plan",           color: "hsl(190 55% 65%)" },
@@ -184,7 +184,7 @@ export default function SampleReport() {
                     strokeDasharray={`${72} ${100 - 72}`} strokeLinecap="round" />
                   <defs>
                     <linearGradient id="score-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="hsl(268 52% 68%)" />
+                      <stop offset="0%" stopColor="hsl(248 62% 52%)" />
                       <stop offset="100%" stopColor="hsl(142 55% 60%)" />
                     </linearGradient>
                   </defs>
@@ -242,7 +242,7 @@ export default function SampleReport() {
           </SectionCard>
 
           {/* Personal Blueprint */}
-          <SectionCard title="Personal Blueprint" color="hsl(268 52% 68%)">
+          <SectionCard title="Personal Blueprint" color="hsl(248 62% 52%)">
             <div className="space-y-3">
               {[
                 { label: "First impression", text: "You come across as capable and composed. The gap is that 'composed' can easily read as 'not looking'. Nothing in your current profile invites someone in." },
@@ -274,7 +274,7 @@ export default function SampleReport() {
                 </div>
                 <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{REWRITTEN_BIO}</p>
               </div>
-              <div className="bg-[hsl(268_52%_68%/0.08)] border border-[hsl(268_52%_68%/0.2)] rounded-xl px-4 py-3">
+              <div className="bg-[hsl(248_62%_52%/0.08)] border border-[hsl(248_62%_52%/0.2)] rounded-xl px-4 py-3">
                 <p className="text-xs text-muted-foreground/70 leading-relaxed">
                   <strong className="text-muted-foreground">Why it works:</strong> The hospital line does three things — it's specific to you, it shows warmth (you care about people), and it's a conversation starter. The Portuguese line is small and honest. The last sentence filters for people who are actually a match.
                 </p>
@@ -283,10 +283,10 @@ export default function SampleReport() {
           </SectionCard>
 
           {/* Founder Review Note */}
-          <motion.div {...fadeUp(0.1)} className="glass border border-[hsl(268_52%_68%/0.35)] rounded-2xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-white/5 bg-[hsl(268_52%_68%/0.08)]">
+          <motion.div {...fadeUp(0.1)} className="glass border border-[hsl(248_62%_52%/0.35)] rounded-2xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/5 bg-[hsl(248_62%_52%/0.08)]">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(348_55%_65%)] flex items-center justify-center text-white text-xs font-bold">F</div>
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(348_55%_65%)] flex items-center justify-center text-white text-xs font-bold">F</div>
                 <div>
                   <p className="text-sm font-semibold text-foreground">Founder Review Note</p>
                   <p className="text-xs text-muted-foreground/50">Personal note — included with Dating Reset</p>
@@ -316,7 +316,7 @@ export default function SampleReport() {
                   type: "Opening message",
                   text: `"I see you also have strong feelings about walk-and-talks vs bars for a first date — what's your case for the bar?"`,
                   note: "Reference something specific from their profile. Turn it into a question that has a real answer.",
-                  color: "hsl(268 52% 68%)",
+                  color: "hsl(248 62% 52%)",
                 },
                 {
                   type: "Follow-up (day 2 silence)",
@@ -383,10 +383,10 @@ export default function SampleReport() {
           </SectionCard>
 
           {/* Compatibility Profile preview */}
-          <motion.div {...fadeUp(0.09)} className="glass border border-[hsl(268_52%_68%/0.2)] rounded-2xl overflow-hidden">
+          <motion.div {...fadeUp(0.09)} className="glass border border-[hsl(248_62%_52%/0.2)] rounded-2xl overflow-hidden">
             <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
-                <div className="w-2 h-2 rounded-full bg-[hsl(268_52%_68%)]" />
+                <div className="w-2 h-2 rounded-full bg-[hsl(248_62%_52%)]" />
                 <p className="font-semibold text-foreground text-sm">Compatibility Profile Snapshot</p>
               </div>
               <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border border-[hsl(43_65%_65%/0.3)] bg-[hsl(43_65%_65%/0.1)] text-[hsl(43_65%_65%)]">
@@ -422,7 +422,7 @@ export default function SampleReport() {
                 <Shield className="w-3.5 h-3.5 text-[hsl(142_55%_60%)] flex-shrink-0 mt-0.5" />
                 <p className="text-[11px] text-muted-foreground/50 leading-relaxed">
                   All dimensions are coaching-only by default. Matching-approved dimensions are explicitly unlocked by you.{" "}
-                  <Link href="/wellness" className="text-[hsl(268_52%_68%)] hover:text-[hsl(268_52%_78%)] transition-colors">Build your profile →</Link>
+                  <Link href="/wellness" className="text-[hsl(248_62%_52%)] hover:text-[hsl(248_62%_62%)] transition-colors">Build your profile →</Link>
                 </p>
               </div>
             </div>
@@ -474,7 +474,7 @@ export default function SampleReport() {
 
           {/* CTA */}
           <motion.div {...fadeUp(0.15)} className="mt-8 glass border border-white/8 rounded-2xl p-6 text-center space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[hsl(268_52%_68%/0.3)] bg-[hsl(268_52%_68%/0.08)] text-xs text-[hsl(268_52%_78%)] font-semibold">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[hsl(248_62%_52%/0.3)] bg-[hsl(248_62%_52%/0.08)] text-xs text-[hsl(248_62%_62%)] font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-[hsl(142_55%_60%)] animate-pulse" />
               Live beta · First 25 users · Personal founder review included
             </div>
@@ -484,7 +484,7 @@ export default function SampleReport() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/start"
-                className="px-7 py-3 rounded-full text-sm font-bold bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(348_55%_65%)] text-white">
+                className="px-7 py-3 rounded-full text-sm font-bold bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(348_55%_65%)] text-white">
                 Start Free Audit <ArrowRight className="inline ml-1 w-3.5 h-3.5" />
               </Link>
               <Link href="/pricing"

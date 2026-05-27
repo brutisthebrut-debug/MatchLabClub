@@ -85,7 +85,7 @@ const TIERS = [
     cta: "Begin My Reset",
     href: "/checkout/dating-reset",
     nextStep: "→ Secure checkout · founder-reviewed within 48 hours · start Day 1 immediately",
-    accentColor: "hsl(268 52% 68%)",
+    accentColor: "hsl(248 62% 52%)",
     icon: Zap,
     features: [
       "Unlimited Profile Signal Audits",
@@ -182,7 +182,7 @@ export default function Pricing() {
           {/* Shebangs Partner */}
           <motion.div {...fadeUp(0.04)}
             className="relative rounded-2xl p-4 mb-10 overflow-hidden glass"
-            style={{ border: "1px solid hsl(268 52% 55% / 0.12)" }}
+            style={{ border: "1px solid hsl(248 62% 55% / 0.12)" }}
           >
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Launch partner</span>
@@ -201,14 +201,14 @@ export default function Pricing() {
 
           {/* Header */}
           <motion.div {...fadeUp(0.07)} className="text-center mb-14">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-3">Invest in clarity</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-3">Invest in clarity</p>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Simple, honest pricing.</h1>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed mb-5">
               Start free. Upgrade when you see the quality. Cancel or delete anytime.
             </p>
             <Link href="/sample-report"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[hsl(268_52%_68%/0.25)] hover:border-[hsl(268_52%_68%/0.5)] hover:bg-[hsl(268_52%_68%/0.06)] transition-all group text-xs font-semibold text-muted-foreground hover:text-foreground">
-              <Sparkles className="w-3.5 h-3.5 text-[hsl(268_52%_68%)]" />
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[hsl(248_62%_52%/0.25)] hover:border-[hsl(248_62%_52%/0.5)] hover:bg-[hsl(248_62%_52%/0.06)] transition-all group text-xs font-semibold text-muted-foreground hover:text-foreground">
+              <Sparkles className="w-3.5 h-3.5 text-[hsl(248_62%_52%)]" />
               Not sure yet? See a full sample report first
               <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </Link>
@@ -226,10 +226,10 @@ export default function Pricing() {
                     <span className="px-3 py-1 rounded-full text-xs font-bold shadow-lg whitespace-nowrap"
                       style={{
                         background: tier.popular
-                          ? "linear-gradient(135deg, hsl(268 52% 65%), hsl(285 45% 58%))"
+                          ? "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))"
                           : "linear-gradient(135deg, hsl(43 65% 55%), hsl(43 65% 42%))",
                         color: "white",
-                        boxShadow: tier.popular ? "0 4px 16px hsl(268 52% 68% / 0.4)" : "0 4px 16px hsl(43 65% 55% / 0.4)",
+                        boxShadow: tier.popular ? "0 4px 16px hsl(248 62% 52% / 0.4)" : "0 4px 16px hsl(43 65% 55% / 0.4)",
                       }}>
                       {tier.badge}
                     </span>
@@ -237,7 +237,7 @@ export default function Pricing() {
                 )}
 
                 <div className={`flex-1 flex flex-col rounded-3xl p-5 pt-6 sm:p-7 sm:pt-8 ${tier.popular ? "mirror-card" : "glass border border-white/8"}`}
-                  style={tier.popular ? { border: "1px solid hsl(268 52% 68% / 0.35)", boxShadow: "0 0 60px hsl(268 52% 68% / 0.12), 0 20px 50px rgb(0 0 0 / 0.4)" } : {}}>
+                  style={tier.popular ? { border: "1px solid hsl(248 62% 52% / 0.35)", boxShadow: "0 0 60px hsl(248 62% 52% / 0.12), 0 20px 50px rgb(0 0 0 / 0.4)" } : {}}>
 
                   {tier.popular && <div className="line-accent mb-6" />}
 
@@ -291,7 +291,7 @@ export default function Pricing() {
                   <Button asChild className="w-full rounded-full h-12 font-semibold border-0"
                     style={
                       tier.popular
-                        ? { background: "linear-gradient(135deg, hsl(268 52% 65%), hsl(285 45% 58%))", boxShadow: "0 4px 20px hsl(268 52% 68% / 0.4)" }
+                        ? { background: "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))", boxShadow: "0 4px 20px hsl(248 62% 52% / 0.4)" }
                         : { background: `${tier.accentColor.replace(")", " / 0.14)")}`, color: tier.accentColor, border: `1px solid ${tier.accentColor.replace(")", " / 0.25)")}` }
                     }
                     data-testid={`button-pricing-cta-${i}`}>
@@ -320,7 +320,7 @@ export default function Pricing() {
           {/* What Happens After You Pay */}
           <motion.div {...fadeUp(0.26)} className="max-w-3xl mx-auto mb-12">
             <div className="text-center mb-6">
-              <p className="text-xs font-bold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-2">No surprises</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-2">No surprises</p>
               <h2 className="text-2xl font-bold text-foreground">What happens after you pay</h2>
             </div>
             <div className="space-y-3">
@@ -329,7 +329,7 @@ export default function Pricing() {
                   step: "1",
                   title: "You submit your profile details",
                   desc: "Bio, prompts, a quick conversation sample, and optionally a photo context note. Takes about 5 minutes. Nothing is shared with third parties — ever.",
-                  color: "hsl(268 52% 68%)",
+                  color: "hsl(248 62% 52%)",
                 },
                 {
                   step: "2",
@@ -374,7 +374,7 @@ export default function Pricing() {
           {/* Founder-Reviewed Beta Offer */}
           <motion.div {...fadeUp(0.3)}
             className="max-w-3xl mx-auto mb-16 rounded-3xl p-7 relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg, hsl(268 52% 20% / 0.6), hsl(43 65% 20% / 0.3))", border: "1px solid hsl(268 52% 68% / 0.25)", boxShadow: "0 0 60px hsl(268 52% 68% / 0.08)" }}
+            style={{ background: "linear-gradient(135deg, hsl(248 62% 20% / 0.6), hsl(43 65% 20% / 0.3))", border: "1px solid hsl(248 62% 52% / 0.25)", boxShadow: "0 0 60px hsl(248 62% 52% / 0.08)" }}
           >
             <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10 pointer-events-none"
               style={{ background: "radial-gradient(circle, hsl(43 65% 65%), transparent)", transform: "translate(30%, -30%)" }} />
@@ -408,7 +408,7 @@ export default function Pricing() {
                   <div className="flex items-center gap-4 flex-wrap">
                     <Link href="/checkout/dating-reset"
                       className="px-5 py-2.5 rounded-full text-sm font-semibold border-0 text-white"
-                      style={{ background: "linear-gradient(135deg, hsl(43 65% 55%), hsl(268 52% 58%))", boxShadow: "0 4px 20px hsl(43 65% 55% / 0.3)" }}>
+                      style={{ background: "linear-gradient(135deg, hsl(43 65% 55%), hsl(248 62% 58%))", boxShadow: "0 4px 20px hsl(43 65% 55% / 0.3)" }}>
                       Claim a Founder-Reviewed Spot →
                     </Link>
                     <p className="text-xs text-muted-foreground/50">Same price as the Dating Reset — $97 one-time</p>
@@ -428,7 +428,7 @@ export default function Pricing() {
                     className="w-full flex items-center justify-between p-5 text-left hover:bg-white/2 transition-colors"
                     data-testid={`button-faq-${i}`}>
                     <p className="font-semibold text-foreground text-sm pr-4">{faq.q}</p>
-                    <span className={`text-lg transition-transform flex-shrink-0 ${openFaq === i ? "rotate-45 text-[hsl(268_52%_68%)]" : "text-muted-foreground"}`}>+</span>
+                    <span className={`text-lg transition-transform flex-shrink-0 ${openFaq === i ? "rotate-45 text-[hsl(248_62%_52%)]" : "text-muted-foreground"}`}>+</span>
                   </button>
                   {openFaq === i && (
                     <div className="px-5 pb-5 border-t border-white/6">
@@ -443,7 +443,7 @@ export default function Pricing() {
           {/* Final CTA */}
           <motion.div {...fadeUp(0.4)} className="text-center mt-16">
             <p className="text-muted-foreground mb-4 text-sm">Start with the free audit. No commitment, no credit card.</p>
-            <Button asChild size="lg" className="rounded-full px-10 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse" data-testid="button-final-cta">
+            <Button asChild size="lg" className="rounded-full px-10 font-semibold bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 glow-pulse" data-testid="button-final-cta">
               <Link href="/start">Get My Free Signal Audit <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
           </motion.div>

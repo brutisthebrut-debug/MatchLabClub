@@ -19,7 +19,7 @@ interface Win {
 
 const CATEGORIES: { id: WinCategory; label: string; icon: React.ElementType; color: string; prompt: string }[] = [
   { id: "sent-it",           label: "Sent It",            icon: Sparkles,       color: "hsl(43 65% 65%)",  prompt: "You hit send. What were you proud of?" },
-  { id: "great-convo",       label: "Great Convo",        icon: MessageSquare,  color: "hsl(268 52% 68%)", prompt: "What made the conversation different?" },
+  { id: "great-convo",       label: "Great Convo",        icon: MessageSquare,  color: "hsl(248 62% 52%)", prompt: "What made the conversation different?" },
   { id: "got-a-date",        label: "Got a Date",         icon: Calendar,       color: "hsl(142 55% 60%)", prompt: "What made it feel like a win?" },
   { id: "noticed-something", label: "Noticed a Pattern",  icon: Eye,            color: "hsl(190 55% 60%)", prompt: "What did you see about yourself or how you were showing up?" },
   { id: "personal-win",      label: "Personal Win",       icon: Star,           color: "hsl(348 55% 65%)", prompt: "What felt different about how you showed up today?" },

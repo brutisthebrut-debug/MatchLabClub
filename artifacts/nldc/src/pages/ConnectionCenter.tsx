@@ -59,7 +59,7 @@ const IMPORT_CARDS: ImportCard[] = [
     desc: "Upload screenshots of profiles you've seen — yours or a match's. The app reads what's there and gives you coaching context.",
     what: "Helps with profile comparison, audit context, and coaching prompts.",
     sensitivity: "medium",
-    color: "hsl(268 52% 68%)",
+    color: "hsl(248 62% 52%)",
     placeholder: "Paste extracted text from a screenshot, or describe what you see in the profile — the app will work with what you share.",
     live: true,
   },
@@ -136,7 +136,7 @@ const FUTURE_CARDS: FutureCard[] = [
     desc: "Share context about your life rhythm — work schedule, social life, what your weeks actually look like.",
     what: "Used for compatibility coaching and Prepare for a Date to personalise advice.",
     sensitivity: "medium",
-    color: "hsl(285 45% 65%)",
+    color: "hsl(326 100% 65%)",
     comingSoon: "Manual entry available in Life Context Profile.",
   },
 ];
@@ -222,7 +222,7 @@ function ImportCardUI({ card, index }: { card: ImportCard; index: number }) {
             value={text}
             onChange={e => setText(e.target.value)}
             placeholder={card.placeholder}
-            className="min-h-[120px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/35 text-sm"
+            className="min-h-[120px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/35 text-sm"
           />
           {text.trim() && (
             <div className="rounded-xl bg-white/3 border border-white/8 p-3">

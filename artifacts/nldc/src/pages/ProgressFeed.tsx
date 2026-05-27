@@ -25,10 +25,10 @@ interface FeedCard {
 
 const CAT_CONFIG: Record<FeedCategory, { label: string; color: string; bg: string }> = {
   communication:  { label: "Communication",     color: "hsl(190 55% 60%)", bg: "hsl(190 55% 60% / 0.1)"  },
-  emotion:        { label: "Emotional Pattern", color: "hsl(285 45% 65%)", bg: "hsl(285 45% 65% / 0.1)"  },
+  emotion:        { label: "Emotional Pattern", color: "hsl(326 100% 65%)", bg: "hsl(326 100% 65% / 0.1)"  },
   progress:       { label: "Progress Signal",   color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.1)"  },
   pattern:        { label: "Repeated Theme",    color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.1)"   },
-  recommendation: { label: "Suggestion",        color: "hsl(268 52% 68%)", bg: "hsl(268 52% 68% / 0.1)"  },
+  recommendation: { label: "Suggestion",        color: "hsl(248 62% 52%)", bg: "hsl(248 62% 52% / 0.1)"  },
 };
 
 const DEMO_FEED: FeedCard[] = [
@@ -132,15 +132,15 @@ export default function ProgressFeed() {
 
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <Rss className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Progress Workspace</p>
+              <Rss className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Progress Workspace</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Learning Feed</h1>
             <p className="text-muted-foreground mt-2 leading-relaxed">Observations based on what you log. Not analysis of you — reflections of the data you share.</p>
           </motion.div>
 
-          <motion.div {...fadeUp(0.04)} className="mb-6 flex items-start gap-3 px-4 py-3.5 rounded-xl border border-[hsl(268_52%_68%/0.2)] bg-[hsl(268_52%_68%/0.06)]">
-            <Info className="w-4 h-4 text-[hsl(268_52%_68%)] flex-shrink-0 mt-0.5" />
+          <motion.div {...fadeUp(0.04)} className="mb-6 flex items-start gap-3 px-4 py-3.5 rounded-xl border border-[hsl(248_62%_52%/0.2)] bg-[hsl(248_62%_52%/0.06)]">
+            <Info className="w-4 h-4 text-[hsl(248_62%_52%)] flex-shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground leading-relaxed">
               <span className="text-foreground/80 font-semibold">All observations here are based on what you log.</span>{" "}
               We're not reading between the lines or drawing conclusions beyond your entries. Mark cards useful or not — it helps surface what's relevant.
@@ -173,7 +173,7 @@ export default function ProgressFeed() {
           </div>
 
           <motion.div {...fadeUp(0.3)} className="mt-8 flex items-center gap-2 px-4 py-3 rounded-xl border border-white/6 bg-white/2">
-            <Sparkles className="w-3.5 h-3.5 text-[hsl(268_52%_68%)]" />
+            <Sparkles className="w-3.5 h-3.5 text-[hsl(248_62%_52%)]" />
             <p className="text-xs text-muted-foreground/50">Feed updates as you log more entries in your Timeline.</p>
           </motion.div>
         </div>

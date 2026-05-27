@@ -274,7 +274,7 @@ export default function Reflection() {
       <div className="flex flex-wrap gap-2">
         {opts.map(o => (
           <button key={o} onClick={() => onSelect(value === o ? "" : o)}
-            className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${value === o ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
+            className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${value === o ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)] border-[hsl(248_62%_52%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
             {o}
           </button>
         ))}
@@ -290,7 +290,7 @@ export default function Reflection() {
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
               <Heart className="w-4 h-4 text-[hsl(348_55%_65%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Meeting Reflection</p>
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Meeting Reflection</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Post-Meeting Reflection</h1>
             <div className="flex items-center gap-2 flex-wrap mt-1">
@@ -344,10 +344,10 @@ export default function Reflection() {
               <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Anything else worth noting? <span className="font-normal normal-case text-muted-foreground/50">(optional)</span></Label>
               <Textarea placeholder="Any specific moments, things they said, how you felt driving home, or anything that stuck with you…"
                 value={notes} onChange={e => setNotes(e.target.value)}
-                className="min-h-[80px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
+                className="min-h-[80px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
             </div>
             <Button onClick={handleAnalyze} disabled={loading || !canSubmit}
-              className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50">
+              className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-50">
               {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Reading the signals…</> : <><Sparkles className="mr-2 h-4 w-4" />Get My Reflection</>}
             </Button>
             {savedCtx.hasSavedContext && (
@@ -422,7 +422,7 @@ export default function Reflection() {
                     <p className="font-semibold text-foreground text-sm">If you reach out — suggested message</p>
                     <CopyBtn text={show.suggestedNote} />
                   </div>
-                  <div className="bg-[hsl(268_52%_68%/0.08)] border border-[hsl(268_52%_68%/0.2)] rounded-xl px-4 py-3">
+                  <div className="bg-[hsl(248_62%_52%/0.08)] border border-[hsl(248_62%_52%/0.2)] rounded-xl px-4 py-3">
                     <p className="text-sm text-foreground/80 italic">"{show.suggestedNote}"</p>
                   </div>
                   <p className="text-xs text-muted-foreground/50 mt-2">Customize before sending — make it specific to your actual conversation.</p>

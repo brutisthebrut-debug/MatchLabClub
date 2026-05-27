@@ -25,7 +25,7 @@ const METRICS: Metric[] = [
   { key: "energy",    label: "Energy right now",  helper: "1 depleted → 5 charged",      icon: Zap,        color: "hsl(43 65% 65%)" },
   { key: "social",    label: "Social fuel",       helper: "1 drained → 5 lit up",        icon: Users,      color: "hsl(190 55% 60%)" },
   { key: "money",     label: "Money headspace",   helper: "1 stressed → 5 unbothered",   icon: DollarSign, color: "hsl(142 55% 60%)" },
-  { key: "headspace", label: "Mental clarity",    helper: "1 foggy → 5 sharp",           icon: Brain,      color: "hsl(268 52% 68%)" },
+  { key: "headspace", label: "Mental clarity",    helper: "1 foggy → 5 sharp",           icon: Brain,      color: "hsl(248 62% 52%)" },
 ];
 
 const SCALE_LABELS = ["—", "Low", "Soft", "OK", "Strong", "Peak"] as const;

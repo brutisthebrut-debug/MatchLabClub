@@ -18,7 +18,8 @@ import {
   Loader2, Sparkles, Copy, Check, AlertTriangle,
   Lightbulb, Eye, TrendingUp, FlaskConical, ArrowRight
 } from "lucide-react";
-import { ConfidenceLabel, getConfidenceLevel } from "@/components/ToneBar";
+import { ConfidenceLabel } from "@/components/ToneBar";
+import { getConfidenceLevel } from "@/lib/toneUtils";
 import { useMeta } from "@/hooks/useMeta";
 
 type CoachingResult = {
@@ -52,11 +53,11 @@ const DEMO_RESULT: CoachingResult = {
 };
 
 const STYLE_META: Record<string, { gradient: string; emoji: string; headerBg: string; glow: string }> = {
-  "Warm":          { gradient: "linear-gradient(135deg, hsl(348 55% 58%), hsl(268 52% 55%))", emoji: "💜", headerBg: "hsl(348 55% 58% / 0.12)", glow: "0 4px 20px hsl(348 55% 58% / 0.3)" },
-  "Playful":       { gradient: "linear-gradient(135deg, hsl(285 45% 58%), hsl(268 52% 65%))", emoji: "😄", headerBg: "hsl(285 45% 58% / 0.12)", glow: "0 4px 20px hsl(285 45% 58% / 0.3)" },
+  "Warm":          { gradient: "linear-gradient(135deg, hsl(348 55% 58%), hsl(248 62% 55%))", emoji: "💜", headerBg: "hsl(348 55% 58% / 0.12)", glow: "0 4px 20px hsl(348 55% 58% / 0.3)" },
+  "Playful":       { gradient: "linear-gradient(135deg, hsl(326 100% 59%), hsl(248 62% 55%))", emoji: "😄", headerBg: "hsl(326 100% 59% / 0.12)", glow: "0 4px 20px hsl(326 100% 59% / 0.3)" },
   "Direct":        { gradient: "linear-gradient(135deg, hsl(43 65% 52%), hsl(43 55% 42%))",   emoji: "→",  headerBg: "hsl(43 65% 52% / 0.12)", glow: "0 4px 20px hsl(43 65% 52% / 0.3)" },
   "Date Ask":      { gradient: "linear-gradient(135deg, hsl(142 55% 42%), hsl(190 55% 48%))", emoji: "✦",  headerBg: "hsl(142 55% 42% / 0.12)", glow: "0 4px 20px hsl(142 55% 42% / 0.3)" },
-  "Graceful Exit": { gradient: "linear-gradient(135deg, hsl(228 25% 42%), hsl(232 28% 34%))", emoji: "🤍", headerBg: "hsl(228 25% 42% / 0.12)", glow: "0 4px 16px hsl(228 25% 50% / 0.2)" },
+  "Graceful Exit": { gradient: "linear-gradient(135deg, hsl(228 25% 42%), hsl(248 40% 34%))", emoji: "🤍", headerBg: "hsl(228 25% 42% / 0.12)", glow: "0 4px 16px hsl(228 25% 50% / 0.2)" },
 };
 
 function CopyButton({ text }: { text: string }) {
@@ -170,7 +171,7 @@ export default function Lab() {
               <div className="space-y-2">
                 <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Match's name</Label>
                 <Input data-testid="input-lab-match-name" placeholder="Alex" value={matchName} onChange={e => setMatchName(e.target.value)}
-                  className="bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/50" />
+                  className="bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/50" />
               </div>
               <div className="space-y-2">
                 <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Goal</Label>
@@ -186,22 +187,22 @@ export default function Lab() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Conversation or message <span className="text-[hsl(268_52%_68%)]">*</span></Label>
+              <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Conversation or message <span className="text-[hsl(248_62%_52%)]">*</span></Label>
               <Textarea data-testid="textarea-lab-message"
                 placeholder={"Alex: I love that little ramen place on 5th\nMe: Oh nice, which one?\nAlex: The one with the black garlic broth!\nMe: I've been meaning to try it\n\n— or just paste your last message"}
                 value={message} onChange={e => setMessage(e.target.value)}
-                className="min-h-[140px] resize-none font-mono text-xs bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
+                className="min-h-[140px] resize-none font-mono text-xs bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40" />
             </div>
 
             <div className="space-y-2">
               <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Extra context <span className="text-muted-foreground font-normal">(optional)</span></Label>
               <Input data-testid="input-lab-context" placeholder="e.g. We matched 3 days ago, she suggested meeting but hasn't replied since"
                 value={context} onChange={e => setContext(e.target.value)}
-                className="bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/50" />
+                className="bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/50" />
             </div>
 
             <Button onClick={runLab} disabled={loading || !message.trim()}
-              className="w-full rounded-full h-12 font-semibold bg-gradient-to-r from-[hsl(190_55%_58%)] via-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50"
+              className="w-full rounded-full h-12 font-semibold bg-gradient-to-r from-[hsl(190_55%_58%)] via-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-50"
               data-testid="button-run-lab">
               {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Analysing...</> : <><Sparkles className="mr-2 h-4 w-4" /> Analyse My Message</>}
             </Button>
@@ -214,7 +215,7 @@ export default function Lab() {
 
               {isDemo ? (
                 <div className="text-center py-1">
-                  <span className="text-xs text-muted-foreground font-medium px-4 py-1.5 rounded-full bg-[hsl(232_28%_16%)] border border-white/8">
+                  <span className="text-xs text-muted-foreground font-medium px-4 py-1.5 rounded-full bg-[hsl(248_40%_94%)] border border-white/8">
                     Example output — paste your message above to get yours
                   </span>
                 </div>
@@ -228,12 +229,12 @@ export default function Lab() {
               <div className="grid sm:grid-cols-5 gap-4">
                 <div className="sm:col-span-2 glass border border-white/8 rounded-3xl p-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <Eye className="w-4 h-4 text-[hsl(268_52%_68%)]" />
+                    <Eye className="w-4 h-4 text-[hsl(248_62%_52%)]" />
                     <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tone detected</p>
                   </div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-3" style={{ background: "hsl(268 52% 68% / 0.1)", border: "1px solid hsl(268 52% 68% / 0.25)" }}>
-                    <span className="w-2 h-2 rounded-full bg-[hsl(268_52%_68%)]" />
-                    <span className="text-xs font-semibold text-[hsl(268_52%_78%)]">Warm &amp; Curious</span>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-3" style={{ background: "hsl(248 62% 52% / 0.1)", border: "1px solid hsl(248 62% 52% / 0.25)" }}>
+                    <span className="w-2 h-2 rounded-full bg-[hsl(248_62%_52%)]" />
+                    <span className="text-xs font-semibold text-[hsl(248_62%_62%)]">Warm &amp; Curious</span>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">{showResult.toneSummary ?? showResult.tone}</p>
                 </div>
@@ -284,8 +285,8 @@ export default function Lab() {
                               {reply.text}
                             </div>
                           </div>
-                          <div className="flex items-start gap-2 bg-[hsl(232_28%_14%/0.5)] rounded-xl p-3">
-                            <Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5 text-[hsl(268_52%_68%)]" />
+                          <div className="flex items-start gap-2 bg-[hsl(248_40%_95%/0.5)] rounded-xl p-3">
+                            <Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5 text-[hsl(248_62%_52%)]" />
                             <p className="text-xs text-muted-foreground leading-relaxed">{reply.rationale}</p>
                           </div>
                         </div>
@@ -310,9 +311,9 @@ export default function Lab() {
                     ))}
                   </ul>
                 </div>
-                <div className="rounded-3xl p-6 border" style={{ background: "hsl(268 52% 68% / 0.07)", borderColor: "hsl(268 52% 68% / 0.25)" }} data-testid="card-lab-tip">
+                <div className="rounded-3xl p-6 border" style={{ background: "hsl(248 62% 52% / 0.07)", borderColor: "hsl(248 62% 52% / 0.25)" }} data-testid="card-lab-tip">
                   <div className="flex items-center gap-2 mb-4">
-                    <Lightbulb className="w-5 h-5 text-[hsl(268_52%_68%)]" />
+                    <Lightbulb className="w-5 h-5 text-[hsl(248_62%_52%)]" />
                     <p className="font-semibold text-foreground text-sm">Coach Tip</p>
                   </div>
                   <p className="text-sm text-foreground/85 leading-relaxed">{showResult.coachTip}</p>
@@ -322,7 +323,7 @@ export default function Lab() {
               {/* CTA if demo */}
               {isDemo && (
                 <div className="text-center">
-                  <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold glow-pulse">
+                  <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 font-semibold glow-pulse">
                     <a href="/start">Get your personalised analysis <ArrowRight className="ml-2 h-4 w-4" /></a>
                   </Button>
                 </div>

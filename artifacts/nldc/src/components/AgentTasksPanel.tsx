@@ -23,7 +23,7 @@ const DEFAULT_TASKS: Omit<AgentTask, "addedAt">[] = [
 
 const STATUS_COLOR: Record<AgentTask["status"], string> = {
   suggested: "hsl(228 18% 55%)",
-  accepted:  "hsl(268 52% 68%)",
+  accepted:  "hsl(248 62% 52%)",
   done:      "hsl(142 55% 60%)",
   skipped:   "hsl(228 18% 38%)",
 };
@@ -72,7 +72,7 @@ export function AgentTasksPanel() {
       <div className="px-4 py-3.5 border-b border-white/6">
         <div className="flex items-center justify-between mb-0.5">
           <p className="text-sm font-semibold text-foreground">Your Next Moves</p>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.15)] text-[hsl(268_52%_78%)]">
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[hsl(248_62%_52%/0.15)] text-[hsl(248_62%_62%)]">
             {doneN}/{tasks.length} done
           </span>
         </div>
@@ -120,7 +120,7 @@ export function AgentTasksPanel() {
                   <div className="flex items-center gap-2 mt-1.5">
                     {task.status === "suggested" && (
                       <button onClick={() => update(task.id, "accepted")}
-                        className="text-[10px] font-semibold text-[hsl(268_52%_78%)] hover:text-[hsl(268_52%_88%)] transition-colors">
+                        className="text-[10px] font-semibold text-[hsl(248_62%_62%)] hover:text-[hsl(248_62%_88%)] transition-colors">
                         Accept
                       </button>
                     )}

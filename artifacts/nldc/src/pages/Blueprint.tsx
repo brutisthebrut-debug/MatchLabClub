@@ -13,7 +13,8 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { useSavedContext } from "@/hooks/useSavedContext";
 import { SavedContextChip } from "@/components/SavedContextChip";
 import { blueprintSchema, parseAiJson, type BlueprintOutput } from "@/lib/aiSchemas";
-import { ToneBar, ConfidenceLabel, getConfidenceLevel } from "@/components/ToneBar";
+import { ToneBar, ConfidenceLabel } from "@/components/ToneBar";
+import { getConfidenceLevel } from "@/lib/toneUtils";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -147,10 +148,10 @@ function saveStoredResult(r: BlueprintResult) {
 }
 
 const SECTIONS = [
-  { key: "firstImpression",    title: "First Impression",      color: "hsl(268 52% 68%)",  desc: "What you project before anyone knows you well" },
+  { key: "firstImpression",    title: "First Impression",      color: "hsl(248 62% 52%)",  desc: "What you project before anyone knows you well" },
   { key: "repeatingPattern",   title: "Repeating Pattern",     color: "hsl(43 65% 65%)",   desc: "What keeps showing up across dating experiences" },
   { key: "communicationStyle", title: "Communication Style",   color: "hsl(190 55% 60%)",  desc: "How you tend to move through early connection" },
-  { key: "attractionPattern",  title: "Attraction Pattern",    color: "hsl(285 45% 65%)",  desc: "What you're drawn to and why that makes sense" },
+  { key: "attractionPattern",  title: "Attraction Pattern",    color: "hsl(326 100% 65%)",  desc: "What you're drawn to and why that makes sense" },
   { key: "comfortNeeds",       title: "Comfort Needs",         color: "hsl(142 55% 60%)",  desc: "What helps you relax and show up as yourself" },
   { key: "riskLoop",           title: "Risk Loop",             color: "hsl(348 55% 65%)",  desc: "What tends to derail promising connections" },
   { key: "growthEdge",         title: "Growth Edge",           color: "hsl(43 65% 65%)",   desc: "One concrete shift that would change your results" },
@@ -246,8 +247,8 @@ export default function Blueprint() {
         <div className="max-w-3xl mx-auto relative z-10">
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <MapPin className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Self-Insight</p>
+              <MapPin className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Self-Insight</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Personal Blueprint</h1>
             <p className="text-muted-foreground mt-2 leading-relaxed">A coaching lens on how you show up, what patterns keep appearing, and where one shift would make the most difference.<br /><span className="text-xs text-muted-foreground/60">Based only on what you choose to share. Practical coaching guidance — not clinical advice.</span></p>
@@ -271,7 +272,7 @@ export default function Blueprint() {
                 placeholder="Be as honest or vague as you like. The more specific, the sharper the output — but this works even with a paragraph."
                 value={text}
                 onChange={e => setText(e.target.value)}
-                className="min-h-[120px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40"
+                className="min-h-[120px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40"
               />
               <p className="text-xs text-muted-foreground/50">{text.trim().split(/\s+/).filter(Boolean).length} words</p>
             </div>
@@ -280,7 +281,7 @@ export default function Blueprint() {
               <div className="flex flex-wrap gap-2">
                 {PATTERNS.map(p => (
                   <button key={p} onClick={() => setPattern(prev => prev === p ? "" : p)}
-                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${pattern === p ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
+                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${pattern === p ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)] border-[hsl(248_62%_52%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
                     {p}
                   </button>
                 ))}
@@ -292,7 +293,7 @@ export default function Blueprint() {
                 placeholder="e.g. I come across as confident but I'm actually pretty self-conscious early on"
                 value={misread}
                 onChange={e => setMisread(e.target.value)}
-                className="min-h-[72px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40"
+                className="min-h-[72px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40"
               />
             </div>
             <div className="space-y-2">
@@ -300,14 +301,14 @@ export default function Blueprint() {
               <div className="flex flex-wrap gap-2">
                 {WANTS.map(w => (
                   <button key={w} onClick={() => setWant(prev => prev === w ? "" : w)}
-                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${want === w ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_60%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
+                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${want === w ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)] border-[hsl(248_62%_52%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
                     {w}
                   </button>
                 ))}
               </div>
             </div>
             <Button onClick={() => { void handleAnalyze(); }} disabled={loading || !text.trim()}
-              className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50">
+              className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-50">
               {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Building your blueprint…</> : <><Sparkles className="mr-2 h-4 w-4" />Build My Blueprint</>}
             </Button>
             {savedCtx.hasSavedContext && (

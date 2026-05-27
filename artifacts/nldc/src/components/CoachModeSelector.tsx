@@ -19,7 +19,7 @@ export const COACH_MODES: CoachModeConfig[] = [
     emoji: "⚡",
     tagline: "Your warm, encouraging partner in this",
     toneHint: "Warm, supportive, action-oriented. Celebrates effort, keeps things moving.",
-    color: "hsl(268 52% 68%)",
+    color: "hsl(248 62% 52%)",
   },
   {
     key: "direct-friend",
@@ -59,7 +59,7 @@ export const COACH_MODES: CoachModeConfig[] = [
     emoji: "🛡️",
     tagline: "Boundaries, clarity, respect — built into every suggestion",
     toneHint: "Consent-forward, non-coercive, always checks the other person's experience too.",
-    color: "hsl(285 45% 65%)",
+    color: "hsl(326 100% 65%)",
   },
 ];
 

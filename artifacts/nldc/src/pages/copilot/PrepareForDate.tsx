@@ -145,8 +145,8 @@ export default function PrepareForDate() {
 
           <motion.div {...fadeUp(0.03)} className="mb-6">
             <div className="flex items-center gap-2 mb-2">
-              <Calendar className="w-4 h-4 text-[hsl(285_45%_65%)]" />
-              <p className="text-sm font-medium text-[hsl(285_45%_75%)]">Wingman Studio</p>
+              <Calendar className="w-4 h-4 text-[hsl(326_100%_65%)]" />
+              <p className="text-sm font-medium text-[hsl(326_100%_75%)]">Wingman Studio</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Prepare for a Date</h1>
             <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
@@ -156,7 +156,7 @@ export default function PrepareForDate() {
 
           <motion.div {...fadeUp(0.05)} className="flex items-center gap-2 mb-6">
             {[0, 1].map(s => (
-              <div key={s} className={`h-1.5 rounded-full transition-all ${s === step ? "flex-1 bg-[hsl(285_45%_65%)]" : "w-6 bg-white/10"}`} />
+              <div key={s} className={`h-1.5 rounded-full transition-all ${s === step ? "flex-1 bg-[hsl(326_100%_65%)]" : "w-6 bg-white/10"}`} />
             ))}
             <span className="text-xs text-muted-foreground/40 ml-1">Step {step + 1} of 2</span>
           </motion.div>
@@ -169,7 +169,7 @@ export default function PrepareForDate() {
                   <div className="flex flex-wrap gap-2">
                     {VENUE_TYPES.map(v => (
                       <button key={v} onClick={() => setVenue(prev => prev === v ? "" : v)}
-                        className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${venue === v ? "bg-[hsl(285_45%_65%/0.2)] text-[hsl(285_45%_80%)] border-[hsl(285_45%_65%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
+                        className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${venue === v ? "bg-[hsl(326_100%_65%/0.2)] text-[hsl(326_100%_80%)] border-[hsl(326_100%_65%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
                         {v}
                       </button>
                     ))}
@@ -181,7 +181,7 @@ export default function PrepareForDate() {
                   <div className="flex flex-wrap gap-2">
                     {KNOW_CHIPS.map(k => (
                       <button key={k} onClick={() => toggleChip(k)}
-                        className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${knowChips.includes(k) ? "bg-[hsl(285_45%_65%/0.2)] text-[hsl(285_45%_80%)] border-[hsl(285_45%_65%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
+                        className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${knowChips.includes(k) ? "bg-[hsl(326_100%_65%/0.2)] text-[hsl(326_100%_80%)] border-[hsl(326_100%_65%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
                         {k}
                       </button>
                     ))}
@@ -193,7 +193,7 @@ export default function PrepareForDate() {
                   <div className="flex flex-wrap gap-2">
                     {INTENTIONS.map(i => (
                       <button key={i} onClick={() => setIntention(prev => prev === i ? "" : i)}
-                        className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${intention === i ? "bg-[hsl(285_45%_65%/0.2)] text-[hsl(285_45%_80%)] border-[hsl(285_45%_65%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
+                        className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${intention === i ? "bg-[hsl(326_100%_65%/0.2)] text-[hsl(326_100%_80%)] border-[hsl(326_100%_65%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
                         {i}
                       </button>
                     ))}
@@ -202,24 +202,24 @@ export default function PrepareForDate() {
 
                 <div className="space-y-2">
                   <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">Anything else to factor in? <span className="font-normal normal-case text-muted-foreground/40">(optional)</span></Label>
-                  <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Something they mentioned, a dynamic you've noticed, something you want to bring up…" className="min-h-[80px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/35" />
+                  <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Something they mentioned, a dynamic you've noticed, something you want to bring up…" className="min-h-[80px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/35" />
                 </div>
 
                 <Button onClick={handleGenerate} disabled={!canGenerate}
-                  className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(285_45%_60%)] to-[hsl(268_52%_65%)] border-0 glow-pulse disabled:opacity-50">
+                  className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(326_100%_59%)] to-[hsl(248_62%_55%)] border-0 glow-pulse disabled:opacity-50">
                   <Sparkles className="mr-2 h-4 w-4" /> Build My Prep Card
                 </Button>
               </motion.div>
             ) : (
               <motion.div key="results" {...fadeUp(0.05)} className="space-y-4">
                 {enhance.isPending && (
-                  <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[hsl(285_45%_65%/0.08)] border border-[hsl(285_45%_65%/0.2)] text-xs text-[hsl(285_45%_75%)]">
+                  <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[hsl(326_100%_65%/0.08)] border border-[hsl(326_100%_65%/0.2)] text-xs text-[hsl(326_100%_75%)]">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" /> Wingman is building your prep card…
                   </div>
                 )}
 
                 {[
-                  { title: "Mindset going in", content: show.mindset, color: "hsl(285 45% 65%)", isList: false },
+                  { title: "Mindset going in", content: show.mindset, color: "hsl(326 100% 65%)", isList: false },
                 ].map(s => (
                   <div key={s.title} className="glass border border-white/8 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-2">
@@ -238,7 +238,7 @@ export default function PrepareForDate() {
                   <div className="space-y-2.5">
                     {show.questions.map((q, i) => (
                       <p key={i} className="text-sm text-muted-foreground leading-relaxed flex gap-2">
-                        <span className="text-[hsl(285_45%_65%)] font-semibold flex-shrink-0">{i + 1}.</span> {q}
+                        <span className="text-[hsl(326_100%_65%)] font-semibold flex-shrink-0">{i + 1}.</span> {q}
                       </p>
                     ))}
                   </div>
@@ -249,15 +249,15 @@ export default function PrepareForDate() {
                   <div className="space-y-2">
                     {show.toRemember.map((r, i) => (
                       <p key={i} className="text-sm text-muted-foreground leading-relaxed flex gap-2">
-                        <span className="text-[hsl(285_45%_65%)] flex-shrink-0">·</span> {r}
+                        <span className="text-[hsl(326_100%_65%)] flex-shrink-0">·</span> {r}
                       </p>
                     ))}
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-[hsl(285_45%_65%/0.2)] bg-[hsl(285_45%_65%/0.06)] px-5 py-4">
+                <div className="rounded-2xl border border-[hsl(326_100%_65%/0.2)] bg-[hsl(326_100%_65%/0.06)] px-5 py-4">
                   <div className="flex items-center justify-between mb-1.5">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(285_45%_65%)]">Follow-up plan</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(326_100%_65%)]">Follow-up plan</p>
                     <CopyBtn text={show.followUp} />
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed">{show.followUp}</p>

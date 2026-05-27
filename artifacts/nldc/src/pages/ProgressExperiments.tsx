@@ -174,7 +174,7 @@ export default function ProgressExperiments() {
                 </button>
               ))}
             </div>
-            <Button onClick={() => setAdding(a => !a)} size="sm" className="rounded-full px-4 h-8 text-xs font-semibold bg-gradient-to-r from-[hsl(190_55%_50%)] to-[hsl(268_52%_60%)] border-0">
+            <Button onClick={() => setAdding(a => !a)} size="sm" className="rounded-full px-4 h-8 text-xs font-semibold bg-gradient-to-r from-[hsl(190_55%_50%)] to-[hsl(248_62%_60%)] border-0">
               <Plus className="w-3.5 h-3.5 mr-1" />Add
             </Button>
           </motion.div>
@@ -189,7 +189,7 @@ export default function ProgressExperiments() {
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-[hsl(190_55%_60%/0.4)] h-20 resize-none" />
                 <div className="flex gap-2">
                   <Button onClick={addExperiment} disabled={!newTitle.trim()} size="sm"
-                    className="rounded-full px-5 font-semibold bg-gradient-to-r from-[hsl(190_55%_50%)] to-[hsl(268_52%_60%)] border-0 disabled:opacity-40">
+                    className="rounded-full px-5 font-semibold bg-gradient-to-r from-[hsl(190_55%_50%)] to-[hsl(248_62%_60%)] border-0 disabled:opacity-40">
                     Add experiment
                   </Button>
                   <Button onClick={() => setAdding(false)} size="sm" variant="ghost" className="rounded-full text-muted-foreground">Cancel</Button>

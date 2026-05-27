@@ -321,7 +321,7 @@ export default function Insights() {
     if (style.toLowerCase().includes("secure")) return "bg-[hsl(142_55%_60%/0.15)] text-[hsl(142_55%_65%)] border-[hsl(142_55%_60%/0.3)]";
     if (style.toLowerCase().includes("anxious")) return "bg-[hsl(43_65%_65%/0.15)] text-[hsl(43_65%_70%)] border-[hsl(43_65%_65%/0.3)]";
     if (style.toLowerCase().includes("avoidant")) return "bg-[hsl(190_55%_60%/0.15)] text-[hsl(190_55%_65%)] border-[hsl(190_55%_60%/0.3)]";
-    return "bg-[hsl(268_52%_68%/0.15)] text-[hsl(268_52%_78%)] border-[hsl(268_52%_68%/0.3)]";
+    return "bg-[hsl(248_62%_52%/0.15)] text-[hsl(248_62%_62%)] border-[hsl(248_62%_52%/0.3)]";
   };
 
   const r = analysis ?? DEMO_ANALYSIS;

@@ -1,12 +1,5 @@
 import { RefreshCw } from "lucide-react";
-
-export type ConfidenceLevel = "strong" | "moderate" | "limited";
-
-export function getConfidenceLevel(charCount: number, fieldsFilled: number): ConfidenceLevel {
-  if (charCount > 250 && fieldsFilled >= 2) return "strong";
-  if (charCount > 100 || fieldsFilled >= 1) return "moderate";
-  return "limited";
-}
+import type { ConfidenceLevel } from "@/lib/toneUtils";
 
 const CONFIDENCE_CONFIG: Record<ConfidenceLevel, { label: string; color: string }> = {
   strong:   { label: "Strong read",           color: "hsl(142 55% 60%)" },
@@ -48,7 +41,7 @@ export function ToneBar({ onApply, loading }: { onApply: (hint: string) => void;
           key={t.label}
           onClick={() => onApply(t.hint)}
           disabled={loading}
-          className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border border-foreground/12 text-muted-foreground hover:text-foreground hover:border-[hsl(268_52%_55%/0.45)] hover:bg-[hsl(268_52%_55%/0.07)] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border border-foreground/12 text-muted-foreground hover:text-foreground hover:border-[hsl(248_62%_55%/0.45)] hover:bg-[hsl(248_62%_55%/0.07)] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {loading && <RefreshCw className="w-2.5 h-2.5 animate-spin" />}
           {t.label}

@@ -60,7 +60,7 @@ const PRODUCTS: Record<Product, ProductConfig> = {
     price: "$97",
     priceDetail: "One-time. No subscription.",
     badge: "Most Popular",
-    badgeColor: "hsl(268 52% 68%)",
+    badgeColor: "hsl(248 62% 52%)",
     description:
       "A complete rebuild of how you present yourself — profile, prompts, messaging, photos, and a 7-day action plan. Walk away with a profile that's finally working.",
     features: [
@@ -74,7 +74,7 @@ const PRODUCTS: Record<Product, ProductConfig> = {
     ],
     cta: "Get The Dating Reset — $97",
     icon: Star,
-    gradient: "from-[hsl(348_55%_58%)] to-[hsl(268_52%_58%)]",
+    gradient: "from-[hsl(348_55%_58%)] to-[hsl(248_62%_58%)]",
     amountCents: 9700,
     stripeEnvKey: "VITE_STRIPE_DATING_RESET_LINK",
     successCopy: "The Dating Reset is confirmed.",
@@ -153,7 +153,7 @@ function PaidForm({ product }: { product: Product }) {
         </div>
         <Link
           href="/sample-report"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[hsl(268_52%_78%)] hover:text-[hsl(268_52%_88%)] transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[hsl(248_62%_62%)] hover:text-[hsl(248_62%_88%)] transition-colors"
         >
           See a real sample report while you wait <ArrowRight className="w-3 h-3" />
         </Link>
@@ -298,7 +298,7 @@ export default function Checkout({ product }: { product: string }) {
               <ul className="space-y-3">
                 {config.features.map((f) => (
                   <li key={f} className="flex items-start gap-3 text-sm text-muted-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-[hsl(268_52%_68%)] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-[hsl(248_62%_52%)] mt-0.5 flex-shrink-0" />
                     {f}
                   </li>
                 ))}
@@ -316,7 +316,7 @@ export default function Checkout({ product }: { product: string }) {
           {/* Payment / form */}
           <div className="glass-strong rounded-2xl p-8 border border-white/8 space-y-6">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[hsl(268_52%_68%)]" />
+              <Sparkles className="w-5 h-5 text-[hsl(248_62%_52%)]" />
               <h2 className="font-semibold text-foreground">
                 {resolvedProduct === "wingman" ? "Save your spot" : "Complete your order"}
               </h2>
@@ -353,7 +353,7 @@ export default function Checkout({ product }: { product: string }) {
             <div className="flex flex-wrap justify-center gap-4">
               <Link
                 href="/checkout/dating-reset"
-                className="px-5 py-2.5 glass rounded-xl text-sm font-medium text-[hsl(268_52%_78%)] hover:bg-white/5 transition-colors border border-[hsl(268_52%_68%/0.25)]"
+                className="px-5 py-2.5 glass rounded-xl text-sm font-medium text-[hsl(248_62%_62%)] hover:bg-white/5 transition-colors border border-[hsl(248_62%_52%/0.25)]"
               >
                 The Dating Reset — $97 →
               </Link>

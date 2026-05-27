@@ -202,10 +202,10 @@ export default function ProgressReadiness() {
 
                 {/* Pacing + Fit */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="glass border border-[hsl(268_52%_68%/0.2)] rounded-2xl p-5">
+                  <div className="glass border border-[hsl(248_62%_52%/0.2)] rounded-2xl p-5">
                     <div className="flex items-center gap-2 mb-2">
-                      <Clock className="w-3.5 h-3.5 text-[hsl(268_52%_68%)]" />
-                      <p className="text-xs font-bold uppercase tracking-wider text-[hsl(268_52%_78%)]">Pacing</p>
+                      <Clock className="w-3.5 h-3.5 text-[hsl(248_62%_52%)]" />
+                      <p className="text-xs font-bold uppercase tracking-wider text-[hsl(248_62%_62%)]">Pacing</p>
                     </div>
                     <p className="text-sm text-muted-foreground leading-relaxed">{profile.pacing}</p>
                   </div>
@@ -219,15 +219,15 @@ export default function ProgressReadiness() {
                 </div>
 
                 {/* Readiness Signs */}
-                <div className="glass border border-[hsl(285_45%_65%/0.2)] rounded-2xl overflow-hidden">
-                  <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[hsl(285_45%_65%/0.15)] bg-[hsl(285_45%_65%/0.06)]">
-                    <TrendingUp className="w-3.5 h-3.5 text-[hsl(285_45%_65%)]" />
-                    <p className="text-xs font-bold uppercase tracking-wider text-[hsl(285_45%_75%)]">Signs You're Ready</p>
+                <div className="glass border border-[hsl(326_100%_65%/0.2)] rounded-2xl overflow-hidden">
+                  <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[hsl(326_100%_65%/0.15)] bg-[hsl(326_100%_65%/0.06)]">
+                    <TrendingUp className="w-3.5 h-3.5 text-[hsl(326_100%_65%)]" />
+                    <p className="text-xs font-bold uppercase tracking-wider text-[hsl(326_100%_75%)]">Signs You're Ready</p>
                   </div>
                   <ul className="divide-y divide-white/5">
                     {profile.readinessSigns.map((s, i) => (
                       <li key={i} className="flex items-start gap-3 px-5 py-3.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[hsl(285_45%_65%)] flex-shrink-0 mt-0.5" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[hsl(326_100%_65%)] flex-shrink-0 mt-0.5" />
                         <p className="text-sm text-muted-foreground leading-relaxed">{s}</p>
                       </li>
                     ))}

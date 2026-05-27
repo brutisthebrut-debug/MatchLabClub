@@ -181,7 +181,7 @@ export default function DebriefWhatHappened() {
                   </Label>
                   <Textarea value={what} onChange={e => setWhat(e.target.value)}
                     placeholder="We met for coffee. First 30 min was a bit awkward, then it opened up. Talked about work and travel. She seemed engaged but I couldn't tell if she was interested or just being polite."
-                    className="min-h-[110px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/35" />
+                    className="min-h-[110px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/35" />
                 </div>
 
                 <div className="space-y-2">
@@ -213,7 +213,7 @@ export default function DebriefWhatHappened() {
                   <div className="flex flex-wrap gap-2">
                     {OUTCOMES.map(o => (
                       <button key={o} onClick={() => setOutcome(prev => prev === o ? "" : o)}
-                        className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${outcome === o ? "bg-[hsl(268_52%_68%/0.2)] text-[hsl(268_52%_82%)] border-[hsl(268_52%_68%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
+                        className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${outcome === o ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)] border-[hsl(248_62%_52%/0.4)]" : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground"}`}>
                         {o}
                       </button>
                     ))}
@@ -221,7 +221,7 @@ export default function DebriefWhatHappened() {
                 </div>
 
                 <Button onClick={handleGenerate} disabled={!canGenerate}
-                  className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(348_55%_60%)] to-[hsl(268_52%_65%)] border-0 glow-pulse disabled:opacity-50">
+                  className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(348_55%_60%)] to-[hsl(248_62%_55%)] border-0 glow-pulse disabled:opacity-50">
                   <Sparkles className="mr-2 h-4 w-4" /> Get My Debrief
                 </Button>
               </motion.div>

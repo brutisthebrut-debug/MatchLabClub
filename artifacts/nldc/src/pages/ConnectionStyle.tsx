@@ -94,9 +94,9 @@ const STYLES: Record<StyleKey, {
   slowBurn: {
     name: "Slow Burn",
     emoji: "🕯️",
-    color: "hsl(268 52% 68%)",
-    bg: "hsl(268 52% 68% / 0.08)",
-    border: "hsl(268 52% 68% / 0.25)",
+    color: "hsl(248 62% 52%)",
+    bg: "hsl(248 62% 52% / 0.08)",
+    border: "hsl(248 62% 52% / 0.25)",
     tagline: "You open gradually, invest deeply, and get significantly better over time. The challenge is that early dating rewards speed.",
     strengths: ["Loyalty is genuine, not performed", "Relationships with you improve over time", "Depth is real — people who earn it stay"],
     activationPattern: "Activates fully once safety is established. Can read as unavailable or uninterested before the threshold is crossed.",
@@ -130,9 +130,9 @@ const STYLES: Record<StyleKey, {
   guardedRomantic: {
     name: "Guarded Romantic",
     emoji: "🗝️",
-    color: "hsl(285 45% 65%)",
-    bg: "hsl(285 45% 65% / 0.08)",
-    border: "hsl(285 45% 65% / 0.25)",
+    color: "hsl(326 100% 65%)",
+    bg: "hsl(326 100% 65% / 0.08)",
+    border: "hsl(326 100% 65% / 0.25)",
     tagline: "You want real connection more than almost anything. And you've learned to protect that want carefully. The push-pull pattern is the result.",
     strengths: ["Depth is real when trust is established", "Loyalty once earned is extraordinary", "Self-awareness about what you're doing"],
     activationPattern: "Moves toward connection, then protects as it becomes real. The pull-back is often unconscious — a protection mechanism rather than a decision.",
@@ -190,9 +190,9 @@ const STYLES: Record<StyleKey, {
   lowTrustDater: {
     name: "Low-Trust Dater",
     emoji: "🔒",
-    color: "hsl(285 45% 65%)",
-    bg: "hsl(285 45% 65% / 0.08)",
-    border: "hsl(285 45% 65% / 0.25)",
+    color: "hsl(326 100% 65%)",
+    bg: "hsl(326 100% 65% / 0.08)",
+    border: "hsl(326 100% 65% / 0.25)",
     tagline: "You've been burned enough that trust doesn't come easily. Your skepticism is adaptation, not flaw — and it makes it hard for trustworthy people to reach you.",
     strengths: ["Trust means something when you give it", "Reads situations carefully", "Not easily manipulated by charm"],
     activationPattern: "Promising person → skepticism → (conscious or unconscious) testing → person fails test without knowing it's happening → exit.",
@@ -393,8 +393,8 @@ export default function ConnectionStyle() {
         <div className="max-w-2xl mx-auto relative z-10">
           <motion.div {...fadeUp()} className="mb-6">
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-[hsl(268_52%_68%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Self-Insight</p>
+              <Sparkles className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Self-Insight</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Connection Style Lens</h1>
             <FallbackRateBadge toolName="Connection Style Lens" className="mt-1" />
@@ -431,7 +431,7 @@ export default function ConnectionStyle() {
                     <div className="space-y-2">
                       {q.opts.map((opt, oi) => (
                         <button key={oi} onClick={() => handleAnswer(qi, oi)}
-                          className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all ${answers[qi] === oi ? "bg-[hsl(268_52%_68%/0.15)] border-[hsl(268_52%_68%/0.4)] text-[hsl(268_60%_82%)]" : "border-white/8 text-muted-foreground hover:border-white/15 hover:text-foreground"}`}>
+                          className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all ${answers[qi] === oi ? "bg-[hsl(248_62%_52%/0.15)] border-[hsl(248_62%_52%/0.4)] text-[hsl(248_62%_65%)]" : "border-white/8 text-muted-foreground hover:border-white/15 hover:text-foreground"}`}>
                           {opt.label}
                         </button>
                       ))}
@@ -441,7 +441,7 @@ export default function ConnectionStyle() {
                 <div className="flex items-center justify-between pt-2">
                   <p className="text-xs text-muted-foreground">{answered} of {QUESTIONS.length} answered</p>
                   <Button onClick={handleSubmit} disabled={answered < QUESTIONS.length || loading}
-                    className="rounded-full px-8 h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-40">
+                    className="rounded-full px-8 h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-40">
                     {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Reading your pattern…</> : <><Sparkles className="mr-2 h-4 w-4" />See My Style</>}
                   </Button>
                 </div>

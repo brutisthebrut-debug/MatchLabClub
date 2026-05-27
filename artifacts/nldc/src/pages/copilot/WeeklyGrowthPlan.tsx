@@ -148,7 +148,7 @@ export default function WeeklyGrowthPlan() {
       wins.trim()      && `Recent win: ${wins}`,
       challenge.trim() && `Current challenge: ${challenge}`,
     ].filter(Boolean).join("\n") +
-    `\n\nReturn JSON: { "actions": [{ "action": string, "tool": string|null, "toolHref": string|null }] (exactly 5 specific, actionable items referencing NLDC tools where relevant), "wingmanNote": string (1-2 warm, direct sentences) }`;
+    `\n\nReturn JSON: { "actions": [{ "action": string, "tool": string|null, "toolHref": string|null }] (exactly 5 specific, actionable items referencing MatchLab Club tools where relevant), "wingmanNote": string (1-2 warm, direct sentences) }`;
     enhance.mutate({ data: { toolName: "Weekly Growth Plan", prompt, expectJson: true } }, {
       onSuccess: data => {
         const raw = (data as { output?: string } | undefined)?.output;
@@ -208,14 +208,14 @@ export default function WeeklyGrowthPlan() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">One thing that went well recently <span className="font-normal normal-case text-muted-foreground/40">(optional)</span></Label>
-                  <Textarea value={wins} onChange={e => setWins(e.target.value)} placeholder="A good conversation, a brave message you sent, something you noticed about yourself…" className="min-h-[80px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/35" />
+                  <Textarea value={wins} onChange={e => setWins(e.target.value)} placeholder="A good conversation, a brave message you sent, something you noticed about yourself…" className="min-h-[80px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/35" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-foreground/70 text-xs font-semibold uppercase tracking-wider">One thing you're finding difficult <span className="font-normal normal-case text-muted-foreground/40">(optional)</span></Label>
-                  <Textarea value={challenge} onChange={e => setChallenge(e.target.value)} placeholder="Getting past small talk, re-engaging after silence, knowing if someone's interested…" className="min-h-[80px] resize-none bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/35" />
+                  <Textarea value={challenge} onChange={e => setChallenge(e.target.value)} placeholder="Getting past small talk, re-engaging after silence, knowing if someone's interested…" className="min-h-[80px] resize-none bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/35" />
                 </div>
                 <Button onClick={handleGenerate} disabled={!focus}
-                  className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(142_55%_55%)] to-[hsl(268_52%_65%)] border-0 glow-pulse disabled:opacity-50">
+                  className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(142_55%_55%)] to-[hsl(248_62%_55%)] border-0 glow-pulse disabled:opacity-50">
                   <Sparkles className="mr-2 h-4 w-4" /> Build My Plan
                 </Button>
               </motion.div>

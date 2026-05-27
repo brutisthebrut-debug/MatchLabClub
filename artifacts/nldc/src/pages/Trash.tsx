@@ -148,7 +148,7 @@ export default function Trash() {
             Back to dashboard
           </Link>
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] flex items-center justify-center">
               <Trash2 className="w-5 h-5 text-white" />
             </div>
             <h1 className="font-serif text-3xl md:text-4xl font-bold text-foreground">
@@ -245,7 +245,7 @@ export default function Trash() {
               return (
                 <div
                   key={audit.id}
-                  className="flex items-center justify-between gap-3 p-4 rounded-2xl border border-white/6 bg-white/2 hover:border-[hsl(268_52%_68%/0.25)] transition-all"
+                  className="flex items-center justify-between gap-3 p-4 rounded-2xl border border-white/6 bg-white/2 hover:border-[hsl(248_62%_52%/0.25)] transition-all"
                   data-testid={`row-trashed-${audit.id}`}
                 >
                   <div className="min-w-0 flex-1">
@@ -268,7 +268,7 @@ export default function Trash() {
                       size="sm"
                       onClick={() => handleRestore(audit)}
                       disabled={busy}
-                      className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold"
+                      className="rounded-full bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 font-semibold"
                       data-testid={`button-restore-${audit.id}`}
                     >
                       <RotateCcw className="w-3.5 h-3.5 mr-1.5" />

@@ -87,9 +87,9 @@ function analyzeStyle(text: string): StyleMapResult {
   const METERS = [
     { label: "Warmth",          value: warmth,       note: warmth > 70 ? "High — your warmth is legible and welcoming" : warmth > 45 ? "Moderate — present but could be more overt in early interactions" : "Low — may read as cool or transactional to some readers", color: "hsl(348 55% 65%)" },
     { label: "Clarity",         value: clarity,      note: clarity > 70 ? "High — people know where they stand with you" : clarity > 45 ? "Moderate — some hedge language creates occasional ambiguity" : "Low — the intent isn't coming through clearly enough", color: "hsl(190 55% 60%)" },
-    { label: "Effort",          value: effortBalance,note: effortBalance > 70 ? "High — you're investing noticeably in the exchange" : effortBalance > 45 ? "Balanced — neither over- nor under-contributing" : "Low — may read as low investment or passive", color: "hsl(268 52% 68%)" },
+    { label: "Effort",          value: effortBalance,note: effortBalance > 70 ? "High — you're investing noticeably in the exchange" : effortBalance > 45 ? "Balanced — neither over- nor under-contributing" : "Low — may read as low investment or passive", color: "hsl(248 62% 52%)" },
     { label: "Playfulness",     value: playfulness,  note: playfulness > 70 ? "High — levity is present and creates ease" : playfulness > 40 ? "Moderate — some lightness, but room to let it breathe more" : "Low — could benefit from occasional humor or lightness", color: "hsl(43 65% 65%)" },
-    { label: "Pacing",          value: pacing,       note: pacing > 70 ? "Moves forward — you're steering toward something, which is good" : pacing > 45 ? "Measured — neither rushing nor stalling" : "Slow — may feel meandering without a clear direction", color: "hsl(285 45% 65%)" },
+    { label: "Pacing",          value: pacing,       note: pacing > 70 ? "Moves forward — you're steering toward something, which is good" : pacing > 45 ? "Measured — neither rushing nor stalling" : "Slow — may feel meandering without a clear direction", color: "hsl(326 100% 65%)" },
     { label: "Availability",    value: availability, note: availability > 70 ? "High — emotional openness is present and legible" : availability > 45 ? "Present — some warmth is accessible" : "Guarded — emotional availability isn't coming through clearly yet", color: "hsl(142 55% 60%)" },
     { label: "Directness",      value: directness,   note: directness > 70 ? "High — you say what you mean" : directness > 45 ? "Moderate — direct in some areas, soft-pedaling in others" : "Low — more indirection than serves you; try naming what you want", color: "hsl(190 55% 60%)" },
     { label: "Pressure",        value: pressure,     note: pressure > 65 ? "Elevated — the intensity may be creating mild pressure; ease off slightly" : pressure > 35 ? "Moderate — present but not excessive" : "Low — no sense of pressure; relaxed energy", color: "hsl(43 65% 65%)" },
@@ -136,9 +136,9 @@ const DEMO: StyleMapResult = {
   meters: [
     { label: "Warmth",       value: 72, note: "High — your warmth is legible and welcoming",                                                                                 color: "hsl(348 55% 65%)" },
     { label: "Clarity",      value: 58, note: "Moderate — some hedge language creates occasional ambiguity",                                                                 color: "hsl(190 55% 60%)" },
-    { label: "Effort",       value: 65, note: "Balanced — neither over- nor under-contributing",                                                                              color: "hsl(268 52% 68%)" },
+    { label: "Effort",       value: 65, note: "Balanced — neither over- nor under-contributing",                                                                              color: "hsl(248 62% 52%)" },
     { label: "Playfulness",  value: 48, note: "Moderate — some lightness, but room to let it breathe more",                                                                  color: "hsl(43 65% 65%)"  },
-    { label: "Pacing",       value: 55, note: "Measured — neither rushing nor stalling",                                                                                      color: "hsl(285 45% 65%)" },
+    { label: "Pacing",       value: 55, note: "Measured — neither rushing nor stalling",                                                                                      color: "hsl(326 100% 65%)" },
     { label: "Availability", value: 68, note: "Present — emotional openness is accessible",                                                                                   color: "hsl(142 55% 60%)" },
     { label: "Directness",   value: 44, note: "Moderate — direct in some areas, soft-pedaling in others",                                                                     color: "hsl(190 55% 60%)" },
     { label: "Pressure",     value: 22, note: "Low — no sense of pressure; relaxed energy",                                                                                   color: "hsl(43 65% 65%)"  },
@@ -157,7 +157,7 @@ function Meter({ label, value, note, color }: { label: string; value: number; no
         <span className="text-xs font-semibold text-foreground/80">{label}</span>
         <span className="text-xs text-muted-foreground font-mono">{value}<span className="text-muted-foreground/40">/100</span></span>
       </div>
-      <div className="h-2 rounded-full bg-[hsl(232_28%_18%)] overflow-hidden">
+      <div className="h-2 rounded-full bg-[hsl(248_40%_154%)] overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${value}%` }}
@@ -249,7 +249,7 @@ export default function StyleMap() {
           <motion.div {...fadeUp()} className="mb-8">
             <div className="flex items-center gap-2 mb-2">
               <BarChart2 className="w-4 h-4 text-[hsl(190_55%_60%)]" />
-              <p className="text-sm font-medium text-[hsl(268_52%_78%)]">Communication Tools</p>
+              <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Communication Tools</p>
             </div>
             <h1 className="text-3xl font-bold text-foreground">Communication Style Map</h1>
             <div className="flex items-center gap-2 flex-wrap mt-1">
@@ -284,12 +284,12 @@ export default function StyleMap() {
               <Textarea
                 placeholder={"Paste the conversation thread here — your messages, their messages, or just your side. The more text, the sharper the read.\n\nFormat: Name: message — each on a new line, or just paste naturally."}
                 value={text} onChange={e => setText(e.target.value)}
-                className="min-h-[180px] resize-none font-mono text-xs bg-[hsl(232_28%_14%)] border-white/10 text-foreground placeholder:text-muted-foreground/40"
+                className="min-h-[180px] resize-none font-mono text-xs bg-[hsl(248_40%_95%)] border-white/10 text-foreground placeholder:text-muted-foreground/40"
               />
               <p className="text-xs text-muted-foreground/50">{text.trim().split(/\s+/).filter(Boolean).length} words — {text.trim().split(/\s+/).filter(Boolean).length < 50 ? "more text = sharper read" : "good amount to work with"}</p>
             </div>
             <Button onClick={handleAnalyze} disabled={loading || !text.trim()}
-              className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 glow-pulse disabled:opacity-50">
+              className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-50">
               {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Mapping your style…</> : <><BarChart2 className="mr-2 h-4 w-4" />Map My Style</>}
             </Button>
             {savedCtx.hasSavedContext && (

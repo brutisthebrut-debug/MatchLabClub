@@ -279,7 +279,7 @@ export default function Gallery() {
           {/* Hero */}
           <motion.div {...fadeUp(0)} className="mb-8 text-center space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 text-xs text-muted-foreground/60 mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-[hsl(268_52%_68%)]" />
+              <Sparkles className="w-3.5 h-3.5 text-[hsl(248_62%_52%)]" />
               Sample content — fictional profiles only
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Before & After</h1>
@@ -302,7 +302,7 @@ export default function Gallery() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/signal-check"
-                className="px-6 py-2.5 rounded-full text-sm font-semibold bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(348_55%_65%)] text-white border-0">
+                className="px-6 py-2.5 rounded-full text-sm font-semibold bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(348_55%_65%)] text-white border-0">
                 Free Signal Check <ArrowRight className="inline ml-1 w-3.5 h-3.5" />
               </Link>
               <Link href="/copilot/profile"

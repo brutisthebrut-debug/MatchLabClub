@@ -50,7 +50,7 @@ function Initials({ name }: { name: string }) {
   const parts = name.trim().split(/\s+/).slice(0, 2);
   const initials = parts.map(p => p[0]?.toUpperCase() ?? "").join("") || "?";
   return (
-    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] flex items-center justify-center text-2xl font-bold text-white shadow-[0_0_24px_hsl(268_52%_68%/0.45)]">
+    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] flex items-center justify-center text-2xl font-bold text-white shadow-[0_0_24px_hsl(248_62%_52%/0.45)]">
       {initials}
     </div>
   );
@@ -158,7 +158,7 @@ export default function Account() {
     <AppLayout>
       <div className="container mx-auto px-4 md:px-6 py-16 max-w-3xl">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-semibold text-[hsl(268_52%_78%)] border border-[hsl(268_52%_68%/0.3)] mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-xs font-semibold text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)] mb-6">
             <UserIcon className="w-3.5 h-3.5" />
             Your Account
           </div>
@@ -183,7 +183,7 @@ export default function Account() {
           </div>
         ) : !isAuthenticated ? (
           <div className="glass rounded-2xl p-8 md:p-10 text-center space-y-5" data-testid="account-signed-out">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] flex items-center justify-center">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] flex items-center justify-center">
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div className="space-y-2">
@@ -195,7 +195,7 @@ export default function Account() {
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <Button
                 onClick={() => login()}
-                className="rounded-full px-6 h-10 text-sm font-semibold bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 hover:opacity-90"
+                className="rounded-full px-6 h-10 text-sm font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 hover:opacity-90"
                 data-testid="button-account-login"
               >
                 <LogIn className="w-4 h-4 mr-2" /> Sign in
@@ -213,7 +213,7 @@ export default function Account() {
                 <img
                   src={user.profileImageUrl}
                   alt={fullName}
-                  className="w-20 h-20 rounded-2xl object-cover shadow-[0_0_24px_hsl(268_52%_68%/0.4)]"
+                  className="w-20 h-20 rounded-2xl object-cover shadow-[0_0_24px_hsl(248_62%_52%/0.4)]"
                   data-testid="account-avatar"
                 />
               ) : (
@@ -233,8 +233,8 @@ export default function Account() {
             {/* Stats */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="glass rounded-2xl p-5 flex items-center gap-4">
-                <div className="w-11 h-11 rounded-xl bg-[hsl(268_52%_68%/0.12)] border border-[hsl(268_52%_68%/0.25)] flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-[hsl(268_52%_78%)]" />
+                <div className="w-11 h-11 rounded-xl bg-[hsl(248_62%_52%/0.12)] border border-[hsl(248_62%_52%/0.25)] flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-[hsl(248_62%_62%)]" />
                 </div>
                 <div className="min-w-0">
                   <div className="text-2xl font-bold text-foreground" data-testid="account-audit-count">
@@ -299,7 +299,7 @@ export default function Account() {
                   Choose how your saved audits behave between visits.
                 </p>
               </div>
-              <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-[hsl(232_38%_15%)] border border-white/5">
+              <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-[hsl(248_45%_157%)] border border-white/5">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">Copy confirmation duration</p>
                   <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
@@ -319,7 +319,7 @@ export default function Account() {
                       className={[
                         "px-2.5 py-1 rounded-lg text-xs font-medium transition-colors capitalize",
                         copyDuration === opt
-                          ? "bg-[hsl(268_52%_58%)] text-white"
+                          ? "bg-[hsl(248_62%_58%)] text-white"
                           : "text-muted-foreground hover:text-foreground hover:bg-white/[0.06]",
                       ].join(" ")}
                     >
@@ -328,7 +328,7 @@ export default function Account() {
                   ))}
                 </div>
               </div>
-              <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-[hsl(232_38%_15%)] border border-white/5">
+              <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-[hsl(248_45%_157%)] border border-white/5">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">Keep my reports up to date</p>
                   <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
@@ -355,7 +355,7 @@ export default function Account() {
                   aria-label="Keep my reports up to date"
                 />
               </div>
-              <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-[hsl(232_38%_15%)] border border-white/5">
+              <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-[hsl(248_45%_157%)] border border-white/5">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">Recently deleted reminders</p>
                   <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
