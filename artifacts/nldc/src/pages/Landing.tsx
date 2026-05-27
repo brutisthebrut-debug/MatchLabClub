@@ -515,7 +515,7 @@ export default function Landing() {
                 Most dating advice is designed for the average person having average problems. It's vague on purpose — vague advice can't be wrong.
               </p>
               <p className="text-muted-foreground leading-relaxed mb-8">
-                We built Next Level Dating Club for people who are emotionally available, self-aware, and genuinely ready — but whose profiles don't show any of that yet. The technology isn't the point. Honest reflection is.
+                We built MatchLab Club for people who are emotionally available, self-aware, and genuinely ready — but whose profiles don't show any of that yet. The technology isn't the point. Honest reflection is.
               </p>
               <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold glow-pulse">
                 <Link href="/waitlist">Join the Early Cohort <ArrowRight className="ml-2 h-4 w-4" /></Link>

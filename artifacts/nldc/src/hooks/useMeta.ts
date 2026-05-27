@@ -1,11 +1,12 @@
 import { useEffect } from "react";
 
-const BRAND = "Next Level Dating Club";
+const BRAND = "MatchLab Club";
 
 function normalize(title: string): string {
   return title
     .replace(/\s*[·—\-|]\s*NLDC.*$/i, "")
     .replace(/\s*[·—\-|]\s*Next Level Dating Club.*$/i, "")
+    .replace(/\s*[·—\-|]\s*MatchLab Club.*$/i, "")
     .trim();
 }
 

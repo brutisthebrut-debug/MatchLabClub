@@ -85,16 +85,17 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
   const text = [
     `Hi ${name},`,
     "",
-    `We noticed a new sign-in to your Next Level Dating Club account from ${channelLabel}.`,
+    `We noticed a new sign-in to your MatchLab Club account from ${channelLabel}.`,
     "",
-    `When: ${when}`,
-    `Device: ${device}`,
-    `IP address: ${displayIpLine}`,
+    `When:      ${when}`,
+    `Device:    ${device}`,
+    `Location:  ${displayIpLine}`,
     "",
-    "If this was you, no action is needed.",
-    "If you don't recognize this sign-in, please change your password right away.",
+    "If this was you — you're all set, no action needed.",
+    "If you don't recognize this sign-in, please change your password immediately.",
     "",
-    "— Next Level Dating Club",
+    "Stay safe,",
+    "— The MatchLab Club team",
   ].join("\n");
 
   // HTML: show location as the label with raw IP as tooltip; fall back to just the IP
@@ -104,26 +105,29 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
 
   const html = `<!doctype html>
 <html>
-  <body style="font-family: -apple-system, Segoe UI, sans-serif; line-height: 1.6; color: #222;">
-    <p>Hi ${name},</p>
-    <p>We noticed a new sign-in to your <strong>Next Level Dating Club</strong> account from ${channelLabel}.</p>
-    <p style="font-size: 13px; color: #666;">
-      <strong>When:</strong> ${when}<br/>
-      <strong>Device:</strong> ${device}<br/>
-      <strong>IP address:</strong> ${htmlIpField}
+  <body style="font-family: -apple-system, Segoe UI, sans-serif; line-height: 1.7; color: #1a1a2e; max-width: 520px; margin: 0 auto; padding: 32px 24px;">
+    <div style="margin-bottom: 28px;">
+      <span style="font-size: 18px; font-weight: 700; color: #7c5cbf;">MatchLab Club</span>
+    </div>
+    <p style="margin: 0 0 16px;">Hi ${name},</p>
+    <p style="margin: 0 0 20px;">We noticed a new sign-in to your <strong>MatchLab Club</strong> account from <strong>${channelLabel}</strong>.</p>
+    <div style="background: #f5f3ff; border-left: 3px solid #7c5cbf; border-radius: 6px; padding: 14px 18px; margin: 0 0 20px; font-size: 13px; color: #444;">
+      <div style="margin-bottom: 6px;"><strong>When:</strong> ${when}</div>
+      <div style="margin-bottom: 6px;"><strong>Device:</strong> ${device}</div>
+      <div><strong>Location:</strong> ${htmlIpField}</div>
+    </div>
+    <p style="margin: 0 0 12px;">If this was you — you're all set, no action needed.</p>
+    <p style="font-size: 13px; color: #666; margin: 0 0 24px;">
+      If you <em>don't</em> recognize this sign-in, please change your password immediately — someone else may have access to your account.
     </p>
-    <p>If this was you, no action is needed.</p>
-    <p style="font-size: 13px; color: #666;">
-      If you don't recognize this sign-in, please change your password right away — someone else may have access to your account.
-    </p>
-    <p>— Next Level Dating Club</p>
+    <p style="margin: 0; color: #888; font-size: 13px;">Stay safe,<br/>— The MatchLab Club team</p>
   </body>
 </html>`;
 
   try {
     await sendMail({
       to: email,
-      subject: "New sign-in to your Next Level Dating Club account",
+      subject: "New sign-in to your MatchLab Club account",
       text,
       html,
     });

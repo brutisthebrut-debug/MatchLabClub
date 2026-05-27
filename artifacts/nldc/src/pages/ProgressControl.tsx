@@ -78,7 +78,7 @@ function ToggleSwitch({ enabled, onChange }: { enabled: boolean; onChange: (v: b
 }
 
 export default function ProgressControl() {
-  useMeta("Control Center · NLDC", "Settings for saving entries, personalization, anonymous learning, and data deletion.");
+  useMeta("Control Center · MatchLab Club", "Settings for saving entries, personalization, anonymous learning, and data deletion.");
   const [sections, setSections] = useState<ControlSection[]>(INITIAL_SECTIONS);
   const [deleteRequested, setDeleteRequested] = useState(false);
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);

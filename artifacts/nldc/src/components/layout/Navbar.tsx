@@ -225,7 +225,7 @@ export function Navbar() {
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           <span className="font-serif text-lg font-bold tracking-tight">
-            <span className="gradient-text-violet">NLDC</span>
+            <span className="gradient-text-violet">MatchLab</span>
           </span>
         </Link>
 

@@ -130,7 +130,7 @@ export function renderExpiredLinkPage(opts: ExpiredLinkPageOptions): string {
       <h1>${opts.heading}</h1>
 ${paragraphs}
       <a class="cta" href="${escapeHtml(opts.ctaUrl)}">${escapeHtml(opts.ctaLabel)}</a>
-      <div class="footer">Next Level Dating Club</div>
+      <div class="footer">MatchLab Club</div>
     </main>
   </body>
 </html>`;

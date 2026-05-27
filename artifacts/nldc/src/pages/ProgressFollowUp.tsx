@@ -117,7 +117,7 @@ function FollowUpCard({ fu, onAnswer, onSkip }: {
 }
 
 export default function ProgressFollowUp() {
-  useMeta("Follow-Up Check · NLDC", "Short follow-up questions tied to your notes and suggestions, with status tracking.");
+  useMeta("Follow-Up Check · MatchLab Club", "Short follow-up questions tied to your notes and suggestions, with status tracking.");
   const [items, setItems] = useState<FollowUp[]>(DEMO_FOLLOW_UPS);
   const [filter, setFilter] = useState<CheckStatus | null>(null);
 

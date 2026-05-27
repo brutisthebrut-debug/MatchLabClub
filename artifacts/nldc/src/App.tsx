@@ -72,6 +72,8 @@ import Scan from "@/pages/Scan";
 import Trash from "@/pages/Trash";
 import JournalPage from "@/pages/mirror/JournalPage";
 import DatesPage from "@/pages/mirror/DatesPage";
+import Blog from "@/pages/Blog";
+import BlogPost from "@/pages/BlogPost";
 
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 
@@ -161,6 +163,10 @@ function Router() {
       <Route path="/sample-report" component={SampleReport} />
       <Route path="/scan" component={Scan} />
       <Route path="/trash" component={Trash} />
+      <Route path="/blog" component={Blog} />
+      <Route path="/blog/:slug">
+        {(params: { slug?: string } | null) => <BlogPost slug={params?.slug ?? ""} />}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

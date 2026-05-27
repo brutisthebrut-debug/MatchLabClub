@@ -161,7 +161,7 @@ async function sendKeyMissingAlert(
   try {
     await sendMail({
       to: recipient,
-      subject: "[NLDC] GeoIP license key missing — location data going stale",
+      subject: "[MatchLab Club] GeoIP license key missing — location data going stale",
       text: [
         "The MAXMIND_LICENSE_KEY secret is not set on the API server, and",
         `the GeoIP database has not been refreshed in ~${Math.floor(daysSinceUpdate)} days`,
@@ -199,7 +199,7 @@ async function sendKeyRestoredEmail(
   try {
     await sendMail({
       to: recipient,
-      subject: "[NLDC] GeoIP license key restored — location data fresh again",
+      subject: "[MatchLab Club] GeoIP license key restored — location data fresh again",
       text: [
         "A GeoIP database refresh has succeeded, so the MAXMIND_LICENSE_KEY secret",
         "is working again and sign-in notification locations are now up to date.",

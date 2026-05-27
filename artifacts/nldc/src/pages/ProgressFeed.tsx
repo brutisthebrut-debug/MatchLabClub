@@ -113,7 +113,7 @@ function FeedCardComp({ card, onRate }: { card: FeedCard; onRate: (id: string, h
 }
 
 export default function ProgressFeed() {
-  useMeta("Learning Feed · NLDC", "Observation cards generated from your logged entries — what we're noticing, based only on what you share.");
+  useMeta("Learning Feed · MatchLab Club", "Observation cards generated from your logged entries — what we're noticing, based only on what you share.");
   const [feed, setFeed] = useState<FeedCard[]>(DEMO_FEED);
   const [filter, setFilter] = useState<FeedCategory | null>(null);
 

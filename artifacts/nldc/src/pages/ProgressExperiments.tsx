@@ -84,7 +84,7 @@ function ExperimentCard({ exp, onCycle, onDelete }: {
 }
 
 export default function ProgressExperiments() {
-  useMeta("Weekly Experiments · NLDC", "Practical weekly experiments with status tracking — what you tried, what helped, what didn't.");
+  useMeta("Weekly Experiments · MatchLab Club", "Practical weekly experiments with status tracking — what you tried, what helped, what didn't.");
   const [experiments, setExperiments] = useState<Experiment[]>(DEMO_EXPERIMENTS);
   const [adding, setAdding] = useState(false);
   const [newTitle, setNewTitle] = useState("");

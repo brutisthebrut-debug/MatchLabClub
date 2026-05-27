@@ -81,7 +81,7 @@ const ROADMAP_ITEMS: RoadmapItem[] = [
   {
     id: "privacy-audit", icon: Shield, category: "Privacy & Control",
     title: "Full Privacy Audit Log",
-    description: "A readable log of exactly what data NLDC has stored for you, when it was created, and what (if anything) has been shared. Complete transparency at any time.",
+    description: "A readable log of exactly what data MatchLab Club has stored for you, when it was created, and what (if anything) has been shared. Complete transparency at any time.",
     userControl: "Available on demand. You can request a full export or deletion from within the audit log.",
     status: "planned",
   },
@@ -120,7 +120,7 @@ function RoadmapCard({ item, i }: { item: RoadmapItem; i: number }) {
 }
 
 export default function ProgressInsightsRoadmap() {
-  useMeta("Insights Roadmap · NLDC", "What's coming to the NLDC Living AI Brain — with explicit user control language for every feature.");
+  useMeta("Insights Roadmap · MatchLab Club", "What's coming to the MatchLab Club Living AI Brain — with explicit user control language for every feature.");
 
   const statuses: RoadmapStatus[] = ["live", "coming-soon", "planned", "concept"];
   const counts = statuses.reduce((acc, s) => ({ ...acc, [s]: ROADMAP_ITEMS.filter(r => r.status === s).length }), {} as Record<RoadmapStatus, number>);

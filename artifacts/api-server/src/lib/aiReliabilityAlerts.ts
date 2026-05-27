@@ -152,7 +152,7 @@ async function sendRecoveredEmail(
   const duration = firstBreachedAt
     ? formatBreachDuration(firstBreachedAt, now)
     : "unknown";
-  const subject = `[NLDC] AI reliability recovered: ${toolName} back to ${pct}%`;
+  const subject = `[MatchLab Club] AI reliability recovered: ${toolName} back to ${pct}%`;
   const text = [
     `The "${toolName}" AI tool's first-try success rate has recovered above the alert threshold.`,
     "",
@@ -187,7 +187,7 @@ async function sendBreachEmail(
   const to = getFounderRecipient();
   const pct = (rate * 100).toFixed(1);
   const thresholdPct = (ALERT_THRESHOLD * 100).toFixed(0);
-  const subject = `[NLDC] AI reliability alert: ${toolName} first-try rate dropped to ${pct}%`;
+  const subject = `[MatchLab Club] AI reliability alert: ${toolName} first-try rate dropped to ${pct}%`;
   const text = [
     `The "${toolName}" AI tool's first-try success rate has dropped below the alert threshold.`,
     "",

@@ -124,7 +124,7 @@ const LEVELS = [
     modules: ["Score History", "Signal Spectrum", "Send-Through Trends", "Pattern Mirror (next)"],
     module_links: ["/dashboard", "/style-map", "/insights", "/progress/patterns"],
     insight: "This is your private psychological asset — a living record of your dating self, scoped to your account, never sold, never used for advertising. Some pieces are already in your dashboard today; the deeper pattern mirror and journal layers are the next things we ship.",
-    technical: "Private to your authenticated account. Data is stored on NLDC infrastructure, never sold or shared with third parties, and can be exported or permanently deleted at any time from Settings → Privacy. True end-to-end encryption (keys held only by you) is a future option we'll add when paying users ask for it.",
+    technical: "Private to your authenticated account. Data is stored on MatchLab Club infrastructure, never sold or shared with third parties, and can be exported or permanently deleted at any time from Settings → Privacy. True end-to-end encryption (keys held only by you) is a future option we'll add when paying users ask for it.",
     accentColor: "hsl(285 45% 68%)",
   },
   {
@@ -163,13 +163,13 @@ const PRIVACY_PRINCIPLES = [
 
 const MOAT_POINTS = [
   { icon: Shield, title: "Trust is the moat", desc: "In an industry drowning in privacy violations and opaque data use, the platform that earns radical trust wins the long-term customer relationship. Trust can't be copied — it's built over time." },
-  { icon: Brain, title: "The intelligence layer compounds", desc: "A user's Level 4 personal intelligence profile gets smarter with every audit, every conversation analysed, every date logged. The longer someone uses NLDC, the more valuable their mirror becomes — and the higher the switching cost." },
+  { icon: Brain, title: "The intelligence layer compounds", desc: "A user's Level 4 personal intelligence profile gets smarter with every audit, every conversation analysed, every date logged. The longer someone uses MatchLab Club, the more valuable their mirror becomes — and the higher the switching cost." },
   { icon: TrendingUp, title: "Aggregate insight is defensible", desc: "The Level 5 B2B layer — anonymised dating trend intelligence — has no peer. No competitor has the consent infrastructure to build it ethically. We build the infrastructure first; the insight business follows." },
   { icon: Users, title: "The community is the product", desc: "A community of people doing serious self-reflection on their dating lives — with data to back it — is the most valuable coaching audience on the planet. Podcasters, coaches, therapists, and dating apps will pay to reach them." },
 ];
 
 export default function Roadmap() {
-  useMeta("Platform Vision", "See everything that's live, in development, and on the roadmap for Next Level Dating Club. Privacy-first. No AI key required.");
+  useMeta("Platform Vision", "See everything that's live, in development, and on the roadmap for MatchLab Club. Privacy-first. No AI key required.");
   return (
     <AppLayout>
       <div className="min-h-screen mesh-bg">
@@ -380,7 +380,7 @@ export default function Roadmap() {
               <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-3">Non-Negotiable</p>
               <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">The Privacy Pledge</h2>
               <p className="text-muted-foreground max-w-xl mx-auto leading-relaxed">
-                Every product decision at NLDC is filtered through one question: does this respect the person trusting us with their most private self? If not, it doesn't ship.
+                Every product decision at MatchLab Club is filtered through one question: does this respect the person trusting us with their most private self? If not, it doesn't ship.
               </p>
             </motion.div>
 

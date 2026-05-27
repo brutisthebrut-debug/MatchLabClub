@@ -43,7 +43,7 @@ function getOrigin(req: Request): string {
 
 function sendExpiredExport(req: Request, res: import("express").Response): void {
   sendExpiredLink(req, res, {
-    pageTitle: "Export link expired — Next Level Dating Club",
+    pageTitle: "Export link expired — MatchLab Club",
     heading: "This export link can&rsquo;t be used anymore",
     bodyParagraphs: [
       "Data export links are single-use and expire after 30 minutes for your security. This one has either already been opened, expired, or we don&rsquo;t recognize it.",
@@ -311,20 +311,20 @@ async function sendExportReceiptEmail(
   const text = [
     `Hi ${name},`,
     "",
-    `This is a receipt confirming that a copy of your Next Level Dating Club data was just exported (${method}).`,
+    `This is a receipt confirming that a copy of your MatchLab Club data was just exported (${method}).`,
     `When: ${when}`,
     "",
     "If you made this request, no action is needed.",
     "If you didn't, please sign in and change your password — someone else may",
     "have access to your account.",
     "",
-    "— Next Level Dating Club",
+    "— MatchLab Club",
   ].join("\n");
   const html = `<!doctype html>
 <html>
   <body style="font-family: -apple-system, Segoe UI, sans-serif; line-height: 1.6; color: #222;">
     <p>Hi ${name},</p>
-    <p>This is a receipt confirming that a copy of your <strong>Next Level Dating Club</strong> data was just exported (${method}).</p>
+    <p>This is a receipt confirming that a copy of your <strong>MatchLab Club</strong> data was just exported (${method}).</p>
     <p style="font-size: 13px; color: #666;"><strong>When:</strong> ${when}</p>
     <p>If you made this request, no action is needed.</p>
     <p style="font-size: 13px; color: #666;">
@@ -334,7 +334,7 @@ async function sendExportReceiptEmail(
 </html>`;
   await sendMail({
     to,
-    subject: "Your Next Level Dating Club data was exported",
+    subject: "Your MatchLab Club data was exported",
     text,
     html,
   });
@@ -424,7 +424,7 @@ router.post("/account/export/email", async (req, res): Promise<void> => {
   const text = [
     `Hi ${firstName},`,
     "",
-    "You asked Next Level Dating Club to email you a copy of your data.",
+    "You asked MatchLab Club to email you a copy of your data.",
     "Use the secure link below to download your full export as JSON:",
     "",
     downloadUrl,
@@ -433,14 +433,14 @@ router.post("/account/export/email", async (req, res): Promise<void> => {
     "If you didn't request this, you can safely ignore this email — the link",
     "won't reveal anything until someone visits it, and it will expire on its own.",
     "",
-    "— Next Level Dating Club",
+    "— MatchLab Club",
   ].join("\n");
 
   const html = `<!doctype html>
 <html>
   <body style="font-family: -apple-system, Segoe UI, sans-serif; line-height: 1.6; color: #222;">
     <p>Hi ${firstName},</p>
-    <p>You asked <strong>Next Level Dating Club</strong> to email you a copy of your data.</p>
+    <p>You asked <strong>MatchLab Club</strong> to email you a copy of your data.</p>
     <p>
       <a href="${downloadUrl}" style="display:inline-block;padding:12px 20px;background:#7a4fb8;color:#fff;border-radius:999px;text-decoration:none;font-weight:600;">
         Download my data
@@ -460,7 +460,7 @@ router.post("/account/export/email", async (req, res): Promise<void> => {
   try {
     await sendMail({
       to: u.email,
-      subject: "Your Next Level Dating Club data export",
+      subject: "Your MatchLab Club data export",
       text,
       html,
     });
@@ -630,7 +630,7 @@ router.delete("/account", async (req, res): Promise<void> => {
     const text = [
       `Hi ${name},`,
       "",
-      "This is a confirmation that your Next Level Dating Club account has been deleted.",
+      "This is a confirmation that your MatchLab Club account has been deleted.",
       `When: ${when}`,
       "",
       "Here's a summary of what was permanently removed:",
@@ -644,13 +644,13 @@ router.delete("/account", async (req, res): Promise<void> => {
       "someone else may have had access to your account.",
       "",
       "Thanks for giving us a try.",
-      "— Next Level Dating Club",
+      "— MatchLab Club",
     ].join("\n");
     const html = `<!doctype html>
 <html>
   <body style="font-family: -apple-system, Segoe UI, sans-serif; line-height: 1.6; color: #222;">
     <p>Hi ${name},</p>
-    <p>This is a confirmation that your <strong>Next Level Dating Club</strong> account has been deleted.</p>
+    <p>This is a confirmation that your <strong>MatchLab Club</strong> account has been deleted.</p>
     <p style="font-size: 13px; color: #666;"><strong>When:</strong> ${when}</p>
     <p>Here's a summary of what was permanently removed:</p>
     <ul>
@@ -663,13 +663,13 @@ router.delete("/account", async (req, res): Promise<void> => {
     <p style="font-size: 13px; color: #666;">
       If you didn't request this, please reply to this email right away — someone else may have had access to your account.
     </p>
-    <p>Thanks for giving us a try.<br/>— Next Level Dating Club</p>
+    <p>Thanks for giving us a try.<br/>— MatchLab Club</p>
   </body>
 </html>`;
     try {
       await sendMail({
         to: recipient.email,
-        subject: "Your Next Level Dating Club account has been deleted",
+        subject: "Your MatchLab Club account has been deleted",
         text,
         html,
       });

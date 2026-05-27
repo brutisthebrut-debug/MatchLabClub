@@ -126,7 +126,7 @@ const PROFILES: Record<Goal, ReadinessProfile> = {
 };
 
 export default function ProgressReadiness() {
-  useMeta("Readiness Guide · NLDC", "Goal-based readiness guide with supportive traits, caution dynamics, pacing, and fit notes.");
+  useMeta("Readiness Guide · MatchLab Club", "Goal-based readiness guide with supportive traits, caution dynamics, pacing, and fit notes.");
   const [selected, setSelected] = useState<Goal | null>(null);
   const profile = selected ? PROFILES[selected] : null;
 

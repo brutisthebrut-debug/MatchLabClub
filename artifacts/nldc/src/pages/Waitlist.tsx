@@ -18,7 +18,7 @@ const INTERESTS = ["Profile audit", "Message coaching", "Full dating reset", "Mo
 type WaitlistEntry = { id: number; email: string; firstName: string; position: number; createdAt: string };
 
 export default function Waitlist() {
-  useMeta("Early Access Waitlist — NLDC", "Join the NLDC waitlist. Early access to the limited launch cohort, lifetime founding-member pricing, and priority support.");
+  useMeta("Early Access Waitlist — MatchLab Club", "Join the MatchLab Club waitlist. Early access to the limited launch cohort, lifetime founding-member pricing, and priority support.");
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [source, setSource] = useState("");
@@ -63,7 +63,7 @@ export default function Waitlist() {
               <span className="gradient-text italic">everyone else.</span>
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Next Level Dating Club is opening to a limited early cohort. Founding members get lifetime 40% off Monthly Coaching and first access to every feature.
+              MatchLab Club is opening to a limited early cohort. Founding members get lifetime 40% off Monthly Coaching and first access to every feature.
             </p>
           </motion.div>
 
@@ -141,7 +141,7 @@ export default function Waitlist() {
                   <Button
                     variant="ghost"
                     className="rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5 flex items-center gap-2"
-                    onClick={() => navigator.share?.({ title: "Next Level Dating Club", text: "I joined the NLDC waitlist — check it out:", url: window.location.origin })}
+                    onClick={() => navigator.share?.({ title: "MatchLab Club", text: "I joined the MatchLab Club waitlist — check it out:", url: window.location.origin })}
                     data-testid="button-share"
                   >
                     <Share2 className="w-4 h-4" /> Share with a friend
@@ -215,7 +215,7 @@ export default function Waitlist() {
                 "Most dating advice is vague by design — vague advice can't be wrong. We built this for people who are emotionally ready and self-aware, but whose profiles don't show any of that. The technology isn't the point. Honest reflection is."
               </p>
             </div>
-            <p className="text-xs text-muted-foreground font-medium">— The NLDC Team</p>
+            <p className="text-xs text-muted-foreground font-medium">— The MatchLab Club Team</p>
           </motion.div>
 
           {/* Early Access Perks */}

@@ -822,7 +822,7 @@ describe("POST /api/claim-anonymous/handoff/redeem", () => {
       expect(res.headers["cache-control"]).toBe("no-store");
       expect(res.text).toMatch(/Link expired/);
       expect(res.text).toMatch(/hand-?off link/i);
-      expect(res.text).toMatch(/Back to Next Level Dating Club/);
+      expect(res.text).toMatch(/Back to MatchLab Club/);
 
       const [row] = await db
         .select()
@@ -881,7 +881,7 @@ describe("POST /api/claim-anonymous/handoff/redeem", () => {
       expect(res.headers["cache-control"]).toBe("no-store");
       expect(res.text).toMatch(/hand-?off link/i);
       expect(res.text).toMatch(/Link expired/);
-      expect(res.text).toMatch(/Back to Next Level Dating Club/);
+      expect(res.text).toMatch(/Back to MatchLab Club/);
     } finally {
       await cleanup(ids);
     }

@@ -17,7 +17,7 @@ const Section = ({ icon: Icon, title, children }: { icon: React.ElementType; tit
 export default function Terms() {
   useMeta(
     "Terms of Service",
-    "Next Level Dating Club terms of service — plain English, no surprises."
+    "MatchLab Club terms of service — plain English, no surprises."
   );
 
   return (
@@ -39,8 +39,8 @@ export default function Terms() {
         </div>
 
         <div className="space-y-6">
-          <Section icon={Heart} title="What NLDC is (and isn't)">
-            <p><strong className="text-foreground">What it is:</strong> A dating coaching tool. NLDC analyses your dating profile, messages, and communication style to give you personalised, actionable coaching. Think of it as an intelligent mirror — honest feedback and a path forward.</p>
+          <Section icon={Heart} title="What MatchLab Club is (and isn't)">
+            <p><strong className="text-foreground">What it is:</strong> A dating coaching tool. MatchLab Club analyses your dating profile, messages, and communication style to give you personalised, actionable coaching. Think of it as an intelligent mirror — honest feedback and a path forward.</p>
             <p><strong className="text-foreground">What it isn't:</strong></p>
             <ul className="space-y-1.5 list-none">
               <li className="flex items-start gap-2"><span className="text-[hsl(268_52%_68%)]">→</span> Not therapy or mental health counselling</li>
@@ -52,7 +52,7 @@ export default function Terms() {
           </Section>
 
           <Section icon={FileText} title="Your content">
-            <p><strong className="text-foreground">You own what you write.</strong> When you paste your bio, prompts, or message samples into NLDC, those words remain yours. Full stop.</p>
+            <p><strong className="text-foreground">You own what you write.</strong> When you paste your bio, prompts, or message samples into MatchLab Club, those words remain yours. Full stop.</p>
             <p><strong className="text-foreground">The limited licence.</strong> By submitting content, you give us permission to process it to generate your coaching output. That's the entire extent of the licence — we use it to help you, nothing more.</p>
             <p><strong className="text-foreground">Accuracy.</strong> Please only submit content that you created or have the right to submit. Pasting someone else's messages without their knowledge isn't something we encourage — and for any 1:1 coaching that involves a third party's private messages, please get their consent first.</p>
           </Section>
@@ -69,7 +69,7 @@ export default function Terms() {
           </Section>
 
           <Section icon={Ban} title="Acceptable use">
-            <p>Please don't use NLDC to:</p>
+            <p>Please don't use MatchLab Club to:</p>
             <ul className="space-y-1.5 list-none">
               <li className="flex items-start gap-2"><span className="text-red-400/80">✗</span> Harass, deceive, or manipulate other people</li>
               <li className="flex items-start gap-2"><span className="text-red-400/80">✗</span> Create fake profiles or represent yourself as someone you're not</li>
@@ -92,7 +92,7 @@ export default function Terms() {
             <p><strong className="text-foreground">Questions?</strong> We're real people. Email us:</p>
             <p><strong className="text-foreground">General:</strong> hello@nextleveldatingclub.com</p>
             <p><strong className="text-foreground">Privacy:</strong> privacy@nextleveldatingclub.com</p>
-            <p className="text-muted-foreground/60 text-xs pt-2">Next Level Dating Club · hello@nextleveldatingclub.com</p>
+            <p className="text-muted-foreground/60 text-xs pt-2">MatchLab Club · hello@nextleveldatingclub.com</p>
           </Section>
         </div>
       </div>

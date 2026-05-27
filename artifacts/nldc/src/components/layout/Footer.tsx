@@ -14,7 +14,7 @@ export function Footer() {
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
-              <span className="font-serif text-lg font-bold gradient-text-violet">Next Level Dating Club</span>
+              <span className="font-serif text-lg font-bold gradient-text-violet">MatchLab Club</span>
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
               The private coaching studio for people who want to be understood accurately — not just liked more.
@@ -38,6 +38,7 @@ export function Footer() {
           <div>
             <h3 className="font-sans font-semibold text-sm text-foreground/70 uppercase tracking-widest mb-5">Trust</h3>
             <ul className="space-y-3 text-sm">
+              <li><Link href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">Blog</Link></li>
               <li><Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
               <li><Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
               <li><Link href="/waitlist" className="text-muted-foreground hover:text-foreground transition-colors">Early Access Waitlist</Link></li>
@@ -49,7 +50,7 @@ export function Footer() {
         <div className="divider-gradient mt-12 mb-8" />
 
         <div className="flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground/50 gap-2">
-          <p>&copy; {new Date().getFullYear()} Next Level Dating Club. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} MatchLab Club. All rights reserved.</p>
           <p>Private, encrypted, confidential. Your data is never sold.</p>
         </div>
       </div>

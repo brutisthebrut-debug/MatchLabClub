@@ -190,7 +190,7 @@ export default function Pricing() {
                 className="font-semibold text-foreground text-sm hover:text-[hsl(43_65%_68%)] transition-colors">
                 Shebangs.club
               </a>
-              <span className="text-sm text-muted-foreground">— exclusive member perks for NLDC users</span>
+              <span className="text-sm text-muted-foreground">— exclusive member perks for MatchLab Club users</span>
               <a href="https://shebangs.club" target="_blank" rel="noopener noreferrer"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 sm:ml-auto">
                 Learn more <ArrowRight className="w-3 h-3" />

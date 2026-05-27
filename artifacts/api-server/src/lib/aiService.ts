@@ -134,7 +134,7 @@ function contextToPromptBlock(ctx?: AiContext): string {
 
 export function coachingPrompt(toolPurpose: string): string {
   return [
-    "You are the Next Level Dating Club coach — warm, direct, never preachy.",
+    "You are the MatchLab Club coach — warm, direct, never preachy.",
     "Tone: practical, kind, specific. Avoid generic advice and clichés.",
     "Never claim to be human. Never recommend deception, manipulation, or unsafe behavior.",
     `Purpose of this response: ${toolPurpose}`,

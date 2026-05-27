@@ -46,8 +46,8 @@ export default function ShebangsPartner() {
   const [error, setError] = useState("");
 
   useMeta(
-    "Shebangs × NLDC — Exclusive Partner Offer",
-    "Shebangs.club members get exclusive access to NLDC's free Profile Signal Audit and 20% off The Dating Reset. Find out what your profile is really saying."
+    "Shebangs × MatchLab Club — Exclusive Partner Offer",
+    "Shebangs.club members get exclusive access to MatchLab Club's free Profile Signal Audit and 20% off The Dating Reset. Find out what your profile is really saying."
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,7 +85,7 @@ export default function ShebangsPartner() {
             <span className="text-muted-foreground/40">×</span>
             <div className="glass px-4 py-2 rounded-full text-sm font-semibold text-[hsl(268_52%_78%)] border border-[hsl(268_52%_68%/0.3)] flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" />
-              Next Level Dating Club
+              MatchLab Club
             </div>
           </div>
 
@@ -95,7 +95,7 @@ export default function ShebangsPartner() {
               <span className="gradient-text-violet">That already tells us something.</span>
             </h1>
             <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl mx-auto">
-              Shebangs listeners are people who take dating seriously — who want to show up as themselves and actually connect. That's exactly who NLDC was built for.
+              Shebangs listeners are people who take dating seriously — who want to show up as themselves and actually connect. That's exactly who MatchLab Club was built for.
             </p>
             <p className="text-muted-foreground/70 max-w-xl mx-auto">
               As a Shebangs member, you get full free access to the Profile Signal Audit, Chemistry Lab message coaching, and 20% off The Dating Reset.
@@ -104,10 +104,10 @@ export default function ShebangsPartner() {
         </div>
       </section>
 
-      {/* What NLDC does */}
+      {/* What MatchLab Club does */}
       <section className="py-12 border-y border-white/5">
         <div className="container mx-auto px-4 md:px-6 max-w-3xl">
-          <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-widest text-center mb-8">What NLDC actually does</p>
+          <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-widest text-center mb-8">What MatchLab Club actually does</p>
           <ul className="space-y-3">
             {WHAT_NLDC_DOES.map((item) => (
               <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground">
@@ -242,7 +242,7 @@ export default function ShebangsPartner() {
         <div className="container mx-auto px-4 md:px-6 max-w-3xl text-center">
           <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-widest mb-4">About this partnership</p>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
-            NLDC partnered with <a href="https://shebangs.club" target="_blank" rel="noopener noreferrer" className="text-[hsl(268_52%_78%)] hover:underline inline-flex items-center gap-1">Shebangs.club <ExternalLink className="w-3 h-3" /></a> because we share the same belief: dating should be approached with honesty, self-awareness, and a genuine desire to connect — not strategy and performance. Shebangs listeners already think this way. We're just here to help you show it.
+            MatchLab Club partnered with <a href="https://shebangs.club" target="_blank" rel="noopener noreferrer" className="text-[hsl(268_52%_78%)] hover:underline inline-flex items-center gap-1">Shebangs.club <ExternalLink className="w-3 h-3" /></a> because we share the same belief: dating should be approached with honesty, self-awareness, and a genuine desire to connect — not strategy and performance. Shebangs listeners already think this way. We're just here to help you show it.
           </p>
         </div>
       </section>

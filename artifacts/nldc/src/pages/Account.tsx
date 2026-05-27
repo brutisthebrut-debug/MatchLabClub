@@ -59,7 +59,7 @@ function Initials({ name }: { name: string }) {
 export default function Account() {
   useMeta(
     "Your Account",
-    "Your Next Level Dating Club account — profile, audit count, and sign-out."
+    "Your MatchLab Club account — profile, audit count, and sign-out."
   );
 
   const { user, isAuthenticated, isLoading, login, logout } = useAuth();

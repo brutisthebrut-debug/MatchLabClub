@@ -3471,7 +3471,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
     subject: "Your Signal Check result — one thing to try this week",
     body: `Hi [First name],
 
-You ran a Signal Check with Next Level Dating Club recently. I wanted to follow up with one practical thing based on what tends to make the biggest difference.
+You ran a Signal Check with MatchLab Club recently. I wanted to follow up with one practical thing based on what tends to make the biggest difference.
 
 The most common issue we see isn't a bad profile — it's a profile that's technically fine but gives someone no specific reason to reach out. If that sounds familiar, try this: swap one generic phrase for a specific detail. "Love to travel" → the place. "Foodie" → the dish. One swap is enough to test it.
 
@@ -3479,14 +3479,14 @@ If you want a full breakdown with rewrites and a specific action plan, your repo
 
 Talk soon,
 [Founder name]
-Next Level Dating Club`,
+MatchLab Club`,
   },
   {
     name: "Day-After Profile Tip",
     subject: "One thing that'll make your profile 10× more specific",
     body: `Hi [First name],
 
-Quick one — you joined Next Level Dating Club yesterday and I wanted to send one actionable tip rather than wait for you to come back.
+Quick one — you joined MatchLab Club yesterday and I wanted to send one actionable tip rather than wait for you to come back.
 
 Read your profile out loud. Anything that sounds stiff, written, or like it could apply to 80% of people on the app — rewrite it in your actual speaking voice.
 
@@ -3533,14 +3533,14 @@ If you're serious about making real progress before summer, this is the most dir
 Claim your spot here: [link]
 
 — [Founder name]
-Next Level Dating Club`,
+MatchLab Club`,
   },
   {
     name: "Wingman Membership Invite",
     subject: "You're invited — Wingman Studio early access",
     body: `Hi [First name],
 
-You've been using Next Level Dating Club for a bit and I wanted to give you early access to something we're opening up.
+You've been using MatchLab Club for a bit and I wanted to give you early access to something we're opening up.
 
 Wingman Studio is the ongoing coaching layer — it includes:
 - Help Me Reply: guided reply drafting for any situation
@@ -3559,7 +3559,7 @@ Join here: [link]
     subject: "One question from the founder — would mean a lot",
     body: `Hi [First name],
 
-I'm the founder of Next Level Dating Club and I built this because I needed it myself. I tested every tool on my own old profiles and patterns before anyone else saw it.
+I'm the founder of MatchLab Club and I built this because I needed it myself. I tested every tool on my own old profiles and patterns before anyone else saw it.
 
 We're still early and your feedback shapes what we build next.
 
@@ -3601,7 +3601,7 @@ If you end up finding it useful, I'd love to know what worked. And if not, I wan
   },
   {
     name: "Partner Visitor Follow-Up (Shebangs)",
-    subject: "Welcome from Next Level Dating Club — your free profile check",
+    subject: "Welcome from MatchLab Club — your free profile check",
     body: `Hi [First name],
 
 Thanks for visiting through Shebangs. You're getting early access to something we don't have open publicly yet.
@@ -3616,7 +3616,7 @@ As a Shebangs member, you also get 20% off the full Dating Reset using code SHEB
 Let me know if you have any questions — I read every reply.
 
 — [Founder name]
-Next Level Dating Club`,
+MatchLab Club`,
   },
   {
     name: "Sample Report Viewer Follow-Up",

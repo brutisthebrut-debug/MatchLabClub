@@ -118,7 +118,7 @@ function DimensionCard({ dim, i }: { dim: Dimension; i: number }) {
 }
 
 export default function ProgressScorecard() {
-  useMeta("Progress Scorecard · NLDC", "Seven dimension meters tracking your growth across clarity, confidence, awareness, and more.");
+  useMeta("Progress Scorecard · MatchLab Club", "Seven dimension meters tracking your growth across clarity, confidence, awareness, and more.");
   const overall = Math.round(DIMENSIONS.reduce((s, d) => s + d.score, 0) / DIMENSIONS.length);
   const topDim  = [...DIMENSIONS].sort((a, b) => b.score - a.score)[0];
   const growingDim = [...DIMENSIONS].sort((a, b) => (b.score - b.prev) - (a.score - a.prev))[0];

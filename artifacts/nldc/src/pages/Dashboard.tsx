@@ -1222,7 +1222,7 @@ export default function Dashboard() {
               size="lg"
               showOrb
               icon={<Sparkles className="w-7 h-7" />}
-              eyebrow="Welcome to Next Level Dating Club"
+              eyebrow="Welcome to MatchLab Club"
               title="Your dashboard is ready for its first signal"
               description="Start your free Signal Audit and we'll fill this page with your real score, strengths, growth areas, and a 7-day action plan — all in about 3 minutes."
               testId="dashboard-empty-state"

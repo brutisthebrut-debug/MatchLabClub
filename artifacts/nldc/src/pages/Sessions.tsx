@@ -57,7 +57,7 @@ function ChannelIcon({ channel }: { channel: MySession["channel"] }) {
 export default function Sessions() {
   useMeta(
     "Devices & sign-ins",
-    "See where you're currently signed in to Next Level Dating Club and sign out any device you don't recognize."
+    "See where you're currently signed in to MatchLab Club and sign out any device you don't recognize."
   );
 
   const { isAuthenticated, isLoading: isAuthLoading, login } = useAuth();

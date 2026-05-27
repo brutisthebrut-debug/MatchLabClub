@@ -38,13 +38,13 @@ function sendExpiredHandoff(
   jsonError: string,
 ): void {
   sendExpiredLink(req, res, {
-    pageTitle: "Handoff link expired — Next Level Dating Club",
+    pageTitle: "Handoff link expired — MatchLab Club",
     heading: "This hand-off link can&rsquo;t be used anymore",
     bodyParagraphs: [
       "&ldquo;Continue on another device&rdquo; links are single-use and only live for about 15 minutes for your security. This one has either already been used, expired, or we don&rsquo;t recognize it.",
       "No worries &mdash; head back to the original device and tap &ldquo;Continue on another device&rdquo; again to get a fresh link.",
     ],
-    ctaLabel: "Back to Next Level Dating Club",
+    ctaLabel: "Back to MatchLab Club",
     ctaUrl: `${originFor(req)}/`,
     jsonError,
     jsonStatus: 400,

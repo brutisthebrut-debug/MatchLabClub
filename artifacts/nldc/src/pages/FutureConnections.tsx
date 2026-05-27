@@ -155,9 +155,9 @@ const HOW_IT_WORKS = [
     desc: "When matching opens, we surface people with genuine compatibility — not just appearance or location. Values, communication, conflict style, future vision.",
     color: "hsl(43 65% 65%)",
     icon: Heart,
-    href: "/future-connections",
-    cta: "Coming soon",
-    disabled: true,
+    href: "/waitlist",
+    cta: "Join the interest list",
+    disabled: false,
   },
 ];
 

@@ -17,7 +17,7 @@ const Section = ({ icon: Icon, title, children }: { icon: React.ElementType; tit
 export default function Privacy() {
   useMeta(
     "Privacy Policy",
-    "How Next Level Dating Club handles your data — what we collect, why, and your rights. Plain English, no legal jargon."
+    "How MatchLab Club handles your data — what we collect, why, and your rights. Plain English, no legal jargon."
   );
 
   return (
@@ -74,7 +74,7 @@ export default function Privacy() {
           </Section>
 
           <Section icon={ExternalLink} title="Future integrations (always opt-in)">
-            <p>Future versions of NLDC may offer optional connections to Gmail, calendar apps, or dating platforms to unlock deeper coaching. These will always be:</p>
+            <p>Future versions of MatchLab Club may offer optional connections to Gmail, calendar apps, or dating platforms to unlock deeper coaching. These will always be:</p>
             <ul className="space-y-1 list-none">
               <li className="flex items-start gap-2"><span className="text-[hsl(268_52%_68%)]">→</span> Entirely optional — you'll never be prompted to connect something you haven't asked for</li>
               <li className="flex items-start gap-2"><span className="text-[hsl(268_52%_68%)]">→</span> Turned on only by you, with a clear consent step before any data is read</li>
