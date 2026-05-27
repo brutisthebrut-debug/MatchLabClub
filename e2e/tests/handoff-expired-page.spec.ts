@@ -77,7 +77,7 @@ test(
     // CTA button
     const cta = page.locator("a.cta");
     await expect(cta).toBeVisible();
-    await expect(cta).toContainText("Back to Next Level Dating Club");
+    await expect(cta).toContainText("Back to MatchLab Club");
   },
 );
 
@@ -106,7 +106,7 @@ test(
     await expect(page.locator(".badge")).toContainText("Link expired");
     await expect(page.locator("h1")).toContainText("hand-off link");
     await expect(page.locator("a.cta")).toContainText(
-      "Back to Next Level Dating Club",
+      "Back to MatchLab Club",
     );
   },
 );

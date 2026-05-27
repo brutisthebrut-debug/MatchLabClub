@@ -76,6 +76,24 @@ export default function Landing() {
                 Built for every dating context — straight, gay, queer, bi, trans, non-binary, mono &amp; poly.
               </p>
 
+              {/* Risk reversal — quiet promise, prominent placement */}
+              <div
+                className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 mt-3 px-4 py-2 rounded-full glass border border-[hsl(142_55%_60%/0.25)]"
+                data-testid="strip-risk-reversal"
+              >
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[hsl(142_55%_72%)]">
+                  <CheckCircle className="w-3 h-3" /> 30-day money-back guarantee
+                </span>
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[hsl(142_55%_72%)]">
+                  <Shield className="w-3 h-3" /> Delete everything anytime
+                </span>
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[hsl(142_55%_72%)]">
+                  <Eye className="w-3 h-3" /> Founder-reviewed in beta
+                </span>
+              </div>
+
               {/* Sample report — frictionless escape hatch */}
               <Link
                 href="/sample-report"

@@ -102,28 +102,61 @@ export default function SampleReport() {
             </div>
           </motion.div>
 
-          {/* Report header */}
-          <motion.div {...fadeUp(0.04)} className="mb-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-2">Dating Reset Report</p>
-            <h1 className="text-4xl font-bold text-foreground mb-2">Jordan's Report</h1>
-            <p className="text-muted-foreground text-sm">31 · Hinge · Looking for a long-term relationship</p>
+          {/* Magazine masthead — Jordan's report, hero score side-by-side */}
+          <motion.div {...fadeUp(0.04)} className="mb-6">
+            <p className="text-xs font-bold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-3">Dating Reset Report — Issue 01</p>
+            <div className="grid sm:grid-cols-[1fr_auto] gap-6 items-end border-b border-white/10 pb-7">
+              <div className="min-w-0">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold text-foreground leading-[1.02] sm:leading-[0.95] mb-3 break-words">
+                  Jordan's <span className="sm:block">Dating Reset.</span>
+                </h1>
+                <p className="text-muted-foreground text-sm">31 · Hinge · Looking for a long-term relationship</p>
+              </div>
+              <div className="flex flex-col items-center sm:items-end">
+                <div className="w-32 h-32 sm:w-36 sm:h-36 relative flex-shrink-0">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="hsl(var(--border))" strokeWidth="2.5" />
+                    <circle cx="18" cy="18" r="15.9" fill="none"
+                      stroke="url(#hero-score-grad)" strokeWidth="2.5"
+                      strokeDasharray={`${72} ${100 - 72}`} strokeLinecap="round" />
+                    <defs>
+                      <linearGradient id="hero-score-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="hsl(var(--brand-indigo))" />
+                        <stop offset="100%" stopColor="hsl(var(--brand-green))" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-4xl sm:text-5xl font-bold text-foreground leading-none">72</span>
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground/50 mt-1">Signal Score</span>
+                  </div>
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(43_65%_68%)] mt-2">Solid — with one big gap</p>
+              </div>
+            </div>
           </motion.div>
 
-          {/* What's in this report — journey indicator */}
-          <motion.div {...fadeUp(0.055)} className="mb-6 flex items-center gap-1 flex-wrap text-[10px] font-bold uppercase tracking-wider select-none">
+          {/* Magazine section nav — bigger pills, sticky-feel masthead */}
+          <motion.div {...fadeUp(0.055)} className="mb-7 -mx-1 flex items-center gap-2 flex-wrap select-none">
             {[
               { label: "Starting point", color: "hsl(348 55% 68%)" },
-              { label: "Score",          color: "hsl(var(--brand-indigo))" },
               { label: "Mirror",         color: "hsl(190 55% 65%)" },
               { label: "Blueprint",      color: "hsl(var(--brand-indigo))" },
               { label: "Rewrite",        color: "hsl(142 55% 65%)" },
               { label: "Messages",       color: "hsl(43 65% 68%)" },
               { label: "Plan",           color: "hsl(190 55% 65%)" },
               { label: "Next steps",     color: "hsl(142 55% 65%)" },
-            ].map((item, i, arr) => (
-              <span key={item.label} className="flex items-center gap-1">
-                <span style={{ color: item.color }}>{item.label}</span>
-                {i < arr.length - 1 && <span className="text-muted-foreground/20 font-normal">→</span>}
+            ].map((item) => (
+              <span
+                key={item.label}
+                className="text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border"
+                style={{
+                  color: item.color,
+                  borderColor: withAlpha(item.color, 0.25),
+                  background: withAlpha(item.color, 0.06),
+                }}
+              >
+                {item.label}
               </span>
             ))}
           </motion.div>

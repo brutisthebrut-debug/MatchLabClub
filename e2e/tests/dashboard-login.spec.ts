@@ -322,6 +322,9 @@ test("submit audit through wizard, then /dashboard renders real score-ring and a
   await page.route("**/api/profiles**", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
   );
+  // /api/messages is already routed above (line ~116); kept the legacy
+  // /api/message-coaching alias for any older hooks still in flight, but
+  // both must return [] so the dashboard never hits the real server.
   await page.route("**/api/message-coaching**", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
   );
@@ -332,20 +335,23 @@ test("submit audit through wizard, then /dashboard renders real score-ring and a
     route.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
   );
 
-  // ── Step 1: name / age / gender ───────────────────────────────────────────
+  // ── Step 1: name + age (basics only) ──────────────────────────────────────
   await page.goto("/start");
   await page.locator('[data-testid="input-first-name"]').fill("Wizard");
   await page.locator('[data-testid="input-age"]').fill("30");
+  await page.locator('[data-testid="button-next"]').click();
+
+  // ── Step 2: identity (all optional) — pick gender then continue ──────────
   await page.locator('[data-testid="button-gender-man"]').click();
   await page.locator('[data-testid="button-next"]').click();
 
-  // ── Step 2: dating goal ───────────────────────────────────────────────────
+  // ── Step 3: dating goal ───────────────────────────────────────────────────
   await page
     .locator('[data-testid="button-goal-find-a-relationship"]')
     .click();
   await page.locator('[data-testid="button-next"]').click();
 
-  // ── Step 3: bio (must be > 20 chars) ──────────────────────────────────────
+  // ── Step 4: bio (must be > 20 chars) ──────────────────────────────────────
   await page
     .locator('[data-testid="textarea-bio"]')
     .fill(
@@ -353,7 +359,7 @@ test("submit audit through wizard, then /dashboard renders real score-ring and a
     );
   await page.locator('[data-testid="button-next"]').click();
 
-  // ── Step 4: optional message sample (which now bakes in the final summary) — submit
+  // ── Step 5: optional message sample (which now bakes in the final summary) — submit
   await page.locator('[data-testid="button-generate-audit"]').click();
 
   // Wizard redirects to /report/:id once the report is generated.

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
@@ -77,7 +77,7 @@ export default function Wizard() {
   const createAudit = useCreateAudit();
   const generateReport = useGenerateAuditReport();
 
-  const totalSteps = 4;
+  const totalSteps = 5;
   const progress = ((step - 1) / totalSteps) * 100;
 
   function toggleApp(app: string) {
@@ -97,8 +97,9 @@ export default function Wizard() {
 
   function canNext(): boolean {
     if (step === 1) return !!(form.firstName && form.age);
-    if (step === 2) return !!(form.datingGoal);
-    if (step === 3) return !!(form.bio.trim().length > 20);
+    if (step === 2) return true;
+    if (step === 3) return !!(form.datingGoal);
+    if (step === 4) return !!(form.bio.trim().length > 20);
     return true;
   }
 
@@ -230,8 +231,8 @@ export default function Wizard() {
               {step === 1 && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-2">Let's start with you</h2>
-                    <p className="text-muted-foreground">The more honest you are, the better your audit will be.</p>
+                    <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-2">First, the basics</h2>
+                    <p className="text-muted-foreground">Just your name and age — takes 5 seconds. We'll go deeper on the next screen.</p>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -256,8 +257,41 @@ export default function Wizard() {
                       />
                     </div>
                   </div>
+                  <div className="space-y-3">
+                    <Label>Which apps are you on? <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {APPS.map(app => (
+                        <label key={app} className="flex items-center gap-3 cursor-pointer" data-testid={`checkbox-app-${app.toLowerCase().replace(/ /g, "-")}`}>
+                          <Checkbox
+                            checked={form.currentApps.includes(app)}
+                            onCheckedChange={() => toggleApp(app)}
+                          />
+                          <span className="text-sm font-medium">{app}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t border-border/50">
+                    <Link
+                      href="/sample-report"
+                      data-testid="link-wizard-sample-report"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-[hsl(248_62%_52%)] hover:underline"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" /> Want to see a real example first?
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              {step === 2 && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-2">Tell us about you</h2>
+                    <p className="text-muted-foreground">All optional. Sharing helps us write your rewrite in your actual voice — skip anything that doesn't fit.</p>
+                  </div>
                   <div className="space-y-2">
-                    <Label>Gender <span className="text-muted-foreground font-normal">(optional · skip if you'd rather)</span></Label>
+                    <Label>Gender <span className="text-muted-foreground font-normal">(optional)</span></Label>
                     <div className="flex flex-wrap gap-2">
                       {GENDERS.map(g => (
                         <button
@@ -272,7 +306,7 @@ export default function Wizard() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Pronouns <span className="text-muted-foreground font-normal">(optional — helps us write your rewrite in the right voice)</span></Label>
+                    <Label>Pronouns <span className="text-muted-foreground font-normal">(optional)</span></Label>
                     <div className="flex flex-wrap gap-2">
                       {PRONOUNS.map(p => (
                         <button
@@ -316,24 +350,10 @@ export default function Wizard() {
                       ))}
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <Label>Which apps are you on? <span className="text-muted-foreground font-normal">(optional)</span></Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {APPS.map(app => (
-                        <label key={app} className="flex items-center gap-3 cursor-pointer" data-testid={`checkbox-app-${app.toLowerCase().replace(/ /g, "-")}`}>
-                          <Checkbox
-                            checked={form.currentApps.includes(app)}
-                            onCheckedChange={() => toggleApp(app)}
-                          />
-                          <span className="text-sm font-medium">{app}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               )}
 
-              {step === 2 && (
+              {step === 3 && (
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-2">What brings you here?</h2>
@@ -371,7 +391,7 @@ export default function Wizard() {
                 </div>
               )}
 
-              {step === 3 && (
+              {step === 4 && (
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-2">Paste your current bio</h2>
@@ -407,7 +427,7 @@ export default function Wizard() {
                 </div>
               )}
 
-              {step === 4 && (
+              {step === 5 && (
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-2">Last thing — a recent conversation</h2>

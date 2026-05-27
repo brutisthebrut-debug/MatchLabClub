@@ -216,10 +216,19 @@ export default function Pricing() {
           </motion.div>
 
           {/* Pricing Cards */}
-          <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-14">
-            {TIERS.map((tier, i) => (
+          <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-14 xl:items-start">
+            {TIERS.map((tier, i) => {
+              const pctOff = tier.promoPrice
+                ? Math.round(
+                    (1 -
+                      parseFloat(tier.promoPrice.replace(/[^0-9.]/g, "")) /
+                        parseFloat(tier.price.replace(/[^0-9.]/g, ""))) *
+                      100,
+                  )
+                : null;
+              return (
               <motion.div key={tier.name} {...fadeUp(0.12 + i * 0.07)}
-                className="relative flex flex-col"
+                className={`relative flex flex-col ${tier.popular ? "xl:-translate-y-4 xl:scale-[1.03]" : ""}`}
                 data-testid={`card-pricing-${tier.name.toLowerCase().replace(/ /g, "-")}`}
               >
                 {tier.badge && (
@@ -249,11 +258,19 @@ export default function Pricing() {
                       </div>
                       <p className="text-xs font-bold uppercase tracking-widest" style={{ color: tier.accentColor }}>{tier.name}</p>
                     </div>
-                    <div className="flex items-end gap-2 mb-3">
+                    <div className="flex items-end gap-2 mb-3 flex-wrap">
                       {tier.promoPrice ? (
                         <>
                           <span className="text-4xl font-bold text-foreground" data-testid={`price-${i}`}>{tier.promoPrice}</span>
                           <span className="text-lg text-muted-foreground line-through mb-1">{tier.price}</span>
+                          {pctOff !== null && pctOff > 0 && (
+                            <span
+                              className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mb-1.5 bg-[hsl(142_55%_60%/0.18)] text-[hsl(142_55%_72%)] border border-[hsl(142_55%_60%/0.35)]"
+                              data-testid={`badge-save-${i}`}
+                            >
+                              Save {pctOff}%
+                            </span>
+                          )}
                         </>
                       ) : (
                         <span className="text-4xl font-bold text-foreground" data-testid={`price-${i}`}>{tier.price}</span>
@@ -314,7 +331,8 @@ export default function Pricing() {
                   )}
                 </div>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
           <TrustBadge className="mt-2 mb-2" />
 

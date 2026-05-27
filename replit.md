@@ -1,4 +1,4 @@
-# Next Level Dating Club
+# MatchLab Club
 
 AI-powered dating profile and messaging coaching web app that audits profiles, rewrites bios, coaches messages, and surfaces communication patterns — all without any external AI API.
 

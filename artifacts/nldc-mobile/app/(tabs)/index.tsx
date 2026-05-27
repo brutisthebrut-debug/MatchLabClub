@@ -184,7 +184,7 @@ export default function ScoreScreen() {
         }
       >
         <ScreenHeader
-          eyebrow="Next Level Dating Club"
+          eyebrow="MatchLab Club"
           title="Your Signal Score"
           subtitle={
             summary.demo
