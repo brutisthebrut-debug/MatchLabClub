@@ -49,9 +49,9 @@ function getCategory(score: number, goal: string): DiagnosisCategory {
   if (score >= 60) return {
     label: "The Hidden Gem",
     tagline: "Real depth that isn't translating to your profile yet.",
-    color: "hsl(248 62% 58%)",
-    bg: "hsl(248 62% 52% / 0.1)",
-    border: "hsl(248 62% 52% / 0.25)",
+    color: "hsl(var(--brand-indigo))",
+    bg: "hsl(var(--brand-indigo) / 0.1)",
+    border: "hsl(var(--brand-indigo) / 0.25)",
     summary: isRelationship
       ? "You have the kind of substance someone serious would deeply appreciate — but your profile isn't showing it yet. You're using language that could apply to anyone, which means the people who'd actually be excited by you are scrolling past without knowing what they're missing."
       : "Your profile has interesting material underneath generic packaging. The people who are right for what you're looking for can't find you through the surface presentation. That's fixable."
@@ -61,9 +61,9 @@ function getCategory(score: number, goal: string): DiagnosisCategory {
   if (score >= 45) return {
     label: "The Generic Profile",
     tagline: "Blending in when you should be standing out.",
-    color: "hsl(43 65% 67%)",
-    bg: "hsl(43 65% 62% / 0.1)",
-    border: "hsl(43 65% 62% / 0.25)",
+    color: "hsl(var(--brand-gold))",
+    bg: "hsl(var(--brand-gold) / 0.1)",
+    border: "hsl(var(--brand-gold) / 0.25)",
     summary: "Your profile reads as pleasant and inoffensive — which unfortunately makes it invisible. You're using phrasing that appears in thousands of other profiles, which means you're asking people to take a chance on someone they can't quite see yet. You're more specific than your profile suggests. Let's show that.",
   };
 
@@ -71,8 +71,8 @@ function getCategory(score: number, goal: string): DiagnosisCategory {
     label: "The Reset Candidate",
     tagline: "Time to rebuild from a stronger foundation.",
     color: "hsl(348 55% 67%)",
-    bg: "hsl(348 55% 65% / 0.1)",
-    border: "hsl(348 55% 65% / 0.25)",
+    bg: "hsl(var(--brand-rose) / 0.1)",
+    border: "hsl(var(--brand-rose) / 0.25)",
     summary: "Your current profile is working against you more than for you. This isn't about who you are — it's about how your profile is communicating. The good news is that starting fresh with the right framework produces dramatic results quickly. A full reset is the fastest path.",
   };
 }
@@ -183,7 +183,7 @@ export default function Diagnosis() {
 
           {/* ── Package Hub Strip — The Dating Reset ── */}
           <div className="glass border rounded-xl px-4 py-3 mb-7 flex flex-wrap items-center gap-x-4 gap-y-2"
-            style={{ borderColor: "hsl(248 62% 52% / 0.2)" }}>
+            style={{ borderColor: "hsl(var(--brand-indigo) / 0.2)" }}>
             <div className="flex items-center gap-2 flex-shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-[hsl(248_62%_52%)]" />
               <span className="text-[11px] font-bold uppercase tracking-widest text-[hsl(248_62%_62%)]">The Dating Reset</span>
@@ -299,7 +299,7 @@ export default function Diagnosis() {
                     {result.report.actionPlan.slice(0, 3).map((item, i) => (
                       <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-[hsl(248_40%_95%/0.5)] border border-white/6">
                         <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                          style={{ background: "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))" }}>
+                          style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo)), hsl(var(--brand-pink)))" }}>
                           {item.priority}
                         </div>
                         <div>
@@ -315,7 +315,7 @@ export default function Diagnosis() {
                 {/* CTAs */}
                 <div
                   className="relative rounded-3xl p-8 text-center overflow-hidden shimmer"
-                  style={{ background: "linear-gradient(135deg, hsl(248 62% 52% / 0.12), hsl(326 100% 59% / 0.08))", border: "1px solid hsl(248 62% 52% / 0.2)" }}
+                  style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo) / 0.12), hsl(var(--brand-pink) / 0.08))", border: "1px solid hsl(var(--brand-indigo) / 0.2)" }}
                 >
                   <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(268_60%_80%)] mb-3">Want the full picture?</p>
                   <h3 className="text-2xl font-bold text-foreground mb-3">Get your complete Dating Blueprint</h3>
@@ -343,7 +343,7 @@ export default function Diagnosis() {
             ) : loading ? (
               /* Loading */
               <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass border border-white/8 rounded-3xl p-16 text-center">
-                <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: "hsl(248 62% 52% / 0.15)", border: "1px solid hsl(248 62% 52% / 0.3)", animation: "glow-pulse 2s ease-in-out infinite" }}>
+                <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: "hsl(var(--brand-indigo) / 0.15)", border: "1px solid hsl(var(--brand-indigo) / 0.3)", animation: "glow-pulse 2s ease-in-out infinite" }}>
                   <Loader2 className="w-8 h-8 text-[hsl(248_62%_52%)] animate-spin" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-2">Running your diagnosis...</h3>
@@ -358,7 +358,7 @@ export default function Diagnosis() {
                   {STEP_LABELS.map((label, i) => (
                     <div key={i} className="flex items-center gap-2 flex-1">
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${i <= step ? "text-white" : "text-muted-foreground bg-[hsl(248_40%_94%)]"}`}
-                        style={i <= step ? { background: "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))" } : {}}>
+                        style={i <= step ? { background: "linear-gradient(135deg, hsl(var(--brand-indigo)), hsl(var(--brand-pink)))" } : {}}>
                         {i < step ? <CheckCircle className="w-4 h-4" /> : i + 1}
                       </div>
                       <span className={`text-xs font-medium hidden sm:block ${i === step ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>

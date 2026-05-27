@@ -91,10 +91,10 @@ export default function UserControl() {
           {/* Trust copy */}
           <motion.div {...fadeUp(0.05)} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { icon: Lock, c: "hsl(142 55% 60%)", t: "You control what's saved", d: "Approve before anything is kept." },
+              { icon: Lock, c: "hsl(var(--brand-green))", t: "You control what's saved", d: "Approve before anything is kept." },
               { icon: Shield, c: "hsl(190 55% 60%)", t: "Private content is not sold", d: "Your inputs never leave your account." },
-              { icon: Eye, c: "hsl(43 65% 65%)", t: "Future additions are opt-in", d: "New data sources stay off by default." },
-              { icon: EyeOff, c: "hsl(248 62% 52%)", t: "De-identification on request", d: "Strip your name and metadata anytime." },
+              { icon: Eye, c: "hsl(var(--brand-gold))", t: "Future additions are opt-in", d: "New data sources stay off by default." },
+              { icon: EyeOff, c: "hsl(var(--brand-indigo))", t: "De-identification on request", d: "Strip your name and metadata anytime." },
             ].map((it, i) => {
               const Icon = it.icon;
               return (

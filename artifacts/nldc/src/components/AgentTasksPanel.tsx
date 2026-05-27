@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { CheckCircle2, Circle, ArrowRight, RotateCcw } from "lucide-react";
@@ -23,8 +24,8 @@ const DEFAULT_TASKS: Omit<AgentTask, "addedAt">[] = [
 
 const STATUS_COLOR: Record<AgentTask["status"], string> = {
   suggested: "hsl(228 18% 55%)",
-  accepted:  "hsl(248 62% 52%)",
-  done:      "hsl(142 55% 60%)",
+  accepted:  "hsl(var(--brand-indigo))",
+  done:      "hsl(var(--brand-green))",
   skipped:   "hsl(228 18% 38%)",
 };
 const STATUS_LABEL: Record<AgentTask["status"], string> = {
@@ -111,7 +112,7 @@ export function AgentTasksPanel() {
                 <div className="flex items-start justify-between gap-2 mb-0.5">
                   <p className="text-xs font-semibold text-foreground leading-snug">{task.title}</p>
                   <span className="text-[9px] font-bold uppercase tracking-wide flex-shrink-0 px-1.5 py-0.5 rounded-full"
-                    style={{ background: `${STATUS_COLOR[task.status].replace(")", " / 0.15)")}`, color: STATUS_COLOR[task.status] }}>
+                    style={{ background: `${withAlpha(STATUS_COLOR[task.status], 0.15)}`, color: STATUS_COLOR[task.status] }}>
                     {STATUS_LABEL[task.status]}
                   </span>
                 </div>

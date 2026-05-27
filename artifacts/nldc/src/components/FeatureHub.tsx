@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { Link, useLocation } from "wouter";
 import { ArrowRight } from "lucide-react";
 import { PACKAGES } from "@/lib/navigationCatalog";
@@ -29,14 +30,14 @@ export function FeatureHub() {
           <div
             key={pkg.id}
             className="glass rounded-2xl p-5 flex flex-col"
-            style={{ border: `1px solid ${pkg.color.replace(")", " / 0.2)")}` }}
+            style={{ border: `1px solid ${withAlpha(pkg.color, 0.2)}` }}
             data-testid={`feature-hub-card-${pkg.id}`}
           >
             {/* Header */}
             <div className="flex items-center gap-2.5 mb-1">
               <div
                 className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: pkg.color.replace(")", " / 0.12)") }}
+                style={{ background: withAlpha(pkg.color, 0.12) }}
               >
                 <pkg.icon className="w-4 h-4" style={{ color: pkg.color }} aria-hidden="true" />
               </div>

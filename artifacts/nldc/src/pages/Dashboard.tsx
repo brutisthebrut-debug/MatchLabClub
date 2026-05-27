@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearch, useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -136,8 +137,8 @@ function ScoreRing({ score }: { score: number }) {
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
-  const color = score >= 75 ? "hsl(142 55% 60%)" : score >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
-  const glowColor = score >= 75 ? "hsl(142 55% 60% / 0.4)" : score >= 55 ? "hsl(43 65% 65% / 0.3)" : "hsl(348 55% 65% / 0.3)";
+  const color = score >= 75 ? "hsl(var(--brand-green))" : score >= 55 ? "hsl(var(--brand-gold))" : "hsl(var(--brand-rose))";
+  const glowColor = score >= 75 ? "hsl(var(--brand-green) / 0.4)" : score >= 55 ? "hsl(var(--brand-gold) / 0.3)" : "hsl(var(--brand-rose) / 0.3)";
   return (
     <div className="relative w-36 h-36 mx-auto" data-testid="score-ring">
       <svg className="w-full h-full -rotate-90" viewBox="0 0 128 128" style={{ filter: `drop-shadow(0 0 18px ${glowColor})` }}>
@@ -155,10 +156,10 @@ function ScoreRing({ score }: { score: number }) {
 }
 
 const SIGNAL_BARS = [
-  { label: "Warmth",      value: 78, color: "hsl(348 55% 65%)" },
-  { label: "Confidence",  value: 72, color: "hsl(248 62% 52%)" },
+  { label: "Warmth",      value: 78, color: "hsl(var(--brand-rose))" },
+  { label: "Confidence",  value: 72, color: "hsl(var(--brand-indigo))" },
   { label: "Specificity", value: 50, color: "hsl(326 100% 65%)" },
-  { label: "Playfulness", value: 55, color: "hsl(43 65% 65%)"  },
+  { label: "Playfulness", value: 55, color: "hsl(var(--brand-gold))"  },
 ];
 
 const DEMO_SUMMARY = {
@@ -194,7 +195,7 @@ const HOW_YOU_COME_ACROSS = [
 
 const ACTION_GROUPS = [
   {
-    label: "Core Tools", color: "hsl(248 62% 52%)",
+    label: "Core Tools", color: "hsl(var(--brand-indigo))",
     items: [
       { icon: FileText,      label: "New Audit",         desc: "Full profile audit + 7-day plan",  href: "/start"          },
       { icon: Camera,        label: "Scan a Profile",    desc: "Screenshot → instant mini-audit",  href: "/scan"           },
@@ -202,7 +203,7 @@ const ACTION_GROUPS = [
     ],
   },
   {
-    label: "Profile Tools", color: "hsl(43 65% 65%)",
+    label: "Profile Tools", color: "hsl(var(--brand-gold))",
     items: [
       { icon: Stethoscope,   label: "Dating Diagnosis",  desc: "Find your pattern",                href: "/diagnosis"      },
       { icon: Wand2,         label: "Profile Glow-Up",   desc: "10 rewrites for any platform",     href: "/glow-up"        },
@@ -233,7 +234,7 @@ const ACTION_GROUPS = [
     ],
   },
   {
-    label: "Wingman Studio", color: "hsl(348 55% 65%)",
+    label: "Wingman Studio", color: "hsl(var(--brand-rose))",
     items: [
       { icon: MessageSquare, label: "Help Me Reply",     desc: "Guided reply workflow",            href: "/copilot/reply"   },
       { icon: Wand2,         label: "Improve Profile",   desc: "Prioritized rewrite plan",         href: "/copilot/profile" },
@@ -242,7 +243,7 @@ const ACTION_GROUPS = [
     ],
   },
   {
-    label: "Growth Tracker", color: "hsl(142 55% 60%)",
+    label: "Growth Tracker", color: "hsl(var(--brand-green))",
     items: [
       { icon: Sparkles,      label: "Your Mirror",       desc: "Patterns across every audit",      href: "/your-mirror"             },
       { icon: Trophy,        label: "Dating Wins Log",   desc: "Log moments of courage + wins",    href: "/progress/wins"           },
@@ -282,7 +283,7 @@ const PACKAGE_CARDS = [
     tagline: "Find exactly what to fix — score, bio rewrite, and 7-day plan.",
     hint: "Start with a free Signal Check →",
     hintHref: "/signal-check",
-    color: "hsl(248 62% 52%)",
+    color: "hsl(var(--brand-indigo))",
     icon: BookOpen,
     hubHref: "/diagnosis",
     tools: [
@@ -310,7 +311,7 @@ const PACKAGE_CARDS = [
     tagline: "Log wins, spot patterns, and break the habits holding you back.",
     hint: "Start with Wins Log →",
     hintHref: "/progress/wins",
-    color: "hsl(142 55% 60%)",
+    color: "hsl(var(--brand-green))",
     icon: TrendingUp,
     hubHref: "/progress/timeline",
     tools: [
@@ -349,7 +350,7 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
       title: "Get your free Signal Audit",
       desc: "Takes 3 minutes. Get your Signal Score, bio rewrite, and a 7-day action plan.",
       href: "/start",
-      color: "hsl(248 62% 52%)",
+      color: "hsl(var(--brand-indigo))",
       cta: "Start My Audit",
     };
   }
@@ -359,7 +360,7 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
       title: "Your score has clear room to grow",
       desc: "Dating Diagnosis will show you exactly what category of issue to fix first — fast.",
       href: "/diagnosis",
-      color: "hsl(348 55% 65%)",
+      color: "hsl(var(--brand-rose))",
       cta: "Run My Diagnosis",
     };
   }
@@ -369,7 +370,7 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
       title: "Your profile is solid — now sharpen your messages",
       desc: "Most matches are won or lost in the first few exchanges. Message Coach gets you 3 ready-to-send replies.",
       href: "/coach",
-      color: "hsl(43 65% 65%)",
+      color: "hsl(var(--brand-gold))",
       cta: "Open Message Coach",
     };
   }
@@ -378,7 +379,7 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
     title: "Strong score. Now see how you actually communicate.",
     desc: "Style Map maps 9 dimensions of your communication — warmth, clarity, directness, and more.",
     href: "/style-map",
-    color: "hsl(142 55% 60%)",
+    color: "hsl(var(--brand-green))",
     cta: "Map My Style",
   };
 }
@@ -994,7 +995,7 @@ export default function Dashboard() {
   const displaySummary = hasRealAudits ? summary ?? EMPTY_SUMMARY : showDemo ? DEMO_SUMMARY : EMPTY_SUMMARY;
   const latestScore = displaySummary.latestScore ?? 0;
   const grade = latestScore >= 85 ? "A" : latestScore >= 72 ? "B" : latestScore >= 58 ? "C" : latestScore >= 42 ? "D" : "F";
-  const gradeColor = latestScore >= 75 ? "hsl(142 55% 60%)" : latestScore >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
+  const gradeColor = latestScore >= 75 ? "hsl(var(--brand-green))" : latestScore >= 55 ? "hsl(var(--brand-gold))" : "hsl(var(--brand-rose))";
   const scoreDelta = (displaySummary.latestScore ?? 0) - (displaySummary.scoreHistory[0]?.score ?? 0);
   const nextAction = getNextBestAction(latestScore, hasRealAudits);
   const latestRealAudit = hasRealAudits
@@ -1027,12 +1028,12 @@ export default function Dashboard() {
             <div
               className="rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 shimmer"
               style={{
-                background: `${nextAction.color.replace(")", " / 0.08)")}`,
-                border: `1px solid ${nextAction.color.replace(")", " / 0.25)")}`,
+                background: `${withAlpha(nextAction.color, 0.08)}`,
+                border: `1px solid ${withAlpha(nextAction.color, 0.25)}`,
               }}
               data-testid="card-next-best-action"
             >
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: nextAction.color.replace(")", " / 0.15)") }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: withAlpha(nextAction.color, 0.15) }}>
                 <Lightbulb className="w-4 h-4" style={{ color: nextAction.color }} />
               </div>
               <div className="flex-1 min-w-0">
@@ -1041,7 +1042,7 @@ export default function Dashboard() {
                 <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{nextAction.desc}</p>
               </div>
               <Button asChild size="sm" className="rounded-full px-5 font-semibold border-0 flex-shrink-0 self-start sm:self-auto"
-                style={{ background: nextAction.color, color: "hsl(248 45% 165%)" }}>
+                style={{ background: nextAction.color, color: "hsl(248 45% 95%)" }}>
                 <Link href={nextAction.href}>{nextAction.cta} <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link>
               </Button>
             </div>
@@ -1195,9 +1196,9 @@ export default function Dashboard() {
                 <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-3">Three steps to your baseline</p>
                 <div className="grid sm:grid-cols-3 gap-3">
                   {[
-                    { n: "1", title: "Get your Signal Audit", desc: "3 minutes · Free · Instant score", href: "/start", color: "hsl(248 62% 52%)", icon: Sparkles },
-                    { n: "2", title: "Build your Blueprint", desc: "Self-insight in 4 questions", href: "/blueprint", color: "hsl(43 65% 65%)", icon: BookOpen },
-                    { n: "3", title: "Check your Wellness", desc: "8 dimensions of readiness", href: "/wellness", color: "hsl(142 55% 60%)", icon: Heart },
+                    { n: "1", title: "Get your Signal Audit", desc: "3 minutes · Free · Instant score", href: "/start", color: "hsl(var(--brand-indigo))", icon: Sparkles },
+                    { n: "2", title: "Build your Blueprint", desc: "Self-insight in 4 questions", href: "/blueprint", color: "hsl(var(--brand-gold))", icon: BookOpen },
+                    { n: "3", title: "Check your Wellness", desc: "8 dimensions of readiness", href: "/wellness", color: "hsl(var(--brand-green))", icon: Heart },
                   ].map(step => {
                     const Icon = step.icon;
                     return (
@@ -1259,7 +1260,7 @@ export default function Dashboard() {
                   <div className="flex items-start gap-3 mb-3">
                     <div
                       className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: pkg.color.replace(")", " / 0.14)") }}
+                      style={{ background: withAlpha(pkg.color, 0.14) }}
                     >
                       <pkg.icon className="w-4 h-4" style={{ color: pkg.color }} />
                     </div>
@@ -1278,7 +1279,7 @@ export default function Dashboard() {
                       >
                         <span
                           className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                          style={{ background: pkg.color.replace(")", " / 0.55)") }}
+                          style={{ background: withAlpha(pkg.color, 0.55) }}
                         />
                         {tool.label}
                         <ArrowRight className="w-2.5 h-2.5 ml-auto opacity-0 group-hover:opacity-50 transition-opacity" />
@@ -1289,7 +1290,7 @@ export default function Dashboard() {
                   <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5 flex-wrap">
                     <Link href={pkg.hintHref}
                       className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-xl transition-all hover:opacity-90"
-                      style={{ background: pkg.color.replace(")", " / 0.14)"), color: pkg.color, border: `1px solid ${pkg.color.replace(")", " / 0.2)")}` }}>
+                      style={{ background: withAlpha(pkg.color, 0.14), color: pkg.color, border: `1px solid ${withAlpha(pkg.color, 0.2)}` }}>
                       {pkg.hint}
                     </Link>
                     <Link href={pkg.hubHref}
@@ -1311,7 +1312,7 @@ export default function Dashboard() {
                       {group.items.map((action, i) => (
                         <Link key={i} href={action.href} data-testid={`card-quick-action-${action.label.toLowerCase().replace(/ /g, "-")}`}>
                           <div className="glass border border-white/8 rounded-2xl p-3 hover:border-[hsl(248_62%_52%/0.3)] hover:shadow-[0_8px_30px_rgb(0_0_0/0.35)] transition-all cursor-pointer h-full card-hover">
-                            <div className="w-7 h-7 rounded-xl flex items-center justify-center mb-2" style={{ background: `${group.color.replace(")", " / 0.12)")}` }}>
+                            <div className="w-7 h-7 rounded-xl flex items-center justify-center mb-2" style={{ background: `${withAlpha(group.color, 0.12)}` }}>
                               <action.icon className="w-3.5 h-3.5" style={{ color: group.color }} />
                             </div>
                             <p className="font-semibold text-foreground text-xs leading-tight">{action.label}</p>
@@ -1378,9 +1379,9 @@ export default function Dashboard() {
                 <ResponsiveContainer width="100%" height={120}>
                   <LineChart data={displaySummary.scoreHistory} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
                     <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(228 18% 55%)" }} tickLine={false} axisLine={false} />
-                    <Tooltip contentStyle={{ background: "hsl(232 34% 11%)", border: "1px solid hsl(248 40% 150%)", borderRadius: "12px", fontSize: "12px", color: "hsl(220 30% 94%)" }} />
-                    <Line type="monotone" dataKey="score" stroke="hsl(248 62% 52%)" strokeWidth={3}
-                      dot={{ r: 5, fill: "hsl(248 62% 52%)", stroke: "hsl(248 45% 165%)", strokeWidth: 2 }} />
+                    <Tooltip contentStyle={{ background: "hsl(232 34% 11%)", border: "1px solid hsl(248 40% 90%)", borderRadius: "12px", fontSize: "12px", color: "hsl(220 30% 94%)" }} />
+                    <Line type="monotone" dataKey="score" stroke="hsl(var(--brand-indigo))" strokeWidth={3}
+                      dot={{ r: 5, fill: "hsl(var(--brand-indigo))", stroke: "hsl(248 45% 95%)", strokeWidth: 2 }} />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -1637,16 +1638,16 @@ export default function Dashboard() {
                   {(
                     [
                       { value: "all", label: "All", tone: null },
-                      { value: "high", label: "High 75+", tone: "hsl(142 55% 60%)" },
-                      { value: "medium", label: "Medium 55–74", tone: "hsl(43 65% 65%)" },
-                      { value: "low", label: "Low <55", tone: "hsl(348 55% 65%)" },
+                      { value: "high", label: "High 75+", tone: "hsl(var(--brand-green))" },
+                      { value: "medium", label: "Medium 55–74", tone: "hsl(var(--brand-gold))" },
+                      { value: "low", label: "Low <55", tone: "hsl(var(--brand-rose))" },
                     ] as const
                   ).map(({ value, label, tone }) => {
                     const active = scoreRange === value;
                     const activeStyle = active && tone
                       ? {
-                          background: `${tone.replace(")", " / 0.18)")}`,
-                          borderColor: `${tone.replace(")", " / 0.5)")}`,
+                          background: `${withAlpha(tone, 0.18)}`,
+                          borderColor: `${withAlpha(tone, 0.5)}`,
                           color: tone,
                         }
                       : undefined;
@@ -1710,8 +1711,8 @@ export default function Dashboard() {
               <div className="space-y-3">
                 {audits!.map((audit) => {
                   const score = audit.readinessScore ?? 0;
-                  const color = score >= 75 ? "hsl(142 55% 60%)" : score >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
-                  const bg    = score >= 75 ? "hsl(142 55% 45% / 0.12)" : score >= 55 ? "hsl(43 65% 55% / 0.12)" : "hsl(348 55% 55% / 0.12)";
+                  const color = score >= 75 ? "hsl(var(--brand-green))" : score >= 55 ? "hsl(var(--brand-gold))" : "hsl(var(--brand-rose))";
+                  const bg    = score >= 75 ? "hsl(142 55% 45% / 0.12)" : score >= 55 ? "hsl(var(--brand-gold) / 0.12)" : "hsl(348 55% 55% / 0.12)";
                   const date  = new Date(audit.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
                   const staleHint = staleHintFromGeneratedAt(audit.reportGeneratedAt);
                   const isSelected = selectedIds.has(audit.id);
@@ -1876,7 +1877,7 @@ export default function Dashboard() {
           {/* Upgrade CTA */}
           <motion.div {...fadeUp(0.3)}
             className="relative rounded-3xl p-6 sm:p-8 text-center overflow-hidden shimmer"
-            style={{ background: "linear-gradient(135deg, hsl(248 62% 52% / 0.15), hsl(326 100% 59% / 0.1), hsl(43 65% 62% / 0.08))" }}
+            style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo) / 0.15), hsl(var(--brand-pink) / 0.1), hsl(var(--brand-gold) / 0.08))" }}
             data-testid="card-upgrade-cta">
             <div className="absolute inset-0 border border-[hsl(248_62%_52%/0.2)] rounded-3xl pointer-events-none" />
             <div className="orb orb-violet absolute w-64 h-64 -right-20 -top-20 opacity-60 pointer-events-none" />

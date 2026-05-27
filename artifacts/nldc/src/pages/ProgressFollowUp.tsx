@@ -23,8 +23,8 @@ interface FollowUp {
 }
 
 const STATUS_CONFIG: Record<CheckStatus, { label: string; color: string; bg: string; border: string }> = {
-  pending:  { label: "Pending",  color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.1)",  border: "hsl(43 65% 65% / 0.25)"  },
-  answered: { label: "Answered", color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.1)", border: "hsl(142 55% 60% / 0.25)" },
+  pending:  { label: "Pending",  color: "hsl(var(--brand-gold))",  bg: "hsl(var(--brand-gold) / 0.1)",  border: "hsl(var(--brand-gold) / 0.25)"  },
+  answered: { label: "Answered", color: "hsl(var(--brand-green))", bg: "hsl(var(--brand-green) / 0.1)", border: "hsl(var(--brand-green) / 0.25)" },
   skipped:  { label: "Skipped",  color: "hsl(228 18% 55%)", bg: "hsl(228 18% 55% / 0.1)", border: "hsl(228 18% 55% / 0.2)"  },
 };
 
@@ -150,7 +150,7 @@ export default function ProgressFollowUp() {
 
           {/* Stats */}
           <motion.div {...fadeUp(0.04)} className="grid grid-cols-3 gap-3 mb-6">
-            {([["pending", pending, "hsl(43 65% 65%)"], ["answered", answered, "hsl(142 55% 60%)"], ["skipped", skipped, "hsl(228 18% 55%)"]] as const).map(([s, count, color]) => (
+            {([["pending", pending, "hsl(var(--brand-gold))"], ["answered", answered, "hsl(var(--brand-green))"], ["skipped", skipped, "hsl(228 18% 55%)"]] as const).map(([s, count, color]) => (
               <div key={s} className="glass border border-white/8 rounded-xl p-3 text-center cursor-pointer hover:border-white/15 transition-all" onClick={() => setFilter(filter === s ? null : s)}>
                 <p className="text-2xl font-bold" style={{ color }}>{count}</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5 capitalize">{s}</p>

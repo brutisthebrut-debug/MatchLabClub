@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { motion } from "framer-motion";
@@ -16,7 +17,7 @@ const SECTIONS = [
     key: "wellness",
     title: "From Wellness Center",
     icon: Sparkles,
-    color: "hsl(43 65% 65%)",
+    color: "hsl(var(--brand-gold))",
     href: "/wellness",
     insights: [
       { text: "Stronger in the emotional and intellectual dimensions; lighter on social breadth.", tag: "Pattern" },
@@ -27,7 +28,7 @@ const SECTIONS = [
     key: "blueprint",
     title: "From Dating Blueprint",
     icon: BookOpen,
-    color: "hsl(248 62% 52%)",
+    color: "hsl(var(--brand-indigo))",
     href: "/blueprint",
     insights: [
       { text: "Reflective–curious archetype; warm and slow to open up.", tag: "Identity" },
@@ -38,7 +39,7 @@ const SECTIONS = [
     key: "progress",
     title: "From Growth Tracker",
     icon: TrendingUp,
-    color: "hsl(142 55% 60%)",
+    color: "hsl(var(--brand-green))",
     href: "/progress/timeline",
     insights: [
       { text: "You reflect best within 24 hours of a date.", tag: "Habit" },
@@ -110,7 +111,7 @@ export default function LifeContext() {
                   <motion.div key={s.key} {...fadeUp(0.05 + i * 0.04)} className="glass-strong rounded-2xl p-5 sm:p-6 border border-white/5" data-testid={`section-${s.key}`}>
                     <div className="flex items-center justify-between mb-3 gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: s.color.replace(")", " / 0.15)") }}>
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: withAlpha(s.color, 0.15) }}>
                           <Icon className="w-4 h-4" style={{ color: s.color }} />
                         </div>
                         <h3 className="font-serif text-lg font-semibold">{s.title}</h3>

@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -44,9 +45,9 @@ interface AiTestData {
 }
 
 const STATUS_STYLES: Record<AiMode, { label: string; color: string; bg: string; border: string; Icon: React.ElementType }> = {
-  live:            { label: "Live AI connected", color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.12)", border: "hsl(142 55% 60% / 0.35)", Icon: CheckCircle2 },
-  fallback:        { label: "Fallback mode",     color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.12)",  border: "hsl(43 65% 65% / 0.35)",  Icon: Sparkles },
-  "setup-needed":  { label: "Setup needed",      color: "hsl(348 55% 65%)", bg: "hsl(348 55% 65% / 0.12)", border: "hsl(348 55% 65% / 0.35)", Icon: AlertTriangle },
+  live:            { label: "Live AI connected", color: "hsl(var(--brand-green))", bg: "hsl(var(--brand-green) / 0.12)", border: "hsl(var(--brand-green) / 0.35)", Icon: CheckCircle2 },
+  fallback:        { label: "Fallback mode",     color: "hsl(var(--brand-gold))",  bg: "hsl(var(--brand-gold) / 0.12)",  border: "hsl(var(--brand-gold) / 0.35)",  Icon: Sparkles },
+  "setup-needed":  { label: "Setup needed",      color: "hsl(var(--brand-rose))", bg: "hsl(var(--brand-rose) / 0.12)", border: "hsl(var(--brand-rose) / 0.35)", Icon: AlertTriangle },
 };
 
 function AiStatusPanel() {
@@ -813,7 +814,7 @@ function GeoipRefreshPanel({ founderKey }: { founderKey: string }) {
     }
   };
 
-  const okColor = "hsl(142 55% 60%)";
+  const okColor = "hsl(var(--brand-green))";
   const warnColor = "hsl(348 65% 70%)";
   const resultColor = result?.success ? okColor : warnColor;
 
@@ -856,8 +857,8 @@ function GeoipRefreshPanel({ founderKey }: { founderKey: string }) {
           className="rounded-xl p-3 border flex items-start gap-2 text-xs"
           data-testid="geoip-refresh-result"
           style={{
-            background: `${resultColor.replace(")", " / 0.07)")}`,
-            borderColor: `${resultColor.replace(")", " / 0.30)")}`,
+            background: `${withAlpha(resultColor, 0.07)}`,
+            borderColor: `${withAlpha(resultColor, 0.30)}`,
             color: resultColor,
           }}
         >
@@ -887,7 +888,7 @@ function BackgroundJobsPanel({ refreshKey, founderKey }: { refreshKey: number; f
       .finally(() => setLoading(false));
   }, [refreshKey, founderKey]);
 
-  const okColor = "hsl(142 55% 60%)";
+  const okColor = "hsl(var(--brand-green))";
   const warnColor = "hsl(348 65% 70%)";
   const staleCount = data?.jobs.filter((j) => j.stale).length ?? 0;
   const totalCount = data?.jobs.length ?? 0;
@@ -914,7 +915,7 @@ function BackgroundJobsPanel({ refreshKey, founderKey }: { refreshKey: number; f
               className="text-xs font-semibold px-2 py-0.5 rounded-full"
               style={{
                 color: allHealthy ? okColor : warnColor,
-                background: allHealthy ? "hsl(142 55% 60% / 0.12)" : "hsl(348 65% 70% / 0.12)",
+                background: allHealthy ? "hsl(var(--brand-green) / 0.12)" : "hsl(348 65% 70% / 0.12)",
               }}
             >
               {allHealthy ? "All healthy" : `${staleCount}/${totalCount} stale`}
@@ -937,8 +938,8 @@ function BackgroundJobsPanel({ refreshKey, founderKey }: { refreshKey: number; f
                 key={job.jobName}
                 className="rounded-xl p-3 border flex items-start gap-3"
                 style={{
-                  background: `${color.replace(")", " / 0.07)")}`,
-                  borderColor: `${color.replace(")", " / 0.30)")}`,
+                  background: `${withAlpha(color, 0.07)}`,
+                  borderColor: `${withAlpha(color, 0.30)}`,
                 }}
               >
                 <Icon className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color }} />
@@ -983,7 +984,7 @@ function RollupHeartbeatPanel({ refreshKey, founderKey }: { refreshKey: number; 
 
   const stale = data?.stale ?? false;
   const thresholdHours = data ? Math.round(data.staleThresholdMs / (60 * 60 * 1000)) : 36;
-  const okColor = "hsl(142 55% 60%)";
+  const okColor = "hsl(var(--brand-green))";
   const warnColor = "hsl(348 65% 70%)";
   const color = stale ? warnColor : okColor;
   const Icon = stale ? AlertTriangle : CheckCircle2;
@@ -1013,8 +1014,8 @@ function RollupHeartbeatPanel({ refreshKey, founderKey }: { refreshKey: number; 
         <div
           className="rounded-xl p-4 border flex items-start gap-3"
           style={{
-            background: `${color.replace(")", " / 0.10)")}`,
-            borderColor: `${color.replace(")", " / 0.40)")}`,
+            background: `${withAlpha(color, 0.10)}`,
+            borderColor: `${withAlpha(color, 0.40)}`,
           }}
         >
           <Icon className="w-4 h-4 mt-0.5 shrink-0" style={{ color }} />
@@ -1103,8 +1104,8 @@ function TrashPurgePanel({ founderKey, onPurged }: { founderKey: string; onPurge
         <div
           className="rounded-xl p-3 border flex items-start gap-2 text-sm"
           style={{
-            background: "hsl(142 55% 60% / 0.10)",
-            borderColor: "hsl(142 55% 60% / 0.40)",
+            background: "hsl(var(--brand-green) / 0.10)",
+            borderColor: "hsl(var(--brand-green) / 0.40)",
             color: "hsl(142 55% 70%)",
           }}
           data-testid="trash-purge-success"
@@ -1170,9 +1171,9 @@ function CooldownBadge({ state }: { state: AiToolCooldownState }) {
     <span
       className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold shrink-0"
       style={{
-        background: "hsl(43 65% 65% / 0.15)",
+        background: "hsl(var(--brand-gold) / 0.15)",
         color: "hsl(43 65% 78%)",
-        border: "1px solid hsl(43 65% 65% / 0.40)",
+        border: "1px solid hsl(var(--brand-gold) / 0.40)",
       }}
       title={`Re-alert cooldown active — next alert allowed after ${new Date(state.cooldownEndsAt).toLocaleTimeString()}`}
     >
@@ -1270,9 +1271,9 @@ function AiMetricsPanel({ refreshKey, founderKey }: { refreshKey: number; founde
                         <span
                           className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold shrink-0"
                           style={{
-                            background: "hsl(43 65% 65% / 0.15)",
+                            background: "hsl(var(--brand-gold) / 0.15)",
                             color: "hsl(43 65% 78%)",
-                            border: "1px solid hsl(43 65% 65% / 0.40)",
+                            border: "1px solid hsl(var(--brand-gold) / 0.40)",
                           }}
                           title={`Re-alert suppressed — email held until cooldown expires at ${new Date(cooldown.cooldownEndsAt).toLocaleTimeString()}`}
                         >
@@ -1297,8 +1298,8 @@ function AiMetricsPanel({ refreshKey, founderKey }: { refreshKey: number; founde
         <div
           className="rounded-xl p-4 border space-y-2"
           style={{
-            background: "hsl(43 65% 65% / 0.07)",
-            borderColor: "hsl(43 65% 65% / 0.30)",
+            background: "hsl(var(--brand-gold) / 0.07)",
+            borderColor: "hsl(var(--brand-gold) / 0.30)",
           }}
         >
           <div className="flex items-center gap-2">
@@ -1420,9 +1421,9 @@ function AiMetricsPanel({ refreshKey, founderKey }: { refreshKey: number; founde
                             title={`Re-alert cooldown active — next breach email allowed after ${row.cooldownEndsAt ? new Date(row.cooldownEndsAt).toLocaleTimeString() : "cooldown expires"}`}
                             className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold shrink-0"
                             style={{
-                              background: "hsl(43 65% 65% / 0.15)",
+                              background: "hsl(var(--brand-gold) / 0.15)",
                               color: "hsl(43 65% 78%)",
-                              border: "1px solid hsl(43 65% 65% / 0.40)",
+                              border: "1px solid hsl(var(--brand-gold) / 0.40)",
                             }}
                           >
                             <Clock className="w-3 h-3" />
@@ -1537,11 +1538,11 @@ type TrendDays = (typeof TREND_DAY_OPTIONS)[number];
 type TrendMetric = "firstTrySuccessRate" | "fallbackRate";
 
 const TREND_COLORS = [
-  "hsl(248 62% 52%)",
-  "hsl(142 55% 60%)",
-  "hsl(43 65% 65%)",
+  "hsl(var(--brand-indigo))",
+  "hsl(var(--brand-green))",
+  "hsl(var(--brand-gold))",
   "hsl(190 55% 60%)",
-  "hsl(348 55% 65%)",
+  "hsl(var(--brand-rose))",
   "hsl(228 40% 65%)",
   "hsl(310 50% 68%)",
   "hsl(95 45% 60%)",
@@ -1954,7 +1955,7 @@ function AiReliabilityTrendsPanel({ refreshKey, founderKey }: { refreshKey: numb
                 type="monotone"
                 dataKey="fallbackPct"
                 name="Fallback %"
-                stroke="hsl(348 55% 65%)"
+                stroke="hsl(var(--brand-rose))"
                 strokeWidth={2}
                 strokeDasharray="4 3"
                 dot={false}
@@ -2004,11 +2005,11 @@ const OCR_FIELD_LABELS: Record<string, string> = {
 const OCR_FILTER_FIELDS: OcrCorrectionField[] = ["firstName", "age", "sourceApp", "bio", "prompts"];
 
 const OCR_FIELD_COLORS: Record<string, string> = {
-  firstName: "hsl(248 62% 52%)",
-  age:        "hsl(142 55% 60%)",
-  sourceApp:  "hsl(43 65% 65%)",
+  firstName: "hsl(var(--brand-indigo))",
+  age:        "hsl(var(--brand-green))",
+  sourceApp:  "hsl(var(--brand-gold))",
   bio:        "hsl(190 55% 60%)",
-  prompts:    "hsl(348 55% 65%)",
+  prompts:    "hsl(var(--brand-rose))",
 };
 
 function OcrMismatchesPanel({ refreshKey }: { refreshKey: number }) {
@@ -2969,12 +2970,12 @@ const LEAD_STATUS_OPTIONS = [
 type LeadStatus = (typeof LEAD_STATUS_OPTIONS)[number];
 
 const STATUS_COLORS: Record<LeadStatus, { color: string; bg: string }> = {
-  "New":                  { color: "hsl(248 62% 52%)", bg: "hsl(248 62% 52% / 0.12)" },
-  "Needs Review":         { color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.12)"  },
+  "New":                  { color: "hsl(var(--brand-indigo))", bg: "hsl(var(--brand-indigo) / 0.12)" },
+  "Needs Review":         { color: "hsl(var(--brand-gold))",  bg: "hsl(var(--brand-gold) / 0.12)"  },
   "Reviewed":             { color: "hsl(190 55% 60%)", bg: "hsl(190 55% 60% / 0.12)" },
   "Follow-Up Sent":       { color: "hsl(228 40% 65%)", bg: "hsl(228 40% 65% / 0.12)" },
-  "Converted":            { color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.12)" },
-  "Testimonial Requested":{ color: "hsl(348 55% 65%)", bg: "hsl(348 55% 65% / 0.12)" },
+  "Converted":            { color: "hsl(var(--brand-green))", bg: "hsl(var(--brand-green) / 0.12)" },
+  "Testimonial Requested":{ color: "hsl(var(--brand-rose))", bg: "hsl(var(--brand-rose) / 0.12)" },
   "Archived":             { color: "hsl(var(--muted-foreground))", bg: "hsl(var(--muted) / 0.3)" },
 };
 
@@ -3010,7 +3011,7 @@ function LeadsStatusTable({ leads }: { leads: Lead[] }) {
                 <span className="font-semibold text-sm text-foreground">{l.firstName}</span>
                 {l.email && <span className="text-xs text-muted-foreground/60">{l.email}</span>}
                 <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ml-auto sm:ml-0"
-                  style={{ color: sc.color, borderColor: sc.color.replace(")", " / 0.3)"), background: sc.bg }}>
+                  style={{ color: sc.color, borderColor: withAlpha(sc.color, 0.3), background: sc.bg }}>
                   {currentStatus}
                 </span>
               </div>
@@ -3043,8 +3044,8 @@ const FOLLOW_UP_SERIES_CONFIG: {
   label: string;
   color: string;
 }[] = [
-  { key: "sentCount",    label: "Sent",      color: "hsl(142 55% 60%)" },
-  { key: "notSentCount", label: "Not sent",  color: "hsl(43 65% 65%)"  },
+  { key: "sentCount",    label: "Sent",      color: "hsl(var(--brand-green))" },
+  { key: "notSentCount", label: "Not sent",  color: "hsl(var(--brand-gold))"  },
   { key: "snoozeCount",  label: "Snoozed",   color: "hsl(220 55% 65%)" },
   { key: "dismissCount", label: "Dismissed", color: "hsl(0 55% 60%)"   },
 ];
@@ -3100,7 +3101,7 @@ function FollowUpTrendsPanel() {
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all"
                 style={
                   active
-                    ? { color, borderColor: color.replace(")", " / 0.4)"), background: color.replace(")", " / 0.1)") }
+                    ? { color, borderColor: withAlpha(color, 0.4), background: withAlpha(color, 0.1) }
                     : { color: "hsl(var(--muted-foreground))", borderColor: "hsl(var(--border))", background: "transparent", opacity: 0.5 }
                 }
               >
@@ -3316,7 +3317,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
           <OcrPendingRulesPanel refreshKey={refreshKey} onApproved={() => setRefreshKey((k) => k + 1)} />
           <OcrRulesPanel refreshKey={refreshKey} />
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <StatCard label="Leads captured" value={stats?.leads ?? "—"} icon={Inbox} color="hsl(248 62% 52%)" />
+            <StatCard label="Leads captured" value={stats?.leads ?? "—"} icon={Inbox} color="hsl(var(--brand-indigo))" />
             <StatCard label="Purchase interest" value={stats?.purchaseInterest ?? "—"} icon={ShoppingBag} color="hsl(348 55% 58%)" />
             <StatCard label="Audits completed" value={stats?.audits ?? "—"} icon={ListChecks} color="hsl(142 55% 50%)" />
             <StatCard label="Waitlist signups" value={stats?.waitlist ?? "—"} icon={Users} color="hsl(43 65% 52%)" />
@@ -3379,7 +3380,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
               const sc = STATUS_COLORS[s];
               return (
                 <span key={s} className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
-                  style={{ color: sc.color, borderColor: sc.color.replace(")", " / 0.3)"), background: sc.bg }}>
+                  style={{ color: sc.color, borderColor: withAlpha(sc.color, 0.3), background: sc.bg }}>
                   {s}
                 </span>
               );
@@ -3900,11 +3901,11 @@ const TEST_FLOWS: TestFlow[] = [
 ];
 
 const AREA_COLORS: Record<string, string> = {
-  "Onboarding":      "hsl(248 62% 52%)",
+  "Onboarding":      "hsl(var(--brand-indigo))",
   "Core Tools":      "hsl(190 55% 60%)",
-  "Wingman Studio":  "hsl(348 55% 65%)",
-  "Data & Trust":    "hsl(142 55% 60%)",
-  "Conversion":      "hsl(43 65% 65%)",
+  "Wingman Studio":  "hsl(var(--brand-rose))",
+  "Data & Trust":    "hsl(var(--brand-green))",
+  "Conversion":      "hsl(var(--brand-gold))",
   "Mobile":          "hsl(228 40% 65%)",
   "AI Health":       "hsl(15 80% 60%)",
 };
@@ -3954,10 +3955,10 @@ function WellnessCompletionPanel({ founderKey }: { founderKey: string }) {
         <>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: "Total answers",     value: stats.totalAnswers          ?? 0, color: "hsl(248 62% 52%)" },
-              { label: "Insight tags",      value: stats.totalTags             ?? 0, color: "hsl(43 65% 65%)"  },
+              { label: "Total answers",     value: stats.totalAnswers          ?? 0, color: "hsl(var(--brand-indigo))" },
+              { label: "Insight tags",      value: stats.totalTags             ?? 0, color: "hsl(var(--brand-gold))"  },
               { label: "Users with profile",value: stats.usersWithAnswers      ?? 0, color: "hsl(190 55% 60%)" },
-              { label: "Approved matching", value: stats.usersApprovedMatching ?? 0, color: "hsl(142 55% 60%)" },
+              { label: "Approved matching", value: stats.usersApprovedMatching ?? 0, color: "hsl(var(--brand-green))" },
             ].map(s => (
               <div key={s.label} className="rounded-xl bg-white/3 border border-white/5 p-3 text-center">
                 <p className="text-xl font-bold tabular-nums" style={{ color: s.color }}>{s.value}</p>
@@ -4036,7 +4037,7 @@ function TestingChecklistPanel() {
       <div className="space-y-3">
         {TEST_FLOWS.map(flow => {
           const done = checked.has(flow.id);
-          const color = AREA_COLORS[flow.area] ?? "hsl(248 62% 52%)";
+          const color = AREA_COLORS[flow.area] ?? "hsl(var(--brand-indigo))";
           return (
             <div key={flow.id}
               className={`glass border rounded-2xl overflow-hidden transition-all ${done ? "border-[hsl(142_55%_60%/0.3)] opacity-60" : "border-white/8"}`}
@@ -4051,7 +4052,7 @@ function TestingChecklistPanel() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                     <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
-                      style={{ color, borderColor: color.replace(")", " / 0.3)"), background: color.replace(")", " / 0.1)") }}>
+                      style={{ color, borderColor: withAlpha(color, 0.3), background: withAlpha(color, 0.1) }}>
                       {flow.area}
                     </span>
                     <span className={`text-sm font-semibold ${done ? "line-through text-muted-foreground/40" : "text-foreground"}`}>

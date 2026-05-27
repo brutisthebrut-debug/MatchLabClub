@@ -26,9 +26,9 @@ interface FeedCard {
 const CAT_CONFIG: Record<FeedCategory, { label: string; color: string; bg: string }> = {
   communication:  { label: "Communication",     color: "hsl(190 55% 60%)", bg: "hsl(190 55% 60% / 0.1)"  },
   emotion:        { label: "Emotional Pattern", color: "hsl(326 100% 65%)", bg: "hsl(326 100% 65% / 0.1)"  },
-  progress:       { label: "Progress Signal",   color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.1)"  },
-  pattern:        { label: "Repeated Theme",    color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.1)"   },
-  recommendation: { label: "Suggestion",        color: "hsl(248 62% 52%)", bg: "hsl(248 62% 52% / 0.1)"  },
+  progress:       { label: "Progress Signal",   color: "hsl(var(--brand-green))", bg: "hsl(var(--brand-green) / 0.1)"  },
+  pattern:        { label: "Repeated Theme",    color: "hsl(var(--brand-gold))",  bg: "hsl(var(--brand-gold) / 0.1)"   },
+  recommendation: { label: "Suggestion",        color: "hsl(var(--brand-indigo))", bg: "hsl(var(--brand-indigo) / 0.1)"  },
 };
 
 const DEMO_FEED: FeedCard[] = [

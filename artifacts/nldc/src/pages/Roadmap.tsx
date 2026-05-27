@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
@@ -19,11 +20,11 @@ const fadeUp = (delay = 0) => ({
 type LevelStatus = "live" | "dev" | "roadmap" | "phase3" | "vision";
 
 const STATUS_CONFIG: Record<LevelStatus, { label: string; color: string; bg: string; border: string; glow: string }> = {
-  live:     { label: "Live Today",         color: "hsl(142 55% 62%)", bg: "hsl(142 55% 45% / 0.12)", border: "hsl(142 55% 45% / 0.3)", glow: "0 0 24px hsl(142 55% 60% / 0.35)" },
-  dev:      { label: "In Development",     color: "hsl(248 62% 58%)", bg: "hsl(248 62% 52% / 0.12)", border: "hsl(248 62% 52% / 0.3)", glow: "0 0 24px hsl(248 62% 52% / 0.3)" },
-  roadmap:  { label: "On the Roadmap",     color: "hsl(43 65% 67%)",  bg: "hsl(43 65% 62% / 0.12)",  border: "hsl(43 65% 62% / 0.3)",  glow: "0 0 20px hsl(43 65% 62% / 0.25)" },
-  phase3:   { label: "Phase 3",            color: "hsl(326 100% 65%)", bg: "hsl(326 100% 59% / 0.12)", border: "hsl(326 100% 59% / 0.3)", glow: "0 0 20px hsl(326 100% 59% / 0.25)" },
-  vision:   { label: "The Vision",         color: "hsl(348 55% 67%)", bg: "hsl(348 55% 65% / 0.12)", border: "hsl(348 55% 65% / 0.3)", glow: "0 0 20px hsl(348 55% 65% / 0.2)" },
+  live:     { label: "Live Today",         color: "hsl(142 55% 62%)", bg: "hsl(142 55% 45% / 0.12)", border: "hsl(142 55% 45% / 0.3)", glow: "0 0 24px hsl(var(--brand-green) / 0.35)" },
+  dev:      { label: "In Development",     color: "hsl(var(--brand-indigo))", bg: "hsl(var(--brand-indigo) / 0.12)", border: "hsl(var(--brand-indigo) / 0.3)", glow: "0 0 24px hsl(var(--brand-indigo) / 0.3)" },
+  roadmap:  { label: "On the Roadmap",     color: "hsl(var(--brand-gold))",  bg: "hsl(var(--brand-gold) / 0.12)",  border: "hsl(var(--brand-gold) / 0.3)",  glow: "0 0 20px hsl(var(--brand-gold) / 0.25)" },
+  phase3:   { label: "Phase 3",            color: "hsl(326 100% 65%)", bg: "hsl(var(--brand-pink) / 0.12)", border: "hsl(var(--brand-pink) / 0.3)", glow: "0 0 20px hsl(var(--brand-pink) / 0.25)" },
+  vision:   { label: "The Vision",         color: "hsl(348 55% 67%)", bg: "hsl(var(--brand-rose) / 0.12)", border: "hsl(var(--brand-rose) / 0.3)", glow: "0 0 20px hsl(var(--brand-rose) / 0.2)" },
 };
 
 const LEVELS = [
@@ -74,7 +75,7 @@ const LEVELS = [
     module_links: ["/start", "/profile-reader", "/start"],
     insight: "Most people present differently across Hinge, LinkedIn, and Instagram without realising it. This level maps the gaps — and reads what's actually in your screenshots — so the right people recognise you everywhere.",
     technical: "On-device-style OCR, structured extraction, and deterministic coaching. No passive screen capture. You upload only what you approve.",
-    accentColor: "hsl(248 62% 58%)",
+    accentColor: "hsl(var(--brand-indigo))",
   },
   {
     num: 3,
@@ -99,7 +100,7 @@ const LEVELS = [
     module_links: ["/integrations", "/connections", "/vault", "/insights"],
     insight: "The step change from manual to automatic insight. Every connection here will be explicit, previewed before analysis, and revocable instantly. We're shipping the consent-first UI first — the OAuth integrations land once we're confident the trust controls are right.",
     technical: "Planned: OAuth read-only scopes, field-level consent controls, preview-before-process architecture, per-source revocation. The Integrations page today is a consent preview — no live connections yet. Live Gmail/Calendar OAuth is intentionally deferred until we complete Google's restricted-scopes verification and the required CASA security audit; we will only enter that process once paying users are asking for it.",
-    accentColor: "hsl(43 65% 67%)",
+    accentColor: "hsl(var(--brand-gold))",
   },
   {
     num: 4,
@@ -153,11 +154,11 @@ const LEVELS = [
 ];
 
 const PRIVACY_PRINCIPLES = [
-  { icon: Eye, title: "Preview before analysis", desc: "At Levels 3+, you see exactly what data will be processed before we touch it. Line by line if you want.", color: "hsl(248 62% 52%)" },
-  { icon: CheckCircle, title: "Consent at every level", desc: "Each data source requires its own explicit opt-in. Approving Gmail doesn't mean approving Calendar. Each switch is separate.", color: "hsl(142 55% 60%)" },
-  { icon: Trash2, title: "Delete everything, permanently", desc: "One click removes your account, all audits, all stored intelligence, and all preferences — no 30-day hold, no 'we keep anonymised data' loophole.", color: "hsl(43 65% 65%)" },
+  { icon: Eye, title: "Preview before analysis", desc: "At Levels 3+, you see exactly what data will be processed before we touch it. Line by line if you want.", color: "hsl(var(--brand-indigo))" },
+  { icon: CheckCircle, title: "Consent at every level", desc: "Each data source requires its own explicit opt-in. Approving Gmail doesn't mean approving Calendar. Each switch is separate.", color: "hsl(var(--brand-green))" },
+  { icon: Trash2, title: "Delete everything, permanently", desc: "One click removes your account, all audits, all stored intelligence, and all preferences — no 30-day hold, no 'we keep anonymised data' loophole.", color: "hsl(var(--brand-gold))" },
   { icon: Lock, title: "Private intelligence stays private", desc: "Your Level 4 intelligence layer is scoped to your account, never sold, never used to train external models, and never shared with third parties. You can export or permanently delete it from Settings → Privacy at any time.", color: "hsl(326 100% 65%)" },
-  { icon: Database, title: "We never sell raw personal content", desc: "Not your messages. Not your profile. Not your photos. Not your conversation history. Not your journal. Nothing individual, ever.", color: "hsl(348 55% 65%)" },
+  { icon: Database, title: "We never sell raw personal content", desc: "Not your messages. Not your profile. Not your photos. Not your conversation history. Not your journal. Nothing individual, ever.", color: "hsl(var(--brand-rose))" },
   { icon: BarChart3, title: "Aggregate intelligence is earned, not extracted", desc: "Level 5 only exists because individuals opt in to anonymous benchmarking. The business model is consent infrastructure — not surveillance.", color: "hsl(190 55% 60%)" },
 ];
 
@@ -239,7 +240,7 @@ export default function Roadmap() {
             {/* Timeline */}
             <div className="relative">
               {/* Connecting line */}
-              <div className="absolute left-8 md:left-10 top-8 bottom-8 w-px" style={{ background: "linear-gradient(180deg, hsl(142 55% 60%) 0%, hsl(248 62% 52%) 25%, hsl(43 65% 62%) 50%, hsl(326 100% 59%) 75%, hsl(348 55% 65%) 100%)", opacity: 0.4 }} />
+              <div className="absolute left-8 md:left-10 top-8 bottom-8 w-px" style={{ background: "linear-gradient(180deg, hsl(var(--brand-green)) 0%, hsl(var(--brand-indigo)) 25%, hsl(var(--brand-gold)) 50%, hsl(var(--brand-pink)) 75%, hsl(var(--brand-rose)) 100%)", opacity: 0.4 }} />
 
               <div className="space-y-8">
                 {LEVELS.map((level, i) => {
@@ -256,8 +257,8 @@ export default function Roadmap() {
                         <div
                           className="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex flex-col items-center justify-center font-bold text-white transition-all"
                           style={{
-                            background: `linear-gradient(135deg, ${level.accentColor.replace(")", " / 0.3)")}, ${level.accentColor.replace(")", " / 0.15)")})`,
-                            border: `2px solid ${level.accentColor.replace(")", " / 0.5)")}`,
+                            background: `linear-gradient(135deg, ${withAlpha(level.accentColor, 0.3)}, ${withAlpha(level.accentColor, 0.15)})`,
+                            border: `2px solid ${withAlpha(level.accentColor, 0.5)}`,
                             boxShadow: status.glow,
                           }}
                         >
@@ -269,12 +270,12 @@ export default function Roadmap() {
                       {/* Card */}
                       <div
                         className="flex-1 glass rounded-3xl p-7 card-hover"
-                        style={{ borderColor: `${level.accentColor.replace(")", " / 0.2)")}`, borderWidth: "1px", borderStyle: "solid" }}
+                        style={{ borderColor: `${withAlpha(level.accentColor, 0.2)}`, borderWidth: "1px", borderStyle: "solid" }}
                       >
                         {/* Header */}
                         <div className="flex items-start justify-between gap-4 mb-4 flex-wrap">
                           <div className="flex items-center gap-3 flex-wrap">
-                            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: level.accentColor.replace(")", " / 0.12)") }}>
+                            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: withAlpha(level.accentColor, 0.12) }}>
                               <level.icon className="w-5 h-5" style={{ color: level.accentColor }} />
                             </div>
                             <div>
@@ -317,7 +318,7 @@ export default function Roadmap() {
                         </div>
 
                         {/* Insight */}
-                        <div className="rounded-2xl p-4 border-l-2 mb-4" style={{ background: level.accentColor.replace(")", " / 0.06)"), borderColor: level.accentColor.replace(")", " / 0.4)") }}>
+                        <div className="rounded-2xl p-4 border-l-2 mb-4" style={{ background: withAlpha(level.accentColor, 0.06), borderColor: withAlpha(level.accentColor, 0.4) }}>
                           <p className="text-sm text-foreground/80 leading-relaxed italic">"{level.insight}"</p>
                         </div>
 
@@ -335,7 +336,7 @@ export default function Roadmap() {
                               <Link key={j} href={level.module_links[j]}>
                                 <span
                                   className="text-xs font-semibold px-3 py-1.5 rounded-full transition-all hover:opacity-80 cursor-pointer"
-                                  style={{ background: level.accentColor.replace(")", " / 0.12)"), color: level.accentColor, border: `1px solid ${level.accentColor.replace(")", " / 0.25)")}` }}
+                                  style={{ background: withAlpha(level.accentColor, 0.12), color: level.accentColor, border: `1px solid ${withAlpha(level.accentColor, 0.25)}` }}
                                 >
                                   {mod}
                                 </span>
@@ -356,7 +357,7 @@ export default function Roadmap() {
                           <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/6">
                             <p className="w-full text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Coming in future updates</p>
                             {level.modules.map((mod, j) => (
-                              <span key={j} className="text-xs font-medium px-3 py-1.5 rounded-full" style={{ background: "hsl(248 40% 94%)", color: "hsl(228 18% 55%)", border: "1px solid hsl(248 40% 150%)" }}>{mod}</span>
+                              <span key={j} className="text-xs font-medium px-3 py-1.5 rounded-full" style={{ background: "hsl(248 40% 94%)", color: "hsl(228 18% 55%)", border: "1px solid hsl(248 40% 90%)" }}>{mod}</span>
                             ))}
                           </div>
                         )}
@@ -374,7 +375,7 @@ export default function Roadmap() {
           <div className="orb orb-violet absolute w-[500px] h-[500px] top-0 right-0 opacity-30 pointer-events-none" />
           <div className="max-w-4xl mx-auto relative z-10">
             <motion.div {...fadeUp(0)} className="text-center mb-14">
-              <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{ background: "hsl(248 62% 52% / 0.15)", border: "1px solid hsl(248 62% 52% / 0.3)", boxShadow: "0 0 30px hsl(248 62% 52% / 0.2)" }}>
+              <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{ background: "hsl(var(--brand-indigo) / 0.15)", border: "1px solid hsl(var(--brand-indigo) / 0.3)", boxShadow: "0 0 30px hsl(var(--brand-indigo) / 0.2)" }}>
                 <Shield className="w-7 h-7 text-[hsl(248_62%_52%)]" />
               </div>
               <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-3">Non-Negotiable</p>
@@ -387,7 +388,7 @@ export default function Roadmap() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
               {PRIVACY_PRINCIPLES.map((p, i) => (
                 <motion.div key={i} {...fadeUp(i * 0.07)} className="glass border border-white/8 rounded-2xl p-6 card-hover">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: `${p.color.replace(")", " / 0.12)")}`, border: `1px solid ${p.color.replace(")", " / 0.2)")}` }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: `${withAlpha(p.color, 0.12)}`, border: `1px solid ${withAlpha(p.color, 0.2)}` }}>
                     <p.icon className="w-5 h-5" style={{ color: p.color }} />
                   </div>
                   <p className="font-semibold text-foreground text-sm mb-2">{p.title}</p>
@@ -456,13 +457,13 @@ export default function Roadmap() {
                   {
                     revenue: "Consumer Coaching",
                     tiers: ["Free Signal Check (acquisition)", "Full Dating Reset — $97 one-time", "Monthly Coaching — $197/mo"],
-                    color: "hsl(248 62% 52%)",
+                    color: "hsl(var(--brand-indigo))",
                     label: "Today",
                   },
                   {
                     revenue: "Premium Intelligence",
                     tiers: ["Personal Intelligence Layer — subscription", "Coaching session bundles", "Partner integrations — premium tier"],
-                    color: "hsl(43 65% 65%)",
+                    color: "hsl(var(--brand-gold))",
                     label: "Phase 2–3",
                   },
                   {
@@ -472,7 +473,7 @@ export default function Roadmap() {
                     label: "Phase 4–5",
                   },
                 ].map((bm, i) => (
-                  <div key={i} className="rounded-2xl p-5" style={{ background: `${bm.color.replace(")", " / 0.07)")}`, border: `1px solid ${bm.color.replace(")", " / 0.2)")}` }}>
+                  <div key={i} className="rounded-2xl p-5" style={{ background: `${withAlpha(bm.color, 0.07)}`, border: `1px solid ${withAlpha(bm.color, 0.2)}` }}>
                     <span className="text-xs font-bold uppercase tracking-wider mb-1 block" style={{ color: bm.color }}>{bm.label}</span>
                     <p className="font-semibold text-foreground text-sm mb-3">{bm.revenue}</p>
                     <ul className="space-y-1.5">

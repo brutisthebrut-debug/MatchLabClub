@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
@@ -85,7 +86,7 @@ const TIERS = [
     cta: "Begin My Reset",
     href: "/checkout/dating-reset",
     nextStep: "→ Secure checkout · founder-reviewed within 48 hours · start Day 1 immediately",
-    accentColor: "hsl(248 62% 52%)",
+    accentColor: "hsl(var(--brand-indigo))",
     icon: Zap,
     features: [
       "Unlimited Profile Signal Audits",
@@ -119,7 +120,7 @@ const TIERS = [
     cta: "Join the Wingman Club",
     href: "/checkout/wingman",
     nextStep: "→ Reserve your cohort spot · today's launch price locks in for life",
-    accentColor: "hsl(43 65% 65%)",
+    accentColor: "hsl(var(--brand-gold))",
     icon: Heart,
     features: [
       "Everything in The Dating Reset",
@@ -168,7 +169,7 @@ export default function Pricing() {
           {/* Launch Cohort Banner */}
           <motion.div {...fadeUp(0)}
             className="relative rounded-2xl p-5 mb-12 text-center overflow-hidden shimmer"
-            style={{ background: "linear-gradient(135deg, hsl(43 65% 62% / 0.15), hsl(43 65% 45% / 0.08))", border: "1px solid hsl(43 65% 62% / 0.25)" }}
+            style={{ background: "linear-gradient(135deg, hsl(var(--brand-gold) / 0.15), hsl(43 65% 45% / 0.08))", border: "1px solid hsl(var(--brand-gold) / 0.25)" }}
             data-testid="banner-launch-cohort"
           >
             <div className="flex items-center justify-center gap-3 flex-wrap">
@@ -182,7 +183,7 @@ export default function Pricing() {
           {/* Shebangs Partner */}
           <motion.div {...fadeUp(0.04)}
             className="relative rounded-2xl p-4 mb-10 overflow-hidden glass"
-            style={{ border: "1px solid hsl(248 62% 55% / 0.12)" }}
+            style={{ border: "1px solid hsl(var(--brand-indigo) / 0.12)" }}
           >
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Launch partner</span>
@@ -226,10 +227,10 @@ export default function Pricing() {
                     <span className="px-3 py-1 rounded-full text-xs font-bold shadow-lg whitespace-nowrap"
                       style={{
                         background: tier.popular
-                          ? "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))"
-                          : "linear-gradient(135deg, hsl(43 65% 55%), hsl(43 65% 42%))",
+                          ? "linear-gradient(135deg, hsl(var(--brand-indigo)), hsl(var(--brand-pink)))"
+                          : "linear-gradient(135deg, hsl(var(--brand-gold)), hsl(43 65% 42%))",
                         color: "white",
-                        boxShadow: tier.popular ? "0 4px 16px hsl(248 62% 52% / 0.4)" : "0 4px 16px hsl(43 65% 55% / 0.4)",
+                        boxShadow: tier.popular ? "0 4px 16px hsl(var(--brand-indigo) / 0.4)" : "0 4px 16px hsl(var(--brand-gold) / 0.4)",
                       }}>
                       {tier.badge}
                     </span>
@@ -237,13 +238,13 @@ export default function Pricing() {
                 )}
 
                 <div className={`flex-1 flex flex-col rounded-3xl p-5 pt-6 sm:p-7 sm:pt-8 ${tier.popular ? "mirror-card" : "glass border border-white/8"}`}
-                  style={tier.popular ? { border: "1px solid hsl(248 62% 52% / 0.35)", boxShadow: "0 0 60px hsl(248 62% 52% / 0.12), 0 20px 50px rgb(0 0 0 / 0.4)" } : {}}>
+                  style={tier.popular ? { border: "1px solid hsl(var(--brand-indigo) / 0.35)", boxShadow: "0 0 60px hsl(var(--brand-indigo) / 0.12), 0 20px 50px rgb(0 0 0 / 0.4)" } : {}}>
 
                   {tier.popular && <div className="line-accent mb-6" />}
 
                   <div className="mb-6">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${tier.accentColor.replace(")", " / 0.12)")}`, border: `1px solid ${tier.accentColor.replace(")", " / 0.2)")}` }}>
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${withAlpha(tier.accentColor, 0.12)}`, border: `1px solid ${withAlpha(tier.accentColor, 0.2)}` }}>
                         <tier.icon className="w-4 h-4" style={{ color: tier.accentColor }} />
                       </div>
                       <p className="text-xs font-bold uppercase tracking-widest" style={{ color: tier.accentColor }}>{tier.name}</p>
@@ -263,7 +264,7 @@ export default function Pricing() {
                   </div>
 
                   {/* What you walk away with */}
-                  <div className="rounded-xl p-4 mb-5" style={{ background: `${tier.accentColor.replace(")", " / 0.07)")}`, border: `1px solid ${tier.accentColor.replace(")", " / 0.15)")}` }}>
+                  <div className="rounded-xl p-4 mb-5" style={{ background: `${withAlpha(tier.accentColor, 0.07)}`, border: `1px solid ${withAlpha(tier.accentColor, 0.15)}` }}>
                     <p className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: tier.accentColor }}>What you walk away with</p>
                     {tier.walkaway.map((w, j) => (
                       <div key={j} className="flex items-start gap-2 text-xs text-foreground/80 mt-1.5">
@@ -291,8 +292,8 @@ export default function Pricing() {
                   <Button asChild className="w-full rounded-full h-12 font-semibold border-0"
                     style={
                       tier.popular
-                        ? { background: "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))", boxShadow: "0 4px 20px hsl(248 62% 52% / 0.4)" }
-                        : { background: `${tier.accentColor.replace(")", " / 0.14)")}`, color: tier.accentColor, border: `1px solid ${tier.accentColor.replace(")", " / 0.25)")}` }
+                        ? { background: "linear-gradient(135deg, hsl(var(--brand-indigo)), hsl(var(--brand-pink)))", boxShadow: "0 4px 20px hsl(var(--brand-indigo) / 0.4)" }
+                        : { background: `${withAlpha(tier.accentColor, 0.14)}`, color: tier.accentColor, border: `1px solid ${withAlpha(tier.accentColor, 0.25)}` }
                     }
                     data-testid={`button-pricing-cta-${i}`}>
                     <Link href={tier.href}>
@@ -307,7 +308,7 @@ export default function Pricing() {
                   )}
                   {"betaNote" in tier && tier.betaNote && (
                     <div className="mt-3 p-3 rounded-xl text-[11px] text-muted-foreground leading-relaxed"
-                      style={{ background: "hsl(43 65% 55% / 0.08)", border: "1px solid hsl(43 65% 55% / 0.2)" }}>
+                      style={{ background: "hsl(var(--brand-gold) / 0.08)", border: "1px solid hsl(var(--brand-gold) / 0.2)" }}>
                       🧪 <span className="font-semibold text-foreground/70">Private beta:</span> {tier.betaNote}
                     </div>
                   )}
@@ -329,7 +330,7 @@ export default function Pricing() {
                   step: "1",
                   title: "You submit your profile details",
                   desc: "Bio, prompts, a quick conversation sample, and optionally a photo context note. Takes about 5 minutes. Nothing is shared with third parties — ever.",
-                  color: "hsl(248 62% 52%)",
+                  color: "hsl(var(--brand-indigo))",
                 },
                 {
                   step: "2",
@@ -341,13 +342,13 @@ export default function Pricing() {
                   step: "3",
                   title: "During beta: a personal founder review note",
                   desc: "For founding beta users, the founder reads your report and writes a personal note on the 1–2 highest-leverage things specific to your situation. This takes up to 48 hours and is not a template.",
-                  color: "hsl(43 65% 65%)",
+                  color: "hsl(var(--brand-gold))",
                 },
                 {
                   step: "4",
                   title: "You start with Day 1 of your action plan",
                   desc: "Don't wait for the founder note. Start with the 7-day plan immediately — most people who do it see measurably better results within the first week.",
-                  color: "hsl(142 55% 60%)",
+                  color: "hsl(var(--brand-green))",
                 },
               ].map((item) => (
                 <div key={item.step} className="flex items-start gap-4 glass border border-white/8 rounded-2xl p-4">
@@ -374,14 +375,14 @@ export default function Pricing() {
           {/* Founder-Reviewed Beta Offer */}
           <motion.div {...fadeUp(0.3)}
             className="max-w-3xl mx-auto mb-16 rounded-3xl p-7 relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg, hsl(248 62% 20% / 0.6), hsl(43 65% 20% / 0.3))", border: "1px solid hsl(248 62% 52% / 0.25)", boxShadow: "0 0 60px hsl(248 62% 52% / 0.08)" }}
+            style={{ background: "linear-gradient(135deg, hsl(248 62% 20% / 0.6), hsl(43 65% 20% / 0.3))", border: "1px solid hsl(var(--brand-indigo) / 0.25)", boxShadow: "0 0 60px hsl(var(--brand-indigo) / 0.08)" }}
           >
             <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10 pointer-events-none"
-              style={{ background: "radial-gradient(circle, hsl(43 65% 65%), transparent)", transform: "translate(30%, -30%)" }} />
+              style={{ background: "radial-gradient(circle, hsl(var(--brand-gold)), transparent)", transform: "translate(30%, -30%)" }} />
             <div className="relative z-10">
               <div className="flex items-start gap-4 flex-col sm:flex-row">
                 <div className="w-12 h-12 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl"
-                  style={{ background: "hsl(43 65% 65% / 0.15)", border: "1px solid hsl(43 65% 65% / 0.25)" }}>
+                  style={{ background: "hsl(var(--brand-gold) / 0.15)", border: "1px solid hsl(var(--brand-gold) / 0.25)" }}>
                   🔬
                 </div>
                 <div className="flex-1">
@@ -408,7 +409,7 @@ export default function Pricing() {
                   <div className="flex items-center gap-4 flex-wrap">
                     <Link href="/checkout/dating-reset"
                       className="px-5 py-2.5 rounded-full text-sm font-semibold border-0 text-white"
-                      style={{ background: "linear-gradient(135deg, hsl(43 65% 55%), hsl(248 62% 58%))", boxShadow: "0 4px 20px hsl(43 65% 55% / 0.3)" }}>
+                      style={{ background: "linear-gradient(135deg, hsl(var(--brand-gold)), hsl(var(--brand-indigo)))", boxShadow: "0 4px 20px hsl(var(--brand-gold) / 0.3)" }}>
                       Claim a Founder-Reviewed Spot →
                     </Link>
                     <p className="text-xs text-muted-foreground/50">Same price as the Dating Reset — $97 one-time</p>

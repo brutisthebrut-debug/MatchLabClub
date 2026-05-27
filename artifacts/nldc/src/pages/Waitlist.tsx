@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -74,7 +75,7 @@ export default function Waitlist() {
             data-testid="card-waitlist-stats"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "hsl(248 62% 52% / 0.12)" }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "hsl(var(--brand-indigo) / 0.12)" }}>
                 <Users className="w-5 h-5 text-[hsl(248_62%_52%)]" />
               </div>
               <div>
@@ -126,7 +127,7 @@ export default function Waitlist() {
                   ].map((step, i) => (
                     <div key={i} className="flex items-start gap-3 text-sm">
                       <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                        style={{ background: "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))" }}>
+                        style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo)), hsl(var(--brand-pink)))" }}>
                         {i + 1}
                       </div>
                       <span className="text-muted-foreground">{step}</span>
@@ -223,12 +224,12 @@ export default function Waitlist() {
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center">Early access perks</p>
             <div className="grid sm:grid-cols-3 gap-4">
               {[
-                { badge: "40% off", title: "Lifetime founding-member discount", desc: "Locked in forever — never expires", color: "hsl(43 65% 65%)" },
-                { badge: "First in", title: "Priority access", desc: "Before public launch, guaranteed", color: "hsl(248 62% 52%)" },
-                { badge: "Bonus", title: "Free Full Dating Reset", desc: "First 50 members who complete an audit", color: "hsl(142 55% 60%)" },
+                { badge: "40% off", title: "Lifetime founding-member discount", desc: "Locked in forever — never expires", color: "hsl(var(--brand-gold))" },
+                { badge: "First in", title: "Priority access", desc: "Before public launch, guaranteed", color: "hsl(var(--brand-indigo))" },
+                { badge: "Bonus", title: "Free Full Dating Reset", desc: "First 50 members who complete an audit", color: "hsl(var(--brand-green))" },
               ].map((perk, i) => (
                 <div key={i} className="glass border border-white/8 rounded-2xl p-5 text-center card-hover" data-testid={`card-perk-${i}`}>
-                  <span className="inline-block text-xs font-bold px-2.5 py-1 rounded-full mb-3" style={{ background: `${perk.color.replace(")", " / 0.12)")}`, color: perk.color, border: `1px solid ${perk.color.replace(")", " / 0.2)")}` }}>{perk.badge}</span>
+                  <span className="inline-block text-xs font-bold px-2.5 py-1 rounded-full mb-3" style={{ background: `${withAlpha(perk.color, 0.12)}`, color: perk.color, border: `1px solid ${withAlpha(perk.color, 0.2)}` }}>{perk.badge}</span>
                   <p className="font-semibold text-foreground text-sm mb-1">{perk.title}</p>
                   <p className="text-xs text-muted-foreground">{perk.desc}</p>
                 </div>

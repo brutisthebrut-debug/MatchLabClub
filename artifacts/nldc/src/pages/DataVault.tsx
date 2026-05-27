@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -37,7 +38,7 @@ const DATA_ENTRIES: DataEntry[] = [
     icon: Activity,
     label: "Signal Audits",
     desc: "Your profile audit results — scores, feedback, bio critique, action items.",
-    color: "hsl(248 62% 52%)",
+    color: "hsl(var(--brand-indigo))",
     count: 3,
     sampleKeys: ["Score history", "Bio feedback", "Action items", "Audit date"],
     retentionNote: "Kept until you delete. Used to show score history on your dashboard.",
@@ -59,7 +60,7 @@ const DATA_ENTRIES: DataEntry[] = [
     icon: FileText,
     label: "My Profile Text",
     desc: "Bios, prompts, or profile text you've pasted into the app for analysis.",
-    color: "hsl(43 65% 65%)",
+    color: "hsl(var(--brand-gold))",
     count: 1,
     sampleKeys: ["Bio text", "Platform context", "Tone preference"],
     retentionNote: "Session-only by default. Persists only if you explicitly saved it in Connection Center.",
@@ -70,7 +71,7 @@ const DATA_ENTRIES: DataEntry[] = [
     icon: MessageSquare,
     label: "Pasted Conversations",
     desc: "Conversation threads you've shared for coaching or debrief.",
-    color: "hsl(348 55% 65%)",
+    color: "hsl(var(--brand-rose))",
     count: 4,
     sampleKeys: ["Conversation snippet", "Goal at time of paste", "Coach mode used"],
     retentionNote: "Session-only by default. You control whether any conversation is saved.",
@@ -92,7 +93,7 @@ const DATA_ENTRIES: DataEntry[] = [
     icon: BookOpen,
     label: "Reflection Notes",
     desc: "Notes you've written about dates, patterns, or things you're processing.",
-    color: "hsl(142 55% 60%)",
+    color: "hsl(var(--brand-green))",
     count: 6,
     sampleKeys: ["Note text", "Date written", "Tags (if added)"],
     retentionNote: "Stored locally in your browser. Cleared if you clear browser data.",
@@ -129,7 +130,7 @@ function DataCategoryRow({ entry, index }: { entry: DataEntry; index: number }) 
       <div className="p-5">
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: entry.color.replace(")", " / 0.12)") }}>
+            style={{ background: withAlpha(entry.color, 0.12) }}>
             <Icon className="w-4 h-4" style={{ color: entry.color }} />
           </div>
           <div className="flex-1 min-w-0">
@@ -265,7 +266,7 @@ function WellnessDataSection() {
               return (
                 <div key={dim} className="rounded-xl bg-white/2 border border-white/5 p-3">
                   <p className="text-[10px] font-bold uppercase tracking-widest mb-2"
-                    style={{ color: meta?.color ?? "hsl(248 62% 52%)" }}>
+                    style={{ color: meta?.color ?? "hsl(var(--brand-indigo))" }}>
                     {meta?.label ?? dim}
                   </p>
                   <div className="space-y-2">

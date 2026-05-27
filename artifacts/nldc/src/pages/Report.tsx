@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useParams, Link } from "wouter";
 import { useState, useEffect } from "react";
 import { useCopyDurationPref, COPY_DURATION_MS } from "@/lib/copyDurationPref";
@@ -100,8 +101,8 @@ function ScoreRing({ score }: { score: number }) {
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
-  const color = score >= 75 ? "hsl(142 55% 60%)" : score >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
-  const glow = score >= 75 ? "hsl(142 55% 60% / 0.4)" : score >= 55 ? "hsl(43 65% 65% / 0.3)" : "hsl(348 55% 65% / 0.3)";
+  const color = score >= 75 ? "hsl(var(--brand-green))" : score >= 55 ? "hsl(var(--brand-gold))" : "hsl(var(--brand-rose))";
+  const glow = score >= 75 ? "hsl(var(--brand-green) / 0.4)" : score >= 55 ? "hsl(var(--brand-gold) / 0.3)" : "hsl(var(--brand-rose) / 0.3)";
   return (
     <div className="relative w-36 h-36 flex-shrink-0" data-testid="report-score-ring">
       <svg className="w-full h-full -rotate-90" viewBox="0 0 128 128" style={{ filter: `drop-shadow(0 0 18px ${glow})` }}>
@@ -149,9 +150,9 @@ function SpectrumBar({ dimension, value, color, desc, delay = 0 }: {
           className="signal-bar-fill"
           style={{
             width: `${value}%`,
-            background: `linear-gradient(90deg, ${color.replace(")", " / 0.6)")}, ${color})`,
+            background: `linear-gradient(90deg, ${withAlpha(color, 0.6)}, ${color})`,
             animationDelay: `${delay}s`,
-            boxShadow: `0 0 8px ${color.replace(")", " / 0.4)")}`,
+            boxShadow: `0 0 8px ${withAlpha(color, 0.4)}`,
           }}
         />
       </div>
@@ -164,11 +165,11 @@ function SpectrumBar({ dimension, value, color, desc, delay = 0 }: {
 const SIGNAL_SPECTRUM_DATA = [
   { dimension: "Warmth", value: 78, color: "hsl(348 55% 68%)", desc: "How emotionally open and inviting you come across" },
   { dimension: "Clarity", value: 62, color: "hsl(190 55% 62%)", desc: "How clearly your personality and intentions communicate" },
-  { dimension: "Confidence", value: 72, color: "hsl(248 62% 58%)", desc: "Whether you seem at ease with who you are" },
-  { dimension: "Playfulness", value: 55, color: "hsl(43 65% 67%)", desc: "Whether you seem fun and light to be around" },
+  { dimension: "Confidence", value: 72, color: "hsl(var(--brand-indigo))", desc: "Whether you seem at ease with who you are" },
+  { dimension: "Playfulness", value: 55, color: "hsl(var(--brand-gold))", desc: "Whether you seem fun and light to be around" },
   { dimension: "Availability", value: 81, color: "hsl(142 55% 62%)", desc: "How emotionally open and ready you seem" },
   { dimension: "Specificity", value: 50, color: "hsl(326 100% 67%)", desc: "How distinct and unique your profile feels vs generic" },
-  { dimension: "Energy", value: 68, color: "hsl(43 65% 67%)", desc: "The vitality and forward momentum in your presence" },
+  { dimension: "Energy", value: 68, color: "hsl(var(--brand-gold))", desc: "The vitality and forward momentum in your presence" },
   { dimension: "Approachability", value: 75, color: "hsl(190 55% 62%)", desc: "How easy it feels to start a conversation with you" },
 ];
 
@@ -234,9 +235,9 @@ const fadeUp = (delay = 0) => ({
 });
 
 const REPLY_STYLES: Record<string, { gradient: string; emoji: string; border: string }> = {
-  "Warm":          { gradient: "linear-gradient(135deg, hsl(348 55% 58%), hsl(248 62% 55%))", emoji: "💜", border: "hsl(348 55% 58% / 0.3)" },
+  "Warm":          { gradient: "linear-gradient(135deg, hsl(348 55% 58%), hsl(var(--brand-indigo)))", emoji: "💜", border: "hsl(348 55% 58% / 0.3)" },
   "Direct":        { gradient: "linear-gradient(135deg, hsl(43 65% 52%), hsl(43 55% 42%))",   emoji: "→",  border: "hsl(43 65% 52% / 0.3)" },
-  "Playful":       { gradient: "linear-gradient(135deg, hsl(326 100% 59%), hsl(248 62% 55%))", emoji: "😄", border: "hsl(326 100% 59% / 0.3)" },
+  "Playful":       { gradient: "linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-indigo)))", emoji: "😄", border: "hsl(var(--brand-pink) / 0.3)" },
   "Date Ask":      { gradient: "linear-gradient(135deg, hsl(142 55% 42%), hsl(190 55% 48%))", emoji: "✦",  border: "hsl(142 55% 42% / 0.3)" },
   "Graceful Exit": { gradient: "linear-gradient(135deg, hsl(228 25% 40%), hsl(248 40% 32%))", emoji: "🤍", border: "hsl(228 25% 50% / 0.25)" },
 };
@@ -420,7 +421,7 @@ export default function Report() {
     : null;
   const showChangeSummary = !!auditId && !!changeSummary && hasChanges(changeSummary) && !viewingVersion;
   const grade = r.readinessScore >= 85 ? "A" : r.readinessScore >= 72 ? "B" : r.readinessScore >= 58 ? "C" : r.readinessScore >= 42 ? "D" : "F";
-  const scoreColor = r.readinessScore >= 75 ? "hsl(142 55% 60%)" : r.readinessScore >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
+  const scoreColor = r.readinessScore >= 75 ? "hsl(var(--brand-green))" : r.readinessScore >= 55 ? "hsl(var(--brand-gold))" : "hsl(var(--brand-rose))";
 
   if (auditLoading || generating) {
     return (
@@ -755,10 +756,10 @@ export default function Report() {
                               style={{
                                 background:
                                   v.readinessScore >= 75
-                                    ? "hsl(142 55% 60% / 0.18)"
+                                    ? "hsl(var(--brand-green) / 0.18)"
                                     : v.readinessScore >= 55
-                                    ? "hsl(43 65% 65% / 0.18)"
-                                    : "hsl(348 55% 65% / 0.18)",
+                                    ? "hsl(var(--brand-gold) / 0.18)"
+                                    : "hsl(var(--brand-rose) / 0.18)",
                                 color:
                                   v.readinessScore >= 75
                                     ? "hsl(142 55% 70%)"
@@ -1200,7 +1201,7 @@ export default function Report() {
               {r.actionPlan.map((item, i) => (
                 <div key={i} className="flex items-start gap-4 p-4 rounded-2xl border border-white/8 bg-[hsl(248_40%_95%/0.5)] card-hover" data-testid={`card-action-item-${i}`}>
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 text-white"
-                    style={{ background: "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))", boxShadow: "0 0 12px hsl(248 62% 52% / 0.35)" }}>
+                    style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo)), hsl(var(--brand-pink)))", boxShadow: "0 0 12px hsl(var(--brand-indigo) / 0.35)" }}>
                     {item.priority}
                   </div>
                   <div className="flex-1">
@@ -1218,9 +1219,21 @@ export default function Report() {
             </div>
           </motion.div>
 
+          {/* ── Inline "go deeper" rail — surfaces conversion options above the giant final CTA so
+                  users scrolling the report see them mid-flight, not only after they've consumed everything ── */}
+          <motion.div {...fadeUp(0.25)} className="rounded-2xl border border-white/10 px-5 py-4 flex flex-wrap items-center justify-between gap-3 bg-[hsl(var(--brand-indigo)/0.08)]" data-testid="card-report-rail">
+            <div className="flex-1 min-w-[200px]">
+              <p className="text-sm font-semibold text-foreground">Like what you're reading?</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Unlock unlimited rewrites + a human coach review for $97.</p>
+            </div>
+            <Button asChild size="sm" className="rounded-full px-5 bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 font-semibold text-white whitespace-nowrap" data-testid="button-report-rail-upgrade">
+              <Link href="/pricing">See plans <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link>
+            </Button>
+          </motion.div>
+
           {/* ── CTA ── */}
           <motion.div {...fadeUp(0.3)} className="relative rounded-3xl p-8 text-center overflow-hidden shimmer" data-testid="card-report-cta"
-            style={{ background: "linear-gradient(135deg, hsl(248 62% 52% / 0.14), hsl(326 100% 59% / 0.1))" }}>
+            style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo) / 0.14), hsl(var(--brand-pink) / 0.1))" }}>
             <div className="absolute inset-0 border border-[hsl(248_62%_52%/0.2)] rounded-3xl pointer-events-none" />
             <div className="orb orb-violet absolute w-64 h-64 -right-20 -top-20 opacity-60 pointer-events-none" />
             <div className="relative z-10">
@@ -1237,7 +1250,7 @@ export default function Report() {
                 </Link>
                 <Link href="/pricing"
                   className="relative rounded-2xl p-4 hover:opacity-90 transition-all block"
-                  style={{ background: "linear-gradient(135deg, hsl(248 62% 55% / 0.35), hsl(326 100% 48% / 0.25))", border: "1px solid hsl(248 62% 52% / 0.5)" }}
+                  style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo) / 0.35), hsl(326 100% 48% / 0.25))", border: "1px solid hsl(var(--brand-indigo) / 0.5)" }}
                   data-testid="button-view-pricing">
                   <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[hsl(248_62%_55%)] text-white whitespace-nowrap">Most popular</span>
                   <p className="text-xs font-bold uppercase tracking-wider text-[hsl(248_62%_62%)] mb-1">Dating Reset</p>
@@ -1318,10 +1331,10 @@ function PreviousReportView({
 }) {
   const scoreColor =
     pr.readinessScore >= 75
-      ? "hsl(142 55% 60%)"
+      ? "hsl(var(--brand-green))"
       : pr.readinessScore >= 55
-      ? "hsl(43 65% 65%)"
-      : "hsl(348 55% 65%)";
+      ? "hsl(var(--brand-gold))"
+      : "hsl(var(--brand-rose))";
   const grade =
     pr.readinessScore >= 85
       ? "A"
@@ -1437,7 +1450,7 @@ function PreviousReportView({
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 text-white"
                 style={{
-                  background: "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))",
+                  background: "linear-gradient(135deg, hsl(var(--brand-indigo)), hsl(var(--brand-pink)))",
                 }}
               >
                 {item.priority}

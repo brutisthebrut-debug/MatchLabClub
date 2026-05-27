@@ -45,7 +45,7 @@ const INITIAL_SECTIONS: ControlSection[] = [
     id: "personalization",
     icon: Settings,
     title: "Personalization",
-    color: "hsl(248 62% 52%)",
+    color: "hsl(var(--brand-indigo))",
     footer: "Personalization uses only what you've entered in this session. No profile is built without your logged data.",
     toggles: [
       { id: "suggest-experiments", label: "Suggest experiments from my entries", desc: "Generate relevant experiment ideas based on your Timeline patterns", enabled: true },
@@ -57,7 +57,7 @@ const INITIAL_SECTIONS: ControlSection[] = [
     id: "anonymous",
     icon: Shield,
     title: "Anonymous Learning",
-    color: "hsl(142 55% 60%)",
+    color: "hsl(var(--brand-green))",
     footer: "If you opt in, only aggregated statistical patterns — never your text or identity — contribute to improving coaching quality across all users. You can opt out at any time.",
     toggles: [
       { id: "anon-patterns",   label: "Contribute to pattern research",      desc: "Share anonymized patterns (never your text) to improve coaching accuracy", enabled: false },

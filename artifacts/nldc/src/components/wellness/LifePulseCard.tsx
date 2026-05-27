@@ -22,10 +22,10 @@ type Metric = {
 
 const METRICS: Metric[] = [
   { key: "sleep",     label: "Sleep last night",  helper: "1 wrecked → 5 rested",        icon: Moon,       color: "hsl(220 50% 65%)" },
-  { key: "energy",    label: "Energy right now",  helper: "1 depleted → 5 charged",      icon: Zap,        color: "hsl(43 65% 65%)" },
+  { key: "energy",    label: "Energy right now",  helper: "1 depleted → 5 charged",      icon: Zap,        color: "hsl(var(--brand-gold))" },
   { key: "social",    label: "Social fuel",       helper: "1 drained → 5 lit up",        icon: Users,      color: "hsl(190 55% 60%)" },
-  { key: "money",     label: "Money headspace",   helper: "1 stressed → 5 unbothered",   icon: DollarSign, color: "hsl(142 55% 60%)" },
-  { key: "headspace", label: "Mental clarity",    helper: "1 foggy → 5 sharp",           icon: Brain,      color: "hsl(248 62% 52%)" },
+  { key: "money",     label: "Money headspace",   helper: "1 stressed → 5 unbothered",   icon: DollarSign, color: "hsl(var(--brand-green))" },
+  { key: "headspace", label: "Mental clarity",    helper: "1 foggy → 5 sharp",           icon: Brain,      color: "hsl(var(--brand-indigo))" },
 ];
 
 const SCALE_LABELS = ["—", "Low", "Soft", "OK", "Strong", "Peak"] as const;

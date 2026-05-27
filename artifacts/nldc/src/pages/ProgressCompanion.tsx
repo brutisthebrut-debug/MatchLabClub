@@ -29,14 +29,14 @@ interface Scenario {
 }
 
 const CAT_CONFIG: Record<ScenarioCategory, { label: string; color: string }> = {
-  "first-date":    { label: "First Date",         color: "hsl(248 62% 52%)" },
+  "first-date":    { label: "First Date",         color: "hsl(var(--brand-indigo))" },
   "re-engaging":   { label: "Re-engaging",         color: "hsl(190 55% 60%)" },
-  "rejection":     { label: "After Rejection",     color: "hsl(348 55% 65%)" },
-  "slow-fade":     { label: "Slow Fade",           color: "hsl(43 65% 65%)"  },
+  "rejection":     { label: "After Rejection",     color: "hsl(var(--brand-rose))" },
+  "slow-fade":     { label: "Slow Fade",           color: "hsl(var(--brand-gold))"  },
   "early-conflict":{ label: "Early Friction",      color: "hsl(326 100% 65%)" },
-  "exclusivity":   { label: "Exclusivity Talk",    color: "hsl(142 55% 60%)" },
+  "exclusivity":   { label: "Exclusivity Talk",    color: "hsl(var(--brand-green))" },
   "ghosting":      { label: "Ghosting",            color: "hsl(228 18% 60%)" },
-  "vulnerability": { label: "Showing Vulnerability", color: "hsl(43 65% 65%)" },
+  "vulnerability": { label: "Showing Vulnerability", color: "hsl(var(--brand-gold))" },
 };
 
 const SCENARIOS: Scenario[] = [

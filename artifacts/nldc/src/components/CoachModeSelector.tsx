@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -19,7 +20,7 @@ export const COACH_MODES: CoachModeConfig[] = [
     emoji: "⚡",
     tagline: "Your warm, encouraging partner in this",
     toneHint: "Warm, supportive, action-oriented. Celebrates effort, keeps things moving.",
-    color: "hsl(248 62% 52%)",
+    color: "hsl(var(--brand-indigo))",
   },
   {
     key: "direct-friend",
@@ -27,7 +28,7 @@ export const COACH_MODES: CoachModeConfig[] = [
     emoji: "🎯",
     tagline: "No BS, honest feedback, says what most won't",
     toneHint: "Straight talk, zero sugarcoating. Respects you enough to tell it like it is.",
-    color: "hsl(43 65% 65%)",
+    color: "hsl(var(--brand-gold))",
   },
   {
     key: "soft-mirror",
@@ -35,7 +36,7 @@ export const COACH_MODES: CoachModeConfig[] = [
     emoji: "🌿",
     tagline: "Gentle reflection — helps you see your own patterns",
     toneHint: "Curious, non-judgmental. Asks questions, mirrors back what it notices.",
-    color: "hsl(142 55% 60%)",
+    color: "hsl(var(--brand-green))",
   },
   {
     key: "flirt-coach",
@@ -43,7 +44,7 @@ export const COACH_MODES: CoachModeConfig[] = [
     emoji: "✨",
     tagline: "Playful help with tone, attraction, and directness",
     toneHint: "Light, warm, a bit cheeky. Keeps advice fun and not overthought.",
-    color: "hsl(348 55% 65%)",
+    color: "hsl(var(--brand-rose))",
   },
   {
     key: "grounded-strategist",
@@ -126,8 +127,8 @@ export function CoachModeSelector({ value, onChange, compact = false }: CoachMod
                 : "border-white/8 text-muted-foreground hover:border-white/18 hover:text-foreground"
             }`}
             style={value === mode.key ? {
-              borderColor: mode.color.replace(")", " / 0.4)"),
-              background: mode.color.replace(")", " / 0.12)"),
+              borderColor: withAlpha(mode.color, 0.4),
+              background: withAlpha(mode.color, 0.12),
               color: undefined,
             } : undefined}
           >

@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -18,11 +19,11 @@ interface Win {
 }
 
 const CATEGORIES: { id: WinCategory; label: string; icon: React.ElementType; color: string; prompt: string }[] = [
-  { id: "sent-it",           label: "Sent It",            icon: Sparkles,       color: "hsl(43 65% 65%)",  prompt: "You hit send. What were you proud of?" },
-  { id: "great-convo",       label: "Great Convo",        icon: MessageSquare,  color: "hsl(248 62% 52%)", prompt: "What made the conversation different?" },
-  { id: "got-a-date",        label: "Got a Date",         icon: Calendar,       color: "hsl(142 55% 60%)", prompt: "What made it feel like a win?" },
+  { id: "sent-it",           label: "Sent It",            icon: Sparkles,       color: "hsl(var(--brand-gold))",  prompt: "You hit send. What were you proud of?" },
+  { id: "great-convo",       label: "Great Convo",        icon: MessageSquare,  color: "hsl(var(--brand-indigo))", prompt: "What made the conversation different?" },
+  { id: "got-a-date",        label: "Got a Date",         icon: Calendar,       color: "hsl(var(--brand-green))", prompt: "What made it feel like a win?" },
   { id: "noticed-something", label: "Noticed a Pattern",  icon: Eye,            color: "hsl(190 55% 60%)", prompt: "What did you see about yourself or how you were showing up?" },
-  { id: "personal-win",      label: "Personal Win",       icon: Star,           color: "hsl(348 55% 65%)", prompt: "What felt different about how you showed up today?" },
+  { id: "personal-win",      label: "Personal Win",       icon: Star,           color: "hsl(var(--brand-rose))", prompt: "What felt different about how you showed up today?" },
 ];
 
 const STORAGE_KEY = "nldc_dating_wins";
@@ -156,7 +157,7 @@ export default function DatingWinsLog() {
                           onClick={() => setCategory(cat.id)}
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all"
                           style={active
-                            ? { background: cat.color.replace(")", " / 0.18)"), borderColor: cat.color.replace(")", " / 0.45)"), color: cat.color }
+                            ? { background: withAlpha(cat.color, 0.18), borderColor: withAlpha(cat.color, 0.45), color: cat.color }
                             : { borderColor: "hsl(var(--border))", color: "hsl(var(--muted-foreground))" }
                           }
                         >
@@ -218,7 +219,7 @@ export default function DatingWinsLog() {
                     className="glass border border-white/8 rounded-2xl p-4 flex items-start gap-3"
                   >
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-                      style={{ background: cat.color.replace(")", " / 0.12)") }}>
+                      style={{ background: withAlpha(cat.color, 0.12) }}>
                       <Icon className="w-4 h-4" style={{ color: cat.color }} />
                     </div>
                     <div className="flex-1 min-w-0">

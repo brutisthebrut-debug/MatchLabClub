@@ -37,7 +37,7 @@ function ReadinessGauge({ score }: { score: number }) {
   const circ = 2 * Math.PI * radius;
   const offset = circ - (score / 100) * circ;
   const tone =
-    score >= 75 ? "hsl(142 55% 60%)" : score >= 50 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
+    score >= 75 ? "hsl(var(--brand-green))" : score >= 50 ? "hsl(var(--brand-gold))" : "hsl(var(--brand-rose))";
   return (
     <div className="relative flex h-32 w-32 items-center justify-center">
       <svg viewBox="0 0 140 140" className="h-32 w-32 -rotate-90">
@@ -226,8 +226,8 @@ export default function YourMirror() {
                       >
                         <defs>
                           <linearGradient id="mirrorScoreFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="hsl(248 62% 52%)" stopOpacity={0.4} />
-                            <stop offset="100%" stopColor="hsl(248 62% 52%)" stopOpacity={0} />
+                            <stop offset="0%" stopColor="hsl(var(--brand-indigo))" stopOpacity={0.4} />
+                            <stop offset="100%" stopColor="hsl(var(--brand-indigo))" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <XAxis
@@ -252,7 +252,7 @@ export default function YourMirror() {
                         <Area
                           type="monotone"
                           dataKey="score"
-                          stroke="hsl(248 62% 52%)"
+                          stroke="hsl(var(--brand-indigo))"
                           strokeWidth={2}
                           fill="url(#mirrorScoreFill)"
                         />

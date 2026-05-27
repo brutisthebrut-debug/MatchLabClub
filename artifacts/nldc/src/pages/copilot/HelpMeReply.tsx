@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -24,11 +25,11 @@ interface ReplyOption { style: string; text: string; rationale: string; color: s
 interface ReplyResult { options: ReplyOption[]; coachNote: string; }
 
 const PALETTE: { color: string; bg: string }[] = [
-  { color: "hsl(248 62% 52%)", bg: "hsl(248 62% 52% / 0.08)" },
-  { color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.08)"  },
+  { color: "hsl(var(--brand-indigo))", bg: "hsl(var(--brand-indigo) / 0.08)" },
+  { color: "hsl(var(--brand-gold))",  bg: "hsl(var(--brand-gold) / 0.08)"  },
   { color: "hsl(190 55% 60%)", bg: "hsl(190 55% 60% / 0.08)" },
-  { color: "hsl(348 55% 65%)", bg: "hsl(348 55% 65% / 0.08)" },
-  { color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.08)" },
+  { color: "hsl(var(--brand-rose))", bg: "hsl(var(--brand-rose) / 0.08)" },
+  { color: "hsl(var(--brand-green))", bg: "hsl(var(--brand-green) / 0.08)" },
 ];
 
 function buildFallback(context: string, tone: string, goal: string): ReplyResult {
@@ -109,7 +110,7 @@ function CopyBtn({ text, label }: { text: string; label?: string }) {
   return (
     <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); toast({ title: "Copied!" }); setTimeout(() => setCopied(false), 2000); }}
       className="flex items-center gap-1.5 text-xs font-medium transition-colors flex-shrink-0"
-      style={{ color: copied ? "hsl(142 55% 60%)" : undefined }}>
+      style={{ color: copied ? "hsl(var(--brand-green))" : undefined }}>
       {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
       <span className={copied ? "" : "text-muted-foreground"}>{label ?? (copied ? "Copied" : "Copy")}</span>
     </button>
@@ -250,7 +251,7 @@ export default function HelpMeReply() {
                 <div className="space-y-3">
                   {show.options.map((opt, i) => (
                     <motion.div key={i} {...fadeUp(0.04 * i)} className="rounded-2xl border overflow-hidden"
-                      style={{ borderColor: opt.color.replace(")", " / 0.2)") }}>
+                      style={{ borderColor: withAlpha(opt.color, 0.2) }}>
                       <div className="flex items-center justify-between px-5 py-2.5" style={{ background: opt.bg }}>
                         <span className="text-xs font-bold uppercase tracking-wider" style={{ color: opt.color }}>{opt.style}</span>
                         <CopyBtn text={opt.text} label={`Copy ${opt.style}`} />
@@ -258,7 +259,7 @@ export default function HelpMeReply() {
                       <div className="px-5 py-4">
                         <div className="flex justify-end mb-2">
                           <p className="text-sm px-4 py-3 rounded-2xl rounded-br-md text-white font-medium max-w-sm"
-                            style={{ background: `linear-gradient(135deg, ${opt.color}, hsl(326 100% 55%))` }}>
+                            style={{ background: `linear-gradient(135deg, ${opt.color}, hsl(var(--brand-pink)))` }}>
                             {opt.text}
                           </p>
                         </div>

@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -121,8 +122,8 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     name: "The Connector",
     emoji: "🌿",
     tagline: "You make people feel seen — and you need that back",
-    color: "hsl(142 55% 60%)",
-    bg: "hsl(142 55% 60% / 0.12)",
+    color: "hsl(var(--brand-green))",
+    bg: "hsl(var(--brand-green) / 0.12)",
     description: "You're emotionally fluent, you create warmth quickly, and people open up to you. Your dating superpower is depth — you go somewhere real faster than most. The risk? You sometimes give more than you receive, or stay in things longer than they deserve.",
     strengths: ["Creates safety fast", "Remembers details", "Asks the right questions", "Makes people feel chosen"],
     edges: ["Can over-invest too early", "May avoid hard conversations to keep the peace", "Reads into silence too much"],
@@ -134,8 +135,8 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     name: "The Bold Pursuer",
     emoji: "⚡",
     tagline: "You go for what you want — directly",
-    color: "hsl(43 65% 65%)",
-    bg: "hsl(43 65% 65% / 0.12)",
+    color: "hsl(var(--brand-gold))",
+    bg: "hsl(var(--brand-gold) / 0.12)",
     description: "You don't leave people guessing. When you're interested, you say it. When you're not, you move on. This directness is a gift in a world full of slow-fading and vague signals. The challenge: you can mistake pace for certainty, and push for resolution before it's ready.",
     strengths: ["Cuts through ambiguity", "Takes initiative", "Doesn't waste time", "Clear about intentions"],
     edges: ["Can push too hard when interest is developing", "May read unavailability as disinterest too fast", "Sometimes skips emotional depth in favour of forward movement"],
@@ -147,8 +148,8 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     name: "The Adventurer",
     emoji: "🔥",
     tagline: "You date with energy, lightness, and real presence",
-    color: "hsl(348 55% 65%)",
-    bg: "hsl(348 55% 65% / 0.12)",
+    color: "hsl(var(--brand-rose))",
+    bg: "hsl(var(--brand-rose) / 0.12)",
     description: "You bring spontaneity, warmth, and genuine presence to every interaction. Dating feels alive when you're in it. You're not afraid of new people or new scenarios — in fact, you thrive there. The edge: it's harder for you to slow down and let real depth develop.",
     strengths: ["Makes dates feel easy and alive", "Low pressure energy", "Curious and interested in people", "Doesn't catastrophize"],
     edges: ["Can keep things fun to avoid deeper vulnerability", "Hard to settle into one thing", "May underestimate chemistry without novelty"],
@@ -160,8 +161,8 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     name: "The Deep Diver",
     emoji: "🌊",
     tagline: "You want something real — or nothing at all",
-    color: "hsl(248 62% 52%)",
-    bg: "hsl(248 62% 52% / 0.12)",
+    color: "hsl(var(--brand-indigo))",
+    bg: "hsl(var(--brand-indigo) / 0.12)",
     description: "Surface-level doesn't do it for you. You feel things intensely, you're drawn to people who have substance, and when you find something worth caring about, you care completely. That intensity is your gift. The challenge: it can make the dating process exhausting, because most of it isn't there yet.",
     strengths: ["High emotional intelligence", "Committed when committed", "Goes beneath the surface fast", "Remembers what matters"],
     edges: ["Easily overwhelmed by superficiality", "Can fall hard and fast before it's earned", "Struggles with uncertainty in between"],
@@ -186,8 +187,8 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     name: "The Intentional Builder",
     emoji: "🧭",
     tagline: "You know what you want — and you're building toward it",
-    color: "hsl(43 65% 65%)",
-    bg: "hsl(43 65% 65% / 0.12)",
+    color: "hsl(var(--brand-gold))",
+    bg: "hsl(var(--brand-gold) / 0.12)",
     description: "You date with direction. You have a picture of what you want — or at least strong instincts about what fits — and you screen accordingly. You're not into wasted time. This intentionality is powerful. The challenge: if the filter is too tight, it screens out good things that needed more time to become visible.",
     strengths: ["Values-aligned decisions", "Doesn't settle for comfort", "Clear about life direction", "Efficient with energy and time"],
     edges: ["Can over-optimize and miss unexpected fits", "Screening can feel transactional to others", "May mistake chemistry for compatibility too fast"],
@@ -354,7 +355,7 @@ export default function Quiz() {
               <motion.div key="result" {...fadeUp(0)} className="space-y-4">
                 {/* Hero card */}
                 <div className="glass border border-white/8 rounded-3xl p-7 text-center space-y-4"
-                  style={{ boxShadow: `0 0 60px ${archetype.color.replace(")", " / 0.15)")}` }}>
+                  style={{ boxShadow: `0 0 60px ${withAlpha(archetype.color, 0.15)}` }}>
                   <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-3xl"
                     style={{ background: archetype.bg }}>
                     {archetype.emoji}
@@ -387,7 +388,7 @@ export default function Quiz() {
                     <div className="space-y-1.5">
                       {archetype.edges.map((e, i) => (
                         <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5" style={{ background: "hsl(43 65% 65%)" }} />
+                          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5" style={{ background: "hsl(var(--brand-gold))" }} />
                           {e}
                         </div>
                       ))}
@@ -396,7 +397,7 @@ export default function Quiz() {
                 </div>
 
                 {/* What you need */}
-                <div className="rounded-2xl border p-5" style={{ borderColor: archetype.color.replace(")", " / 0.25)"), background: archetype.bg }}>
+                <div className="rounded-2xl border p-5" style={{ borderColor: withAlpha(archetype.color, 0.25), background: archetype.bg }}>
                   <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: archetype.color }}>What you actually need</p>
                   <p className="text-sm text-muted-foreground leading-relaxed">{archetype.whatYouNeed}</p>
                 </div>
@@ -404,7 +405,7 @@ export default function Quiz() {
                 {/* CTA */}
                 <Button onClick={() => navigate(archetype.cta.href)}
                   className="w-full h-12 rounded-full font-semibold border-0"
-                  style={{ background: `linear-gradient(135deg, ${archetype.color}, hsl(248 62% 55%))` }}>
+                  style={{ background: `linear-gradient(135deg, ${archetype.color}, hsl(var(--brand-indigo)))` }}>
                   {archetype.cta.label}
                 </Button>
 

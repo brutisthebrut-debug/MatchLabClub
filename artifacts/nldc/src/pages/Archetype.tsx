@@ -83,9 +83,9 @@ const ARCHETYPES: Record<ArchetypeKey, {
   sparkChaser: {
     name: "The Spark Chaser",
     emoji: "⚡",
-    color: "hsl(43 65% 65%)",
-    bg: "hsl(43 65% 65% / 0.08)",
-    border: "hsl(43 65% 65% / 0.25)",
+    color: "hsl(var(--brand-gold))",
+    bg: "hsl(var(--brand-gold) / 0.08)",
+    border: "hsl(var(--brand-gold) / 0.25)",
     meaning: "You're drawn to intensity and chemistry above all else — the feeling of electricity between two people is your primary signal that something is real. You recognize potential quickly and move toward it fast. The challenge is that the spark and the person are not always the same thing.",
     strengths: ["You feel things fully — intensity is genuine, not performed", "You recognize chemistry fast and act on it decisively", "You bring real energy into early connection", "You don't coast — you're present and invested when you're in"],
     riskLoop: "The loop: strong chemistry → fast attachment → the person starts becoming real (flawed, inconsistent, or just different from the idea) → the spark dims → you pull back or the connection collapses. The exit point: before acting on the spark, give it 3-4 interactions to test whether it's chemistry or just novelty.",
@@ -95,9 +95,9 @@ const ARCHETYPES: Record<ArchetypeKey, {
   slowBurn: {
     name: "The Slow Burn",
     emoji: "🕯️",
-    color: "hsl(248 62% 52%)",
-    bg: "hsl(248 62% 52% / 0.08)",
-    border: "hsl(248 62% 52% / 0.25)",
+    color: "hsl(var(--brand-indigo))",
+    bg: "hsl(var(--brand-indigo) / 0.08)",
+    border: "hsl(var(--brand-indigo) / 0.25)",
     meaning: "You are someone who opens gradually, whose depth appears over time, and whose loyalty — once given — is extraordinary. The challenge is that early dating rewards speed and visibility, and you tend to show up fully only after the early window has closed.",
     strengths: ["Deeply loyal once trust is established", "Relationships with you tend to get better over time", "You don't perform — what people see is real", "Your depth is genuine, not rehearsed"],
     riskLoop: "The loop: slow reveal → person interprets caution as disinterest or unavailability → they pull back or move on → you assume it wasn't right → actually it just needed more time than the format allows. The exit point: one small earlier signal of genuine interest changes the dynamic significantly.",
@@ -119,9 +119,9 @@ const ARCHETYPES: Record<ArchetypeKey, {
   steadySeeker: {
     name: "The Steady Seeker",
     emoji: "🧭",
-    color: "hsl(142 55% 60%)",
-    bg: "hsl(142 55% 60% / 0.08)",
-    border: "hsl(142 55% 60% / 0.25)",
+    color: "hsl(var(--brand-green))",
+    bg: "hsl(var(--brand-green) / 0.08)",
+    border: "hsl(var(--brand-green) / 0.25)",
     meaning: "You want a partnership — real, reliable, lasting. You show up consistently, you communicate clearly, and you take the process seriously. The challenge is that in an environment that rewards game-playing and artificial scarcity, your directness can read as low-stakes rather than high-confidence.",
     strengths: ["You know what you want and pursue it honestly", "You're consistent — people know where they stand with you", "You don't create unnecessary drama or ambiguity", "Your emotional availability is a genuine asset"],
     riskLoop: "The loop: genuine availability → person doesn't feel the need to invest quickly → they slow-play → you wonder if you're too available → start managing your availability artificially → dynamic becomes less honest → connection suffers. The exit: availability is only a problem when matched with someone who doesn't want what you're offering.",
@@ -143,9 +143,9 @@ const ARCHETYPES: Record<ArchetypeKey, {
   anxiousConfirmer: {
     name: "The Anxious Confirmer",
     emoji: "💬",
-    color: "hsl(348 55% 65%)",
-    bg: "hsl(348 55% 65% / 0.08)",
-    border: "hsl(348 55% 65% / 0.25)",
+    color: "hsl(var(--brand-rose))",
+    bg: "hsl(var(--brand-rose) / 0.08)",
+    border: "hsl(var(--brand-rose) / 0.25)",
     meaning: "You care deeply — perhaps more than most — and that care expresses itself as a high need for reassurance that the connection is still real. You're genuinely interested, genuinely warm, and genuinely invested. The challenge is that the checking-in can feel like pressure to someone who hasn't yet matched your level.",
     strengths: ["You're genuinely invested — you don't coast", "Your caring shows and is recognized as real", "You communicate — you don't leave people wondering where they stand", "Your capacity for intimacy is high once you feel safe"],
     riskLoop: "The loop: feel uncertain → check in or reach out → person feels slightly crowded → pulls back slightly → you feel the pull-back → anxiety increases → you check in again → dynamic becomes managed rather than natural. The exit: learn to self-soothe first, communicate second.",
@@ -167,9 +167,9 @@ const ARCHETYPES: Record<ArchetypeKey, {
   intensityResponder: {
     name: "The Intensity Responder",
     emoji: "🔥",
-    color: "hsl(43 65% 65%)",
-    bg: "hsl(43 65% 65% / 0.08)",
-    border: "hsl(43 65% 65% / 0.25)",
+    color: "hsl(var(--brand-gold))",
+    bg: "hsl(var(--brand-gold) / 0.08)",
+    border: "hsl(var(--brand-gold) / 0.25)",
     meaning: "You come alive in high-emotion, high-stakes situations — the beginning of something, a crisis, a dramatic moment. You're not manufacturing drama; you're genuinely more alive when the stakes feel real. The challenge is that sustainable relationships are mostly made of ordinary moments, and ordinary can feel like disappearing.",
     strengths: ["You're fully present when things feel alive and real", "You bring intensity that some people find irresistible", "You don't do halfway — when you're in, you're in", "You're rarely boring to be with"],
     riskLoop: "The loop: ordinary phase of relationship → you feel yourself dimming → unconsciously create intensity (conflict, tests, distance) → spark comes back → calm again → dim again → pattern escalates. The exit: learn to find aliveness in depth and consistency, not just stakes.",
@@ -323,7 +323,7 @@ export default function Archetype() {
                 </div>
 
                 {/* Risk Loop */}
-                <div className="glass border border-white/8 rounded-2xl p-6" style={{ borderColor: "hsl(348 55% 65% / 0.2)" }}>
+                <div className="glass border border-white/8 rounded-2xl p-6" style={{ borderColor: "hsl(var(--brand-rose) / 0.2)" }}>
                   <p className="font-semibold text-foreground text-sm mb-2">Your Risk Loop</p>
                   <p className="text-sm text-muted-foreground leading-relaxed">{archetype!.riskLoop}</p>
                 </div>

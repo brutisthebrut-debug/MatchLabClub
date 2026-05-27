@@ -148,13 +148,13 @@ function saveStoredResult(r: BlueprintResult) {
 }
 
 const SECTIONS = [
-  { key: "firstImpression",    title: "First Impression",      color: "hsl(248 62% 52%)",  desc: "What you project before anyone knows you well" },
-  { key: "repeatingPattern",   title: "Repeating Pattern",     color: "hsl(43 65% 65%)",   desc: "What keeps showing up across dating experiences" },
+  { key: "firstImpression",    title: "First Impression",      color: "hsl(var(--brand-indigo))",  desc: "What you project before anyone knows you well" },
+  { key: "repeatingPattern",   title: "Repeating Pattern",     color: "hsl(var(--brand-gold))",   desc: "What keeps showing up across dating experiences" },
   { key: "communicationStyle", title: "Communication Style",   color: "hsl(190 55% 60%)",  desc: "How you tend to move through early connection" },
   { key: "attractionPattern",  title: "Attraction Pattern",    color: "hsl(326 100% 65%)",  desc: "What you're drawn to and why that makes sense" },
-  { key: "comfortNeeds",       title: "Comfort Needs",         color: "hsl(142 55% 60%)",  desc: "What helps you relax and show up as yourself" },
-  { key: "riskLoop",           title: "Risk Loop",             color: "hsl(348 55% 65%)",  desc: "What tends to derail promising connections" },
-  { key: "growthEdge",         title: "Growth Edge",           color: "hsl(43 65% 65%)",   desc: "One concrete shift that would change your results" },
+  { key: "comfortNeeds",       title: "Comfort Needs",         color: "hsl(var(--brand-green))",  desc: "What helps you relax and show up as yourself" },
+  { key: "riskLoop",           title: "Risk Loop",             color: "hsl(var(--brand-rose))",  desc: "What tends to derail promising connections" },
+  { key: "growthEdge",         title: "Growth Edge",           color: "hsl(var(--brand-gold))",   desc: "One concrete shift that would change your results" },
 ];
 
 function CopyBtn({ text, label }: { text: string; label?: string }) {
@@ -169,7 +169,7 @@ function CopyBtn({ text, label }: { text: string; label?: string }) {
         setTimeout(() => setCopied(false), 2000);
       }}
       className="flex items-center gap-1.5 text-xs transition-colors flex-shrink-0"
-      style={{ color: copied ? "hsl(142 55% 60%)" : undefined }}
+      style={{ color: copied ? "hsl(var(--brand-green))" : undefined }}
       title="Copy to clipboard"
       data-testid="button-copy-blueprint"
     >

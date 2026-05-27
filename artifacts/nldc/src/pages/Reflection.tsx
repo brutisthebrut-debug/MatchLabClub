@@ -151,8 +151,8 @@ function CopyBtn({ text }: { text: string }) {
 }
 
 const REC_STYLES = {
-  pursue: { label: "Pursue", color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.1)", border: "hsl(142 55% 60% / 0.25)" },
-  pause:  { label: "Pause",  color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.1)",  border: "hsl(43 65% 65% / 0.25)"  },
+  pursue: { label: "Pursue", color: "hsl(var(--brand-green))", bg: "hsl(var(--brand-green) / 0.1)", border: "hsl(var(--brand-green) / 0.25)" },
+  pause:  { label: "Pause",  color: "hsl(var(--brand-gold))",  bg: "hsl(var(--brand-gold) / 0.1)",  border: "hsl(var(--brand-gold) / 0.25)"  },
   pass:   { label: "Pass",   color: "hsl(228 18% 60%)", bg: "hsl(228 18% 60% / 0.1)", border: "hsl(228 18% 60% / 0.25)" },
 };
 

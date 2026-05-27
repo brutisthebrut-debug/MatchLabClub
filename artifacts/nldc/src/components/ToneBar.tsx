@@ -1,10 +1,11 @@
+import { withAlpha } from "@/lib/brandColor";
 import { RefreshCw } from "lucide-react";
 import type { ConfidenceLevel } from "@/lib/toneUtils";
 
 const CONFIDENCE_CONFIG: Record<ConfidenceLevel, { label: string; color: string }> = {
-  strong:   { label: "Strong read",           color: "hsl(142 55% 60%)" },
-  moderate: { label: "Needs more context",     color: "hsl(43 65% 65%)"  },
-  limited:  { label: "Based on limited input", color: "hsl(348 55% 65%)" },
+  strong:   { label: "Strong read",           color: "hsl(var(--brand-green))" },
+  moderate: { label: "Needs more context",     color: "hsl(var(--brand-gold))"  },
+  limited:  { label: "Based on limited input", color: "hsl(var(--brand-rose))" },
 };
 
 export function ConfidenceLabel({ level }: { level: ConfidenceLevel }) {
@@ -14,8 +15,8 @@ export function ConfidenceLabel({ level }: { level: ConfidenceLevel }) {
       className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
       style={{
         color: c.color,
-        borderColor: c.color.replace(")", " / 0.3)"),
-        background: c.color.replace(")", " / 0.1)"),
+        borderColor: withAlpha(c.color, 0.3),
+        background: withAlpha(c.color, 0.1),
       }}
     >
       {c.label}

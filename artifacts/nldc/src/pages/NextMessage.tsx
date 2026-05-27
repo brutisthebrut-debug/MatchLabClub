@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -67,8 +68,8 @@ function generateMessages(context: string, lastMsg: string, name: string, goal: 
         ? `I've been thinking about you. Would love to actually meet — are you free this week?`
         : `I really enjoy talking with you. This has been one of the better conversations I've had on here.`,
       when: "When there's real warmth and you want to signal genuine interest without pressure.",
-      color: "hsl(348 55% 65%)",
-      bg: "hsl(348 55% 65% / 0.08)",
+      color: "hsl(var(--brand-rose))",
+      bg: "hsl(var(--brand-rose) / 0.08)",
     },
     {
       style: "Playful",
@@ -78,8 +79,8 @@ function generateMessages(context: string, lastMsg: string, name: string, goal: 
         ? `Okay I have to know — [follow-up on something funny they said]. This has been bothering me.`
         : `I feel like we've been building up to an actual conversation. When does that happen?`,
       when: "When the vibe has been light and banter-y. Keeps things easy.",
-      color: "hsl(43 65% 65%)",
-      bg: "hsl(43 65% 65% / 0.08)",
+      color: "hsl(var(--brand-gold))",
+      bg: "hsl(var(--brand-gold) / 0.08)",
     },
     {
       style: "Bold",
@@ -89,8 +90,8 @@ function generateMessages(context: string, lastMsg: string, name: string, goal: 
         ? `I want to be honest with you — I've been a bit unsure about the direction here. Worth a conversation?`
         : `I'm going to say the thing nobody says: I'm actually interested in getting to know you properly. Let's do something about that.`,
       when: "When you've been dancing around the obvious thing. Clear, confident, attractive.",
-      color: "hsl(248 62% 52%)",
-      bg: "hsl(248 62% 52% / 0.08)",
+      color: "hsl(var(--brand-indigo))",
+      bg: "hsl(var(--brand-indigo) / 0.08)",
     },
     {
       style: "Direct",
@@ -109,8 +110,8 @@ function generateMessages(context: string, lastMsg: string, name: string, goal: 
         ? `There's a [place / thing] I've been wanting to try — would you want to come?`
         : `This is the kind of conversation that's better in person. Want to find out if that's true?`,
       when: "Suggests something without making it a big ask. Feels natural, not pressured.",
-      color: "hsl(142 55% 60%)",
-      bg: "hsl(142 55% 60% / 0.08)",
+      color: "hsl(var(--brand-green))",
+      bg: "hsl(var(--brand-green) / 0.08)",
     },
     {
       style: "Clean Exit",
@@ -156,11 +157,11 @@ function saveStoredResult(r: NextMessageResult) {
 const DEMO: NextMessageResult = {
   options: [
     { style: "Safe",       text: "I keep coming back to what you said about [thing from conversation]. What made you say that?",                                           when: "When you want to restart without pressure.",                                  color: "hsl(228 18% 65%)", bg: "hsl(228 18% 65% / 0.08)" },
-    { style: "Warm",       text: "I really enjoy talking with you. This has been one of the better conversations I've had on here.",                                        when: "When there's real warmth and you want to signal genuine interest.",           color: "hsl(348 55% 65%)", bg: "hsl(348 55% 65% / 0.08)" },
-    { style: "Playful",    text: "I feel like we've been building up to an actual conversation. When does that happen?",                                                    when: "When the vibe has been light. Keeps things easy.",                            color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.08)"  },
-    { style: "Bold",       text: "I'm going to say the thing nobody says: I'm actually interested in getting to know you properly. Let's do something about that.",          when: "When you've been dancing around the obvious thing.",                          color: "hsl(248 62% 52%)", bg: "hsl(248 62% 52% / 0.08)" },
+    { style: "Warm",       text: "I really enjoy talking with you. This has been one of the better conversations I've had on here.",                                        when: "When there's real warmth and you want to signal genuine interest.",           color: "hsl(var(--brand-rose))", bg: "hsl(var(--brand-rose) / 0.08)" },
+    { style: "Playful",    text: "I feel like we've been building up to an actual conversation. When does that happen?",                                                    when: "When the vibe has been light. Keeps things easy.",                            color: "hsl(var(--brand-gold))",  bg: "hsl(var(--brand-gold) / 0.08)"  },
+    { style: "Bold",       text: "I'm going to say the thing nobody says: I'm actually interested in getting to know you properly. Let's do something about that.",          when: "When you've been dancing around the obvious thing.",                          color: "hsl(var(--brand-indigo))", bg: "hsl(var(--brand-indigo) / 0.08)" },
     { style: "Direct",     text: "What are you actually looking for right now? I'd rather know than guess.",                                                                when: "Works when you want real information fast.",                                 color: "hsl(190 55% 60%)", bg: "hsl(190 55% 60% / 0.08)" },
-    { style: "Invitation", text: "This is the kind of conversation that's better in person. Want to find out if that's true?",                                             when: "Suggests something without making it a big ask.",                            color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.08)" },
+    { style: "Invitation", text: "This is the kind of conversation that's better in person. Want to find out if that's true?",                                             when: "Suggests something without making it a big ask.",                            color: "hsl(var(--brand-green))", bg: "hsl(var(--brand-green) / 0.08)" },
     { style: "Clean Exit", text: "I've had a great time chatting — I just don't think I can give this what it deserves right now. I hope you find someone who can.",        when: "A kind, clean close. No ambiguity, no bridge burned.",                        color: "hsl(228 18% 55%)", bg: "hsl(228 18% 55% / 0.08)" },
   ],
   coachNote: "Personalize before sending — replace any bracketed text with something real from your conversation. The more specific, the better it lands.",
@@ -178,7 +179,7 @@ function CopyBtn({ text, style: msgStyle }: { text: string; style?: string }) {
         setTimeout(() => setCopied(false), 2000);
       }}
       className="flex items-center gap-1.5 text-xs font-medium transition-colors flex-shrink-0"
-      style={{ color: copied ? "hsl(142 55% 60%)" : undefined }}
+      style={{ color: copied ? "hsl(var(--brand-green))" : undefined }}
       data-testid="button-copy-next-message"
     >
       {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
@@ -394,7 +395,7 @@ export default function NextMessage() {
                 {show.options.map((opt, i) => (
                   <motion.div key={i} {...fadeUp(0.04 * i)}
                     className="rounded-2xl border overflow-hidden"
-                    style={{ borderColor: opt.color.replace(")", " / 0.2)") }}>
+                    style={{ borderColor: withAlpha(opt.color, 0.2) }}>
                     <div className="flex items-center justify-between px-5 py-2.5" style={{ background: opt.bg }}>
                       <span className="text-xs font-bold uppercase tracking-wider" style={{ color: opt.color }}>{opt.style}</span>
                       <div className="flex items-center gap-3">
@@ -405,7 +406,7 @@ export default function NextMessage() {
                     <div className="px-5 py-4">
                       <div className="flex justify-end">
                         <div className="max-w-sm text-sm px-4 py-3 rounded-2xl rounded-br-md text-white font-medium"
-                          style={{ background: `linear-gradient(135deg, ${opt.color}, hsl(326 100% 55%))` }}>
+                          style={{ background: `linear-gradient(135deg, ${opt.color}, hsl(var(--brand-pink)))` }}>
                           {opt.text}
                         </div>
                       </div>

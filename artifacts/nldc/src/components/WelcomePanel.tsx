@@ -20,17 +20,17 @@ interface TintConfig {
 const TINT_CONFIGS: Record<ShimmerTint, TintConfig> = {
   violet: {
     gradient:
-      "linear-gradient(135deg, hsl(248 62% 52% / 0.12), hsl(326 100% 59% / 0.08), hsl(43 65% 62% / 0.06))",
-    borderColor: "hsl(248 62% 52% / 0.2)",
-    iconBg: "hsl(248 62% 52% / 0.15)",
-    iconBorder: "hsl(248 62% 52% / 0.25)",
+      "linear-gradient(135deg, hsl(var(--brand-indigo) / 0.12), hsl(var(--brand-pink) / 0.08), hsl(var(--brand-gold) / 0.06))",
+    borderColor: "hsl(var(--brand-indigo) / 0.2)",
+    iconBg: "hsl(var(--brand-indigo) / 0.15)",
+    iconBorder: "hsl(var(--brand-indigo) / 0.25)",
     iconColor: "hsl(248 62% 62%)",
     eyebrowColor: "hsl(248 62% 65%)",
   },
   purple: {
     gradient:
-      "linear-gradient(135deg, hsl(248 62% 52% / 0.12), hsl(326 100% 59% / 0.08))",
-    borderColor: "hsl(248 62% 52% / 0.2)",
+      "linear-gradient(135deg, hsl(var(--brand-indigo) / 0.12), hsl(var(--brand-pink) / 0.08))",
+    borderColor: "hsl(var(--brand-indigo) / 0.2)",
     iconBg: "hsl(326 100% 62% / 0.15)",
     iconBorder: "hsl(326 100% 62% / 0.25)",
     iconColor: "hsl(326 100% 62%)",
@@ -38,28 +38,28 @@ const TINT_CONFIGS: Record<ShimmerTint, TintConfig> = {
   },
   "violet-green": {
     gradient:
-      "linear-gradient(135deg, hsl(248 62% 52% / 0.12), hsl(142 55% 60% / 0.08))",
-    borderColor: "hsl(248 62% 52% / 0.2)",
-    iconBg: "hsl(142 55% 60% / 0.15)",
-    iconBorder: "hsl(142 55% 60% / 0.25)",
+      "linear-gradient(135deg, hsl(var(--brand-indigo) / 0.12), hsl(var(--brand-green) / 0.08))",
+    borderColor: "hsl(var(--brand-indigo) / 0.2)",
+    iconBg: "hsl(var(--brand-green) / 0.15)",
+    iconBorder: "hsl(var(--brand-green) / 0.25)",
     iconColor: "hsl(142 55% 70%)",
     eyebrowColor: "hsl(142 60% 78%)",
   },
   gold: {
     gradient:
-      "linear-gradient(135deg, hsl(43 65% 65% / 0.12), hsl(248 62% 52% / 0.08))",
-    borderColor: "hsl(43 65% 65% / 0.2)",
-    iconBg: "hsl(43 65% 65% / 0.15)",
-    iconBorder: "hsl(43 65% 65% / 0.25)",
+      "linear-gradient(135deg, hsl(var(--brand-gold) / 0.12), hsl(var(--brand-indigo) / 0.08))",
+    borderColor: "hsl(var(--brand-gold) / 0.2)",
+    iconBg: "hsl(var(--brand-gold) / 0.15)",
+    iconBorder: "hsl(var(--brand-gold) / 0.25)",
     iconColor: "hsl(43 65% 72%)",
     eyebrowColor: "hsl(43 65% 72%)",
   },
   "violet-teal": {
     gradient:
-      "linear-gradient(135deg, hsl(248 62% 52% / 0.12), hsl(190 55% 60% / 0.08))",
-    borderColor: "hsl(248 62% 52% / 0.2)",
-    iconBg: "hsl(248 62% 52% / 0.15)",
-    iconBorder: "hsl(248 62% 52% / 0.25)",
+      "linear-gradient(135deg, hsl(var(--brand-indigo) / 0.12), hsl(190 55% 60% / 0.08))",
+    borderColor: "hsl(var(--brand-indigo) / 0.2)",
+    iconBg: "hsl(var(--brand-indigo) / 0.15)",
+    iconBorder: "hsl(var(--brand-indigo) / 0.25)",
     iconColor: "hsl(248 62% 62%)",
     eyebrowColor: "hsl(248 62% 65%)",
   },

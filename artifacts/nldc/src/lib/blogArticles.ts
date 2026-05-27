@@ -17,7 +17,7 @@ export const ARTICLES: Article[] = [
     category: "Profile Science",
     readMin: 7,
     date: "May 2026",
-    color: "hsl(248 62% 52%)",
+    color: "hsl(var(--brand-indigo))",
   },
   {
     slug: "the-science-of-message-coaching",
@@ -37,7 +37,7 @@ export const ARTICLES: Article[] = [
     category: "Profile Audit",
     readMin: 6,
     date: "April 2026",
-    color: "hsl(348 55% 65%)",
+    color: "hsl(var(--brand-rose))",
   },
   {
     slug: "photo-psychology-dating-apps",
@@ -47,6 +47,6 @@ export const ARTICLES: Article[] = [
     category: "Photo Psychology",
     readMin: 9,
     date: "April 2026",
-    color: "hsl(43 65% 65%)",
+    color: "hsl(var(--brand-gold))",
   },
 ];

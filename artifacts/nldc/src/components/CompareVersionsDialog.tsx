@@ -31,7 +31,7 @@ function formatGeneratedAt(iso: string): string {
 }
 
 function scoreColor(s: number) {
-  return s >= 75 ? "hsl(142 55% 62%)" : s >= 55 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
+  return s >= 75 ? "hsl(142 55% 62%)" : s >= 55 ? "hsl(var(--brand-gold))" : "hsl(var(--brand-rose))";
 }
 
 function computeDiff(a: string[], b: string[]): { text: string; status: "added" | "removed" | "kept" }[] {

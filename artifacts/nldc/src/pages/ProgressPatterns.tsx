@@ -19,9 +19,9 @@ interface PatternCard {
 }
 
 const CATEGORY_CONFIG = {
-  theme:       { label: "Repeated Theme",      icon: Repeat,        color: "hsl(248 62% 52%)", bg: "hsl(248 62% 52% / 0.08)", border: "hsl(248 62% 52% / 0.2)" },
-  strength:    { label: "Strength",             icon: TrendingUp,    color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.08)", border: "hsl(142 55% 60% / 0.2)" },
-  friction:    { label: "Friction Point",       icon: AlertTriangle, color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.08)",  border: "hsl(43 65% 65% / 0.2)"  },
+  theme:       { label: "Repeated Theme",      icon: Repeat,        color: "hsl(var(--brand-indigo))", bg: "hsl(var(--brand-indigo) / 0.08)", border: "hsl(var(--brand-indigo) / 0.2)" },
+  strength:    { label: "Strength",             icon: TrendingUp,    color: "hsl(var(--brand-green))", bg: "hsl(var(--brand-green) / 0.08)", border: "hsl(var(--brand-green) / 0.2)" },
+  friction:    { label: "Friction Point",       icon: AlertTriangle, color: "hsl(var(--brand-gold))",  bg: "hsl(var(--brand-gold) / 0.08)",  border: "hsl(var(--brand-gold) / 0.2)"  },
   opportunity: { label: "Improvement Opp.",     icon: Target,        color: "hsl(190 55% 60%)", bg: "hsl(190 55% 60% / 0.08)", border: "hsl(190 55% 60% / 0.2)" },
 };
 

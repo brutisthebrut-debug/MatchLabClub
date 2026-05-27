@@ -24,9 +24,9 @@ interface Experiment {
 
 const STATUS_CONFIG: Record<ExperimentStatus, { label: string; color: string; bg: string; border: string }> = {
   "planned":       { label: "Planned",        color: "hsl(228 18% 65%)", bg: "hsl(228 18% 65% / 0.1)",  border: "hsl(228 18% 65% / 0.25)" },
-  "tried":         { label: "Tried",          color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.1)",   border: "hsl(43 65% 65% / 0.25)"  },
-  "helped":        { label: "Helped",         color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.1)",  border: "hsl(142 55% 60% / 0.25)" },
-  "did-not-help":  { label: "Didn't help",    color: "hsl(348 55% 65%)", bg: "hsl(348 55% 65% / 0.1)",  border: "hsl(348 55% 65% / 0.25)" },
+  "tried":         { label: "Tried",          color: "hsl(var(--brand-gold))",  bg: "hsl(var(--brand-gold) / 0.1)",   border: "hsl(var(--brand-gold) / 0.25)"  },
+  "helped":        { label: "Helped",         color: "hsl(var(--brand-green))", bg: "hsl(var(--brand-green) / 0.1)",  border: "hsl(var(--brand-green) / 0.25)" },
+  "did-not-help":  { label: "Didn't help",    color: "hsl(var(--brand-rose))", bg: "hsl(var(--brand-rose) / 0.1)",  border: "hsl(var(--brand-rose) / 0.25)" },
 };
 
 const ALL_STATUSES: ExperimentStatus[] = ["planned", "tried", "helped", "did-not-help"];

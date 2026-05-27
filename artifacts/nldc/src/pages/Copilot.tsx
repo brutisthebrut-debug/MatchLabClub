@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -28,7 +29,7 @@ const WORKFLOWS = [
     title: "Start My Reset",
     tagline: "Guided onboarding through your 5 core tools",
     steps: 5,
-    color: "hsl(248 62% 52%)",
+    color: "hsl(var(--brand-indigo))",
     href: "/copilot/reset",
     desc: "Signal Check → Blueprint → Profile → Messaging → Your Plan",
   },
@@ -37,7 +38,7 @@ const WORKFLOWS = [
     title: "Improve My Profile",
     tagline: "Prioritized rewrite plan + copy-ready versions",
     steps: 2,
-    color: "hsl(43 65% 65%)",
+    color: "hsl(var(--brand-gold))",
     href: "/copilot/profile",
     desc: "Paste your profile, pick your platform and tone, get a rewrite",
   },
@@ -55,7 +56,7 @@ const WORKFLOWS = [
     title: "Debrief What Happened",
     tagline: "Reflect, identify patterns, choose a next step",
     steps: 2,
-    color: "hsl(348 55% 65%)",
+    color: "hsl(var(--brand-rose))",
     href: "/copilot/debrief",
     desc: "After any interaction — capture what felt good or confusing while it's fresh",
   },
@@ -64,7 +65,7 @@ const WORKFLOWS = [
     title: "Weekly Growth Plan",
     tagline: "5 specific actions for the next 7 days",
     steps: 2,
-    color: "hsl(142 55% 60%)",
+    color: "hsl(var(--brand-green))",
     href: "/copilot/weekly-plan",
     desc: "Your goals + recent notes → a small, actionable checklist",
   },
@@ -82,7 +83,7 @@ const WORKFLOWS = [
     title: "Flirt Coach",
     tagline: "Draft messages for any moment — flirting, consent, boundaries, exits",
     steps: 2,
-    color: "hsl(348 55% 65%)",
+    color: "hsl(var(--brand-rose))",
     href: "/copilot/flirt",
     desc: "Sex-positive, non-manipulative options for flirting, date asks, setting limits, or exiting clean",
   },
@@ -136,7 +137,7 @@ export default function Copilot() {
                         className="glass border border-white/8 rounded-2xl p-5 flex flex-col gap-3 hover:border-white/15 hover:shadow-[0_8px_30px_rgb(0_0_0/0.35)] transition-all card-hover block h-full group">
                         <div className="flex items-start justify-between gap-2">
                           <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                            style={{ background: `${wf.color.replace(")", " / 0.15)")}` }}>
+                            style={{ background: `${withAlpha(wf.color, 0.15)}` }}>
                             <Icon className="w-4 h-4" style={{ color: wf.color }} />
                           </div>
                           <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full border border-white/10 text-muted-foreground/40">

@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -43,7 +44,7 @@ export default function Blog() {
             <Link href={`/blog/${ARTICLES[0]!.slug}`}>
               <div className="glass border border-[hsl(248_62%_52%/0.2)] rounded-3xl p-8 md:p-10 hover:bg-white/3 transition-colors group cursor-pointer">
                 <div className="flex items-center gap-3 mb-4 flex-wrap">
-                  <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: "hsl(248 62% 52% / 0.12)", color: "hsl(248 62% 62%)", border: "1px solid hsl(248 62% 52% / 0.25)" }}>
+                  <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: "hsl(var(--brand-indigo) / 0.12)", color: "hsl(248 62% 62%)", border: "1px solid hsl(var(--brand-indigo) / 0.25)" }}>
                     {ARTICLES[0]!.category}
                   </span>
                   <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-[hsl(248_62%_52%/0.12)] border border-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_62%)]">
@@ -73,7 +74,7 @@ export default function Blog() {
               <motion.div key={article.slug} {...fadeUp(0.14 + i * 0.05)}>
                 <Link href={`/blog/${article.slug}`}>
                   <div className="glass rounded-2xl p-6 h-full hover:bg-white/3 transition-colors group cursor-pointer flex flex-col"
-                    style={{ borderColor: `${article.color.replace(")", " / 0.15)")}`, borderWidth: "1px", borderStyle: "solid" }}>
+                    style={{ borderColor: `${withAlpha(article.color, 0.15)}`, borderWidth: "1px", borderStyle: "solid" }}>
                     <span className="text-[10px] font-bold uppercase tracking-widest mb-3 flex-shrink-0" style={{ color: article.color }}>
                       {article.category}
                     </span>

@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -68,10 +69,10 @@ const ACTIONS: ActionItem[] = [
 ];
 
 const CATEGORY_COLORS: Record<ActionItem["category"], string> = {
-  "profile":    "hsl(248 62% 52%)",
+  "profile":    "hsl(var(--brand-indigo))",
   "message":    "hsl(190 55% 60%)",
-  "mindset":    "hsl(43 65% 65%)",
-  "real-world": "hsl(142 55% 60%)",
+  "mindset":    "hsl(var(--brand-gold))",
+  "real-world": "hsl(var(--brand-green))",
 };
 
 const CATEGORY_LABELS: Record<ActionItem["category"], string> = {
@@ -241,7 +242,7 @@ export default function PatternBreaker() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
-                          style={{ color, borderColor: color.replace(")", " / 0.3)"), background: color.replace(")", " / 0.1)") }}>
+                          style={{ color, borderColor: withAlpha(color, 0.3), background: withAlpha(color, 0.1) }}>
                           {CATEGORY_LABELS[action.category]}
                         </span>
                       </div>

@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -43,7 +44,7 @@ function SectionCard({ title, color, children, badge }: { title: string; color: 
         </div>
         {badge && (
           <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
-            style={{ color, borderColor: color.replace(")", " / 0.3)"), background: color.replace(")", " / 0.1)") }}>
+            style={{ color, borderColor: withAlpha(color, 0.3), background: withAlpha(color, 0.1) }}>
             {badge}
           </span>
         )}
@@ -112,9 +113,9 @@ export default function SampleReport() {
           <motion.div {...fadeUp(0.055)} className="mb-6 flex items-center gap-1 flex-wrap text-[10px] font-bold uppercase tracking-wider select-none">
             {[
               { label: "Starting point", color: "hsl(348 55% 68%)" },
-              { label: "Score",          color: "hsl(248 62% 58%)" },
+              { label: "Score",          color: "hsl(var(--brand-indigo))" },
               { label: "Mirror",         color: "hsl(190 55% 65%)" },
-              { label: "Blueprint",      color: "hsl(248 62% 58%)" },
+              { label: "Blueprint",      color: "hsl(var(--brand-indigo))" },
               { label: "Rewrite",        color: "hsl(142 55% 65%)" },
               { label: "Messages",       color: "hsl(43 65% 68%)" },
               { label: "Plan",           color: "hsl(190 55% 65%)" },
@@ -184,8 +185,8 @@ export default function SampleReport() {
                     strokeDasharray={`${72} ${100 - 72}`} strokeLinecap="round" />
                   <defs>
                     <linearGradient id="score-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="hsl(248 62% 52%)" />
-                      <stop offset="100%" stopColor="hsl(142 55% 60%)" />
+                      <stop offset="0%" stopColor="hsl(var(--brand-indigo))" />
+                      <stop offset="100%" stopColor="hsl(var(--brand-green))" />
                     </linearGradient>
                   </defs>
                 </svg>
@@ -196,11 +197,11 @@ export default function SampleReport() {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               {[
-                { label: "Authenticity", score: 78, color: "hsl(142 55% 60%)" },
-                { label: "Specificity",  score: 62, color: "hsl(43 65% 65%)" },
-                { label: "Approachability", score: 65, color: "hsl(43 65% 65%)" },
-                { label: "Energy Match", score: 74, color: "hsl(142 55% 60%)" },
-                { label: "Completeness", score: 81, color: "hsl(142 55% 60%)" },
+                { label: "Authenticity", score: 78, color: "hsl(var(--brand-green))" },
+                { label: "Specificity",  score: 62, color: "hsl(var(--brand-gold))" },
+                { label: "Approachability", score: 65, color: "hsl(var(--brand-gold))" },
+                { label: "Energy Match", score: 74, color: "hsl(var(--brand-green))" },
+                { label: "Completeness", score: 81, color: "hsl(var(--brand-green))" },
               ].map(d => (
                 <div key={d.label} className="glass rounded-xl p-3 text-center">
                   <p className="text-lg font-bold text-foreground">{d.score}</p>
@@ -242,7 +243,7 @@ export default function SampleReport() {
           </SectionCard>
 
           {/* Personal Blueprint */}
-          <SectionCard title="Personal Blueprint" color="hsl(248 62% 52%)">
+          <SectionCard title="Personal Blueprint" color="hsl(var(--brand-indigo))">
             <div className="space-y-3">
               {[
                 { label: "First impression", text: "You come across as capable and composed. The gap is that 'composed' can easily read as 'not looking'. Nothing in your current profile invites someone in." },
@@ -259,7 +260,7 @@ export default function SampleReport() {
           </SectionCard>
 
           {/* Profile Rewrite */}
-          <SectionCard title="Profile Rewrite" color="hsl(142 55% 60%)" badge="Copy-ready">
+          <SectionCard title="Profile Rewrite" color="hsl(var(--brand-green))" badge="Copy-ready">
             <div className="space-y-4">
               <div>
                 <p className="text-[9px] font-bold uppercase tracking-widest text-[hsl(348_55%_65%)] mb-2">Before</p>
@@ -300,7 +301,7 @@ export default function SampleReport() {
               <div className="mt-4 flex items-center gap-2">
                 <div className="flex">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5" fill="hsl(43 65% 65%)" stroke="hsl(43 65% 65%)" />
+                    <Star key={i} className="w-3.5 h-3.5" fill="hsl(var(--brand-gold))" stroke="hsl(var(--brand-gold))" />
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground/50">Founder-reviewed · Sample content only</p>
@@ -309,14 +310,14 @@ export default function SampleReport() {
           </motion.div>
 
           {/* Message Strategy */}
-          <SectionCard title="Message Strategy" color="hsl(348 55% 65%)">
+          <SectionCard title="Message Strategy" color="hsl(var(--brand-rose))">
             <div className="space-y-3">
               {[
                 {
                   type: "Opening message",
                   text: `"I see you also have strong feelings about walk-and-talks vs bars for a first date — what's your case for the bar?"`,
                   note: "Reference something specific from their profile. Turn it into a question that has a real answer.",
-                  color: "hsl(248 62% 52%)",
+                  color: "hsl(var(--brand-indigo))",
                 },
                 {
                   type: "Follow-up (day 2 silence)",
@@ -328,12 +329,12 @@ export default function SampleReport() {
                   type: "The ask",
                   text: `"I'm free Wednesday or Thursday — the walk-and-talk route is yours to pick."`,
                   note: "Specific days. Acknowledge the previous conversation. Let them choose the detail.",
-                  color: "hsl(142 55% 60%)",
+                  color: "hsl(var(--brand-green))",
                 },
               ].map(m => (
                 <div key={m.type} className="glass border border-white/5 rounded-xl overflow-hidden">
                   <div className="px-4 py-2.5 border-b border-white/5 flex items-center justify-between"
-                    style={{ background: m.color.replace(")", " / 0.08)") }}>
+                    style={{ background: withAlpha(m.color, 0.08) }}>
                     <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: m.color }}>{m.type}</p>
                     <CopyBtn text={m.text} />
                   </div>
@@ -347,7 +348,7 @@ export default function SampleReport() {
           </SectionCard>
 
           {/* Compatibility Compass */}
-          <SectionCard title="Compatibility Compass" color="hsl(43 65% 65%)">
+          <SectionCard title="Compatibility Compass" color="hsl(var(--brand-gold))">
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(142_55%_60%)] mb-2">High compatibility</p>
@@ -401,7 +402,7 @@ export default function SampleReport() {
                 {[
                   { dim: "Communication", pct: 92, note: "Direct, prefers face-to-face", color: "hsl(228 50% 68%)" },
                   { dim: "Conflict",      pct: 78, note: "Repair-focused, gives space first", color: "hsl(15 65% 62%)" },
-                  { dim: "Values",        pct: 85, note: "Values-aligned first",              color: "hsl(43 65% 65%)" },
+                  { dim: "Values",        pct: 85, note: "Values-aligned first",              color: "hsl(var(--brand-gold))" },
                   { dim: "Lifestyle",     pct: 70, note: "Routine-driven, early riser",       color: "hsl(35 65% 62%)" },
                   { dim: "Intimacy",      pct: 60, note: "Builds slowly · approved for matching", color: "hsl(305 45% 62%)" },
                   { dim: "Future vision", pct: 88, note: "Family-oriented, location-flexible", color: "hsl(190 55% 60%)" },
@@ -467,7 +468,7 @@ export default function SampleReport() {
             </Collapsible>
             <Collapsible title="Is this for everyone — not just straight/cis daters?">
               <p className="text-sm text-muted-foreground leading-relaxed pt-1">
-                Yes. The tools work for any dating context — straight, gay, queer, bi, trans, non-binary, monogamous, non-monogamous, casual, serious, every platform. The sample report uses a fictional straight male profile because it's the most common use case, but the coaching principles apply broadly. Platform-specific modes cover Hinge, Tinder, Bumble, Feeld, Grindr, HER, OkCupid, Lex, and more.
+                Yes — built for every dating context: straight, gay, lesbian, queer, bi, pan, trans, non-binary, monogamous, non-monogamous, casual, serious. The sample below uses one fictional profile for illustration; the engine adapts to your actual identity, who you're dating, and the platform you're on. See <a href="/gallery" className="underline text-foreground hover:text-primary">the gallery</a> for queer, sapphic, gay-male, and ENM rewrites. Platform-specific modes cover Hinge, Tinder, Bumble, Feeld, Grindr, HER, OkCupid, Lex, and more.
               </p>
             </Collapsible>
           </motion.div>

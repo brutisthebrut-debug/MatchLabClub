@@ -30,8 +30,8 @@ function StarRating({ value, onChange }: { value: number; onChange: (n: number) 
         >
           <Star
             className="w-7 h-7 transition-colors"
-            fill={(hover || value) >= n ? "hsl(43 65% 65%)" : "transparent"}
-            stroke={(hover || value) >= n ? "hsl(43 65% 65%)" : "hsl(var(--muted-foreground) / 0.3)"}
+            fill={(hover || value) >= n ? "hsl(var(--brand-gold))" : "transparent"}
+            stroke={(hover || value) >= n ? "hsl(var(--brand-gold))" : "hsl(var(--muted-foreground) / 0.3)"}
           />
         </button>
       ))}

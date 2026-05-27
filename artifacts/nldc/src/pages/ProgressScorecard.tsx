@@ -24,17 +24,17 @@ interface Dimension {
 
 const DIMENSIONS: Dimension[] = [
   {
-    key: "clarity", label: "Clarity", score: 72, prev: 61, color: "hsl(248 62% 52%)",
+    key: "clarity", label: "Clarity", score: 72, prev: 61, color: "hsl(var(--brand-indigo))",
     note: "You've sharpened your sense of what you want. Earlier entries were exploratory; recent ones are more specific.",
     detail: "Clarity means knowing what you want and why — not just what you'll tolerate. You've moved from 'something real' to naming the specific dynamics, pacing, and qualities that matter. That precision matters in how you filter, communicate, and choose.",
   },
   {
-    key: "confidence", label: "Confidence", score: 65, prev: 60, color: "hsl(43 65% 65%)",
+    key: "confidence", label: "Confidence", score: 65, prev: 60, color: "hsl(var(--brand-gold))",
     note: "Stable upward movement. You're second-guessing yourself less in early interactions.",
     detail: "Confidence here means ease, not performance. A high score isn't swagger — it's being able to show up without constantly running a background check on how you're landing. You're calmer in early interactions than you were four weeks ago.",
   },
   {
-    key: "follow-through", label: "Follow-Through", score: 78, prev: 70, color: "hsl(142 55% 60%)",
+    key: "follow-through", label: "Follow-Through", score: 78, prev: 70, color: "hsl(var(--brand-green))",
     note: "Your strongest dimension. You do what you say you'll try.",
     detail: "Most coaching stops at insight. Follow-through is what makes insight useful. Your timeline shows a pattern of deciding to try something and then actually trying it — which is rarer than it sounds and the single most predictive indicator of progress.",
   },
@@ -44,7 +44,7 @@ const DIMENSIONS: Dimension[] = [
     detail: "Filtering means choosing based on what's real — not reflexive self-protection or anxious over-attachment. A slight dip here often appears when someone is becoming more self-aware of their patterns. The awareness itself is a sign of progress, even if the score reflects the friction.",
   },
   {
-    key: "readiness", label: "Readiness", score: 68, prev: 65, color: "hsl(348 55% 65%)",
+    key: "readiness", label: "Readiness", score: 68, prev: 65, color: "hsl(var(--brand-rose))",
     note: "You're more open than you were. Some protective habits still active — which is fine.",
     detail: "Readiness isn't about urgency — it's about being available enough to let something real develop. The protective habits you've noted (over-explaining, anxiety during quiet periods) are still present but you're naming them faster, which is exactly what shifts them.",
   },
@@ -54,7 +54,7 @@ const DIMENSIONS: Dimension[] = [
     detail: "You've logged more self-observations in the last 30 days than most people develop across years. Awareness precedes change — you can't shift a pattern you can't see. At this rate, you're building a genuinely useful internal map of how you work.",
   },
   {
-    key: "self-trust", label: "Self-Trust", score: 60, prev: 57, color: "hsl(43 65% 65%)",
+    key: "self-trust", label: "Self-Trust", score: 60, prev: 57, color: "hsl(var(--brand-gold))",
     note: "Growing slowly. You're making decisions you're more comfortable with in retrospect.",
     detail: "Self-trust in dating means making a call — pursue, pause, pass — and not immediately second-guessing it. Your logs show you making decisions you're more comfortable with three days later, which is a meaningful indicator. Trust usually lags awareness by a few weeks.",
   },

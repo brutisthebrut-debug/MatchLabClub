@@ -91,15 +91,15 @@ function CopyButton({ text }: { text: string }) {
 }
 
 const STYLE_COLORS: Record<string, string> = {
-  Playful: "hsl(248 62% 52%)",
+  Playful: "hsl(var(--brand-indigo))",
   Direct: "hsl(190 55% 60%)",
-  Warm: "hsl(43 65% 65%)",
+  Warm: "hsl(var(--brand-gold))",
 };
 
 const STYLE_BG: Record<string, string> = {
-  Playful: "hsl(248 62% 52% / 0.1)",
+  Playful: "hsl(var(--brand-indigo) / 0.1)",
   Direct: "hsl(190 55% 60% / 0.1)",
-  Warm: "hsl(43 65% 62% / 0.1)",
+  Warm: "hsl(var(--brand-gold) / 0.1)",
 };
 
 function fileToBase64(file: File): Promise<{ dataUrl: string; base64: string }> {
@@ -607,10 +607,10 @@ export default function Coach() {
                       }
                       const toneStyles =
                         callout?.tone === "up"
-                          ? { color: "hsl(142 55% 70%)", background: "hsl(142 55% 60% / 0.12)" }
+                          ? { color: "hsl(142 55% 70%)", background: "hsl(var(--brand-green) / 0.12)" }
                           : callout?.tone === "down"
                             ? { color: "hsl(0 65% 72%)", background: "hsl(0 55% 60% / 0.12)" }
-                            : { color: "hsl(0 0% 75%)", background: "hsl(248 40% 150%)" };
+                            : { color: "hsl(0 0% 75%)", background: "hsl(248 40% 90%)" };
                       const ToneIcon = callout?.tone === "up" ? TrendingUp : callout?.tone === "down" ? TrendingDown : Minus;
                       return (
                         <div className="mb-3" data-testid="timeline-chart">
@@ -641,9 +641,9 @@ export default function Coach() {
                                 />
                                 <YAxis hide domain={[0, 100]} />
                                 <Tooltip
-                                  cursor={{ fill: "hsl(248 40% 150% / 0.5)" }}
+                                  cursor={{ fill: "hsl(248 40% 90% / 0.5)" }}
                                   contentStyle={{
-                                    background: "hsl(248 40% 160%)",
+                                    background: "hsl(248 40% 95%)",
                                     border: "1px solid hsl(0 0% 100% / 0.08)",
                                     borderRadius: "0.5rem",
                                     fontSize: "11px",
@@ -655,7 +655,7 @@ export default function Coach() {
                                     return [`${value}% (${p.sent}/${p.sent + p.notSent})`, "Sent"];
                                   }}
                                 />
-                                <Bar dataKey="rate" fill="hsl(142 55% 60%)" radius={[3, 3, 0, 0]} />
+                                <Bar dataKey="rate" fill="hsl(var(--brand-green))" radius={[3, 3, 0, 0]} />
                               </BarChart>
                             </ResponsiveContainer>
                           </div>
@@ -693,7 +693,7 @@ export default function Coach() {
                           <span
                             className="text-xs font-semibold px-2 py-0.5 rounded-full"
                             style={{
-                              background: followUpStats.lastAnswer === "sent" ? "hsl(142 55% 60% / 0.15)" : "hsl(248 40% 150%)",
+                              background: followUpStats.lastAnswer === "sent" ? "hsl(var(--brand-green) / 0.15)" : "hsl(248 40% 90%)",
                               color: followUpStats.lastAnswer === "sent" ? "hsl(142 55% 70%)" : "hsl(0 0% 70%)",
                             }}
                             data-testid="stats-last-answer"
@@ -859,10 +859,10 @@ export default function Coach() {
                         key={i}
                         className="border border-white/8 rounded-2xl overflow-hidden card-hover"
                         data-testid={`card-reply-${i}`}
-                        style={{ borderColor: `${STYLE_COLORS[reply.style] || "hsl(248 62% 52%)"} / 0.2` }}
+                        style={{ borderColor: `${STYLE_COLORS[reply.style] || "hsl(var(--brand-indigo))"} / 0.2` }}
                       >
-                        <div className="flex items-center justify-between px-5 py-3" style={{ background: STYLE_BG[reply.style] || "hsl(248 62% 52% / 0.08)" }}>
-                          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: STYLE_COLORS[reply.style] || "hsl(248 62% 52%)" }}>
+                        <div className="flex items-center justify-between px-5 py-3" style={{ background: STYLE_BG[reply.style] || "hsl(var(--brand-indigo) / 0.08)" }}>
+                          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: STYLE_COLORS[reply.style] || "hsl(var(--brand-indigo))" }}>
                             {reply.style}
                           </span>
                           <CopyButton text={reply.text} />
@@ -872,7 +872,7 @@ export default function Coach() {
                           <div className="flex justify-end mb-3">
                             <div
                               className="max-w-xs text-sm px-4 py-3 rounded-2xl rounded-br-md text-white font-medium"
-                              style={{ background: `linear-gradient(135deg, ${STYLE_COLORS[reply.style] || "hsl(248 62% 52%)"}, hsl(326 100% 55%))` }}
+                              style={{ background: `linear-gradient(135deg, ${STYLE_COLORS[reply.style] || "hsl(var(--brand-indigo))"}, hsl(var(--brand-pink)))` }}
                               data-testid={`text-reply-${i}`}
                             >
                               {reply.text}
@@ -1039,7 +1039,7 @@ export default function Coach() {
                       ))}
                     </ul>
                   </div>
-                  <div className="rounded-3xl p-6 border" style={{ background: "hsl(248 62% 52% / 0.07)", borderColor: "hsl(248 62% 52% / 0.2)" }} data-testid="card-coach-tip">
+                  <div className="rounded-3xl p-6 border" style={{ background: "hsl(var(--brand-indigo) / 0.07)", borderColor: "hsl(var(--brand-indigo) / 0.2)" }} data-testid="card-coach-tip">
                     <div className="flex items-center gap-2 mb-4">
                       <Lightbulb className="w-5 h-5 text-[hsl(248_62%_52%)]" />
                       <p className="font-semibold text-foreground text-sm">Coach Tip</p>

@@ -85,14 +85,14 @@ function analyzeStyle(text: string): StyleMapResult {
   ));
 
   const METERS = [
-    { label: "Warmth",          value: warmth,       note: warmth > 70 ? "High — your warmth is legible and welcoming" : warmth > 45 ? "Moderate — present but could be more overt in early interactions" : "Low — may read as cool or transactional to some readers", color: "hsl(348 55% 65%)" },
+    { label: "Warmth",          value: warmth,       note: warmth > 70 ? "High — your warmth is legible and welcoming" : warmth > 45 ? "Moderate — present but could be more overt in early interactions" : "Low — may read as cool or transactional to some readers", color: "hsl(var(--brand-rose))" },
     { label: "Clarity",         value: clarity,      note: clarity > 70 ? "High — people know where they stand with you" : clarity > 45 ? "Moderate — some hedge language creates occasional ambiguity" : "Low — the intent isn't coming through clearly enough", color: "hsl(190 55% 60%)" },
-    { label: "Effort",          value: effortBalance,note: effortBalance > 70 ? "High — you're investing noticeably in the exchange" : effortBalance > 45 ? "Balanced — neither over- nor under-contributing" : "Low — may read as low investment or passive", color: "hsl(248 62% 52%)" },
-    { label: "Playfulness",     value: playfulness,  note: playfulness > 70 ? "High — levity is present and creates ease" : playfulness > 40 ? "Moderate — some lightness, but room to let it breathe more" : "Low — could benefit from occasional humor or lightness", color: "hsl(43 65% 65%)" },
+    { label: "Effort",          value: effortBalance,note: effortBalance > 70 ? "High — you're investing noticeably in the exchange" : effortBalance > 45 ? "Balanced — neither over- nor under-contributing" : "Low — may read as low investment or passive", color: "hsl(var(--brand-indigo))" },
+    { label: "Playfulness",     value: playfulness,  note: playfulness > 70 ? "High — levity is present and creates ease" : playfulness > 40 ? "Moderate — some lightness, but room to let it breathe more" : "Low — could benefit from occasional humor or lightness", color: "hsl(var(--brand-gold))" },
     { label: "Pacing",          value: pacing,       note: pacing > 70 ? "Moves forward — you're steering toward something, which is good" : pacing > 45 ? "Measured — neither rushing nor stalling" : "Slow — may feel meandering without a clear direction", color: "hsl(326 100% 65%)" },
-    { label: "Availability",    value: availability, note: availability > 70 ? "High — emotional openness is present and legible" : availability > 45 ? "Present — some warmth is accessible" : "Guarded — emotional availability isn't coming through clearly yet", color: "hsl(142 55% 60%)" },
+    { label: "Availability",    value: availability, note: availability > 70 ? "High — emotional openness is present and legible" : availability > 45 ? "Present — some warmth is accessible" : "Guarded — emotional availability isn't coming through clearly yet", color: "hsl(var(--brand-green))" },
     { label: "Directness",      value: directness,   note: directness > 70 ? "High — you say what you mean" : directness > 45 ? "Moderate — direct in some areas, soft-pedaling in others" : "Low — more indirection than serves you; try naming what you want", color: "hsl(190 55% 60%)" },
-    { label: "Pressure",        value: pressure,     note: pressure > 65 ? "Elevated — the intensity may be creating mild pressure; ease off slightly" : pressure > 35 ? "Moderate — present but not excessive" : "Low — no sense of pressure; relaxed energy", color: "hsl(43 65% 65%)" },
+    { label: "Pressure",        value: pressure,     note: pressure > 65 ? "Elevated — the intensity may be creating mild pressure; ease off slightly" : pressure > 35 ? "Moderate — present but not excessive" : "Low — no sense of pressure; relaxed energy", color: "hsl(var(--brand-gold))" },
     { label: "Ambiguity",       value: ambiguity,    note: ambiguity > 65 ? "High — the intent isn't clear enough; name what you want more explicitly" : ambiguity > 35 ? "Some — a few unclear signals worth tightening" : "Low — signals are clear and legible", color: "hsl(228 18% 65%)" },
   ];
 
@@ -134,14 +134,14 @@ function analyzeStyle(text: string): StyleMapResult {
 
 const DEMO: StyleMapResult = {
   meters: [
-    { label: "Warmth",       value: 72, note: "High — your warmth is legible and welcoming",                                                                                 color: "hsl(348 55% 65%)" },
+    { label: "Warmth",       value: 72, note: "High — your warmth is legible and welcoming",                                                                                 color: "hsl(var(--brand-rose))" },
     { label: "Clarity",      value: 58, note: "Moderate — some hedge language creates occasional ambiguity",                                                                 color: "hsl(190 55% 60%)" },
-    { label: "Effort",       value: 65, note: "Balanced — neither over- nor under-contributing",                                                                              color: "hsl(248 62% 52%)" },
-    { label: "Playfulness",  value: 48, note: "Moderate — some lightness, but room to let it breathe more",                                                                  color: "hsl(43 65% 65%)"  },
+    { label: "Effort",       value: 65, note: "Balanced — neither over- nor under-contributing",                                                                              color: "hsl(var(--brand-indigo))" },
+    { label: "Playfulness",  value: 48, note: "Moderate — some lightness, but room to let it breathe more",                                                                  color: "hsl(var(--brand-gold))"  },
     { label: "Pacing",       value: 55, note: "Measured — neither rushing nor stalling",                                                                                      color: "hsl(326 100% 65%)" },
-    { label: "Availability", value: 68, note: "Present — emotional openness is accessible",                                                                                   color: "hsl(142 55% 60%)" },
+    { label: "Availability", value: 68, note: "Present — emotional openness is accessible",                                                                                   color: "hsl(var(--brand-green))" },
     { label: "Directness",   value: 44, note: "Moderate — direct in some areas, soft-pedaling in others",                                                                     color: "hsl(190 55% 60%)" },
-    { label: "Pressure",     value: 22, note: "Low — no sense of pressure; relaxed energy",                                                                                   color: "hsl(43 65% 65%)"  },
+    { label: "Pressure",     value: 22, note: "Low — no sense of pressure; relaxed energy",                                                                                   color: "hsl(var(--brand-gold))"  },
     { label: "Ambiguity",    value: 38, note: "Some — a few unclear signals worth tightening",                                                                                color: "hsl(228 18% 65%)" },
   ],
   readout: "Your warmth comes through clearly, and there's a steady, non-pressuring quality to the exchange. The main opportunity: be a little more direct about what you want. Clarity is attractive — it's not the same as intensity.",

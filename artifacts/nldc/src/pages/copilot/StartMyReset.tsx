@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -34,7 +35,7 @@ const STEPS: ResetStep[] = [
     tagline: "Your 3-minute baseline",
     why: "Gives you a starting score so every other step has something to compare against. Most people skip this and then don't know if anything's working.",
     href: "/signal-check",
-    color: "hsl(248 62% 52%)",
+    color: "hsl(var(--brand-indigo))",
     time: "3 min",
   },
   {
@@ -44,7 +45,7 @@ const STEPS: ResetStep[] = [
     tagline: "Your personalized self-insight",
     why: "A coaching lens on how you show up — patterns, first impressions, growth edge. Worth doing before rewriting your profile because it tells you *what* to fix.",
     href: "/blueprint",
-    color: "hsl(43 65% 65%)",
+    color: "hsl(var(--brand-gold))",
     time: "5 min",
   },
   {
@@ -74,7 +75,7 @@ const STEPS: ResetStep[] = [
     tagline: "See your full picture",
     why: "Now that you've run the core tools, your Dashboard will surface your Signal Score, score history, and a personalised next best action.",
     href: "/dashboard",
-    color: "hsl(142 55% 60%)",
+    color: "hsl(var(--brand-green))",
     time: "2 min",
   },
 ];
@@ -209,7 +210,7 @@ export default function StartMyReset() {
                       {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2.5 mb-1">
-                          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${step.color.replace(")", " / 0.15)")}` }}>
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${withAlpha(step.color, 0.15)}` }}>
                             <Icon className="w-3.5 h-3.5" style={{ color: step.color }} />
                           </div>
                           <div>
@@ -220,7 +221,7 @@ export default function StartMyReset() {
                         <p className="text-xs text-muted-foreground/65 leading-relaxed mb-3">{step.why}</p>
                         <div className="flex items-center gap-3">
                           <Button asChild size="sm" className="rounded-full text-xs px-4 border-0 font-semibold"
-                            style={{ background: step.color, color: "hsl(248 45% 165%)" }}>
+                            style={{ background: step.color, color: "hsl(248 45% 95%)" }}>
                             <Link href={step.href}>Open Tool <ArrowRight className="ml-1 h-3 w-3" /></Link>
                           </Button>
                           <button onClick={() => isDone ? unmark(step.id) : markDone(step.id)}

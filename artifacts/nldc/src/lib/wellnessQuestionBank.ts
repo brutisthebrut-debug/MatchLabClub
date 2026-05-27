@@ -15,24 +15,24 @@ export type WellnessQuestion = {
 };
 
 export const DIMENSION_META: Record<string, { label: string; color: string; blurb: string }> = {
-  emotional:    { label: "Emotional",              color: "hsl(348 55% 65%)",  blurb: "How you notice, name, and move through feelings." },
-  physical:     { label: "Physical",               color: "hsl(142 55% 60%)",  blurb: "Energy, body awareness, health habits." },
+  emotional:    { label: "Emotional",              color: "hsl(var(--brand-rose))",  blurb: "How you notice, name, and move through feelings." },
+  physical:     { label: "Physical",               color: "hsl(var(--brand-green))",  blurb: "Energy, body awareness, health habits." },
   social:       { label: "Social",                 color: "hsl(190 55% 60%)",  blurb: "The people around you and how you connect." },
-  intellectual: { label: "Intellectual",           color: "hsl(248 62% 52%)",  blurb: "Curiosity, learning, and the questions you carry." },
-  spiritual:    { label: "Spiritual / Meaning",    color: "hsl(43 65% 65%)",   blurb: "Values, meaning, and what keeps you grounded." },
+  intellectual: { label: "Intellectual",           color: "hsl(var(--brand-indigo))",  blurb: "Curiosity, learning, and the questions you carry." },
+  spiritual:    { label: "Spiritual / Meaning",    color: "hsl(var(--brand-gold))",   blurb: "Values, meaning, and what keeps you grounded." },
   occupational: { label: "Occupational / Purpose", color: "hsl(220 50% 65%)",  blurb: "Work rhythm, ambition, and life direction." },
   financial:    { label: "Financial",              color: "hsl(155 50% 60%)",  blurb: "Money style, security needs, and shared lifestyle." },
   environmental:{ label: "Environmental / Home",   color: "hsl(160 45% 60%)",  blurb: "Spaces, routines, and home environment." },
   communication:{ label: "Communication",          color: "hsl(228 50% 68%)",  blurb: "How you speak, listen, and process together." },
   conflict:     { label: "Conflict & Repair",      color: "hsl(15 65% 62%)",   blurb: "How you handle disagreement and come back." },
   boundaries:   { label: "Boundaries",             color: "hsl(326 100% 65%)",  blurb: "What you protect and how you communicate it." },
-  affection:    { label: "Affection & Touch",      color: "hsl(348 55% 65%)",  blurb: "Physical closeness, warmth, and how you give care." },
+  affection:    { label: "Affection & Touch",      color: "hsl(var(--brand-rose))",  blurb: "Physical closeness, warmth, and how you give care." },
   intimacy:     { label: "Intimacy",               color: "hsl(305 45% 62%)",  blurb: "Emotional and physical connection at depth.", },
   lifestyle:    { label: "Lifestyle Rhythm",       color: "hsl(35 65% 62%)",   blurb: "Daily patterns, energy, and how you like to live." },
   future_vision:{ label: "Future Vision",          color: "hsl(190 55% 60%)",  blurb: "Where you're heading and what you're building." },
-  values:       { label: "Values & Character",     color: "hsl(43 65% 65%)",   blurb: "What you stand for and how you want to live." },
-  family:       { label: "Family & Community",     color: "hsl(142 55% 60%)",  blurb: "Roots, relationships, and who shaped you." },
-  culture:      { label: "Culture & Background",   color: "hsl(248 62% 52%)",  blurb: "Heritage, traditions, and shared context." },
+  values:       { label: "Values & Character",     color: "hsl(var(--brand-gold))",   blurb: "What you stand for and how you want to live." },
+  family:       { label: "Family & Community",     color: "hsl(var(--brand-green))",  blurb: "Roots, relationships, and who shaped you." },
+  culture:      { label: "Culture & Background",   color: "hsl(var(--brand-indigo))",  blurb: "Heritage, traditions, and shared context." },
 };
 
 export const WELLNESS_QUESTIONS: WellnessQuestion[] = [

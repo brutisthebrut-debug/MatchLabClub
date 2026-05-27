@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -70,7 +71,7 @@ const SAMPLE_MATCHES = [
 
 function SampleMatchCard({ match, index }: { match: typeof SAMPLE_MATCHES[number]; index: number }) {
   const [open, setOpen] = useState(false);
-  const color = match.strength >= 80 ? "hsl(142 55% 60%)" : match.strength >= 70 ? "hsl(43 65% 65%)" : "hsl(190 55% 60%)";
+  const color = match.strength >= 80 ? "hsl(var(--brand-green))" : match.strength >= 70 ? "hsl(var(--brand-gold))" : "hsl(190 55% 60%)";
 
   return (
     <motion.div {...fadeUp(0.1 + index * 0.04)} className="glass-strong rounded-2xl border border-white/5 overflow-hidden">
@@ -115,7 +116,7 @@ function SampleMatchCard({ match, index }: { match: typeof SAMPLE_MATCHES[number
                 if (!meta) return null;
                 return (
                   <span key={d} className="text-[10px] px-2 py-0.5 rounded-full border"
-                    style={{ color: meta.color, borderColor: meta.color.replace(")", " / 0.25)"), background: meta.color.replace(")", " / 0.07)") }}>
+                    style={{ color: meta.color, borderColor: withAlpha(meta.color, 0.25), background: withAlpha(meta.color, 0.07) }}>
                     {meta.label}
                   </span>
                 );
@@ -135,7 +136,7 @@ const HOW_IT_WORKS = [
     step: "1",
     title: "Build your compatibility profile",
     desc: "Answer across 18 dimensions at your own pace. No time limit, no pressure. Skip anything sensitive.",
-    color: "hsl(248 62% 52%)",
+    color: "hsl(var(--brand-indigo))",
     icon: Sparkles,
     href: "/wellness",
     cta: "Go to Profile Builder",
@@ -144,7 +145,7 @@ const HOW_IT_WORKS = [
     step: "2",
     title: "Approve what's used for matching",
     desc: "Every answer is coaching-only by default. You explicitly approve which dimensions surface to potential matches.",
-    color: "hsl(142 55% 60%)",
+    color: "hsl(var(--brand-green))",
     icon: Shield,
     href: "/user-control",
     cta: "Review consent settings",
@@ -153,7 +154,7 @@ const HOW_IT_WORKS = [
     step: "3",
     title: "Get matched on real signal",
     desc: "When matching opens, we surface people with genuine compatibility — not just appearance or location. Values, communication, conflict style, future vision.",
-    color: "hsl(43 65% 65%)",
+    color: "hsl(var(--brand-gold))",
     icon: Heart,
     href: "/waitlist",
     cta: "Join the interest list",
@@ -217,7 +218,7 @@ export default function FutureConnections() {
                 </p>
               </div>
               <div className="flex flex-col items-end flex-shrink-0">
-                <span className="text-3xl font-bold tabular-nums" style={{ color: overallPct >= 60 ? "hsl(142 55% 60%)" : "hsl(43 65% 65%)" }}>
+                <span className="text-3xl font-bold tabular-nums" style={{ color: overallPct >= 60 ? "hsl(var(--brand-green))" : "hsl(var(--brand-gold))" }}>
                   {overallPct}%
                 </span>
                 <span className="text-[9px] text-muted-foreground/40 uppercase tracking-widest">profile complete</span>

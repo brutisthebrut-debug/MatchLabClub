@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -58,8 +59,8 @@ type ConsentLevel = "coaching" | "matching" | "research";
 
 const CONSENT_META: Record<ConsentLevel, { label: string; color: string; blurb: string }> = {
   coaching:  { label: "Coaching only",  color: "hsl(190 55% 60%)",  blurb: "Used only for your personal coaching and readiness insights." },
-  matching:  { label: "Matching",       color: "hsl(142 55% 60%)",  blurb: "May be used for compatibility matching when you opt in." },
-  research:  { label: "Research",       color: "hsl(248 62% 52%)",  blurb: "Anonymised contribution to product research." },
+  matching:  { label: "Matching",       color: "hsl(var(--brand-green))",  blurb: "May be used for compatibility matching when you opt in." },
+  research:  { label: "Research",       color: "hsl(var(--brand-indigo))",  blurb: "Anonymised contribution to product research." },
 };
 
 function ConsentBadge({ level, onChange }: { level: ConsentLevel; onChange: (l: ConsentLevel) => void }) {
@@ -71,7 +72,7 @@ function ConsentBadge({ level, onChange }: { level: ConsentLevel; onChange: (l: 
       <button
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full border transition-all"
-        style={{ color: meta.color, borderColor: meta.color.replace(")", " / 0.35)"), background: meta.color.replace(")", " / 0.09)") }}
+        style={{ color: meta.color, borderColor: withAlpha(meta.color, 0.35), background: withAlpha(meta.color, 0.09) }}
       >
         <span className="w-1.5 h-1.5 rounded-full" style={{ background: meta.color }} />
         {meta.label}
@@ -221,7 +222,7 @@ function ProfileModule({
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
           <div className="text-right">
-            <p className="text-xs font-semibold tabular-nums" style={{ color: pct >= 80 ? "hsl(142 55% 60%)" : pct >= 40 ? "hsl(43 65% 65%)" : "hsl(220 10% 55%)" }}>
+            <p className="text-xs font-semibold tabular-nums" style={{ color: pct >= 80 ? "hsl(var(--brand-green))" : pct >= 40 ? "hsl(var(--brand-gold))" : "hsl(220 10% 55%)" }}>
               {answered}/{total}
             </p>
             <p className="text-[9px] text-muted-foreground/40 uppercase tracking-widest">answered</p>
@@ -283,7 +284,7 @@ function DimensionGrid({ profile }: { profile: WellnessProfile | undefined }) {
           <div key={d.dimension} className="glass-strong rounded-xl border border-white/5 p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ background: meta.color.replace(")", " / 0.13)") }}>
+                style={{ background: withAlpha(meta.color, 0.13) }}>
                 <Icon className="w-3.5 h-3.5" style={{ color: meta.color }} />
               </div>
               <div className="flex-1 min-w-0">
@@ -315,7 +316,7 @@ function MatchingReadinessPanel({ profile }: { profile: WellnessProfile | undefi
   if (!profile?.matchingReadiness) return null;
   const mr = profile.matchingReadiness;
   const pct = mr.overallPct ?? 0;
-  const color = pct >= 60 ? "hsl(142 55% 60%)" : pct >= 30 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
+  const color = pct >= 60 ? "hsl(var(--brand-green))" : pct >= 30 ? "hsl(var(--brand-gold))" : "hsl(var(--brand-rose))";
 
   return (
     <motion.div {...fadeUp(0.2)} className="glass-strong rounded-2xl border border-[hsl(248_62%_52%/0.18)] p-5 mb-6">
@@ -371,8 +372,8 @@ function InsightTagsPanel({ tags }: { tags: Array<{ tag: string; label: string; 
             className="text-[11px] px-2.5 py-1 rounded-full border flex items-center gap-1.5"
             style={{
               color: t.approvedForMatching ? "hsl(142 55% 72%)" : "hsl(220 10% 65%)",
-              borderColor: t.approvedForMatching ? "hsl(142 55% 60% / 0.3)" : "hsl(220 10% 35%)",
-              background: t.approvedForMatching ? "hsl(142 55% 60% / 0.07)" : "hsl(232 18% 15%)",
+              borderColor: t.approvedForMatching ? "hsl(var(--brand-green) / 0.3)" : "hsl(220 10% 35%)",
+              background: t.approvedForMatching ? "hsl(var(--brand-green) / 0.07)" : "hsl(232 18% 15%)",
             }}
           >
             {t.approvedForMatching ? <Unlock className="w-2.5 h-2.5 flex-shrink-0" /> : <Lock className="w-2.5 h-2.5 flex-shrink-0" />}

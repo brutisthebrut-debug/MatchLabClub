@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -46,9 +47,9 @@ interface FutureCard {
 type Card = ImportCard | FutureCard;
 
 const SENSITIVITY_LABELS: Record<Sensitivity, { label: string; color: string }> = {
-  low:    { label: "Low sensitivity",    color: "hsl(142 55% 60%)" },
-  medium: { label: "Medium sensitivity", color: "hsl(43 65% 65%)"  },
-  high:   { label: "High sensitivity",   color: "hsl(348 55% 65%)" },
+  low:    { label: "Low sensitivity",    color: "hsl(var(--brand-green))" },
+  medium: { label: "Medium sensitivity", color: "hsl(var(--brand-gold))"  },
+  high:   { label: "High sensitivity",   color: "hsl(var(--brand-rose))" },
 };
 
 const IMPORT_CARDS: ImportCard[] = [
@@ -59,7 +60,7 @@ const IMPORT_CARDS: ImportCard[] = [
     desc: "Upload screenshots of profiles you've seen — yours or a match's. The app reads what's there and gives you coaching context.",
     what: "Helps with profile comparison, audit context, and coaching prompts.",
     sensitivity: "medium",
-    color: "hsl(248 62% 52%)",
+    color: "hsl(var(--brand-indigo))",
     placeholder: "Paste extracted text from a screenshot, or describe what you see in the profile — the app will work with what you share.",
     live: true,
   },
@@ -81,7 +82,7 @@ const IMPORT_CARDS: ImportCard[] = [
     desc: "Paste your own bio, prompts, and headline. The app reviews it and gives you a personalised improvement plan.",
     what: "Used for Profile Audit, Improve My Profile, and Glow-Up workflows.",
     sensitivity: "medium",
-    color: "hsl(43 65% 65%)",
+    color: "hsl(var(--brand-gold))",
     placeholder: "Paste your current bio, prompts, or anything written on your profile. Rough drafts are fine.",
     live: true,
   },
@@ -92,7 +93,7 @@ const IMPORT_CARDS: ImportCard[] = [
     desc: "Write a note about a date, a pattern you've noticed, or something you want to process. Your coach uses it as context.",
     what: "Feeds into Blueprint, Debrief, and Weekly Growth Plan.",
     sensitivity: "high",
-    color: "hsl(142 55% 60%)",
+    color: "hsl(var(--brand-green))",
     placeholder: "Write whatever feels relevant — a date debrief, a pattern you keep noticing, something you want to get clear on.",
     live: true,
   },
@@ -106,7 +107,7 @@ const FUTURE_CARDS: FutureCard[] = [
     desc: "Connect Gmail or paste email exchanges to surface communication patterns and attachment cues.",
     what: "Powers the Email Insights tool for deeper communication pattern analysis.",
     sensitivity: "high",
-    color: "hsl(348 55% 65%)",
+    color: "hsl(var(--brand-rose))",
     comingSoon: "Manual paste available now in Email Insights. Direct Gmail connection coming later.",
   },
   {
@@ -116,7 +117,7 @@ const FUTURE_CARDS: FutureCard[] = [
     desc: "Share your availability and lifestyle rhythm — not your events, just your general bandwidth.",
     what: "Helps Weekly Growth Plan suggest timing that actually fits your life.",
     sensitivity: "low",
-    color: "hsl(43 65% 65%)",
+    color: "hsl(var(--brand-gold))",
     comingSoon: "Coming in a future update. Manual entry available in Life Context.",
   },
   {
@@ -181,7 +182,7 @@ function ImportCardUI({ card, index }: { card: ImportCard; index: number }) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: card.color.replace(")", " / 0.12)") }}>
+              style={{ background: withAlpha(card.color, 0.12) }}>
               <Icon className="w-4 h-4" style={{ color: card.color }} />
             </div>
             <div className="flex-1 min-w-0">
@@ -255,7 +256,7 @@ function FutureCardUI({ card, index }: { card: FutureCard; index: number }) {
     <motion.div {...fadeUp(0.06 + index * 0.04)} className="glass border border-white/5 rounded-2xl p-5 opacity-60">
       <div className="flex items-start gap-3">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 opacity-50"
-          style={{ background: card.color.replace(")", " / 0.10)") }}>
+          style={{ background: withAlpha(card.color, 0.10) }}>
           <Icon className="w-4 h-4" style={{ color: card.color }} />
         </div>
         <div className="flex-1">

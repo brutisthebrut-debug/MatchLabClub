@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -50,14 +51,14 @@ function generateGlowUp(original: string, goal: string): GlowVersion[] {
       label: "Serious / Long-Term",
       bio: `I'm someone who ${core}. Not in a way that's trying to impress you — in a way that's just how I am. I ${detail}. I'm here because I want something real, which means I'm looking for someone who's also done pretending that doesn't matter. ${closing}`,
       tip: "Leads with character, not a list of attributes. States intention without desperation.",
-      color: "hsl(248 62% 52%)",
+      color: "hsl(var(--brand-indigo))",
     },
     {
       style: "playful",
       label: "Playful / Light",
       bio: `Hot take: the best first dates feel like the second one. I'm ${core.replace("makes", "the kind of person who makes").replace("builds", "building").replace("makes the", "making the").replace("pays", "paying")}. I'll probably make you laugh at something unexpected, order something off-menu, and remember what you said three conversations later. Looking for someone who's actually trying — not just swiping. Is that you?`,
       tip: "Light tone signals ease without lowering seriousness. The question at the end invites.",
-      color: "hsl(43 65% 65%)",
+      color: "hsl(var(--brand-gold))",
     },
     {
       style: "direct",
@@ -78,7 +79,7 @@ function generateGlowUp(original: string, goal: string): GlowVersion[] {
       label: "Less Generic",
       bio: `I'll give you one true thing: I'm the person who ${detail}. I ${core} — but I only mention that because it's actually true, not because it sounds good. I'm not sure how to write a bio that sounds like a person and not a brand. This is my best attempt. If it worked, send me your current unpopular opinion. If it didn't, no hard feelings.`,
       tip: "Meta-honesty creates instant differentiation. The specific detail does all the heavy lifting.",
-      color: "hsl(142 55% 60%)",
+      color: "hsl(var(--brand-green))",
     },
     {
       style: "hinge",
@@ -90,7 +91,7 @@ I'm looking for: Someone who takes the relationship seriously but doesn't take t
 
 Typical Sunday: ${hasHomebody ? "Slow morning, good coffee, cooking something with too many steps, and genuinely enjoying all of it." : hasAdventure ? "Probably outside, probably went further than planned, definitely didn't regret it." : "A mix of productive and useless in a ratio that feels right that day."}`,
       tip: "Uses Hinge prompt format. Each answer ends with something to respond to.",
-      color: "hsl(348 55% 65%)",
+      color: "hsl(var(--brand-rose))",
     },
     {
       style: "tinder",
@@ -114,7 +115,7 @@ Typical Sunday: ${hasHomebody ? "Slow morning, good coffee, cooking something wi
       label: "Sniffies-Style",
       bio: `${core.charAt(0).toUpperCase() + core.slice(1)}. Here for what this app is for — no judgment, no complications. ${hasHumor ? "Good vibes, good humor, clean." : "Clean, curious, low-drama."} Chat first, always. If you're respectful I'll match it.`,
       tip: "Brief, clear, non-judgmental. Sniffies users value honesty about intent.",
-      color: "hsl(43 65% 65%)",
+      color: "hsl(var(--brand-gold))",
     },
     {
       style: "feeld",
@@ -146,11 +147,11 @@ function VersionCard({ v, original }: { v: GlowVersion; original: string }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="glass border border-white/8 rounded-2xl overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: `1px solid ${v.color.replace(")", " / 0.15)")}` }}>
+      <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: `1px solid ${withAlpha(v.color, 0.15)}` }}>
         <div className="flex items-center gap-2.5">
           <span className="w-2.5 h-2.5 rounded-full" style={{ background: v.color }} />
           <span className="font-semibold text-foreground text-sm">{v.label}</span>
-          {v.platform && <span className="text-xs px-2 py-0.5 rounded-full border text-muted-foreground/60" style={{ borderColor: v.color.replace(")", " / 0.2)") }}>{v.platform}</span>}
+          {v.platform && <span className="text-xs px-2 py-0.5 rounded-full border text-muted-foreground/60" style={{ borderColor: withAlpha(v.color, 0.2) }}>{v.platform}</span>}
         </div>
         <div className="flex items-center gap-3">
           <CopyBtn text={v.bio} />
@@ -168,7 +169,7 @@ function VersionCard({ v, original }: { v: GlowVersion; original: string }) {
       )}
       {/* What to use instead */}
       <div className="px-5 py-4">
-        {open && <p className="section-label mb-2" style={{ color: `${v.color.replace(")", " / 0.85)")}` }}>What to use instead</p>}
+        {open && <p className="section-label mb-2" style={{ color: `${withAlpha(v.color, 0.85)}` }}>What to use instead</p>}
         <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-line">{v.bio}</p>
         {open && <p className="section-label mt-4 mb-1.5" style={{ color: "hsl(326 100% 72% / 0.75)" }}>Why this version works</p>}
         <p className={`text-xs text-muted-foreground/60 leading-relaxed ${open ? "" : "mt-3 italic"}`}>{v.tip}</p>

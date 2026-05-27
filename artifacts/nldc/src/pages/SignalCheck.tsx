@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -81,7 +82,7 @@ function AnimatedScore({ target, color }: { target: number; color: string }) {
   return (
     <div className="relative w-48 h-48 mx-auto" data-testid="signal-score-ring">
       <svg className="w-full h-full -rotate-90" viewBox="0 0 160 160" style={{ filter: `drop-shadow(0 0 18px ${color}50)` }}>
-        <circle cx="80" cy="80" r={radius} strokeWidth="12" stroke="hsl(248 40% 154%)" fill="none" />
+        <circle cx="80" cy="80" r={radius} strokeWidth="12" stroke="hsl(248 40% 92%)" fill="none" />
         <circle
           cx="80" cy="80" r={radius} strokeWidth="12"
           stroke={color} fill="none"
@@ -176,8 +177,8 @@ export default function SignalCheck() {
   }
 
   const scoreColor = result
-    ? result.score >= 75 ? "hsl(142 55% 60%)" : result.score >= 55 ? "hsl(248 62% 52%)" : "hsl(43 65% 65%)"
-    : "hsl(248 62% 52%)";
+    ? result.score >= 75 ? "hsl(var(--brand-green))" : result.score >= 55 ? "hsl(var(--brand-indigo))" : "hsl(var(--brand-gold))"
+    : "hsl(var(--brand-indigo))";
 
   const LOCKED_ITEMS = [
     "Complete bio rewrite (not just one line)",
@@ -223,7 +224,7 @@ export default function SignalCheck() {
                 {/* Score Card */}
                 <div
                   className="glass rounded-3xl p-8 text-center shimmer"
-                  style={{ borderColor: `${scoreColor.replace(")", " / 0.3)")}`, borderWidth: "1px", borderStyle: "solid", boxShadow: `0 0 60px ${scoreColor.replace(")", " / 0.1)")}` }}
+                  style={{ borderColor: `${withAlpha(scoreColor, 0.3)}`, borderWidth: "1px", borderStyle: "solid", boxShadow: `0 0 60px ${withAlpha(scoreColor, 0.1)}` }}
                   data-testid="card-signal-score"
                 >
                   <AnimatedScore target={result.score} color={scoreColor} />
@@ -231,7 +232,7 @@ export default function SignalCheck() {
                     <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2">Your Profile Category</p>
                     <span
                       className="inline-block px-5 py-2 rounded-full text-sm font-bold"
-                      style={{ background: `${scoreColor.replace(")", " / 0.12)")}`, color: scoreColor, border: `1px solid ${scoreColor.replace(")", " / 0.3)")}` }}
+                      style={{ background: `${withAlpha(scoreColor, 0.12)}`, color: scoreColor, border: `1px solid ${withAlpha(scoreColor, 0.3)}` }}
                       data-testid="text-signal-category"
                     >
                       {result.category}
@@ -271,30 +272,31 @@ export default function SignalCheck() {
                 <div className="glass border border-white/8 rounded-3xl p-7" data-testid="card-signal-opener">
                   <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">One Opening Message to Try</p>
                   <div className="flex justify-end">
-                    <div className="max-w-[min(100%,22rem)] text-sm px-4 py-3 rounded-2xl rounded-br-sm text-white font-medium break-words" style={{ background: "linear-gradient(135deg, hsl(248 62% 55%), hsl(326 100% 59%))" }}>
+                    <div className="max-w-[min(100%,22rem)] text-sm px-4 py-3 rounded-2xl rounded-br-sm text-white font-medium break-words" style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo)), hsl(var(--brand-pink)))" }}>
                       {result.suggestedOpener}
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground mt-3 leading-relaxed">Personalise the [specific thing] to something real from their profile. Messages that reference something specific convert at 3× the rate of generic openers.</p>
                 </div>
 
-                {/* Email lead capture */}
+                {/* Email lead capture — soft, non-gating. The Full Audit CTA sits directly below this card,
+                    so saving an email is genuinely optional, not the dark-pattern "give us your email to continue". */}
                 {!leadSaved ? (
-                  <div className="glass border border-[hsl(248_62%_52%/0.2)] rounded-3xl p-6" data-testid="card-signal-lead-capture">
+                  <div className="glass border border-white/10 rounded-3xl p-6" data-testid="card-signal-lead-capture">
                     <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-[hsl(248_62%_52%/0.12)] flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Mail className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+                      <div className="w-8 h-8 rounded-xl bg-[hsl(var(--brand-indigo)/0.12)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Mail className="w-4 h-4 text-[hsl(var(--brand-indigo))]" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-foreground mb-0.5">Save your result</p>
-                        <p className="text-xs text-muted-foreground mb-3">Get your score and rewrite emailed to you — and be first to know when your full audit is ready.</p>
+                        <p className="text-sm font-semibold text-foreground mb-0.5">Want this emailed to you? <span className="text-muted-foreground font-normal">(totally optional)</span></p>
+                        <p className="text-xs text-muted-foreground mb-3">You can keep scrolling — your result is already here. We'll only send the score + rewrite if you ask.</p>
                         <div className="flex gap-2">
                           <input
                             type="email"
                             placeholder="your@email.com"
                             value={leadEmail}
                             onChange={(e) => setLeadEmail(e.target.value)}
-                            className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-[hsl(248_62%_52%/0.5)] transition-colors"
+                            className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-[hsl(var(--brand-indigo)/0.5)] transition-colors"
                           />
                           <button
                             onClick={async () => {
@@ -310,17 +312,11 @@ export default function SignalCheck() {
                               } catch { /* silent — still show success */ }
                               setLeadSaved(true);
                             }}
-                            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_55%)] text-white text-sm font-semibold hover:opacity-90 transition-opacity flex-shrink-0 whitespace-nowrap"
+                            className="px-5 py-2.5 rounded-xl border border-white/15 bg-white/5 text-foreground text-sm font-medium hover:bg-white/10 transition-colors flex-shrink-0 whitespace-nowrap"
                           >
-                            Save
+                            Email me
                           </button>
                         </div>
-                        <button
-                          onClick={() => setLeadSaved(true)}
-                          className="mt-2 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-                        >
-                          No thanks, skip →
-                        </button>
                       </div>
                     </div>
                   </div>

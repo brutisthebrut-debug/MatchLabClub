@@ -28,18 +28,18 @@ interface TimelineEntry {
 }
 
 const TAG_CONFIG: Record<EntryTag, { label: string; color: string; bg: string }> = {
-  insight:  { label: "Insight",  color: "hsl(248 62% 52%)", bg: "hsl(248 62% 52% / 0.12)" },
-  win:      { label: "Win",      color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.12)" },
-  pattern:  { label: "Pattern",  color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.12)"  },
+  insight:  { label: "Insight",  color: "hsl(var(--brand-indigo))", bg: "hsl(var(--brand-indigo) / 0.12)" },
+  win:      { label: "Win",      color: "hsl(var(--brand-green))", bg: "hsl(var(--brand-green) / 0.12)" },
+  pattern:  { label: "Pattern",  color: "hsl(var(--brand-gold))",  bg: "hsl(var(--brand-gold) / 0.12)"  },
   growth:   { label: "Growth",   color: "hsl(190 55% 60%)", bg: "hsl(190 55% 60% / 0.12)" },
-  setback:  { label: "Setback",  color: "hsl(348 55% 65%)", bg: "hsl(348 55% 65% / 0.12)" },
+  setback:  { label: "Setback",  color: "hsl(var(--brand-rose))", bg: "hsl(var(--brand-rose) / 0.12)" },
   question: { label: "Question", color: "hsl(326 100% 65%)", bg: "hsl(326 100% 65% / 0.12)" },
 };
 
 const STATUS_CONFIG: Record<EntryStatus, { label: string; icon: typeof Circle; color: string }> = {
   "noted":       { label: "Noted",        icon: Circle,        color: "hsl(228 18% 60%)" },
-  "working-on":  { label: "Working on",   icon: Minus,         color: "hsl(43 65% 65%)"  },
-  "resolved":    { label: "Resolved",     icon: CheckCircle2,  color: "hsl(142 55% 60%)" },
+  "working-on":  { label: "Working on",   icon: Minus,         color: "hsl(var(--brand-gold))"  },
+  "resolved":    { label: "Resolved",     icon: CheckCircle2,  color: "hsl(var(--brand-green))" },
 };
 
 const DEMO_ENTRIES: TimelineEntry[] = [
@@ -178,7 +178,7 @@ export default function ProgressTimeline() {
 
           {/* ── Package Hub Strip — Growth Tracker ── */}
           <div className="glass border rounded-xl px-4 py-3 mb-7 flex flex-wrap items-center gap-x-4 gap-y-2"
-            style={{ borderColor: "hsl(142 55% 60% / 0.2)" }}>
+            style={{ borderColor: "hsl(var(--brand-green) / 0.2)" }}>
             <div className="flex items-center gap-2 flex-shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-[hsl(142_55%_60%)]" />
               <span className="text-[11px] font-bold uppercase tracking-widest text-[hsl(142_55%_72%)]">Growth Tracker</span>

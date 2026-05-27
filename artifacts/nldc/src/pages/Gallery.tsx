@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -222,7 +223,7 @@ function RewriteCard({ r, index }: { r: Rewrite; index: number }) {
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-semibold px-2.5 py-1 rounded-full border text-[10px]"
-              style={{ color: r.platformColor, borderColor: r.platformColor.replace(")", " / 0.3)"), background: r.platformColor.replace(")", " / 0.08)") }}>
+              style={{ color: r.platformColor, borderColor: withAlpha(r.platformColor, 0.3), background: withAlpha(r.platformColor, 0.08) }}>
               {r.platform}
             </span>
             {r.badge && (

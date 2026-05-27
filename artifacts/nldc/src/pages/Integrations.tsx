@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -106,14 +107,14 @@ const INTEGRATIONS: Integration[] = [
 ];
 
 const STATUS_CONFIG: Record<IntegrationStatus, { label: string; color: string; bg: string; border: string }> = {
-  not_connected: { label: "Not Connected", color: "hsl(228 18% 55%)", bg: "hsl(248 40% 94%)", border: "hsl(248 40% 150%)" },
-  coming_soon:   { label: "Coming Soon",   color: "hsl(248 62% 58%)", bg: "hsl(248 62% 52% / 0.1)", border: "hsl(248 62% 52% / 0.25)" },
+  not_connected: { label: "Not Connected", color: "hsl(228 18% 55%)", bg: "hsl(248 40% 94%)", border: "hsl(248 40% 90%)" },
+  coming_soon:   { label: "Coming Soon",   color: "hsl(var(--brand-indigo))", bg: "hsl(var(--brand-indigo) / 0.1)", border: "hsl(var(--brand-indigo) / 0.25)" },
   beta:          { label: "Beta — Available", color: "hsl(142 55% 62%)", bg: "hsl(142 55% 45% / 0.1)", border: "hsl(142 55% 45% / 0.25)" },
 };
 
 const LEVEL_COLORS: Record<number, string> = {
-  2: "hsl(248 62% 58%)",
-  3: "hsl(43 65% 65%)",
+  2: "hsl(var(--brand-indigo))",
+  3: "hsl(var(--brand-gold))",
   4: "hsl(326 100% 65%)",
 };
 
@@ -122,18 +123,18 @@ function IntegrationCard({ integration }: { integration: Integration }) {
   const [consented, setConsented] = useState(false);
   const [previewEnabled, setPreviewEnabled] = useState(true);
   const status = STATUS_CONFIG[integration.status];
-  const lvlColor = LEVEL_COLORS[integration.level] || "hsl(248 62% 52%)";
+  const lvlColor = LEVEL_COLORS[integration.level] || "hsl(var(--brand-indigo))";
 
   return (
     <div
       className="glass rounded-3xl overflow-hidden transition-all"
-      style={{ borderColor: `${lvlColor.replace(")", " / 0.15)")}`, borderWidth: "1px", borderStyle: "solid" }}
+      style={{ borderColor: `${withAlpha(lvlColor, 0.15)}`, borderWidth: "1px", borderStyle: "solid" }}
       data-testid={`card-integration-${integration.title.toLowerCase().replace(/ /g, "-")}`}
     >
       <div className="p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: `${lvlColor.replace(")", " / 0.1)")}`, border: `1px solid ${lvlColor.replace(")", " / 0.2)")}` }}>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: `${withAlpha(lvlColor, 0.1)}`, border: `1px solid ${withAlpha(lvlColor, 0.2)}` }}>
               <integration.icon className="w-6 h-6" style={{ color: lvlColor }} />
             </div>
             <div>
@@ -154,7 +155,7 @@ function IntegrationCard({ integration }: { integration: Integration }) {
             Join the interest list →
           </Link>
         </div>
-        <div className="mt-4 rounded-xl p-3 text-sm" style={{ background: `${lvlColor.replace(")", " / 0.07)")}`, border: `1px solid ${lvlColor.replace(")", " / 0.15)")}` }}>
+        <div className="mt-4 rounded-xl p-3 text-sm" style={{ background: `${withAlpha(lvlColor, 0.07)}`, border: `1px solid ${withAlpha(lvlColor, 0.15)}` }}>
           <span className="font-semibold text-foreground/80">Benefit: </span>
           <span className="text-muted-foreground">{integration.benefit}</span>
         </div>
@@ -283,7 +284,7 @@ export default function Integrations() {
           </motion.div>
 
           {/* Available Now: Email Insight Demo */}
-          <motion.div {...fadeUp(0.1)} className="rounded-3xl p-6 mb-7 flex items-start gap-4" style={{ background: "hsl(248 62% 52% / 0.08)", border: "1px solid hsl(248 62% 52% / 0.25)" }}>
+          <motion.div {...fadeUp(0.1)} className="rounded-3xl p-6 mb-7 flex items-start gap-4" style={{ background: "hsl(var(--brand-indigo) / 0.08)", border: "1px solid hsl(var(--brand-indigo) / 0.25)" }}>
             <div className="w-10 h-10 rounded-xl bg-[hsl(248_62%_52%/0.15)] flex items-center justify-center flex-shrink-0 border border-[hsl(248_62%_52%/0.2)]">
               <Mail className="w-5 h-5 text-[hsl(248_62%_52%)]" />
             </div>
@@ -328,9 +329,9 @@ export default function Integrations() {
                 { icon: BarChart3, level: 3, title: "Dating App Export Analysis", desc: "Where apps allow it, import your conversation and match history directly for the deepest pattern analysis possible.", status: "Roadmap" },
                 { icon: Users, level: 3, title: "Multi-Platform Presence Sync", desc: "Cross-platform analysis of how you present on Hinge, LinkedIn, and Instagram — and whether they're telling the same story.", status: "Roadmap" },
               ].map((future, i) => {
-                const col = LEVEL_COLORS[future.level] || "hsl(248 62% 52%)";
+                const col = LEVEL_COLORS[future.level] || "hsl(var(--brand-indigo))";
                 return (
-                  <div key={i} className="rounded-2xl p-5" style={{ background: `${col.replace(")", " / 0.06)")}`, border: `1px solid ${col.replace(")", " / 0.15)")}` }}>
+                  <div key={i} className="rounded-2xl p-5" style={{ background: `${withAlpha(col, 0.06)}`, border: `1px solid ${withAlpha(col, 0.15)}` }}>
                     <div className="flex items-start gap-3 mb-2">
                       <future.icon className="w-4.5 h-4.5 flex-shrink-0 mt-0.5" style={{ color: col }} />
                       <div>
@@ -349,7 +350,7 @@ export default function Integrations() {
           <motion.div
             {...fadeUp(0.38)}
             className="relative rounded-3xl p-7 text-center overflow-hidden"
-            style={{ background: "linear-gradient(135deg, hsl(248 62% 52% / 0.1), hsl(326 100% 59% / 0.07))", border: "1px solid hsl(248 62% 52% / 0.2)" }}
+            style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo) / 0.1), hsl(var(--brand-pink) / 0.07))", border: "1px solid hsl(var(--brand-indigo) / 0.2)" }}
           >
             <div className="orb orb-violet absolute w-52 h-52 -right-16 -top-16 opacity-60 pointer-events-none" />
             <div className="relative z-10">

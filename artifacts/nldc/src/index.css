@@ -143,6 +143,15 @@
   --glow-violet: 0 0 28px hsl(248 62% 52% / 0.22), 0 0 72px hsl(248 62% 52% / 0.07);
   --glow-gold: 0 0 28px hsl(326 100% 59% / 0.20), 0 0 56px hsl(326 100% 59% / 0.07);
   --glow-rose: 0 0 22px hsl(326 100% 59% / 0.20);
+
+  /* ── Brand color tokens (LIGHT) — used by inline styles + chart data arrays.
+        Reference as `hsl(var(--brand-indigo))` or `hsl(var(--brand-indigo) / 0.25)`. */
+  --brand-indigo: 248 62% 52%;
+  --brand-pink:   326 100% 59%;
+  --brand-gold:   43 65% 55%;
+  --brand-green:  142 55% 60%;
+  --brand-rose:   348 55% 65%;
+  --brand-teal:   190 70% 50%;
 }
 
 /* ─── DARK THEME — Dramatic Indigo/Pink (men-at-night) ─── */
@@ -208,6 +217,14 @@
   --glow-violet: 0 0 32px hsl(248 75% 65% / 0.5), 0 0 90px hsl(248 75% 65% / 0.18);
   --glow-gold:   0 0 32px hsl(326 100% 65% / 0.5), 0 0 80px hsl(326 100% 65% / 0.18);
   --glow-rose:   0 0 28px hsl(326 100% 65% / 0.55);
+
+  /* ── Brand color tokens (DARK) — luminous variants so charts/dots stay vivid on indigo midnight */
+  --brand-indigo: 248 80% 76%;
+  --brand-pink:   326 100% 72%;
+  --brand-gold:   43 90% 68%;
+  --brand-green:  142 60% 65%;
+  --brand-rose:   348 75% 75%;
+  --brand-teal:   190 75% 62%;
 }
 
 /* ── Dark-theme utility overrides ── */
@@ -291,6 +308,36 @@
 .dark .bg-\[hsl\(248_62\%_52\%\/0\.08\)\] { background-color: hsl(248 75% 65% / 0.14) !important; }
 .dark .bg-\[hsl\(248_62\%_52\%\/0\.12\)\] { background-color: hsl(248 75% 65% / 0.18) !important; }
 .dark .hover\:border-\[hsl\(248_62\%_52\%\/0\.55\)\]:hover { border-color: hsl(248 75% 65% / 0.70) !important; }
+
+/* ── Dark-mode override for the canonical brand gradient (`from-[#3D35CC] to-[#FF2D9B]`)
+   Arbitrary-hex Tailwind classes cannot use CSS vars, so we remap them in dark to the
+   luminous variants of indigo + pink for better contrast on the dark surface. */
+.dark .from-\[\#3D35CC\] { --tw-gradient-from: hsl(248 80% 65%) var(--tw-gradient-from-position) !important; --tw-gradient-to: hsl(248 80% 65% / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+.dark .to-\[\#FF2D9B\]   { --tw-gradient-to: hsl(326 100% 70%) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), hsl(326 100% 70%) var(--tw-gradient-to-position) !important; }
+.dark .via-\[\#FF2D9B\]  { --tw-gradient-via: hsl(326 100% 70%) var(--tw-gradient-via-position) !important; }
+
+/* Bright-pearl panel backgrounds that were written with light-pastel lightness or invalid >100%
+   values — give them a usable dark surface so they don't read as bright white islands on dark. */
+.dark .bg-\[hsl\(248_40\%_92\%\)\],
+.dark .bg-\[hsl\(248_40\%_94\%\)\],
+.dark .bg-\[hsl\(248_40\%_95\%\)\],
+.dark .bg-\[hsl\(248_40\%_96\%\)\],
+.dark .bg-\[hsl\(248_40\%_97\%\)\],
+.dark .bg-\[hsl\(248_45\%_97\%\)\],
+.dark .bg-\[hsl\(248_40\%_150\%\)\],
+.dark .bg-\[hsl\(248_40\%_154\%\)\],
+.dark .bg-\[hsl\(248_40\%_160\%\)\],
+.dark .bg-\[hsl\(248_40\%_165\%\)\],
+.dark .bg-\[hsl\(248_45\%_165\%\)\] { background-color: hsl(248 38% 14%) !important; }
+.dark .bg-\[hsl\(248_40\%_95\%\/0\.5\)\],
+.dark .bg-\[hsl\(248_40\%_90\%\)\],
+.dark .bg-\[hsl\(248_40\%_90\%\/0\.5\)\] { background-color: hsl(248 38% 14% / 0.6) !important; }
+
+/* Card/panel surfaces inside reports that use inline-style background should respect the dark surface */
+.dark [style*="background: hsl(248 40% 94%)"],
+.dark [style*="background:hsl(248 40% 94%)"],
+.dark [style*="background: hsl(248 40% 95%)"],
+.dark [style*="background:hsl(248 40% 95%)"] { background: hsl(248 38% 14%) !important; }
 
 @layer base {
   * {

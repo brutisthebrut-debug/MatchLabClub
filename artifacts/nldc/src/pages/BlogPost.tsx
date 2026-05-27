@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -396,7 +397,7 @@ export default function BlogPost({ slug }: { slug: string }) {
           {/* Header */}
           <motion.div {...fadeUp(0.06)} className="mb-10">
             <div className="flex items-center gap-3 mb-5 flex-wrap">
-              <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: `${article.color.replace(")", " / 0.12)")}`, color: article.color, border: `1px solid ${article.color.replace(")", " / 0.25)")}` }}>
+              <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: `${withAlpha(article.color, 0.12)}`, color: article.color, border: `1px solid ${withAlpha(article.color, 0.25)}` }}>
                 {article.category}
               </span>
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground/50">

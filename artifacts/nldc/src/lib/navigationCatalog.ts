@@ -21,7 +21,7 @@ export const PACKAGES: Package[] = [
     id: "start",
     label: "Start Here",
     tagline: "Your first 3 minutes — get a real read",
-    color: "hsl(248 62% 52%)",
+    color: "hsl(var(--brand-indigo))",
     icon: Sparkles,
     tools: [
       { name: "Get your Signal Audit", href: "/start",         desc: "Begin here — 3-min intake wizard" },
@@ -41,7 +41,7 @@ export const PACKAGES: Package[] = [
     id: "blueprint",
     label: "The Reset",
     tagline: "Build a profile that actually reads as you",
-    color: "hsl(43 65% 65%)",
+    color: "hsl(var(--brand-gold))",
     icon: BookOpen,
     tools: [
       { name: "Dating Blueprint",       href: "/blueprint", desc: "Your personalized dating action plan" },
@@ -85,7 +85,7 @@ export const PACKAGES: Package[] = [
     id: "growth",
     label: "Progress",
     tagline: "Track what's actually changing over time",
-    color: "hsl(142 55% 60%)",
+    color: "hsl(var(--brand-green))",
     icon: TrendingUp,
     tools: [
       { name: "Dating Wins Log",    href: "/progress/wins",            desc: "Log moments of courage and progress" },

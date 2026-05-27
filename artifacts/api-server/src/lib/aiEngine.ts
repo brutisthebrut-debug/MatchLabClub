@@ -77,7 +77,7 @@ function appBioFlavor(app: KnownApp | null, name: string): string {
     case "Hinge":
       return `On Hinge specifically, the prompts do most of the heavy lifting — so ${name}'s bio doesn't need to carry the whole personality on its own, but it does need to set a clear tone the prompts can build on.`;
     case "Bumble":
-      return `Bumble readers skim bios fast — and women see hundreds a week. ${name}'s opening line has to earn the second sentence; without a sharp hook the rest of the profile never gets read.`;
+      return `Bumble readers skim bios fast — and the people seeing yours have hundreds of options a week. ${name}'s opening line has to earn the second sentence; without a sharp hook the rest of the profile never gets read.`;
     case "Tinder":
       return `Tinder bios are read in the half-second between photo swipes, so ${name} needs one punchy, specific line up top — not a paragraph. Density beats depth here.`;
     default:
@@ -94,8 +94,8 @@ function appPromptTips(app: KnownApp | null): { tip: string; rewriteHint: string
       };
     case "Bumble":
       return {
-        tip: "On Bumble, prompts (and the question prompt at the top) are conversation seeds — leave an opening for her to send the first message.",
-        rewriteHint: "Bumble women open conversations — give them something obvious and easy to react to, not abstract values statements.",
+        tip: "On Bumble, prompts (and the question prompt at the top) are conversation seeds — leave an obvious opening for them to send the first message.",
+        rewriteHint: "On Bumble the first move is restricted — give the other person something obvious and easy to react to, not abstract values statements.",
       };
     case "Tinder":
       return {
@@ -331,7 +331,7 @@ function appCoachRedFlags(app: KnownApp | null): string[] {
     case "Hinge":
       return ["On Hinge, ignoring the prompt they liked is a missed hook — anchor your next reply to it"];
     case "Bumble":
-      return ["On Bumble, letting a women-message-first thread go cold past 24 hours often resets the dynamic entirely"];
+      return ["On Bumble, letting an opening thread go cold past 24 hours often resets the dynamic entirely"];
     case "Tinder":
       return ["On Tinder, staying in the chat past two days without suggesting plans usually kills the match"];
     default:
@@ -460,7 +460,7 @@ function insightSourcePatternImpact(source: InsightSource | null, isLongMessages
         : "On Hinge, concise replies work — but make sure each one anchors back to a prompt or photo so the conversation stays specific.";
     case "Bumble":
       return isLongMessages
-        ? "On Bumble where women open, long replies can feel like pressure — keep early messages snappy and let them pick the thread."
+        ? "On Bumble the opener is restricted to one side — long replies can feel like pressure, so keep early messages snappy and let them pick the thread."
         : "On Bumble the 24-hour clock rewards your concise style — just make sure replies still bring fresh energy, not just acknowledgement.";
     case "Tinder":
       return isLongMessages
@@ -480,7 +480,7 @@ function insightSourceGrowthArea(source: InsightSource | null): string | null {
     case "Hinge":
       return "On Hinge, tie at least one reply back to whatever prompt or photo originally got the like — it consistently lifts response quality.";
     case "Bumble":
-      return "On Bumble, when she opens, your reply within the first few hours sets the tone — concise specifics beat long appreciative essays.";
+      return "On Bumble, when they open, your reply within the first few hours sets the tone — concise specifics beat long appreciative essays.";
     case "Tinder":
       return "On Tinder, set a soft deadline in your head — if you're past a dozen messages without suggesting plans, the thread is dying.";
     case "iMessage":
@@ -514,7 +514,7 @@ function insightSourceSummaryAddendum(source: InsightSource | null): string {
     case "Hinge":
       return " Tuned to Hinge conventions — prompt-anchored replies and individual-photo specificity weighted heavily.";
     case "Bumble":
-      return " Tuned to Bumble dynamics — women-open timing and lead-photo weight factored in.";
+      return " Tuned to Bumble dynamics — opener-restricted timing and lead-photo weight factored in.";
     case "Tinder":
       return " Tuned to Tinder pacing — fast-decay thread expectations and plans-first asks weighted in.";
     case "iMessage":

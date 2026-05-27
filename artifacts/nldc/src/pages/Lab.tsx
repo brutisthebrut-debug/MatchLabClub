@@ -53,8 +53,8 @@ const DEMO_RESULT: CoachingResult = {
 };
 
 const STYLE_META: Record<string, { gradient: string; emoji: string; headerBg: string; glow: string }> = {
-  "Warm":          { gradient: "linear-gradient(135deg, hsl(348 55% 58%), hsl(248 62% 55%))", emoji: "💜", headerBg: "hsl(348 55% 58% / 0.12)", glow: "0 4px 20px hsl(348 55% 58% / 0.3)" },
-  "Playful":       { gradient: "linear-gradient(135deg, hsl(326 100% 59%), hsl(248 62% 55%))", emoji: "😄", headerBg: "hsl(326 100% 59% / 0.12)", glow: "0 4px 20px hsl(326 100% 59% / 0.3)" },
+  "Warm":          { gradient: "linear-gradient(135deg, hsl(348 55% 58%), hsl(var(--brand-indigo)))", emoji: "💜", headerBg: "hsl(348 55% 58% / 0.12)", glow: "0 4px 20px hsl(348 55% 58% / 0.3)" },
+  "Playful":       { gradient: "linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-indigo)))", emoji: "😄", headerBg: "hsl(var(--brand-pink) / 0.12)", glow: "0 4px 20px hsl(var(--brand-pink) / 0.3)" },
   "Direct":        { gradient: "linear-gradient(135deg, hsl(43 65% 52%), hsl(43 55% 42%))",   emoji: "→",  headerBg: "hsl(43 65% 52% / 0.12)", glow: "0 4px 20px hsl(43 65% 52% / 0.3)" },
   "Date Ask":      { gradient: "linear-gradient(135deg, hsl(142 55% 42%), hsl(190 55% 48%))", emoji: "✦",  headerBg: "hsl(142 55% 42% / 0.12)", glow: "0 4px 20px hsl(142 55% 42% / 0.3)" },
   "Graceful Exit": { gradient: "linear-gradient(135deg, hsl(228 25% 42%), hsl(248 40% 34%))", emoji: "🤍", headerBg: "hsl(228 25% 42% / 0.12)", glow: "0 4px 16px hsl(228 25% 50% / 0.2)" },
@@ -232,7 +232,7 @@ export default function Lab() {
                     <Eye className="w-4 h-4 text-[hsl(248_62%_52%)]" />
                     <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tone detected</p>
                   </div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-3" style={{ background: "hsl(248 62% 52% / 0.1)", border: "1px solid hsl(248 62% 52% / 0.25)" }}>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-3" style={{ background: "hsl(var(--brand-indigo) / 0.1)", border: "1px solid hsl(var(--brand-indigo) / 0.25)" }}>
                     <span className="w-2 h-2 rounded-full bg-[hsl(248_62%_52%)]" />
                     <span className="text-xs font-semibold text-[hsl(248_62%_62%)]">Warm &amp; Curious</span>
                   </div>
@@ -311,7 +311,7 @@ export default function Lab() {
                     ))}
                   </ul>
                 </div>
-                <div className="rounded-3xl p-6 border" style={{ background: "hsl(248 62% 52% / 0.07)", borderColor: "hsl(248 62% 52% / 0.25)" }} data-testid="card-lab-tip">
+                <div className="rounded-3xl p-6 border" style={{ background: "hsl(var(--brand-indigo) / 0.07)", borderColor: "hsl(var(--brand-indigo) / 0.25)" }} data-testid="card-lab-tip">
                   <div className="flex items-center gap-2 mb-4">
                     <Lightbulb className="w-5 h-5 text-[hsl(248_62%_52%)]" />
                     <p className="font-semibold text-foreground text-sm">Coach Tip</p>

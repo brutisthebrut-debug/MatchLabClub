@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
@@ -126,9 +127,9 @@ const PRODUCT_COPY: Record<string, ProductCopy> = {
 
 const EXPLORE_CARDS = [
   { icon: Zap,           label: "Run your Signal Audit",    href: "/start",      color: "hsl(190 75% 50%)" },
-  { icon: MessageCircle, label: "Chemistry Lab",            href: "/lab",        color: "hsl(248 62% 52%)" },
-  { icon: Heart,         label: "Compatibility Profile",    href: "/wellness",   color: "hsl(348 55% 65%)" },
-  { icon: Sparkles,      label: "View Dashboard",           href: "/dashboard",  color: "hsl(43 65% 65%)"  },
+  { icon: MessageCircle, label: "Chemistry Lab",            href: "/lab",        color: "hsl(var(--brand-indigo))" },
+  { icon: Heart,         label: "Compatibility Profile",    href: "/wellness",   color: "hsl(var(--brand-rose))" },
+  { icon: Sparkles,      label: "View Dashboard",           href: "/dashboard",  color: "hsl(var(--brand-gold))"  },
 ];
 
 export default function CheckoutSuccess() {
@@ -212,7 +213,7 @@ export default function CheckoutSuccess() {
                 href={href}
                 className="glass rounded-xl p-4 flex flex-col items-center gap-2.5 hover:bg-white/5 transition-colors group text-center"
               >
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${color.replace(")", " / 0.12)")}` }}>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${withAlpha(color, 0.12)}` }}>
                   <Icon className="w-4 h-4" style={{ color }} />
                 </div>
                 <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors leading-tight">{label}</span>

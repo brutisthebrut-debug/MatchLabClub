@@ -142,15 +142,15 @@ const DEMO: MirrorResult = {
 };
 
 const SECTIONS = [
-  { key: "values",               title: "What You're Actually Optimizing For", color: "hsl(248 62% 52%)" },
-  { key: "protectiveHabits",     title: "Protective Habits",                   color: "hsl(43 65% 65%)" },
+  { key: "values",               title: "What You're Actually Optimizing For", color: "hsl(var(--brand-indigo))" },
+  { key: "protectiveHabits",     title: "Protective Habits",                   color: "hsl(var(--brand-gold))" },
   { key: "signalsShown",         title: "Signals You're Broadcasting",          color: "hsl(190 55% 60%)" },
-  { key: "understatedQualities", title: "Understated Qualities",                color: "hsl(142 55% 60%)" },
-  { key: "overcompensation",     title: "Where You May Be Overcompensating",   color: "hsl(348 55% 65%)" },
+  { key: "understatedQualities", title: "Understated Qualities",                color: "hsl(var(--brand-green))" },
+  { key: "overcompensation",     title: "Where You May Be Overcompensating",   color: "hsl(var(--brand-rose))" },
   { key: "likelyAudienceResponse", title: "How Different People Tend to Read You", color: "hsl(326 100% 65%)" },
-  { key: "missingInformation",   title: "What's Not Coming Through",            color: "hsl(43 65% 65%)" },
-  { key: "emotionalImpression",  title: "Your Emotional Impression",            color: "hsl(248 62% 52%)" },
-  { key: "nextExperiment",       title: "Next Experiment",                      color: "hsl(142 55% 60%)" },
+  { key: "missingInformation",   title: "What's Not Coming Through",            color: "hsl(var(--brand-gold))" },
+  { key: "emotionalImpression",  title: "Your Emotional Impression",            color: "hsl(var(--brand-indigo))" },
+  { key: "nextExperiment",       title: "Next Experiment",                      color: "hsl(var(--brand-green))" },
 ];
 
 export default function MirrorProfile() {

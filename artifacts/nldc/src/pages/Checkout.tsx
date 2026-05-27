@@ -60,7 +60,7 @@ const PRODUCTS: Record<Product, ProductConfig> = {
     price: "$97",
     priceDetail: "One-time. No subscription.",
     badge: "Most Popular",
-    badgeColor: "hsl(248 62% 52%)",
+    badgeColor: "hsl(var(--brand-indigo))",
     description:
       "A complete rebuild of how you present yourself — profile, prompts, messaging, photos, and a 7-day action plan. Walk away with a profile that's finally working.",
     features: [

@@ -22,9 +22,9 @@ interface RoadmapItem {
 }
 
 const STATUS_CONFIG: Record<RoadmapStatus, { label: string; color: string; bg: string; border: string; icon: typeof Clock }> = {
-  "live":        { label: "Live",         color: "hsl(142 55% 60%)", bg: "hsl(142 55% 60% / 0.12)", border: "hsl(142 55% 60% / 0.3)", icon: CheckCircle2 },
-  "coming-soon": { label: "Coming soon",  color: "hsl(248 62% 52%)", bg: "hsl(248 62% 52% / 0.12)", border: "hsl(248 62% 52% / 0.3)", icon: Clock        },
-  "planned":     { label: "Planned",      color: "hsl(43 65% 65%)",  bg: "hsl(43 65% 65% / 0.12)",  border: "hsl(43 65% 65% / 0.3)",  icon: TrendingUp   },
+  "live":        { label: "Live",         color: "hsl(var(--brand-green))", bg: "hsl(var(--brand-green) / 0.12)", border: "hsl(var(--brand-green) / 0.3)", icon: CheckCircle2 },
+  "coming-soon": { label: "Coming soon",  color: "hsl(var(--brand-indigo))", bg: "hsl(var(--brand-indigo) / 0.12)", border: "hsl(var(--brand-indigo) / 0.3)", icon: Clock        },
+  "planned":     { label: "Planned",      color: "hsl(var(--brand-gold))",  bg: "hsl(var(--brand-gold) / 0.12)",  border: "hsl(var(--brand-gold) / 0.3)",  icon: TrendingUp   },
   "concept":     { label: "Concept",      color: "hsl(228 18% 60%)", bg: "hsl(228 18% 60% / 0.1)",  border: "hsl(228 18% 60% / 0.25)", icon: Lightbulb   },
 };
 

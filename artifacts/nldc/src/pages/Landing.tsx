@@ -1,3 +1,4 @@
+import { withAlpha } from "@/lib/brandColor";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -71,6 +72,9 @@ export default function Landing() {
                 <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
                 <span className="inline-flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> Instant result</span>
               </div>
+              <p className="text-[11px] text-muted-foreground/70 mt-1">
+                Built for every dating context — straight, gay, queer, bi, trans, non-binary, mono &amp; poly.
+              </p>
 
               {/* Sample report — frictionless escape hatch */}
               <Link
@@ -151,14 +155,14 @@ export default function Landing() {
                 step: "01",
                 title: "Check your signal",
                 desc: "Paste your bio (and optionally your prompts or a recent message). Takes 3 minutes. No account needed to start.",
-                color: "hsl(248 62% 52%)",
+                color: "hsl(var(--brand-indigo))",
                 cta: { label: "Start the check", href: "/signal-check" },
               },
               {
                 step: "02",
                 title: "Get your honest report",
                 desc: "Receive a Signal Score, the category your profile reads as, specific critiques, and rewritten bio + prompt lines.",
-                color: "hsl(43 65% 55%)",
+                color: "hsl(var(--brand-gold))",
                 cta: { label: "See a sample", href: "/sample-report" },
               },
               {
@@ -172,7 +176,7 @@ export default function Landing() {
               <motion.div
                 key={i}
                 className="glass rounded-3xl p-7 card-hover flex flex-col"
-                style={{ border: `1px solid ${item.color.replace(")", " / 0.18)")}` }}
+                style={{ border: `1px solid ${withAlpha(item.color, 0.18)}` }}
                 initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
               >
                 <div className="text-4xl font-bold mb-4 font-mono" style={{ color: item.color }}>{item.step}</div>
@@ -233,7 +237,7 @@ export default function Landing() {
 
             <motion.div
               className="glass rounded-3xl p-7 relative shimmer"
-              style={{ border: "1px solid hsl(248 62% 52% / 0.3)", boxShadow: "0 0 40px hsl(248 62% 52% / 0.08)" }}
+              style={{ border: "1px solid hsl(var(--brand-indigo) / 0.3)", boxShadow: "0 0 40px hsl(var(--brand-indigo) / 0.08)" }}
               initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
             >
               <div className="absolute -top-3 left-6">
@@ -273,12 +277,12 @@ export default function Landing() {
             </motion.div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { num: "01", title: "What you're projecting", desc: "We show you what your profile is actually communicating — and how it reads to someone swiping.", color: "hsl(248 62% 52%)" },
-                { num: "02", title: "Your profile text", desc: "Your bio and prompts, rewritten to sound genuinely like you — specific, memorable, worth responding to.", color: "hsl(43 65% 55%)" },
+                { num: "01", title: "What you're projecting", desc: "We show you what your profile is actually communicating — and how it reads to someone swiping.", color: "hsl(var(--brand-indigo))" },
+                { num: "02", title: "Your profile text", desc: "Your bio and prompts, rewritten to sound genuinely like you — specific, memorable, worth responding to.", color: "hsl(var(--brand-gold))" },
                 { num: "03", title: "Your conversations", desc: "Tone analysis and 5 tailored reply options — from warm to direct to date invitation — for every situation.", color: "hsl(190 55% 50%)" },
                 { num: "04", title: "Your action plan", desc: "A concrete, prioritised 7-day plan built around your specific audit — not generic advice.", color: "hsl(142 55% 50%)" },
               ].map((item, i) => (
-                <motion.div key={i} className="rounded-2xl p-6 card-hover" style={{ background: `${item.color.replace(")", " / 0.05)")}`, border: `1px solid ${item.color.replace(")", " / 0.2)")}` }}
+                <motion.div key={i} className="rounded-2xl p-6 card-hover" style={{ background: `${withAlpha(item.color, 0.05)}`, border: `1px solid ${withAlpha(item.color, 0.2)}` }}
                   initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
                   <p className="text-2xl font-bold font-mono mb-3" style={{ color: item.color }}>{item.num}</p>
                   <h3 className="font-bold text-foreground text-sm mb-2">{item.title}</h3>
@@ -305,14 +309,14 @@ export default function Landing() {
           </div>
           <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
             {[
-              { icon: "🔬", title: "Founder-reviewed", desc: "Every audit during private beta is reviewed by the founders personally. You're not getting a generic output — you're getting our full attention on your specific situation.", color: "hsl(248 62% 52%)" },
-              { icon: "🤝", title: "You shape the product", desc: "Beta members get direct access to give feedback, request features, and influence what we build next. Help us build the tool you actually wish existed.", color: "hsl(43 65% 55%)" },
+              { icon: "🔬", title: "Founder-reviewed", desc: "Every audit during private beta is reviewed by the founders personally. You're not getting a generic output — you're getting our full attention on your specific situation.", color: "hsl(var(--brand-indigo))" },
+              { icon: "🤝", title: "You shape the product", desc: "Beta members get direct access to give feedback, request features, and influence what we build next. Help us build the tool you actually wish existed.", color: "hsl(var(--brand-gold))" },
               { icon: "🔒", title: "Launch pricing, locked in", desc: "Beta members lock in today's pricing for life. As we add more features and move out of beta, the price goes up — yours doesn't.", color: "hsl(142 55% 50%)" },
             ].map((card, i) => (
               <motion.div
                 key={i}
                 className="glass rounded-3xl p-7 flex flex-col card-hover"
-                style={{ border: `1px solid ${card.color.replace(")", " / 0.18)")}` }}
+                style={{ border: `1px solid ${withAlpha(card.color, 0.18)}` }}
                 initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
               >
                 <p className="text-3xl mb-3">{card.icon}</p>

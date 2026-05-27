@@ -42,11 +42,16 @@ const LOADING_TIPS = [
   "Finalizing your action plan...",
 ];
 
+const PRONOUNS = ["she/her", "he/him", "they/them", "she/they", "he/they", "Other"];
+const SEEKING = ["Women", "Men", "Non-binary people", "Everyone", "Other / it's complicated"];
+
 type FormData = {
   firstName: string;
   age: string;
   gender: string;
+  pronouns: string;
   orientation: string;
+  seeking: string[];
   currentApps: string[];
   datingGoal: string;
   biggestChallenge: string;
@@ -56,8 +61,8 @@ type FormData = {
 };
 
 const initial: FormData = {
-  firstName: "", age: "", gender: "", orientation: "",
-  currentApps: [], datingGoal: "", biggestChallenge: "",
+  firstName: "", age: "", gender: "", pronouns: "", orientation: "",
+  seeking: [], currentApps: [], datingGoal: "", biggestChallenge: "",
   bio: "", prompts: "", recentMessageSample: "",
 };
 
@@ -72,7 +77,7 @@ export default function Wizard() {
   const createAudit = useCreateAudit();
   const generateReport = useGenerateAuditReport();
 
-  const totalSteps = 5;
+  const totalSteps = 4;
   const progress = ((step - 1) / totalSteps) * 100;
 
   function toggleApp(app: string) {
@@ -83,9 +88,15 @@ export default function Wizard() {
         : [...f.currentApps, app],
     }));
   }
+  function toggleSeeking(s: string) {
+    setForm(f => ({
+      ...f,
+      seeking: f.seeking.includes(s) ? f.seeking.filter(x => x !== s) : [...f.seeking, s],
+    }));
+  }
 
   function canNext(): boolean {
-    if (step === 1) return !!(form.firstName && form.age && form.gender);
+    if (step === 1) return !!(form.firstName && form.age);
     if (step === 2) return !!(form.datingGoal);
     if (step === 3) return !!(form.bio.trim().length > 20);
     return true;
@@ -98,12 +109,19 @@ export default function Wizard() {
     }, 1800);
 
     try {
+      // We pack pronouns + seeking into existing free-text fields rather than
+      // expanding the API schema in this sprint — keeps the contract stable while
+      // still letting the coaching engine read the user's identity context.
+      const genderField = [form.gender || "Prefer not to say", form.pronouns && `(${form.pronouns})`]
+        .filter(Boolean).join(" ");
+      const orientationField = [form.orientation || "Prefer not to say", form.seeking.length && `· seeking ${form.seeking.join(", ").toLowerCase()}`]
+        .filter(Boolean).join(" ");
       const audit = await createAudit.mutateAsync({
         data: {
           firstName: form.firstName,
           age: parseInt(form.age, 10),
-          gender: form.gender,
-          orientation: form.orientation || "Prefer not to say",
+          gender: genderField,
+          orientation: orientationField,
           datingGoal: form.datingGoal,
           currentApps: form.currentApps.length ? form.currentApps : ["Other"],
           bio: form.bio,
@@ -239,13 +257,13 @@ export default function Wizard() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Gender</Label>
+                    <Label>Gender <span className="text-muted-foreground font-normal">(optional · skip if you'd rather)</span></Label>
                     <div className="flex flex-wrap gap-2">
                       {GENDERS.map(g => (
                         <button
                           key={g}
                           data-testid={`button-gender-${g.toLowerCase().replace(/ /g, "-")}`}
-                          onClick={() => setForm(f => ({ ...f, gender: g }))}
+                          onClick={() => setForm(f => ({ ...f, gender: f.gender === g ? "" : g }))}
                           className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${form.gender === g ? "bg-primary text-primary-foreground border-primary" : "border-border bg-background hover:border-primary/40"}`}
                         >
                           {g}
@@ -254,7 +272,37 @@ export default function Wizard() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Sexual orientation <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                    <Label>Pronouns <span className="text-muted-foreground font-normal">(optional — helps us write your rewrite in the right voice)</span></Label>
+                    <div className="flex flex-wrap gap-2">
+                      {PRONOUNS.map(p => (
+                        <button
+                          key={p}
+                          data-testid={`button-pronouns-${p.toLowerCase().replace(/\//g, "-")}`}
+                          onClick={() => setForm(f => ({ ...f, pronouns: f.pronouns === p ? "" : p }))}
+                          className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${form.pronouns === p ? "bg-primary text-primary-foreground border-primary" : "border-border bg-background hover:border-primary/40"}`}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>You're dating <span className="text-muted-foreground font-normal">(optional · pick any that fit)</span></Label>
+                    <div className="flex flex-wrap gap-2">
+                      {SEEKING.map(s => (
+                        <button
+                          key={s}
+                          data-testid={`button-seeking-${s.toLowerCase().replace(/[ /]+/g, "-")}`}
+                          onClick={() => toggleSeeking(s)}
+                          className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${form.seeking.includes(s) ? "bg-primary text-primary-foreground border-primary" : "border-border bg-background hover:border-primary/40"}`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>How you identify <span className="text-muted-foreground font-normal">(optional)</span></Label>
                     <div className="flex flex-wrap gap-2">
                       {ORIENTATIONS.map(o => (
                         <button
@@ -269,7 +317,7 @@ export default function Wizard() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <Label>Which apps are you on?</Label>
+                    <Label>Which apps are you on? <span className="text-muted-foreground font-normal">(optional)</span></Label>
                     <div className="grid grid-cols-2 gap-3">
                       {APPS.map(app => (
                         <label key={app} className="flex items-center gap-3 cursor-pointer" data-testid={`checkbox-app-${app.toLowerCase().replace(/ /g, "-")}`}>
@@ -362,9 +410,9 @@ export default function Wizard() {
               {step === 4 && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-2">Add a message sample</h2>
+                    <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-2">Last thing — a recent conversation</h2>
                     <p className="text-muted-foreground">
-                      Optional but powerful. Paste a recent conversation from any dating app. We'll analyze your communication style and tell you what's working.
+                      Optional but powerful. Paste a recent chat from any app and we'll read your communication style. Leave it blank and hit Generate if you'd rather skip.
                     </p>
                   </div>
                   <div className="bg-secondary/40 rounded-2xl p-4 text-sm text-muted-foreground">
@@ -379,37 +427,15 @@ export default function Wizard() {
                       placeholder={"Me: Hey, I saw you're into hiking too — have you done the Marin Headlands trail?\nThem: Yes! Last month actually, the views were incredible\nMe: Right? I was just there in spring..."}
                       value={form.recentMessageSample}
                       onChange={e => setForm(f => ({ ...f, recentMessageSample: e.target.value }))}
-                      className="min-h-[180px] resize-none font-mono text-xs"
+                      className="min-h-[160px] resize-none font-mono text-xs"
                     />
                   </div>
-                  <button
-                    className="text-sm text-muted-foreground underline underline-offset-2"
-                    onClick={() => setStep(5)}
-                  >
-                    Skip this step
-                  </button>
-                </div>
-              )}
-
-              {step === 5 && (
-                <div className="space-y-6 text-center">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                    <CheckCircle className="w-8 h-8 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-2">
-                      You're ready, {form.firstName || "friend"}.
-                    </h2>
-                    <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-                      We have everything we need to build your personalized Profile Signal Audit. This takes about 20 seconds.
-                    </p>
-                  </div>
-                  <div className="bg-secondary/30 rounded-2xl p-6 text-left space-y-3 text-sm">
-                    <p className="font-semibold text-foreground mb-3">Your report will include:</p>
+                  <div className="bg-secondary/30 rounded-2xl p-5 text-left space-y-2.5 text-sm">
+                    <p className="font-semibold text-foreground mb-2">Your report will include:</p>
                     {[
-                      "Signal Score (0-100)",
+                      "Signal Score (0–100)",
                       "Full bio audit — honest, specific, no fluff",
-                      "AI-rewritten bio and prompts",
+                      "AI-rewritten bio and prompts in your voice",
                       "Photo guidance checklist",
                       "Top strengths and risks",
                       "Your 7-day action plan",
