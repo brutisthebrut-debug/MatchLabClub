@@ -1020,26 +1020,6 @@ export default function Dashboard() {
             )}
           </motion.div>
 
-          {/* Wingman Note */}
-          {(() => {
-            const note = WINGMAN_NOTES[new Date().getDay()];
-            return (
-              <motion.div {...fadeUp(0.03)} className="mb-4">
-                <div className="rounded-2xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3 bg-[hsl(268_52%_68%/0.07)] border border-[hsl(268_52%_68%/0.18)]">
-                  <Sparkles className="w-4 h-4 text-[hsl(268_52%_72%)] flex-shrink-0 hidden sm:block" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(268_52%_68%)] mb-0.5">Today's Wingman Note</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{note.note}</p>
-                  </div>
-                  <Link href={note.href}
-                    className="flex-shrink-0 text-xs font-semibold text-[hsl(268_52%_78%)] hover:text-[hsl(268_52%_88%)] transition-colors whitespace-nowrap self-end sm:self-auto">
-                    {note.action} →
-                  </Link>
-                </div>
-              </motion.div>
-            );
-          })()}
-
           {/* Next Best Action Banner */}
           <motion.div {...fadeUp(0.04)} className="mb-5">
             <div
@@ -1255,6 +1235,95 @@ export default function Dashboard() {
             </WelcomePanel>
           )}
 
+          {/* Package Cards — grouped tool grid, promoted above the secondary widgets */}
+          <motion.div {...fadeUp(0.10)} className="mb-5">
+            <div className="flex items-center justify-between mb-4">
+              <p className="font-semibold text-foreground text-sm">Explore by package</p>
+              <button
+                onClick={() => setShowAllTools(t => !t)}
+                className="text-xs text-muted-foreground hover:text-[hsl(268_52%_68%)] transition-colors flex items-center gap-1"
+              >
+                {showAllTools ? "Collapse" : "All tools"}
+                <ArrowRight className={`w-3 h-3 transition-transform ${showAllTools ? "rotate-90" : ""}`} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {PACKAGE_CARDS.map(pkg => (
+                <div
+                  key={pkg.name}
+                  className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(268_52%_68%/0.22)] transition-all"
+                >
+                  <div className="flex items-start gap-3 mb-3">
+                    <div
+                      className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: pkg.color.replace(")", " / 0.14)") }}
+                    >
+                      <pkg.icon className="w-4 h-4" style={{ color: pkg.color }} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground text-sm leading-tight">{pkg.name}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{pkg.tagline}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-0.5 mb-3">
+                    {pkg.tools.map(tool => (
+                      <Link
+                        key={tool.href}
+                        href={tool.href}
+                        className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground py-1.5 transition-colors group"
+                      >
+                        <span
+                          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                          style={{ background: pkg.color.replace(")", " / 0.55)") }}
+                        />
+                        {tool.label}
+                        <ArrowRight className="w-2.5 h-2.5 ml-auto opacity-0 group-hover:opacity-50 transition-opacity" />
+                      </Link>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5 flex-wrap">
+                    <Link href={pkg.hintHref}
+                      className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-xl transition-all hover:opacity-90"
+                      style={{ background: pkg.color.replace(")", " / 0.14)"), color: pkg.color, border: `1px solid ${pkg.color.replace(")", " / 0.2)")}` }}>
+                      {pkg.hint}
+                    </Link>
+                    <Link href={pkg.hubHref}
+                      className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1 py-1.5 whitespace-nowrap">
+                      All tools <ArrowRight className="w-2.5 h-2.5" />
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* All tools — expanded grid (hidden by default) */}
+            {showAllTools && (
+              <div className="mt-5 space-y-5">
+                {ACTION_GROUPS.map((group) => (
+                  <div key={group.label}>
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5 px-0.5" style={{ color: group.color }}>{group.label}</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {group.items.map((action, i) => (
+                        <Link key={i} href={action.href} data-testid={`card-quick-action-${action.label.toLowerCase().replace(/ /g, "-")}`}>
+                          <div className="glass border border-white/8 rounded-2xl p-3 hover:border-[hsl(268_52%_68%/0.3)] hover:shadow-[0_8px_30px_rgb(0_0_0/0.35)] transition-all cursor-pointer h-full card-hover">
+                            <div className="w-7 h-7 rounded-xl flex items-center justify-center mb-2" style={{ background: `${group.color.replace(")", " / 0.12)")}` }}>
+                              <action.icon className="w-3.5 h-3.5" style={{ color: group.color }} />
+                            </div>
+                            <p className="font-semibold text-foreground text-xs leading-tight">{action.label}</p>
+                            <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight hidden sm:block">{action.desc}</p>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+
           {/* Signal Score + History */}
           {!isBrandNewUser && (<>
           {showDemo && (
@@ -1392,94 +1461,25 @@ export default function Dashboard() {
           </div>
           </>)}
 
-          {/* Package Cards */}
-          <motion.div {...fadeUp(0.22)} className="mb-5">
-            <div className="flex items-center justify-between mb-4">
-              <p className="font-semibold text-foreground text-sm">Explore by package</p>
-              <button
-                onClick={() => setShowAllTools(t => !t)}
-                className="text-xs text-muted-foreground hover:text-[hsl(268_52%_68%)] transition-colors flex items-center gap-1"
-              >
-                {showAllTools ? "Collapse" : "All tools"}
-                <ArrowRight className={`w-3 h-3 transition-transform ${showAllTools ? "rotate-90" : ""}`} />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {PACKAGE_CARDS.map(pkg => (
-                <div
-                  key={pkg.name}
-                  className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(268_52%_68%/0.22)] transition-all"
-                >
-                  <div className="flex items-start gap-3 mb-3">
-                    <div
-                      className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: pkg.color.replace(")", " / 0.14)") }}
-                    >
-                      <pkg.icon className="w-4 h-4" style={{ color: pkg.color }} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-foreground text-sm leading-tight">{pkg.name}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{pkg.tagline}</p>
-                    </div>
+          {/* Wingman Note — demoted to a daily tip above Recent Audits */}
+          {(() => {
+            const note = WINGMAN_NOTES[new Date().getDay()];
+            return (
+              <motion.div {...fadeUp(0.22)} className="mb-5">
+                <div className="rounded-2xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3 bg-[hsl(268_52%_68%/0.07)] border border-[hsl(268_52%_68%/0.18)]">
+                  <Sparkles className="w-4 h-4 text-[hsl(268_52%_72%)] flex-shrink-0 hidden sm:block" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(268_52%_68%)] mb-0.5">Today's Wingman Note</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{note.note}</p>
                   </div>
-
-                  <div className="flex flex-col gap-0.5 mb-3">
-                    {pkg.tools.map(tool => (
-                      <Link
-                        key={tool.href}
-                        href={tool.href}
-                        className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground py-1.5 transition-colors group"
-                      >
-                        <span
-                          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                          style={{ background: pkg.color.replace(")", " / 0.55)") }}
-                        />
-                        {tool.label}
-                        <ArrowRight className="w-2.5 h-2.5 ml-auto opacity-0 group-hover:opacity-50 transition-opacity" />
-                      </Link>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5 flex-wrap">
-                    <Link href={pkg.hintHref}
-                      className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-xl transition-all hover:opacity-90"
-                      style={{ background: pkg.color.replace(")", " / 0.14)"), color: pkg.color, border: `1px solid ${pkg.color.replace(")", " / 0.2)")}` }}>
-                      {pkg.hint}
-                    </Link>
-                    <Link href={pkg.hubHref}
-                      className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-1 py-1.5 whitespace-nowrap">
-                      All tools <ArrowRight className="w-2.5 h-2.5" />
-                    </Link>
-                  </div>
+                  <Link href={note.href}
+                    className="flex-shrink-0 text-xs font-semibold text-[hsl(268_52%_78%)] hover:text-[hsl(268_52%_88%)] transition-colors whitespace-nowrap self-end sm:self-auto">
+                    {note.action} →
+                  </Link>
                 </div>
-              ))}
-            </div>
-
-            {/* All tools — expanded grid (hidden by default) */}
-            {showAllTools && (
-              <div className="mt-5 space-y-5">
-                {ACTION_GROUPS.map((group) => (
-                  <div key={group.label}>
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5 px-0.5" style={{ color: group.color }}>{group.label}</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                      {group.items.map((action, i) => (
-                        <Link key={i} href={action.href} data-testid={`card-quick-action-${action.label.toLowerCase().replace(/ /g, "-")}`}>
-                          <div className="glass border border-white/8 rounded-2xl p-3 hover:border-[hsl(268_52%_68%/0.3)] hover:shadow-[0_8px_30px_rgb(0_0_0/0.35)] transition-all cursor-pointer h-full card-hover">
-                            <div className="w-7 h-7 rounded-xl flex items-center justify-center mb-2" style={{ background: `${group.color.replace(")", " / 0.12)")}` }}>
-                              <action.icon className="w-3.5 h-3.5" style={{ color: group.color }} />
-                            </div>
-                            <p className="font-semibold text-foreground text-xs leading-tight">{action.label}</p>
-                            <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight hidden sm:block">{action.desc}</p>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </motion.div>
+              </motion.div>
+            );
+          })()}
 
           {/* Recent Audits */}
           {!isBrandNewUser && (
