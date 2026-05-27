@@ -57,6 +57,7 @@ import {
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { HandoffShareDialog } from "@/components/HandoffShareDialog";
 import { WelcomePanel } from "@/components/WelcomePanel";
+import { FeatureHub } from "@/components/FeatureHub";
 import { hasAnyAnonymousIds } from "@/lib/anonymousIds";
 import { readSavedProgressEntries, type ProgressEntryLike } from "@/lib/contextBuilder";
 import {
@@ -1891,6 +1892,9 @@ export default function Dashboard() {
               </Button>
             </div>
           </motion.div>
+
+          {/* Full feature catalog — moved here from the navbar to keep the top nav focused */}
+          <FeatureHub />
 
         </div>
       </div>
