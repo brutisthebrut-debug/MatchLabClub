@@ -145,16 +145,152 @@
   --glow-rose: 0 0 22px hsl(326 100% 59% / 0.20);
 }
 
-/* ── Dark override (if ever needed for dark subpanels) ── */
+/* ─── DARK THEME — Dramatic Indigo/Pink (men-at-night) ─── */
 .dark {
-  --background: 248 55% 8%;
-  --foreground: 248 30% 96%;
-  --card: 248 50% 11%;
-  --card-foreground: 248 30% 96%;
-  --muted: 248 35% 14%;
-  --muted-foreground: 248 18% 60%;
-  --border: 248 30% 18%;
+  --button-outline: rgba(255, 45, 155, 0.22);
+  --badge-outline: rgba(124, 92, 245, 0.18);
+  --opaque-button-border-intensity: 22;
+  --elevate-1: rgba(255, 255, 255, 0.04);
+  --elevate-2: rgba(255, 255, 255, 0.07);
+
+  /* Deep indigo midnight base — not pure black, brand-tinted */
+  --background: 248 55% 5%;          /* #07061A — deep indigo midnight */
+  --foreground: 248 25% 96%;         /* #F1F0FA — soft white */
+  --border: 248 35% 18%;             /* #1F1B40 */
+
+  --card: 248 48% 9%;                /* #0F0D26 */
+  --card-foreground: 248 25% 96%;
+  --card-border: 248 38% 20%;
+
+  --sidebar: 248 50% 7%;
+  --sidebar-foreground: 248 25% 96%;
+  --sidebar-border: 248 38% 18%;
+  --sidebar-primary: 248 75% 65%;
+  --sidebar-primary-foreground: 248 55% 5%;
+  --sidebar-accent: 248 45% 12%;
+  --sidebar-accent-foreground: 248 25% 96%;
+  --sidebar-ring: 248 75% 65%;
+
+  --popover: 248 48% 9%;
+  --popover-foreground: 248 25% 96%;
+  --popover-border: 248 38% 20%;
+
+  /* Brighter indigo for dark bg — keeps contrast on glow buttons */
+  --primary: 248 75% 65%;            /* #7B5CF5 — luminous indigo */
+  --primary-foreground: 248 55% 8%;
+
+  --secondary: 248 40% 14%;
+  --secondary-foreground: 248 20% 88%;
+
+  --muted: 248 38% 12%;
+  --muted-foreground: 248 15% 65%;
+
+  --accent: 326 100% 65%;            /* #FF4FA8 — hot pink boosted */
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 80% 62%;
+  --destructive-foreground: 0 0% 100%;
+
+  --input: 248 38% 14%;
+  --ring: 248 75% 65%;
+
+  --chart-1: 248 75% 65%;
+  --chart-2: 326 100% 65%;
+  --chart-3: 190 80% 55%;
+  --chart-4: 152 65% 55%;
+  --chart-5: 38 95% 60%;
+
+  /* Dark-theme shadows — deep + brand-glow */
+  --shadow-sm: 0 1px 4px 0 rgba(0,0,0,0.45);
+  --shadow:    0 2px 14px 0 rgba(0,0,0,0.55);
+  --shadow-md: 0 4px 24px 0 rgba(0,0,0,0.6);
+  --shadow-lg: 0 12px 60px 0 rgba(0,0,0,0.7);
+  --glow-violet: 0 0 32px hsl(248 75% 65% / 0.5), 0 0 90px hsl(248 75% 65% / 0.18);
+  --glow-gold:   0 0 32px hsl(326 100% 65% / 0.5), 0 0 80px hsl(326 100% 65% / 0.18);
+  --glow-rose:   0 0 28px hsl(326 100% 65% / 0.55);
 }
+
+/* ── Dark-theme utility overrides ── */
+.dark .glass {
+  background: rgba(15, 13, 38, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 30px rgba(0,0,0,0.4);
+}
+.dark .glass-strong {
+  background: rgba(15, 13, 38, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 50px rgba(0,0,0,0.55);
+}
+.dark .glass-elevated {
+  background: rgba(20, 18, 48, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.dark .mesh-bg {
+  background:
+    radial-gradient(ellipse at 12% 18%, hsl(326 100% 60% / 0.18) 0%, transparent 50%),
+    radial-gradient(ellipse at 88% 82%, hsl(248 75% 65% / 0.20) 0%, transparent 50%),
+    radial-gradient(ellipse at 62% 8%,  hsl(285 70% 65% / 0.14) 0%, transparent 45%),
+    radial-gradient(ellipse at 28% 92%, hsl(248 75% 65% / 0.12) 0%, transparent 40%),
+    hsl(var(--background));
+}
+.dark .mesh-bg::before { opacity: 0.18; }
+.dark .orb-violet { background: hsl(248 80% 65% / 0.42); }
+.dark .orb-gold   { background: hsl(326 100% 65% / 0.32); }
+.dark .orb-plum   { background: hsl(285 70% 65% / 0.32); }
+.dark .orb-rose   { background: hsl(326 100% 65% / 0.30); }
+.dark .border-violet-glow {
+  border-color: hsl(248 75% 65% / 0.55) !important;
+  box-shadow: 0 0 0 1px hsl(248 75% 65% / 0.25), inset 0 0 0 1px hsl(248 75% 65% / 0.14);
+}
+.dark .border-gold-glow {
+  border-color: hsl(326 100% 65% / 0.55) !important;
+  box-shadow: 0 0 0 1px hsl(326 100% 65% / 0.22);
+}
+.dark .section-card {
+  background: rgba(15, 13, 38, 0.7);
+  border: 1px solid hsl(248 38% 22%);
+}
+.dark ::selection { background: hsl(248 75% 65% / 0.4); color: hsl(248 25% 98%); }
+.dark ::-webkit-scrollbar-track { background: hsl(248 50% 8%); }
+.dark ::-webkit-scrollbar-thumb { background: hsl(248 38% 22%); }
+.dark ::-webkit-scrollbar-thumb:hover { background: hsl(248 75% 55% / 0.5); }
+.dark input, .dark textarea, .dark select { color-scheme: dark; }
+/* Dark-theme: collapse the light-theme white-overlay overrides back to genuine translucent white */
+.dark .border-white\/4  { border-color: rgba(255,255,255,0.04) !important; }
+.dark .border-white\/5  { border-color: rgba(255,255,255,0.05) !important; }
+.dark .border-white\/6  { border-color: rgba(255,255,255,0.06) !important; }
+.dark .border-white\/8  { border-color: rgba(255,255,255,0.08) !important; }
+.dark .border-white\/10 { border-color: rgba(255,255,255,0.10) !important; }
+.dark .border-white\/12 { border-color: rgba(255,255,255,0.12) !important; }
+.dark .border-white\/18 { border-color: rgba(255,255,255,0.18) !important; }
+.dark .border-white\/20 { border-color: rgba(255,255,255,0.20) !important; }
+.dark .bg-white\/2  { background-color: rgba(255,255,255,0.02) !important; }
+.dark .bg-white\/4  { background-color: rgba(255,255,255,0.04) !important; }
+.dark .bg-white\/5  { background-color: rgba(255,255,255,0.05) !important; }
+.dark .bg-white\/8  { background-color: rgba(255,255,255,0.08) !important; }
+.dark .bg-white\/10 { background-color: rgba(255,255,255,0.10) !important; }
+.dark .tag-strength { background: hsl(152 60% 45% / 0.15); color: hsl(152 60% 75%); border-color: hsl(152 60% 50% / 0.35); }
+.dark .tag-risk     { background: hsl(38 90% 55% / 0.15);  color: hsl(38 95% 75%);  border-color: hsl(38 90% 55% / 0.35); }
+.dark .tag-violet   { background: hsl(248 75% 65% / 0.18); color: hsl(248 75% 85%); border-color: hsl(248 75% 65% / 0.4); }
+.dark .card-hover:hover {
+  box-shadow: 0 18px 60px rgba(0,0,0,0.5), 0 0 0 1px hsl(248 75% 65% / 0.35);
+  border-color: hsl(248 75% 65% / 0.45) !important;
+}
+.dark .divider-gradient { background: linear-gradient(90deg, transparent 0%, hsl(248 75% 65% / 0.45) 50%, transparent 100%); }
+
+/* ── Dark-theme remap of hardcoded light-brand indigo (#3D35CC ≈ hsl(248 62% 52%)) ──
+   Components were written with arbitrary Tailwind values like `text-[hsl(248_62%_52%)]`
+   which produces ~3:1 contrast on the dark #07061A background. We bump it to the
+   luminous dark-mode primary (~#7B5CF5 ≈ hsl(248 75% 72%)) globally. */
+.dark .text-\[hsl\(248_62\%_52\%\)\] { color: hsl(248 80% 76%) !important; }
+.dark .border-\[hsl\(248_62\%_52\%\/0\.25\)\] { border-color: hsl(248 75% 65% / 0.40) !important; }
+.dark .border-\[hsl\(248_62\%_52\%\/0\.3\)\]  { border-color: hsl(248 75% 65% / 0.45) !important; }
+.dark .border-\[hsl\(248_62\%_52\%\/0\.35\)\] { border-color: hsl(248 75% 65% / 0.50) !important; }
+.dark .border-\[hsl\(248_62\%_52\%\/0\.55\)\] { border-color: hsl(248 75% 65% / 0.70) !important; }
+.dark .bg-\[hsl\(248_62\%_52\%\/0\.08\)\] { background-color: hsl(248 75% 65% / 0.14) !important; }
+.dark .bg-\[hsl\(248_62\%_52\%\/0\.12\)\] { background-color: hsl(248 75% 65% / 0.18) !important; }
+.dark .hover\:border-\[hsl\(248_62\%_52\%\/0\.55\)\]:hover { border-color: hsl(248 75% 65% / 0.70) !important; }
 
 @layer base {
   * {
@@ -167,7 +303,11 @@
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif;
+    letter-spacing: -0.02em;
   }
+  h1 { font-weight: 700; }
+  /* Smooth theme transition on root color changes */
+  html { transition: background-color 240ms ease, color 240ms ease; }
 
   ::selection {
     background: hsl(248 62% 52% / 0.14);

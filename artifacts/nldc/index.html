@@ -17,6 +17,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      // Pre-hydration theme bootstrap — prevents FOUC on dark/system-dark loads.
+      // Must match the key + logic in src/lib/theme.tsx.
+      (function () {
+        try {
+          var stored = localStorage.getItem("matchlab-theme");
+          var resolved =
+            stored === "dark" ? "dark"
+            : stored === "light" ? "light"
+            : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+          if (resolved === "dark") document.documentElement.classList.add("dark");
+          document.documentElement.style.colorScheme = resolved;
+        } catch (e) { /* localStorage blocked — fall back to default light */ }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

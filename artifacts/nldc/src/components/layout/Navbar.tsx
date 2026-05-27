@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, LogIn, LogOut, User as UserIcon, ArrowRight, Compass } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@workspace/replit-auth-web";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const PRIMARY_LINKS = [
   { name: "Start Here", href: "/start" },
@@ -35,16 +36,22 @@ export function Navbar() {
       }`}
       ref={navRef}
     >
-      <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+      <div className="container mx-auto px-4 md:px-6 h-20 md:h-24 flex items-center justify-between">
 
-        {/* Logo */}
-        <Link href="/" className="flex items-center flex-shrink-0 group" onClick={closeAll}>
+        {/* Logo — featured, bigger, with wordmark */}
+        <Link href="/" className="flex items-center gap-3 flex-shrink-0 group" onClick={closeAll}>
           <img
             src="/matchlab-logo.png"
             alt="MatchLab Club"
-            className="h-10 w-auto transition-opacity group-hover:opacity-85"
-            style={{ filter: "drop-shadow(0 0 8px hsl(326 100% 65% / 0.5))" }}
+            className="h-12 md:h-14 w-auto transition-transform group-hover:scale-[1.04]"
+            style={{ filter: "drop-shadow(0 2px 14px hsl(326 100% 60% / 0.45)) drop-shadow(0 0 18px hsl(248 75% 60% / 0.35))" }}
           />
+          <div className="hidden sm:flex flex-col leading-tight">
+            <span className="font-serif font-bold text-lg md:text-xl text-foreground tracking-tight">
+              MatchLab<span className="gradient-text">.</span>
+            </span>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">Club</span>
+          </div>
         </Link>
 
         {/* Desktop Nav — minimal: 3 marketing links + Dashboard (if authed) + Account/Sign-in + CTA */}
@@ -84,6 +91,8 @@ export function Navbar() {
 
           <div className="w-px h-5 bg-foreground/10 mx-2" />
 
+          <ThemeToggle className="mr-1" />
+
           {isLoading ? null : isAuthenticated ? (
             <Link
               href="/account"
@@ -113,15 +122,18 @@ export function Navbar() {
           </Button>
         </nav>
 
-        {/* Mobile Toggle */}
-        <button
-          className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label={mobileOpen ? "Close menu" : "Open menu"}
-          aria-expanded={mobileOpen}
-        >
-          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        {/* Mobile Right Cluster */}
+        <div className="md:hidden flex items-center gap-1">
+          <ThemeToggle />
+          <button
+            className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Nav */}

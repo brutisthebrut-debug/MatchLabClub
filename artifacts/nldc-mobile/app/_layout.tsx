@@ -158,9 +158,9 @@ function RootLayoutNav() {
       <Stack
         screenOptions={{
           headerBackTitle: "Back",
-          headerStyle: { backgroundColor: "#0B0F1D" },
-          headerTintColor: "#ECEEF5",
-          contentStyle: { backgroundColor: "#0B0F1D" },
+          headerStyle: { backgroundColor: "#07061A" },
+          headerTintColor: "#F1F0FA",
+          contentStyle: { backgroundColor: "#07061A" },
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -198,7 +198,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#0B0F1D" }}>
+          <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#07061A" }}>
             <KeyboardProvider>
               <StatusBar style="light" />
               <RootLayoutNav />

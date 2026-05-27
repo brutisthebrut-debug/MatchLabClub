@@ -19,21 +19,23 @@ export default function Landing() {
   );
   return (
     <AppLayout>
-      {/* ── Hero — two clear differentiated entry points ── */}
-      <section className="relative mesh-bg overflow-hidden pt-16 md:pt-24 pb-16 md:pb-24">
+      {/* ── Hero — ONE primary action; Audit positioned as the natural next step ── */}
+      <section className="relative mesh-bg overflow-hidden pt-14 md:pt-20 pb-20 md:pb-28">
         <div className="orb orb-violet absolute w-[600px] h-[600px] -top-60 -right-60 opacity-80 pointer-events-none" />
         <div className="orb orb-gold absolute w-[400px] h-[400px] bottom-0 left-1/4 opacity-60 pointer-events-none" />
         <div className="orb orb-plum absolute w-[300px] h-[300px] top-40 left-0 opacity-70 pointer-events-none" />
 
         <div className="container mx-auto px-4 relative z-10">
-          {/* Headline + subhead */}
-          <div className="max-w-3xl mx-auto text-center mb-12 md:mb-14">
-            <motion.div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-[hsl(248_62%_52%/0.25)] mb-6" {...fadeUp(0.04)}>
+          <div className="max-w-3xl mx-auto text-center">
+            {/* Trust eyebrow */}
+            <motion.div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-[hsl(248_62%_52%/0.25)] mb-7" {...fadeUp(0.04)}>
               <span className="w-2 h-2 rounded-full bg-[hsl(142_55%_60%)] animate-pulse" />
               <span className="text-xs text-muted-foreground">Private beta · Founder reviews every report</span>
             </motion.div>
+
+            {/* Monumental headline */}
             <motion.h1
-              className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-5"
+              className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-bold tracking-tight leading-[0.98] mb-6"
               {...fadeUp(0.08)}
             >
               <span className="text-foreground">Stop being</span>{" "}
@@ -42,130 +44,97 @@ export default function Landing() {
               <span className="text-foreground">Start being</span>{" "}
               <span className="gradient-text">chosen.</span>
             </motion.h1>
+
             <motion.p
-              className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+              className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed mb-9"
               {...fadeUp(0.15)}
             >
-              Find out what your dating profile is really saying — and get it rewritten. Pick the entry point that fits your time.
+              Paste your bio. Get an honest read on what it's actually saying — and one rewritten line that shows what's possible. <span className="text-foreground/80 font-medium">3 minutes. No account. Free.</span>
             </motion.p>
-          </div>
 
-          {/* ── TWO CLEAR ENTRY POINTS — differentiated by depth + time ── */}
-          <motion.div
-            className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto"
-            {...fadeUp(0.22)}
-          >
-            {/* Card 1 — Signal Check (free, fast, no account) */}
-            <div
-              className="glass rounded-3xl p-7 flex flex-col relative card-hover"
-              style={{ border: "1px solid hsl(43 65% 55% / 0.3)" }}
-              data-testid="card-hero-signal-check"
-            >
-              <div className="absolute -top-3 left-6">
-                <span className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest bg-[hsl(43_65%_55%)] text-white shadow-md">
-                  Free · No account
-                </span>
-              </div>
-              <div className="flex items-center gap-3 mb-3 mt-2">
-                <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "hsl(43 65% 55% / 0.12)", border: "1px solid hsl(43 65% 55% / 0.25)" }}>
-                  <Headphones className="w-5 h-5 text-[hsl(43_65%_50%)]" aria-hidden="true" />
-                </div>
-                <div>
-                  <h2 className="font-bold text-foreground text-lg leading-tight">Signal Check</h2>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Clock className="w-3 h-3" /> 3 minutes · Instant result</p>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                Paste your bio, get a Signal Strength score, your profile category, your #1 fix, and one rewritten line — instantly.
-              </p>
-              <ul className="space-y-1.5 mb-6 text-xs text-muted-foreground" role="list">
-                {[
-                  "Signal Strength score (0–100)",
-                  "Profile category — e.g. 'The Hidden Gem'",
-                  "Your #1 improvement, specific to your bio",
-                  "One rewritten line showing what's possible",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-2">
-                    <CheckCircle className="w-3.5 h-3.5 text-[hsl(43_65%_55%)] flex-shrink-0 mt-0.5" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
+            {/* PRIMARY CTA — single, oversized, unmissable */}
+            <motion.div className="flex flex-col items-center gap-4" {...fadeUp(0.22)}>
               <Button
                 asChild
                 size="lg"
-                className="rounded-full font-semibold w-full mt-auto text-white"
-                style={{ background: "linear-gradient(135deg, hsl(43 65% 55%), hsl(43 65% 42%))", boxShadow: "0 4px 20px hsl(43 65% 55% / 0.35)" }}
+                className="rounded-full font-semibold h-14 px-9 text-base bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 glow-pulse text-white shadow-[0_8px_32px_hsl(248_62%_52%/0.45)] hover:scale-[1.02] transition-transform"
                 data-testid="button-hero-signal-check"
               >
-                <Link href="/signal-check">Start free check <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link href="/signal-check">Get my free Signal Check <ArrowRight className="ml-2 h-5 w-5" /></Link>
               </Button>
-            </div>
 
-            {/* Card 2 — Full Audit (deeper, recommended) */}
-            <div
-              className="glass rounded-3xl p-7 flex flex-col relative card-hover shimmer"
-              style={{ border: "1px solid hsl(248 62% 52% / 0.35)", boxShadow: "0 0 60px hsl(248 62% 52% / 0.1)" }}
-              data-testid="card-hero-full-audit"
-            >
-              <div className="absolute -top-3 left-6">
-                <span className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] text-white shadow-[0_2px_12px_hsl(248_62%_52%/0.4)]">
-                  ✦ Recommended · Free to start
-                </span>
+              {/* Trust micro-row */}
+              <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> 3 minutes</span>
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
+                <span className="inline-flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" /> No account needed</span>
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
+                <span className="inline-flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> Instant result</span>
               </div>
-              <div className="flex items-center gap-3 mb-3 mt-2">
-                <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "hsl(248 62% 52% / 0.12)", border: "1px solid hsl(248 62% 52% / 0.3)" }}>
-                  <FileText className="w-5 h-5 text-[hsl(248_62%_52%)]" aria-hidden="true" />
-                </div>
-                <div>
-                  <h2 className="font-bold text-foreground text-lg leading-tight">Profile Signal Audit</h2>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Clock className="w-3 h-3" /> 5–7 minutes · Full report</p>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                A complete intake — bio, prompts, goal, optional message sample. You get a full report and a 7-day action plan built around you.
-              </p>
-              <ul className="space-y-1.5 mb-6 text-xs text-muted-foreground" role="list">
-                {[
-                  "Everything in the Signal Check, plus —",
-                  "8-dimension Signal Spectrum breakdown",
-                  "Complete bio + prompt rewrites",
-                  "Photo guidance & a 7-day action plan",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-2">
-                    <CheckCircle className="w-3.5 h-3.5 text-[hsl(248_62%_52%)] flex-shrink-0 mt-0.5" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button
-                asChild
-                size="lg"
-                className="rounded-full font-semibold w-full mt-auto bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 glow-pulse text-white shadow-[0_4px_24px_hsl(248_62%_52%/0.4)]"
-                data-testid="button-hero-full-audit"
+
+              {/* Sample report — frictionless escape hatch */}
+              <Link
+                href="/sample-report"
+                className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-[hsl(248_62%_52%)] hover:underline"
+                data-testid="link-hero-sample-report"
               >
-                <Link href="/start">Get my Audit <ArrowRight className="ml-2 h-4 w-4" /></Link>
-              </Button>
-            </div>
+                <Eye className="w-3.5 h-3.5" /> Or see an example report first
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </motion.div>
+          </div>
+
+          {/* "What you'll get" — keeps Signal Check tangible without competing for the click */}
+          <motion.div
+            className="max-w-2xl mx-auto mt-14 grid sm:grid-cols-2 gap-3 text-left"
+            initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.05 }}
+          >
+            {[
+              { icon: Sparkles, text: "Your Signal Strength score (0–100)" },
+              { icon: FileText, text: "The category your profile actually reads as" },
+              { icon: CheckCircle, text: "Your #1 specific fix, not generic advice" },
+              { icon: Headphones, text: "One rewritten line that shows what's possible" },
+            ].map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <div key={i} className="flex items-start gap-3 p-3 rounded-xl glass-elevated">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-[hsl(248_62%_52%/0.12)] border border-[hsl(248_62%_52%/0.25)]">
+                    <Icon className="w-3.5 h-3.5 text-[hsl(248_62%_52%)]" />
+                  </div>
+                  <p className="text-sm text-foreground/85 leading-snug pt-0.5">{item.text}</p>
+                </div>
+              );
+            })}
           </motion.div>
 
-          {/* Secondary action — sample report */}
-          <motion.div className="flex items-center justify-center gap-2 mt-8" {...fadeUp(0.32)}>
-            <span className="text-xs text-muted-foreground/70">Not sure yet?</span>
+          {/* Audit upgrade — presented as the natural next step, not a competing choice */}
+          <motion.div
+            className="max-w-2xl mx-auto mt-7 p-5 rounded-2xl glass border border-[hsl(248_62%_52%/0.25)] flex flex-col sm:flex-row items-start sm:items-center gap-4"
+            data-testid="card-hero-full-audit"
+            initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.15 }}
+          >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] shadow-[0_4px_16px_hsl(248_62%_52%/0.4)]">
+              <FileText className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground mb-0.5">Ready for the full picture?</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                After your Signal Check, upgrade to the <span className="font-semibold text-foreground/85">Profile Signal Audit</span> — 8-dimension breakdown, full bio + prompt rewrites, and a 7-day plan.
+              </p>
+            </div>
             <Link
-              href="/sample-report"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[hsl(248_62%_52%)] hover:underline"
-              data-testid="link-hero-sample-report"
+              href="/start"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[hsl(248_62%_52%)] hover:underline whitespace-nowrap"
+              data-testid="button-hero-full-audit"
             >
-              <Eye className="w-3.5 h-3.5" /> See an example report
-              <ArrowRight className="w-3 h-3" />
+              Skip to the Audit <ArrowRight className="w-3 h-3" />
             </Link>
           </motion.div>
         </div>
       </section>
 
       {/* ── How It Works — the 3-step narrative ── */}
-      <section id="how-it-works" className="py-20 md:py-24 border-t border-foreground/5 bg-[hsl(248_40%_98%/0.5)]">
+      <section id="how-it-works" className="py-20 md:py-24 border-t border-foreground/5 bg-[hsl(248_40%_98%/0.5)] dark:bg-[hsl(248_50%_8%/0.5)]">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-3">How it works</p>
