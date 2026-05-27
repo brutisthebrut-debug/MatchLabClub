@@ -1597,6 +1597,148 @@ export interface DeletePostDateNoteResult {
   deletedId: number;
 }
 
+export type WellnessConsentLevel = typeof WellnessConsentLevel[keyof typeof WellnessConsentLevel];
+
+
+export const WellnessConsentLevel = {
+  coaching: 'coaching',
+  matching: 'matching',
+  research: 'research',
+} as const;
+
+export interface WellnessAnswerInput {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  questionId: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  dimension: string;
+  /**
+     * @maxLength 80
+     * @nullable
+     */
+  category?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  questionText: string;
+  /**
+     * @minLength 1
+     * @maxLength 5000
+     */
+  answer: string;
+  consentLevel?: WellnessConsentLevel;
+}
+
+export interface WellnessAnswerPatch {
+  /**
+     * @minLength 1
+     * @maxLength 5000
+     */
+  answer?: string;
+  consentLevel?: WellnessConsentLevel;
+}
+
+export interface WellnessAnswer {
+  id: number;
+  questionId: string;
+  dimension: string;
+  /** @nullable */
+  category?: string | null;
+  questionText: string;
+  answer: string;
+  consentLevel: WellnessConsentLevel;
+  /** @nullable */
+  deletedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WellnessAnswerList {
+  answers: WellnessAnswer[];
+  total: number;
+}
+
+export interface WellnessTagInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  tag: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  category: string;
+  approvedForMatching?: boolean;
+  hidden?: boolean;
+}
+
+export interface WellnessTagPatch {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label?: string;
+  approvedForMatching?: boolean;
+  hidden?: boolean;
+}
+
+export interface WellnessTag {
+  id: number;
+  tag: string;
+  label: string;
+  category: string;
+  approvedForMatching: boolean;
+  hidden: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WellnessTagList {
+  tags: WellnessTag[];
+}
+
+export interface WellnessDimensionSummary {
+  dimension: string;
+  label: string;
+  answeredCount: number;
+  totalQuestions: number;
+  completionPct: number;
+  strengths: string[];
+  frictionPoints: string[];
+  /** @nullable */
+  nextQuestion: string | null;
+}
+
+export type WellnessProfileMatchingReadiness = {
+  overallPct: number;
+  strongDimensions: string[];
+  weakDimensions: string[];
+  readyForMatching: boolean;
+};
+
+export interface WellnessProfile {
+  dimensions: WellnessDimensionSummary[];
+  tags: WellnessTag[];
+  matchingReadiness: WellnessProfileMatchingReadiness;
+}
+
+export interface DeleteWellnessAnswerResult {
+  success: true;
+  deletedId: number;
+}
+
 /**
  * Opaque session token — `Bearer <sid>`.
  */
@@ -1700,6 +1842,15 @@ export const ListPostDateNotesOutcome = {
   unsure: 'unsure',
   ghosted: 'ghosted',
 } as const;
+
+export type ListWellnessAnswersParams = {
+dimension?: string;
+};
+
+export type DeleteWellnessTag200 = {
+  success: true;
+  deletedId: number;
+};
 
 export type ListAuditsParams = {
 source?: ListAuditsSource;

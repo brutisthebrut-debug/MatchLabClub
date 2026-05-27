@@ -1202,6 +1202,246 @@ export const RestorePostDateNoteResponse = zod.object({
 
 
 /**
+ * @summary List all wellness answers for current user
+ */
+export const ListWellnessAnswersQueryParams = zod.object({
+  "dimension": zod.coerce.string().optional()
+})
+
+export const ListWellnessAnswersHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const ListWellnessAnswersResponse = zod.object({
+  "answers": zod.array(zod.object({
+  "id": zod.number(),
+  "questionId": zod.string(),
+  "dimension": zod.string(),
+  "category": zod.string().nullish(),
+  "questionText": zod.string(),
+  "answer": zod.string(),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research']),
+  "deletedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "total": zod.number()
+})
+
+
+/**
+ * @summary Save a wellness answer
+ */
+export const CreateWellnessAnswerHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const createWellnessAnswerBodyQuestionIdMax = 120;
+
+export const createWellnessAnswerBodyDimensionMax = 40;
+
+export const createWellnessAnswerBodyCategoryMax = 80;
+
+export const createWellnessAnswerBodyQuestionTextMax = 1000;
+
+export const createWellnessAnswerBodyAnswerMax = 5000;
+
+
+
+export const CreateWellnessAnswerBody = zod.object({
+  "questionId": zod.string().min(1).max(createWellnessAnswerBodyQuestionIdMax),
+  "dimension": zod.string().min(1).max(createWellnessAnswerBodyDimensionMax),
+  "category": zod.string().max(createWellnessAnswerBodyCategoryMax).nullish(),
+  "questionText": zod.string().min(1).max(createWellnessAnswerBodyQuestionTextMax),
+  "answer": zod.string().min(1).max(createWellnessAnswerBodyAnswerMax),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research']).optional()
+})
+
+
+/**
+ * @summary Update a wellness answer or consent level
+ */
+export const UpdateWellnessAnswerParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateWellnessAnswerHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const updateWellnessAnswerBodyAnswerMax = 5000;
+
+
+
+export const UpdateWellnessAnswerBody = zod.object({
+  "answer": zod.string().min(1).max(updateWellnessAnswerBodyAnswerMax).optional(),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research']).optional()
+})
+
+export const UpdateWellnessAnswerResponse = zod.object({
+  "id": zod.number(),
+  "questionId": zod.string(),
+  "dimension": zod.string(),
+  "category": zod.string().nullish(),
+  "questionText": zod.string(),
+  "answer": zod.string(),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research']),
+  "deletedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Soft-delete a wellness answer
+ */
+export const DeleteWellnessAnswerParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteWellnessAnswerHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const DeleteWellnessAnswerResponse = zod.object({
+  "success": zod.boolean(),
+  "deletedId": zod.number()
+})
+
+
+/**
+ * @summary List compatibility insight tags for current user
+ */
+export const ListWellnessTagsHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const ListWellnessTagsResponse = zod.object({
+  "tags": zod.array(zod.object({
+  "id": zod.number(),
+  "tag": zod.string(),
+  "label": zod.string(),
+  "category": zod.string(),
+  "approvedForMatching": zod.boolean(),
+  "hidden": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Create a compatibility insight tag
+ */
+export const CreateWellnessTagHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const createWellnessTagBodyTagMax = 80;
+
+export const createWellnessTagBodyLabelMax = 120;
+
+export const createWellnessTagBodyCategoryMax = 40;
+
+
+
+export const CreateWellnessTagBody = zod.object({
+  "tag": zod.string().min(1).max(createWellnessTagBodyTagMax),
+  "label": zod.string().min(1).max(createWellnessTagBodyLabelMax),
+  "category": zod.string().min(1).max(createWellnessTagBodyCategoryMax),
+  "approvedForMatching": zod.boolean().optional(),
+  "hidden": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Update a compatibility tag
+ */
+export const UpdateWellnessTagParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateWellnessTagHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const updateWellnessTagBodyLabelMax = 120;
+
+
+
+export const UpdateWellnessTagBody = zod.object({
+  "label": zod.string().min(1).max(updateWellnessTagBodyLabelMax).optional(),
+  "approvedForMatching": zod.boolean().optional(),
+  "hidden": zod.boolean().optional()
+})
+
+export const UpdateWellnessTagResponse = zod.object({
+  "id": zod.number(),
+  "tag": zod.string(),
+  "label": zod.string(),
+  "category": zod.string(),
+  "approvedForMatching": zod.boolean(),
+  "hidden": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a compatibility tag
+ */
+export const DeleteWellnessTagParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteWellnessTagHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const DeleteWellnessTagResponse = zod.object({
+  "success": zod.boolean(),
+  "deletedId": zod.number()
+})
+
+
+/**
+ * @summary Get summarised wellness dimensions profile + matching readiness
+ */
+export const GetWellnessProfileHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetWellnessProfileResponse = zod.object({
+  "dimensions": zod.array(zod.object({
+  "dimension": zod.string(),
+  "label": zod.string(),
+  "answeredCount": zod.number(),
+  "totalQuestions": zod.number(),
+  "completionPct": zod.number(),
+  "strengths": zod.array(zod.string()),
+  "frictionPoints": zod.array(zod.string()),
+  "nextQuestion": zod.string().nullable()
+})),
+  "tags": zod.array(zod.object({
+  "id": zod.number(),
+  "tag": zod.string(),
+  "label": zod.string(),
+  "category": zod.string(),
+  "approvedForMatching": zod.boolean(),
+  "hidden": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "matchingReadiness": zod.object({
+  "overallPct": zod.number(),
+  "strongDimensions": zod.array(zod.string()),
+  "weakDimensions": zod.array(zod.string()),
+  "readyForMatching": zod.boolean()
+})
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */

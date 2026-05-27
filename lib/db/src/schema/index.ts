@@ -24,3 +24,5 @@ export * from "./push_tokens";
 export * from "./life_pulses";
 export * from "./journal_entries";
 export * from "./post_date_notes";
+export * from "./wellness_answers";
+export * from "./wellness_tags";

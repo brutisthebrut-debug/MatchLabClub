@@ -961,6 +961,206 @@ paths:
         "404":
           description: Not found
 
+  /wellness/answers:
+    get:
+      operationId: listWellnessAnswers
+      tags: [wellness]
+      summary: List all wellness answers for current user
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: dimension
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Wellness answers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessAnswerList"
+    post:
+      operationId: createWellnessAnswer
+      tags: [wellness]
+      summary: Save a wellness answer
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WellnessAnswerInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessAnswer"
+
+  /wellness/answers/{id}:
+    patch:
+      operationId: updateWellnessAnswer
+      tags: [wellness]
+      summary: Update a wellness answer or consent level
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WellnessAnswerPatch"
+      responses:
+        "200":
+          description: Updated answer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessAnswer"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteWellnessAnswer
+      tags: [wellness]
+      summary: Soft-delete a wellness answer
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteWellnessAnswerResult"
+        "404":
+          description: Not found
+
+  /wellness/tags:
+    get:
+      operationId: listWellnessTags
+      tags: [wellness]
+      summary: List compatibility insight tags for current user
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        "200":
+          description: Tags
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessTagList"
+    post:
+      operationId: createWellnessTag
+      tags: [wellness]
+      summary: Create a compatibility insight tag
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WellnessTagInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessTag"
+
+  /wellness/tags/{id}:
+    patch:
+      operationId: updateWellnessTag
+      tags: [wellness]
+      summary: Update a compatibility tag
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WellnessTagPatch"
+      responses:
+        "200":
+          description: Updated tag
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessTag"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteWellnessTag
+      tags: [wellness]
+      summary: Delete a compatibility tag
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, deletedId]
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  deletedId:
+                    type: integer
+        "404":
+          description: Not found
+
+  /wellness/profile:
+    get:
+      operationId: getWellnessProfile
+      tags: [wellness]
+      summary: Get summarised wellness dimensions profile + matching readiness
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        "200":
+          description: Wellness profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessProfile"
+
   /healthz:
     get:
       operationId: healthCheck
@@ -4236,6 +4436,214 @@ components:
           type: integer
 
     DeletePostDateNoteResult:
+      type: object
+      required: [success, deletedId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        deletedId:
+          type: integer
+
+    WellnessConsentLevel:
+      type: string
+      enum: [coaching, matching, research]
+
+    WellnessAnswerInput:
+      type: object
+      required: [questionId, dimension, questionText, answer]
+      properties:
+        questionId:
+          type: string
+          minLength: 1
+          maxLength: 120
+        dimension:
+          type: string
+          minLength: 1
+          maxLength: 40
+        category:
+          type: [string, "null"]
+          maxLength: 80
+        questionText:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        answer:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        consentLevel:
+          $ref: "#/components/schemas/WellnessConsentLevel"
+
+    WellnessAnswerPatch:
+      type: object
+      properties:
+        answer:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        consentLevel:
+          $ref: "#/components/schemas/WellnessConsentLevel"
+
+    WellnessAnswer:
+      type: object
+      required: [id, questionId, dimension, questionText, answer, consentLevel, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        questionId:
+          type: string
+        dimension:
+          type: string
+        category:
+          type: [string, "null"]
+        questionText:
+          type: string
+        answer:
+          type: string
+        consentLevel:
+          $ref: "#/components/schemas/WellnessConsentLevel"
+        deletedAt:
+          type: [string, "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    WellnessAnswerList:
+      type: object
+      required: [answers, total]
+      properties:
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/WellnessAnswer"
+        total:
+          type: integer
+
+    WellnessTagInput:
+      type: object
+      required: [tag, label, category]
+      properties:
+        tag:
+          type: string
+          minLength: 1
+          maxLength: 80
+        label:
+          type: string
+          minLength: 1
+          maxLength: 120
+        category:
+          type: string
+          minLength: 1
+          maxLength: 40
+        approvedForMatching:
+          type: boolean
+        hidden:
+          type: boolean
+
+    WellnessTagPatch:
+      type: object
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 120
+        approvedForMatching:
+          type: boolean
+        hidden:
+          type: boolean
+
+    WellnessTag:
+      type: object
+      required: [id, tag, label, category, approvedForMatching, hidden, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        tag:
+          type: string
+        label:
+          type: string
+        category:
+          type: string
+        approvedForMatching:
+          type: boolean
+        hidden:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    WellnessTagList:
+      type: object
+      required: [tags]
+      properties:
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/WellnessTag"
+
+    WellnessDimensionSummary:
+      type: object
+      required: [dimension, label, answeredCount, totalQuestions, completionPct, strengths, frictionPoints, nextQuestion]
+      properties:
+        dimension:
+          type: string
+        label:
+          type: string
+        answeredCount:
+          type: integer
+        totalQuestions:
+          type: integer
+        completionPct:
+          type: integer
+        strengths:
+          type: array
+          items:
+            type: string
+        frictionPoints:
+          type: array
+          items:
+            type: string
+        nextQuestion:
+          type: [string, "null"]
+
+    WellnessProfile:
+      type: object
+      required: [dimensions, tags, matchingReadiness]
+      properties:
+        dimensions:
+          type: array
+          items:
+            $ref: "#/components/schemas/WellnessDimensionSummary"
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/WellnessTag"
+        matchingReadiness:
+          type: object
+          required: [overallPct, strongDimensions, weakDimensions, readyForMatching]
+          properties:
+            overallPct:
+              type: integer
+            strongDimensions:
+              type: array
+              items:
+                type: string
+            weakDimensions:
+              type: array
+              items:
+                type: string
+            readyForMatching:
+              type: boolean
+
+    DeleteWellnessAnswerResult:
       type: object
       required: [success, deletedId]
       properties:

@@ -16,6 +16,8 @@ import {
   jobHeartbeatsTable,
   founderSettingsTable,
   FOUNDER_SETTINGS_REBREACH_COOLDOWN,
+  wellnessAnswersTable,
+  wellnessTagsTable,
 } from "@workspace/db";
 import { and, count, sql, desc, gte, asc, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod/v4";
@@ -72,6 +74,42 @@ router.get("/founder/stats", requireFounder, async (req, res): Promise<void> => 
     messages: Number(messagesCount?.c ?? 0),
     followUpSnoozeCount: Number(followUpAgg?.snoozed ?? 0),
     followUpDismissCount: Number(followUpAgg?.dismissed ?? 0),
+  });
+});
+
+router.get("/founder/wellness-stats", requireFounder, async (_req, res): Promise<void> => {
+  const [totalAnswers] = await db.select({ c: count() }).from(wellnessAnswersTable);
+  const [totalTags]    = await db.select({ c: count() }).from(wellnessTagsTable);
+  const [usersWithAnswers] = await db
+    .select({ c: sql<number>`count(distinct ${wellnessAnswersTable.userId})::int` })
+    .from(wellnessAnswersTable);
+  const [usersApprovedMatching] = await db
+    .select({ c: sql<number>`count(distinct ${wellnessAnswersTable.userId})::int` })
+    .from(wellnessAnswersTable)
+    .where(sql`${wellnessAnswersTable.consentLevel} = 'matching'`);
+
+  // dimensions answered (distinct dimension values)
+  const dimensionRows = await db
+    .selectDistinct({ dimension: wellnessAnswersTable.dimension })
+    .from(wellnessAnswersTable);
+
+  // answers per dimension
+  const dimensionCounts = await db
+    .select({
+      dimension: wellnessAnswersTable.dimension,
+      c: count(),
+    })
+    .from(wellnessAnswersTable)
+    .groupBy(wellnessAnswersTable.dimension)
+    .orderBy(desc(count()));
+
+  res.json({
+    totalAnswers:          Number(totalAnswers?.c ?? 0),
+    totalTags:             Number(totalTags?.c ?? 0),
+    usersWithAnswers:      Number(usersWithAnswers?.c ?? 0),
+    usersApprovedMatching: Number(usersApprovedMatching?.c ?? 0),
+    dimensionsAnswered:    dimensionRows.length,
+    topDimensions:         dimensionCounts.slice(0, 6).map(d => ({ dimension: d.dimension, count: Number(d.c) })),
   });
 });
 

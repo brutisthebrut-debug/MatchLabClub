@@ -6,8 +6,10 @@ import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import {
   Shield, Lock, Download, Trash2, Eye, EyeOff, ChevronDown, ChevronUp,
-  Image, MessageSquare, FileText, BookOpen, Activity, Check,
+  Image, MessageSquare, FileText, BookOpen, Activity, Check, Heart, ArrowRight,
 } from "lucide-react";
+import { useListWellnessAnswers, useListWellnessTags, useDeleteWellnessAnswer } from "@workspace/api-client-react";
+import { DIMENSION_META } from "@/lib/wellnessQuestionBank";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -196,6 +198,115 @@ function DataCategoryRow({ entry, index }: { entry: DataEntry; index: number }) 
   );
 }
 
+function WellnessDataSection() {
+  const { data: answersData, refetch } = useListWellnessAnswers({});
+  const { data: tagsData }              = useListWellnessTags({});
+  const { mutate: deleteAnswer }        = useDeleteWellnessAnswer();
+  const { toast }                       = useToast();
+  const [open, setOpen] = useState(false);
+
+  const answers = answersData?.answers ?? [];
+  const tags    = tagsData?.tags ?? [];
+  const total   = answers.length + tags.length;
+
+  if (total === 0) return null;
+
+  function handleDeleteAnswer(id: number) {
+    deleteAnswer({ id }, {
+      onSuccess: () => {
+        toast({ title: "Answer deleted", description: "Removed from your Compatibility Profile." });
+        void refetch();
+      },
+    });
+  }
+
+  // Group by dimension
+  const byDimension = new Map<string, typeof answers>();
+  for (const a of answers) {
+    const arr = byDimension.get(a.dimension) ?? [];
+    arr.push(a);
+    byDimension.set(a.dimension, arr);
+  }
+
+  return (
+    <motion.div {...fadeUp(0.05)} className="glass border border-white/8 rounded-2xl overflow-hidden mb-3">
+      <div className="p-5">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[hsl(268_52%_68%/0.12)]">
+            <Heart className="w-4 h-4 text-[hsl(268_52%_68%)]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-foreground">Compatibility Profile</p>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/10 text-muted-foreground/50 flex-shrink-0">
+                {answers.length} answer{answers.length !== 1 ? "s" : ""}{tags.length > 0 ? ` · ${tags.length} tag${tags.length !== 1 ? "s" : ""}` : ""}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground/55 mt-0.5 leading-relaxed">Your answers across 18 wellness dimensions — used only for your coaching unless you approve matching.</p>
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center gap-3">
+          <button onClick={() => setOpen(o => !o)}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+            {open ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            {open ? "Hide" : "Preview"}
+          </button>
+          <span className="text-white/15">·</span>
+          <Link href="/wellness" className="flex items-center gap-1.5 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+            <ArrowRight className="w-3.5 h-3.5" /> Manage in Profile Builder
+          </Link>
+        </div>
+
+        {open && (
+          <div className="mt-4 space-y-3">
+            {Array.from(byDimension.entries()).map(([dim, dimAnswers]) => {
+              const meta = DIMENSION_META[dim];
+              return (
+                <div key={dim} className="rounded-xl bg-white/2 border border-white/5 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-2"
+                    style={{ color: meta?.color ?? "hsl(268 52% 68%)" }}>
+                    {meta?.label ?? dim}
+                  </p>
+                  <div className="space-y-2">
+                    {dimAnswers.map(a => (
+                      <div key={a.id} className="flex items-start gap-2 text-xs">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-muted-foreground/50 mb-0.5 leading-snug truncate">{a.questionText}</p>
+                          <p className="text-foreground/80 leading-relaxed">"{a.answer}"</p>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteAnswer(a.id)}
+                          className="flex-shrink-0 p-1 text-[hsl(348_55%_65%/0.5)] hover:text-[hsl(348_55%_65%)] transition-colors"
+                          aria-label="Delete answer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+            {tags.length > 0 && (
+              <div className="rounded-xl bg-white/2 border border-white/5 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-2 text-[hsl(43_65%_72%)]">Insight Tags</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {tags.map(t => (
+                    <span key={t.id} className="text-[11px] px-2 py-0.5 rounded-full bg-[hsl(43_65%_65%/0.1)] border border-[hsl(43_65%_65%/0.2)] text-[hsl(43_65%_72%)]">
+                      {t.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 export default function DataVault() {
   useMeta("Personal Data Vault", "Everything you've shared with the app — preview it, export it, or delete it. All of it. Any time.");
   const { toast } = useToast();
@@ -254,6 +365,9 @@ export default function DataVault() {
               </button>
             )}
           </motion.div>
+
+          {/* Wellness / Compatibility data */}
+          <WellnessDataSection />
 
           {/* Data categories */}
           {allDeleted ? (

@@ -382,6 +382,52 @@ export default function SampleReport() {
             </div>
           </SectionCard>
 
+          {/* Compatibility Profile preview */}
+          <motion.div {...fadeUp(0.09)} className="glass border border-[hsl(268_52%_68%/0.2)] rounded-2xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-2 h-2 rounded-full bg-[hsl(268_52%_68%)]" />
+                <p className="font-semibold text-foreground text-sm">Compatibility Profile Snapshot</p>
+              </div>
+              <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border border-[hsl(43_65%_65%/0.3)] bg-[hsl(43_65%_65%/0.1)] text-[hsl(43_65%_65%)]">
+                Dating Reset Add-on
+              </span>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-xs text-muted-foreground/60 leading-relaxed">
+                With the Dating Reset, your compatibility profile gets analysed alongside your audit — surfacing how your communication style, conflict approach, and lifestyle dimensions either support or work against your stated dating goals.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {[
+                  { dim: "Communication", pct: 92, note: "Direct, prefers face-to-face", color: "hsl(228 50% 68%)" },
+                  { dim: "Conflict",      pct: 78, note: "Repair-focused, gives space first", color: "hsl(15 65% 62%)" },
+                  { dim: "Values",        pct: 85, note: "Values-aligned first",              color: "hsl(43 65% 65%)" },
+                  { dim: "Lifestyle",     pct: 70, note: "Routine-driven, early riser",       color: "hsl(35 65% 62%)" },
+                  { dim: "Intimacy",      pct: 60, note: "Builds slowly · approved for matching", color: "hsl(305 45% 62%)" },
+                  { dim: "Future vision", pct: 88, note: "Family-oriented, location-flexible", color: "hsl(190 55% 60%)" },
+                ].map(d => (
+                  <div key={d.dim} className="rounded-xl bg-white/3 border border-white/5 p-3">
+                    <div className="flex items-center justify-between gap-1 mb-1.5">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">{d.dim}</p>
+                      <span className="text-[10px] font-bold tabular-nums" style={{ color: d.color }}>{d.pct}%</span>
+                    </div>
+                    <div className="h-1 rounded-full bg-white/8 mb-2">
+                      <div className="h-full rounded-full" style={{ width: `${d.pct}%`, background: d.color }} />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground/50 leading-relaxed">{d.note}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-start gap-2 pt-2 border-t border-white/5">
+                <Shield className="w-3.5 h-3.5 text-[hsl(142_55%_60%)] flex-shrink-0 mt-0.5" />
+                <p className="text-[11px] text-muted-foreground/50 leading-relaxed">
+                  All dimensions are coaching-only by default. Matching-approved dimensions are explicitly unlocked by you.{" "}
+                  <Link href="/wellness" className="text-[hsl(268_52%_68%)] hover:text-[hsl(268_52%_78%)] transition-colors">Build your profile →</Link>
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
           {/* 7-Day Plan */}
           <SectionCard title="7-Day Action Plan" color="hsl(190 55% 60%)">
             <div className="space-y-2">

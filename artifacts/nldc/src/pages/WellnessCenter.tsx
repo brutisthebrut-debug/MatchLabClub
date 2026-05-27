@@ -1,11 +1,29 @@
+import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Heart, Activity, Users, BookOpen, Sparkles, Briefcase, DollarSign, Trees, ArrowRight, Shield } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import {
+  Heart, Activity, Users, BookOpen, Sparkles, Briefcase, DollarSign, Trees,
+  ArrowRight, Shield, ChevronDown, ChevronUp, CheckCircle2, Lock, Unlock,
+  MessageSquare, Compass, AlertCircle, SkipForward,
+} from "lucide-react";
 import { LifePulseCard, dimensionScoreFromPulse } from "@/components/wellness/LifePulseCard";
-import { useGetRecentLifePulses } from "@workspace/api-client-react";
+import {
+  useGetRecentLifePulses,
+  useGetWellnessProfile,
+  useListWellnessAnswers,
+  useCreateWellnessAnswer,
+  type WellnessProfile,
+} from "@workspace/api-client-react";
+import { useAuth } from "@workspace/replit-auth-web";
+import {
+  DIMENSION_META,
+  PROFILE_MODULES,
+  type WellnessQuestion,
+} from "@/lib/wellnessQuestionBank";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -13,117 +31,396 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] as const },
 });
 
-type Dimension = {
-  key: string;
-  name: string;
-  icon: typeof Heart;
-  color: string;
-  blurb: string;
-  strengths: string[];
-  friction: string[];
-  readiness: string;
-  experiments: string[];
+const DIMENSION_ICONS: Record<string, React.ElementType> = {
+  emotional:     Heart,
+  physical:      Activity,
+  social:        Users,
+  intellectual:  BookOpen,
+  spiritual:     Sparkles,
+  occupational:  Briefcase,
+  financial:     DollarSign,
+  environmental: Trees,
+  communication: MessageSquare,
+  conflict:      AlertCircle,
+  boundaries:    Shield,
+  affection:     Heart,
+  intimacy:      Lock,
+  lifestyle:     Compass,
+  future_vision: ArrowRight,
+  values:        Sparkles,
+  family:        Users,
+  culture:       BookOpen,
 };
 
-const DIMENSIONS: Dimension[] = [
-  {
-    key: "emotional",
-    name: "Emotional",
-    icon: Heart,
-    color: "hsl(348 55% 65%)",
-    blurb: "How you notice, name, and move through feelings.",
-    strengths: ["You name feelings clearly when prompted", "Reflective after conversations end"],
-    friction: ["Tend to push past discomfort instead of naming it in the moment"],
-    readiness: "Strong baseline. Practising live naming will deepen connection in dates.",
-    experiments: ["Once this week, name a feeling out loud during a conversation", "Write 2 lines after every date about what felt true"],
-  },
-  {
-    key: "physical",
-    name: "Physical",
-    icon: Activity,
-    color: "hsl(142 55% 60%)",
-    blurb: "Energy, sleep, body awareness — your dating stamina layer.",
-    strengths: ["Show up rested when meeting new people"],
-    friction: ["Energy dips in the evenings can flatten conversations"],
-    readiness: "Notice your peak energy windows and try scheduling first dates inside them.",
-    experiments: ["Try a daytime coffee for the first meeting", "Walk before texting — observe tone shift"],
-  },
-  {
-    key: "social",
-    name: "Social",
-    icon: Users,
-    color: "hsl(190 55% 60%)",
-    blurb: "The web of people around you — who you reach, who reaches back.",
-    strengths: ["Steady inner circle you can debrief with"],
-    friction: ["Dating circle is narrow — most introductions come from apps"],
-    readiness: "Strong base; widening your offline channels gives more shots on goal.",
-    experiments: ["Tell two friends one specific kind of person you'd like to meet", "Join one recurring activity for 4 weeks"],
-  },
-  {
-    key: "intellectual",
-    name: "Intellectual",
-    icon: BookOpen,
-    color: "hsl(268 52% 68%)",
-    blurb: "Curiosity, learning rhythms, the questions you carry around.",
-    strengths: ["Genuine curiosity about how people think"],
-    friction: ["Lead with topics instead of questions in early conversations"],
-    readiness: "This is your superpower — let it land on them, not just appear smart.",
-    experiments: ["Open dates with a real question, not a topic dump", "Listen for one belief, mirror it back"],
-  },
-  {
-    key: "spiritual",
-    name: "Spiritual",
-    icon: Sparkles,
-    color: "hsl(43 65% 65%)",
-    blurb: "Meaning, values, how you feel grounded — religious or not.",
-    strengths: ["Clear sense of what matters most to you"],
-    friction: ["Reluctant to surface values early — feels too heavy"],
-    readiness: "Naming one value naturally early prevents misalignment downstream.",
-    experiments: ["Mention one value casually within the first 2 dates", "Notice when their values surface — name what you heard"],
-  },
-  {
-    key: "occupational",
-    name: "Occupational",
-    icon: Briefcase,
-    color: "hsl(220 50% 65%)",
-    blurb: "Work rhythm, ambition, how your career affects your dating bandwidth.",
-    strengths: ["Steady career grounding"],
-    friction: ["Work spillover into evenings cuts into connection time"],
-    readiness: "Define your weekly dating bandwidth honestly so plans hold.",
-    experiments: ["Pick 2 evenings per week as protected date time", "Don't apologise for being busy — schedule around it"],
-  },
-  {
-    key: "financial",
-    name: "Financial",
-    icon: DollarSign,
-    color: "hsl(142 55% 60%)",
-    blurb: "How money shows up in dates without you noticing.",
-    strengths: ["Comfortable being clear about cost"],
-    friction: ["Avoid talking about money styles until late"],
-    readiness: "Financial style mismatch surfaces in date 4–6. Catch it earlier.",
-    experiments: ["Try a low-cost date once and notice what changes", "Mention one money habit you're proud of"],
-  },
-  {
-    key: "environmental",
-    name: "Environmental",
-    icon: Trees,
-    color: "hsl(155 50% 60%)",
-    blurb: "The spaces you live, work, and date in — how they hold you.",
-    strengths: ["Your home is calm and centred"],
-    friction: ["Almost all dates happen in the same 3 spots"],
-    readiness: "Varying location subtly varies energy. Use it as a tool.",
-    experiments: ["Plan one date in nature this month", "Notice which spaces let you be most yourself"],
-  },
-];
+// ── Consent level badge ─────────────────────────────────────────────────────
+
+type ConsentLevel = "coaching" | "matching" | "research";
+
+const CONSENT_META: Record<ConsentLevel, { label: string; color: string; blurb: string }> = {
+  coaching:  { label: "Coaching only",  color: "hsl(190 55% 60%)",  blurb: "Used only for your personal coaching and readiness insights." },
+  matching:  { label: "Matching",       color: "hsl(142 55% 60%)",  blurb: "May be used for compatibility matching when you opt in." },
+  research:  { label: "Research",       color: "hsl(268 52% 68%)",  blurb: "Anonymised contribution to product research." },
+};
+
+function ConsentBadge({ level, onChange }: { level: ConsentLevel; onChange: (l: ConsentLevel) => void }) {
+  const [open, setOpen] = useState(false);
+  const meta = CONSENT_META[level];
+  const levels: ConsentLevel[] = ["coaching", "matching", "research"];
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full border transition-all"
+        style={{ color: meta.color, borderColor: meta.color.replace(")", " / 0.35)"), background: meta.color.replace(")", " / 0.09)") }}
+      >
+        <span className="w-1.5 h-1.5 rounded-full" style={{ background: meta.color }} />
+        {meta.label}
+        <ChevronDown className="w-2.5 h-2.5 ml-0.5" />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+            className="absolute right-0 top-full mt-1 z-20 glass-strong border border-white/10 rounded-xl p-2 min-w-[180px] shadow-xl"
+          >
+            {levels.map(l => {
+              const m = CONSENT_META[l];
+              return (
+                <button
+                  key={l}
+                  onClick={() => { onChange(l); setOpen(false); }}
+                  className="w-full flex items-start gap-2 px-2.5 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"
+                >
+                  <span className="w-2 h-2 rounded-full flex-shrink-0 mt-0.5" style={{ background: m.color }} />
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: m.color }}>{m.label}</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5 leading-tight">{m.blurb}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Question card ────────────────────────────────────────────────────────────
+
+function QuestionCard({
+  question,
+  savedAnswer,
+  onSave,
+}: {
+  question: WellnessQuestion;
+  savedAnswer?: string;
+  onSave: (questionId: string, answer: string, consentLevel: ConsentLevel) => Promise<void>;
+}) {
+  const [text, setText]   = useState(savedAnswer ?? "");
+  const [consent, setConsent] = useState<ConsentLevel>("coaching");
+  const [saving, setSaving]   = useState(false);
+  const [saved, setSaved]     = useState(!!savedAnswer);
+  const [skipped, setSkipped] = useState(false);
+
+  if (skipped) return null;
+
+  async function handleSave() {
+    if (!text.trim()) return;
+    setSaving(true);
+    try {
+      await onSave(question.id, text.trim(), consent);
+      setSaved(true);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className={`rounded-xl border p-4 transition-all ${saved ? "bg-[hsl(142_55%_60%/0.05)] border-[hsl(142_55%_60%/0.2)]" : "bg-white/2 border-white/8"}`}>
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <p className="text-sm text-foreground leading-relaxed">{question.text}</p>
+        {question.sensitive && (
+          <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-[hsl(43_65%_65%/0.12)] text-[hsl(43_65%_72%)] border border-[hsl(43_65%_65%/0.2)] flex-shrink-0">
+            Sensitive
+          </span>
+        )}
+      </div>
+      {saved ? (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground/70 italic flex-1 leading-relaxed">"{text}"</p>
+          <button onClick={() => setSaved(false)} className="text-[10px] text-muted-foreground/40 hover:text-muted-foreground transition-colors flex-shrink-0">Edit</button>
+        </div>
+      ) : (
+        <>
+          <textarea
+            value={text}
+            onChange={e => setText(e.target.value)}
+            placeholder="Your answer..."
+            rows={2}
+            className="w-full bg-white/4 border border-white/8 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/30 resize-none focus:outline-none focus:border-[hsl(268_52%_68%/0.4)] transition-colors"
+          />
+          <div className="flex items-center justify-between gap-3 mt-2">
+            <div className="flex items-center gap-2">
+              <ConsentBadge level={consent} onChange={setConsent} />
+              {question.sensitive && (
+                <button onClick={() => setSkipped(true)} className="flex items-center gap-1 text-[10px] text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors">
+                  <SkipForward className="w-3 h-3" /> Skip
+                </button>
+              )}
+            </div>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={!text.trim() || saving}
+              className="rounded-full text-xs h-7 px-4 bg-gradient-to-r from-[hsl(268_52%_55%)] to-[hsl(285_45%_50%)] border-0 disabled:opacity-40"
+            >
+              {saving ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Module accordion ─────────────────────────────────────────────────────────
+
+function ProfileModule({
+  mod,
+  answeredIds,
+  onSave,
+  index,
+}: {
+  mod: typeof PROFILE_MODULES[number];
+  answeredIds: Set<string>;
+  onSave: (qId: string, answer: string, consent: ConsentLevel) => Promise<void>;
+  index: number;
+}) {
+  const answered = mod.questions.filter(q => answeredIds.has(q.id)).length;
+  const total    = mod.questions.length;
+  const pct      = total === 0 ? 0 : Math.round((answered / total) * 100);
+  const [open, setOpen] = useState(index === 0);
+
+  return (
+    <motion.div {...fadeUp(0.04 + index * 0.025)} className="glass-strong rounded-2xl border border-white/5 overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-3 p-5 text-left hover:bg-white/2 transition-colors"
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <p className="font-semibold text-foreground text-sm">{mod.label}</p>
+            {mod.sensitive && (
+              <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[hsl(43_65%_65%/0.12)] text-[hsl(43_65%_72%)] border border-[hsl(43_65%_65%/0.2)]">
+                Optional
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] text-muted-foreground">{mod.subtitle}</p>
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="text-right">
+            <p className="text-xs font-semibold tabular-nums" style={{ color: pct >= 80 ? "hsl(142 55% 60%)" : pct >= 40 ? "hsl(43 65% 65%)" : "hsl(220 10% 55%)" }}>
+              {answered}/{total}
+            </p>
+            <p className="text-[9px] text-muted-foreground/40 uppercase tracking-widest">answered</p>
+          </div>
+          {open ? <ChevronUp className="w-4 h-4 text-muted-foreground/50" /> : <ChevronDown className="w-4 h-4 text-muted-foreground/50" />}
+        </div>
+      </button>
+
+      {pct > 0 && (
+        <div className="px-5 pb-3 -mt-1">
+          <Progress value={pct} className="h-1 bg-white/8" />
+        </div>
+      )}
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 pb-5 space-y-3 border-t border-white/5 pt-4">
+              {mod.questions.map(q => (
+                <QuestionCard
+                  key={q.id}
+                  question={q}
+                  savedAnswer={answeredIds.has(q.id) ? "(answered)" : undefined}
+                  onSave={onSave}
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// ── Dimension summary grid ────────────────────────────────────────────────────
+
+function DimensionGrid({ profile }: { profile: WellnessProfile | undefined }) {
+  const { data: pulseData } = useGetRecentLifePulses();
+  const latestPulse = pulseData?.latest ?? null;
+
+  if (!profile) return null;
+  const dims = profile.dimensions ?? [];
+
+  return (
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-6">
+      {dims.map(d => {
+        const Icon = DIMENSION_ICONS[d.dimension] ?? Sparkles;
+        const meta = DIMENSION_META[d.dimension];
+        if (!meta) return null;
+        const signal = dimensionScoreFromPulse(d.dimension, latestPulse);
+        const pct    = d.completionPct ?? 0;
+        return (
+          <div key={d.dimension} className="glass-strong rounded-xl border border-white/5 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: meta.color.replace(")", " / 0.13)") }}>
+                <Icon className="w-3.5 h-3.5" style={{ color: meta.color }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-foreground leading-tight">{meta.label}</p>
+              </div>
+              {signal.value !== null && (
+                <span className="text-xs font-bold tabular-nums" style={{ color: meta.color }}>{signal.value}/5</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Progress value={pct} className="h-1.5 bg-white/8 flex-1" />
+              <span className="text-[10px] tabular-nums text-muted-foreground/50 flex-shrink-0">{pct}%</span>
+            </div>
+            {d.nextQuestion && pct < 100 && (
+              <p className="text-[10px] text-muted-foreground/40 mt-2 leading-relaxed line-clamp-2 italic">
+                Next: {d.nextQuestion}
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Matching readiness panel ──────────────────────────────────────────────────
+
+function MatchingReadinessPanel({ profile }: { profile: WellnessProfile | undefined }) {
+  if (!profile?.matchingReadiness) return null;
+  const mr = profile.matchingReadiness;
+  const pct = mr.overallPct ?? 0;
+  const color = pct >= 60 ? "hsl(142 55% 60%)" : pct >= 30 ? "hsl(43 65% 65%)" : "hsl(348 55% 65%)";
+
+  return (
+    <motion.div {...fadeUp(0.2)} className="glass-strong rounded-2xl border border-[hsl(268_52%_68%/0.18)] p-5 mb-6">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-1">Matching Readiness</p>
+          <h3 className="font-serif text-lg font-semibold text-foreground">
+            {mr.readyForMatching ? "Profile ready for matching" : "Keep building your profile"}
+          </h3>
+          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+            {mr.readyForMatching
+              ? "You've answered enough to begin compatibility matching when it opens."
+              : `Complete ${5 - (mr.strongDimensions?.length ?? 0)} more dimension areas to unlock matching readiness.`}
+          </p>
+        </div>
+        <div className="flex flex-col items-center flex-shrink-0">
+          <span className="text-3xl font-bold tabular-nums" style={{ color }}>{pct}%</span>
+          <span className="text-[9px] text-muted-foreground/50 uppercase tracking-widest mt-0.5">complete</span>
+        </div>
+      </div>
+      <Progress value={pct} className="h-2 bg-white/8 mb-3" />
+      <div className="flex items-center gap-2">
+        {mr.readyForMatching ? (
+          <div className="flex items-center gap-1.5 text-xs text-[hsl(142_55%_60%)]">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>Matching pool — when feature opens, your profile will be considered</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
+            <Lock className="w-3.5 h-3.5" />
+            <span>Matching unlocks at 30% profile completion with 5+ strong dimensions</span>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Insight tags panel ────────────────────────────────────────────────────────
+
+function InsightTagsPanel({ tags }: { tags: Array<{ tag: string; label: string; category: string; approvedForMatching: boolean | null }> }) {
+  if (!tags.length) return null;
+  return (
+    <motion.div {...fadeUp(0.22)} className="glass-strong rounded-2xl border border-white/5 p-5 mb-6">
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(43_65%_72%)]">Compatibility Insight Tags</p>
+        <Link href="/vault" className="text-[10px] text-muted-foreground/40 hover:text-muted-foreground transition-colors">Manage in Vault →</Link>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {tags.map(t => (
+          <span
+            key={t.tag}
+            className="text-[11px] px-2.5 py-1 rounded-full border flex items-center gap-1.5"
+            style={{
+              color: t.approvedForMatching ? "hsl(142 55% 72%)" : "hsl(220 10% 65%)",
+              borderColor: t.approvedForMatching ? "hsl(142 55% 60% / 0.3)" : "hsl(220 10% 35%)",
+              background: t.approvedForMatching ? "hsl(142 55% 60% / 0.07)" : "hsl(232 18% 15%)",
+            }}
+          >
+            {t.approvedForMatching ? <Unlock className="w-2.5 h-2.5 flex-shrink-0" /> : <Lock className="w-2.5 h-2.5 flex-shrink-0" />}
+            {t.label}
+          </span>
+        ))}
+      </div>
+      <p className="text-[10px] text-muted-foreground/35 mt-3 leading-relaxed">
+        <Lock className="w-2.5 h-2.5 inline-block mr-1" />Locked tags are coaching-only · <Unlock className="w-2.5 h-2.5 inline-block mr-1" />Unlocked are approved for future compatibility matching.
+      </p>
+    </motion.div>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function WellnessCenter() {
   useMeta(
-    "Wellness Center",
-    "Eight dimensions of wellness mapped to your dating readiness — strengths, friction points, and small experiments you can try this week.",
+    "Compatibility Profile Builder",
+    "Build your wellness compatibility profile — 18 dimensions, progressive questions, and a matching readiness score.",
   );
 
-  const { data: pulseData } = useGetRecentLifePulses();
-  const latestPulse = pulseData?.latest ?? null;
+  const { user } = useAuth();
+  const { data: profileData } = useGetWellnessProfile();
+  const { data: answersData }  = useListWellnessAnswers({});
+  const { mutateAsync: saveAnswer } = useCreateWellnessAnswer();
+
+  const answeredIds = new Set((answersData?.answers ?? []).map(a => a.questionId));
+
+  const totalAnswered = answeredIds.size;
+  const overallPct = profileData?.matchingReadiness?.overallPct ?? 0;
+
+  async function handleSave(questionId: string, answer: string, consentLevel: ConsentLevel) {
+    const question = PROFILE_MODULES.flatMap(m => m.questions).find(q => q.id === questionId);
+    if (!question) return;
+    await saveAnswer({
+      data: {
+        questionId,
+        dimension:    question.dimension,
+        category:     question.category,
+        questionText: question.text,
+        answer,
+        consentLevel,
+      },
+    });
+  }
+
+  const tags = (profileData?.tags ?? []) as Array<{ tag: string; label: string; category: string; approvedForMatching: boolean | null }>;
 
   return (
     <AppLayout>
@@ -131,27 +428,36 @@ export default function WellnessCenter() {
         <div className="orb orb-violet fixed w-[400px] h-[400px] top-0 right-0 opacity-30 pointer-events-none" />
         <div className="orb orb-teal fixed w-[300px] h-[300px] bottom-0 left-0 opacity-30 pointer-events-none" />
 
-        <div className="max-w-6xl mx-auto relative z-10">
-          <motion.div {...fadeUp(0)} className="mb-8">
+        <div className="max-w-4xl mx-auto relative z-10">
+
+          {/* Header */}
+          <motion.div {...fadeUp(0)} className="mb-6">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-strong border border-[hsl(43_65%_65%/0.2)] text-xs font-medium text-[hsl(43_65%_72%)] mb-3">
               <Sparkles className="w-3 h-3" />
-              Wellness Center
+              Compatibility Profile
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3">
-              The 8 dimensions of <span className="gradient-text-violet">your readiness</span>
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2">
+              Build your <span className="gradient-text-violet">compatibility profile</span>
             </h1>
-            <p className="text-muted-foreground max-w-2xl leading-relaxed">
-              Dating doesn't happen in a vacuum — eight life dimensions shape how you show up. We surface
-              strengths, friction points, and small experiments that fit the week you're actually in.
+            <p className="text-muted-foreground max-w-2xl leading-relaxed text-sm">
+              Answer at your own pace across 18 wellness dimensions. Every answer stays private unless you explicitly approve it for matching. Skip anything that doesn't feel right.
             </p>
-            <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(232_38%_15%)] border border-white/5 text-xs text-muted-foreground">
-              <Shield className="w-3 h-3 text-[hsl(142_55%_60%)]" />
-              Based only on what you choose to share and approve.
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(232_38%_15%)] border border-white/5 text-xs text-muted-foreground">
+                <Shield className="w-3 h-3 text-[hsl(142_55%_60%)]" />
+                Coaching-only by default. You control what's used for matching.
+              </div>
+              {totalAnswered > 0 && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(142_55%_60%/0.09)] border border-[hsl(142_55%_60%/0.2)] text-xs text-[hsl(142_55%_72%)]">
+                  <CheckCircle2 className="w-3 h-3" />
+                  {totalAnswered} answer{totalAnswered !== 1 ? "s" : ""} saved · {overallPct}% complete
+                </div>
+              )}
             </div>
           </motion.div>
 
-          {/* ── Package Hub Strip — Context + Trust ── */}
-          <div className="glass border rounded-xl px-4 py-3 mb-7 flex flex-wrap items-center gap-x-4 gap-y-2"
+          {/* Context + Trust strip */}
+          <div className="glass border rounded-xl px-4 py-3 mb-6 flex flex-wrap items-center gap-x-4 gap-y-2"
             style={{ borderColor: "hsl(228 30% 62% / 0.2)" }}>
             <div className="flex items-center gap-2 flex-shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-[hsl(228_30%_62%)]" />
@@ -161,11 +467,11 @@ export default function WellnessCenter() {
             <div className="flex flex-wrap gap-1.5 items-center">
               <span className="text-[10px] text-muted-foreground/40 font-semibold uppercase tracking-wider mr-0.5 hidden sm:inline">Also in this package:</span>
               {[
-                { name: "Data Vault",       href: "/vault"        },
-                { name: "Connection Center",href: "/connections"  },
-                { name: "User Control",     href: "/user-control" },
-                { name: "Privacy",          href: "/privacy"      },
-                { name: "Integrations",     href: "/integrations" },
+                { name: "Data Vault",        href: "/vault"              },
+                { name: "Future Matching",   href: "/future-connections" },
+                { name: "User Control",      href: "/user-control"       },
+                { name: "Privacy",           href: "/privacy"            },
+                { name: "Integrations",      href: "/integrations"       },
               ].map(t => (
                 <Link key={t.href} href={t.href}
                   className="text-[11px] px-2.5 py-0.5 rounded-full border border-white/10 text-muted-foreground/70 hover:text-foreground hover:border-white/20 transition-colors whitespace-nowrap">
@@ -175,89 +481,76 @@ export default function WellnessCenter() {
             </div>
           </div>
 
+          {/* Life Pulse */}
           <LifePulseCard />
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-4">
-            {DIMENSIONS.map((d, i) => {
-              const Icon = d.icon;
-              const signal = dimensionScoreFromPulse(d.key, latestPulse);
-              return (
-                <motion.div
-                  key={d.key}
-                  {...fadeUp(0.04 + i * 0.03)}
-                  className="glass-strong rounded-2xl p-5 sm:p-6 border border-white/5 hover:border-white/10 transition-colors"
-                  data-testid={`card-wellness-${d.key}`}
-                >
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: d.color.replace(")", " / 0.15)") }}>
-                      <Icon className="w-5 h-5" style={{ color: d.color }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-serif text-xl font-semibold leading-tight">{d.name}</h3>
-                        {signal.value !== null && (
-                          <div
-                            className="flex flex-col items-end flex-shrink-0"
-                            data-testid={`signal-wellness-${d.key}`}
-                            title={`Today's pulse · ${signal.sourceLabel}`}
-                          >
-                            <span className="text-base font-bold tabular-nums leading-none" style={{ color: d.color }}>{signal.value}/5</span>
-                            <span className="text-[9px] uppercase tracking-widest text-muted-foreground mt-0.5">Today</span>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{d.blurb}</p>
-                    </div>
-                  </div>
+          {/* Matching readiness */}
+          <MatchingReadinessPanel profile={profileData} />
 
-                  <div className="space-y-3 text-sm">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(142_55%_60%)] mb-1.5">Strengths</p>
-                      <ul className="space-y-1">
-                        {d.strengths.map((s, idx) => (
-                          <li key={idx} className="text-muted-foreground leading-relaxed pl-3 relative before:content-['•'] before:absolute before:left-0 before:text-[hsl(142_55%_60%)]">{s}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(43_65%_72%)] mb-1.5">Friction Points</p>
-                      <ul className="space-y-1">
-                        {d.friction.map((f, idx) => (
-                          <li key={idx} className="text-muted-foreground leading-relaxed pl-3 relative before:content-['•'] before:absolute before:left-0 before:text-[hsl(43_65%_72%)]">{f}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="pt-3 border-t border-white/5">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-1.5">Relationship Readiness</p>
-                      <p className="text-sm text-foreground leading-relaxed">{d.readiness}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(190_55%_72%)] mb-1.5">Try This Week</p>
-                      <ul className="space-y-1.5">
-                        {d.experiments.map((e, idx) => (
-                          <li key={idx} className="text-sm text-foreground leading-relaxed flex items-start gap-2">
-                            <span className="text-[hsl(190_55%_72%)] mt-0.5 flex-shrink-0">→</span>
-                            <span>{e}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+          {/* Insight tags (if any) */}
+          {tags.length > 0 && <InsightTagsPanel tags={tags} />}
+
+          {/* Auth gate */}
+          {!user && (
+            <motion.div {...fadeUp(0.12)} className="mb-6 glass-strong rounded-2xl border border-[hsl(268_52%_68%/0.2)] p-6 text-center space-y-3">
+              <Lock className="w-6 h-6 mx-auto text-[hsl(268_52%_68%)]" />
+              <p className="text-sm font-semibold text-foreground">Sign in to save your answers</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                You can read the questions now. Saving requires an account so your profile persists across sessions.
+              </p>
+              <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0">
+                <Link href="/login">Sign in free <ArrowRight className="w-4 h-4 ml-1.5" /></Link>
+              </Button>
+            </motion.div>
+          )}
+
+          {/* Progressive profile modules */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-semibold text-foreground">Profile modules</p>
+              <p className="text-[11px] text-muted-foreground/50">{PROFILE_MODULES.length} modules · answer at your own pace</p>
+            </div>
+            <div className="space-y-3">
+              {PROFILE_MODULES.map((mod, i) => (
+                <ProfileModule
+                  key={mod.id}
+                  mod={mod}
+                  answeredIds={answeredIds}
+                  onSave={handleSave}
+                  index={i}
+                />
+              ))}
+            </div>
           </div>
 
-          <motion.div {...fadeUp(0.4)} className="mt-8 glass-strong rounded-2xl p-6 sm:p-7 border border-[hsl(268_52%_68%/0.2)]">
-            <h3 className="font-serif text-xl font-semibold mb-2">Want this tied to your real entries?</h3>
-            <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-              Approve items in the Life Context Profile to make these cards reflect what you've actually shared — not generic guidance.
+          {/* Dimension summary */}
+          {profileData && profileData.dimensions && profileData.dimensions.length > 0 && (
+            <motion.div {...fadeUp(0.3)} className="mb-8">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-semibold text-foreground">Dimensions overview</p>
+                <p className="text-[11px] text-muted-foreground/50">18 dimensions</p>
+              </div>
+              <DimensionGrid profile={profileData} />
+            </motion.div>
+          )}
+
+          {/* Footer CTAs */}
+          <motion.div {...fadeUp(0.4)} className="glass-strong rounded-2xl p-6 sm:p-7 border border-[hsl(268_52%_68%/0.2)] text-center space-y-4">
+            <p className="text-xs font-bold uppercase tracking-widest text-[hsl(268_52%_78%)]">What happens next</p>
+            <h3 className="font-serif text-xl font-semibold">Compatibility matching is coming</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
+              When live matching opens, your completed profile will be used to surface people who are actually compatible with how you think, communicate, and live — not just photos and bios.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild variant="outline" className="rounded-full"><Link href="/life-context">Life Context Profile <ArrowRight className="w-4 h-4 ml-1.5" /></Link></Button>
-              <Button asChild variant="outline" className="rounded-full"><Link href="/user-control">User Control <ArrowRight className="w-4 h-4 ml-1.5" /></Link></Button>
+            <div className="flex flex-wrap gap-3 justify-center">
+              <Button asChild variant="outline" className="rounded-full">
+                <Link href="/future-connections">Future Matching Preview <ArrowRight className="w-4 h-4 ml-1.5" /></Link>
+              </Button>
+              <Button asChild variant="outline" className="rounded-full">
+                <Link href="/user-control">Consent & privacy <ArrowRight className="w-4 h-4 ml-1.5" /></Link>
+              </Button>
             </div>
           </motion.div>
+
         </div>
       </div>
     </AppLayout>

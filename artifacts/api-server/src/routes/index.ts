@@ -19,6 +19,7 @@ import lifePulseRouter from "./lifePulse";
 import mirrorRouter from "./mirror";
 import journalRouter from "./journal";
 import postDateNotesRouter from "./postDateNotes";
+import wellnessRouter from "./wellness";
 
 const router: IRouter = Router();
 
@@ -42,5 +43,6 @@ router.use(lifePulseRouter);
 router.use(mirrorRouter);
 router.use(journalRouter);
 router.use(postDateNotesRouter);
+router.use(wellnessRouter);
 
 export default router;

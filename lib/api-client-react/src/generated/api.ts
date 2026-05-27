@@ -64,6 +64,8 @@ import type {
   DeleteMyAccountResult,
   DeletePostDateNoteResult,
   DeleteProfileResult,
+  DeleteWellnessAnswerResult,
+  DeleteWellnessTag200,
   EmailInsight,
   EmailInsightAnalysis,
   EmailInsightInput,
@@ -91,6 +93,7 @@ import type {
   ListExpiringTrashedAuditsParams,
   ListJournalEntriesParams,
   ListPostDateNotesParams,
+  ListWellnessAnswersParams,
   LogoutSuccess,
   MessageCoachingInput,
   MessageCoachingResponse,
@@ -121,7 +124,16 @@ import type {
   UnregisterPushTokenResult,
   WaitlistEntry,
   WaitlistInput,
-  WaitlistStats
+  WaitlistStats,
+  WellnessAnswer,
+  WellnessAnswerInput,
+  WellnessAnswerList,
+  WellnessAnswerPatch,
+  WellnessProfile,
+  WellnessTag,
+  WellnessTagInput,
+  WellnessTagList,
+  WellnessTagPatch
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -2605,6 +2617,670 @@ export const useRestorePostDateNote = <TError = ErrorType<void>,
       > => {
       return useMutation(getRestorePostDateNoteMutationOptions(options));
     }
+
+export const getListWellnessAnswersUrl = (params?: ListWellnessAnswersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/wellness/answers?${stringifiedParams}` : `/api/wellness/answers`
+}
+
+/**
+ * @summary List all wellness answers for current user
+ */
+export const listWellnessAnswers = async (params?: ListWellnessAnswersParams, options?: RequestInit): Promise<WellnessAnswerList> => {
+
+  return customFetch<WellnessAnswerList>(getListWellnessAnswersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListWellnessAnswersQueryKey = (params?: ListWellnessAnswersParams,) => {
+    return [
+    `/api/wellness/answers`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListWellnessAnswersQueryOptions = <TData = Awaited<ReturnType<typeof listWellnessAnswers>>, TError = ErrorType<unknown>>(params?: ListWellnessAnswersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWellnessAnswers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWellnessAnswersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWellnessAnswers>>> = ({ signal }) => listWellnessAnswers(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWellnessAnswers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListWellnessAnswersQueryResult = NonNullable<Awaited<ReturnType<typeof listWellnessAnswers>>>
+export type ListWellnessAnswersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all wellness answers for current user
+ */
+
+export function useListWellnessAnswers<TData = Awaited<ReturnType<typeof listWellnessAnswers>>, TError = ErrorType<unknown>>(
+ params?: ListWellnessAnswersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWellnessAnswers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListWellnessAnswersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateWellnessAnswerUrl = () => {
+
+
+
+
+  return `/api/wellness/answers`
+}
+
+/**
+ * @summary Save a wellness answer
+ */
+export const createWellnessAnswer = async (wellnessAnswerInput: WellnessAnswerInput, options?: RequestInit): Promise<WellnessAnswer> => {
+
+  return customFetch<WellnessAnswer>(getCreateWellnessAnswerUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      wellnessAnswerInput,)
+  }
+);}
+
+
+
+
+export const getCreateWellnessAnswerMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWellnessAnswer>>, TError,{data: BodyType<WellnessAnswerInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWellnessAnswer>>, TError,{data: BodyType<WellnessAnswerInput>}, TContext> => {
+
+const mutationKey = ['createWellnessAnswer'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWellnessAnswer>>, {data: BodyType<WellnessAnswerInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createWellnessAnswer(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWellnessAnswerMutationResult = NonNullable<Awaited<ReturnType<typeof createWellnessAnswer>>>
+    export type CreateWellnessAnswerMutationBody = BodyType<WellnessAnswerInput>
+    export type CreateWellnessAnswerMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Save a wellness answer
+ */
+export const useCreateWellnessAnswer = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWellnessAnswer>>, TError,{data: BodyType<WellnessAnswerInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createWellnessAnswer>>,
+        TError,
+        {data: BodyType<WellnessAnswerInput>},
+        TContext
+      > => {
+      return useMutation(getCreateWellnessAnswerMutationOptions(options));
+    }
+
+export const getUpdateWellnessAnswerUrl = (id: number,) => {
+
+
+
+
+  return `/api/wellness/answers/${id}`
+}
+
+/**
+ * @summary Update a wellness answer or consent level
+ */
+export const updateWellnessAnswer = async (id: number,
+    wellnessAnswerPatch: WellnessAnswerPatch, options?: RequestInit): Promise<WellnessAnswer> => {
+
+  return customFetch<WellnessAnswer>(getUpdateWellnessAnswerUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      wellnessAnswerPatch,)
+  }
+);}
+
+
+
+
+export const getUpdateWellnessAnswerMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWellnessAnswer>>, TError,{id: number;data: BodyType<WellnessAnswerPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateWellnessAnswer>>, TError,{id: number;data: BodyType<WellnessAnswerPatch>}, TContext> => {
+
+const mutationKey = ['updateWellnessAnswer'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWellnessAnswer>>, {id: number;data: BodyType<WellnessAnswerPatch>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateWellnessAnswer(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateWellnessAnswerMutationResult = NonNullable<Awaited<ReturnType<typeof updateWellnessAnswer>>>
+    export type UpdateWellnessAnswerMutationBody = BodyType<WellnessAnswerPatch>
+    export type UpdateWellnessAnswerMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a wellness answer or consent level
+ */
+export const useUpdateWellnessAnswer = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWellnessAnswer>>, TError,{id: number;data: BodyType<WellnessAnswerPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateWellnessAnswer>>,
+        TError,
+        {id: number;data: BodyType<WellnessAnswerPatch>},
+        TContext
+      > => {
+      return useMutation(getUpdateWellnessAnswerMutationOptions(options));
+    }
+
+export const getDeleteWellnessAnswerUrl = (id: number,) => {
+
+
+
+
+  return `/api/wellness/answers/${id}`
+}
+
+/**
+ * @summary Soft-delete a wellness answer
+ */
+export const deleteWellnessAnswer = async (id: number, options?: RequestInit): Promise<DeleteWellnessAnswerResult> => {
+
+  return customFetch<DeleteWellnessAnswerResult>(getDeleteWellnessAnswerUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteWellnessAnswerMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWellnessAnswer>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteWellnessAnswer>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteWellnessAnswer'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteWellnessAnswer>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteWellnessAnswer(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteWellnessAnswerMutationResult = NonNullable<Awaited<ReturnType<typeof deleteWellnessAnswer>>>
+
+    export type DeleteWellnessAnswerMutationError = ErrorType<void>
+
+    /**
+ * @summary Soft-delete a wellness answer
+ */
+export const useDeleteWellnessAnswer = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWellnessAnswer>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteWellnessAnswer>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteWellnessAnswerMutationOptions(options));
+    }
+
+export const getListWellnessTagsUrl = () => {
+
+
+
+
+  return `/api/wellness/tags`
+}
+
+/**
+ * @summary List compatibility insight tags for current user
+ */
+export const listWellnessTags = async ( options?: RequestInit): Promise<WellnessTagList> => {
+
+  return customFetch<WellnessTagList>(getListWellnessTagsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListWellnessTagsQueryKey = () => {
+    return [
+    `/api/wellness/tags`
+    ] as const;
+    }
+
+
+export const getListWellnessTagsQueryOptions = <TData = Awaited<ReturnType<typeof listWellnessTags>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWellnessTags>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWellnessTagsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWellnessTags>>> = ({ signal }) => listWellnessTags({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWellnessTags>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListWellnessTagsQueryResult = NonNullable<Awaited<ReturnType<typeof listWellnessTags>>>
+export type ListWellnessTagsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List compatibility insight tags for current user
+ */
+
+export function useListWellnessTags<TData = Awaited<ReturnType<typeof listWellnessTags>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWellnessTags>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListWellnessTagsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateWellnessTagUrl = () => {
+
+
+
+
+  return `/api/wellness/tags`
+}
+
+/**
+ * @summary Create a compatibility insight tag
+ */
+export const createWellnessTag = async (wellnessTagInput: WellnessTagInput, options?: RequestInit): Promise<WellnessTag> => {
+
+  return customFetch<WellnessTag>(getCreateWellnessTagUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      wellnessTagInput,)
+  }
+);}
+
+
+
+
+export const getCreateWellnessTagMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWellnessTag>>, TError,{data: BodyType<WellnessTagInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWellnessTag>>, TError,{data: BodyType<WellnessTagInput>}, TContext> => {
+
+const mutationKey = ['createWellnessTag'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWellnessTag>>, {data: BodyType<WellnessTagInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createWellnessTag(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWellnessTagMutationResult = NonNullable<Awaited<ReturnType<typeof createWellnessTag>>>
+    export type CreateWellnessTagMutationBody = BodyType<WellnessTagInput>
+    export type CreateWellnessTagMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a compatibility insight tag
+ */
+export const useCreateWellnessTag = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWellnessTag>>, TError,{data: BodyType<WellnessTagInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createWellnessTag>>,
+        TError,
+        {data: BodyType<WellnessTagInput>},
+        TContext
+      > => {
+      return useMutation(getCreateWellnessTagMutationOptions(options));
+    }
+
+export const getUpdateWellnessTagUrl = (id: number,) => {
+
+
+
+
+  return `/api/wellness/tags/${id}`
+}
+
+/**
+ * @summary Update a compatibility tag
+ */
+export const updateWellnessTag = async (id: number,
+    wellnessTagPatch: WellnessTagPatch, options?: RequestInit): Promise<WellnessTag> => {
+
+  return customFetch<WellnessTag>(getUpdateWellnessTagUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      wellnessTagPatch,)
+  }
+);}
+
+
+
+
+export const getUpdateWellnessTagMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWellnessTag>>, TError,{id: number;data: BodyType<WellnessTagPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateWellnessTag>>, TError,{id: number;data: BodyType<WellnessTagPatch>}, TContext> => {
+
+const mutationKey = ['updateWellnessTag'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWellnessTag>>, {id: number;data: BodyType<WellnessTagPatch>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateWellnessTag(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateWellnessTagMutationResult = NonNullable<Awaited<ReturnType<typeof updateWellnessTag>>>
+    export type UpdateWellnessTagMutationBody = BodyType<WellnessTagPatch>
+    export type UpdateWellnessTagMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a compatibility tag
+ */
+export const useUpdateWellnessTag = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWellnessTag>>, TError,{id: number;data: BodyType<WellnessTagPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateWellnessTag>>,
+        TError,
+        {id: number;data: BodyType<WellnessTagPatch>},
+        TContext
+      > => {
+      return useMutation(getUpdateWellnessTagMutationOptions(options));
+    }
+
+export const getDeleteWellnessTagUrl = (id: number,) => {
+
+
+
+
+  return `/api/wellness/tags/${id}`
+}
+
+/**
+ * @summary Delete a compatibility tag
+ */
+export const deleteWellnessTag = async (id: number, options?: RequestInit): Promise<DeleteWellnessTag200> => {
+
+  return customFetch<DeleteWellnessTag200>(getDeleteWellnessTagUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteWellnessTagMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWellnessTag>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteWellnessTag>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteWellnessTag'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteWellnessTag>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteWellnessTag(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteWellnessTagMutationResult = NonNullable<Awaited<ReturnType<typeof deleteWellnessTag>>>
+
+    export type DeleteWellnessTagMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a compatibility tag
+ */
+export const useDeleteWellnessTag = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWellnessTag>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteWellnessTag>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteWellnessTagMutationOptions(options));
+    }
+
+export const getGetWellnessProfileUrl = () => {
+
+
+
+
+  return `/api/wellness/profile`
+}
+
+/**
+ * @summary Get summarised wellness dimensions profile + matching readiness
+ */
+export const getWellnessProfile = async ( options?: RequestInit): Promise<WellnessProfile> => {
+
+  return customFetch<WellnessProfile>(getGetWellnessProfileUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWellnessProfileQueryKey = () => {
+    return [
+    `/api/wellness/profile`
+    ] as const;
+    }
+
+
+export const getGetWellnessProfileQueryOptions = <TData = Awaited<ReturnType<typeof getWellnessProfile>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWellnessProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWellnessProfileQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWellnessProfile>>> = ({ signal }) => getWellnessProfile({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWellnessProfile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWellnessProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getWellnessProfile>>>
+export type GetWellnessProfileQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get summarised wellness dimensions profile + matching readiness
+ */
+
+export function useGetWellnessProfile<TData = Awaited<ReturnType<typeof getWellnessProfile>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWellnessProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWellnessProfileQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getHealthCheckUrl = () => {
 

@@ -3306,6 +3306,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
       {tab === "overview" && (
         <div className="space-y-8">
           <AiStatusPanel />
+          <WellnessCompletionPanel founderKey={FOUNDER_KEY} />
           <BackgroundJobsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
           <TrashPurgePanel founderKey={FOUNDER_KEY} onPurged={() => setRefreshKey((k) => k + 1)} />
           <GeoipRefreshPanel founderKey={FOUNDER_KEY} />
@@ -3907,6 +3908,104 @@ const AREA_COLORS: Record<string, string> = {
   "Mobile":          "hsl(228 40% 65%)",
   "AI Health":       "hsl(15 80% 60%)",
 };
+
+interface WellnessStats {
+  totalAnswers: number;
+  totalTags: number;
+  usersWithAnswers: number;
+  usersApprovedMatching: number;
+  dimensionsAnswered: number;
+  topDimensions: { dimension: string; count: number }[];
+}
+
+async function getWellnessStats(key: string): Promise<WellnessStats> {
+  const res = await fetch("/api/founder/wellness-stats", {
+    headers: { "x-founder-key": key },
+  });
+  if (!res.ok) throw new Error("Failed to load wellness stats");
+  return res.json() as Promise<WellnessStats>;
+}
+
+function WellnessCompletionPanel({ founderKey }: { founderKey: string }) {
+  const [stats, setStats] = useState<WellnessStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    getWellnessStats(founderKey).then(setStats).catch(() => {}).finally(() => setLoading(false));
+  }, [founderKey]);
+
+  const TOTAL_DIMENSIONS = 18;
+  const pct = stats ? Math.round((stats.dimensionsAnswered / TOTAL_DIMENSIONS) * 100) : 0;
+
+  return (
+    <div className="glass border border-white/8 rounded-2xl p-6 space-y-5">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h2 className="font-semibold text-foreground mb-1">Compatibility Profile Adoption</h2>
+          <p className="text-sm text-muted-foreground/60 leading-relaxed">
+            Wellness answers &amp; insight tags across your user base.
+          </p>
+        </div>
+        {loading && <Loader2 className="w-4 h-4 text-muted-foreground/40 animate-spin flex-shrink-0 mt-1" />}
+      </div>
+
+      {stats && (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: "Total answers",     value: stats.totalAnswers,          color: "hsl(268 52% 68%)" },
+              { label: "Insight tags",      value: stats.totalTags,             color: "hsl(43 65% 65%)"  },
+              { label: "Users with profile",value: stats.usersWithAnswers,      color: "hsl(190 55% 60%)" },
+              { label: "Approved matching", value: stats.usersApprovedMatching, color: "hsl(142 55% 60%)" },
+            ].map(s => (
+              <div key={s.label} className="rounded-xl bg-white/3 border border-white/5 p-3 text-center">
+                <p className="text-xl font-bold tabular-nums" style={{ color: s.color }}>{s.value}</p>
+                <p className="text-[10px] text-muted-foreground/50 mt-0.5">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-xs text-muted-foreground/50">Dimensions answered across all users</p>
+              <p className="text-xs font-bold tabular-nums text-[hsl(268_52%_68%)]">{stats.dimensionsAnswered}/{TOTAL_DIMENSIONS}</p>
+            </div>
+            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[hsl(268_52%_68%)] to-[hsl(190_55%_60%)] transition-all duration-500"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </div>
+
+          {stats.topDimensions.length > 0 && (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2">Most-answered dimensions</p>
+              <div className="space-y-1.5">
+                {stats.topDimensions.map(d => {
+                  const max = stats.topDimensions[0]?.count ?? 1;
+                  return (
+                    <div key={d.dimension} className="flex items-center gap-3">
+                      <p className="text-xs text-muted-foreground/60 w-36 flex-shrink-0 truncate capitalize">{d.dimension}</p>
+                      <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-[hsl(268_52%_68%/0.6)]"
+                          style={{ width: `${Math.round((d.count / max) * 100)}%` }}
+                        />
+                      </div>
+                      <p className="text-[10px] tabular-nums text-muted-foreground/40 w-5 text-right">{d.count}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
 function TestingChecklistPanel() {
   const [checked, setChecked] = useState<Set<string>>(new Set());

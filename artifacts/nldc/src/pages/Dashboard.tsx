@@ -320,16 +320,17 @@ const PACKAGE_CARDS = [
   },
   {
     name: "Context + Trust",
-    tagline: "Control what we know — your data, wellness, and privacy on your terms.",
-    hint: "Start with Wellness Check →",
+    tagline: "Build your compatibility profile — 18 dimensions, consent-first, coaching by default.",
+    hint: "Build Compatibility Profile →",
     hintHref: "/wellness",
     color: "hsl(228 30% 62%)",
     icon: Shield,
     hubHref: "/wellness",
     tools: [
-      { label: "Wellness Center", href: "/wellness"     },
-      { label: "Data Vault",      href: "/vault"        },
-      { label: "User Control",    href: "/user-control" },
+      { label: "Compatibility Profile", href: "/wellness"            },
+      { label: "Future Matching",       href: "/future-connections"  },
+      { label: "Data Vault",            href: "/vault"               },
+      { label: "User Control",          href: "/user-control"        },
     ],
   },
 ] as const;
