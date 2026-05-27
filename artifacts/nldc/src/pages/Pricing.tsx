@@ -299,8 +299,10 @@ export default function Pricing() {
                     </Link>
                   </Button>
                   <p className="text-center text-[11px] text-foreground/75 mt-2.5 leading-snug px-1">{tier.nextStep}</p>
-                  {tier.price !== "$0" && (
+                  {tier.price !== "$0" ? (
                     <p className="text-center text-[11px] text-muted-foreground mt-1.5">30-day guarantee — we'll redo it or refund it</p>
+                  ) : (
+                    <p className="text-center text-[11px] text-muted-foreground mt-1.5">Free forever · no account required · results saved</p>
                   )}
                 </div>
               </motion.div>

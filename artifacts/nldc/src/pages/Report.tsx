@@ -960,18 +960,25 @@ export default function Report() {
                 <div className="w-2.5 h-2.5 rounded-full bg-[hsl(348_55%_65%)]" /> Needs work (&lt;50)
               </div>
             </div>
+            <div className="mt-5 pt-4 border-t border-white/5">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                <strong className="text-foreground">What to focus on first:</strong>{" "}
+                Your lowest-scoring dimensions are where the 7-day action plan starts. The plan below sequences the highest-leverage changes in order — start there.
+              </p>
+            </div>
           </motion.div>
 
           {/* ── What You're Showing / How It's Received / What to Improve ── */}
           <motion.div {...fadeUp(0.1)} className="glass border border-white/8 rounded-3xl p-8">
-            <div className="flex items-center gap-2.5 mb-6">
+            <div className="flex items-center gap-2.5 mb-2">
               <Eye className="w-5 h-5 text-[hsl(268_52%_68%)]" />
               <h2 className="text-xl font-bold text-foreground">How You're Coming Across</h2>
             </div>
+            <p className="text-xs text-muted-foreground mb-5">What your profile signals — and where the gap is.</p>
             <p className="text-muted-foreground leading-relaxed text-sm mb-7">{r.bioAudit}</p>
             <div className="grid sm:grid-cols-3 gap-4">
               <div className="panel-show rounded-2xl p-5">
-                <p className="text-xs font-bold uppercase tracking-wider text-[hsl(268_52%_72%)] mb-3">You're showing</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-[hsl(268_52%_72%)] mb-3">What you're showing</p>
                 <div className="flex flex-wrap gap-1.5">
                   {r.strengths.map((s, i) => <span key={i} className="tag-strength border px-2.5 py-1 rounded-full text-xs" data-testid={`item-strength-${i}`}>{s}</span>)}
                 </div>
@@ -981,11 +988,18 @@ export default function Report() {
                 <p className="text-xs text-muted-foreground leading-relaxed">Genuine and warm, but similar to many others. The surface impression is positive — but not yet memorable.</p>
               </div>
               <div className="panel-improve rounded-2xl p-5">
-                <p className="text-xs font-bold uppercase tracking-wider text-[hsl(43_65%_67%)] mb-3">What to improve</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-[hsl(43_65%_67%)] mb-3">What to change</p>
                 <div className="flex flex-wrap gap-1.5">
                   {r.risks.map((risk, i) => <span key={i} className="tag-risk border px-2.5 py-1 rounded-full text-xs" data-testid={`item-risk-${i}`}>{risk}</span>)}
                 </div>
               </div>
+            </div>
+            <div className="mt-5 pt-4 border-t border-white/5 flex items-start gap-2">
+              <Lightbulb className="w-3.5 h-3.5 text-[hsl(268_52%_68%)] flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                <strong className="text-foreground">Next action:</strong>{" "}
+                The rewritten bio and prompts below address the gaps flagged above. Swap in the rewrite, then check your score again in 7 days.
+              </p>
             </div>
           </motion.div>
 

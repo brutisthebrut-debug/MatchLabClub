@@ -25,7 +25,7 @@ function CopyBtn({ text }: { text: string }) {
         }
       }}
       aria-label={copied ? "Copied to clipboard" : "Copy to clipboard"}
-      className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors flex-shrink-0 min-h-[32px] px-2 -mx-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)]"
+      className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors flex-shrink-0 min-h-[36px] px-2 -mx-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(268_52%_68%/0.6)]"
     >
       {copied ? <Check className="w-3 h-3 text-[hsl(142_55%_60%)]" aria-hidden="true" /> : <Copy className="w-3 h-3" aria-hidden="true" />}
       {copied ? "Copied" : "Copy"}
@@ -94,18 +94,37 @@ export default function SampleReport() {
         <div className="max-w-2xl mx-auto relative z-10">
 
           {/* Sample disclaimer */}
-          <motion.div {...fadeUp(0)} className="mb-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 text-xs text-muted-foreground/60">
+          <motion.div {...fadeUp(0)} className="mb-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[hsl(268_52%_68%/0.3)] bg-[hsl(268_52%_68%/0.08)] text-xs text-[hsl(268_52%_78%)] font-semibold">
               <Sparkles className="w-3.5 h-3.5 text-[hsl(268_52%_68%)]" />
-              Sample content — fictional profile, real structure
+              Sample report — fictional profile, real structure
             </div>
           </motion.div>
 
           {/* Report header */}
-          <motion.div {...fadeUp(0.04)} className="mb-6">
+          <motion.div {...fadeUp(0.04)} className="mb-4">
             <p className="text-xs font-bold uppercase tracking-widest text-[hsl(268_52%_78%)] mb-2">Dating Reset Report</p>
             <h1 className="text-4xl font-bold text-foreground mb-2">Jordan's Report</h1>
             <p className="text-muted-foreground text-sm">31 · Hinge · Looking for a long-term relationship</p>
+          </motion.div>
+
+          {/* What's in this report — journey indicator */}
+          <motion.div {...fadeUp(0.055)} className="mb-6 flex items-center gap-1 flex-wrap text-[10px] font-bold uppercase tracking-wider select-none">
+            {[
+              { label: "Starting point", color: "hsl(348 55% 68%)" },
+              { label: "Score",          color: "hsl(268 52% 72%)" },
+              { label: "Mirror",         color: "hsl(190 55% 65%)" },
+              { label: "Blueprint",      color: "hsl(268 52% 72%)" },
+              { label: "Rewrite",        color: "hsl(142 55% 65%)" },
+              { label: "Messages",       color: "hsl(43 65% 68%)" },
+              { label: "Plan",           color: "hsl(190 55% 65%)" },
+              { label: "Next steps",     color: "hsl(142 55% 65%)" },
+            ].map((item, i, arr) => (
+              <span key={item.label} className="flex items-center gap-1">
+                <span style={{ color: item.color }}>{item.label}</span>
+                {i < arr.length - 1 && <span className="text-muted-foreground/20 font-normal">→</span>}
+              </span>
+            ))}
           </motion.div>
 
           {/* What Jordan came in with */}
@@ -409,13 +428,13 @@ export default function SampleReport() {
 
           {/* CTA */}
           <motion.div {...fadeUp(0.15)} className="mt-8 glass border border-white/8 rounded-2xl p-6 text-center space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[hsl(268_52%_68%/0.3)] bg-[hsl(268_52%_68%/0.08)] text-xs text-[hsl(268_52%_78%)]">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[hsl(268_52%_68%/0.3)] bg-[hsl(268_52%_68%/0.08)] text-xs text-[hsl(268_52%_78%)] font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-[hsl(142_55%_60%)] animate-pulse" />
-              Founding Beta · First 25 users · Founder reviewed
+              Live beta · First 25 users · Personal founder review included
             </div>
             <h2 className="text-xl font-bold text-foreground">Get your own report</h2>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              This is what we'd produce for your actual profile. Start with a free Signal Check — no account needed, takes 3 minutes.
+              This is what we'd produce for your actual profile. Start free — 3 minutes, no credit card, no account required.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/start"
@@ -427,7 +446,7 @@ export default function SampleReport() {
                 See Dating Reset pricing →
               </Link>
             </div>
-            <p className="text-xs text-muted-foreground/40">Free · No credit card · No account required to start</p>
+            <p className="text-xs text-muted-foreground/40">Free forever · no credit card · no account required to start</p>
           </motion.div>
 
           {/* Trust promise */}
