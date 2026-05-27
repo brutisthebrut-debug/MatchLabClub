@@ -72,6 +72,7 @@ const GROWTH_MORE = [
 const FOUNDER_BETA_TOOLS = [
   { name: "Plans & Pricing",    href: "/pricing",       desc: "Three tiers, launch perks, no surprises" },
   { name: "Sample Report",      href: "/sample-report", desc: "See a full Dating Reset Report before you decide" },
+  { name: "The Journal",        href: "/blog",          desc: "Dating science and profile psychology articles" },
   { name: "Join the Waitlist",  href: "/waitlist",      desc: "Be first when new paid tiers open" },
   { name: "Beta Feedback",      href: "/feedback",      desc: "Tell us what's working and what isn't" },
 ];
@@ -220,13 +221,13 @@ export function Navbar() {
       <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0" onClick={closeAll}>
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] flex items-center justify-center shadow-[0_0_14px_hsl(268_52%_68%/0.4)] group-hover:shadow-[0_0_22px_hsl(268_52%_68%/0.6)] transition-shadow">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-serif text-lg font-bold tracking-tight">
-            <span className="gradient-text-violet">MatchLab</span>
-          </span>
+        <Link href="/" className="flex items-center flex-shrink-0 group" onClick={closeAll}>
+          <img
+            src="/matchlab-logo.png"
+            alt="MatchLab Club"
+            className="h-10 w-auto transition-opacity group-hover:opacity-85"
+            style={{ filter: "drop-shadow(0 0 8px hsl(285 45% 68% / 0.5))" }}
+          />
         </Link>
 
         {/* Desktop Nav */}

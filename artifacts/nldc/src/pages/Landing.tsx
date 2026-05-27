@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { ArrowRight, CheckCircle, Shield, Sparkles, Headphones, Star, TrendingUp, Eye, Quote, MessageSquare } from "lucide-react";
+import { ArrowRight, CheckCircle, Shield, Sparkles, Headphones, TrendingUp, Eye, MessageSquare, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMeta } from "@/hooks/useMeta";
 import { TrustBadge } from "@/components/TrustBadge";
@@ -89,23 +89,11 @@ export default function Landing() {
               <span className="text-xs text-muted-foreground/50">No account needed</span>
             </motion.div>
 
-            {/* Social proof avatars */}
+            {/* Beta badge */}
             <motion.div className="flex items-center justify-center gap-3 mt-6" {...fadeUp(0.3)}>
-              <div className="flex -space-x-2.5">
-                {["A", "M", "J", "S", "R"].map((l, i) => (
-                  <div
-                    key={i}
-                    className="w-9 h-9 rounded-full border-2 border-background flex items-center justify-center text-[11px] font-bold text-white"
-                    style={{ background: `hsl(${268 - i * 18} 52% ${58 + i * 3}%)` }}
-                  >
-                    {l}
-                  </div>
-                ))}
-              </div>
-              <div className="text-sm">
-                <span className="text-foreground font-semibold">2,847 audits</span>
-                <span className="text-muted-foreground"> completed. Avg score gain: </span>
-                <span className="text-[hsl(43_65%_65%)] font-semibold">+23 pts.</span>
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass border border-[hsl(268_52%_68%/0.25)]">
+                <span className="w-2 h-2 rounded-full bg-[hsl(142_55%_60%)] animate-pulse flex-shrink-0" />
+                <span className="text-sm text-muted-foreground">Private beta · Founder reviews every report · Built on real dating science</span>
               </div>
             </motion.div>
           </div>
@@ -118,9 +106,9 @@ export default function Landing() {
             transition={{ duration: 0.7, delay: 0.35 }}
           >
             {[
-              { value: "94%", label: "of members report higher-quality conversations", color: "hsl(268 52% 68%)" },
-              { value: "3.2×", label: "average increase in meaningful matches", color: "hsl(43 65% 65%)" },
-              { value: "48h", label: "to see results after implementing your audit", color: "hsl(348 55% 65%)" },
+              { value: "8", label: "dimensions of your dating signal — scored and explained", color: "hsl(268 52% 68%)" },
+              { value: "3 min", label: "to get your Signal Score, bio critique, and action items", color: "hsl(43 65% 65%)" },
+              { value: "7-day", label: "personalised action plan included in every full audit", color: "hsl(348 55% 65%)" },
             ].map((stat, i) => (
               <div
                 key={i}
@@ -177,6 +165,10 @@ export default function Landing() {
               See what changes when you're{" "}
               <span className="gradient-text-violet italic">seen accurately.</span>
             </motion.h2>
+            <motion.p
+              className="text-xs text-muted-foreground/50 mt-3"
+              initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            >Illustrative example — the kind of rewrite our coaching engine produces</motion.p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -378,7 +370,7 @@ export default function Landing() {
               { icon: CheckCircle, title: "Profile Signal Audit", desc: "The full audit. Signal Score, 8-dimension Signal Spectrum, complete bio + prompt rewrites, photo guidance, and a 7-day action plan you can start tomorrow.", href: "/start", badge: "Free to Start", badgeColor: "hsl(268 52% 68%)", accentColor: "hsl(142 55% 60%)" },
               { icon: MessageSquare, title: "Chemistry Lab", desc: "Paste any message or conversation. Get tone analysis, your recommended next action, and 5 reply options — Warm, Playful, Direct, Date Ask, Graceful Exit.", href: "/lab", badge: "Free", badgeColor: "hsl(190 55% 60%)", accentColor: "hsl(190 55% 60%)" },
               { icon: MessageSquare, title: "Message Coach", desc: "Deeper session coaching: paste a full conversation, choose your goal, and receive 3 tailored reply options with rationale.", href: "/coach", badge: "Free", badgeColor: "hsl(285 45% 65%)", accentColor: "hsl(285 45% 65%)" },
-              { icon: Shield, title: "Platform Vision", desc: "See the full 5-level dating intelligence roadmap — from free audit to private personal intelligence. Investor-demo ready.", href: "/roadmap", badge: "Vision", badgeColor: "hsl(43 65% 65%)", accentColor: "hsl(43 65% 65%)" },
+              { icon: BookOpen, title: "The MatchLab Journal", desc: "Dating science, profile psychology, and message coaching insights — written for people who want to understand what's actually happening.", href: "/blog", badge: "Read Free", badgeColor: "hsl(43 65% 65%)", accentColor: "hsl(43 65% 65%)" },
             ].map((tool, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
                 <Link href={tool.href}>
@@ -431,39 +423,59 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── Testimonials ── */}
+      {/* ── Early Access Social Proof ── */}
       <section className="py-20 md:py-28 relative overflow-hidden">
         <div className="orb orb-gold absolute w-96 h-96 right-0 top-20 opacity-40 pointer-events-none" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-14">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(43_65%_68%)] mb-3">Real Members</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(43_65%_68%)] mb-3">Early Access</p>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-              What it feels like when your profile finally <span className="gradient-text italic">sounds like you.</span>
+              We're in private beta — <span className="gradient-text italic">be among the first.</span>
             </h2>
+            <p className="text-muted-foreground max-w-lg mx-auto mt-4 leading-relaxed">
+              We're building in public and reviewing every report ourselves. That means you get founder-level attention on your audit — and we get honest feedback to make it better.
+            </p>
           </div>
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
-              { quote: "My match rate tripled, but more importantly, I stopped dreading conversations. My profile finally sounds like me — and the people reaching out actually get what I'm about.", name: "Sarah, 31", label: "Found a relationship in 6 weeks" },
-              { quote: "I've been on apps for two years and felt like I was screaming into a void. Two weeks after my audit, I had four dates lined up. The bio rewrite alone changed everything.", name: "Marcus, 28", label: "3× more matches in first week" },
-              { quote: "What got me was how honest it was. Not mean, just accurate. It showed me exactly what I was projecting vs. what I wanted to project. That clarity was worth more than the rewrite.", name: "Elena, 35", label: "Engaged after meeting on Hinge" },
-            ].map((review, i) => (
+              {
+                icon: "🔬",
+                title: "Founder-reviewed",
+                desc: "Every audit during private beta is reviewed by the founders personally. You're not getting a generic output — you're getting our full attention on your specific situation.",
+                color: "hsl(268 52% 68%)",
+              },
+              {
+                icon: "🤝",
+                title: "You shape the product",
+                desc: "Beta members get direct access to give feedback, request features, and influence what we build next. This is your chance to help build the tool you actually wish existed.",
+                color: "hsl(43 65% 65%)",
+              },
+              {
+                icon: "🔒",
+                title: "Launch pricing, locked in",
+                desc: "Beta members lock in today's pricing for life. As we add more features and move out of beta, the price goes up — yours doesn't.",
+                color: "hsl(142 55% 60%)",
+              },
+            ].map((card, i) => (
               <motion.div
                 key={i}
                 className="glass border border-white/8 rounded-3xl p-7 flex flex-col card-hover"
                 initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
               >
-                <Quote className="w-8 h-8 text-[hsl(268_52%_68%/0.4)] mb-4 flex-shrink-0" />
-                <p className="text-sm text-foreground/85 leading-relaxed flex-1 italic">"{review.quote}"</p>
-                <div className="mt-6 pt-5 border-t border-white/5">
-                  <div className="flex text-[hsl(43_65%_65%)] mb-1">
-                    {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5 fill-current" />)}
-                  </div>
-                  <p className="font-semibold text-foreground text-sm">{review.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{review.label}</p>
-                </div>
+                <p className="text-3xl mb-4">{card.icon}</p>
+                <h3 className="font-bold text-foreground mb-3">{card.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed flex-1">{card.desc}</p>
               </motion.div>
             ))}
           </div>
+          <motion.div
+            className="text-center mt-10"
+            initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }}
+          >
+            <Link href="/waitlist" className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass border border-[hsl(268_52%_68%/0.3)] text-sm font-semibold text-[hsl(268_52%_78%)] hover:border-[hsl(268_52%_68%/0.55)] transition-all">
+              Join the early cohort <ArrowRight className="w-4 h-4" />
+            </Link>
+          </motion.div>
         </div>
       </section>
 

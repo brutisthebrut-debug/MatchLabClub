@@ -124,7 +124,7 @@ const TIERS = [
     features: [
       "Everything in The Dating Reset",
       "Direct access to a real dating coach",
-      "Weekly 45-min strategy session",
+      "Weekly 45-min strategy session (scheduled within 48h of joining)",
       "Unlimited message coaching",
       "Audit after every major profile change",
       "Members-only community access",
@@ -133,6 +133,7 @@ const TIERS = [
     ],
     excluded: [],
     walkaway: ["A real coach in your corner, weekly", "Unlimited coaching and audits", "A community of people doing the work"],
+    betaNote: "Currently in private beta. We schedule your first session within 48 hours of joining — founder-matched to a coach suited to your situation.",
   },
 ];
 
@@ -303,6 +304,12 @@ export default function Pricing() {
                     <p className="text-center text-[11px] text-muted-foreground mt-1.5">30-day guarantee — we'll redo it or refund it</p>
                   ) : (
                     <p className="text-center text-[11px] text-muted-foreground mt-1.5">Free forever · no account required · results saved</p>
+                  )}
+                  {"betaNote" in tier && tier.betaNote && (
+                    <div className="mt-3 p-3 rounded-xl text-[11px] text-muted-foreground leading-relaxed"
+                      style={{ background: "hsl(43 65% 55% / 0.08)", border: "1px solid hsl(43 65% 55% / 0.2)" }}>
+                      🧪 <span className="font-semibold text-foreground/70">Private beta:</span> {tier.betaNote}
+                    </div>
                   )}
                 </div>
               </motion.div>
