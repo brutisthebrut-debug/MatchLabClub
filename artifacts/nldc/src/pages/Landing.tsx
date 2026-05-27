@@ -50,10 +50,10 @@ export default function Landing() {
               className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed mb-9"
               {...fadeUp(0.15)}
             >
-              Paste your bio. Get an honest read on what it's actually saying — and one rewritten line that shows what's possible. <span className="text-foreground/80 font-medium">3 minutes. No account. Free.</span>
+              See exactly why you're getting skipped — and the <span className="text-foreground/80 font-medium">one specific fix</span> that changes it. The honest read no friend will give you.
             </motion.p>
 
-            {/* PRIMARY CTA — single, oversized, unmissable */}
+            {/* PRIMARY CTA — single, oversized, unmissable. Everything else lives below the proof. */}
             <motion.div className="flex flex-col items-center gap-4" {...fadeUp(0.22)}>
               <Button
                 asChild
@@ -75,38 +75,10 @@ export default function Landing() {
               <p className="text-[11px] text-muted-foreground/70 mt-1">
                 Built for every dating context — straight, gay, queer, bi, trans, non-binary, mono &amp; poly.
               </p>
-
-              {/* Risk reversal — quiet promise, prominent placement */}
-              <div
-                className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 mt-3 px-4 py-2 rounded-full glass border border-[hsl(142_55%_60%/0.25)]"
-                data-testid="strip-risk-reversal"
-              >
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[hsl(142_55%_72%)]">
-                  <CheckCircle className="w-3 h-3" /> 30-day money-back guarantee
-                </span>
-                <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[hsl(142_55%_72%)]">
-                  <Shield className="w-3 h-3" /> Delete everything anytime
-                </span>
-                <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[hsl(142_55%_72%)]">
-                  <Eye className="w-3 h-3" /> Founder-reviewed in beta
-                </span>
-              </div>
-
-              {/* Sample report — frictionless escape hatch */}
-              <Link
-                href="/sample-report"
-                className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-[hsl(248_62%_52%)] hover:underline"
-                data-testid="link-hero-sample-report"
-              >
-                <Eye className="w-3.5 h-3.5" /> Or see an example report first
-                <ArrowRight className="w-3 h-3" />
-              </Link>
             </motion.div>
           </div>
 
-          {/* "What you'll get" — keeps Signal Check tangible without competing for the click */}
+          {/* "What you'll get" — supports the single CTA without competing for the click */}
           <motion.div
             className="max-w-2xl mx-auto mt-14 grid sm:grid-cols-2 gap-3 text-left"
             initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.05 }}
@@ -128,93 +100,11 @@ export default function Landing() {
               );
             })}
           </motion.div>
-
-          {/* Audit upgrade — presented as the natural next step, not a competing choice */}
-          <motion.div
-            className="max-w-2xl mx-auto mt-7 p-5 rounded-2xl glass border border-[hsl(248_62%_52%/0.25)] flex flex-col sm:flex-row items-start sm:items-center gap-4"
-            data-testid="card-hero-full-audit"
-            initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.15 }}
-          >
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] shadow-[0_4px_16px_hsl(248_62%_52%/0.4)]">
-              <FileText className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground mb-0.5">Ready for the full picture?</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                After your Signal Check, upgrade to the <span className="font-semibold text-foreground/85">Profile Signal Audit</span> — 8-dimension breakdown, full bio + prompt rewrites, and a 7-day plan.
-              </p>
-            </div>
-            <Link
-              href="/start"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-[hsl(248_62%_52%)] hover:underline whitespace-nowrap"
-              data-testid="button-hero-full-audit"
-            >
-              Skip to the Audit <ArrowRight className="w-3 h-3" />
-            </Link>
-          </motion.div>
         </div>
       </section>
 
-      {/* ── How It Works — the 3-step narrative ── */}
-      <section id="how-it-works" className="py-20 md:py-24 border-t border-foreground/5 bg-[hsl(248_40%_98%/0.5)] dark:bg-[hsl(248_50%_8%/0.5)]">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-3">How it works</p>
-            <h2 className="text-3xl md:text-5xl font-bold text-foreground">
-              Three steps. <span className="gradient-text italic">No guesswork.</span>
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto mt-4 leading-relaxed text-sm">
-              From an honest read of your profile to a plan you can actually act on this week.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
-            {[
-              {
-                step: "01",
-                title: "Check your signal",
-                desc: "Paste your bio (and optionally your prompts or a recent message). Takes 3 minutes. No account needed to start.",
-                color: "hsl(var(--brand-indigo))",
-                cta: { label: "Start the check", href: "/signal-check" },
-              },
-              {
-                step: "02",
-                title: "Get your honest report",
-                desc: "Receive a Signal Score, the category your profile reads as, specific critiques, and rewritten bio + prompt lines.",
-                color: "hsl(var(--brand-gold))",
-                cta: { label: "See a sample", href: "/sample-report" },
-              },
-              {
-                step: "03",
-                title: "Follow your 7-day plan",
-                desc: "A prioritised plan built around your specific audit — not generic advice. Track your score as you implement.",
-                color: "hsl(142 55% 50%)",
-                cta: { label: "Track your progress", href: "/pricing" },
-              },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                className="glass rounded-3xl p-7 card-hover flex flex-col"
-                style={{ border: `1px solid ${withAlpha(item.color, 0.18)}` }}
-                initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-              >
-                <div className="text-4xl font-bold mb-4 font-mono" style={{ color: item.color }}>{item.step}</div>
-                <h3 className="text-lg font-semibold text-foreground mb-2.5">{item.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-5 flex-1">{item.desc}</p>
-                <Link
-                  href={item.cta.href}
-                  className="inline-flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80"
-                  style={{ color: item.color }}
-                >
-                  {item.cta.label} <ArrowRight className="w-3 h-3" />
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Before / After — concrete proof ── */}
-      <section className="py-20 md:py-28 relative overflow-hidden">
+      {/* ── Before / After — LIFTED above-the-fold proof ── */}
+      <section className="py-20 md:py-28 relative overflow-hidden border-t border-foreground/5">
         <div className="orb orb-plum absolute w-80 h-80 -left-40 top-20 opacity-50 pointer-events-none" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-14">
@@ -285,6 +175,162 @@ export default function Landing() {
               </div>
               </div>
             </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Cost anchor — what bad signal actually costs you ── */}
+      <section className="py-16 md:py-20 border-t border-foreground/5 relative overflow-hidden">
+        <div className="orb orb-plum absolute w-72 h-72 -right-32 top-10 opacity-40 pointer-events-none" />
+        <div className="container mx-auto px-4 relative z-10">
+          <motion.div className="text-center mb-10 max-w-2xl mx-auto" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(0_60%_60%)] mb-3">The math you're avoiding</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+              A bad profile isn't free. <span className="gradient-text italic">It's the most expensive thing on the apps.</span>
+            </h2>
+            <p className="text-sm text-muted-foreground/80 leading-relaxed">
+              Most people pay for it in months, not dollars — and don't notice until they look back.
+            </p>
+          </motion.div>
+          <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            {[
+              { stat: "300+", unit: "hours/year", desc: "Average time singles spend swiping, messaging, and going on dates that don't go anywhere.", color: "hsl(0 60% 55%)" },
+              { stat: "~$420", unit: "spent on apps", desc: "What the average dater spends per year on premium tiers, boosts, and super-likes — all routed through a bio that isn't working.", color: "hsl(var(--brand-gold))" },
+              { stat: "14–18", unit: "months lost", desc: "Typical gap between when something is broken in how you're presenting and when someone actually tells you about it.", color: "hsl(var(--brand-indigo))" },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                className="glass rounded-2xl p-6 card-hover"
+                style={{ border: `1px solid ${withAlpha(item.color, 0.22)}`, background: `${withAlpha(item.color, 0.04)}` }}
+                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}
+                data-testid={`card-cost-${i}`}
+              >
+                <p className="text-4xl font-bold mb-1" style={{ color: item.color }}>{item.stat}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-foreground/70 mb-3">{item.unit}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+          <motion.p
+            className="text-center text-sm text-foreground/80 mt-8 max-w-xl mx-auto leading-relaxed"
+            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 }}
+          >
+            For the cost of one bad first date you can fix the thing that keeps producing them.{" "}
+            <Link href="/pricing" className="font-semibold text-[hsl(248_62%_62%)] hover:underline">See plans →</Link>
+          </motion.p>
+        </div>
+      </section>
+
+      {/* ── Take another path — recovery row (sample report · skip-to-audit · risk-reversal) ── */}
+      <section className="py-12 md:py-16 border-t border-foreground/5">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-5">Not ready to paste your bio yet?</p>
+            <div className="grid sm:grid-cols-2 gap-3 mb-5">
+              <Link
+                href="/sample-report"
+                className="glass border border-foreground/10 rounded-2xl p-4 flex items-center gap-3 hover:border-[hsl(248_62%_52%/0.4)] hover:bg-[hsl(248_62%_52%/0.04)] transition-all"
+                data-testid="link-hero-sample-report"
+              >
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[hsl(248_62%_52%/0.12)] border border-[hsl(248_62%_52%/0.25)]">
+                  <Eye className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground mb-0.5">See an example report first</p>
+                  <p className="text-[11px] text-muted-foreground leading-snug">Full sample audit. No paste required.</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              </Link>
+              <Link
+                href="/start"
+                className="rounded-2xl p-4 flex items-center gap-3 hover:opacity-95 transition-all"
+                style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo) / 0.16), hsl(326 100% 59% / 0.10))", border: "1px solid hsl(var(--brand-indigo) / 0.35)" }}
+                data-testid="button-hero-full-audit"
+              >
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] shadow-[0_4px_16px_hsl(248_62%_52%/0.4)]">
+                  <FileText className="w-4 h-4 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground mb-0.5">Skip to the full Audit</p>
+                  <p className="text-[11px] text-muted-foreground leading-snug">8-dimension breakdown · full rewrites · 7-day plan</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-[hsl(248_62%_62%)] flex-shrink-0" />
+              </Link>
+            </div>
+            <div
+              className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 px-5 py-2.5 rounded-full glass border border-[hsl(142_55%_60%/0.3)] mx-auto w-fit"
+              data-testid="strip-risk-reversal"
+            >
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[hsl(142_55%_72%)]">
+                <CheckCircle className="w-3.5 h-3.5" /> 30-day money-back guarantee
+              </span>
+              <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[hsl(142_55%_72%)]">
+                <Shield className="w-3.5 h-3.5" /> Delete everything anytime
+              </span>
+              <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[hsl(142_55%_72%)]">
+                <Eye className="w-3.5 h-3.5" /> Founder-reviewed in beta
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── How It Works — the 3-step narrative (demoted below proof + cost) ── */}
+      <section id="how-it-works" className="py-20 md:py-24 border-t border-foreground/5 bg-[hsl(248_40%_98%/0.5)] dark:bg-[hsl(248_50%_8%/0.5)]">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-3">How it works</p>
+            <h2 className="text-3xl md:text-5xl font-bold text-foreground">
+              Three steps. <span className="gradient-text italic">No guesswork.</span>
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto mt-4 leading-relaxed text-sm">
+              From an honest read of your profile to a plan you can actually act on this week.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
+            {[
+              {
+                step: "01",
+                title: "Check your signal",
+                desc: "Paste your bio (and optionally your prompts or a recent message). Takes 3 minutes. No account needed to start.",
+                color: "hsl(var(--brand-indigo))",
+                cta: { label: "Start the check", href: "/signal-check" },
+              },
+              {
+                step: "02",
+                title: "Get your honest report",
+                desc: "Receive a Signal Score, the category your profile reads as, specific critiques, and rewritten bio + prompt lines.",
+                color: "hsl(var(--brand-gold))",
+                cta: { label: "See a sample", href: "/sample-report" },
+              },
+              {
+                step: "03",
+                title: "Follow your 7-day plan",
+                desc: "A prioritised plan built around your specific audit — not generic advice. Track your score as you implement.",
+                color: "hsl(142 55% 50%)",
+                cta: { label: "Track your progress", href: "/pricing" },
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                className="glass rounded-3xl p-7 card-hover flex flex-col"
+                style={{ border: `1px solid ${withAlpha(item.color, 0.18)}` }}
+                initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+              >
+                <div className="text-4xl font-bold mb-4 font-mono" style={{ color: item.color }}>{item.step}</div>
+                <h3 className="text-lg font-semibold text-foreground mb-2.5">{item.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-5 flex-1">{item.desc}</p>
+                <Link
+                  href={item.cta.href}
+                  className="inline-flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80"
+                  style={{ color: item.color }}
+                >
+                  {item.cta.label} <ArrowRight className="w-3 h-3" />
+                </Link>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>

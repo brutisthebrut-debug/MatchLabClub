@@ -11,6 +11,7 @@ import { TrustBadge } from "@/components/TrustBadge";
 const TIERS = [
   {
     name: "Free Signal Check",
+    outcome: "See what's holding you back",
     price: "$0",
     promoPrice: null,
     period: "",
@@ -42,6 +43,7 @@ const TIERS = [
   },
   {
     name: "Signal Audit",
+    outcome: "Get the honest blueprint",
     price: "$29",
     promoPrice: null,
     period: "one-time",
@@ -77,6 +79,7 @@ const TIERS = [
   },
   {
     name: "Dating Reset",
+    outcome: "Get fully rewritten — start matching in days, not months",
     price: "$97",
     promoPrice: null,
     period: "one-time",
@@ -111,6 +114,7 @@ const TIERS = [
   },
   {
     name: "Wingman",
+    outcome: "Get a real coach in your corner — weekly",
     price: "$197",
     promoPrice: "$118",
     period: "per month",
@@ -252,11 +256,17 @@ export default function Pricing() {
                   {tier.popular && <div className="line-accent mb-6" />}
 
                   <div className="mb-6">
+                    <p
+                      className="text-base sm:text-lg font-bold leading-snug mb-3 text-foreground"
+                      data-testid={`outcome-${i}`}
+                    >
+                      {tier.outcome}
+                    </p>
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${withAlpha(tier.accentColor, 0.12)}`, border: `1px solid ${withAlpha(tier.accentColor, 0.2)}` }}>
                         <tier.icon className="w-4 h-4" style={{ color: tier.accentColor }} />
                       </div>
-                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: tier.accentColor }}>{tier.name}</p>
+                      <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: tier.accentColor }}>{tier.name}</p>
                     </div>
                     <div className="flex items-end gap-2 mb-3 flex-wrap">
                       {tier.promoPrice ? (
@@ -319,7 +329,9 @@ export default function Pricing() {
                   </Button>
                   <p className="text-center text-[11px] text-foreground/75 mt-2.5 leading-snug px-1">{tier.nextStep}</p>
                   {tier.price !== "$0" ? (
-                    <p className="text-center text-[11px] text-muted-foreground mt-1.5">30-day guarantee — we'll redo it or refund it</p>
+                    <p className="text-center text-[11px] text-[hsl(142_55%_60%)] font-medium mt-1.5">
+                      30-day guarantee — if your matches don't improve, full refund
+                    </p>
                   ) : (
                     <p className="text-center text-[11px] text-muted-foreground mt-1.5">Free forever · no account required · results saved</p>
                   )}
