@@ -254,15 +254,20 @@ export default function Landing() {
             </motion.div>
 
             <motion.div
-              className="glass rounded-3xl p-7 relative shimmer"
-              style={{ border: "1px solid hsl(var(--brand-indigo) / 0.3)", boxShadow: "0 0 40px hsl(var(--brand-indigo) / 0.08)" }}
+              className="relative"
               initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
             >
-              <div className="absolute -top-3 left-6">
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] text-white shadow-[0_2px_12px_hsl(248_62%_52%/0.4)]">
+              {/* Badge lives OUTSIDE the shimmer card — shimmer uses overflow:hidden
+                  to clip its moving gradient, which would otherwise clip this -top-3 pill. */}
+              <div className="absolute -top-3 left-6 z-10">
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] text-white shadow-[0_2px_12px_hsl(248_62%_52%/0.4)]">
                   ✦ After Your Audit
                 </span>
               </div>
+              <div
+                className="glass rounded-3xl p-7 relative shimmer"
+                style={{ border: "1px solid hsl(var(--brand-indigo) / 0.3)", boxShadow: "0 0 40px hsl(var(--brand-indigo) / 0.08)" }}
+              >
               <div className="flex items-center gap-3 mb-5 mt-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] flex items-center justify-center text-sm font-bold text-white shadow-[0_0_12px_hsl(248_62%_52%/0.4)]">J</div>
                 <div>
@@ -277,6 +282,7 @@ export default function Landing() {
                 {["✓ Specific", "✓ Memorable", "✓ Conversation hook", "✓ Distinctly you"].map((tag, i) => (
                   <span key={i} className="px-2.5 py-1 rounded-full text-xs tag-strength border">{tag}</span>
                 ))}
+              </div>
               </div>
             </motion.div>
           </div>
