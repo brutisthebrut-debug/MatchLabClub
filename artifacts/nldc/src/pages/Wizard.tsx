@@ -128,35 +128,60 @@ export default function Wizard() {
   const isLoading = createAudit.isPending || generateReport.isPending;
 
   if (isLoading) {
+    const ANALYSIS_STEPS = [
+      "Reading your bio and prompts…",
+      "Scoring your Signal Spectrum…",
+      "Mapping strengths and risk areas…",
+      "Writing your personalised rewrite…",
+      "Building your 7-day action plan…",
+    ];
+    const stepIdx = Math.min(tipIndex, ANALYSIS_STEPS.length - 1);
     return (
       <AppLayout>
-        <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="min-h-screen mesh-bg flex items-center justify-center px-4 relative overflow-hidden">
+          <div className="orb orb-violet fixed w-[500px] h-[500px] -top-40 -right-40 opacity-35 pointer-events-none" />
+          <div className="orb orb-gold fixed w-[300px] h-[300px] bottom-0 -left-20 opacity-20 pointer-events-none" />
           <motion.div
-            className="text-center max-w-md"
+            className="relative z-10 text-center max-w-md w-full"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-8">
-              <Sparkles className="w-10 h-10 text-primary animate-pulse" />
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(285_45%_55%)] flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_hsl(268_52%_68%/0.45)]">
+              <Sparkles className="w-10 h-10 text-white animate-pulse" />
             </div>
-            <h2 className="text-2xl font-serif font-bold mb-3 text-foreground">Building your audit...</h2>
-            <p className="text-muted-foreground mb-8 leading-relaxed">
-              We're analyzing everything carefully. This usually takes about 20 seconds.
+            <h2 className="text-2xl font-bold mb-2 text-foreground">Building your audit…</h2>
+            <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+              Analyzing everything carefully — usually takes about 20 seconds.
             </p>
-            <div className="bg-card border border-border rounded-2xl p-6">
-              <Loader2 className="w-6 h-6 text-primary animate-spin mx-auto mb-4" />
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={tipIndex}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  className="text-sm text-muted-foreground font-medium"
-                >
-                  {LOADING_TIPS[tipIndex]}
-                </motion.p>
-              </AnimatePresence>
+            <div className="glass border border-white/8 rounded-2xl p-6 text-left space-y-3.5 mb-6">
+              {ANALYSIS_STEPS.map((step, i) => {
+                const done   = i < stepIdx;
+                const active = i === stepIdx;
+                return (
+                  <div key={i} className={`flex items-center gap-3 transition-opacity duration-500 ${done || active ? "opacity-100" : "opacity-25"}`}>
+                    <div className="w-4 h-4 flex-shrink-0">
+                      {done   ? <CheckCircle className="w-4 h-4 text-[hsl(142_55%_60%)]" /> :
+                       active ? <Loader2 className="w-4 h-4 text-[hsl(268_52%_68%)] animate-spin" /> :
+                                <div className="w-4 h-4 rounded-full border border-white/15" />}
+                    </div>
+                    <p className={`text-sm leading-snug ${done ? "text-muted-foreground/50 line-through" : active ? "text-foreground font-medium" : "text-muted-foreground/35"}`}>
+                      {step}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={tipIndex}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                className="text-xs text-muted-foreground/45 italic"
+              >
+                {LOADING_TIPS[tipIndex % LOADING_TIPS.length]}
+              </motion.p>
+            </AnimatePresence>
           </motion.div>
         </div>
       </AppLayout>

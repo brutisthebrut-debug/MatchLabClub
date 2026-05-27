@@ -1,0 +1,26 @@
+Add a Wellness Compatibility Foundation without overwhelming the main user flow. Do not add live matching yet. Do not scrape public data. Preserve all existing routes, features, checkout-interest behavior, founder tools, AI/fallback behavior, current dark theme, and mobile functionality.
+
+Create a structured question bank using the existing wellness/compatibility question set. Organize questions into categories: Emotional Wellness, Physical Wellness, Social Wellness, Intellectual Wellness, Spiritual/Meaning, Occupational/Purpose, Financial Wellness, Environmental/Home, Communication, Conflict/Repair, Boundaries, Affection/Touch, Intimacy, Lifestyle Rhythm, Future Vision, Values, Family/Community, and Culture/Background.
+
+Add a Progressive Profile Builder that lets users answer a small number of questions at a time. It should not feel like a giant questionnaire. Use short modules such as “Answer 3 questions,” “Build your Communication Style,” “Add your Financial Wellness lens,” “Add your Lifestyle Rhythm,” and “Add your Intimacy & Boundaries preferences.” Users should be able to skip sensitive sections.
+
+Add a Wellness Dimensions Profile page that summarizes approved answers into the 8 dimensions of wellness: Emotional, Physical, Social, Intellectual, Spiritual, Occupational, Financial, and Environmental. Each dimension should show: what we know, what we still need, strengths, possible friction points, and one suggested next question.
+
+Add Insight Tags. Convert user answers into approved compatibility tags such as direct communicator, needs processing time, security-oriented, experience-oriented, routine-driven, flexible planner, small-circle social style, adventure-oriented, touch-forward, space-sensitive, repair-focused, conflict-avoidant under stress, future-family-oriented, location-flexible, and similar. These tags should be visible and editable by the user.
+
+Add a Matching Readiness section. Do not match users yet. Show whether the user has enough approved profile signal for future matching. Use language like “Your profile has strong signal in communication and lifestyle, but needs more detail in financial wellness and conflict style.” Do not shame users.
+
+Add Consent Controls for wellness and compatibility data. Users should choose whether each insight can be used for personal coaching only, future matching, or anonymous product learning. Include delete/edit controls and clear language that no hidden profiling or data resale is used.
+
+Add a Future Matching Preview page or section. Explain that once enough members opt in, the app can suggest better-fit connections based on approved insights across communication, lifestyle, values, boundaries, financial wellness, intimacy preferences, conflict style, and future vision. Make it clear that matching will be opt-in and based only on user-approved profile data.
+
+Integrate this foundation lightly into the existing product:
+- Dashboard: show “Build your Compatibility Profile” as a secondary action, not the primary action.
+- Dating Reset: include “Compatibility Profile starter” as an optional add-on.
+- Data Vault/User Control: show wellness answers and insight tags.
+- Founder dashboard: show completion percentages by dimension if practical.
+- Sample Report: add a small section showing what future compatibility insights could look like.
+
+Keep the main user flow simple: Start Free Check → Report → Upgrade. The wellness profile is a deeper layer, not the front door.
+
+Keep the voice warm, direct, consent-first, inclusive, sex-positive where appropriate, practical, and trustworthy. Avoid clinical diagnosis, creepy language, surveillance framing, hidden scoring, or claims that the app knows anything beyond what users choose to share.

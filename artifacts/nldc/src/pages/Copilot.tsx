@@ -183,8 +183,8 @@ export default function Copilot() {
             </div>
 
             {/* Agent Tasks panel */}
-            <motion.div {...fadeUp(0.08)} className="lg:sticky lg:top-24">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-3">Your tasks</p>
+            <motion.div {...fadeUp(0.08)} className="lg:sticky lg:top-24 order-first lg:order-last">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-3">Suggested starting points</p>
               <AgentTasksPanel />
             </motion.div>
           </div>

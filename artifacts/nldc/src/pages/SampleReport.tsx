@@ -282,6 +282,32 @@ export default function SampleReport() {
             </div>
           </SectionCard>
 
+          {/* Founder Review Note */}
+          <motion.div {...fadeUp(0.1)} className="glass border border-[hsl(268_52%_68%/0.35)] rounded-2xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/5 bg-[hsl(268_52%_68%/0.08)]">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(348_55%_65%)] flex items-center justify-center text-white text-xs font-bold">F</div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Founder Review Note</p>
+                  <p className="text-xs text-muted-foreground/50">Personal note — included with Dating Reset</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-5">
+              <p className="text-sm text-muted-foreground leading-relaxed italic">
+                "Jordan — your profile is doing most of the work well. The one change I'd make today is your first line. 'Marketing manager' is a job title, not an identity. Replace it with the most specific thing about the work you actually do. The hospital software line I added? That's a conversation starter. Your current line isn't. Everything else — the prompts, the message strategy, the photos — is fixable in sequence, but that first line is what someone reads in three seconds before deciding whether to swipe. Start there."
+              </p>
+              <div className="mt-4 flex items-center gap-2">
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5" fill="hsl(43 65% 65%)" stroke="hsl(43 65% 65%)" />
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground/50">Founder-reviewed · Sample content only</p>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Message Strategy */}
           <SectionCard title="Message Strategy" color="hsl(348 55% 65%)">
             <div className="space-y-3">
@@ -372,32 +398,6 @@ export default function SampleReport() {
               ))}
             </div>
           </SectionCard>
-
-          {/* Founder Review Note */}
-          <motion.div {...fadeUp(0.1)} className="glass border border-[hsl(268_52%_68%/0.35)] rounded-2xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-white/5 bg-[hsl(268_52%_68%/0.08)]">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[hsl(268_52%_68%)] to-[hsl(348_55%_65%)] flex items-center justify-center text-white text-xs font-bold">F</div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Founder Review Note</p>
-                  <p className="text-xs text-muted-foreground/50">Personal note — included with Dating Reset</p>
-                </div>
-              </div>
-            </div>
-            <div className="p-5">
-              <p className="text-sm text-muted-foreground leading-relaxed italic">
-                "Jordan — your profile is doing most of the work well. The one change I'd make today is your first line. 'Marketing manager' is a job title, not an identity. Replace it with the most specific thing about the work you actually do. The hospital software line I added? That's a conversation starter. Your current line isn't. Everything else — the prompts, the message strategy, the photos — is fixable in sequence, but that first line is what someone reads in three seconds before deciding whether to swipe. Start there."
-              </p>
-              <div className="mt-4 flex items-center gap-2">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5" fill="hsl(43 65% 65%)" stroke="hsl(43 65% 65%)" />
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground/50">Founder-reviewed · Sample content only</p>
-              </div>
-            </div>
-          </motion.div>
 
           {/* FAQ collapsed */}
           <motion.div {...fadeUp(0.12)} className="mt-5 space-y-2">

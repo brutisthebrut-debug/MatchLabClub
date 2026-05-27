@@ -217,6 +217,16 @@ const DEMO_REPORT = {
   coachingCta: "Ready to go deeper? Get your full Dating Reset — complete profile rewrite, conversation strategy, and a 7-day action plan built around your specific situation.",
 };
 
+function receptionRead(report: { readinessScore: number; risks: string[] }): string {
+  const s = report.readinessScore;
+  const topRisk = report.risks?.[0];
+  const suffix = topRisk ? ` The main signal gap: ${topRisk.toLowerCase().replace(/\.$/, "")}.` : "";
+  if (s >= 75) return `Strong signal — specific, authentic, and memorable. Your profile reads as someone worth a closer look.${suffix}`;
+  if (s >= 60) return `Genuine and warm, but similar to many others. The surface impression is positive — not yet memorable.${suffix}`;
+  if (s >= 45) return `The impression lands as pleasant but generic. The warmth is real — the specificity isn't there yet.${suffix}`;
+  return `The profile reads as surface-level right now. Nothing off-putting, but nothing that stands out from the feed yet.${suffix}`;
+}
+
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -985,7 +995,7 @@ export default function Report() {
               </div>
               <div className="panel-received rounded-2xl p-5">
                 <p className="text-xs font-bold uppercase tracking-wider text-[hsl(190_55%_65%)] mb-3">How it may be received</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">Genuine and warm, but similar to many others. The surface impression is positive — but not yet memorable.</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{receptionRead(r)}</p>
               </div>
               <div className="panel-improve rounded-2xl p-5">
                 <p className="text-xs font-bold uppercase tracking-wider text-[hsl(43_65%_67%)] mb-3">What to change</p>
@@ -1215,16 +1225,36 @@ export default function Report() {
             <div className="orb orb-violet absolute w-64 h-64 -right-20 -top-20 opacity-60 pointer-events-none" />
             <div className="relative z-10">
               <Heart className="w-8 h-8 text-[hsl(268_52%_78%)] mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-foreground mb-3">Ready for your full Dating Reset?</h3>
+              <h3 className="text-2xl font-bold text-foreground mb-3">Ready to go further?</h3>
               <p className="text-muted-foreground mb-6 max-w-lg mx-auto text-sm leading-relaxed">{r.coachingCta}</p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(268_52%_65%)] to-[hsl(285_45%_58%)] border-0 font-semibold glow-pulse" data-testid="button-view-pricing">
-                  <Link href="/pricing">The Dating Reset — $97 <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                </Button>
-                <Button asChild variant="ghost" className="rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5" data-testid="button-coach-messages">
-                  <Link href="/lab">Open Chemistry Lab</Link>
-                </Button>
+              <div className="grid sm:grid-cols-3 gap-3 mb-5 text-left">
+                <Link href="/checkout/signal-audit"
+                  className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(190_55%_60%/0.5)] transition-all block"
+                  data-testid="cta-tier-signal-audit">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[hsl(190_55%_65%)] mb-1">Signal Audit</p>
+                  <p className="text-2xl font-bold text-foreground mb-0.5">$29</p>
+                  <p className="text-[11px] text-muted-foreground/70">Full rewrite + 7-day plan</p>
+                </Link>
+                <Link href="/pricing"
+                  className="relative rounded-2xl p-4 hover:opacity-90 transition-all block"
+                  style={{ background: "linear-gradient(135deg, hsl(268 52% 55% / 0.35), hsl(285 45% 48% / 0.25))", border: "1px solid hsl(268 52% 68% / 0.5)" }}
+                  data-testid="button-view-pricing">
+                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[hsl(268_52%_65%)] text-white whitespace-nowrap">Most popular</span>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[hsl(268_52%_78%)] mb-1">Dating Reset</p>
+                  <p className="text-2xl font-bold text-foreground mb-0.5">$97</p>
+                  <p className="text-[11px] text-muted-foreground/70">Unlimited audits + coaching</p>
+                </Link>
+                <Link href="/checkout/wingman"
+                  className="glass border border-white/8 rounded-2xl p-4 hover:border-[hsl(43_65%_65%/0.5)] transition-all block"
+                  data-testid="cta-tier-wingman">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[hsl(43_65%_68%)] mb-1">Wingman</p>
+                  <p className="text-2xl font-bold text-foreground mb-0.5">$197<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+                  <p className="text-[11px] text-muted-foreground/70">Human coach, weekly</p>
+                </Link>
               </div>
+              <Button asChild variant="ghost" className="rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5" data-testid="button-coach-messages">
+                <Link href="/lab">Open Chemistry Lab <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
             </div>
           </motion.div>
         </div>

@@ -1,0 +1,46 @@
+Run one focused pre-handoff cleanup sprint based on the latest product/UX review. Do not add new major features. Do not reset the theme. Preserve all existing routes, data flows, checkout-interest behavior, promo code capture, founder tools, AI/fallback behavior, and mobile functionality.
+
+Goal: remove the biggest conversion, credibility, and visual-consistency issues before handoff.
+
+1. Add a strong Report-to-upgrade conversion moment.
+At the end of real report/audit pages, add a clear CTA section: “Ready to go further?” with links to the $29 Signal Audit, $97 Dating Reset, and/or Founder Reviewed Beta. This should appear after the 7-Day Plan / final report content. Make it feel like the natural next step, not a pushy ad.
+
+2. Fix the hardcoded “How it may be received” panel.
+The copy currently reads as identical for every user. Make it dynamic based on available audit/profile data, score, goal, or fallback variants. If there is not enough data, label it honestly as a general read. Do not let repeat users see the exact same supposedly personalized panel every time.
+
+3. Upgrade the wizard/audit loading screen.
+Replace the generic spinner-only “Building your audit…” state with a premium loading experience. Use 3–5 staged lines such as “Reading your profile signals,” “Checking clarity and specificity,” “Mapping message tone,” “Building your reset plan,” and “Preparing your report.” Keep it polished, dark-theme consistent, and mobile-friendly.
+
+4. Fix Insights page dark-theme badge styling.
+Replace hardcoded light-mode badge colors such as pale green/amber backgrounds with dark-theme-safe status tokens. Ensure badges are readable and visually consistent with the rest of the app.
+
+5. Restore or restack Copilot/Agent Tasks on mobile.
+The task panel should not disappear on phone width. On mobile, restack it below the main Copilot content or place it in a clear collapsible section such as “Your suggested tasks.” Keep it tap-friendly and readable.
+
+6. Rename confusing nav groups.
+Change “Context & Trust” to “My Profile.”
+Change “Growth Tracker” to “Progress.”
+Update labels consistently across desktop nav, mobile nav, dashboard/package cards, and any relevant tool hubs. Clear value-first labels matter more than internal category theory.
+
+7. Unify pricing tier naming.
+Use a clearer ladder:
+Free Signal Check
+Signal Audit
+Dating Reset
+Wingman
+Make pricing cards and CTAs use this naming consistently while preserving existing routes and purchase-interest behavior.
+
+8. Clarify Copilot tasks.
+If tasks are not actually generated from a user’s specific report, label them as “Suggested starting points.” If saved report/context is available, personalize the task titles/descriptions from that context. Avoid making generic tasks look falsely personalized.
+
+9. Reposition Founder Review Note.
+If the note is static, change it to “What to expect from your founder review” or “Example founder review note.” If actual user context exists, allow it to become more specific. Do not let a generic block appear as a personal founder note.
+
+10. Start visual cleanup on legacy pages.
+Prioritize Coach, Insights, HelpMeReply/NextMessage, Copilot, and /progress pages. Bring them closer to the polished Landing/Dashboard/Report/Sample Report style: consistent cards, dark-theme-safe colors, spacing, badges, buttons, copy buttons, and section headers. Do not attempt a full redesign of every route in this pass; focus on the most visible legacy inconsistencies.
+
+11. Preserve the current dark visual direction.
+Keep the dark navy/ink blue base, violet/plum gradients, champagne/gold highlights, pearl text, and glass-card style. Avoid light-theme pockets, hardcoded pale colors, muddy gradients, and mismatched card styles.
+
+12. Verify after changes.
+Run available typecheck/build/tests. Screenshot report end state, wizard loading screen, Insights, Copilot mobile, pricing, dashboard, and one legacy tool page. Commit/checkpoint and report what changed, what passed, what remains, and what should be manually tested next.

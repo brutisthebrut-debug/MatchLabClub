@@ -138,7 +138,7 @@ const PACKAGES = [
   },
   {
     id: "growth" as const,
-    label: "Growth Tracker",
+    label: "Progress",
     tagline: "Track what's actually changing over time",
     color: "hsl(142 55% 60%)",
     icon: TrendingUp,
@@ -162,7 +162,7 @@ const PACKAGES = [
   },
   {
     id: "trust" as const,
-    label: "Context & Trust",
+    label: "My Profile",
     tagline: "What we know about you — and what you control",
     color: "hsl(228 30% 62%)",
     icon: Shield,

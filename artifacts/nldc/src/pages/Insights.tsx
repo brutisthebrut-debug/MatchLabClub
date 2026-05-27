@@ -318,17 +318,17 @@ export default function Insights() {
     : allDisplayInsights;
 
   const attachmentColor = (style: string) => {
-    if (style.toLowerCase().includes("secure")) return "bg-green-50 text-green-700 border-green-200";
-    if (style.toLowerCase().includes("anxious")) return "bg-amber-50 text-amber-700 border-amber-200";
-    if (style.toLowerCase().includes("avoidant")) return "bg-blue-50 text-blue-700 border-blue-200";
-    return "bg-purple-50 text-purple-700 border-purple-200";
+    if (style.toLowerCase().includes("secure")) return "bg-[hsl(142_55%_60%/0.15)] text-[hsl(142_55%_65%)] border-[hsl(142_55%_60%/0.3)]";
+    if (style.toLowerCase().includes("anxious")) return "bg-[hsl(43_65%_65%/0.15)] text-[hsl(43_65%_70%)] border-[hsl(43_65%_65%/0.3)]";
+    if (style.toLowerCase().includes("avoidant")) return "bg-[hsl(190_55%_60%/0.15)] text-[hsl(190_55%_65%)] border-[hsl(190_55%_60%/0.3)]";
+    return "bg-[hsl(268_52%_68%/0.15)] text-[hsl(268_52%_78%)] border-[hsl(268_52%_68%/0.3)]";
   };
 
   const r = analysis ?? DEMO_ANALYSIS;
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-background py-10 px-4">
+      <div className="min-h-screen mesh-bg py-10 px-4">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
@@ -351,13 +351,13 @@ export default function Insights() {
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 flex flex-col sm:flex-row gap-4 sm:items-center"
+              className="bg-[hsl(43_65%_65%/0.1)] border border-[hsl(43_65%_65%/0.25)] rounded-2xl p-5 mb-6 flex flex-col sm:flex-row gap-4 sm:items-center"
               data-testid="banner-anon-insights-unsaved"
             >
-              <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 text-[hsl(43_65%_68%)] flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="font-semibold text-amber-900 text-sm mb-1">Sign in now to save your analysis</p>
-                <p className="text-sm text-amber-800 leading-relaxed">
+                <p className="font-semibold text-foreground text-sm mb-1">Sign in now to save your analysis</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   Your Email Insights analysis is currently stored on this device only. If you clear your browser cookies or switch devices before signing in, it can't be linked to your account.
                 </p>
               </div>
@@ -375,17 +375,17 @@ export default function Insights() {
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 flex gap-4"
+              className="bg-[hsl(43_65%_65%/0.1)] border border-[hsl(43_65%_65%/0.25)] rounded-2xl p-5 mb-6 flex gap-4"
               data-testid="banner-insights-possibly-orphaned"
             >
-              <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 text-[hsl(43_65%_68%)] flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-amber-900 text-sm mb-1">Your previous analysis may not have transferred</p>
-                <p className="text-sm text-amber-800 leading-relaxed">
+                <p className="font-semibold text-foreground text-sm mb-1">Your previous analysis may not have transferred</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   It looks like you ran an analysis before signing in, but your browser cookies were cleared before we could link it to your account. The analysis itself is not lost — it just isn't attached to your profile.{" "}
                   <a
                     href="mailto:support@nextleveldatingclub.com?subject=Anonymous%20Email%20Insight%20not%20transferred&body=Hi%2C%20I%20ran%20an%20Email%20Insights%20analysis%20before%20signing%20in%20and%20it%20did%20not%20appear%20in%20my%20account.%20Could%20you%20help%20me%20recover%20it%3F"
-                    className="underline underline-offset-2 font-medium text-amber-900 hover:text-amber-700 transition-colors"
+                    className="underline underline-offset-2 font-medium text-foreground hover:text-foreground/70 transition-colors"
                     data-testid="link-insights-orphan-support"
                   >
                     Contact support
@@ -820,7 +820,7 @@ export default function Insights() {
                                 {new Date(insight.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                               </p>
                             </div>
-                            <Badge variant="secondary" className={insight.status === "complete" ? "bg-green-50 text-green-700" : ""}>{insight.status}</Badge>
+                            <Badge variant="secondary" className={insight.status === "complete" ? "bg-[hsl(142_55%_60%/0.15)] text-[hsl(142_55%_65%)]" : ""}>{insight.status}</Badge>
                             {hasInsights && (
                               <>
                                 {insight.status === "complete" && (

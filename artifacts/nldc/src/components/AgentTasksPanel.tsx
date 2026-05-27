@@ -71,7 +71,7 @@ export function AgentTasksPanel() {
       {/* Header */}
       <div className="px-4 py-3.5 border-b border-white/6">
         <div className="flex items-center justify-between mb-0.5">
-          <p className="text-sm font-semibold text-foreground">Agent Tasks</p>
+          <p className="text-sm font-semibold text-foreground">Your Next Moves</p>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[hsl(268_52%_68%/0.15)] text-[hsl(268_52%_78%)]">
             {doneN}/{tasks.length} done
           </span>

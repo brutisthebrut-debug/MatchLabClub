@@ -9,7 +9,7 @@ import { TrustBadge } from "@/components/TrustBadge";
 
 const TIERS = [
   {
-    name: "Signal Check",
+    name: "Free Signal Check",
     price: "$0",
     promoPrice: null,
     period: "",
@@ -40,7 +40,7 @@ const TIERS = [
     walkaway: ["Your Signal Score", "Your top 3 action items", "What you're actually projecting"],
   },
   {
-    name: "Profile Signal Audit",
+    name: "Signal Audit",
     price: "$29",
     promoPrice: null,
     period: "one-time",
@@ -75,7 +75,7 @@ const TIERS = [
     ],
   },
   {
-    name: "The Dating Reset",
+    name: "Dating Reset",
     price: "$97",
     promoPrice: null,
     period: "one-time",
@@ -109,7 +109,7 @@ const TIERS = [
     walkaway: ["A profile rewritten to actually sound like you", "Your 7-day action plan", "10 message coaching credits + Chemistry Lab access"],
   },
   {
-    name: "Wingman Membership",
+    name: "Wingman",
     price: "$197",
     promoPrice: "$118",
     period: "per month",
