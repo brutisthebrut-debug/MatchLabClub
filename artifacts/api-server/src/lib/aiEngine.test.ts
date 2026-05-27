@@ -176,7 +176,7 @@ const SOURCE_EXPECTATIONS: Record<
     summary: /Tuned to Hinge conventions/,
   },
   Bumble: {
-    growth: /On Bumble, when she opens, your reply within the first few hours/,
+    growth: /On Bumble, when (they|she) opens?, your reply within the first few hours/,
     profile: /On Bumble, the lead photo and first bio line/,
     summary: /Tuned to Bumble dynamics/,
   },

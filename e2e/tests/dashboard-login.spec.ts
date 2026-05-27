@@ -353,10 +353,7 @@ test("submit audit through wizard, then /dashboard renders real score-ring and a
     );
   await page.locator('[data-testid="button-next"]').click();
 
-  // ── Step 4: optional message sample — skip ────────────────────────────────
-  await page.locator('[data-testid="button-next"]').click();
-
-  // ── Step 5: submit ────────────────────────────────────────────────────────
+  // ── Step 4: optional message sample (which now bakes in the final summary) — submit
   await page.locator('[data-testid="button-generate-audit"]').click();
 
   // Wizard redirects to /report/:id once the report is generated.
