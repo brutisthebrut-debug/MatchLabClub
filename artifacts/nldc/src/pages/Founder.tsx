@@ -3936,7 +3936,7 @@ function WellnessCompletionPanel({ founderKey }: { founderKey: string }) {
   }, [founderKey]);
 
   const TOTAL_DIMENSIONS = 18;
-  const pct = stats ? Math.round((stats.dimensionsAnswered / TOTAL_DIMENSIONS) * 100) : 0;
+  const pct = stats ? Math.round(((stats.dimensionsAnswered ?? 0) / TOTAL_DIMENSIONS) * 100) : 0;
 
   return (
     <div className="glass border border-white/8 rounded-2xl p-6 space-y-5">
@@ -3954,10 +3954,10 @@ function WellnessCompletionPanel({ founderKey }: { founderKey: string }) {
         <>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: "Total answers",     value: stats.totalAnswers,          color: "hsl(268 52% 68%)" },
-              { label: "Insight tags",      value: stats.totalTags,             color: "hsl(43 65% 65%)"  },
-              { label: "Users with profile",value: stats.usersWithAnswers,      color: "hsl(190 55% 60%)" },
-              { label: "Approved matching", value: stats.usersApprovedMatching, color: "hsl(142 55% 60%)" },
+              { label: "Total answers",     value: stats.totalAnswers          ?? 0, color: "hsl(268 52% 68%)" },
+              { label: "Insight tags",      value: stats.totalTags             ?? 0, color: "hsl(43 65% 65%)"  },
+              { label: "Users with profile",value: stats.usersWithAnswers      ?? 0, color: "hsl(190 55% 60%)" },
+              { label: "Approved matching", value: stats.usersApprovedMatching ?? 0, color: "hsl(142 55% 60%)" },
             ].map(s => (
               <div key={s.label} className="rounded-xl bg-white/3 border border-white/5 p-3 text-center">
                 <p className="text-xl font-bold tabular-nums" style={{ color: s.color }}>{s.value}</p>
@@ -3969,7 +3969,7 @@ function WellnessCompletionPanel({ founderKey }: { founderKey: string }) {
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <p className="text-xs text-muted-foreground/50">Dimensions answered across all users</p>
-              <p className="text-xs font-bold tabular-nums text-[hsl(268_52%_68%)]">{stats.dimensionsAnswered}/{TOTAL_DIMENSIONS}</p>
+              <p className="text-xs font-bold tabular-nums text-[hsl(268_52%_68%)]">{stats.dimensionsAnswered ?? 0}/{TOTAL_DIMENSIONS}</p>
             </div>
             <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
               <div
@@ -3979,12 +3979,12 @@ function WellnessCompletionPanel({ founderKey }: { founderKey: string }) {
             </div>
           </div>
 
-          {stats.topDimensions.length > 0 && (
+          {(stats.topDimensions ?? []).length > 0 && (
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2">Most-answered dimensions</p>
               <div className="space-y-1.5">
-                {stats.topDimensions.map(d => {
-                  const max = stats.topDimensions[0]?.count ?? 1;
+                {(stats.topDimensions ?? []).map(d => {
+                  const max = (stats.topDimensions ?? [])[0]?.count ?? 1;
                   return (
                     <div key={d.dimension} className="flex items-center gap-3">
                       <p className="text-xs text-muted-foreground/60 w-36 flex-shrink-0 truncate capitalize">{d.dimension}</p>
