@@ -886,6 +886,281 @@ const ARTICLE_CONTENT: Record<string, React.ReactNode> = {
       </p>
     </>
   ),
+
+  "love-pace-mismatch": (
+    <>
+      <p>
+        Two people meet, like each other, start dating, and somewhere around week six it quietly falls apart. Nothing dramatic. They both still describe the other person as great. They just stop reaching for each other and one of them eventually puts it into words.
+      </p>
+      <p>
+        If you've had this happen more than twice, you're not unlucky — you're hitting a pattern. The most common version is what we'd call a love-pace mismatch, and the silence about it is what kills more promising relationships than chemistry ever does.
+      </p>
+
+      <h2>What love-pace actually means</h2>
+      <p>
+        Love-pace is the speed at which you naturally develop feelings, escalate contact, and want to integrate someone into your life. It's not the same as how interested you are. Two equally interested people can operate on completely different pacing systems.
+      </p>
+      <p>
+        Fast-pace people feel things early and act on them — they're texting daily by week one, picturing the future by week three, introducing you to friends by month two. Slow-pace people are doing the opposite work: holding the same level of interest but moving it slower because they need evidence, time, and a sense of the real person before opening.
+      </p>
+      <p>
+        Neither is wrong. Both are valid operating systems. The problem is that they don't naturally translate, and most people don't know how to name what's happening.
+      </p>
+
+      <h2>How the mismatch actually plays out</h2>
+      <p>
+        Week one: both people are excited. Week two: the fast-paced person is texting more, suggesting plans more, sharing more. The slow-paced person is into it but feels the asymmetry as pressure, even when nothing is being explicitly asked for. They pull back slightly to find their pace.
+      </p>
+      <p>
+        Week three: the fast-paced person reads the pullback as cooling interest. They get anxious. They either chase harder (worse) or pull back themselves to protect (also worse). Either way, the warmth that was real two weeks ago is now mediated by both people managing each other instead of meeting each other.
+      </p>
+      <p>
+        By week six, both people have built a quiet story: "they're not as into me as I thought" or "they were too much." Neither story is accurate. The pace mismatch was never named, so it became a verdict on the connection itself.
+      </p>
+
+      <h2>The one conversation that changes everything</h2>
+      <p>
+        Naming the pacing difference around week three — kindly, specifically, and without making it a problem — is one of the most underused moves in dating. It sounds like:
+      </p>
+      <blockquote>
+        "I notice I tend to move pretty fast when I like someone. I want to make sure I'm pacing this in a way that works for you too — let me know if I'm too much or too little."
+      </blockquote>
+      <p>
+        Or from the other direction:
+      </p>
+      <blockquote>
+        "I want you to know I'm in this — I just move slower than I sometimes wish I did. If I go quiet for a day it's not because I'm losing interest."
+      </blockquote>
+      <p>
+        Both of those sentences sound vulnerable. They are. They're also what makes the next four weeks possible.
+      </p>
+
+      <h2>How to know your own pace</h2>
+      <p>
+        Most people have never thought explicitly about their own love-pace, which is why the mismatch is so common — you can't communicate something you can't name. Some signals:
+      </p>
+      <p>
+        <strong>You're probably fast-pace</strong> if you can usually tell by date three whether you want to keep seeing someone, if you initiate plans easily, and if the silence between texts feels like content rather than rest.
+      </p>
+      <p>
+        <strong>You're probably slow-pace</strong> if your strongest reactions to people show up in month two rather than week two, if quick escalation feels suffocating even when you like the person, and if you need time alone to register what you actually felt.
+      </p>
+      <p>
+        Both can build something real. Neither is closer to "right." The work is the conversation, not the pace.
+      </p>
+
+      <h2>What to do this week</h2>
+      <p>
+        If you're currently in a promising new connection: name your pace once. Don't apologise for it. Don't make it heavy. Just say it as information, the way you'd mention being a morning person.
+      </p>
+      <p>
+        If you're between connections: write down how the last three ended. If the pattern is "they cooled" or "they pulled back," check whether what actually happened was a pace mismatch that neither of you ever discussed.
+      </p>
+    </>
+  ),
+
+  "conflict-instinct-says-everything": (
+    <>
+      <p>
+        You can read a hundred bios. You can have a great first date. You can spend a month texting someone funny and warm and easy. None of it tells you the thing that matters most about whether the third month is going to happen.
+      </p>
+      <p>
+        The thing that matters is what they do the first time you accidentally hurt each other. And the inverse: what you do.
+      </p>
+
+      <h2>The five common conflict instincts</h2>
+      <p>
+        Most people fall into one of five patterns when tension hits in early dating. Knowing which one is yours — and which one they have — predicts the next six months better than anything else.
+      </p>
+      <p>
+        <strong>The Confronter</strong> brings it up in the moment, directly, without much wrap. Honest, fast, useful — and can read as aggressive to anyone who needs runway.
+      </p>
+      <p>
+        <strong>The Processor</strong> goes quiet, thinks it through, and comes back with something considered. Their delayed responses are the work, not the avoidance — but to a partner who needs reassurance in the moment, the delay can feel like punishment.
+      </p>
+      <p>
+        <strong>The Smoother</strong> protects the connection by shifting the energy. Jokes, redirects, "let's not let this ruin the night." Great in the moment, hazardous over months because the things that didn't get said become resentments wearing a costume.
+      </p>
+      <p>
+        <strong>The Archiver</strong> doesn't make a thing of any individual moment. They track the pattern across weeks. Wise — and quietly devastating when the partner finds out months later that there was a list they were being measured against without knowing.
+      </p>
+      <p>
+        <strong>The Repairer</strong> can name what hurt and restitch the connection in the same conversation. Rarest. The closest thing to a relationship superpower.
+      </p>
+
+      <h2>Why early matters more than later</h2>
+      <p>
+        The pattern you set in the first hard moment becomes the template for every subsequent hard moment. If the first time someone hurt your feelings you went quiet, the third time you'll go quiet faster. If they jokingly deflected, they'll deflect harder next time.
+      </p>
+      <p>
+        The patterns are not destiny — they can be changed, but only when they're seen. And early dating is when they're easiest to see, because the stakes are still low enough to actually look at them.
+      </p>
+
+      <h2>The "what would make me trust you more" question</h2>
+      <p>
+        One of the most useful exercises after any small early-relationship friction is to ask yourself: <em>what would they need to do in this moment to make me trust them more?</em>
+      </p>
+      <p>
+        Most of the time the answer is small and specific. Acknowledge what happened. Say the apology and the change in the same sentence. Not perform repair — just do the actual thing. The people who can do this are rare and worth pacing yourself to find.
+      </p>
+
+      <h2>The mismatch nobody talks about</h2>
+      <p>
+        Confronters with Processors look like a flashpoint pairing — and they are, for the first two months. But they're actually one of the most stable long-term combinations, because both styles are honest. The Confronter learns to give the Processor time. The Processor learns to name the delay rather than disappear into it. It works.
+      </p>
+      <p>
+        Smoothers paired with Smoothers look like the easiest relationship in the world for the first six months. And then the unspoken stuff hits critical mass and the whole thing goes quiet in a month. The pattern that protected the early connection eats it later.
+      </p>
+
+      <h2>What to do this week</h2>
+      <p>
+        Identify your own instinct. Then identify the instinct of the last person you dated. If you can't remember any moment of friction in the first three months, that's information: one or both of you was smoothing.
+      </p>
+      <p>
+        For the next person: pay attention not to the first kiss or the first deep talk, but to the first thing that landed wrong. Watch what they do. Watch what you do. That moment is the data.
+      </p>
+    </>
+  ),
+
+  "soft-boundary-trap": (
+    <>
+      <p>
+        You said no. You said it kindly. You wrapped it in three layers of "but I totally understand if" and "I'm sorry I'm being weird about this" and offered a backdoor in case they wanted to push.
+      </p>
+      <p>
+        They pushed. You partially gave. They pushed again. By the time the conversation ended you had agreed to something you'd already explicitly said no to twice. And you spent the rest of the day quietly furious at yourself, and slightly at them.
+      </p>
+      <p>
+        This is the soft-boundary trap, and it's almost always self-imposed. The person you're with isn't trying to manipulate you. They're responding to the actual signal you sent — which was, "this might be no, but the door's open if you'd like to keep negotiating."
+      </p>
+
+      <h2>The math of soft boundaries</h2>
+      <p>
+        Every boundary you set has two parts: the limit itself, and the wrapper around it. The wrapper is where soft-boundary people put 90% of their effort and 100% of their anxiety.
+      </p>
+      <p>
+        The wrapper is meant to do two things at once: protect the other person from feeling rejected, and protect you from being seen as rigid. The problem is that the wrapper consistently undermines the limit. The more padding you add, the more negotiable your no sounds — even when it isn't.
+      </p>
+
+      <h2>Why the wrapper grows</h2>
+      <p>
+        Soft-boundary patterns usually trace back to one of three places: you learned early that saying no got punished, you learned that being "easy" was your value to people, or you developed an over-tuned sense of how rejection feels and started preemptively cushioning everyone else from it.
+      </p>
+      <p>
+        None of these are personality flaws. They're sophisticated systems built when softness was the right tool. The trap is keeping them on default mode once you're an adult who can actually handle someone being briefly disappointed.
+      </p>
+
+      <h2>What clarity actually sounds like</h2>
+      <p>
+        Clarity isn't bluntness. It's the absence of negotiability. Compare:
+      </p>
+      <blockquote>
+        "Yeah I mean, I might, I think I'm pretty tired tonight and I have a thing tomorrow, but if it's important we can totally figure something out — sorry, I'm being weird, what do you want to do?"
+      </blockquote>
+      <blockquote>
+        "I can't tonight — I'm too tired to be good company. Let's do Saturday."
+      </blockquote>
+      <p>
+        Both are honest. Both are kind. Only one of them ends the negotiation.
+      </p>
+
+      <h2>The "and" reframe</h2>
+      <p>
+        One of the highest-leverage skills in boundary work is replacing "but" with "and." Watch:
+      </p>
+      <p>
+        "I can't do this, <strong>but</strong> I want you to know I really like you" — the "but" makes the second clause feel like consolation, which makes the first clause feel like rejection.
+      </p>
+      <p>
+        "I can't do this, <strong>and</strong> I really like you" — the "and" makes both true at once. The limit doesn't have to mean less interest. Most people have never been taught this.
+      </p>
+
+      <h2>The thing your nos do for your yeses</h2>
+      <p>
+        The reason real boundaries matter is not that they protect you — though they do. It's that they make your yeses mean something. If your no is negotiable, your yes is also conditional. If your no is real, your yes is too.
+      </p>
+      <p>
+        People with real boundaries are easier to be with, not harder, because everyone can stop guessing. Their friends, their dates, their family, themselves.
+      </p>
+
+      <h2>What to do this week</h2>
+      <p>
+        Pick one no you're avoiding. Write it out as a single sentence. Notice every word you added to soften it. Then write the version with just the no and one neutral reason. Practice saying it out loud.
+      </p>
+      <p>
+        Then say it for real, once, this week. Notice that nothing terrible happens. The discomfort fades in 15 minutes. The clarity stays.
+      </p>
+    </>
+  ),
+
+  "second-brain-for-dating": (
+    <>
+      <p>
+        The promise of dating apps is that more options will eventually produce the right one. The reality, ten years in, is that more options produce more noise, more fatigue, and more of the same patterns repeating with different faces.
+      </p>
+      <p>
+        Most people don't need another app. They need a layer on top of the apps they already have — a private space that remembers what they noticed, surfaces the patterns they're not tracking, and tells them what their last six dates have in common.
+      </p>
+      <p>
+        That's what we mean by a second brain for your dating life. It's a quiet, persistent system that does the cognitive work nobody else is doing for you.
+      </p>
+
+      <h2>What your dating brain is currently storing</h2>
+      <p>
+        Right now, your dating life lives in seven places: three apps, your camera roll, three group chats, your memory, and a vague sense of how things have been going. None of these talk to each other. None of them remember the small thing you noticed on date two that you forgot by date five.
+      </p>
+      <p>
+        The cost isn't obvious in any single moment. It shows up in the aggregate — the patterns you don't see, the date you didn't realise was the third "let's grab dinner sometime" that never materialised, the type of person you keep ending up with even though you keep saying you want someone different.
+      </p>
+
+      <h2>What a real second brain does</h2>
+      <p>
+        At minimum, a working second brain for dating does four things:
+      </p>
+      <p>
+        <strong>1. It captures friction-free.</strong> Post-date notes that take 60 seconds. Voice memos that turn into structured signals. Pasted screenshots that become observable patterns. If logging takes effort, you won't do it.
+      </p>
+      <p>
+        <strong>2. It surfaces patterns you can't see.</strong> You can't notice that you've initiated 80% of your conversations because you don't have a count. You can't notice that every date with someone who has a specific energy ends after the third date — until something else counts the dates.
+      </p>
+      <p>
+        <strong>3. It runs the analysis when you ask.</strong> A real read on a new match's profile. A real assessment of how a message will land before you send it. A real summary of how this week was different from last week.
+      </p>
+      <p>
+        <strong>4. It belongs to you.</strong> Not to a dating company optimising for your continued swiping. To you, exportable, deletable, with explicit consent for anything that touches it.
+      </p>
+
+      <h2>Why now</h2>
+      <p>
+        The technology for this has only been good enough for about 18 months. Large language models can finally hold the nuance of a paragraph of text and return something specific instead of generic. OCR can pull a profile out of a screenshot reliably. Storage is cheap enough that capturing every detail is no longer the limit — making sense of it is.
+      </p>
+      <p>
+        The result is that for the first time you can run analysis on your own dating data the way a marketing team would run analysis on their funnel. Not because you're a project — because the patterns are real and worth seeing.
+      </p>
+
+      <h2>What this isn't</h2>
+      <p>
+        It isn't a matchmaker. We don't want to be the third dating app on your phone. The world is full of those.
+      </p>
+      <p>
+        It isn't surveillance. The hard line is consent: nothing gets analysed without you turning it on, you can see exactly what's been processed, and you can wipe it any time.
+      </p>
+      <p>
+        It isn't a replacement for therapy, friends, or your own judgement. It's the layer that makes those other things sharper because it remembers what you actually said you wanted three months ago, before the current crush rewrote the story.
+      </p>
+
+      <h2>What to do this week</h2>
+      <p>
+        Start with one log: write three sentences about your last date or last week of dating. What you noticed, how you felt, what you'd do differently. Don't optimise it. Just capture it.
+      </p>
+      <p>
+        Do it twice more this week. By the end of a month you'll have something you've never had before: an honest record of your own dating life, in your own words, that you can actually read and learn from.
+      </p>
+      <p>
+        Everything else we build for you sits on top of that.
+      </p>
+    </>
+  ),
 };
 
 // ── Prose wrapper ─────────────────────────────────────────────────────────────

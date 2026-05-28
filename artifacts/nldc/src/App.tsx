@@ -74,6 +74,8 @@ import JournalPage from "@/pages/mirror/JournalPage";
 import DatesPage from "@/pages/mirror/DatesPage";
 import Blog from "@/pages/Blog";
 import BlogPost from "@/pages/BlogPost";
+import Quizzes from "@/pages/Quizzes";
+import QuizPlay from "@/pages/QuizPlay";
 
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 import { usePageTracking } from "@/hooks/usePageTracking";
@@ -165,6 +167,10 @@ function Router() {
       <Route path="/sample-report" component={SampleReport} />
       <Route path="/scan" component={Scan} />
       <Route path="/trash" component={Trash} />
+      <Route path="/quizzes" component={Quizzes} />
+      <Route path="/quizzes/:slug">
+        {(params: { slug?: string } | null) => <QuizPlay slug={params?.slug ?? ""} />}
+      </Route>
       <Route path="/blog" component={Blog} />
       <Route path="/blog/:slug">
         {(params: { slug?: string } | null) => <BlogPost slug={params?.slug ?? ""} />}

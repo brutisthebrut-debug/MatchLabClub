@@ -227,4 +227,48 @@ export const ARTICLES: Article[] = [
     color: "hsl(220 70% 60%)",
     cta: INSIGHTS_CTA,
   },
+  {
+    slug: "love-pace-mismatch",
+    title: "The Love-Pace Mismatch: Why Two People Who Like Each Other Still Can't Make It Work",
+    excerpt:
+      "Fast-feeling people partner with slow-feeling people more than chance alone would predict. The mismatch isn't the killer — it's the silence about the mismatch that ends it by week six.",
+    category: "Attachment Theory",
+    readMin: 7,
+    date: "May 2026",
+    color: "hsl(326 100% 65%)",
+    cta: CONNECTION_STYLE_CTA,
+  },
+  {
+    slug: "conflict-instinct-says-everything",
+    title: "Your Conflict Instinct Says More About You Than Your Bio Ever Will",
+    excerpt:
+      "Confronter, processor, smoother, archiver, repairer — the way you handle the first tense moment with someone you like is the single best predictor of whether the third month happens.",
+    category: "Communication",
+    readMin: 8,
+    date: "May 2026",
+    color: "hsl(248 62% 62%)",
+    cta: COACH_CTA,
+  },
+  {
+    slug: "soft-boundary-trap",
+    title: "The Soft Boundary Trap: Why Your Polite Nos Keep Becoming Resentments",
+    excerpt:
+      "Wrapping every limit in apology, hedge, and a backdoor exit teaches the other person that your no is negotiable. It also teaches you that your needs are a burden. The fix isn't bluntness — it's clarity.",
+    category: "Boundaries",
+    readMin: 7,
+    date: "May 2026",
+    color: "hsl(228 18% 65%)",
+    cta: MIRROR_CTA,
+  },
+  {
+    slug: "second-brain-for-dating",
+    title: "What a 'Second Brain for Your Dating Life' Actually Looks Like",
+    excerpt:
+      "Not another app to swipe on. A private layer on top of the apps you already use — that remembers what you noticed, surfaces the patterns you're not tracking, and tells you what your last six dates have in common.",
+    category: "Product",
+    readMin: 6,
+    date: "May 2026",
+    color: "hsl(190 75% 50%)",
+    cta: MIRROR_CTA,
+  },
 ];
