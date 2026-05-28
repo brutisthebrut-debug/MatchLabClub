@@ -201,6 +201,40 @@ export const purgeTrashNow = (founderKey: string) =>
     return (await res.json()) as PurgeTrashResponse;
   });
 
+export interface SetUserTierResponse {
+  user: {
+    id: string;
+    email: string | null;
+    tier: string | null;
+    tierGrantedAt: string | null;
+  };
+}
+
+export const setUserTier = async (
+  founderKey: string,
+  email: string,
+  tier: "free" | "reset" | "wingman" | null,
+): Promise<SetUserTierResponse> => {
+  const res = await fetch(`${BASE}/founder/users/set-tier`, {
+    method: "POST",
+    headers: {
+      "x-founder-key": founderKey,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ email, tier }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    try {
+      const parsed = JSON.parse(text) as { error?: string };
+      throw new Error(parsed.error || text || `HTTP ${res.status}`);
+    } catch {
+      throw new Error(text || `HTTP ${res.status}`);
+    }
+  }
+  return (await res.json()) as SetUserTierResponse;
+};
+
 export interface BackgroundJobStatus {
   jobName: string;
   lastSuccessAt: string | null;

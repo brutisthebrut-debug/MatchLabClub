@@ -497,6 +497,53 @@ router.post("/founder/purge-trash", requireFounder, async (_req, res): Promise<v
   res.json({ deleted });
 });
 
+router.post("/founder/users/set-tier", requireFounder, async (req, res): Promise<void> => {
+  const emailRaw = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  const tierRaw = req.body?.tier;
+  if (!emailRaw || !emailRaw.includes("@")) {
+    res.status(400).json({ error: "A valid email is required." });
+    return;
+  }
+  const allowedTiers = new Set(["free", "reset", "wingman", null]);
+  const tier: string | null = tierRaw === null || tierRaw === "" ? null : String(tierRaw);
+  if (!allowedTiers.has(tier)) {
+    res.status(400).json({ error: "Tier must be one of: free, reset, wingman, or null to clear." });
+    return;
+  }
+  const now = new Date();
+  const updated = await db
+    .update(usersTable)
+    .set({
+      tier,
+      tierGrantedAt: tier === null ? null : now,
+      updatedAt: now,
+    })
+    .where(eq(usersTable.email, emailRaw))
+    .returning({
+      id: usersTable.id,
+      email: usersTable.email,
+      tier: usersTable.tier,
+      tierGrantedAt: usersTable.tierGrantedAt,
+    });
+  if (updated.length === 0) {
+    res.status(404).json({ error: `No user with email ${emailRaw}.` });
+    return;
+  }
+  const row = updated[0]!;
+  req.log.info(
+    { userId: row.id, email: row.email, tier: row.tier },
+    "Founder set user tier",
+  );
+  res.json({
+    user: {
+      id: row.id,
+      email: row.email,
+      tier: row.tier,
+      tierGrantedAt: row.tierGrantedAt ? row.tierGrantedAt.toISOString() : null,
+    },
+  });
+});
+
 router.get("/founder/trash-purge-heartbeat", requireFounder, async (_req, res): Promise<void> => {
   const lastSuccessAt = await getTrashPurgeHeartbeat();
   const staleThresholdMs = getTrashPurgeStaleThresholdMs();

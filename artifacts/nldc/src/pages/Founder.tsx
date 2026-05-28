@@ -5,7 +5,7 @@ import { useMeta } from "@/hooks/useMeta";
 import {
   getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
   getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges, undoAiThresholdChange,
-  getRollupHeartbeat, getOcrMismatches, getBackgroundJobs, purgeTrashNow, refreshGeoip,
+  getRollupHeartbeat, getOcrMismatches, getBackgroundJobs, purgeTrashNow, refreshGeoip, setUserTier,
   getOcrLearnedRules, runOcrLearn, clearOcrLearnedRules, deleteOcrRule, patchOcrRule, getOcrMismatchesTrends,
   getOcrPendingRules, approveOcrRule, rejectOcrRule, getOcrRuleReviewLog,
   getAlertSettings, updateAlertSettings, resetAlertSettings,
@@ -1130,6 +1130,128 @@ function TrashPurgePanel({ founderKey, onPurged }: { founderKey: string; onPurge
         >
           <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
           <span>Could not purge trash: {err}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TierFlipPanel({ founderKey }: { founderKey: string }) {
+  const [email, setEmail] = useState("");
+  const [tier, setTier] = useState<"free" | "reset" | "wingman" | "">("wingman");
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<{ email: string | null; tier: string | null } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const run = async () => {
+    if (running) return;
+    if (!email.trim() || !email.includes("@")) {
+      setErr("Enter a valid email.");
+      return;
+    }
+    setRunning(true);
+    setResult(null);
+    setErr(null);
+    try {
+      const res = await setUserTier(founderKey, email.trim(), tier === "" ? null : tier);
+      setResult({ email: res.user.email, tier: res.user.tier });
+      toast({
+        title: "Tier updated",
+        description: `${res.user.email} is now ${res.user.tier ?? "unpaid (free)"}.`,
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to set tier";
+      setErr(message);
+      toast({ title: "Tier update failed", description: message, variant: "destructive" });
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div className="glass rounded-2xl p-6 space-y-3" data-testid="tier-flip-panel">
+      <div className="space-y-1">
+        <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
+          Set paid tier
+        </p>
+        <p className="text-base font-semibold text-foreground">
+          Mark a user as Reset, Wingman, or clear back to free
+        </p>
+        <p className="text-xs text-muted-foreground/80">
+          After a Stripe payment lands, flip the customer here. Wingman customers who opt into the matching pool get auto-routed to concierge-only review. Until the Stripe webhook ships, this is the manual lever.
+        </p>
+      </div>
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex-1 min-w-[220px]">
+          <label className="block text-xs text-muted-foreground/80 mb-1" htmlFor="tier-flip-email">
+            Customer email
+          </label>
+          <input
+            id="tier-flip-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="paid@example.com"
+            data-testid="input-tier-flip-email"
+            className="w-full rounded-xl px-3 py-2 text-sm bg-background/40 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-muted-foreground/80 mb-1" htmlFor="tier-flip-tier">
+            Tier
+          </label>
+          <select
+            id="tier-flip-tier"
+            value={tier}
+            onChange={(e) => setTier(e.target.value as "free" | "reset" | "wingman" | "")}
+            data-testid="select-tier-flip"
+            className="rounded-xl px-3 py-2 text-sm bg-background/40 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            <option value="wingman">wingman ($197/mo)</option>
+            <option value="reset">reset ($97)</option>
+            <option value="free">free (paid label)</option>
+            <option value="">clear (back to unpaid)</option>
+          </select>
+        </div>
+        <button
+          type="button"
+          onClick={run}
+          disabled={running}
+          data-testid="button-set-tier"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-[hsl(348_55%_58%/0.2)] text-[hsl(348_55%_78%)] border border-[hsl(348_55%_58%/0.4)] hover:bg-[hsl(348_55%_58%/0.3)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+        >
+          {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+          {running ? "Updating…" : "Set tier"}
+        </button>
+      </div>
+      {result && (
+        <div
+          className="rounded-xl p-3 border flex items-start gap-2 text-sm"
+          style={{
+            background: "hsl(var(--brand-green) / 0.10)",
+            borderColor: "hsl(var(--brand-green) / 0.40)",
+            color: "hsl(142 55% 70%)",
+          }}
+          data-testid="tier-flip-success"
+        >
+          <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>
+            {result.email} is now {result.tier ?? "unpaid (free)"}.
+          </span>
+        </div>
+      )}
+      {err && (
+        <div
+          className="rounded-xl p-3 border flex items-start gap-2 text-sm"
+          style={{
+            background: "hsl(348 55% 58% / 0.10)",
+            borderColor: "hsl(348 55% 58% / 0.40)",
+            color: "hsl(348 55% 78%)",
+          }}
+          data-testid="tier-flip-error"
+        >
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>{err}</span>
         </div>
       )}
     </div>
@@ -3312,6 +3434,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
           <WellnessCompletionPanel founderKey={FOUNDER_KEY} />
           <BackgroundJobsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
           <TrashPurgePanel founderKey={FOUNDER_KEY} onPurged={() => setRefreshKey((k) => k + 1)} />
+          <TierFlipPanel founderKey={FOUNDER_KEY} />
           <GeoipRefreshPanel founderKey={FOUNDER_KEY} />
           <OcrMismatchesPanel refreshKey={refreshKey} />
           <AiMetricsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
