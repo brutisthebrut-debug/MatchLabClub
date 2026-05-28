@@ -21,8 +21,12 @@ import {
   FOUNDER_SETTINGS_REBREACH_COOLDOWN,
   wellnessAnswersTable,
   wellnessTagsTable,
+  matchProposalsTable,
+  matchPoolMembershipTable,
+  matchPreferencesTable,
+  compatibilityReadsTable,
 } from "@workspace/db";
-import { and, count, sql, desc, gte, asc, eq, isNotNull } from "drizzle-orm";
+import { and, count, sql, desc, gte, asc, eq, isNotNull, lt, inArray, lte } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { z } from "zod/v4";
 import { requireFounder } from "../middlewares/founderAuth";
@@ -1651,5 +1655,228 @@ router.post("/founder/copilot/ask", requireFounder, async (req, res): Promise<vo
 
   res.json({ answer: result.output });
 });
+
+// ---------------------------------------------------------------------------
+// Founder Matching Review Queue
+// ---------------------------------------------------------------------------
+
+const MatchingProposalStatusBody = z.object({
+  status: z.enum(["reviewed", "sent", "dismissed"]),
+});
+
+const MatchingProposalNoteBody = z.object({
+  note: z.string().trim().min(1).max(4000),
+});
+
+router.get(
+  "/founder/matching/queue",
+  requireFounder,
+  async (req, res): Promise<void> => {
+    const beforeRaw = typeof req.query.before === "string" ? req.query.before : "";
+    const beforeDate = beforeRaw ? new Date(beforeRaw) : null;
+    const conditions = [eq(matchProposalsTable.status, "proposed")];
+    if (beforeDate && !Number.isNaN(beforeDate.getTime())) {
+      conditions.push(lt(matchProposalsTable.createdAt, beforeDate));
+    }
+
+    const rows = await db
+      .select({
+        id: matchProposalsTable.id,
+        userId: matchProposalsTable.userId,
+        proposedToUserId: matchProposalsTable.proposedToUserId,
+        source: matchProposalsTable.source,
+        compatibilityScore: matchProposalsTable.compatibilityScore,
+        summary: matchProposalsTable.summary,
+        status: matchProposalsTable.status,
+        createdAt: matchProposalsTable.createdAt,
+        updatedAt: matchProposalsTable.updatedAt,
+        userEmail: usersTable.email,
+        userFirstName: usersTable.firstName,
+        poolStatus: matchPoolMembershipTable.status,
+        poolTier: matchPoolMembershipTable.tier,
+      })
+      .from(matchProposalsTable)
+      .leftJoin(usersTable, eq(usersTable.id, matchProposalsTable.userId))
+      .leftJoin(
+        matchPoolMembershipTable,
+        eq(matchPoolMembershipTable.userId, matchProposalsTable.userId),
+      )
+      .where(and(...conditions))
+      .orderBy(desc(matchProposalsTable.createdAt))
+      .limit(50);
+
+    // For external_paste rows, look up the most recent compatibility_reads
+    // row written by that user with mode='matching_external' at or before the
+    // proposal createdAt. The matching route inserts both rows back to back,
+    // so this is the right pairing in practice.
+    const enriched = await Promise.all(
+      rows.map(async (row) => {
+        let rawText: string | null = null;
+        if (row.source === "external_paste") {
+          const readRows = await db
+            .select({ rawText: compatibilityReadsTable.rawText })
+            .from(compatibilityReadsTable)
+            .where(
+              and(
+                eq(compatibilityReadsTable.userId, row.userId),
+                eq(compatibilityReadsTable.mode, "matching_external"),
+                lte(compatibilityReadsTable.createdAt, row.createdAt),
+              ),
+            )
+            .orderBy(desc(compatibilityReadsTable.createdAt))
+            .limit(1);
+          rawText = readRows[0]?.rawText ?? null;
+        }
+        return {
+          id: row.id,
+          userId: row.userId,
+          proposedToUserId: row.proposedToUserId,
+          source: row.source,
+          compatibilityScore: row.compatibilityScore,
+          summary: row.summary,
+          status: row.status,
+          createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
+          updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
+          user: {
+            email: row.userEmail ?? null,
+            firstName: row.userFirstName ?? null,
+          },
+          pool: {
+            status: row.poolStatus ?? null,
+            tier: row.poolTier ?? null,
+          },
+          rawText,
+        };
+      }),
+    );
+
+    res.json({ items: enriched });
+  },
+);
+
+router.post(
+  "/founder/matching/proposals/:id/note",
+  requireFounder,
+  async (req, res): Promise<void> => {
+    const id = String(req.params.id ?? "");
+    if (!id) {
+      res.status(400).json({ error: "Missing proposal id" });
+      return;
+    }
+    const parsed = MatchingProposalNoteBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    const existing = await db
+      .select({ summary: matchProposalsTable.summary })
+      .from(matchProposalsTable)
+      .where(eq(matchProposalsTable.id, id))
+      .limit(1);
+    if (existing.length === 0) {
+      res.status(404).json({ error: "Proposal not found" });
+      return;
+    }
+    const prior = existing[0]?.summary ?? "";
+    const stamp = new Date().toISOString();
+    const appended = `${prior ? `${prior}\n\n` : ""}FOUNDER: ${parsed.data.note.trim()} (${stamp})`;
+    const [updated] = await db
+      .update(matchProposalsTable)
+      .set({ summary: appended })
+      .where(eq(matchProposalsTable.id, id))
+      .returning({
+        id: matchProposalsTable.id,
+        summary: matchProposalsTable.summary,
+      });
+    req.log.info({ proposalId: id }, "founder.matching.note appended");
+    res.json({ id: updated!.id, summary: updated!.summary });
+  },
+);
+
+router.post(
+  "/founder/matching/proposals/:id/status",
+  requireFounder,
+  async (req, res): Promise<void> => {
+    const id = String(req.params.id ?? "");
+    if (!id) {
+      res.status(400).json({ error: "Missing proposal id" });
+      return;
+    }
+    const parsed = MatchingProposalStatusBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    const [updated] = await db
+      .update(matchProposalsTable)
+      .set({ status: parsed.data.status })
+      .where(eq(matchProposalsTable.id, id))
+      .returning({
+        id: matchProposalsTable.id,
+        status: matchProposalsTable.status,
+      });
+    if (!updated) {
+      res.status(404).json({ error: "Proposal not found" });
+      return;
+    }
+    req.log.info(
+      { proposalId: id, status: parsed.data.status },
+      "founder.matching.proposal status changed",
+    );
+    res.json({ id: updated.id, status: updated.status });
+  },
+);
+
+router.get(
+  "/founder/matching/pool",
+  requireFounder,
+  async (_req, res): Promise<void> => {
+    const rows = await db
+      .select({
+        userId: matchPoolMembershipTable.userId,
+        status: matchPoolMembershipTable.status,
+        tier: matchPoolMembershipTable.tier,
+        readyAt: matchPoolMembershipTable.readyAt,
+        updatedAt: matchPoolMembershipTable.updatedAt,
+        pausedReason: matchPoolMembershipTable.pausedReason,
+        userEmail: usersTable.email,
+        userTier: usersTable.tier,
+        cityHint: matchPreferencesTable.cityHint,
+        ageMin: matchPreferencesTable.ageMin,
+        ageMax: matchPreferencesTable.ageMax,
+        genderPreference: matchPreferencesTable.genderPreference,
+      })
+      .from(matchPoolMembershipTable)
+      .leftJoin(usersTable, eq(usersTable.id, matchPoolMembershipTable.userId))
+      .leftJoin(
+        matchPreferencesTable,
+        eq(matchPreferencesTable.userId, matchPoolMembershipTable.userId),
+      )
+      .where(inArray(matchPoolMembershipTable.status, ["ready", "concierge_only"]))
+      .orderBy(desc(matchPoolMembershipTable.readyAt))
+      .limit(50);
+
+    res.json({
+      items: rows.map((row) => ({
+        userId: row.userId,
+        status: row.status,
+        tier: row.tier,
+        readyAt: row.readyAt instanceof Date ? row.readyAt.toISOString() : row.readyAt ? String(row.readyAt) : null,
+        updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
+        pausedReason: row.pausedReason ?? null,
+        user: {
+          email: row.userEmail ?? null,
+          tier: row.userTier ?? null,
+        },
+        preferences: {
+          cityHint: row.cityHint ?? null,
+          ageMin: row.ageMin ?? null,
+          ageMax: row.ageMax ?? null,
+          genderPreference: row.genderPreference ?? null,
+        },
+      })),
+    });
+  },
+);
 
 export default router;

@@ -6,6 +6,8 @@ import { Sparkles, ArrowRight, Clock, Award, Compass } from "lucide-react";
 import { QUIZZES, readQuizResults } from "@/lib/quizzes";
 import { useEffect, useState } from "react";
 import type { SavedQuizResult } from "@/lib/quizzes";
+import { ShareButton } from "@/components/echo/ShareButton";
+import { useAuth } from "@workspace/replit-auth-web";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -36,6 +38,8 @@ export default function Quizzes() {
     "Short, honest quizzes that read your dating pattern in 60–90 seconds. No signup needed. Each one feeds your dating second-brain.",
   );
 
+  const { user } = useAuth();
+  const shareRef = user?.id ? `user-${user.id}` : "quiz-catalog";
   const [saved, setSaved] = useState<SavedQuizResult[]>([]);
   useEffect(() => { setSaved(readQuizResults()); }, []);
 
@@ -90,35 +94,49 @@ export default function Quizzes() {
             {QUIZZES.map((q) => {
               const result = saved.find(s => s.slug === q.slug);
               return (
-                <Link
+                <div
                   key={q.slug}
-                  href={`/quizzes/${q.slug}`}
                   className="group glass border border-foreground/8 rounded-2xl p-6 hover:border-[hsl(248_62%_52%/0.4)] transition-all hover:-translate-y-0.5"
                   data-testid={`card-quiz-${q.slug}`}
                 >
-                  <div className="flex items-start gap-4 mb-3">
-                    <div className="text-4xl flex-shrink-0">{q.emoji}</div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-foreground text-lg mb-1">{q.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{q.pitch}</p>
+                  <Link href={`/quizzes/${q.slug}`} className="block">
+                    <div className="flex items-start gap-4 mb-3">
+                      <div className="text-4xl flex-shrink-0">{q.emoji}</div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-foreground text-lg mb-1">{q.title}</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{q.pitch}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-foreground/5">
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3" />~{Math.round(q.durationSec / 60) || 1} min</span>
-                      <span>·</span>
-                      <span>{q.questions.length} questions</span>
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-foreground/5">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3" />~{Math.round(q.durationSec / 60) || 1} min</span>
+                        <span>·</span>
+                        <span>{q.questions.length} questions</span>
+                      </div>
+                      <span className="text-xs font-semibold text-[hsl(248_62%_62%)] inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                        {result ? "Retake" : "Start"} <ArrowRight className="w-3 h-3" />
+                      </span>
                     </div>
-                    <span className="text-xs font-semibold text-[hsl(248_62%_62%)] inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                      {result ? "Retake" : "Start"} <ArrowRight className="w-3 h-3" />
-                    </span>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {q.feeds.map(f => (
+                        <span key={f} className="text-[10px] px-1.5 py-0.5 rounded bg-foreground/5 text-muted-foreground/80 font-mono">{f}</span>
+                      ))}
+                    </div>
+                  </Link>
+                  <div className="mt-3 pt-3 border-t border-foreground/5 flex justify-end">
+                    <ShareButton
+                      surface="quiz-result"
+                      variant="pill"
+                      title={`Try this quiz: ${q.title}`}
+                      text={`${q.emoji} ${q.title} on MatchLab Club. ${q.pitch} Takes about ${Math.round(q.durationSec / 60) || 1} minutes.`}
+                      path={`/quizzes/${q.slug}`}
+                      ref={shareRef}
+                      label="Send to a friend"
+                      copiedLabel="Link copied"
+                      testId={`share-quiz-${q.slug}`}
+                    />
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {q.feeds.map(f => (
-                      <span key={f} className="text-[10px] px-1.5 py-0.5 rounded bg-foreground/5 text-muted-foreground/80 font-mono">{f}</span>
-                    ))}
-                  </div>
-                </Link>
+                </div>
               );
             })}
           </motion.div>

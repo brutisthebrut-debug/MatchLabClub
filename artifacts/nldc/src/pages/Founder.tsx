@@ -9,6 +9,8 @@ import {
   getOcrLearnedRules, runOcrLearn, clearOcrLearnedRules, deleteOcrRule, patchOcrRule, getOcrMismatchesTrends,
   getOcrPendingRules, approveOcrRule, rejectOcrRule, getOcrRuleReviewLog,
   getAlertSettings, updateAlertSettings, resetAlertSettings,
+  getMatchingQueue, getMatchingPool, setMatchingProposalStatus, addMatchingProposalNote,
+  type MatchingQueueItem, type MatchingPoolItem,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
   type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
   type AiThresholdChange, type RollupHeartbeatResponse,
@@ -22,7 +24,7 @@ import {
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
 import { useListAudits, useGetWaitlistStats, useGetCoachFollowUpTimeline, useGetFounderReferrals } from "@workspace/api-client-react";
-import { Lock, LogOut, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock, Share2 } from "lucide-react";
+import { Lock, LogOut, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock, Share2, Heart, MapPin } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
 import { EchoPlaybookPanel } from "@/components/founder/EchoPlaybookPanel";
 import { toast } from "@/hooks/use-toast";
@@ -3348,7 +3350,7 @@ function LockedView({ onSubmit }: { onSubmit: (key: string) => void }) {
   );
 }
 
-type Tab = "overview" | "leads" | "audits" | "purchases" | "waitlist" | "emails" | "testing" | "ocr-mismatches" | "referrals";
+type Tab = "overview" | "leads" | "audits" | "purchases" | "waitlist" | "emails" | "testing" | "ocr-mismatches" | "referrals" | "matching";
 
 
 function Dashboard({ onSignOut }: { onSignOut: () => void }) {
@@ -3381,6 +3383,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
     { id: "testing",   label: "Testing Checklist",                     icon: ClipboardCheck },
     { id: "ocr-mismatches", label: "OCR Mismatches",                   icon: ScanLine       },
     { id: "referrals", label: "Referrals",                              icon: Share2         },
+    { id: "matching",  label: "Matching",                               icon: Heart          },
   ];
 
   return (
@@ -3580,9 +3583,366 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
       {/* Referrals */}
       {tab === "referrals" && <ReferralsPanel founderKey={FOUNDER_KEY} refreshKey={refreshKey} />}
 
+      {/* Matching Review Queue */}
+      {tab === "matching" && (
+        <div className="space-y-6" data-testid="matching-tab">
+          <ProposalsQueuePanel founderKey={FOUNDER_KEY} refreshKey={refreshKey} />
+          <PoolReadyPanel founderKey={FOUNDER_KEY} refreshKey={refreshKey} />
+        </div>
+      )}
+
       <p className="text-xs text-muted-foreground/30 mt-12 text-center">
         Founder demo mode · Full auth + multi-user coming in V3
       </p>
+    </div>
+  );
+}
+
+/* ─── Matching Review Panels ────────────────────────────────────────── */
+
+function ProposalsQueuePanel({ founderKey, refreshKey }: { founderKey: string; refreshKey: number }) {
+  const [items, setItems] = useState<MatchingQueueItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setErr(null);
+    getMatchingQueue(founderKey)
+      .then((res) => {
+        if (cancelled) return;
+        setItems(res.items);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setErr(e instanceof Error ? e.message : "Failed to load queue");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [founderKey, refreshKey, reloadKey]);
+
+  const onStatus = async (id: string, status: "reviewed" | "sent" | "dismissed") => {
+    if (busyId) return;
+    setBusyId(id);
+    try {
+      await setMatchingProposalStatus(founderKey, id, status);
+      toast({
+        title: "Proposal updated",
+        description: `Marked as ${status}.`,
+      });
+      setReloadKey((k) => k + 1);
+    } catch (e) {
+      toast({
+        title: "Update failed",
+        description: e instanceof Error ? e.message : "Could not update proposal",
+        variant: "destructive",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const onNote = async (id: string) => {
+    const note = (notes[id] ?? "").trim();
+    if (!note || busyId) return;
+    setBusyId(id);
+    try {
+      await addMatchingProposalNote(founderKey, id, note);
+      toast({
+        title: "Note saved",
+        description: "Founder note appended to proposal.",
+      });
+      setNotes((prev) => ({ ...prev, [id]: "" }));
+      setReloadKey((k) => k + 1);
+    } catch (e) {
+      toast({
+        title: "Save failed",
+        description: e instanceof Error ? e.message : "Could not save note",
+        variant: "destructive",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <div className="glass rounded-2xl p-6 space-y-4" data-testid="proposals-queue-panel">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
+            Proposals Queue
+          </p>
+          <p className="text-base font-semibold text-foreground">
+            Pending external reads and concierge proposals
+          </p>
+          <p className="text-xs text-muted-foreground/80 mt-1">
+            New rows from /matching land here. Review, send an intro, or dismiss.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setReloadKey((k) => k + 1)}
+          disabled={loading}
+          data-testid="button-refresh-proposals"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium bg-white/5 text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors disabled:opacity-60"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+          Refresh
+        </button>
+      </div>
+
+      {err && (
+        <div
+          className="rounded-xl p-3 border flex items-start gap-2 text-sm"
+          style={{
+            background: "hsl(348 55% 58% / 0.10)",
+            borderColor: "hsl(348 55% 58% / 0.40)",
+            color: "hsl(348 55% 78%)",
+          }}
+          data-testid="proposals-queue-error"
+        >
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>Could not load queue: {err}</span>
+        </div>
+      )}
+
+      {!loading && !err && items.length === 0 && (
+        <div className="rounded-xl p-6 border border-white/10 bg-white/[0.02] text-sm text-muted-foreground text-center" data-testid="proposals-queue-empty">
+          No proposed rows right now. New pastes and concierge opt-ins will show up here.
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {items.map((item) => {
+          const created = new Date(item.createdAt);
+          return (
+            <div
+              key={item.id}
+              className="rounded-xl p-4 border border-white/10 bg-white/[0.03] space-y-3"
+              data-testid={`proposal-card-${item.id}`}
+            >
+              <div className="flex items-start justify-between flex-wrap gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">
+                    {item.user.firstName || item.user.email || item.userId}
+                  </p>
+                  <p className="text-xs text-muted-foreground/80">
+                    {item.user.email ?? "no email on file"} · score {item.compatibilityScore} · source {item.source}
+                  </p>
+                  <p className="text-xs text-muted-foreground/60">
+                    Pool: {item.pool.status ?? "off"}{item.pool.tier ? ` · ${item.pool.tier}` : ""} · {created.toLocaleString()}
+                  </p>
+                </div>
+                <span className="text-xs px-2 py-1 rounded-md bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_72%)]" data-testid={`proposal-status-${item.id}`}>
+                  {item.status}
+                </span>
+              </div>
+
+              {item.rawText && (
+                <details className="rounded-lg border border-white/10 bg-black/20">
+                  <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground" data-testid={`proposal-raw-toggle-${item.id}`}>
+                    View pasted profile ({item.rawText.length} chars)
+                  </summary>
+                  <pre className="px-3 py-2 text-xs whitespace-pre-wrap text-muted-foreground/90 max-h-64 overflow-auto" data-testid={`proposal-raw-${item.id}`}>{item.rawText}</pre>
+                </details>
+              )}
+
+              {item.summary && (
+                <p className="text-xs text-muted-foreground whitespace-pre-wrap" data-testid={`proposal-summary-${item.id}`}>
+                  {item.summary}
+                </p>
+              )}
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => onStatus(item.id, "reviewed")}
+                  disabled={busyId === item.id}
+                  data-testid={`button-mark-reviewed-${item.id}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white/5 text-foreground hover:bg-white/10 transition-colors disabled:opacity-60"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Mark reviewed
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onStatus(item.id, "sent")}
+                  disabled={busyId === item.id}
+                  data-testid={`button-mark-sent-${item.id}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[hsl(142_55%_50%/0.15)] text-[hsl(142_55%_70%)] hover:bg-[hsl(142_55%_50%/0.25)] transition-colors disabled:opacity-60"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  Sent intro
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onStatus(item.id, "dismissed")}
+                  disabled={busyId === item.id}
+                  data-testid={`button-dismiss-${item.id}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[hsl(348_55%_58%/0.15)] text-[hsl(348_55%_78%)] hover:bg-[hsl(348_55%_58%/0.25)] transition-colors disabled:opacity-60"
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                  Dismiss
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={notes[item.id] ?? ""}
+                  onChange={(e) => setNotes((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                  placeholder="Add founder note..."
+                  data-testid={`input-note-${item.id}`}
+                  className="flex-1 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-foreground text-xs outline-none focus:border-[hsl(248_62%_52%/0.5)] transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => onNote(item.id)}
+                  disabled={busyId === item.id || !(notes[item.id] ?? "").trim()}
+                  data-testid={`button-save-note-${item.id}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_72%)] hover:bg-[hsl(248_62%_52%/0.3)] transition-colors disabled:opacity-60"
+                >
+                  Save note
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PoolReadyPanel({ founderKey, refreshKey }: { founderKey: string; refreshKey: number }) {
+  const [items, setItems] = useState<MatchingPoolItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setErr(null);
+    getMatchingPool(founderKey)
+      .then((res) => {
+        if (cancelled) return;
+        setItems(res.items);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setErr(e instanceof Error ? e.message : "Failed to load pool");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [founderKey, refreshKey, reloadKey]);
+
+  return (
+    <div className="glass rounded-2xl p-6 space-y-4" data-testid="pool-ready-panel">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
+            Pool Members
+          </p>
+          <p className="text-base font-semibold text-foreground">
+            Ready and concierge-only members
+          </p>
+          <p className="text-xs text-muted-foreground/80 mt-1">
+            Wingman concierge opt-ins and ready pool members with their stated preferences.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setReloadKey((k) => k + 1)}
+          disabled={loading}
+          data-testid="button-refresh-pool"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium bg-white/5 text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors disabled:opacity-60"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+          Refresh
+        </button>
+      </div>
+
+      {err && (
+        <div
+          className="rounded-xl p-3 border flex items-start gap-2 text-sm"
+          style={{
+            background: "hsl(348 55% 58% / 0.10)",
+            borderColor: "hsl(348 55% 58% / 0.40)",
+            color: "hsl(348 55% 78%)",
+          }}
+          data-testid="pool-ready-error"
+        >
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>Could not load pool: {err}</span>
+        </div>
+      )}
+
+      {!loading && !err && items.length === 0 && (
+        <div className="rounded-xl p-6 border border-white/10 bg-white/[0.02] text-sm text-muted-foreground text-center" data-testid="pool-ready-empty">
+          No members in the ready or concierge-only pool yet.
+        </div>
+      )}
+
+      <div className="space-y-2">
+        {items.map((item) => {
+          const ageRange = item.preferences.ageMin || item.preferences.ageMax
+            ? `${item.preferences.ageMin ?? "?"} to ${item.preferences.ageMax ?? "?"}`
+            : "any age";
+          return (
+            <div
+              key={item.userId}
+              className="rounded-xl p-3 border border-white/10 bg-white/[0.03] flex items-start justify-between gap-3 flex-wrap"
+              data-testid={`pool-card-${item.userId}`}
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">
+                  {item.user.email ?? item.userId}
+                </p>
+                <p className="text-xs text-muted-foreground/80 flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {item.preferences.cityHint ?? "no city"}
+                  </span>
+                  <span>· {ageRange}</span>
+                  {item.preferences.genderPreference && <span>· {item.preferences.genderPreference}</span>}
+                </p>
+                <p className="text-xs text-muted-foreground/60">
+                  Ready: {item.readyAt ? new Date(item.readyAt).toLocaleString() : "not set"}
+                </p>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span
+                  className={`text-xs px-2 py-1 rounded-md ${
+                    item.status === "concierge_only"
+                      ? "bg-[hsl(326_100%_55%/0.2)] text-[hsl(326_100%_75%)]"
+                      : "bg-[hsl(142_55%_50%/0.2)] text-[hsl(142_55%_70%)]"
+                  }`}
+                  data-testid={`pool-status-${item.userId}`}
+                >
+                  {item.status}
+                </span>
+                {item.user.tier && (
+                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground/70">
+                    {item.user.tier}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

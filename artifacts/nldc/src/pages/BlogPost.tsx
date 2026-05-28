@@ -9,6 +9,7 @@ import { ARTICLES } from "@/lib/blogArticles";
 import { QUIZ_BY_BLOG_SLUG, getQuizBySlug } from "@/lib/quizzes";
 import { trackEvent } from "@/lib/analytics";
 import { ShareButton } from "@/components/echo/ShareButton";
+import { useAuth } from "@workspace/replit-auth-web";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -1187,6 +1188,7 @@ function Prose({ children }: { children: React.ReactNode }) {
 export default function BlogPost({ slug }: { slug: string }) {
   const article = ARTICLES.find(a => a.slug === slug);
   const content = ARTICLE_CONTENT[slug];
+  const { user } = useAuth();
 
   if (!article || !content) {
     return (
@@ -1309,7 +1311,7 @@ export default function BlogPost({ slug }: { slug: string }) {
               title={article.title}
               text={article.excerpt}
               path={`/blog/${article.slug}`}
-              ref={article.slug}
+              ref={user?.id ? `user-${user.id}` : article.slug}
               variant="ghost"
               label="Share this piece"
               copiedLabel="Link copied"

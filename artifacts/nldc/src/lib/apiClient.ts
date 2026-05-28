@@ -189,6 +189,105 @@ export interface PurgeTrashResponse {
   deleted: number;
 }
 
+export interface MatchingQueueItem {
+  id: string;
+  userId: string;
+  proposedToUserId: string | null;
+  source: string;
+  compatibilityScore: number;
+  summary: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  user: { email: string | null; firstName: string | null };
+  pool: { status: string | null; tier: string | null };
+  rawText: string | null;
+}
+
+export interface MatchingQueueResponse {
+  items: MatchingQueueItem[];
+}
+
+export interface MatchingPoolItem {
+  userId: string;
+  status: string;
+  tier: string | null;
+  readyAt: string | null;
+  updatedAt: string;
+  pausedReason: string | null;
+  user: { email: string | null; tier: string | null };
+  preferences: {
+    cityHint: string | null;
+    ageMin: number | null;
+    ageMax: number | null;
+    genderPreference: string | null;
+  };
+}
+
+export interface MatchingPoolResponse {
+  items: MatchingPoolItem[];
+}
+
+async function founderJson<T>(
+  path: string,
+  founderKey: string,
+  init?: { method?: string; body?: unknown },
+): Promise<T> {
+  const headers: Record<string, string> = { "x-founder-key": founderKey };
+  if (init?.body !== undefined) headers["content-type"] = "application/json";
+  const res = await fetch(`${BASE}${path}`, {
+    method: init?.method ?? "GET",
+    headers,
+    body: init?.body !== undefined ? JSON.stringify(init.body) : undefined,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    try {
+      const parsed = JSON.parse(text) as { error?: string };
+      throw new Error(parsed.error || text || `HTTP ${res.status}`);
+    } catch {
+      throw new Error(text || `HTTP ${res.status}`);
+    }
+  }
+  return (await res.json()) as T;
+}
+
+export const getMatchingQueue = (
+  founderKey: string,
+  before?: string | null,
+): Promise<MatchingQueueResponse> => {
+  const qs = before ? `?before=${encodeURIComponent(before)}` : "";
+  return founderJson<MatchingQueueResponse>(
+    `/founder/matching/queue${qs}`,
+    founderKey,
+  );
+};
+
+export const getMatchingPool = (founderKey: string) =>
+  founderJson<MatchingPoolResponse>("/founder/matching/pool", founderKey);
+
+export const setMatchingProposalStatus = (
+  founderKey: string,
+  id: string,
+  status: "reviewed" | "sent" | "dismissed",
+) =>
+  founderJson<{ id: string; status: string }>(
+    `/founder/matching/proposals/${encodeURIComponent(id)}/status`,
+    founderKey,
+    { method: "POST", body: { status } },
+  );
+
+export const addMatchingProposalNote = (
+  founderKey: string,
+  id: string,
+  note: string,
+) =>
+  founderJson<{ id: string; summary: string | null }>(
+    `/founder/matching/proposals/${encodeURIComponent(id)}/note`,
+    founderKey,
+    { method: "POST", body: { note } },
+  );
+
 export const purgeTrashNow = (founderKey: string) =>
   fetch(`${BASE}/founder/purge-trash`, {
     method: "POST",

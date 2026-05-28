@@ -260,6 +260,95 @@ export const ARTICLES: Article[] = [
     color: "hsl(228 18% 65%)",
     cta: MIRROR_CTA,
   },
+  // ── Cluster 1: Profile signal & specificity ────────────────────────────
+  {
+    slug: "specificity-beats-clever",
+    title: "Specificity Beats Clever Every Time",
+    excerpt:
+      "Clever bios feel like effort. Specific bios feel like a person. Only one of them earns replies from the right kind of stranger.",
+    category: "Profile Audit",
+    readMin: 6,
+    date: "2026-05-28",
+    color: "hsl(var(--brand-indigo))",
+    cta: AUDIT_CTA,
+  },
+  {
+    slug: "photo-order-on-hinge",
+    title: "Photo Order on Hinge Is Doing More Work Than Your Bio",
+    excerpt:
+      "The order of your photos is a tiny narrative most people post without thinking about. It is also the single fastest way to fix a profile that is matching with the wrong people.",
+    category: "Photo Psychology",
+    readMin: 7,
+    date: "2026-05-21",
+    color: "hsl(var(--brand-gold))",
+    cta: AUDIT_CTA,
+  },
+  {
+    slug: "what-your-prompts-actually-say",
+    title: "What Your Hinge Prompts Actually Say About You",
+    excerpt:
+      "Prompt answers are not a quiz. They are a tone of voice. Read yours back the way a stranger would and you will hear what is actually coming through.",
+    category: "Prompt Strategy",
+    readMin: 7,
+    date: "2026-05-14",
+    color: "hsl(190 75% 50%)",
+    cta: AUDIT_CTA,
+  },
+  {
+    slug: "bio-anti-patterns-i-keep-seeing",
+    title: "Bio Anti-Patterns I Keep Seeing on Every App",
+    excerpt:
+      "Six bio moves that feel safe to write and read as forgettable. If two of them are in your profile you are probably blending into the scroll.",
+    category: "Profile Audit",
+    readMin: 8,
+    date: "2026-05-07",
+    color: "hsl(var(--brand-rose))",
+    cta: AUDIT_CTA,
+  },
+  {
+    slug: "the-everything-profile-attracts-nobody",
+    title: "The Everything-To-Everyone Profile Attracts Nobody Specific",
+    excerpt:
+      "Trying to appeal to a wide audience is the most common profile mistake I see. The fix is not narrower. It is more particular.",
+    category: "Profile Strategy",
+    readMin: 7,
+    date: "2026-04-30",
+    color: "hsl(280 70% 60%)",
+    cta: COMPASS_CTA,
+  },
+  {
+    slug: "when-good-photos-still-fail",
+    title: "When Good Photos Still Fail: Why Lighting Is Not the Problem",
+    excerpt:
+      "Sharp photos in soft light still die in the queue when the lineup is telling the wrong story. The lie of good lighting is that it is enough on its own.",
+    category: "Photo Psychology",
+    readMin: 8,
+    date: "2026-04-23",
+    color: "hsl(var(--brand-gold))",
+    cta: AUDIT_CTA,
+  },
+  {
+    slug: "one-prompt-to-pre-filter-everyone-wrong",
+    title: "The One Prompt That Pre-Filters Everyone Wrong For You",
+    excerpt:
+      "If you only change one line in your profile this month, make it this one. Done well, it does the work of three first dates in two sentences.",
+    category: "Prompt Strategy",
+    readMin: 6,
+    date: "2026-04-16",
+    color: "hsl(190 75% 50%)",
+    cta: COACH_CTA,
+  },
+  {
+    slug: "profile-as-invitation-not-resume",
+    title: "Your Profile Is an Invitation, Not a Resume",
+    excerpt:
+      "Most profiles read like a credentials list. The ones that get replied to read like a doorway someone is being invited to walk through.",
+    category: "Profile Strategy",
+    readMin: 7,
+    date: "2026-04-09",
+    color: "hsl(248 62% 62%)",
+    cta: AUDIT_CTA,
+  },
   {
     slug: "second-brain-for-dating",
     title: "What a 'Second Brain for Your Dating Life' Actually Looks Like",

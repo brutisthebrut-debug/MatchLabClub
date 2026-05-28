@@ -946,6 +946,20 @@ export default function CompatibilityCompass() {
                 />
               </button>
               {historyOpen && (
+                <>
+                <div className="flex justify-end px-5 py-2 border-t border-white/5">
+                  <ShareButton
+                    surface="compass-read"
+                    variant="pill"
+                    title="My Compatibility Compass history"
+                    text={`Been tracking my compatibility patterns on MatchLab Club. ${history.data?.reads.length ?? 0} reads so far and the throughline is real. Try one.`}
+                    path="/compatibility-compass"
+                    ref="compass-history-share"
+                    label="Share my history"
+                    copiedLabel="Link copied"
+                    testId="button-share-compass-history"
+                  />
+                </div>
                 <ul className="divide-y divide-white/5 border-t border-white/5">
                   {(history.data?.reads ?? []).slice(0, 10).map(r => {
                     const d = new Date(r.createdAt);
@@ -977,6 +991,7 @@ export default function CompatibilityCompass() {
                     );
                   })}
                 </ul>
+                </>
               )}
             </motion.section>
           )}
