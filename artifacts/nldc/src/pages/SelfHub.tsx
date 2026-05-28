@@ -16,6 +16,7 @@ import {
   ArrowRight,
   BookOpen,
   Brain,
+  Calendar,
   Compass,
   Database,
   Download,
@@ -23,9 +24,12 @@ import {
   Heart,
   ListChecks,
   Lock,
+  Mail,
   MessageSquare,
+  Plug,
   Sparkles,
   Upload,
+  Wallet,
 } from "lucide-react";
 import {
   useGetAccountSummary,
@@ -42,6 +46,8 @@ import {
   useCreateInstagramPaste,
   useGetMatchingState,
   getGetMatchingStateQueryKey,
+  useListInsights,
+  getListInsightsQueryKey,
 } from "@workspace/api-client-react";
 import { ShareButton } from "@/components/echo/ShareButton";
 
@@ -153,6 +159,204 @@ function CompletenessRing({ pct, label, sub }: { pct: number; label: string; sub
   );
 }
 
+type SignalSource = {
+  key: string;
+  label: string;
+  icon: typeof Activity;
+  active: boolean;
+  href?: string;
+  state: "live" | "building";
+};
+
+function SignalDensityPanel({ sources }: { sources: SignalSource[] }) {
+  const liveSources = sources.filter((s) => s.state === "live");
+  const active = liveSources.filter((s) => s.active).length;
+  const total = liveSources.length;
+  const pct = total > 0 ? Math.round((active / total) * 100) : 0;
+  return (
+    <div data-testid="signal-density-panel">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="min-w-0">
+          <h3 className="font-serif text-xl font-bold text-foreground">Signal density</h3>
+          <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+            {active} of {total} sources feeding your second brain. More sources, sharper reads.
+          </p>
+        </div>
+        <Link
+          href="/connections"
+          className="hidden md:inline-flex flex-shrink-0 items-center gap-1 text-xs font-semibold text-[hsl(248_62%_52%)] hover:underline"
+          data-testid="link-signal-density-connections"
+        >
+          <Plug className="h-3.5 w-3.5" /> Plug in another
+        </Link>
+      </div>
+      <div
+        className="h-2 rounded-full bg-[hsl(248_30%_92%)] overflow-hidden mb-5"
+        role="progressbar"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`${pct} percent of live sources active`}
+      >
+        <div
+          className="h-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] transition-all"
+          style={{ width: `${pct}%` }}
+          data-testid="signal-density-bar"
+        />
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+        {sources.map((s) => {
+          const isLiveActive = s.state === "live" && s.active;
+          const isLiveIdle = s.state === "live" && !s.active;
+          const isBuilding = s.state === "building";
+          const tileClasses = [
+            "flex items-center gap-2.5 rounded-xl px-3 py-2.5 border transition-colors h-full",
+            isLiveActive && "border-[hsl(248_62%_52%/0.3)] bg-[hsl(248_62%_52%/0.06)]",
+            isLiveIdle && "border-[hsl(248_30%_88%)] bg-[hsl(248_30%_98%)] hover:bg-[hsl(248_30%_96%)]",
+            isBuilding && "border-dashed border-[hsl(248_30%_85%)] bg-transparent opacity-70",
+          ]
+            .filter(Boolean)
+            .join(" ");
+          const iconClasses = [
+            "h-4 w-4 flex-shrink-0",
+            isLiveActive && "text-[hsl(248_62%_52%)]",
+            (isLiveIdle || isBuilding) && "text-muted-foreground",
+          ]
+            .filter(Boolean)
+            .join(" ");
+          const tile = (
+            <div className={tileClasses}>
+              <s.icon className={iconClasses} aria-hidden="true" />
+              <span className="text-xs font-semibold text-foreground truncate flex-1">{s.label}</span>
+              {isLiveActive && <span className="text-[10px] font-bold text-[hsl(248_62%_52%)]">ON</span>}
+              {isLiveIdle && <span className="text-[10px] font-semibold text-muted-foreground">add</span>}
+              {isBuilding && <span className="text-[10px] font-semibold text-muted-foreground">soon</span>}
+            </div>
+          );
+          return s.href && !isBuilding ? (
+            <Link key={s.key} href={s.href} data-testid={`signal-tile-${s.key}`}>
+              {tile}
+            </Link>
+          ) : (
+            <div key={s.key} data-testid={`signal-tile-${s.key}`}>
+              {tile}
+            </div>
+          );
+        })}
+      </div>
+      <div className="md:hidden mt-4">
+        <Link
+          href="/connections"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-[hsl(248_62%_52%)] hover:underline"
+          data-testid="link-signal-density-connections-mobile"
+        >
+          <Plug className="h-3.5 w-3.5" /> Plug in another source
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+type RecentInsight = {
+  id: number;
+  sourceLabel: string;
+  sourceApp?: string | null;
+  status: string;
+  createdAt: string;
+};
+
+function RecentInsightStream({
+  insights,
+  isLoading,
+}: {
+  insights: RecentInsight[];
+  isLoading: boolean;
+}) {
+  const recent = [...insights]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 3);
+  return (
+    <div data-testid="recent-insight-stream">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="min-w-0">
+          <h3 className="font-serif text-xl font-bold text-foreground">Recent insights</h3>
+          <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+            The last few pattern reads your second brain produced.
+          </p>
+        </div>
+        <Link
+          href="/insights"
+          className="flex-shrink-0 text-xs font-semibold text-[hsl(248_62%_52%)] hover:underline inline-flex items-center gap-1"
+          data-testid="link-recent-insights-all"
+        >
+          Open insights <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+      {isLoading ? (
+        <div className="space-y-2" aria-busy="true">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-14 rounded-xl bg-[hsl(248_30%_94%)] animate-pulse" />
+          ))}
+        </div>
+      ) : recent.length === 0 ? (
+        <div
+          className="rounded-xl border border-dashed border-[hsl(248_30%_85%)] p-5 text-center"
+          data-testid="recent-insight-empty"
+        >
+          <p className="text-sm text-muted-foreground mb-3">
+            No insights yet. Drop a message history into the analyzer to get your first pattern read.
+          </p>
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="rounded-full font-semibold"
+            data-testid="button-recent-insight-empty-cta"
+          >
+            <Link href="/insights">Run my first insight</Link>
+          </Button>
+        </div>
+      ) : (
+        <ul className="space-y-2">
+          {recent.map((i) => (
+            <li
+              key={i.id}
+              className="flex items-center gap-3 rounded-xl border border-[hsl(248_30%_90%)] bg-white/60 px-3.5 py-3"
+              data-testid={`recent-insight-${i.id}`}
+            >
+              <div className="h-8 w-8 rounded-lg bg-[hsl(326_100%_60%/0.10)] flex items-center justify-center flex-shrink-0">
+                <Sparkles className="h-4 w-4 text-[hsl(326_100%_60%)]" aria-hidden="true" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {i.sourceApp ? `${i.sourceApp} · ` : ""}
+                  {i.sourceLabel}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {i.status === "complete"
+                    ? "Ready"
+                    : i.status === "analyzing"
+                      ? "Analyzing..."
+                      : "Queued"}
+                  {" · "}
+                  {daysAgo(i.createdAt)}
+                </p>
+              </div>
+              <Link
+                href="/insights"
+                className="text-xs font-semibold text-[hsl(248_62%_52%)] hover:underline flex-shrink-0"
+                data-testid={`recent-insight-open-${i.id}`}
+              >
+                Open
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function SelfHub() {
   useMeta(
     "Your Self Hub — MatchLab Club",
@@ -177,6 +381,9 @@ export default function SelfHub() {
   });
   const matchingState = useGetMatchingState({
     query: { queryKey: getGetMatchingStateQueryKey(), enabled: isAuthenticated },
+  });
+  const insights = useListInsights({
+    query: { queryKey: getListInsightsQueryKey(), enabled: isAuthenticated },
   });
 
   // Derive completeness: count distinct dimensions answered, out of 18.
@@ -303,6 +510,22 @@ export default function SelfHub() {
   const compassReadsCount = 0; // Placeholder until T005/T006 ship the /compass/reads endpoint
   const importsCount = 0; // Placeholder until T007/T008 ship /imports
 
+  const insightRows = (insights.data ?? []) as RecentInsight[];
+
+  const signalSources: SignalSource[] = [
+    { key: "audits", label: "Profile audits", icon: FileText, active: summaryData.audits > 0, href: "/dashboard", state: "live" },
+    { key: "wellness", label: "Wellness", icon: Activity, active: distinctDims.size > 0, href: "/wellness", state: "live" },
+    { key: "messages", label: "Message coach", icon: MessageSquare, active: summaryData.messages > 0, href: "/coach", state: "live" },
+    { key: "insights", label: "Email patterns", icon: Sparkles, active: summaryData.insights > 0, href: "/insights", state: "live" },
+    { key: "journal", label: "Journal", icon: BookOpen, active: summaryData.journalEntries > 0, href: "/mirror/journal", state: "live" },
+    { key: "postdate", label: "Post-date notes", icon: Heart, active: summaryData.postDateNotes > 0, href: "/mirror/dates", state: "live" },
+    { key: "compass", label: "Compass reads", icon: Compass, active: compassReadsCount > 0, href: "/compatibility-compass", state: "live" },
+    { key: "imports", label: "Hinge import", icon: Upload, active: importsCount > 0, href: "/imports", state: "live" },
+    { key: "forwarding", label: "Forwarding inbox", icon: Mail, active: false, state: "building" },
+    { key: "plaid", label: "Spending signals", icon: Wallet, active: false, state: "building" },
+    { key: "calendar", label: "Calendar paste", icon: Calendar, active: false, state: "building" },
+  ];
+
   return (
     <AppLayout>
       <div className="container mx-auto px-4 md:px-6 py-10 md:py-14 max-w-6xl">
@@ -342,9 +565,22 @@ export default function SelfHub() {
             label="Your wellness profile"
             sub={
               distinctDims.size === 0
-                ? "You haven't answered any wellness questions yet. Start there — it's what powers everything else."
+                ? "You haven't answered any wellness questions yet. Start there, it's what powers everything else."
                 : `You've covered ${distinctDims.size} of ${WELLNESS_DIMENSION_COUNT} dimensions. The more you cover, the sharper your compass reads and coaching become.`
             }
+          />
+        </motion.div>
+
+        {/* Beat 6: Signal density panel */}
+        <motion.div {...fadeUp(0.07)} className="glass rounded-3xl p-6 md:p-8 mb-6 md:mb-8" data-testid="card-signal-density">
+          <SignalDensityPanel sources={signalSources} />
+        </motion.div>
+
+        {/* Beat 4 surface: recent insight stream */}
+        <motion.div {...fadeUp(0.09)} className="glass rounded-3xl p-6 md:p-8 mb-6 md:mb-8" data-testid="card-recent-insights">
+          <RecentInsightStream
+            insights={insightRows}
+            isLoading={insights.isLoading}
           />
         </motion.div>
 
