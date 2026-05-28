@@ -1164,6 +1164,716 @@ const ARTICLE_CONTENT: Record<string, React.ReactNode> = {
       </p>
     </>
   ),
+
+  "specificity-beats-clever": (
+    <>
+      <p>
+        A friend of mine spent four hours last winter rewriting her Hinge bio so it would be funny. She workshopped it with two people. Tested three variations. Landed on a tight little joke about being the kind of person who alphabetizes her spice rack but loses her keys twice a week.
+      </p>
+      <p>
+        It got her nothing. Three matches in a week, all from men who said some version of "haha cool bio." None of them led anywhere. She asked me what was wrong with it.
+      </p>
+      <p>
+        Nothing was wrong with it. It was a perfectly fine joke. It just was not a person.
+      </p>
+
+      <h2>Clever is a defense mechanism</h2>
+      <p>
+        Clever bios feel like effort because they are effort. You have to think about them. You have to test them. You have to file off the rough edges until the line sits clean. That work is real. It is also, often, work in the wrong direction.
+      </p>
+      <p>
+        The thing clever bios accomplish, almost without fail, is distance. A clever line lets you show up without quite showing up. You point at yourself sideways. You make the reader laugh, which feels like a connection, but the only thing you have told them is that you can write a joke. Which is not nothing. But it is not enough to start a conversation that goes anywhere real.
+      </p>
+      <p>
+        I have read a lot of these. Bios about being the friend who plans the trip. Bios about how the writer is 30% golden retriever and 70% goblin. Bios that open with "warning: I will steal your fries." They are all small, contained pieces of performance. None of them tell me what you are actually like at brunch on a Sunday in October.
+      </p>
+
+      <h2>Specific is not the same as long</h2>
+      <p>
+        People hear "be more specific" and think "write more." Then they panic, because they already feel like they are writing too much. So they delete a sentence and call it done.
+      </p>
+      <p>
+        Specific is not a length problem. It is a content problem. One specific sentence beats a paragraph of vague ones. Compare:
+      </p>
+      <blockquote>"I love trying new restaurants and exploring the city on weekends."</blockquote>
+      <blockquote>"I have been going to the same Vietnamese place in Marrickville every Sunday for two years and they no longer ask what I want."</blockquote>
+      <p>
+        The second one is the same length. The second one tells me where you live, what you do on Sundays, how loyal you are to the things you like, and that you might be the kind of person who has a regular order somewhere. Which is a lot of information for one sentence.
+      </p>
+      <p>
+        The first sentence tells me nothing. It is true of about 40 million people. If I screenshotted it and texted it to four of your friends, none of them would recognize you in it.
+      </p>
+
+      <h2>The screenshot test</h2>
+      <p>
+        This is the test I run on my own writing and the test I run on bios people send me. Take any line from the bio. Imagine you screenshotted it and sent it to three of the writer's close friends, with no context. If those friends would respond "yeah, that sounds like her," the line is doing work. If they would respond "could be anybody," the line is filler.
+      </p>
+      <p>
+        Most clever bios fail the screenshot test. Most specific bios pass it easily. The cleverness lives in your head. The specifics live in your actual life, which is the thing the reader is trying to figure out.
+      </p>
+
+      <h2>What specificity does to the reader</h2>
+      <p>
+        When someone reads a specific bio, two things happen in their head that do not happen with a clever one.
+      </p>
+      <p>
+        First, they form a picture. Not of your face, of your life. They see the Vietnamese place. They see the Sunday. They see the woman who walks in and the owner already turning toward the kitchen. Their brain has now done unpaid work building a small movie of you, which means they are slightly invested before they even decide whether to swipe.
+      </p>
+      <p>
+        Second, they get a hook. They can message you about Marrickville. About what the regular order is. About whether you have tried the place two doors down. Specific bios hand the reader a reason to type something. Clever bios usually do not, because the joke is closed. There is nowhere to go after "haha that is great."
+      </p>
+
+      <h2>Why specific feels riskier (and why it is not)</h2>
+      <p>
+        Most people resist specificity because it feels exposing. If I say I go to a specific Vietnamese place every Sunday, what if the person reading it thinks that is sad? What if they think I am boring? What if they Google the place and decide they hate it?
+      </p>
+      <p>
+        I get it. The fear is real. The math is not.
+      </p>
+      <p>
+        The people who would be turned off by a specific honest thing about your life were never going to be a good match. The people who are drawn in by it are exactly who you want. Specificity is a filter, not an exposure problem. The exposure is the filter working.
+      </p>
+      <p>
+        Clever bios, by contrast, attract a broad audience of people who like clever bios. That sounds good until you have spent six months going on dates with people who turned out to share none of your actual values, only your taste in punchlines.
+      </p>
+
+      <h2>Three swaps to try this week</h2>
+      <p>
+        If your bio is doing the clever thing right now, try three swaps. You do not have to delete the joke. You just have to add some weight to it.
+      </p>
+      <p>
+        Swap a job title for a sentence about what you actually do at work that you like. "I'm a product manager" becomes "I'm a product manager and my favorite part of the week is the Tuesday meeting where we look at last week's user research and argue about what it means." Different reader. Different conversation.
+      </p>
+      <p>
+        Swap a hobby word for the smallest concrete version of it. "I love reading" becomes "I am 80 pages into the new Sally Rooney and not sure yet." Now I know when this bio was last edited, what you are reading, and that you are willing to say a book might not be a hit. That is three signals in twelve words.
+      </p>
+      <p>
+        Swap an aspiration for a regular routine. "Looking for someone to travel with" becomes "Going to Lisbon in October by myself, would also do it with the right person." Now you are a person with a plan. Now I can ask about Lisbon. Now there is a conversation.
+      </p>
+      <p>
+        You will know it is working when the messages you get start referencing things in the bio instead of the photos.
+      </p>
+    </>
+  ),
+
+  "photo-order-on-hinge": (
+    <>
+      <p>
+        On Hinge, you get six photos. Most people upload them in the order their phone hands the photos to them. Maybe they swap one or two. Then they call it done and move on.
+      </p>
+      <p>
+        That sequence is doing more work than your bio. By a wide margin. And almost nobody touches it after the first afternoon they set up the profile.
+      </p>
+
+      <h2>The first photo is not the photo you think</h2>
+      <p>
+        The first photo is not the "best" photo. It is the photo that decides whether anyone scrolls to the second one.
+      </p>
+      <p>
+        Those are different jobs. The "best" photo, the one your friends helped you pick because you look amazing in it, is often a tight portrait at golden hour. Great photo. Bad opener. Because a tight portrait gives the viewer nowhere to go. They have already seen your face. There is no reason to swipe through the rest.
+      </p>
+      <p>
+        The first photo should give a clear, fast read on who you are, with one piece of context the next photo can build on. A wider shot of you doing something specific is almost always stronger than a tighter shot of you looking great. The face you can do anywhere in the lineup. The first slot has a different job.
+      </p>
+
+      <h2>Photos 2 through 4 are a tiny film</h2>
+      <p>
+        This is the part most people miss. Hinge users do not see your photos as a grid. They see them one at a time, in order, with a little tap or swipe between each one. That sequence is a film. A very short film about who you are.
+      </p>
+      <p>
+        If your photos go: clear face shot, group photo at a wedding, photo of you on a mountain, mirror selfie at the gym, photo of your dog, blurry photo from a concert, the film looks like this. Person. Friends. Outdoorsy. Cares about body. Has dog. Goes out. That is a fine little stack of signals. It also tells the viewer nothing they have not already seen on 200 other profiles this week.
+      </p>
+      <p>
+        If your photos go: clear wide shot of you on a kitchen island holding a bowl of pasta, then a close-up of the pasta, then you laughing with a friend in the same kitchen, then a different night at a restaurant in what looks like the same neighborhood, the film is a story. This person cooks. This person feeds people. This person has a Saturday night life that revolves around tables and friends. That is a much stronger lineup with the exact same elements rearranged and trimmed.
+      </p>
+
+      <h2>The third photo rule</h2>
+      <p>
+        People decide whether to keep reading at the third photo. That is roughly when the brain decides the profile is worth the cognitive cost of finishing.
+      </p>
+      <p>
+        If photo three is a repeat of photo two in spirit, energy drops. Another solo shot, slightly different angle, similar lighting, similar background. The viewer's brain quietly tags the profile as "I have seen what this person has to offer" and starts looking for an exit.
+      </p>
+      <p>
+        Photo three should be the photo that surprises them. A different setting. A different version of you. The pasta person is at a friend's wedding looking unrecognizable in formal wear. The wedding person is suddenly muddy after a hike. The hike person is now sitting on the floor with a guitar. The contrast does not have to be dramatic. It just has to be a turn.
+      </p>
+
+      <h2>Group photos kill more profiles than they help</h2>
+      <p>
+        Almost everyone is told to have one group photo "to show you have friends." This advice has aged badly. The problem is not that group photos are bad. The problem is where people put them.
+      </p>
+      <p>
+        A group photo in slot two is a small disaster. The viewer just saw your face in slot one. Now they have to find you again in a crowd. They do not want to. They will not bother. They swipe.
+      </p>
+      <p>
+        If you must include a group photo, put it in slot four or later, after the viewer already knows your face cold. And it should be a group of four people max. Five faces in a photo on a 6-inch phone screen is a face you cannot see.
+      </p>
+
+      <h2>The last photo is the close, not the leftover</h2>
+      <p>
+        The last photo is the one that decides whether they message after they have already decided to like the profile. It is also the photo people treat as a dumping ground for the one they like that did not fit anywhere else.
+      </p>
+      <p>
+        I would put your most specific, most warm, most "this is what hanging out with me feels like" photo here. The one where you are clearly mid-laugh. The one where you are clearly comfortable. The one that closes the door behind them so they want to write something instead of just tapping the heart.
+      </p>
+
+      <h2>The slot-six trap</h2>
+      <p>
+        The other lineup mistake I see constantly. Slot six is treated as either a throwaway or, worse, a "fun" photo that does not look like you. A heavily filtered shot. A photo from 2019 with significantly different hair. A wide landscape from a hike that does not have you in it at all.
+      </p>
+      <p>
+        A reader who has tapped through five photos and made it to the last one is the most invested they are going to get before deciding whether to message. Showing them a photo where you are hard to identify, or a photo with no face, or a meme of your dog, breaks the moment. They were about to commit. The last photo handed them an exit.
+      </p>
+      <p>
+        Put your second-clearest face shot here if you have nothing else. A clear face the reader can carry into the message they are about to write is worth more than a clever close.
+      </p>
+
+      <h2>A small experiment to run this week</h2>
+      <p>
+        Do not change your photos. Just reorder them. Try this sequence.
+      </p>
+      <p>
+        Slot one: wider context shot, clear face, doing something specific. Slot two: tighter portrait that confirms what they saw in slot one is really what you look like. Slot three: a turn. Different setting, different energy. Slot four: social proof, ideally not a wedding. Slot five: a hobby or place you spend real time in. Slot six: a warm "what hanging out with me feels like" close.
+      </p>
+      <p>
+        Leave it for two weeks. Watch what shifts. If you are like most of the profiles I have looked at, the message quality changes before the match volume does. That is a good sign. It means the people writing now are the ones who actually finished the lineup.
+      </p>
+    </>
+  ),
+
+  "what-your-prompts-actually-say": (
+    <>
+      <p>
+        Hinge gives you three prompt slots. Most people treat them like a quiz with right and wrong answers. You pick the prompt that has an answer you can think of. You type the answer. You move on.
+      </p>
+      <p>
+        This is the wrong frame. Prompts are not a quiz. They are a tone of voice. The viewer is not grading the answer. They are listening to how you talk.
+      </p>
+
+      <h2>The voice is the message</h2>
+      <p>
+        If your three prompts are, in order: a punchline about being too tall for compact cars, a list of three travel destinations, and a sentence about how you want a partner who will challenge you, your voice is doing three different things at once. Funny. Lifestyle bullet list. Earnest dating-app cliche. The reader's brain has to switch register three times in 90 seconds.
+      </p>
+      <p>
+        What they take away is not the content of any of the three answers. It is that they do not quite know who they were just reading.
+      </p>
+      <p>
+        Tone consistency across the three prompts is more important than the cleverness of any single one. Pick a register. Stay there. Let the three answers feel like the same person talking on three different days.
+      </p>
+
+      <h2>What the three most common answers actually communicate</h2>
+      <p>
+        I read a lot of profiles. Here are three answers I see roughly once a day, with what they actually communicate to a careful reader.
+      </p>
+      <p>
+        <strong>"Two truths and a lie: I've been skydiving, I speak three languages, I hate cilantro."</strong> This communicates: I have not thought about this for more than 30 seconds. The three items are unrelated in a way that feels generic. The reader cannot do anything with them. There is no story to follow up on. The skydive happened seven years ago and you have not done it since. The languages turn out to be high school French and a tourist amount of Italian. The cilantro thing is a Twitter-meme position, not yours.
+      </p>
+      <p>
+        <strong>"The way to win me over is: good food, good wine, good conversation."</strong> This communicates: I am describing literally any acceptable date. The viewer learns nothing about your specific taste. Worse, the structure of the answer, the rule of three with a parallel adjective, signals that you reached for the safest possible shape. Which they then read into your personality.
+      </p>
+      <p>
+        <strong>"I geek out on: history podcasts, cooking, and travel."</strong> This communicates: a list of three things, none of which I am going to elaborate on. "I geek out on" implies depth. Three generic nouns refuse to deliver any. So the answer collapses on itself. The reader leaves with no specific image to grab onto.
+      </p>
+
+      <h2>The say-it-out-loud test</h2>
+      <p>
+        Read your prompt answers out loud. Not in your head. Out loud, in your normal speaking voice, in a room by yourself.
+      </p>
+      <p>
+        If you sound like a person, the answer is probably working. If you sound like the back of a wine bottle, the answer is not.
+      </p>
+      <p>
+        The reason this test works is that your speaking voice has rhythm. It has the small ums and qualifiers and turns of phrase that make you, you. Most prompt answers strip that out in the name of being concise, then accidentally end up sounding like marketing copy for a person who does not exist.
+      </p>
+
+      <h2>One prompt should do the actual work</h2>
+      <p>
+        You only need one of your three prompts to be doing real work. The other two can be lighter. They can be jokes, they can be small specific things, they can be a one-line preference.
+      </p>
+      <p>
+        The "real work" prompt is the one where you say something that gives a reader a clear picture of how you actually live. Not what you value. Not what you are looking for. How you live.
+      </p>
+      <p>
+        "My ideal Sunday" is a good slot for this if you actually describe a Sunday, in order, with at least one detail that is true and slightly weird. "Wake up too late, take a long walk to the cafe on Crown that does the egg sandwich, get back to the apartment in time to lose two hours of the afternoon to a book I keep saying I am almost done with, then probably the same friends as every Sunday at the same bar." That is a paragraph. It is also a person.
+      </p>
+
+      <h2>What the reader is checking for</h2>
+      <p>
+        When someone reads your three prompts, they are not grading you. They are running a small unconscious checklist. Does this person sound like a person. Could I have a conversation with this person without it being work. Do I get any sense of what they actually do all week. Would I be bored on a date with them.
+      </p>
+      <p>
+        The prompts answer those questions whether you mean for them to or not. The trick is to know which questions yours are currently answering, and to make sure the answers are the ones you want.
+      </p>
+
+      <h2>The prompt you should almost never pick</h2>
+      <p>
+        "Don't hate me if I." It is the most overrepresented prompt on the app, and almost no one has a real answer to it. The honest answers are mild ("don't hate me if I take my shoes off at restaurants") and the dishonest ones are performative ("don't hate me if I love pineapple on pizza," which everyone has heard 500 times).
+      </p>
+      <p>
+        The structural problem is that the prompt invites a confession at a register that is too low to be interesting. You end up promising a small transgression and then delivering something that is not transgressive at all. The reader feels the gap.
+      </p>
+      <p>
+        Same goes for "Two truths and a lie," "I'll fall for you if," and "The hallmark of a good relationship is." These are prompts that almost always produce the same five answers. If you can write something genuinely fresh to them, fine. Otherwise pick a prompt that does not have a default groove worn into it.
+      </p>
+
+      <h2>What to do this afternoon</h2>
+      <p>
+        Open your three prompts. Read them out loud. Notice which one sounds the least like a person. Rewrite that one with one concrete detail from the past month of your actual life. A street name. A meal. A specific thing you said yes or no to.
+      </p>
+      <p>
+        If you cannot think of anything that fits, that itself is a piece of information. The prompt may be wrong for you. Change the prompt before you change the answer.
+      </p>
+    </>
+  ),
+
+  "bio-anti-patterns-i-keep-seeing": (
+    <>
+      <p>
+        I have looked at a lot of dating profiles in the last year. Hinge, Bumble, Tinder, the lot. The same six bio moves keep coming up. They feel safe to write. They read as forgettable. If your bio has two of them, your profile is almost certainly blending into the scroll, which is the worst place it can be.
+      </p>
+      <p>
+        None of these are wrong. They are just inert. They take up space that could be doing work.
+      </p>
+
+      <h2>1. The list of cities</h2>
+      <p>
+        "Sydney via Melbourne via London." Or some version of it. The geographical resume bio. It tells the reader you have moved, which is true of a large fraction of people on dating apps, and gives them no other information to work with.
+      </p>
+      <p>
+        The fix is not to delete the cities. It is to pick one of them and say something specific about it. "Sydney, but I still miss the corner store under my flat in Highbury that sold both wine and lightbulbs." That is the same fact. It is now a person.
+      </p>
+
+      <h2>2. The Office quote, or its equivalent</h2>
+      <p>
+        "I am Jim. Looking for my Pam." "Schrute Bucks accepted." Any line that signals you watched a show that the reader also watched. This was almost charming in 2017. It now functions as a placeholder for a personality.
+      </p>
+      <p>
+        The reason it does not work is that it is borrowed. You did not write it. The reader cannot tell what is yours and what is reflexive. Borrowed lines from popular media are read as decoration, not content. They make the viewer feel like they are looking at someone else's stuff arranged on your wall.
+      </p>
+
+      <h2>3. The disclaimer about hating writing bios</h2>
+      <p>
+        "I am terrible at writing these things." "Bios are weird, just ask me anything." "Send help, I do not know what to put here."
+      </p>
+      <p>
+        This is a defensive move pretending to be a humble one. What it actually communicates is: I did not put effort into this and I want you to do the work instead. The reader, who has 80 other profiles to look at, declines.
+      </p>
+      <p>
+        The fix is not "try harder at being witty." The fix is to just write the next sentence, the one you would have written if you had not opened with the apology. Start there.
+      </p>
+
+      <h2>4. The list of activities with no specifics</h2>
+      <p>
+        "I love hiking, reading, traveling, trying new restaurants, and spending time with friends."
+      </p>
+      <p>
+        This sentence is in roughly one in four bios. It contains no information. Every person on the app likes those things. Listing them is the textual equivalent of breathing.
+      </p>
+      <p>
+        If you do hike, name one trail. If you read, name a book you are 100 pages into and not yet sure about. If you travel, name the last place you slept that was not your own bed and one thing about it. If you love restaurants, name a meal that genuinely changed your week. Each of these is a small risk. Each one is also the entire reason a bio exists.
+      </p>
+
+      <h2>5. The wish list</h2>
+      <p>
+        "Looking for someone who is kind, ambitious, funny, and emotionally available."
+      </p>
+      <p>
+        I want to be careful here. There is nothing wrong with knowing what you want. The issue is that this kind of sentence lands as a job posting. It tells the viewer how to qualify for an interview. It tells them nothing about what working at the company is like.
+      </p>
+      <p>
+        If you want to communicate that you take dating seriously, do it by being specific about your own life, not by listing the attributes of a hypothetical partner. The viewer will infer what you want from how you present yourself. A bio that is clearly written by a thoughtful person attracts thoughtful readers without ever using the word.
+      </p>
+
+      <h2>6. The catalog of irony</h2>
+      <p>
+        "Not here for hookups, not here for games, not here for anything serious, just here to see what happens." Or some version of being on the app while also being above the app.
+      </p>
+      <p>
+        The reader can tell. It reads as ambivalence with a wink. It is the equivalent of showing up to a party and announcing that you do not really like parties. People will believe you and leave you alone, which is the opposite of what you wanted when you opened the app.
+      </p>
+      <p>
+        If you are ambivalent about dating right now, that is fine. The bio does not have to address it. Write the bio of the version of you who wants to meet someone, and let the ambivalence live in your head where it belongs.
+      </p>
+
+      <h2>Bonus pattern: the height-and-stats opener</h2>
+      <p>
+        On apps that do not display height by default, a small contingent of men open the bio with their height. Sometimes followed by their MBTI and their enneagram. "6'2, ENTJ, 4w3, looking for my person."
+      </p>
+      <p>
+        I understand why this happens. Height filtering on dating apps is real and exhausting. Stating it up front is meant to remove ambiguity. The problem is that opening with stats sets the entire bio in a register of measurement. The rest of whatever you write is read through that frame. The reader has been told, in the first line, that you think of yourself as a set of data points. The line that follows has to fight uphill against that.
+      </p>
+      <p>
+        If you want to put your height in the bio, put it later. Buried in a sentence about how you can never find pants that fit. Anything except the opening line.
+      </p>
+
+      <h2>The compounding effect</h2>
+      <p>
+        One of these in a bio is recoverable. Most people have at least one. Two of them and the profile starts to read as generic. Three and the reader has stopped seeing a person and started seeing a category.
+      </p>
+      <p>
+        Go look at your bio. Count how many of the six are in there. Pick the one that hurts the least to cut. Replace it with one true sentence about your actual week. That single swap usually changes the kind of person who messages you within ten days.
+      </p>
+    </>
+  ),
+
+  "the-everything-profile-attracts-nobody": (
+    <>
+      <p>
+        The most common bad profile is not the lazy one. It is the careful one. The one that has been edited five times to make sure it does not say anything that could turn anyone off. The one that ends up appealing to everyone in theory and nobody in practice.
+      </p>
+      <p>
+        I think of these as everything profiles. They are trying to be appropriate for every kind of person who might read them. The result is a profile with no edges, which is also a profile that no specific person feels something about.
+      </p>
+
+      <h2>Why the everything profile happens</h2>
+      <p>
+        You sit down to write your bio. You think, what if I mention I like staying in on Friday nights, and the kind of person I want is more of a party person, and they swipe past. So you take it out. You think, what if I mention I run a small business, and the kind of person I want feels intimidated, and they swipe past. So you take it out.
+      </p>
+      <p>
+        You do this maybe 15 more times. Each cut feels rational in isolation. At the end, the bio says you love good coffee and traveling and being outside. Which is also what every other bio says, for exactly the same reasons.
+      </p>
+      <p>
+        The mental model is that the goal is to maximize the pool of people who might swipe right. The actual goal, the one that produces dates and relationships, is to maximize the pool of people who swipe right because something specific in the profile made them feel like this person might be worth meeting.
+      </p>
+
+      <h2>Particular beats narrow</h2>
+      <p>
+        The fix is not to write a niche profile. Writing for a niche is its own trap. You end up performing a personality you think will appeal to a specific subculture, which is just a different version of writing for an imagined audience.
+      </p>
+      <p>
+        The fix is to be particular. Particular is not narrow. Particular is what your actual life looks like, written down without sanding off the parts that make it yours.
+      </p>
+      <p>
+        Consider the difference. Narrow: "I am looking for someone who is into wine and the slow food movement and weekend trips to the Hunter Valley." Particular: "I have a Sunday tradition of cooking too much pasta and inviting two people over who have not met each other."
+      </p>
+      <p>
+        The narrow version filters for a lifestyle. The particular version filters for a person who responds to specificity. Those are different filters. The second one will produce better matches because it filters on something that actually predicts compatibility, which is taste in detail.
+      </p>
+
+      <h2>The fear is real, the math is wrong</h2>
+      <p>
+        When I tell people to be more particular, the most common response is some version of "but what if it scares people off."
+      </p>
+      <p>
+        The answer is yes. It will scare some people off. That is the point. Those people were not going to be a good match. Filtering them out earlier saves both of you a Wednesday evening at a wine bar in two months.
+      </p>
+      <p>
+        The other thing that happens, which people do not predict, is that the right kind of stranger reads the particular bio and feels relief. Something specific. Something they can ask about. Something that suggests the person on the other end is a real human and not a customer service script. That feeling is what triggers the swipe.
+      </p>
+
+      <h2>How to find your particulars</h2>
+      <p>
+        Most people do not have a particular-finding problem. They have a particular-noticing problem. The details are there. They just do not show up when you sit down to write a bio because the bio-writing brain immediately reaches for the generic shape.
+      </p>
+      <p>
+        One exercise that works. Open your messages. Find the last three real conversations you had with close friends in the past week. Read them. The voice in those conversations is yours. The references in them are yours. The small specific things you complained about, the bit you keep bringing up about your boss, the joke you and your sister have been running for five years, the cafe you keep mentioning. That is your material.
+      </p>
+      <p>
+        Most of what you need for a good bio is already in the last 30 messages you sent someone who knows you. You are just used to writing the bio in a different voice than the one you actually use.
+      </p>
+
+      <h2>The two-line test</h2>
+      <p>
+        Open your bio. Find the two sentences that are doing the most work. If you cut them, would the bio still describe a recognizable person? If yes, the rest of the bio is filler. Cut it. Let the two good lines breathe.
+      </p>
+      <p>
+        Most bios I rewrite end up shorter than they started, because the rewrite is mostly an act of removing what was not earning its place. The everything profile has more words than it needs. The particular profile usually has fewer.
+      </p>
+
+      <h2>The "third paragraph" tell</h2>
+      <p>
+        Here is a quick diagnostic. Read your bio aloud and count the sentences. If you can finish the whole bio without ever having said something a friend of yours would tease you about, the bio is still in everything mode.
+      </p>
+      <p>
+        The tease-able sentence is the one that gives a specific human texture. The fact that you cannot pass a bookstore without going in even if you do not need anything. The fact that you fall asleep with the TV on every night and pretend you do not. The fact that the longest grudge you currently hold is against a former coworker who took credit for an idea in 2022. None of these need to be in the bio. But the bio should contain at least one sentence in the same key. Otherwise it is just a list of acceptable answers.
+      </p>
+
+      <h2>What changes when you stop trying to please everyone</h2>
+      <p>
+        The first thing you notice, after you swap an everything profile for a particular one, is that the match volume often drops a little. Sometimes more than a little. This is the moment people panic and revert.
+      </p>
+      <p>
+        Do not revert. Wait a week.
+      </p>
+      <p>
+        The match volume drops because the filter got sharper. The replies you do get are different. The conversations start somewhere other than "hey." People reference things in your profile. The energy is higher. The percentage that turn into actual dates climbs. Which is the only number that ever mattered.
+      </p>
+      <p>
+        The everything profile gives you a lot of matches with nobody specific. The particular profile gives you fewer matches with people who actually wanted to meet you. The second outcome is the one you opened the app for.
+      </p>
+    </>
+  ),
+
+  "when-good-photos-still-fail": (
+    <>
+      <p>
+        You hired a photographer. Or your friend with the good camera spent a Saturday afternoon on it. The photos are sharp. The lighting is soft. You look like yourself, on a good day, in good light. You upload them. Nothing happens.
+      </p>
+      <p>
+        This is one of the more frustrating versions of a dating-app problem, because the most common advice you will get is to fix the photos. The photos are fine. The lineup is the issue.
+      </p>
+
+      <h2>Good photos in a bad lineup</h2>
+      <p>
+        A photo lineup tells a story. The story is told by the order of the photos, the variety of settings, the energy of each shot relative to the ones around it, and the gaps between what is shown and what is implied.
+      </p>
+      <p>
+        You can have six technically excellent photos that all tell the same small story. Six headshots in soft light. Six photos taken on the same afternoon at the same beach. Six versions of you looking serious at a slight angle to the camera. The viewer reads the lineup and concludes that this person exists in one mood, in one place, in one register. Which is not true of you, but it is what the photos are saying.
+      </p>
+      <p>
+        This is the lie of good lighting. Good lighting can make any single photo feel substantial. It cannot make a lineup of six similar photos feel like a person.
+      </p>
+
+      <h2>The one-of-each rule</h2>
+      <p>
+        A working lineup usually has one photo from each of several categories. The categories are not strict. The point is variety.
+      </p>
+      <p>
+        One photo of your face, clean and clear, no props. One photo of you doing something specific that is not posed. One photo with other people in it, ideally where the relationship to them is legible. One photo somewhere that says where you actually live or spend your time, which is rarely a beach in Bali. One photo that has some movement in it, where you are not staring at the camera. One photo that is slightly older or different, that adds a dimension the others do not.
+      </p>
+      <p>
+        If five of your six photos are from the same category, the lineup is failing even if each photo is technically perfect.
+      </p>
+
+      <h2>The repeat-outfit problem</h2>
+      <p>
+        One of the easier diagnostics. Go look at your lineup. How many photos have you in the same outfit? If two or more of them are from the same day, that is two photos doing the work of one.
+      </p>
+      <p>
+        This happens almost every time someone gets professional photos done. The photographer takes 300 shots over two hours. You pick the six best. All six are from the same shoot. Now the entire profile is wearing one outfit, has one haircut, was in one mood, and was photographed by one person who lit you the same way. The viewer reads this as a curated set, not a life.
+      </p>
+      <p>
+        The fix is to use, at most, two photos from any single shoot. The other four come from your camera roll. Yes, the camera roll. Yes, the iPhone photo from last September of you laughing in a kitchen with bad overhead lighting. That photo is doing more work than the third headshot from the shoot.
+      </p>
+
+      <h2>The energy problem nobody names</h2>
+      <p>
+        There is a thing that happens with technically good photos where everyone in them is performing for the camera. You can feel it without being able to name it. The eyes are not quite present. The smile is in place but not earned. The body is angled correctly. The vibe is poster, not person.
+      </p>
+      <p>
+        This is hard to fix in a photo shoot because the photo shoot is the problem. You are aware of being photographed, so you perform. The performance is competent. The performance is also what the viewer reads.
+      </p>
+      <p>
+        The photo in your lineup that is doing the most work, almost always, is the one where you were not aware the photo was being taken. The one a friend snapped from across a table while you were in the middle of a sentence. The one from a birthday party where you were laughing at something the person to your left said. Those photos look slightly less "good" by photo-shoot standards. They look much more like a person you might want to meet.
+      </p>
+
+      <h2>The third-photo gap</h2>
+      <p>
+        Watch what happens between your second and third photo. This is where most lineups die.
+      </p>
+      <p>
+        Photo one: clear shot of you. Photo two: another clear shot of you, slightly different angle, same energy. Photo three: a third clear shot. By now the viewer is looking at three versions of the same input. The brain marks this as redundant and stops investing attention.
+      </p>
+      <p>
+        Photo three needs to be a turn. A different setting, a different version of you, a different mood. The contrast is what keeps the viewer scrolling. If your good photos are all in the same register, slot three is where the lineup quietly collapses.
+      </p>
+
+      <h2>The "what would a stranger conclude" exercise</h2>
+      <p>
+        A useful exercise. Hand your phone to a friend who has not seen your profile. Have them swipe through the photos once, in order, no bio. Then ask them three questions. Where do you think this person lives. What do you think this person does on a Sunday. What kind of people do you think this person spends time with.
+      </p>
+      <p>
+        The answers tell you exactly what the lineup is saying. If your friend, who actually knows you, cannot answer those questions from the photos, no stranger is going to either. A photo lineup that produces three blank answers is not failing on quality. It is failing on coverage.
+      </p>
+      <p>
+        Most fixes start there. Find the question the lineup cannot answer. Add one camera-roll photo that answers it. Do not add anything else. Watch the next two weeks.
+      </p>
+
+      <h2>Run the test on your current set</h2>
+      <p>
+        Pull up your profile. Look at the six photos in order. Ask three questions.
+      </p>
+      <p>
+        Could a stranger tell where you actually live from the photos? If no, you have a setting problem. Could a stranger tell what kind of week you have when nothing exciting is happening? If no, you have a daily-life problem. Could a stranger tell what you are like with people who know you well? If no, you have a relationship-legibility problem.
+      </p>
+      <p>
+        One of those three questions usually answers itself the moment you ask it. The fix is rarely a new photo shoot. It is one camera-roll photo that fills a missing register in the lineup you already have.
+      </p>
+    </>
+  ),
+
+  "one-prompt-to-pre-filter-everyone-wrong": (
+    <>
+      <p>
+        If you only change one line in your profile this month, make it the one that does the pre-filtering. Done well, it saves you the equivalent of three first dates that were never going to work. Done badly, it does nothing and you stay in the queue.
+      </p>
+      <p>
+        The prompt that does the filtering is not the one you think. It is not "deal breakers." It is not "looking for." It is not the manifesto where you list what kind of person you want.
+      </p>
+      <p>
+        The prompt that filters is the one that names a small specific thing about how you actually live, with enough clarity that the wrong person reads it and quietly swipes left.
+      </p>
+
+      <h2>How the filter actually works</h2>
+      <p>
+        Most people think the filter mechanism in a profile is intellectual. The reader sees a value or preference, agrees or disagrees, and acts accordingly.
+      </p>
+      <p>
+        That is not how it works. The filter mechanism is emotional. The reader feels a small yes or a small no when they read the line. The yes or the no fires before the conscious thought arrives. The swipe follows the feeling.
+      </p>
+      <p>
+        This is why "I want someone kind and ambitious" filters nothing. It does not produce a feeling. Everyone agrees in principle and swipes regardless. Whereas "I do not own a TV and have a strong opinion about the people who use that as a personality trait" does produce a feeling. Some readers feel relief. Some feel mild offense. Either way they are out of the queue of false positives.
+      </p>
+
+      <h2>The structure of a good filter prompt</h2>
+      <p>
+        The best filter prompts share three properties.
+      </p>
+      <p>
+        First, they describe a behavior rather than a value. "I cook on Sundays and freeze the leftovers" is a behavior. "I love cooking" is a value. The behavior triggers a feeling because the reader can imagine themselves living next to it. The value does not, because the value is abstract.
+      </p>
+      <p>
+        Second, they have some friction. They include one detail that some readers will react against. Not a deal breaker. A texture. "I am asleep by 10:30 most nights because I run a small business and I am tired" has friction. The reader who wants someone who closes down bars on Saturdays feels a quiet no. Which is the point.
+      </p>
+      <p>
+        Third, they are short. The longer the prompt, the more the reader's brain treats it as background. A two-sentence filter prompt outperforms a six-sentence one almost every time.
+      </p>
+
+      <h2>The one I keep recommending</h2>
+      <p>
+        The prompt I keep recommending to people is some version of: "What a normal Tuesday night looks like for me right now."
+      </p>
+      <p>
+        Tuesday is the key word. Tuesdays are honest. Weekends are aspirational. Saturday nights are a performance you put on for the camera of the dating app. Tuesdays are what your life is actually like.
+      </p>
+      <p>
+        A good Tuesday-night answer might be: "Home by 7, cook something that is mostly vegetables, on the couch with my dog and whatever I am watching, asleep by 10:30." Or: "Pottery class until 9, walk home, half an hour with a book before I fall asleep with the lights on." Or: "Late shift at the restaurant so I am not home until 1, then I am useless until Wednesday afternoon."
+      </p>
+      <p>
+        Each of these tells the reader exactly what a relationship with you might look like on a non-special day. The reader who wants something different feels it. The reader who wants something like it feels it more.
+      </p>
+
+      <h2>What this prompt does that the others do not</h2>
+      <p>
+        The Tuesday-night prompt does three things at once that no single other prompt does as well.
+      </p>
+      <p>
+        It pre-filters on energy match. People with very different energy levels read each other's Tuesdays and self-select.
+      </p>
+      <p>
+        It pre-filters on life logistics. Late shifts, early bedtimes, kids, dogs, second jobs, gym schedules. All of these surface in the Tuesday answer without you having to list them as facts.
+      </p>
+      <p>
+        It pre-filters on writing voice. The answer is short. You cannot hide in it. Either you sound like a person or you sound like a generic bio. The reader's brain picks up the difference in about three seconds.
+      </p>
+
+      <h2>The pushback I always get</h2>
+      <p>
+        Every time I suggest the Tuesday prompt to someone, the first response is some version of "my Tuesday is boring." Which is correct. And which is the point.
+      </p>
+      <p>
+        Almost everyone's Tuesday is boring. Most relationships happen in the boring weekday space between work and sleep. The reader of your bio is also someone whose Tuesday is mostly unremarkable. When you describe yours honestly, you are showing them what the actual shared space of being together would look like. The fact that it is not exciting is exactly what makes it useful information.
+      </p>
+      <p>
+        The other pushback is "but what if my Tuesday is genuinely just work and bed." That is also a valid answer. "Work until 8, eat whatever is in the fridge, bed by 11" is a perfectly good filter. It tells anyone who needs more evening energy than that to move along, and it tells the person on the same schedule that you exist.
+      </p>
+
+      <h2>What to do with your current pre-filter</h2>
+      <p>
+        If your current "filter" prompt is some version of a wish list, swap it. The wish list is not pre-filtering anyone. It is making the profile look serious without doing any work.
+      </p>
+      <p>
+        Write your Tuesday in three sentences. Be specific. Use a real start time, a real activity, a real bedtime. Do not edit it to sound impressive. The fact that your Tuesday is unremarkable is most of the value of the answer.
+      </p>
+      <p>
+        Leave it up for two weeks. Notice the difference in who messages you. The volume might drop. The conversations should get notably more aligned. Some of them will reference Tuesday specifically, which is your sign that the filter is working.
+      </p>
+      <p>
+        The point of a filter prompt is not to attract more people. It is to attract fewer wrong ones. By that measure, the Tuesday answer is one of the few prompts that genuinely pays for the slot it takes up.
+      </p>
+    </>
+  ),
+
+  "profile-as-invitation-not-resume": (
+    <>
+      <p>
+        If you have spent any time editing your dating profile, there is a moment most people hit where the bio reads back like a CV. Job. Hobbies. Education. Travel. Languages. A photo at a wedding. A photo on a mountain. A line about looking for something serious.
+      </p>
+      <p>
+        The instinct that produces this is rational. You are presenting yourself to strangers who are deciding whether to spend an evening with you. Of course you list your credentials. Of course you show your best angles. This is how presenting yourself works in every other context.
+      </p>
+      <p>
+        Dating profiles are not every other context. The mental model that produces good resumes produces bad profiles. The two formats are doing different work.
+      </p>
+
+      <h2>What a resume is for</h2>
+      <p>
+        A resume is a document that argues you are qualified for a role. The role is defined in advance. The reader is comparing you to a job description and to other candidates. The optimal resume is comprehensive, accurate, and free of personality, because personality is noise in a hiring decision.
+      </p>
+      <p>
+        The reader of a resume is asking: should I move this person to the next stage? They are looking for proof. Specific accomplishments, measurable outcomes, verifiable credentials. Anything that is not proof gets in the way.
+      </p>
+      <p>
+        This is exactly the wrong frame for a profile.
+      </p>
+
+      <h2>What an invitation is for</h2>
+      <p>
+        An invitation is a different document. It does not argue. It depicts. It shows the reader what a specific evening or experience would look like if they accepted. The optimal invitation is concrete, sensory, and a little particular. The reader can almost smell the room.
+      </p>
+      <p>
+        The reader of an invitation is asking: do I want to be in that room? They are not comparing your invitation to a list of requirements. They are checking whether the picture you painted produces a small feeling of yes.
+      </p>
+      <p>
+        This is the question someone is actually asking when they swipe. Not "is this person qualified." But "do I want to be in a room with this person."
+      </p>
+
+      <h2>What changes when you write an invitation</h2>
+      <p>
+        The first thing that changes is what you put in. Resume bios list. Invitation bios show. The job becomes a sentence about what you actually do at work that you like. The hobby becomes a small scene from the last time you did it. The travel becomes one street in one city you keep thinking about.
+      </p>
+      <p>
+        The second thing that changes is what you leave out. A resume tries to be comprehensive. An invitation does not. An invitation can leave entire areas of your life unmentioned because the reader does not need to know everything to decide whether to come. They just need to see one room clearly enough to want to walk into it.
+      </p>
+      <p>
+        The third thing is the voice. Resumes are written in a register that downplays the writer. Invitations are written in the writer's actual voice. The reader of an invitation is not just deciding whether to come. They are deciding whether they like the person doing the inviting.
+      </p>
+
+      <h2>The dinner-party heuristic</h2>
+      <p>
+        Here is a heuristic I use when I am stuck on a bio. Imagine you are writing an invitation to a dinner party you are throwing on Saturday. Not a wedding invitation. A casual one, by text, to a person you have not seen in a while who you genuinely want to come.
+      </p>
+      <p>
+        What would that message say? Probably something like: "I am cooking a thing on Saturday, two friends you do not know, low key, food will be too much pasta and probably a decent bottle of wine. Come if you can." Notice what it does. It names the event. It gives the texture. It signals the energy. It invites without pressuring. It does not list your credentials as a host.
+      </p>
+      <p>
+        Your bio is, structurally, doing the same job. It is inviting a stranger to consider a hypothetical Saturday with you. The texture of the invitation is what they are deciding on, not the credentials.
+      </p>
+
+      <h2>What people on the other end actually read</h2>
+      <p>
+        Ask anyone who has spent serious time on dating apps what they remember from the last 20 profiles they liked. They will not remember anyone's job. They will not remember anyone's height. They will remember one specific detail. The pasta on Sundays. The dog named after a poet. The thing about how he always orders the same drink at every bar.
+      </p>
+      <p>
+        This is what gets remembered because this is what gets felt. The resume parts of the profile are scanned and forgotten in under a second. The invitation parts are what stay in the reader's head when they are deciding whether to swipe back.
+      </p>
+
+      <h2>The "first line" problem</h2>
+      <p>
+        Resume bios almost always open with a credential. Job title, city, age range. Invitation bios open with a sensory detail or a small scene. The opening line is doing more weight than the rest combined, because it is the only sentence that has the reader's full attention before they decide whether to keep reading.
+      </p>
+      <p>
+        I have rewritten a lot of opening lines this year. Almost every successful rewrite involves cutting a fact and replacing it with a specific moment. "Architect in Brooklyn" becomes "I draw houses for a living and the best part of my week is the half hour I spend on the train sketching the building across from the platform." Same person. Different invitation.
+      </p>
+      <p>
+        If your first line could be the headline of someone else's LinkedIn profile, it is doing resume work. Rewrite it as the first sentence of a story about a Wednesday in your actual life.
+      </p>
+
+      <h2>One swap to make this week</h2>
+      <p>
+        Find the most resume-shaped sentence in your bio. The one that sounds the most like a LinkedIn line. Usually it is the one that names your job, or the one that lists three hobbies, or the one that says where you went to university.
+      </p>
+      <p>
+        Do not delete the underlying fact. Keep the fact. Rewrite the sentence as a tiny scene from the actual activity it describes.
+      </p>
+      <p>
+        "Senior product manager at a fintech" becomes "I run product at a startup and most weeks the best part is the Tuesday meeting where we argue about what last week's user research means." Same fact. Now there is a room. Now there is a person in the room. Now the reader can decide whether they want to walk in.
+      </p>
+      <p>
+        This is the entire move. Stop arguing that you are qualified. Start showing what the evening looks like. The right people will accept the invitation.
+      </p>
+    </>
+  ),
 };
 
 // ── Prose wrapper ─────────────────────────────────────────────────────────────
