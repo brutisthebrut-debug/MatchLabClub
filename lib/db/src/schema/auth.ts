@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, jsonb, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, jsonb, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 // (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
 export const sessionsTable = pgTable(
@@ -32,6 +32,12 @@ export const usersTable = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  // Account-level consent for sending the user's own content to a hosted LLM
+  // (Anthropic via Replit AI Integrations). When false/null, AI tools that
+  // opt in to this gate fall back to deterministic output.
+  aiContentConsentGranted: boolean("ai_content_consent_granted").notNull().default(false),
+  aiContentConsentGrantedAt: timestamp("ai_content_consent_granted_at", { withTimezone: true }),
+  aiContentConsentRevokedAt: timestamp("ai_content_consent_revoked_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

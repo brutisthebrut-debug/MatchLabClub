@@ -16,6 +16,9 @@
     },
     {
       "path": "../../lib/ai-schemas"
+    },
+    {
+      "path": "../../lib/integrations-anthropic-ai"
     }
   ]
 }

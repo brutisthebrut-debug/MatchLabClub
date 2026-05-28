@@ -413,6 +413,51 @@ export const GetAccountSummaryResponse = zod.object({
 
 
 /**
+ * Returns whether the authenticated user has granted consent to send
+their own content (bios, messages, screenshots, journal entries) to
+the hosted LLM (Anthropic via Replit AI Integrations), plus the
+timestamps of the most recent grant and revoke events. When consent
+is absent, AI tools that opt into this gate fall back to deterministic
+output and never transmit user content to the model.
+
+ * @summary Get the signed-in user's AI content consent state
+ */
+export const GetAiContentConsentHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetAiContentConsentResponse = zod.object({
+  "granted": zod.boolean(),
+  "grantedAt": zod.coerce.date().nullable(),
+  "revokedAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * Sets the authenticated user's account-level AI content consent.
+Setting `granted: true` stamps `grantedAt = now()`. Setting
+`granted: false` stamps `revokedAt = now()` and immediately causes
+consent-gated AI tools to fall back to deterministic output on the
+next request.
+
+ * @summary Grant or revoke the signed-in user's AI content consent
+ */
+export const SetAiContentConsentHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const SetAiContentConsentBody = zod.object({
+  "granted": zod.boolean()
+})
+
+export const SetAiContentConsentResponse = zod.object({
+  "granted": zod.boolean(),
+  "grantedAt": zod.coerce.date().nullable(),
+  "revokedAt": zod.coerce.date().nullable()
+})
+
+
+/**
  * Creates a short-lived, single-use token that the user can use to
 download the same JSON returned by `/account/export`, and emails a
 link containing that token to the user's account email address. The

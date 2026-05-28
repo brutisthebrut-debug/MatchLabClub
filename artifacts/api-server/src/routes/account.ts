@@ -22,6 +22,9 @@ import {
   ListMySessionsResponse,
   RevokeOtherSessionsResponse,
   RevokeOneSessionResponse,
+  GetAiContentConsentResponse,
+  SetAiContentConsentBody,
+  SetAiContentConsentResponse,
 } from "@workspace/api-zod";
 import { clearSession, getSessionId, SESSION_COOKIE } from "../lib/auth";
 import { describeUserAgent } from "../lib/userAgent";
@@ -690,6 +693,88 @@ router.delete("/account", async (req, res): Promise<void> => {
         messages: messages.length,
         insights: insights.length,
       },
+    }),
+  );
+});
+
+/**
+ * GET /api/me/consent/ai-content
+ *
+ * Returns the authenticated user's current AI content consent state. Used by
+ * the Settings UI and as the server-side source of truth for the
+ * `requireContentConsent` gate in `aiService.generate`.
+ */
+router.get("/me/consent/ai-content", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const rows = await db
+    .select({
+      granted: usersTable.aiContentConsentGranted,
+      grantedAt: usersTable.aiContentConsentGrantedAt,
+      revokedAt: usersTable.aiContentConsentRevokedAt,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.id, req.user.id))
+    .limit(1);
+  const row = rows[0];
+  res.json(
+    GetAiContentConsentResponse.parse({
+      granted: row?.granted ?? false,
+      grantedAt: row?.grantedAt ? toIso(row.grantedAt) : null,
+      revokedAt: row?.revokedAt ? toIso(row.revokedAt) : null,
+    }),
+  );
+});
+
+/**
+ * POST /api/me/consent/ai-content
+ *
+ * Grant or revoke account-level AI content consent. Stamps grantedAt on
+ * grant and revokedAt on revoke (independently — both timestamps may be set,
+ * the booleans tells us the current state). Revoke takes effect on the very
+ * next consent-gated AI request via the `requireContentConsent` flag in
+ * `aiService.generate`.
+ */
+router.post("/me/consent/ai-content", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const parsed = SetAiContentConsentBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const now = new Date();
+  const updates: Partial<typeof usersTable.$inferInsert> = {
+    aiContentConsentGranted: parsed.data.granted,
+    updatedAt: now,
+  };
+  if (parsed.data.granted) {
+    updates.aiContentConsentGrantedAt = now;
+  } else {
+    updates.aiContentConsentRevokedAt = now;
+  }
+  const [updated] = await db
+    .update(usersTable)
+    .set(updates)
+    .where(eq(usersTable.id, req.user.id))
+    .returning({
+      granted: usersTable.aiContentConsentGranted,
+      grantedAt: usersTable.aiContentConsentGrantedAt,
+      revokedAt: usersTable.aiContentConsentRevokedAt,
+    });
+  req.log.info(
+    { userId: req.user.id, granted: parsed.data.granted },
+    "User updated AI content consent",
+  );
+  res.json(
+    SetAiContentConsentResponse.parse({
+      granted: updated?.granted ?? parsed.data.granted,
+      grantedAt: updated?.grantedAt ? toIso(updated.grantedAt) : null,
+      revokedAt: updated?.revokedAt ? toIso(updated.revokedAt) : null,
     }),
   );
 });

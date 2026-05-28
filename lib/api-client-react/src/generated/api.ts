@@ -22,6 +22,7 @@ import type {
 import type {
   AccountExport,
   AccountSummary,
+  AiContentConsentState,
   AiEnhanceInput,
   AiError,
   AiFallbackRate,
@@ -117,6 +118,7 @@ import type {
   ScreenshotAuditReport,
   ScreenshotExtractInput,
   ScreenshotExtractResult,
+  SetAiContentConsentInput,
   TestAiParams,
   TrashPurgeHeartbeat,
   TrashPurgeResult,
@@ -1083,6 +1085,167 @@ export function useGetAccountSummary<TData = Awaited<ReturnType<typeof getAccoun
 
 
 
+
+export const getGetAiContentConsentUrl = () => {
+
+
+
+
+  return `/api/me/consent/ai-content`
+}
+
+/**
+ * Returns whether the authenticated user has granted consent to send
+their own content (bios, messages, screenshots, journal entries) to
+the hosted LLM (Anthropic via Replit AI Integrations), plus the
+timestamps of the most recent grant and revoke events. When consent
+is absent, AI tools that opt into this gate fall back to deterministic
+output and never transmit user content to the model.
+
+ * @summary Get the signed-in user's AI content consent state
+ */
+export const getAiContentConsent = async ( options?: RequestInit): Promise<AiContentConsentState> => {
+
+  return customFetch<AiContentConsentState>(getGetAiContentConsentUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAiContentConsentQueryKey = () => {
+    return [
+    `/api/me/consent/ai-content`
+    ] as const;
+    }
+
+
+export const getGetAiContentConsentQueryOptions = <TData = Awaited<ReturnType<typeof getAiContentConsent>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAiContentConsent>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAiContentConsentQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiContentConsent>>> = ({ signal }) => getAiContentConsent({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAiContentConsent>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAiContentConsentQueryResult = NonNullable<Awaited<ReturnType<typeof getAiContentConsent>>>
+export type GetAiContentConsentQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the signed-in user's AI content consent state
+ */
+
+export function useGetAiContentConsent<TData = Awaited<ReturnType<typeof getAiContentConsent>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAiContentConsent>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAiContentConsentQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSetAiContentConsentUrl = () => {
+
+
+
+
+  return `/api/me/consent/ai-content`
+}
+
+/**
+ * Sets the authenticated user's account-level AI content consent.
+Setting `granted: true` stamps `grantedAt = now()`. Setting
+`granted: false` stamps `revokedAt = now()` and immediately causes
+consent-gated AI tools to fall back to deterministic output on the
+next request.
+
+ * @summary Grant or revoke the signed-in user's AI content consent
+ */
+export const setAiContentConsent = async (setAiContentConsentInput: SetAiContentConsentInput, options?: RequestInit): Promise<AiContentConsentState> => {
+
+  return customFetch<AiContentConsentState>(getSetAiContentConsentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      setAiContentConsentInput,)
+  }
+);}
+
+
+
+
+export const getSetAiContentConsentMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setAiContentConsent>>, TError,{data: BodyType<SetAiContentConsentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setAiContentConsent>>, TError,{data: BodyType<SetAiContentConsentInput>}, TContext> => {
+
+const mutationKey = ['setAiContentConsent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setAiContentConsent>>, {data: BodyType<SetAiContentConsentInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setAiContentConsent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetAiContentConsentMutationResult = NonNullable<Awaited<ReturnType<typeof setAiContentConsent>>>
+    export type SetAiContentConsentMutationBody = BodyType<SetAiContentConsentInput>
+    export type SetAiContentConsentMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Grant or revoke the signed-in user's AI content consent
+ */
+export const useSetAiContentConsent = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setAiContentConsent>>, TError,{data: BodyType<SetAiContentConsentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setAiContentConsent>>,
+        TError,
+        {data: BodyType<SetAiContentConsentInput>},
+        TContext
+      > => {
+      return useMutation(getSetAiContentConsentMutationOptions(options));
+    }
 
 export const getEmailMyDataExportUrl = () => {
 

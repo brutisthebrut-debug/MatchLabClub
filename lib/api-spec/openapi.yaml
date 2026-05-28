@@ -326,6 +326,73 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/consent/ai-content:
+    get:
+      tags: [Auth]
+      operationId: getAiContentConsent
+      summary: Get the signed-in user's AI content consent state
+      description: |
+        Returns whether the authenticated user has granted consent to send
+        their own content (bios, messages, screenshots, journal entries) to
+        the hosted LLM (Anthropic via Replit AI Integrations), plus the
+        timestamps of the most recent grant and revoke events. When consent
+        is absent, AI tools that opt into this gate fall back to deterministic
+        output and never transmit user content to the model.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Current consent state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiContentConsentState'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+    post:
+      tags: [Auth]
+      operationId: setAiContentConsent
+      summary: Grant or revoke the signed-in user's AI content consent
+      description: |
+        Sets the authenticated user's account-level AI content consent.
+        Setting `granted: true` stamps `grantedAt = now()`. Setting
+        `granted: false` stamps `revokedAt = now()` and immediately causes
+        consent-gated AI tools to fall back to deterministic output on the
+        next request.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetAiContentConsentInput'
+      responses:
+        '200':
+          description: Consent state after the update.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiContentConsentState'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /account/export/email:
     post:
       tags: [Auth]
@@ -4652,3 +4719,23 @@ components:
           const: true
         deletedId:
           type: integer
+
+    AiContentConsentState:
+      type: object
+      required: [granted, grantedAt, revokedAt]
+      properties:
+        granted:
+          type: boolean
+        grantedAt:
+          type: [string, "null"]
+          format: date-time
+        revokedAt:
+          type: [string, "null"]
+          format: date-time
+
+    SetAiContentConsentInput:
+      type: object
+      required: [granted]
+      properties:
+        granted:
+          type: boolean

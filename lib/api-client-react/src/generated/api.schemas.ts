@@ -1739,6 +1739,18 @@ export interface DeleteWellnessAnswerResult {
   deletedId: number;
 }
 
+export interface AiContentConsentState {
+  granted: boolean;
+  /** @nullable */
+  grantedAt: string | null;
+  /** @nullable */
+  revokedAt: string | null;
+}
+
+export interface SetAiContentConsentInput {
+  granted: boolean;
+}
+
 /**
  * Opaque session token — `Bearer <sid>`.
  */
