@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { withAlpha } from "@/lib/brandColor";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -5,6 +6,7 @@ import { useMeta } from "@/hooks/useMeta";
 import { motion } from "framer-motion";
 import { Clock, ArrowLeft, ArrowRight, Sparkles, BookOpen } from "lucide-react";
 import { ARTICLES } from "@/lib/blogArticles";
+import { trackEvent } from "@/lib/analytics";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -336,6 +338,554 @@ const ARTICLE_CONTENT: Record<string, React.ReactNode> = {
       </p>
     </>
   ),
+
+  "matching-with-the-wrong-people": (
+    <>
+      <p>
+        Three matches in a row. All wrong. Different faces, different bios, somehow the same disappointment by week two.
+      </p>
+      <p>
+        When this happens once, it's bad luck. When it happens four or five times in a row, it stops being about them and starts being about a pattern your swipe finger is running without your conscious permission.
+      </p>
+
+      <h2>The filter you don't know you're using</h2>
+      <p>
+        Most people swipe based on a fast feeling: this person is attractive, this person seems fun, this person is "my type." That fast feeling is built from years of associations — what your last good relationship looked like, what felt safe growing up, what your friends approve of, what you're proving to your ex.
+      </p>
+      <p>
+        None of those filters are necessarily wrong. The problem is they're invisible. You don't see yourself filtering. You just see the matches you ended up with — and conclude the dating pool is broken.
+      </p>
+
+      <h2>The three patterns that produce wrong matches</h2>
+      <p>
+        <strong>Pattern one: the familiar.</strong> You're swiping right on people who feel familiar — because familiar feels safe — and familiar is often a version of the dynamic you said you wanted to leave. The signal you're tuning into isn't "compatible." It's "recognisable."
+      </p>
+      <p>
+        <strong>Pattern two: the proof.</strong> You're swiping right on people who would prove something — to yourself, to an ex, to a friend group. Their profile is doing the job of a trophy more than a partner. Whatever it's proving, it's not actually about them.
+      </p>
+      <p>
+        <strong>Pattern three: the avoidance.</strong> You're swiping right on people who give you cover for not actually committing — they live far away, they're recently single, they're "complicated." The match exists, but the relationship can't, and that's the unspoken reason it felt safe to swipe.
+      </p>
+
+      <h2>How to actually see the pattern</h2>
+      <p>
+        Write down the last five people you matched with and at least one detail about each: their job, their stated relationship goal, how the conversation ended. Then write down the last five people you went on a date with from the apps.
+      </p>
+      <p>
+        Read both lists back. Look for what's the same. Not in their personalities — in the dynamic. Who initiated. Who kept the energy going. Who you were performing for. What ended each one.
+      </p>
+      <p>
+        The pattern is almost always there. It's usually quieter than you'd expect.
+      </p>
+
+      <h2>The reset isn't "try harder"</h2>
+      <p>
+        Once you can see the pattern, the move isn't to white-knuckle different choices. It's to slow the swipe down enough that you're actually choosing instead of pattern-matching.
+      </p>
+      <p>
+        Before the next right-swipe: read the bio twice, read the prompts, look at every photo, and ask the awkward question — what is this person's actual life going to ask of me? If the answer makes you feel something honest, swipe. If the answer makes you feel nothing, the swipe is your filter talking, not you.
+      </p>
+    </>
+  ),
+
+  "attachment-styles-on-dating-apps": (
+    <>
+      <p>
+        Attachment theory is having a moment, and most of how it's used in dating discourse is wrong — flattened into four boxes, used to label other people, deployed mostly as a reason to stop trying with someone.
+      </p>
+      <p>
+        Used honestly, it does something more useful: it gives you a frame for noticing how you actually behave in the first three weeks of any new dating connection. Because that's where attachment style does most of its damage, and it does most of it through behaviours you wouldn't have called "attachment" at all.
+      </p>
+
+      <h2>What each style looks like on a dating app specifically</h2>
+      <p>
+        <strong>Secure</strong> shows up on a dating app as steady pace. You match, you have a real conversation, you ask them out within a reasonable window, you don't catastrophise the gaps between replies. None of this feels effortful — it feels like baseline.
+      </p>
+      <p>
+        <strong>Anxious</strong> shows up as the read-receipt spiral. You check whether they opened it. You re-read your last message looking for what was wrong with it. You draft and redraft. You sometimes send a follow-up to fill the silence. You feel relief, then a fresh wave of needing, every time they reply.
+      </p>
+      <p>
+        <strong>Avoidant</strong> shows up as the slow fade-out. You match, the conversation is good, then on day three you can't bring yourself to open the app. You see they replied and you tell yourself you'll respond later. By the time you do, the energy is gone — and your nervous system registers that as relief.
+      </p>
+      <p>
+        <strong>Disorganised</strong> looks like both of the above on alternate days — intense pursuit followed by total withdrawal, often without an obvious external trigger.
+      </p>
+
+      <h2>The signal you're sending without knowing</h2>
+      <p>
+        Here's the part nobody talks about: the person on the other end can feel your attachment style through the cadence and shape of your messages, even if they couldn't name what they're feeling.
+      </p>
+      <p>
+        Anxious cadence — replies that come too fast, that are too long for the moment, that include three follow-up questions — feels like pressure to the reader, even if every word is fine. Avoidant cadence — multi-day gaps, replies that match the literal content but drop all the warmth — feels like rejection, even when no rejection was intended.
+      </p>
+      <p>
+        Both of those feelings get attributed to chemistry, not to attachment. So when someone "loses interest," your read on what happened is almost always slightly off.
+      </p>
+
+      <h2>What to actually do about your own style</h2>
+      <p>
+        You can't change your attachment style in a week. You can change the behaviour it produces on a specific dating app, this week.
+      </p>
+      <p>
+        If you're anxious-leaning, the move is delay-without-disappearing — match the cadence of their messages instead of beating them to the reply, and resist the urge to follow up on your own follow-up.
+      </p>
+      <p>
+        If you're avoidant-leaning, the move is small consistent contact instead of intense bursts — reply within the day every day, even if briefly, instead of going dark for three days and coming back with a paragraph.
+      </p>
+      <p>
+        Neither of these requires fixing yourself. They just require noticing the move you're about to make, and choosing a slightly different one in the moment.
+      </p>
+    </>
+  ),
+
+  "first-date-question-predicts-second-date": (
+    <>
+      <p>
+        Most first-date questions are filler. "What do you do?" "Where are you from?" "How long have you lived here?" They exist because the silence would be worse, but they don't actually move anything forward.
+      </p>
+      <p>
+        There's one question that does — and whether someone can answer it is the strongest in-conversation predictor that you'll want a second date.
+      </p>
+
+      <h2>The question</h2>
+      <p>
+        Some version of: "What's something you've changed your mind about in the last couple of years?"
+      </p>
+      <p>
+        It's a small question. It doesn't look like much. But it does three things at once that almost no other first-date question does.
+      </p>
+
+      <h2>What it actually tests</h2>
+      <p>
+        First, it tests whether they're a person who reflects. People who don't update their beliefs based on experience tend to make for difficult long-term partners, because every disagreement becomes a stalemate. Someone who can name a real shift in their thinking is showing you they have an internal life that responds to evidence.
+      </p>
+      <p>
+        Second, it tests vulnerability. Admitting you were wrong about something — even something small — is a low-stakes vulnerability test. People who can do it casually on a first date have a baseline emotional security. People who can't, often can't in higher-stakes situations either.
+      </p>
+      <p>
+        Third, it gives you something specific to talk about for the next twenty minutes. Whatever they changed their mind about becomes the next conversation, and it'll be a real one — not a script.
+      </p>
+
+      <h2>The bad versions to avoid</h2>
+      <p>
+        Don't ask it like a job interview question. "So — tell me about a time you changed your mind." That collapses it.
+      </p>
+      <p>
+        Ask it like you're genuinely curious. Lead with one of your own. "I used to think X about Y, and I've been thinking lately I had it backwards. Anything like that for you recently?"
+      </p>
+      <p>
+        That reframing does the work — it makes it a conversation, not a test.
+      </p>
+
+      <h2>What the answers tell you</h2>
+      <p>
+        The content of the answer matters less than the shape. Watch for: do they engage the question or deflect it? Do they give you something concrete or stay abstract? Does the example reveal something about how they think, or just what they think?
+      </p>
+      <p>
+        Someone who says "I used to be really judgmental about people who drink alcohol and I realised I was projecting" is giving you a window into a real internal process. Someone who says "I don't really change my mind about much" is also giving you a window — into something else entirely.
+      </p>
+
+      <h2>Why it predicts the second date</h2>
+      <p>
+        Because by the time you've both answered it, you've had something approximating an actual conversation — not an interview. And the felt sense of "this person is interesting" is built almost entirely from moments like that.
+      </p>
+      <p>
+        The second date isn't decided by chemistry or attraction. It's decided by whether the first date generated even one moment that felt different from the dozen other first dates you've both had this year. This question generates that moment reliably.
+      </p>
+    </>
+  ),
+
+  "good-vibes-only-bio": (
+    <>
+      <p>
+        "Good vibes only." "Looking for my partner in crime." "Just here to see what happens." "Adventure seeker. Coffee enthusiast. Dog lover."
+      </p>
+      <p>
+        These phrases are written constantly because they feel safe. They're warm-sounding, non-committal, broadly agreeable. They are also the single most reliable signal that the writer didn't think carefully about their profile — and the reader picks that up immediately, even when they couldn't tell you why they swiped left.
+      </p>
+
+      <h2>What 'good vibes' actually communicates</h2>
+      <p>
+        On the surface: "I'm a positive person." Below the surface: "I haven't thought about what I want from this." And below that: "I'd like to seem fun without taking the risk of saying anything specific."
+      </p>
+      <p>
+        Generic positivity does almost no filtering work. Everyone is "fun" in their profile. Everyone has "good vibes." If your bio applies equally well to half the platform, it's not telling someone why to choose you — and reading it produces nothing.
+      </p>
+
+      <h2>The mathematics of selection</h2>
+      <p>
+        Someone scrolling through dating profiles is performing a fast selection task. Their goal is not to find someone they like; their goal is to filter out people they don't want to think about further so they can focus on the small number worth a real swipe.
+      </p>
+      <p>
+        Generic bios are easy to filter out — not because they're bad, but because they give no reason to stop. Specific bios are harder to filter out, because the reader has to actually engage with whether the specific thing is interesting to them.
+      </p>
+      <p>
+        That brief moment of engagement is what you're competing for. Generic copy never earns it.
+      </p>
+
+      <h2>What to write instead</h2>
+      <p>
+        Pick a thing you actually do — a habit, a hobby, a recent obsession, an opinion — and describe it concretely enough that someone could form a mental picture.
+      </p>
+      <p>
+        Not: "I love food."
+      </p>
+      <p>
+        Try: "I will drive an unreasonable distance for good xiao long bao. Currently working through every Sichuan restaurant in a 30km radius and rating them on a private spreadsheet."
+      </p>
+      <p>
+        Not: "I'm into music."
+      </p>
+      <p>
+        Try: "Saw Big Thief three times this year and I'm somehow still not over it. Always looking for the next obsession."
+      </p>
+
+      <h2>Why this feels risky and isn't</h2>
+      <p>
+        Specificity feels risky because it's filtering. Some people read your xiao long bao bio and think "weird obsession." Good — they were never going to be a match.
+      </p>
+      <p>
+        Some people read it and think "I'd actually want to meet that person." That's the entire point of a dating profile. You don't need every reader to want to meet you. You need the right ones to feel something specific.
+      </p>
+    </>
+  ),
+
+  "three-message-test": (
+    <>
+      <p>
+        Most dating app conversations die quietly. Not in a fight, not from rejection — they just thin out. Reply gaps stretch. Energy fades. By message five or six, someone stops responding and neither of you mentions it.
+      </p>
+      <p>
+        The reason is almost always something that happened at message three.
+      </p>
+
+      <h2>The three-message structure</h2>
+      <p>
+        Look at any healthy early dating app conversation and the first three messages tend to do specific work:
+      </p>
+      <p>
+        <strong>Message one</strong> opens — usually a reference to something specific in their profile plus a real question.
+      </p>
+      <p>
+        <strong>Message two</strong> answers the question and asks one back. Reciprocity.
+      </p>
+      <p>
+        <strong>Message three</strong> is where the conversation either deepens or coasts. This is the inflection point. The third message either takes the topic somewhere more interesting, opens a new thread, or makes the leap toward suggesting a call or meeting up.
+      </p>
+      <p>
+        When message three just answers the previous one without adding anything new, you've entered Q&A mode — and Q&A mode has a short shelf life.
+      </p>
+
+      <h2>Why this happens</h2>
+      <p>
+        Most people are so relieved to be in a working conversation that they keep doing the thing that's working — answering questions, sharing details, being nice. None of that is wrong. But all of it is reactive.
+      </p>
+      <p>
+        Reactive conversations on dating apps stall because there's no momentum being generated. You're both just maintaining. Without someone driving — adding a new angle, sharing something unprompted, suggesting a next step — the energy slowly bleeds out.
+      </p>
+
+      <h2>How to handle message three</h2>
+      <p>
+        The simplest move: answer their question, then add something they didn't ask for. A connected story, an opinion, a tangent, a small piece of vulnerability.
+      </p>
+      <p>
+        Instead of: "Yeah, I really liked Lisbon, the food was great." (Q&A loop.)
+      </p>
+      <p>
+        Try: "Yeah, Lisbon was great — the actual highlight was getting completely lost in Alfama on the third night and ending up at this tiny fado bar with maybe ten people in it. I've been trying to replicate that 'accidentally found something real' feeling on trips ever since." (Story + signal + ongoing thread.)
+      </p>
+      <p>
+        The second version gives them five things they could respond to. The first gives them one.
+      </p>
+
+      <h2>The other move: name what's happening</h2>
+      <p>
+        Sometimes the right message three move is to call the moment. "I'm enjoying this — want to keep going over a drink this week?" By message three, you've established enough of a baseline that suggesting meeting up doesn't feel like a leap.
+      </p>
+      <p>
+        Conversations that drag on for forty messages before someone suggests a date almost always die before the date happens. The energy needs somewhere to go.
+      </p>
+
+      <h2>The bigger principle</h2>
+      <p>
+        Healthy early conversations have a small forward-motion vector on each message. The motion can come from depth, from humour, from a new topic, or from suggesting a next step — but something has to move.
+      </p>
+      <p>
+        If you read the last three messages of any stalled conversation and find that nothing was added beyond the literal questions and answers, you'll know exactly why it stalled.
+      </p>
+    </>
+  ),
+
+  "read-a-profile-like-a-compatibility-analyst": (
+    <>
+      <p>
+        There are two ways to read a dating profile. The first is the way almost everyone does it: do I like them? Am I attracted? Do they seem cool?
+      </p>
+      <p>
+        The second is the way someone trying to predict an actual relationship would do it: what specific signals is this person sending, and what do those signals tell me about how we would actually fit together day-to-day?
+      </p>
+      <p>
+        The second way takes ninety seconds longer and prevents most of the bad first dates.
+      </p>
+
+      <h2>Read the structure, not just the content</h2>
+      <p>
+        Start with how the profile is built before what's in it. Is the bio long, short, blank? Are the prompts answered with care or with throwaways? Are the photos varied or repetitive? Does the profile feel maintained, or like it was thrown together a year ago and forgotten?
+      </p>
+      <p>
+        These structural signals tell you about effort, intention, and how seriously the person is treating this. Someone with three hastily-chosen photos and "ask me" as their bio is communicating something whether they meant to or not.
+      </p>
+
+      <h2>The four dimensions worth reading for</h2>
+      <p>
+        <strong>Life stage.</strong> What does their actual week probably look like? Are they in a stable job or a chaotic one, do they seem to have a settled friend group, are they in their hometown or transient? Stage compatibility matters more than personality compatibility in early dating, because misaligned stages produce conflict you can't talk your way out of.
+      </p>
+      <p>
+        <strong>Energy.</strong> Read for whether this person sounds high-output or low-output, social or solitary, ambitious or content. None of these are good or bad — but pairing high-output with someone who needs a slow domestic life rarely works, no matter how much you like them in conversation.
+      </p>
+      <p>
+        <strong>Communication style.</strong> Their bio and prompts are a writing sample. Do they explain things, do they joke, do they hedge, do they use sarcasm, do they over-explain, do they leave things implied? You're going to be communicating with them constantly if this works. Notice how the communication feels to read.
+      </p>
+      <p>
+        <strong>What's not said.</strong> Almost every profile has a noticeable absence — no mention of work, no mention of friends, no mention of family, no mention of where they live. Absences are signals. They're not necessarily problems, but they're worth noting.
+      </p>
+
+      <h2>The mental exercise</h2>
+      <p>
+        After reading a profile, before you swipe, imagine the third Wednesday after a hypothetical fourth date. You're at home, you're tired, they text you. What does that text look like? What does dinner together look like? Are you texting friends about them, are you avoiding talking about them, are you bored, are you energised?
+      </p>
+      <p>
+        You can't know for sure, of course. But the brief imaginative exercise reliably surfaces compatibility instincts that the fast swipe completely misses.
+      </p>
+
+      <h2>The questions that come from the read</h2>
+      <p>
+        Reading a profile this way also generates better first messages. Instead of complimenting a photo, you can reference something the profile suggested about how they live — "Your bio reads like someone who's recently moved cities and is figuring out their footing — true, or am I reading too much into it?" — and the conversation starts at a different depth than 99% of openers.
+      </p>
+      <p>
+        That depth is what makes it possible to know, by message five, whether to actually go on a date.
+      </p>
+    </>
+  ),
+
+  "dating-app-burnout-reset": (
+    <>
+      <p>
+        Dating app burnout doesn't announce itself. It arrives slowly, as a flatness — swipes that feel mechanical, matches that feel like obligations, conversations that feel like work you didn't ask for.
+      </p>
+      <p>
+        And the standard advice — take a break, delete the apps, focus on yourself — almost never actually addresses what's causing the burnout, because the burnout isn't really about the apps.
+      </p>
+
+      <h2>The actual loop</h2>
+      <p>
+        What's burning you out isn't the volume of swiping. It's the specific neurological loop the apps train you into: short bursts of novelty + intermittent reward + low-stakes rejection + repetition. After enough cycles, your brain stops registering the matches as anything meaningful, and starts processing the whole experience as transactional.
+      </p>
+      <p>
+        Once the experience is transactional, every match feels like one more small obligation. Every conversation feels like one more thing to maintain. The interesting people start to blur with the uninteresting ones, because your attention isn't sharp enough to tell them apart anymore.
+      </p>
+
+      <h2>Why deleting the apps doesn't fix it</h2>
+      <p>
+        Two weeks off and you'll feel better. Then you'll reinstall, and within four days you'll be in the same loop, because the loop wasn't caused by the apps — it was caused by how you were using them.
+      </p>
+      <p>
+        The break gives your nervous system a rest, but it doesn't change the patterns you'll resume the moment you re-engage.
+      </p>
+
+      <h2>The reset that actually works</h2>
+      <p>
+        Three changes, in order:
+      </p>
+      <p>
+        <strong>First, cap your swipe sessions.</strong> Not an absolute swipe count — a time cap. Ten minutes, twice a day, maximum. The burnout is largely produced by the volume, and capping the time is the cleanest intervention.
+      </p>
+      <p>
+        <strong>Second, make every swipe deliberate.</strong> Stop fast-swiping. For every profile, you should be able to articulate one specific reason you swiped the way you did. This forces your attention back on, and turns swiping from a reflex into a choice.
+      </p>
+      <p>
+        <strong>Third, treat your matches like fewer matters more.</strong> Instead of trying to keep ten conversations going at a sub-engaged level, pick the three you're actually interested in and let the others lapse. The apps' design rewards volume; the actual dating part rewards focus.
+      </p>
+
+      <h2>What to do during the reset</h2>
+      <p>
+        The reset doesn't work in isolation. Use the time you used to spend swiping on the part of dating most people skip: figuring out what you actually want and what kind of partner that points to.
+      </p>
+      <p>
+        That sounds soft, but it's the part that determines whether you're filtering well when you're back in the apps. Almost everyone's filters are running on autopilot. The reset is the chance to actually look at them.
+      </p>
+
+      <h2>The signal that it's working</h2>
+      <p>
+        You'll know the reset has worked when a match arrives and you feel something specific about that match — not the generic "okay let me reply" flatness. That specific feeling is what you used to have before the burnout. The goal isn't to feel that about every match — it's to be able to feel it about any match at all.
+      </p>
+    </>
+  ),
+
+  "voice-notes-on-dating-apps": (
+    <>
+      <p>
+        Voice notes on dating apps started as a Hinge novelty and have become a small ritual: the moment in a conversation where the energy is good enough to feel like text isn't quite enough, but a phone call would be too much.
+      </p>
+      <p>
+        They're also one of the highest-leverage moves on a dating app, because a voice note carries information that text physically can't — and people read that information faster than they realise.
+      </p>
+
+      <h2>What a voice note actually transmits</h2>
+      <p>
+        The literal content of a voice note often matters less than the carrier signal: your voice quality, your cadence, your laugh, your background, whether you sound relaxed or rehearsed, whether you sound like a person someone would enjoy being in a room with.
+      </p>
+      <p>
+        Most people, when they finally hear a match's voice for the first time, make a small fast judgment. The judgment isn't about content. It's about whether the voice fits the version of the person they'd built in their head from text — and whether they'd want to keep listening.
+      </p>
+
+      <h2>The good voice note</h2>
+      <p>
+        Twenty to forty-five seconds. Not rehearsed. Not the audio-version of a long text. It answers something specific from the conversation and adds one detail you couldn't have texted as easily — a tone shift, an aside, an actual laugh.
+      </p>
+      <p>
+        The sound quality matters more than people think. Sent from a quiet room, no wind, no echo. The brain registers acoustic clarity as confidence.
+      </p>
+      <p>
+        It ends naturally. The worst voice notes peter out into "uhh I guess that's it" because the sender wasn't sure when to stop.
+      </p>
+
+      <h2>The bad voice note</h2>
+      <p>
+        Over a minute long, especially the first one. (Long voice notes from someone you don't yet know feel like an imposition.)
+      </p>
+      <p>
+        Sent from a moving car or a loud street. Bad audio makes a great voice sound bad, and there's no recovering from the first impression.
+      </p>
+      <p>
+        Overly performative. If you sound like you're auditioning, you'll trigger a small wince in the listener that has nothing to do with you and everything to do with feeling like they're being marketed to.
+      </p>
+
+      <h2>When to send one and when not to</h2>
+      <p>
+        Send one when: the text conversation is going well and you've been at it for at least a few exchanges, you'd like to add warmth, and you have something specific to say that benefits from tone.
+      </p>
+      <p>
+        Don't send one when: you're nervous and trying to "make a move," the conversation is fragile and you're trying to revive it, or you're using it as a substitute for actually suggesting a meet-up.
+      </p>
+      <p>
+        Voice notes don't fix bad conversations. They amplify the existing energy — good or bad — by an order of magnitude.
+      </p>
+
+      <h2>If you can't bring yourself to send one</h2>
+      <p>
+        Many people are quietly uncomfortable with how they sound, and avoid voice notes for that reason. Worth knowing: the version of your voice you hear in a recording is not how others hear it, and your aversion is almost always more intense than anyone else's reaction.
+      </p>
+      <p>
+        Record one, listen back, decide if it sounds reasonable, send it. The discomfort fades by the third one — and you've added a tool that lets your matches actually meet you, not the text version of you.
+      </p>
+    </>
+  ),
+
+  "post-date-reflection-questions": (
+    <>
+      <p>
+        Most post-date reflection happens in one of two unhelpful modes. Either you're spiralling — did they like me, why haven't they texted, was that joke too much — or you've already rendered a verdict that closes the case before you've learned anything from it.
+      </p>
+      <p>
+        Neither of those modes makes you better at dating. They just make you tireder.
+      </p>
+      <p>
+        The reflection that actually compounds — date after date, year after year — answers a different set of questions.
+      </p>
+
+      <h2>The six questions</h2>
+      <p>
+        <strong>1. What did I notice about myself tonight?</strong> Not about them. About you — your energy, your nerves, your defaults, the moments you became someone slightly different than usual. The dating context surfaces things about you that don't surface in any other context.
+      </p>
+      <p>
+        <strong>2. When was I most present, and when did I check out?</strong> Most dates have a small inflection point where you either leaned in or leaned out. Knowing where those points are, for you specifically, is the most useful self-knowledge dating produces.
+      </p>
+      <p>
+        <strong>3. What did they say that I want to remember?</strong> Not just because it was funny or interesting — because it told you something about who they actually are. The detail might matter on date three, or it might matter in two months when you're trying to decide something.
+      </p>
+      <p>
+        <strong>4. What did I avoid asking?</strong> There's almost always a question you didn't ask — about their ex, about what they want, about something that came up. The avoidance is informative. Sometimes it's healthy boundaries; sometimes it's a pattern of not wanting to know.
+      </p>
+      <p>
+        <strong>5. What would have to be true for me to want a second date?</strong> Phrasing it this way is more useful than "do I want a second date" — because the conditional reveals what's actually load-bearing for you. The honest answer is often surprising.
+      </p>
+      <p>
+        <strong>6. If they came back six months from now and asked me one question, what would I want them to ask?</strong> A weird question, deliberately. It tests how much of the actual you came out tonight. If you'd want them to ask about something you never mentioned, you weren't showing up as yourself.
+      </p>
+
+      <h2>Why these specifically</h2>
+      <p>
+        These questions don't generate verdicts. They generate signal — about you, about how you date, about what you actually want.
+      </p>
+      <p>
+        Over enough dates, the answers form a pattern. The pattern is more valuable than any individual answer, because it tells you who you become in romantic contexts — which is the most important thing to know if you want any of those contexts to work out long-term.
+      </p>
+
+      <h2>How long this should take</h2>
+      <p>
+        Five minutes. Voice memo, journal entry, notes app — whichever you'll actually do.
+      </p>
+      <p>
+        Done within a few hours of the date, before you've consolidated the night into a single narrative. The point isn't to make the date conclusive. It's to capture what's still ambiguous, because the ambiguous parts are usually where the learning is.
+      </p>
+    </>
+  ),
+
+  "what-your-message-history-reveals": (
+    <>
+      <p>
+        If someone handed you a transcript of every dating app conversation you've had in the last year — every opener, every reply, every fade-out — you'd be looking at the most honest data about how you actually date that exists anywhere in the world.
+      </p>
+      <p>
+        And almost no one ever looks at it.
+      </p>
+
+      <h2>The patterns you can only see in aggregate</h2>
+      <p>
+        Any individual conversation feels unique while you're in it. Across fifty conversations, you'd find the same things happening over and over:
+      </p>
+      <p>
+        <strong>Your initiation default.</strong> You probably open conversations the same way every time — same length, same structure, same approximate tone. That default is doing a huge amount of filtering you weren't aware of.
+      </p>
+      <p>
+        <strong>Your reply latency pattern.</strong> The gap between when you receive a message and when you reply is shockingly consistent per person. It's also one of the strongest signals the other person uses to read your interest, separate from anything you said.
+      </p>
+      <p>
+        <strong>The questions you never ask.</strong> Look at five of your old conversations and count how many times you asked about: their family, their last relationship, what they want in the next year, what their week actually looks like. Patterns of avoidance are visible only when you look at multiple conversations at once.
+      </p>
+      <p>
+        <strong>Where things stall.</strong> Most of your conversations probably die at the same approximate point — message seven, message twelve, the point where someone needs to suggest a meet-up. If you find that point, you've found your highest-leverage thing to change.
+      </p>
+
+      <h2>The attachment signature in your messages</h2>
+      <p>
+        Your attachment style leaves fingerprints all over your text. Anxious-leaning messages tend to be longer than the previous one, include more questions, and trail off with self-deprecating asides. Avoidant-leaning messages tend to be exactly as long as needed, drop emotional content casually, and rarely follow up on something the other person opened up about.
+      </p>
+      <p>
+        These aren't conscious. Which is exactly why they're worth looking at — because the version of you that's writing the messages at 11pm on a Tuesday isn't the version of you that's thinking about your dating life on a Saturday afternoon.
+      </p>
+
+      <h2>The thing nobody wants to look at</h2>
+      <p>
+        The hardest pattern to see is the one where you're consistently the version of yourself you don't actually want to be — too eager, too distant, too performative, too sarcastic, too earnest, too whatever. That pattern is almost always there if you look across enough conversations.
+      </p>
+      <p>
+        Seeing it isn't a judgment. It's the only way to choose differently next time, because you can only change what you can name.
+      </p>
+
+      <h2>How to actually look</h2>
+      <p>
+        Read five of your recent conversations end-to-end. Not skimming. Read them like a stranger would read them — like you're trying to figure out who this person is from how they text.
+      </p>
+      <p>
+        Write down three things you notice. Don't judge them yet — just notice.
+      </p>
+      <p>
+        Those three things are usually the same three things across most of your conversations, and they're usually the leverage points where small changes produce large different outcomes.
+      </p>
+    </>
+  ),
 };
 
 // ── Prose wrapper ─────────────────────────────────────────────────────────────
@@ -380,6 +930,10 @@ export default function BlogPost({ slug }: { slug: string }) {
 
   useMeta(article.title, article.excerpt);
 
+  useEffect(() => {
+    trackEvent("blog_post_view", { slug: article.slug, category: article.category });
+  }, [article.slug, article.category]);
+
   return (
     <AppLayout>
       <div className="min-h-screen mesh-bg">
@@ -417,20 +971,34 @@ export default function BlogPost({ slug }: { slug: string }) {
             <Prose>{content}</Prose>
           </motion.div>
 
-          {/* CTA */}
-          <motion.div {...fadeUp(0.2)} className="mt-14 glass border border-[hsl(248_62%_52%/0.2)] rounded-2xl p-6 text-center">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 mb-2">Put this into practice</p>
-            <h3 className="font-serif text-xl font-bold text-foreground mb-3">Get your free Profile Signal Audit</h3>
-            <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">
-              Find out exactly what your profile is communicating — Signal Score, bio critique, prompt rewrites, and a 7-day action plan.
-            </p>
-            <Link
-              href="/start"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity text-sm"
-            >
-              <Sparkles className="w-4 h-4" /> Start free audit — takes 3 minutes
-            </Link>
-          </motion.div>
+          {/* CTA — per-article when defined, otherwise generic audit CTA */}
+          {(() => {
+            const cta = article.cta ?? {
+              title: "Get your free Profile Signal Audit",
+              body: "Find out exactly what your profile is communicating — Signal Score, bio critique, prompt rewrites, and a 7-day action plan.",
+              href: "/start",
+              label: "Start free audit — takes 3 minutes",
+            };
+            const borderColor = withAlpha(article.color, 0.25);
+            return (
+              <motion.div
+                {...fadeUp(0.2)}
+                className="mt-14 glass rounded-2xl p-6 text-center"
+                style={{ borderColor, borderWidth: "1px", borderStyle: "solid" }}
+              >
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 mb-2">Put this into practice</p>
+                <h3 className="font-serif text-xl font-bold text-foreground mb-3">{cta.title}</h3>
+                <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">{cta.body}</p>
+                <Link
+                  href={cta.href}
+                  onClick={() => trackEvent("blog_cta_click", { slug: article.slug, cta_href: cta.href, cta_label: cta.label })}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity text-sm"
+                >
+                  <Sparkles className="w-4 h-4" /> {cta.label}
+                </Link>
+              </motion.div>
+            );
+          })()}
 
           {/* Prev/next */}
           {(prev || next) && (

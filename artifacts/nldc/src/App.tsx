@@ -76,6 +76,7 @@ import Blog from "@/pages/Blog";
 import BlogPost from "@/pages/BlogPost";
 
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
+import { usePageTracking } from "@/hooks/usePageTracking";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +86,7 @@ function ClaimAnonymousGate() {
 }
 
 function Router() {
+  usePageTracking();
   return (
     <Switch>
       <Route path="/" component={Landing} />
