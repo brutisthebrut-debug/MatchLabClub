@@ -24,6 +24,7 @@ import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianG
 import { useListAudits, useGetWaitlistStats, useGetCoachFollowUpTimeline } from "@workspace/api-client-react";
 import { Lock, LogOut, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
+import { EchoPlaybookPanel } from "@/components/founder/EchoPlaybookPanel";
 import { toast } from "@/hooks/use-toast";
 
 type AiMode = "live" | "fallback" | "setup-needed";
@@ -3314,6 +3315,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
           <OcrMismatchesPanel refreshKey={refreshKey} />
           <AiMetricsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
           <AiReliabilityTrendsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
+          <EchoPlaybookPanel />
           <OcrPendingRulesPanel refreshKey={refreshKey} onApproved={() => setRefreshKey((k) => k + 1)} />
           <OcrRulesPanel refreshKey={refreshKey} />
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

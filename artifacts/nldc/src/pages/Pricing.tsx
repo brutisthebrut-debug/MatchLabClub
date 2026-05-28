@@ -26,11 +26,11 @@ const TIERS = [
     features: [
       "1 complete Profile Signal Audit",
       "Your Signal Score (0–100)",
-      "Signal Spectrum — 8 dimensions",
-      "Bio critique — honest and specific",
+      "Signal Spectrum across 8 dimensions",
+      "Bio critique, honest and specific",
       "Top 3 action items",
       "2 photo guidance points",
-      "Chemistry Lab — message analysis (demo)",
+      "Chemistry Lab, message analysis (demo)",
     ],
     excluded: [
       "Rewritten bio + prompts",
@@ -50,7 +50,7 @@ const TIERS = [
     popular: false,
     badge: null,
     desc: "Complete audit with full bio rewrite, all prompt rewrites, photo checklist, and your 7-day action plan. One payment, done.",
-    cta: "Get My Audit — $29",
+    cta: "Get My Audit, $29",
     href: "/checkout/signal-audit",
     nextStep: "→ Secure Stripe checkout · report delivered instantly after intake",
     accentColor: "hsl(190 75% 40%)",
@@ -58,8 +58,8 @@ const TIERS = [
     features: [
       "1 complete Profile Signal Audit",
       "Your Signal Score (0–100)",
-      "Signal Spectrum — 8 dimensions",
-      "Full bio rewrite — sounds like you",
+      "Signal Spectrum across 8 dimensions",
+      "Full bio rewrite that sounds like you",
       "All prompts rewritten with coach notes",
       "Photo checklist (5 categories)",
       "7-day personalised action plan",
@@ -79,13 +79,13 @@ const TIERS = [
   },
   {
     name: "Dating Reset",
-    outcome: "Get fully rewritten — start matching in days, not months",
+    outcome: "Get fully rewritten. Start matching in days, not months",
     price: "$97",
     promoPrice: null,
     period: "one-time",
     popular: true,
     badge: "Most Popular",
-    desc: "A complete rebuild of how you present yourself — profile, prompts, messaging, photos, and a 7-day action plan.",
+    desc: "A complete rebuild of how you present yourself. Profile, prompts, messaging, photos, and a 7-day action plan.",
     cta: "Begin My Reset",
     href: "/checkout/dating-reset",
     nextStep: "→ Secure checkout · founder-reviewed within 48 hours · start Day 1 immediately",
@@ -94,11 +94,11 @@ const TIERS = [
     features: [
       "Unlimited Profile Signal Audits",
       "Full Signal Spectrum across 8 dimensions",
-      "Complete rewritten bio — sounds like you, not a template",
+      "Complete rewritten bio that sounds like you, not a template",
       "All prompts rewritten with coach notes",
       "Full photo checklist (5 categories)",
-      "Dating Diagnosis — pattern review",
-      "Chemistry Lab — full message coaching",
+      "Dating Diagnosis pattern review",
+      "Chemistry Lab, full message coaching",
       "10 message coaching sessions",
       "7-day personalised action plan",
       "Score history + progress tracking",
@@ -114,13 +114,13 @@ const TIERS = [
   },
   {
     name: "Wingman",
-    outcome: "Get a real coach in your corner — weekly",
+    outcome: "Get a real coach in your corner, weekly",
     price: "$197",
     promoPrice: "$118",
     period: "per month",
     popular: false,
     badge: "Launch Cohort Deal",
-    desc: "Everything in The Dating Reset — plus a real human coach in your corner, every week.",
+    desc: "Everything in The Dating Reset, plus a real human coach in your corner, every week.",
     cta: "Join the Wingman Club",
     href: "/checkout/wingman",
     nextStep: "→ Reserve your cohort spot · today's launch price locks in for life",
@@ -134,22 +134,22 @@ const TIERS = [
       "Audit after every major profile change",
       "Members-only community access",
       "Pre-date coaching briefs",
-      "Priority access to all new features — first",
+      "Priority access to all new features, first",
     ],
     excluded: [],
     walkaway: ["A real coach in your corner, weekly", "Unlimited coaching and audits", "A community of people doing the work"],
-    betaNote: "Currently in private beta. We schedule your first session within 48 hours of joining — founder-matched to a coach suited to your situation.",
+    betaNote: "Currently in private beta. We schedule your first session within 48 hours of joining, founder-matched to a coach suited to your situation.",
   },
 ];
 
 const FAQS = [
-  { q: "How is this different from generic dating advice?", a: "We give you specific, personalised output: a rewritten version of YOUR bio, coaching on YOUR messages, your Signal Spectrum across 8 dimensions, and an action plan built around YOUR situation. Nothing here could apply to someone else — that's the point." },
+  { q: "How is this different from generic dating advice?", a: "We give you specific, personalised output: a rewritten version of YOUR bio, coaching on YOUR messages, your Signal Spectrum across 8 dimensions, and an action plan built around YOUR situation. Nothing here could apply to someone else. That's the point." },
   { q: "Is the free audit actually free? No hidden catch?", a: "Yes, completely free. We give you a real, substantive audit including your Signal Score and Spectrum because we believe if you see the quality, you'll upgrade. No credit card required." },
-  { q: "What is The Dating Reset, exactly?", a: "It's a complete overhaul of your dating presence — your bio rewritten to sound like you, all prompts improved, a full photo checklist, your 8-dimension Signal Spectrum, Dating Diagnosis, Chemistry Lab message coaching, and a 7-day action plan. One payment, everything included." },
-  { q: "How does the coaching engine work?", a: "Hybrid: our deterministic engine is always-on (built on structured dating frameworks and real profile patterns — never fails from rate limits, no key needed). On top of that, Anthropic Claude is layered in as an opt-in 'deep AI lane' for tools that benefit from semantic depth: bio rewrites, message coaching, Compatibility Compass reads, and import summaries. You control it per-account: on, off, or off-by-default with one-tap toggle. When deep AI is off or upstream is down, everything quietly falls back to the deterministic engine — nothing breaks. For Monthly Coaching, a human coach reviews and is directly available to you." },
-  { q: "What if I'm not happy?", a: "We'll redo it or refund it. Dating is vulnerable and we take this seriously. Reach out within 30 days and we'll make it right — no questions asked." },
-  { q: "Is my data private?", a: "Your bios, messages, and profile data are encrypted and never sold or shared with any third party. You can delete everything permanently from your account at any time. See our full consent-first privacy architecture on the Integrations page." },
-  { q: "How quickly will I see results?", a: "Most members who implement the action plan see measurably better results — more matches, better conversations, more dates — within 7–14 days. We track your Signal Score over time so progress is visible, not just felt." },
+  { q: "What is The Dating Reset, exactly?", a: "It's a complete overhaul of your dating presence. Your bio rewritten to sound like you, all prompts improved, a full photo checklist, your 8-dimension Signal Spectrum, Dating Diagnosis, Chemistry Lab message coaching, and a 7-day action plan. One payment, everything included." },
+  { q: "How does the coaching engine work?", a: "Hybrid AI. Our deterministic engine is always-on (built on structured dating frameworks and real profile patterns, no external calls, never rate-limited, no key needed). On top of that, Anthropic Claude is layered in as an opt-in 'deep AI lane' for tools that benefit from semantic depth: bio rewrites, message coaching, Compatibility Compass reads, and import summaries. You control it per account, off by default, and you can turn it off anytime. When deep AI is off or upstream is down, everything quietly falls back to the deterministic engine. Nothing breaks. For Monthly Coaching, a human coach reviews and is directly available to you." },
+  { q: "What if I'm not happy?", a: "We'll redo it or refund it. Dating is vulnerable and we take this seriously. Reach out within 30 days and we'll make it right. No questions asked." },
+  { q: "Is my data private?", a: "Your bios, messages, and profile data are encrypted and never sold or shared with advertisers. The deterministic baseline runs on our servers with no external calls. Deeper analysis through Anthropic Claude is opt-in per account, off by default, and you can turn it off anytime. You can delete everything permanently from your account at any time. See our full consent-first privacy architecture on the Integrations page." },
+  { q: "How quickly will I see results?", a: "Most members who implement the action plan see measurably better results, more matches, better conversations, more dates, within 7–14 days. We track your Signal Score over time so progress is visible, not just felt." },
 ];
 
 const fadeUp = (delay = 0) => ({
@@ -159,7 +159,7 @@ const fadeUp = (delay = 0) => ({
 });
 
 export default function Pricing() {
-  useMeta("Pricing — Free, $29, $97 & $197 Coaching", "Four ways to get your dating profile working. Free Signal Check, $29 one-time audit, The Dating Reset ($97), or Monthly Wingman coaching ($197/mo).");
+  useMeta("Pricing: Free, $29, $97 & $197 Coaching", "Four ways to get your dating profile working. Free Signal Check, $29 one-time audit, The Dating Reset ($97), or Monthly Wingman coaching ($197/mo).");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
@@ -196,7 +196,7 @@ export default function Pricing() {
                 className="font-semibold text-foreground text-sm hover:text-[hsl(43_65%_68%)] transition-colors">
                 Shebangs.club
               </a>
-              <span className="text-sm text-muted-foreground">— exclusive member perks for MatchLab Club users</span>
+              <span className="text-sm text-muted-foreground">exclusive member perks for MatchLab Club users</span>
               <a href="https://shebangs.club" target="_blank" rel="noopener noreferrer"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 sm:ml-auto">
                 Learn more <ArrowRight className="w-3 h-3" />
@@ -330,7 +330,7 @@ export default function Pricing() {
                   <p className="text-center text-[11px] text-foreground/75 mt-2.5 leading-snug px-1">{tier.nextStep}</p>
                   {tier.price !== "$0" ? (
                     <p className="text-center text-[11px] text-[hsl(142_55%_60%)] font-medium mt-1.5">
-                      30-day guarantee — if your matches don't improve, full refund
+                      30-day guarantee. If your matches don't improve, full refund
                     </p>
                   ) : (
                     <p className="text-center text-[11px] text-muted-foreground mt-1.5">Free forever · no account required · results saved</p>
@@ -359,7 +359,7 @@ export default function Pricing() {
                 {
                   step: "1",
                   title: "You submit your profile details",
-                  desc: "Bio, prompts, a quick conversation sample, and optionally a photo context note. Takes about 5 minutes. Nothing is shared with third parties — ever.",
+                  desc: "Bio, prompts, a quick conversation sample, and optionally a photo context note. Takes about 5 minutes. Your content is never sold. Deeper analysis through Anthropic Claude is opt-in per account, off by default, and you can turn it off anytime.",
                   color: "hsl(var(--brand-indigo))",
                 },
                 {
@@ -377,7 +377,7 @@ export default function Pricing() {
                 {
                   step: "4",
                   title: "You start with Day 1 of your action plan",
-                  desc: "Don't wait for the founder note. Start with the 7-day plan immediately — most people who do it see measurably better results within the first week.",
+                  desc: "Don't wait for the founder note. Start with the 7-day plan immediately. Most people who do it see measurably better results within the first week.",
                   color: "hsl(var(--brand-green))",
                 },
               ].map((item) => (
@@ -397,7 +397,7 @@ export default function Pricing() {
               <span className="text-base flex-shrink-0">🔒</span>
               <p className="text-xs text-muted-foreground/55 leading-relaxed">
                 <strong className="text-muted-foreground/70">Privacy promise:</strong>{" "}
-                You control what is saved. Private content is not sold. You choose what becomes part of your profile — and you can export or delete everything at any time from your account page.
+                You control what is saved. Private content is not sold. You choose what becomes part of your profile, and you can export or delete everything at any time from your account page.
               </p>
             </div>
           </motion.div>
@@ -422,13 +422,13 @@ export default function Pricing() {
                   </div>
                   <h3 className="text-xl font-bold text-foreground mb-2">Founder-Reviewed Dating Reset</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                    Early beta users get the full $97 Dating Reset — plus a personal note from the founder reviewing your results and suggesting one specific next move. Not a template. An actual read of your situation.
+                    Early beta users get the full $97 Dating Reset, plus a personal note from the founder reviewing your results and suggesting one specific next move. Not a template. An actual read of your situation.
                   </p>
                   <div className="grid sm:grid-cols-3 gap-3 mb-5">
                     {[
                       { label: "What you get", value: "Full Dating Reset + founder personal review note" },
                       { label: "Turnaround", value: "Within 48 hours of your audit completing" },
-                      { label: "Why limited", value: "Founder does every review personally — keeping it to 20 spots" },
+                      { label: "Why limited", value: "Founder does every review personally, keeping it to 20 spots" },
                     ].map(item => (
                       <div key={item.label} className="rounded-xl bg-white/4 border border-white/8 p-3">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 mb-1">{item.label}</p>
@@ -442,7 +442,7 @@ export default function Pricing() {
                       style={{ background: "linear-gradient(135deg, hsl(var(--brand-gold)), hsl(var(--brand-indigo)))", boxShadow: "0 4px 20px hsl(var(--brand-gold) / 0.3)" }}>
                       Claim a Founder-Reviewed Spot →
                     </Link>
-                    <p className="text-xs text-muted-foreground/50">Same price as the Dating Reset — $97 one-time</p>
+                    <p className="text-xs text-muted-foreground/50">Same price as the Dating Reset, $97 one-time</p>
                   </div>
                 </div>
               </div>

@@ -56,6 +56,8 @@ import type {
   CorrectAuditSourceApp404,
   CorrectSourceAppInput,
   CorrectSourceAppResult,
+  CreateInstagramPasteInput,
+  CreateInstagramPasteResult,
   DatingProfile,
   DatingProfileInput,
   DatingProfileUpdate,
@@ -96,6 +98,7 @@ import type {
   ListPostDateNotesParams,
   ListWellnessAnswersParams,
   LogoutSuccess,
+  MeConsent,
   MessageCoachingInput,
   MessageCoachingResponse,
   MessageCoachingSession,
@@ -1085,6 +1088,169 @@ export function useGetAccountSummary<TData = Awaited<ReturnType<typeof getAccoun
 
 
 
+
+export const getGetMeConsentUrl = () => {
+
+
+
+
+  return `/api/me/consent`
+}
+
+/**
+ * Returns a flat envelope of the signed-in user's content-sharing
+consents. Today this is just `aiContent` (the deep AI lane), but
+the shape is designed to grow as new consent gates land (push
+notifications, sharing with a coach, etc). The companion endpoint
+`/me/consent/ai-content` exposes the same boolean with separate
+grant and revoke timestamps for audit views.
+
+ * @summary Get the signed-in user's consent envelope
+ */
+export const getMeConsent = async ( options?: RequestInit): Promise<MeConsent> => {
+
+  return customFetch<MeConsent>(getGetMeConsentUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMeConsentQueryKey = () => {
+    return [
+    `/api/me/consent`
+    ] as const;
+    }
+
+
+export const getGetMeConsentQueryOptions = <TData = Awaited<ReturnType<typeof getMeConsent>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMeConsent>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMeConsentQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMeConsent>>> = ({ signal }) => getMeConsent({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMeConsent>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMeConsentQueryResult = NonNullable<Awaited<ReturnType<typeof getMeConsent>>>
+export type GetMeConsentQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the signed-in user's consent envelope
+ */
+
+export function useGetMeConsent<TData = Awaited<ReturnType<typeof getMeConsent>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMeConsent>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMeConsentQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateInstagramPasteUrl = () => {
+
+
+
+
+  return `/api/me/instagram-paste`
+}
+
+/**
+ * Persists a paste of the caller's Instagram bio plus a handful of
+recent captions into `imported_sources` with `source='instagram-paste'`
+and `status='pending'`. Anon-safe: if the request has no signed-in
+user, the row is stamped with the anonymous claim token cookie so
+it can be merged into the account later via the standard claim flow.
+A follow-up task wires the actual tone-extract call against the
+persisted row; this endpoint only handles capture.
+
+ * @summary Capture a copy-paste of the user's Instagram bio and captions
+ */
+export const createInstagramPaste = async (createInstagramPasteInput: CreateInstagramPasteInput, options?: RequestInit): Promise<CreateInstagramPasteResult> => {
+
+  return customFetch<CreateInstagramPasteResult>(getCreateInstagramPasteUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createInstagramPasteInput,)
+  }
+);}
+
+
+
+
+export const getCreateInstagramPasteMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInstagramPaste>>, TError,{data: BodyType<CreateInstagramPasteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createInstagramPaste>>, TError,{data: BodyType<CreateInstagramPasteInput>}, TContext> => {
+
+const mutationKey = ['createInstagramPaste'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createInstagramPaste>>, {data: BodyType<CreateInstagramPasteInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createInstagramPaste(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateInstagramPasteMutationResult = NonNullable<Awaited<ReturnType<typeof createInstagramPaste>>>
+    export type CreateInstagramPasteMutationBody = BodyType<CreateInstagramPasteInput>
+    export type CreateInstagramPasteMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Capture a copy-paste of the user's Instagram bio and captions
+ */
+export const useCreateInstagramPaste = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInstagramPaste>>, TError,{data: BodyType<CreateInstagramPasteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createInstagramPaste>>,
+        TError,
+        {data: BodyType<CreateInstagramPasteInput>},
+        TContext
+      > => {
+      return useMutation(getCreateInstagramPasteMutationOptions(options));
+    }
 
 export const getGetAiContentConsentUrl = () => {
 

@@ -326,6 +326,71 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/consent:
+    get:
+      tags: [Auth]
+      operationId: getMeConsent
+      summary: Get the signed-in user's consent envelope
+      description: |
+        Returns a flat envelope of the signed-in user's content-sharing
+        consents. Today this is just `aiContent` (the deep AI lane), but
+        the shape is designed to grow as new consent gates land (push
+        notifications, sharing with a coach, etc). The companion endpoint
+        `/me/consent/ai-content` exposes the same boolean with separate
+        grant and revoke timestamps for audit views.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Current consent envelope.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeConsent'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/instagram-paste:
+    post:
+      tags: [Auth]
+      operationId: createInstagramPaste
+      summary: Capture a copy-paste of the user's Instagram bio and captions
+      description: |
+        Persists a paste of the caller's Instagram bio plus a handful of
+        recent captions into `imported_sources` with `source='instagram-paste'`
+        and `status='pending'`. Anon-safe: if the request has no signed-in
+        user, the row is stamped with the anonymous claim token cookie so
+        it can be merged into the account later via the standard claim flow.
+        A follow-up task wires the actual tone-extract call against the
+        persisted row; this endpoint only handles capture.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInstagramPasteInput'
+      responses:
+        '201':
+          description: Paste captured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInstagramPasteResult'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/consent/ai-content:
     get:
       tags: [Auth]
@@ -4739,3 +4804,52 @@ components:
       properties:
         granted:
           type: boolean
+
+    MeConsent:
+      type: object
+      required: [aiContent, aiContentUpdatedAt]
+      properties:
+        aiContent:
+          type: boolean
+          description: |
+            Whether the user has opted in to sending their own content
+            (bios, messages, journal text, pastes) to the hosted LLM. False
+            by default. Mirrors `AiContentConsentState.granted` but exposed
+            in a flatter envelope alongside a single updated-at timestamp.
+        aiContentUpdatedAt:
+          type: [string, "null"]
+          format: date-time
+          description: Last time the user flipped the AI content consent boolean.
+
+    CreateInstagramPasteInput:
+      type: object
+      required: [bio, recentCaptions]
+      properties:
+        bio:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: The user's current Instagram bio text.
+        recentCaptions:
+          type: array
+          maxItems: 10
+          items:
+            type: string
+            maxLength: 800
+          description: Five to ten recent Instagram captions, one per array item.
+
+    CreateInstagramPasteResult:
+      type: object
+      required: [id, source, status, uploadedAt]
+      properties:
+        id:
+          type: integer
+        source:
+          type: string
+          const: instagram-paste
+        status:
+          type: string
+          const: pending
+        uploadedAt:
+          type: string
+          format: date-time

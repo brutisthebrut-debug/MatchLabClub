@@ -1,9 +1,16 @@
+import { useState } from "react";
 import { Link } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { Instagram } from "lucide-react";
 import {
   Activity,
   ArrowRight,
@@ -31,6 +38,8 @@ import {
   getListPostDateNotesQueryKey,
   useGetAiContentConsent,
   getGetAiContentConsentQueryKey,
+  useSetAiContentConsent,
+  useCreateInstagramPaste,
 } from "@workspace/api-client-react";
 import { ShareButton } from "@/components/echo/ShareButton";
 
@@ -185,6 +194,74 @@ export default function SelfHub() {
 
   const consentGranted = Boolean(consent.data?.granted);
 
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const setConsent = useSetAiContentConsent();
+  const igPaste = useCreateInstagramPaste();
+  const [igBio, setIgBio] = useState("");
+  const [igCaptions, setIgCaptions] = useState("");
+
+  const handleConsentToggle = (next: boolean) => {
+    setConsent.mutate(
+      { data: { granted: next } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetAiContentConsentQueryKey() });
+          toast({
+            title: next ? "AI on your content is on" : "AI on your content is off",
+            description: next
+              ? "Your bios, messages, and pastes can now be sent to Claude for deeper analysis."
+              : "We will stick to the deterministic baseline. You can switch this back on anytime.",
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Could not save your choice",
+            description: "Something went wrong on our end. Try again in a moment.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
+
+  const handleInstagramSubmit = () => {
+    const bio = igBio.trim();
+    const captions = igCaptions
+      .split(/\r?\n/)
+      .map(c => c.trim())
+      .filter(c => c.length > 0)
+      .slice(0, 10);
+    if (!bio) {
+      toast({
+        title: "Add a bio first",
+        description: "Paste your Instagram bio so we have something to read.",
+        variant: "destructive",
+      });
+      return;
+    }
+    igPaste.mutate(
+      { data: { bio: bio.slice(0, 500), recentCaptions: captions.map(c => c.slice(0, 800)) } },
+      {
+        onSuccess: () => {
+          setIgBio("");
+          setIgCaptions("");
+          toast({
+            title: "We got it",
+            description: "Tone read coming in a future build.",
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Could not save that paste",
+            description: "Something went wrong on our end. Try again in a moment.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
+
   // Signed-out state
   if (!authLoading && !isAuthenticated) {
     return (
@@ -334,17 +411,81 @@ export default function SelfHub() {
               {consentGranted ? <Brain className="h-5 w-5 text-[hsl(326_100%_60%)]" /> : <Lock className="h-5 w-5 text-[hsl(326_100%_60%)]" />}
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="font-serif text-xl font-bold text-foreground">
-                {consentGranted ? "Deep AI lane: on" : "Deep AI lane: off"}
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                {consentGranted
-                  ? "Anthropic Claude is layered on top of the deterministic baseline for tools that benefit from semantic depth (bio rewrites, compass synthesis, import summaries). You can turn this off at any time on the Account page."
-                  : "You're on the deterministic baseline only — fast, free, and never rate-limited. Turn on Deep AI consent on Account to unlock the semantic layer for the tools that benefit from it."}
-              </p>
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <h2 className="font-serif text-xl font-bold text-foreground">Use AI on my content</h2>
+                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                    When on, your bios, messages, and pastes can be sent to Claude for deeper analysis. Off by default. Switch anytime.
+                  </p>
+                </div>
+                <Switch
+                  checked={consentGranted}
+                  onCheckedChange={handleConsentToggle}
+                  disabled={consent.isLoading || setConsent.isPending}
+                  aria-label="Use AI on my content"
+                  data-testid="switch-ai-content-consent"
+                />
+              </div>
               <div className="flex flex-wrap gap-2 mt-3">
                 <Button asChild variant="outline" size="sm" className="rounded-full font-semibold" data-testid="link-consent-account">
-                  <Link href="/account">{consentGranted ? "Manage AI consent" : "Turn on Deep AI"}</Link>
+                  <Link href="/account">Manage on Account</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Instagram paste capture */}
+        <motion.div {...fadeUp(0.18)} className="glass rounded-3xl p-6 md:p-8 mb-6 md:mb-8" data-testid="card-instagram-paste">
+          <div className="flex items-start gap-4">
+            <div className="h-10 w-10 rounded-xl bg-[hsl(326_100%_60%/0.12)] flex items-center justify-center flex-shrink-0">
+              <Instagram className="h-5 w-5 text-[hsl(326_100%_60%)]" />
+            </div>
+            <div className="flex-1 min-w-0 space-y-4">
+              <div>
+                <h2 className="font-serif text-xl font-bold text-foreground">
+                  Import from Instagram (beta)
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                  Paste your bio and a handful of recent captions. We will use them to read your tone and write things that sound like you. Nothing leaves this account.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ig-bio" className="text-xs font-semibold text-foreground">
+                  Your Instagram bio
+                </Label>
+                <Textarea
+                  id="ig-bio"
+                  value={igBio}
+                  onChange={e => setIgBio(e.target.value.slice(0, 500))}
+                  placeholder="Paste your bio here"
+                  rows={3}
+                  maxLength={500}
+                  data-testid="input-instagram-bio"
+                />
+                <p className="text-xs text-muted-foreground">{igBio.length}/500</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ig-captions" className="text-xs font-semibold text-foreground">
+                  Recent captions
+                </Label>
+                <Textarea
+                  id="ig-captions"
+                  value={igCaptions}
+                  onChange={e => setIgCaptions(e.target.value)}
+                  placeholder="Paste 5 to 10 recent captions, one per line"
+                  rows={6}
+                  data-testid="input-instagram-captions"
+                />
+              </div>
+              <div>
+                <Button
+                  onClick={handleInstagramSubmit}
+                  disabled={igPaste.isPending || !igBio.trim()}
+                  className="rounded-full px-5 h-10 bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white font-semibold"
+                  data-testid="button-instagram-submit"
+                >
+                  {igPaste.isPending ? "Saving..." : "Send to MatchLab"}
                 </Button>
               </div>
             </div>

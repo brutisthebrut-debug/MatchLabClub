@@ -23,6 +23,9 @@
     },
     {
       "path": "../../lib/ai-schemas"
+    },
+    {
+      "path": "../../lib/echo"
     }
   ]
 }

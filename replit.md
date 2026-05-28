@@ -51,7 +51,7 @@ The updater fetches current GeoLite2 CSV files directly from MaxMind, converts t
 
 - `artifacts/nldc/` — React+Vite frontend (previewPath: `/`)
 - `artifacts/api-server/` — Express API server (previewPath: `/api`)
-- `artifacts/api-server/src/lib/aiEngine.ts` — deterministic AI engine (no external API)
+- `artifacts/api-server/src/lib/aiEngine.ts` — deterministic AI engine (always-on baseline, no external calls). The product as a whole is hybrid: this engine plus optional Anthropic Claude, opt-in per account.
 - `lib/api-spec/` — OpenAPI spec source of truth
 - `lib/api-client-react/src/generated/` — generated hooks and Zod schemas (do not edit)
 - `lib/db/src/schema.ts` — Drizzle schema source of truth

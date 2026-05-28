@@ -26,9 +26,9 @@ export const importedSourcesTable = pgTable(
     userId: varchar("user_id"),
     anonymousClaimToken: varchar("anonymous_claim_token"),
     /** Source app the export came from. */
-    source: varchar("source", { length: 20 }).notNull(), // 'hinge' | 'tinder' | 'bumble'
+    source: varchar("source", { length: 32 }).notNull(), // 'hinge' | 'tinder' | 'bumble' | 'instagram-paste'
     /** Lifecycle state machine. */
-    status: varchar("status", { length: 20 }).notNull().default("uploaded"), // 'uploaded' | 'parsing' | 'ready' | 'failed'
+    status: varchar("status", { length: 20 }).notNull().default("uploaded"), // 'uploaded' | 'pending' | 'parsing' | 'ready' | 'failed'
     originalFilename: varchar("original_filename", { length: 255 }),
     /** Structured summary after parsing. Shape varies per source. */
     parsedSummary: jsonb("parsed_summary").$type<Record<string, unknown>>(),

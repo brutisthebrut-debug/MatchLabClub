@@ -16,7 +16,7 @@ const fadeUp = (delay = 0) => ({
 export default function Landing() {
   useMeta(
     "Free Dating Profile Audit & Message Coaching",
-    "Find out what your dating profile is really saying — and get it rewritten. Free 3-min Signal Check or the full Profile Signal Audit. No account needed to start.",
+    "Find out what your dating profile is really saying, and get it rewritten. Free 3-min Signal Check or the full Profile Signal Audit. No account needed to start.",
   );
   return (
     <AppLayout>
@@ -50,7 +50,7 @@ export default function Landing() {
               className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed mb-9"
               {...fadeUp(0.15)}
             >
-              See exactly why you're getting skipped — and the <span className="text-foreground/80 font-medium">one specific fix</span> that changes it. The honest read no friend will give you.
+              See exactly why you're getting skipped, and the <span className="text-foreground/80 font-medium">one specific fix</span> that changes it. The honest read no friend will give you.
             </motion.p>
 
             {/* PRIMARY CTA — single, oversized, unmissable. Everything else lives below the proof. */}
@@ -73,7 +73,7 @@ export default function Landing() {
                 <span className="inline-flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> Instant result</span>
               </div>
               <p className="text-[11px] text-muted-foreground/70 mt-1">
-                Built for every dating context — straight, gay, queer, bi, trans, non-binary, mono &amp; poly.
+                Built for every dating context: straight, gay, queer, bi, trans, non-binary, mono &amp; poly.
               </p>
             </motion.div>
           </div>
@@ -113,7 +113,7 @@ export default function Landing() {
               See what changes when you're{" "}
               <span className="gradient-text-violet italic">seen accurately.</span>
             </h2>
-            <p className="text-xs text-muted-foreground/60 mt-3">Illustrative example — the kind of rewrite our coaching engine produces</p>
+            <p className="text-xs text-muted-foreground/60 mt-3">Illustrative example. The kind of rewrite our coaching engine produces.</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -166,7 +166,7 @@ export default function Landing() {
                 </div>
               </div>
               <p className="text-sm text-foreground leading-relaxed">
-                "I make a genuinely great first date — I'll pick somewhere unexpected, actually listen, and probably make you laugh at something you didn't expect to. Currently: too invested in my sourdough starter, rewatching things I've already seen, trying to find someone worth getting off the couch for."
+                "I make a genuinely great first date. I'll pick somewhere unexpected, actually listen, and probably make you laugh at something you didn't expect to. Currently: too invested in my sourdough starter, rewatching things I've already seen, trying to find someone worth getting off the couch for."
               </p>
               <div className="flex flex-wrap gap-2 mt-5">
                 {["✓ Specific", "✓ Memorable", "✓ Conversation hook", "✓ Distinctly you"].map((tag, i) => (
@@ -189,13 +189,13 @@ export default function Landing() {
               A bad profile isn't free. <span className="gradient-text italic">It's the most expensive thing on the apps.</span>
             </h2>
             <p className="text-sm text-muted-foreground/80 leading-relaxed">
-              Most people pay for it in months, not dollars — and don't notice until they look back.
+              Most people pay for it in months, not dollars, and don't notice until they look back.
             </p>
           </motion.div>
           <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
             {[
               { stat: "300+", unit: "hours/year", desc: "Average time singles spend swiping, messaging, and going on dates that don't go anywhere.", color: "hsl(0 60% 55%)" },
-              { stat: "~$420", unit: "spent on apps", desc: "What the average dater spends per year on premium tiers, boosts, and super-likes — all routed through a bio that isn't working.", color: "hsl(var(--brand-gold))" },
+              { stat: "~$420", unit: "spent on apps", desc: "What the average dater spends per year on premium tiers, boosts, and super-likes, all routed through a bio that isn't working.", color: "hsl(var(--brand-gold))" },
               { stat: "14–18", unit: "months lost", desc: "Typical gap between when something is broken in how you're presenting and when someone actually tells you about it.", color: "hsl(var(--brand-indigo))" },
             ].map((item, i) => (
               <motion.div
@@ -308,7 +308,7 @@ export default function Landing() {
               {
                 step: "03",
                 title: "Follow your 7-day plan",
-                desc: "A prioritised plan built around your specific audit — not generic advice. Track your score as you implement.",
+                desc: "A prioritised plan built around your specific audit, not generic advice. Track your score as you implement.",
                 color: "hsl(142 55% 50%)",
                 cta: { label: "Track your progress", href: "/pricing" },
               },
@@ -347,10 +347,10 @@ export default function Landing() {
             </motion.div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { num: "01", title: "What you're projecting", desc: "We show you what your profile is actually communicating — and how it reads to someone swiping.", color: "hsl(var(--brand-indigo))" },
-                { num: "02", title: "Your profile text", desc: "Your bio and prompts, rewritten to sound genuinely like you — specific, memorable, worth responding to.", color: "hsl(var(--brand-gold))" },
-                { num: "03", title: "Your conversations", desc: "Tone analysis and 5 tailored reply options — from warm to direct to date invitation — for every situation.", color: "hsl(190 55% 50%)" },
-                { num: "04", title: "Your action plan", desc: "A concrete, prioritised 7-day plan built around your specific audit — not generic advice.", color: "hsl(142 55% 50%)" },
+                { num: "01", title: "What you're projecting", desc: "We show you what your profile is actually communicating, and how it reads to someone swiping.", color: "hsl(var(--brand-indigo))" },
+                { num: "02", title: "Your profile text", desc: "Your bio and prompts, rewritten to sound genuinely like you. Specific, memorable, worth responding to.", color: "hsl(var(--brand-gold))" },
+                { num: "03", title: "Your conversations", desc: "Tone analysis and 5 tailored reply options, from warm to direct to date invitation, for every situation.", color: "hsl(190 55% 50%)" },
+                { num: "04", title: "Your action plan", desc: "A concrete, prioritised 7-day plan built around your specific audit, not generic advice.", color: "hsl(142 55% 50%)" },
               ].map((item, i) => (
                 <motion.div key={i} className="rounded-2xl p-6 card-hover" style={{ background: `${withAlpha(item.color, 0.05)}`, border: `1px solid ${withAlpha(item.color, 0.2)}` }}
                   initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
@@ -371,7 +371,7 @@ export default function Landing() {
           <div className="text-center mb-12">
             <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(43_65%_50%)] mb-3">Why this isn't another dating app</p>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-              Built for people doing the work — <span className="gradient-text italic">not chasing tricks.</span>
+              Built for people doing the work, <span className="gradient-text italic">not chasing tricks.</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto mt-4 leading-relaxed text-sm">
               We're in private beta and reviewing every report ourselves. You get founder-level attention on your audit.
@@ -379,9 +379,9 @@ export default function Landing() {
           </div>
           <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
             {[
-              { icon: "🔬", title: "Founder-reviewed", desc: "Every audit during private beta is reviewed by the founders personally. You're not getting a generic output — you're getting our full attention on your specific situation.", color: "hsl(var(--brand-indigo))" },
+              { icon: "🔬", title: "Founder-reviewed", desc: "Every audit during private beta is reviewed by the founders personally. You're not getting a generic output. You're getting our full attention on your specific situation.", color: "hsl(var(--brand-indigo))" },
               { icon: "🤝", title: "You shape the product", desc: "Beta members get direct access to give feedback, request features, and influence what we build next. Help us build the tool you actually wish existed.", color: "hsl(var(--brand-gold))" },
-              { icon: "🔒", title: "Launch pricing, locked in", desc: "Beta members lock in today's pricing for life. As we add more features and move out of beta, the price goes up — yours doesn't.", color: "hsl(142 55% 50%)" },
+              { icon: "🔒", title: "Launch pricing, locked in", desc: "Beta members lock in today's pricing for life. As we add more features and move out of beta, the price goes up. Yours doesn't.", color: "hsl(142 55% 50%)" },
             ].map((card, i) => (
               <motion.div
                 key={i}
@@ -415,12 +415,12 @@ export default function Landing() {
               Your private sanctuary.
             </h2>
             <p className="text-muted-foreground leading-relaxed text-sm">
-              Dating is vulnerable. We treat everything you share with the highest level of respect, security, and discretion.
+              Dating is vulnerable. We treat everything you share with the highest level of respect, security, and discretion. Hybrid AI: a deterministic baseline runs on our servers with no external calls. Deeper analysis through Anthropic Claude is opt-in per account, off by default, and you can turn it off anytime.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
             {[
-              { icon: "🔒", title: "Never sold",       desc: "Your data is yours. We never sell or share with third parties." },
+              { icon: "🔒", title: "Never sold",       desc: "Your data is yours. We never sell it or share it with advertisers." },
               { icon: "🗑", title: "Delete anytime",   desc: "One click permanently removes your account and all history." },
               { icon: "✋", title: "Consent first",    desc: "You control exactly what we analyze. Nothing is assumed." },
               { icon: "🚫", title: "Zero judgment",    desc: "An entirely private space to process your dating life honestly." },

@@ -413,6 +413,55 @@ export const GetAccountSummaryResponse = zod.object({
 
 
 /**
+ * Returns a flat envelope of the signed-in user's content-sharing
+consents. Today this is just `aiContent` (the deep AI lane), but
+the shape is designed to grow as new consent gates land (push
+notifications, sharing with a coach, etc). The companion endpoint
+`/me/consent/ai-content` exposes the same boolean with separate
+grant and revoke timestamps for audit views.
+
+ * @summary Get the signed-in user's consent envelope
+ */
+export const GetMeConsentHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetMeConsentResponse = zod.object({
+  "aiContent": zod.boolean().describe('Whether the user has opted in to sending their own content\n(bios, messages, journal text, pastes) to the hosted LLM. False\nby default. Mirrors `AiContentConsentState.granted` but exposed\nin a flatter envelope alongside a single updated-at timestamp.\n'),
+  "aiContentUpdatedAt": zod.coerce.date().nullable().describe('Last time the user flipped the AI content consent boolean.')
+})
+
+
+/**
+ * Persists a paste of the caller's Instagram bio plus a handful of
+recent captions into `imported_sources` with `source='instagram-paste'`
+and `status='pending'`. Anon-safe: if the request has no signed-in
+user, the row is stamped with the anonymous claim token cookie so
+it can be merged into the account later via the standard claim flow.
+A follow-up task wires the actual tone-extract call against the
+persisted row; this endpoint only handles capture.
+
+ * @summary Capture a copy-paste of the user's Instagram bio and captions
+ */
+export const CreateInstagramPasteHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const createInstagramPasteBodyBioMax = 500;
+
+export const createInstagramPasteBodyRecentCaptionsItemMax = 800;
+
+export const createInstagramPasteBodyRecentCaptionsMax = 10;
+
+
+
+export const CreateInstagramPasteBody = zod.object({
+  "bio": zod.string().min(1).max(createInstagramPasteBodyBioMax).describe('The user\'s current Instagram bio text.'),
+  "recentCaptions": zod.array(zod.string().max(createInstagramPasteBodyRecentCaptionsItemMax)).max(createInstagramPasteBodyRecentCaptionsMax).describe('Five to ten recent Instagram captions, one per array item.')
+})
+
+
+/**
  * Returns whether the authenticated user has granted consent to send
 their own content (bios, messages, screenshots, journal entries) to
 the hosted LLM (Anthropic via Replit AI Integrations), plus the

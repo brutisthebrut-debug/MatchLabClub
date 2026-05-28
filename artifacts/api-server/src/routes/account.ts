@@ -32,6 +32,7 @@ import {
   GetAiContentConsentResponse,
   SetAiContentConsentBody,
   SetAiContentConsentResponse,
+  GetMeConsentResponse,
 } from "@workspace/api-zod";
 import { clearSession, getSessionId, SESSION_COOKIE } from "../lib/auth";
 import { describeUserAgent } from "../lib/userAgent";
@@ -773,6 +774,7 @@ router.post("/me/consent/ai-content", async (req, res): Promise<void> => {
   const now = new Date();
   const updates: Partial<typeof usersTable.$inferInsert> = {
     aiContentConsentGranted: parsed.data.granted,
+    aiContentConsentUpdatedAt: now,
     updatedAt: now,
   };
   if (parsed.data.granted) {
@@ -798,6 +800,37 @@ router.post("/me/consent/ai-content", async (req, res): Promise<void> => {
       granted: updated?.granted ?? parsed.data.granted,
       grantedAt: updated?.grantedAt ? toIso(updated.grantedAt) : null,
       revokedAt: updated?.revokedAt ? toIso(updated.revokedAt) : null,
+    }),
+  );
+});
+
+/**
+ * GET /api/me/consent
+ *
+ * Simplified consent envelope: a single boolean plus the last time it
+ * changed. Sits alongside `/me/consent/ai-content` (which exposes the
+ * grant/revoke timestamps separately). Used by the Self Hub toggle and any
+ * future surface that just needs "is the deep AI lane on right now and
+ * when did the user last decide that".
+ */
+router.get("/me/consent", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const rows = await db
+    .select({
+      granted: usersTable.aiContentConsentGranted,
+      updatedAt: usersTable.aiContentConsentUpdatedAt,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.id, req.user.id))
+    .limit(1);
+  const row = rows[0];
+  res.json(
+    GetMeConsentResponse.parse({
+      aiContent: row?.granted ?? false,
+      aiContentUpdatedAt: row?.updatedAt ? toIso(row.updatedAt) : null,
     }),
   );
 });

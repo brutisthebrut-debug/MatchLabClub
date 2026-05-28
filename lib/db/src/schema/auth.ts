@@ -38,6 +38,10 @@ export const usersTable = pgTable("users", {
   aiContentConsentGranted: boolean("ai_content_consent_granted").notNull().default(false),
   aiContentConsentGrantedAt: timestamp("ai_content_consent_granted_at", { withTimezone: true }),
   aiContentConsentRevokedAt: timestamp("ai_content_consent_revoked_at", { withTimezone: true }),
+  // Last time the consent boolean flipped (grant or revoke). Powers the
+  // simplified `/me/consent` endpoint which exposes a single timestamp
+  // alongside the current state.
+  aiContentConsentUpdatedAt: timestamp("ai_content_consent_updated_at", { withTimezone: true }),
   // Referral attribution — populated on signup from the `mlc_ref` cookie if
   // the user landed via an Echo share URL with `?ref=user-<inviterId>`.
   invitedByUserId: varchar("invited_by_user_id"),

@@ -1751,6 +1751,41 @@ export interface SetAiContentConsentInput {
   granted: boolean;
 }
 
+export interface MeConsent {
+  /** Whether the user has opted in to sending their own content
+  (bios, messages, journal text, pastes) to the hosted LLM. False
+  by default. Mirrors `AiContentConsentState.granted` but exposed
+  in a flatter envelope alongside a single updated-at timestamp.
+   */
+  aiContent: boolean;
+  /**
+     * Last time the user flipped the AI content consent boolean.
+     * @nullable
+     */
+  aiContentUpdatedAt: string | null;
+}
+
+export interface CreateInstagramPasteInput {
+  /**
+     * The user's current Instagram bio text.
+     * @minLength 1
+     * @maxLength 500
+     */
+  bio: string;
+  /**
+     * Five to ten recent Instagram captions, one per array item.
+     * @maxItems 10
+     */
+  recentCaptions: string[];
+}
+
+export interface CreateInstagramPasteResult {
+  id: number;
+  source: 'instagram-paste';
+  status: 'pending';
+  uploadedAt: string;
+}
+
 /**
  * Opaque session token — `Bearer <sid>`.
  */
