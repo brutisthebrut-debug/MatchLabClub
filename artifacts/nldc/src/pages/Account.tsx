@@ -30,7 +30,11 @@ import {
   useGetAccountSummary,
   getGetAccountSummaryQueryKey,
   useEmailMyDataExport,
+  useGetAiContentConsent,
+  useSetAiContentConsent,
+  getGetAiContentConsentQueryKey,
 } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   LogIn,
   LogOut,
@@ -44,6 +48,7 @@ import {
   Trash2,
   Loader2,
   Smartphone,
+  Brain,
 } from "lucide-react";
 
 function Initials({ name }: { name: string }) {
@@ -82,6 +87,35 @@ export default function Account() {
     },
   });
   const emailExport = useEmailMyDataExport();
+  const queryClient = useQueryClient();
+  const aiConsent = useGetAiContentConsent({
+    query: { queryKey: getGetAiContentConsentQueryKey(), enabled: isAuthenticated },
+  });
+  const setAiConsent = useSetAiContentConsent({
+    mutation: {
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: getGetAiContentConsentQueryKey() });
+      },
+    },
+  });
+  const consentGranted = Boolean(aiConsent.data?.granted);
+  const handleToggleAiConsent = async (next: boolean) => {
+    try {
+      await setAiConsent.mutateAsync({ data: { granted: next } });
+      toast({
+        title: next ? "Deep AI lane: on" : "Deep AI lane: off",
+        description: next
+          ? "Anthropic Claude is now layered on top of the deterministic baseline for tools that benefit from it."
+          : "You're back on the deterministic baseline. Everything still works — just without the semantic layer.",
+      });
+    } catch (err) {
+      toast({
+        title: "Couldn't update your AI consent",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useAutoRefreshPref();
   const [trashRemindersEnabled, setTrashRemindersEnabled] = useTrashReminderPref();
   const [copyDuration, setCopyDuration] = useCopyDurationPref();
@@ -288,6 +322,41 @@ export default function Account() {
                 >
                   <LogOut className="w-4 h-4 mr-2" /> Sign out
                 </Button>
+              </div>
+            </div>
+
+            {/* Deep AI lane (account-level consent for Anthropic) */}
+            <div className="glass rounded-2xl p-6 md:p-8 space-y-4" data-testid="card-ai-consent">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-xl bg-[hsl(326_100%_60%/0.12)] flex items-center justify-center flex-shrink-0">
+                  <Brain className="h-5 w-5 text-[hsl(326_100%_60%)]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-serif text-lg font-bold text-foreground">Deep AI lane</h3>
+                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                    Hybrid setup. The deterministic engine is always on — fast, free, never rate-limited.
+                    With this on, Anthropic Claude is layered on top for tools that benefit from semantic depth:
+                    bio rewrites, message coaching, Compatibility Compass reads, import summaries.
+                    Off = baseline only. Nothing breaks either way.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-[hsl(248_45%_157%)] border border-white/5 ml-13">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">
+                    {consentGranted ? "Deep AI lane is on" : "Deep AI lane is off"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Toggle any time. We log when it changes.
+                  </p>
+                </div>
+                <Switch
+                  checked={consentGranted}
+                  disabled={aiConsent.isLoading || setAiConsent.isPending}
+                  onCheckedChange={handleToggleAiConsent}
+                  data-testid="switch-ai-consent"
+                  aria-label="Toggle Deep AI lane"
+                />
               </div>
             </div>
 

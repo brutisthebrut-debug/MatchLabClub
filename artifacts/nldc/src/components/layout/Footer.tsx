@@ -7,8 +7,10 @@ export function Footer() {
       <div className="orb orb-violet absolute w-96 h-96 -bottom-32 -left-32 opacity-60 pointer-events-none" />
 
       <div className="container mx-auto px-4 md:px-6 py-14 md:py-16 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-12">
-          <div className="col-span-1 md:col-span-2">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-10 md:gap-12">
+
+          {/* Brand */}
+          <div className="col-span-2">
             <Link href="/" className="flex items-center mb-5 w-fit group">
               <img
                 src="/matchlab-logo.png"
@@ -17,31 +19,46 @@ export function Footer() {
               />
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
-              The private coaching studio for people who want to be understood accurately — not just liked more.
+              Your second brain for dating. Sits on top of Tinder, Hinge, and Bumble — never replaces them.
+              Audits your profile, coaches your messages, reads compatibility, and quietly learns who you actually are.
             </p>
-            <p className="text-muted-foreground/50 text-xs mt-4 leading-relaxed max-w-xs">
-              No generic advice. No vague confidence tips. Just honest, specific, actionable coaching built around who you actually are.
+            <p className="text-muted-foreground/60 text-xs mt-4 leading-relaxed max-w-xs">
+              Hybrid AI: deterministic baseline always-on, Anthropic Claude layered on top — opt-in per account.
             </p>
           </div>
 
+          {/* Try it free */}
           <div>
-            <h3 className="font-sans font-semibold text-sm text-foreground/70 uppercase tracking-widest mb-5">Product</h3>
+            <h3 className="font-sans font-semibold text-sm text-foreground/70 uppercase tracking-widest mb-5">Try It Free</h3>
             <ul className="space-y-3 text-sm">
-              <li><Link href="/start" className="text-muted-foreground hover:text-foreground transition-colors">Free Dating Audit</Link></li>
-              <li><Link href="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</Link></li>
-              <li><Link href="/coach" className="text-muted-foreground hover:text-foreground transition-colors">Message Coaching</Link></li>
-              <li><Link href="/insights" className="text-muted-foreground hover:text-foreground transition-colors">Import Communication Patterns</Link></li>
-              <li><Link href="/integrations" className="text-muted-foreground hover:text-foreground transition-colors">Integrations</Link></li>
+              <li><Link href="/quizzes" className="text-muted-foreground hover:text-foreground transition-colors">Personality quizzes</Link></li>
+              <li><Link href="/signal-check" className="text-muted-foreground hover:text-foreground transition-colors">Signal Check</Link></li>
+              <li><Link href="/sample-report" className="text-muted-foreground hover:text-foreground transition-colors">Sample audit</Link></li>
+              <li><Link href="/coach" className="text-muted-foreground hover:text-foreground transition-colors">Message coach</Link></li>
+              <li><Link href="/compatibility-compass" className="text-muted-foreground hover:text-foreground transition-colors">Compatibility Compass</Link></li>
             </ul>
           </div>
 
+          {/* Product */}
           <div>
-            <h3 className="font-sans font-semibold text-sm text-foreground/70 uppercase tracking-widest mb-5">Trust</h3>
+            <h3 className="font-sans font-semibold text-sm text-foreground/70 uppercase tracking-widest mb-5">Product</h3>
             <ul className="space-y-3 text-sm">
-              <li><Link href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">Blog</Link></li>
-              <li><Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
-              <li><Link href="/waitlist" className="text-muted-foreground hover:text-foreground transition-colors">Early Access Waitlist</Link></li>
+              <li><Link href="/start" className="text-muted-foreground hover:text-foreground transition-colors">Full Dating Audit</Link></li>
+              <li><Link href="/insights" className="text-muted-foreground hover:text-foreground transition-colors">Communication Insights</Link></li>
+              <li><Link href="/wellness" className="text-muted-foreground hover:text-foreground transition-colors">Wellness Center</Link></li>
+              <li><Link href="/me" className="text-muted-foreground hover:text-foreground transition-colors">Self Hub</Link></li>
+              <li><Link href="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</Link></li>
+            </ul>
+          </div>
+
+          {/* Trust & co */}
+          <div>
+            <h3 className="font-sans font-semibold text-sm text-foreground/70 uppercase tracking-widest mb-5">Trust &amp; Co</h3>
+            <ul className="space-y-3 text-sm">
+              <li><Link href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">Journal</Link></li>
+              <li><Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">Privacy policy</Link></li>
+              <li><Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms of service</Link></li>
+              <li><Link href="/waitlist" className="text-muted-foreground hover:text-foreground transition-colors">Early access</Link></li>
               <li><Link href="/partners/shebangs" className="text-muted-foreground hover:text-foreground transition-colors">Partner: Shebangs.club</Link></li>
             </ul>
           </div>
@@ -49,9 +66,9 @@ export function Footer() {
 
         <div className="divider-gradient mt-12 mb-8" />
 
-        <div className="flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground/50 gap-2">
+        <div className="flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground/60 gap-2">
           <p>&copy; {new Date().getFullYear()} MatchLab Club. All rights reserved.</p>
-          <p>Private, encrypted, confidential. Your data is never sold.</p>
+          <p>Private &amp; encrypted · Your data, your call · Never sold</p>
         </div>
       </div>
     </footer>

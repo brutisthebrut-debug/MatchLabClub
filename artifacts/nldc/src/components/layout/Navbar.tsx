@@ -6,7 +6,9 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const PRIMARY_LINKS = [
-  { name: "Try Free",  href: "/quizzes" },
+  { name: "Try Free",   href: "/quizzes" },
+  { name: "Sample Read",href: "/sample-report" },
+  { name: "Coach",      href: "/coach" },
   { name: "Pricing",    href: "/pricing" },
   { name: "Journal",    href: "/blog" },
 ] as const;
@@ -73,20 +75,35 @@ export function Navbar() {
           ))}
 
           {isAuthenticated && (
-            <Link
-              href="/dashboard"
-              onClick={closeAll}
-              aria-current={isActive("/dashboard") ? "page" : undefined}
-              className={`flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
-                isActive("/dashboard")
-                  ? "text-[hsl(248_62%_52%)] bg-[hsl(248_62%_52%/0.08)]"
-                  : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
-              }`}
-              data-testid="link-dashboard"
-            >
-              <Compass className="w-3.5 h-3.5" aria-hidden="true" />
-              Dashboard
-            </Link>
+            <>
+              <Link
+                href="/dashboard"
+                onClick={closeAll}
+                aria-current={isActive("/dashboard") ? "page" : undefined}
+                className={`flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+                  isActive("/dashboard")
+                    ? "text-[hsl(248_62%_52%)] bg-[hsl(248_62%_52%/0.08)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                }`}
+                data-testid="link-dashboard"
+              >
+                <Compass className="w-3.5 h-3.5" aria-hidden="true" />
+                Dashboard
+              </Link>
+              <Link
+                href="/me"
+                onClick={closeAll}
+                aria-current={isActive("/me") ? "page" : undefined}
+                className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+                  isActive("/me")
+                    ? "text-[hsl(248_62%_52%)] bg-[hsl(248_62%_52%/0.08)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                }`}
+                data-testid="link-self-hub"
+              >
+                My Hub
+              </Link>
+            </>
           )}
 
           <div className="w-px h-5 bg-foreground/10 mx-2" />
@@ -157,19 +174,34 @@ export function Navbar() {
             ))}
 
             {isAuthenticated && (
-              <Link
-                href="/dashboard"
-                onClick={closeAll}
-                aria-current={isActive("/dashboard") ? "page" : undefined}
-                className={`flex items-center gap-2 text-base font-medium py-2.5 transition-colors ${
-                  isActive("/dashboard")
-                    ? "text-[hsl(248_62%_52%)]"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-                data-testid="link-dashboard-mobile"
-              >
-                <Compass className="w-4 h-4" aria-hidden="true" /> Dashboard
-              </Link>
+              <>
+                <Link
+                  href="/dashboard"
+                  onClick={closeAll}
+                  aria-current={isActive("/dashboard") ? "page" : undefined}
+                  className={`flex items-center gap-2 text-base font-medium py-2.5 transition-colors ${
+                    isActive("/dashboard")
+                      ? "text-[hsl(248_62%_52%)]"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  data-testid="link-dashboard-mobile"
+                >
+                  <Compass className="w-4 h-4" aria-hidden="true" /> Dashboard
+                </Link>
+                <Link
+                  href="/me"
+                  onClick={closeAll}
+                  aria-current={isActive("/me") ? "page" : undefined}
+                  className={`text-base font-medium py-2.5 transition-colors ${
+                    isActive("/me")
+                      ? "text-[hsl(248_62%_52%)]"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  data-testid="link-self-hub-mobile"
+                >
+                  My Hub
+                </Link>
+              </>
             )}
 
             <div className="h-px bg-foreground/8 my-2" />
