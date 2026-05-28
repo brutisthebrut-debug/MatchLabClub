@@ -23,6 +23,14 @@ import { useAuth } from "@workspace/replit-auth-web";
 import {
   DIMENSION_META,
   PROFILE_MODULES,
+  WELLNESS_QUESTIONS,
+  DOMAIN_META,
+  FEATURE_USAGE_MAP,
+  FEATURE_META,
+  getDimensionsByDomain,
+  getFeaturesForDimension,
+  getQuestionsByDimension,
+  type FeatureKey,
   type WellnessQuestion,
 } from "@/lib/wellnessQuestionBank";
 
@@ -388,6 +396,292 @@ function InsightTagsPanel({ tags }: { tags: Array<{ tag: string; label: string; 
   );
 }
 
+// ── Domain overview ───────────────────────────────────────────────────────────
+
+function ProgressRing({ pct, color, size = 56 }: { pct: number; color: string; size?: number }) {
+  const stroke = 5;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c - (Math.max(0, Math.min(100, pct)) / 100) * c;
+  return (
+    <svg width={size} height={size} className="flex-shrink-0" aria-hidden="true">
+      <circle cx={size / 2} cy={size / 2} r={r} stroke={withAlpha(color, 0.15)} strokeWidth={stroke} fill="none" />
+      <circle
+        cx={size / 2} cy={size / 2} r={r}
+        stroke={color} strokeWidth={stroke} fill="none"
+        strokeDasharray={c} strokeDashoffset={offset}
+        strokeLinecap="round"
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        style={{ transition: "stroke-dashoffset 400ms ease" }}
+      />
+      <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" fontSize="11" fontWeight="700" fill={color}>
+        {pct}%
+      </text>
+    </svg>
+  );
+}
+
+const FEATURE_ORDER: FeatureKey[] = ["compass", "coach", "report", "insights"];
+
+function FeatureBadges({ dimensionId }: { dimensionId: string }) {
+  const features = getFeaturesForDimension(dimensionId);
+  if (!features.length) return null;
+  return (
+    <div className="flex flex-wrap gap-1 mt-2">
+      {features.map(f => (
+        <span
+          key={f}
+          className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full border border-white/10 bg-white/3 text-muted-foreground/70"
+        >
+          Feeds {FEATURE_META[f].label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function DimensionInlineRow({
+  dimensionId,
+  answeredIds,
+  onSave,
+}: {
+  dimensionId: string;
+  answeredIds: Set<string>;
+  onSave: (qId: string, answer: string, consent: ConsentLevel) => Promise<void>;
+}) {
+  const meta = DIMENSION_META[dimensionId];
+  const Icon = DIMENSION_ICONS[dimensionId] ?? Sparkles;
+  const questions = getQuestionsByDimension(dimensionId);
+  const answered = questions.filter(q => answeredIds.has(q.id)).length;
+  const total = questions.length;
+  const pct = total === 0 ? 0 : Math.round((answered / total) * 100);
+  const [open, setOpen] = useState(false);
+
+  if (!meta) return null;
+
+  return (
+    <div className="rounded-xl border border-white/8 bg-white/2 overflow-hidden">
+      <div className="flex items-start gap-3 p-4">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+          style={{ background: withAlpha(meta.color, 0.13) }}>
+          <Icon className="w-4 h-4" style={{ color: meta.color }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-semibold text-foreground">{meta.label}</p>
+            <span className="text-[10px] tabular-nums text-muted-foreground/60">
+              {answered}/{total}
+            </span>
+          </div>
+          <p className="text-[11px] text-muted-foreground/70 leading-relaxed mt-0.5">{meta.blurb}</p>
+          <FeatureBadges dimensionId={dimensionId} />
+        </div>
+        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setOpen(o => !o)}
+            className="rounded-full text-[11px] h-7 px-3 border-white/15"
+          >
+            {open ? "Close" : pct === 0 ? "Start" : pct === 100 ? "Review" : "Continue"}
+          </Button>
+          <span className="text-[9px] tabular-nums text-muted-foreground/50">{pct}%</span>
+        </div>
+      </div>
+      <div className="px-4 pb-2">
+        <Progress value={pct} className="h-1 bg-white/8" />
+      </div>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 pt-3 space-y-3 border-t border-white/5">
+              {questions.map(q => (
+                <QuestionCard
+                  key={q.id}
+                  question={q}
+                  savedAnswer={answeredIds.has(q.id) ? "(answered)" : undefined}
+                  onSave={onSave}
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function DomainCard({
+  domain,
+  answeredIds,
+  expanded,
+  onToggle,
+}: {
+  domain: typeof DOMAIN_META[number];
+  answeredIds: Set<string>;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const allQuestions = WELLNESS_QUESTIONS.filter(q => domain.dimensionIds.includes(q.dimension));
+  const answered = allQuestions.filter(q => answeredIds.has(q.id)).length;
+  const total = allQuestions.length;
+  const pct = total === 0 ? 0 : Math.round((answered / total) * 100);
+
+  return (
+    <button
+      onClick={onToggle}
+      className={`text-left rounded-2xl border p-4 transition-all w-full ${
+        expanded ? "border-white/20 bg-white/4" : "border-white/8 bg-white/2 hover:border-white/15"
+      }`}
+      style={expanded ? { boxShadow: `0 0 0 1px ${withAlpha(domain.color, 0.25)}` } : undefined}
+    >
+      <div className="flex items-start gap-3">
+        <ProgressRing pct={pct} color={domain.color} />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground leading-tight">{domain.label}</p>
+          <p className="text-[11px] text-muted-foreground/70 leading-snug mt-1">{domain.description}</p>
+          <p className="text-[10px] text-muted-foreground/50 mt-2 tabular-nums">
+            {answered} of {total} questions answered · {domain.dimensionIds.length} dimensions
+          </p>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function DomainOverview({
+  answeredIds,
+  onSave,
+}: {
+  answeredIds: Set<string>;
+  onSave: (qId: string, answer: string, consent: ConsentLevel) => Promise<void>;
+}) {
+  const [expandedDomain, setExpandedDomain] = useState<string | null>(DOMAIN_META[0]?.id ?? null);
+
+  const totalQuestions = WELLNESS_QUESTIONS.length;
+  const totalAnswered = WELLNESS_QUESTIONS.filter(q => answeredIds.has(q.id)).length;
+  const overallPct = totalQuestions === 0 ? 0 : Math.round((totalAnswered / totalQuestions) * 100);
+  const dimensionsExplored = Object.keys(DIMENSION_META).filter(dim =>
+    WELLNESS_QUESTIONS.some(q => q.dimension === dim && answeredIds.has(q.id)),
+  ).length;
+
+  return (
+    <motion.div {...fadeUp(0.14)} className="mb-6">
+      {/* Top-level horizontal progress */}
+      <div className="glass-strong rounded-2xl border border-white/5 p-5 mb-4">
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Overall progress</p>
+            <p className="text-sm font-semibold text-foreground mt-0.5">
+              {dimensionsExplored} of 18 dimensions explored
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-2xl font-bold tabular-nums text-foreground">{overallPct}%</p>
+            <p className="text-[9px] uppercase tracking-widest text-muted-foreground/50">
+              {totalAnswered} of {totalQuestions} answered
+            </p>
+          </div>
+        </div>
+        <Progress value={overallPct} className="h-2 bg-white/8" />
+      </div>
+
+      {/* Domain grid */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {DOMAIN_META.map(d => (
+          <DomainCard
+            key={d.id}
+            domain={d}
+            answeredIds={answeredIds}
+            expanded={expandedDomain === d.id}
+            onToggle={() => setExpandedDomain(prev => (prev === d.id ? null : d.id))}
+          />
+        ))}
+      </div>
+
+      {/* Expanded dimensions list */}
+      <AnimatePresence initial={false}>
+        {expandedDomain && (
+          <motion.div
+            key={expandedDomain}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="pt-4 space-y-2">
+              {getDimensionsByDomain(expandedDomain).map(dimId => (
+                <DimensionInlineRow
+                  key={dimId}
+                  dimensionId={dimId}
+                  answeredIds={answeredIds}
+                  onSave={onSave}
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// ── What this powers ──────────────────────────────────────────────────────────
+
+function WhatThisPowers() {
+  const [open, setOpen] = useState(false);
+  return (
+    <motion.div {...fadeUp(0.18)} className="mb-6 glass-strong rounded-2xl border border-white/5 overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-white/2 transition-colors"
+      >
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(248_62%_62%)]">What this powers</p>
+          <p className="text-sm font-semibold text-foreground mt-0.5">See which dimensions feed which features</p>
+        </div>
+        {open ? <ChevronUp className="w-4 h-4 text-muted-foreground/50" /> : <ChevronDown className="w-4 h-4 text-muted-foreground/50" />}
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 pt-2 space-y-3 border-t border-white/5">
+              {FEATURE_ORDER.map(f => {
+                const dims = FEATURE_USAGE_MAP[f];
+                const labels = dims.map(d => DIMENSION_META[d]?.label ?? d);
+                return (
+                  <div key={f} className="rounded-xl bg-white/2 border border-white/5 p-3">
+                    <p className="text-xs font-semibold text-foreground">
+                      {FEATURE_META[f].label} uses these {dims.length} dimensions
+                    </p>
+                    <p className="text-[11px] text-muted-foreground/70 mt-0.5">{FEATURE_META[f].blurb}</p>
+                    <p className="text-[11px] text-muted-foreground/80 mt-2 leading-relaxed">
+                      {labels.join(", ")}.
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function WellnessCenter() {
@@ -504,6 +798,12 @@ export default function WellnessCenter() {
               </Button>
             </motion.div>
           )}
+
+          {/* Domain-grouped overview */}
+          <DomainOverview answeredIds={answeredIds} onSave={handleSave} />
+
+          {/* What this powers */}
+          <WhatThisPowers />
 
           {/* Progressive profile modules */}
           <div className="mb-6">

@@ -105,6 +105,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="self-hub"
+        options={{
+          title: "Me",
+          tabBarIcon: ({ color }) => (
+            <Feather name="grid" size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="account"
         options={{
           title: "Account",

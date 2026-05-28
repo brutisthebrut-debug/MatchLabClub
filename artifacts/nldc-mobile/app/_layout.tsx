@@ -172,6 +172,8 @@ function RootLayoutNav() {
           name="sessions"
           options={{ title: "Devices & sign-ins" }}
         />
+        <Stack.Screen name="compass" options={{ title: "Compatibility Compass" }} />
+        <Stack.Screen name="imports" options={{ title: "Imports" }} />
       </Stack>
     </AuthProvider>
   );

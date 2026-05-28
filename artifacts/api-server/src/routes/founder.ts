@@ -53,6 +53,8 @@ import {
   getEnvRebreachCooldownMinutes,
   getRebreachCooldownMs,
 } from "../lib/aiReliabilityAlerts";
+import { PLAYBOOK, buildEchoSystemPrompt } from "@workspace/echo";
+import { generate as aiGenerate } from "../lib/aiService";
 
 const router: IRouter = Router();
 
@@ -1484,6 +1486,88 @@ router.delete("/founder/alert-settings/rebreach-cooldown", requireFounder, async
     isOverridden: false,
     updatedAt: null,
   });
+});
+
+const askCopilotSchema = z.object({
+  question: z.string().min(4).max(2000),
+  contextHint: z.string().max(1000).optional(),
+});
+
+function pickClosestPlaybookEntry(question: string): typeof PLAYBOOK[number] {
+  const tokens = question
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t.length >= 4);
+  let best = PLAYBOOK[0];
+  let bestScore = -1;
+  for (const entry of PLAYBOOK) {
+    const haystack =
+      `${entry.id} ${entry.decision} ${entry.rationale} ${entry.revisitWhen}`.toLowerCase();
+    let score = 0;
+    for (const tok of tokens) {
+      if (haystack.includes(tok)) score += 1;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      best = entry;
+    }
+  }
+  return best;
+}
+
+router.post("/founder/copilot/ask", requireFounder, async (req, res): Promise<void> => {
+  const parsed = askCopilotSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request body.", details: parsed.error.format() });
+    return;
+  }
+  const { question, contextHint } = parsed.data;
+
+  const playbookJson = JSON.stringify(PLAYBOOK);
+  const taskBrief = [
+    "You are Echo, MatchLab Club's cofounder voice. The founder is asking you for strategic guidance based on the playbook below.",
+    "Reply in Echo's voice. Be specific, be willing to push back, no jargon, no em dashes. Reference the playbook decisions when relevant. Max 350 words.",
+    "",
+    "Embedded playbook (JSON, reference material only, do not echo it back verbatim):",
+    playbookJson,
+  ].join("\n");
+  const system = buildEchoSystemPrompt(taskBrief);
+
+  const userMessage = contextHint && contextHint.trim().length > 0
+    ? `Question: ${question}\n\nContext the founder added: ${contextHint}`
+    : `Question: ${question}`;
+
+  // requireContentConsent is intentionally false here: the founder copilot
+  // operates on the founder's own strategic questions, not on end-user
+  // content (bios, messages, journal entries). The account-level AI
+  // consent gate is scoped to end-user data. This endpoint is gated by
+  // requireFounder instead, which is the appropriate trust boundary.
+  const result = await aiGenerate(
+    {
+      provider: "anthropic",
+      model: "claude-sonnet-4-6",
+      system,
+      user: userMessage,
+      expectJson: false,
+      requireContentConsent: false,
+      maxTokens: 2048,
+      context: { toolName: "founder-copilot-ask" },
+    },
+    "",
+  );
+
+  if (result.isFallback || result.output.trim().length === 0) {
+    const closest = pickClosestPlaybookEntry(question);
+    res.json({
+      answer:
+        `Echo couldn't reach the model right now. Here's the relevant playbook entry instead: ` +
+        `${closest.decision} (revisit when: ${closest.revisitWhen})`,
+      fallback: true,
+    });
+    return;
+  }
+
+  res.json({ answer: result.output });
 });
 
 export default router;

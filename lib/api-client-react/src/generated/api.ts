@@ -32,6 +32,9 @@ import type {
   AnonymousClaimHandoff,
   AnonymousClaimHandoffStatus,
   AnonymousClaimHandoffStatusInput,
+  AskFounderCopilotInput,
+  AskFounderCopilotParams,
+  AskFounderCopilotResult,
   Audit,
   AuditFromScreenshot400,
   AuditInput,
@@ -55,6 +58,7 @@ import type {
   CompassRead,
   CompassReadInput,
   CompassReadList,
+  CompassScreenshotExtractResult,
   CorrectAuditSourceApp400,
   CorrectAuditSourceApp404,
   CorrectSourceAppInput,
@@ -7387,6 +7391,172 @@ export function useGetFounderReferrals<TData = Awaited<ReturnType<typeof getFoun
 
 
 
+
+export const getAskFounderCopilotUrl = (params?: AskFounderCopilotParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/founder/copilot/ask?${stringifiedParams}` : `/api/founder/copilot/ask`
+}
+
+/**
+ * Routes a free-form founder question to the Echo persona via Anthropic.
+The full strategic playbook is embedded in the system prompt so the
+reply can reference prior decisions. On model failure or unavailable
+provider, returns a fallback answer pointing at the closest playbook
+entry. Requires founder key.
+
+ * @summary Ask Echo a free-form strategic question
+ */
+export const askFounderCopilot = async (askFounderCopilotInput: AskFounderCopilotInput,
+    params?: AskFounderCopilotParams, options?: RequestInit): Promise<AskFounderCopilotResult> => {
+
+  return customFetch<AskFounderCopilotResult>(getAskFounderCopilotUrl(params),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      askFounderCopilotInput,)
+  }
+);}
+
+
+
+
+export const getAskFounderCopilotMutationOptions = <TError = ErrorType<AiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof askFounderCopilot>>, TError,{data: BodyType<AskFounderCopilotInput>;params?: AskFounderCopilotParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof askFounderCopilot>>, TError,{data: BodyType<AskFounderCopilotInput>;params?: AskFounderCopilotParams}, TContext> => {
+
+const mutationKey = ['askFounderCopilot'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof askFounderCopilot>>, {data: BodyType<AskFounderCopilotInput>;params?: AskFounderCopilotParams}> = (props) => {
+          const {data,params} = props ?? {};
+
+          return  askFounderCopilot(data,params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AskFounderCopilotMutationResult = NonNullable<Awaited<ReturnType<typeof askFounderCopilot>>>
+    export type AskFounderCopilotMutationBody = BodyType<AskFounderCopilotInput>
+    export type AskFounderCopilotMutationError = ErrorType<AiError>
+
+    /**
+ * @summary Ask Echo a free-form strategic question
+ */
+export const useAskFounderCopilot = <TError = ErrorType<AiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof askFounderCopilot>>, TError,{data: BodyType<AskFounderCopilotInput>;params?: AskFounderCopilotParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof askFounderCopilot>>,
+        TError,
+        {data: BodyType<AskFounderCopilotInput>;params?: AskFounderCopilotParams},
+        TContext
+      > => {
+      return useMutation(getAskFounderCopilotMutationOptions(options));
+    }
+
+export const getExtractCompassScreenshotUrl = () => {
+
+
+
+
+  return `/api/compass/extract-screenshot`
+}
+
+/**
+ * Accepts an image upload (max 10MB) and returns the OCR-extracted text
+as a single string. The client is expected to feed that text into the
+same Compatibility Compass derivation flow used by the paste tab.
+Anon-safe: nothing is persisted.
+
+A multipart/form-data POST with a single `file` field containing the
+screenshot. Not modeled as a typed body in the generated client;
+callers should construct a `FormData` and POST it via `fetch`
+directly.
+
+ * @summary OCR a profile or chat screenshot and return its extracted text
+ */
+export const extractCompassScreenshot = async (extractCompassScreenshotBody: Blob, options?: RequestInit): Promise<CompassScreenshotExtractResult> => {
+
+  return customFetch<CompassScreenshotExtractResult>(getExtractCompassScreenshotUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/octet-stream', ...options?.headers },
+    body: JSON.stringify(
+      extractCompassScreenshotBody,)
+  }
+);}
+
+
+
+
+export const getExtractCompassScreenshotMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof extractCompassScreenshot>>, TError,{data: BodyType<Blob>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof extractCompassScreenshot>>, TError,{data: BodyType<Blob>}, TContext> => {
+
+const mutationKey = ['extractCompassScreenshot'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof extractCompassScreenshot>>, {data: BodyType<Blob>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  extractCompassScreenshot(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ExtractCompassScreenshotMutationResult = NonNullable<Awaited<ReturnType<typeof extractCompassScreenshot>>>
+    export type ExtractCompassScreenshotMutationBody = BodyType<Blob>
+    export type ExtractCompassScreenshotMutationError = ErrorType<void>
+
+    /**
+ * @summary OCR a profile or chat screenshot and return its extracted text
+ */
+export const useExtractCompassScreenshot = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof extractCompassScreenshot>>, TError,{data: BodyType<Blob>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof extractCompassScreenshot>>,
+        TError,
+        {data: BodyType<Blob>},
+        TContext
+      > => {
+      return useMutation(getExtractCompassScreenshotMutationOptions(options));
+    }
 
 export const getListCompassReadsUrl = () => {
 

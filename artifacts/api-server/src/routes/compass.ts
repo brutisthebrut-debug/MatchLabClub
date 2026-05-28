@@ -1,4 +1,5 @@
-import { Router, type IRouter, type Request } from "express";
+import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
+import multer from "multer";
 import { and, desc, eq, isNull, sql, type SQL } from "drizzle-orm";
 import { db, compatibilityReadsTable } from "@workspace/db";
 import { SaveCompassReadBody } from "@workspace/api-zod";
@@ -6,8 +7,31 @@ import {
   getAnonClaimToken,
   getOrCreateAnonClaimToken,
 } from "../lib/anonClaimToken";
+import { extractProfileFromScreenshot } from "../lib/ocr";
 
 const router: IRouter = Router();
+
+const MAX_SCREENSHOT_BYTES = 10 * 1024 * 1024;
+const ALLOWED_IMAGE_MIME = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+]);
+
+const screenshotUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_SCREENSHOT_BYTES, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    if (!ALLOWED_IMAGE_MIME.has(file.mimetype)) {
+      cb(new Error("invalid_mime"));
+      return;
+    }
+    cb(null, true);
+  },
+});
 
 function ownerScope(req: Request): SQL {
   if (req.user?.id) return eq(compatibilityReadsTable.userId, req.user.id);
@@ -56,6 +80,51 @@ function parseIdParam(raw: string | string[] | undefined): number | null {
   const id = parseInt(v ?? "", 10);
   return Number.isFinite(id) && id > 0 ? id : null;
 }
+
+router.post(
+  "/compass/extract-screenshot",
+  (req: Request, res: Response, next: NextFunction) => {
+    screenshotUpload.single("file")(req, res, (err: unknown) => {
+      if (err instanceof multer.MulterError) {
+        if (err.code === "LIMIT_FILE_SIZE") {
+          res.status(413).json({ error: "Image is too large. Max 10MB." });
+          return;
+        }
+        res.status(400).json({ error: "Upload failed. Try a different image." });
+        return;
+      }
+      if (err instanceof Error && err.message === "invalid_mime") {
+        res.status(415).json({ error: "Unsupported image format. Use PNG, JPG, or WEBP." });
+        return;
+      }
+      if (err) {
+        next(err);
+        return;
+      }
+      next();
+    });
+  },
+  async (req, res): Promise<void> => {
+    const file = req.file;
+    if (!file || !file.buffer || file.buffer.length === 0) {
+      res.status(400).json({ error: "Missing image upload. Use the 'file' field." });
+      return;
+    }
+    try {
+      const base64 = file.buffer.toString("base64");
+      const extracted = await extractProfileFromScreenshot(base64);
+      const text = (extracted.rawText || "").trim();
+      if (!text) {
+        res.status(400).json({ error: "Couldn't read text from that screenshot. Try a clearer image." });
+        return;
+      }
+      res.json({ text });
+    } catch (err) {
+      req.log.error({ err }, "Compass OCR failed");
+      res.status(400).json({ error: "Couldn't read text from that screenshot. Try a clearer image." });
+    }
+  },
+);
 
 router.post("/compass/reads", async (req, res): Promise<void> => {
   const parsed = SaveCompassReadBody.safeParse(req.body);

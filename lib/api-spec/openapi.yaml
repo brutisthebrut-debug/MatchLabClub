@@ -2490,6 +2490,90 @@ paths:
               schema:
                 $ref: "#/components/schemas/AiError"
 
+  /founder/copilot/ask:
+    post:
+      operationId: askFounderCopilot
+      tags: [founder]
+      summary: Ask Echo a free-form strategic question
+      description: |
+        Routes a free-form founder question to the Echo persona via Anthropic.
+        The full strategic playbook is embedded in the system prompt so the
+        reply can reference prior decisions. On model failure or unavailable
+        provider, returns a fallback answer pointing at the closest playbook
+        entry. Requires founder key.
+      parameters:
+        - name: x-founder-key
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: key
+          in: query
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AskFounderCopilotInput"
+      responses:
+        "200":
+          description: Echo's answer, or a deterministic playbook fallback.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AskFounderCopilotResult"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiError"
+        "401":
+          description: Founder key required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiError"
+
+  /compass/extract-screenshot:
+    post:
+      tags: [mirror]
+      operationId: extractCompassScreenshot
+      summary: OCR a profile or chat screenshot and return its extracted text
+      description: |
+        Accepts an image upload (max 10MB) and returns the OCR-extracted text
+        as a single string. The client is expected to feed that text into the
+        same Compatibility Compass derivation flow used by the paste tab.
+        Anon-safe: nothing is persisted.
+
+        A multipart/form-data POST with a single `file` field containing the
+        screenshot. Not modeled as a typed body in the generated client;
+        callers should construct a `FormData` and POST it via `fetch`
+        directly.
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: Extracted text from the screenshot.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompassScreenshotExtractResult"
+        "400":
+          description: Invalid image or no readable text found.
+        "413":
+          description: Image exceeded the 10MB limit.
+        "415":
+          description: Unsupported image format.
+
   /compass/reads:
     get:
       tags: [mirror]
@@ -5203,6 +5287,14 @@ components:
           items:
             $ref: "#/components/schemas/CompassRead"
 
+    CompassScreenshotExtractResult:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+          description: The raw OCR-extracted text from the uploaded screenshot.
+
     ImportSource:
       type: object
       required: [id, source, status, uploadedAt]
@@ -5251,3 +5343,31 @@ components:
           const: true
         id:
           type: integer
+
+    AskFounderCopilotInput:
+      type: object
+      required: [question]
+      properties:
+        question:
+          type: string
+          minLength: 4
+          maxLength: 2000
+          description: Free-form strategic question for Echo.
+        contextHint:
+          type: string
+          maxLength: 1000
+          description: Optional one-line context the founder wants Echo to consider (a metric, a moment, a specific signup).
+
+    AskFounderCopilotResult:
+      type: object
+      required: [answer]
+      properties:
+        answer:
+          type: string
+          description: Echo's reply, voiced per the persona rules.
+        fallback:
+          type: boolean
+          description: True when the model was unavailable and the answer was assembled from the playbook deterministically.
+        tokensUsed:
+          type: integer
+          description: Approximate tokens consumed by the model call, when reported by the provider.

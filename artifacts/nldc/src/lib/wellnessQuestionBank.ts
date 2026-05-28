@@ -344,3 +344,136 @@ export const POSSIBLE_TAGS: InsightTag[] = [
   { tag: "values-aligned-first",    label: "Values-aligned first",     category: "values" },
   { tag: "financially-intentional", label: "Financially intentional",  category: "financial" },
 ];
+
+// ── Life-domain groupings ───────────────────────────────────────────────────
+//
+// The 18 dimensions group into five life-domains. This grouping powers the
+// Wellness Center overview so a person can see their profile in chunks they
+// already think in, instead of a flat 18-row checklist.
+
+export type DomainMeta = {
+  id: string;
+  label: string;
+  color: string;
+  description: string;
+  dimensionIds: string[];
+};
+
+export const DOMAIN_META: DomainMeta[] = [
+  {
+    id: "knowing_yourself",
+    label: "Knowing yourself",
+    color: "hsl(var(--brand-rose))",
+    description: "How you feel, think, and what you stand for.",
+    dimensionIds: ["emotional", "intellectual", "spiritual", "values"],
+  },
+  {
+    id: "relating_to_others",
+    label: "Relating to others",
+    color: "hsl(228 50% 68%)",
+    description: "How you communicate, repair, and hold limits with people.",
+    dimensionIds: ["communication", "conflict", "boundaries", "social"],
+  },
+  {
+    id: "body_and_energy",
+    label: "Body and energy",
+    color: "hsl(305 45% 62%)",
+    description: "Physical rhythm, affection, and how you experience intimacy.",
+    dimensionIds: ["physical", "affection", "intimacy"],
+  },
+  {
+    id: "life_shape",
+    label: "Life shape",
+    color: "hsl(35 65% 62%)",
+    description: "Daily rhythm, home, money, and work bandwidth.",
+    dimensionIds: ["lifestyle", "environmental", "financial", "occupational"],
+  },
+  {
+    id: "growth_and_direction",
+    label: "Growth and direction",
+    color: "hsl(var(--brand-gold))",
+    description: "Where you're heading, who shaped you, and the roots you carry.",
+    dimensionIds: ["future_vision", "family", "culture"],
+  },
+];
+
+/** Dimensions that belong to a given domain id. */
+export function getDimensionsByDomain(domainId: string): string[] {
+  return DOMAIN_META.find(d => d.id === domainId)?.dimensionIds ?? [];
+}
+
+const DOMAIN_FOR_DIMENSION: Record<string, string> = (() => {
+  const out: Record<string, string> = {};
+  for (const d of DOMAIN_META) {
+    for (const dim of d.dimensionIds) out[dim] = d.id;
+  }
+  return out;
+})();
+
+/** The domain id a given dimension belongs to, or undefined. */
+export function getDomainForDimension(dimensionId: string): string | undefined {
+  return DOMAIN_FOR_DIMENSION[dimensionId];
+}
+
+// ── Feature usage map ───────────────────────────────────────────────────────
+//
+// Which dimensions feed which downstream features. This is shown to the user
+// in a "What this powers" panel so they can see, concretely, why each answer
+// matters. Keep this list aligned with what the features actually read today.
+
+export type FeatureKey = "compass" | "coach" | "report" | "insights";
+
+export const FEATURE_USAGE_MAP: Record<FeatureKey, string[]> = {
+  compass: [
+    "communication", // compatibility reads lean heavily on how each person communicates
+    "conflict",      // conflict instinct is a top driver of long-term fit
+    "values",        // shared values is a primary compatibility signal
+    "affection",     // affection style shapes day-to-day closeness fit
+    "intimacy",      // intimacy preferences inform long-term physical compatibility
+    "future_vision", // life direction alignment matters for serious matching
+    "lifestyle",     // daily rhythm compatibility is a frequent dealbreaker
+    "boundaries",    // boundaries shape what each person needs to feel safe
+  ],
+  coach: [
+    "communication", // the coach mirrors back communication patterns in replies
+    "conflict",      // repair coaching pulls from conflict style
+    "emotional",     // emotional self-awareness shapes tone suggestions
+    "boundaries",    // coach respects user-defined limits when drafting messages
+    "affection",     // affection language flavours warmth in suggested replies
+    "social",        // social style affects pacing advice
+  ],
+  report: [
+    "values",        // mirror reports anchor in core values
+    "emotional",     // emotional patterns are a main report theme
+    "future_vision", // direction summary in the readiness report
+    "occupational",  // bandwidth for dating is part of readiness
+    "spiritual",     // meaning and worldview show up in reflection sections
+    "intellectual",  // curiosity and beliefs round out the self-portrait
+  ],
+  insights: [
+    "communication", // insight tags lean on communication signals
+    "lifestyle",     // routine vs spontaneous tags come from here
+    "boundaries",    // space-sensitive and independence tags
+    "affection",     // touch-forward and affection expressor tags
+    "conflict",      // repair-focused and conflict-avoidant tags
+    "values",        // values-aligned-first tags
+    "financial",     // financially-intentional tag
+    "social",        // small-circle-social tag
+  ],
+};
+
+export const FEATURE_META: Record<FeatureKey, { label: string; blurb: string }> = {
+  compass: { label: "Compatibility Compass", blurb: "Reads compatibility between two people." },
+  coach:   { label: "Coach",                  blurb: "Drafts and refines messages in your voice." },
+  report:  { label: "Mirror Report",          blurb: "Your readiness portrait and growth themes." },
+  insights:{ label: "Insight tags",           blurb: "Short tags that summarise patterns in your answers." },
+};
+
+/** Which features draw on a given dimension. */
+export function getFeaturesForDimension(dimensionId: string): FeatureKey[] {
+  const out: FeatureKey[] = [];
+  (Object.keys(FEATURE_USAGE_MAP) as FeatureKey[]).forEach(f => {
+    if (FEATURE_USAGE_MAP[f].includes(dimensionId)) out.push(f);
+  });
+  return out;
+}

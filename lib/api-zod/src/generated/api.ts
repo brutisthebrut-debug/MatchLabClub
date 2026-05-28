@@ -3247,6 +3247,60 @@ export const GetFounderReferralsResponse = zod.object({
 
 
 /**
+ * Routes a free-form founder question to the Echo persona via Anthropic.
+The full strategic playbook is embedded in the system prompt so the
+reply can reference prior decisions. On model failure or unavailable
+provider, returns a fallback answer pointing at the closest playbook
+entry. Requires founder key.
+
+ * @summary Ask Echo a free-form strategic question
+ */
+export const AskFounderCopilotQueryParams = zod.object({
+  "key": zod.coerce.string().optional()
+})
+
+export const AskFounderCopilotHeader = zod.object({
+  "x-founder-key": zod.string().optional()
+})
+
+export const askFounderCopilotBodyQuestionMin = 4;
+export const askFounderCopilotBodyQuestionMax = 2000;
+
+export const askFounderCopilotBodyContextHintMax = 1000;
+
+
+
+export const AskFounderCopilotBody = zod.object({
+  "question": zod.string().min(askFounderCopilotBodyQuestionMin).max(askFounderCopilotBodyQuestionMax).describe('Free-form strategic question for Echo.'),
+  "contextHint": zod.string().max(askFounderCopilotBodyContextHintMax).optional().describe('Optional one-line context the founder wants Echo to consider (a metric, a moment, a specific signup).')
+})
+
+export const AskFounderCopilotResponse = zod.object({
+  "answer": zod.string().describe('Echo\'s reply, voiced per the persona rules.'),
+  "fallback": zod.boolean().optional().describe('True when the model was unavailable and the answer was assembled from the playbook deterministically.'),
+  "tokensUsed": zod.number().optional().describe('Approximate tokens consumed by the model call, when reported by the provider.')
+})
+
+
+/**
+ * Accepts an image upload (max 10MB) and returns the OCR-extracted text
+as a single string. The client is expected to feed that text into the
+same Compatibility Compass derivation flow used by the paste tab.
+Anon-safe: nothing is persisted.
+
+A multipart/form-data POST with a single `file` field containing the
+screenshot. Not modeled as a typed body in the generated client;
+callers should construct a `FormData` and POST it via `fetch`
+directly.
+
+ * @summary OCR a profile or chat screenshot and return its extracted text
+ */
+export const ExtractCompassScreenshotResponse = zod.object({
+  "text": zod.string().describe('The raw OCR-extracted text from the uploaded screenshot.')
+})
+
+
+/**
  * Returns up to 50 compass reads for the signed-in user, or for the
 anonymous-claim browser if no user is signed in. Ordered newest
 first. Soft-deleted rows are excluded.

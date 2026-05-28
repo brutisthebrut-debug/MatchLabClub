@@ -1898,6 +1898,11 @@ export interface CompassReadList {
   reads: CompassRead[];
 }
 
+export interface CompassScreenshotExtractResult {
+  /** The raw OCR-extracted text from the uploaded screenshot. */
+  text: string;
+}
+
 /**
  * Structured summary derived from the upload. Shape varies per
 source. For Hinge imports it includes a `counts` object, a
@@ -1939,6 +1944,29 @@ export interface ImportSourceList {
 export interface DeleteImportResult {
   deleted: true;
   id: number;
+}
+
+export interface AskFounderCopilotInput {
+  /**
+     * Free-form strategic question for Echo.
+     * @minLength 4
+     * @maxLength 2000
+     */
+  question: string;
+  /**
+     * Optional one-line context the founder wants Echo to consider (a metric, a moment, a specific signup).
+     * @maxLength 1000
+     */
+  contextHint?: string;
+}
+
+export interface AskFounderCopilotResult {
+  /** Echo's reply, voiced per the persona rules. */
+  answer: string;
+  /** True when the model was unavailable and the answer was assembled from the playbook deterministically. */
+  fallback?: boolean;
+  /** Approximate tokens consumed by the model call, when reported by the provider. */
+  tokensUsed?: number;
 }
 
 /**
@@ -2168,6 +2196,10 @@ key?: string;
 };
 
 export type GetFounderReferralsParams = {
+key?: string;
+};
+
+export type AskFounderCopilotParams = {
 key?: string;
 };
 
