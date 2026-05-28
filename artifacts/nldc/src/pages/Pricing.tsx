@@ -7,6 +7,14 @@ import { motion } from "framer-motion";
 import { CheckCircle, ArrowRight, Headphones, Sparkles, Zap, Heart, Star } from "lucide-react";
 import { useState } from "react";
 import { TrustBadge } from "@/components/TrustBadge";
+import { ShareButton } from "@/components/echo/ShareButton";
+
+const TIER_SHARE_TEXT: Record<string, string> = {
+  "Free Signal Check": "MatchLab Club Free Signal Check: a 3-minute audit that shows what your profile is actually projecting.",
+  "Signal Audit": "MatchLab Club Signal Audit: $29 one-time for a full bio rewrite and 7-day action plan.",
+  "Dating Reset": "MatchLab Club Dating Reset: $97 for a full rebuild of how you show up, profile, prompts, photos, and messaging.",
+  "Wingman": "MatchLab Club Wingman: $197 a month for the deep AI lane plus a human coach review.",
+};
 
 const TIERS = [
   {
@@ -341,6 +349,19 @@ export default function Pricing() {
                       🧪 <span className="font-semibold text-foreground/70">Private beta:</span> {tier.betaNote}
                     </div>
                   )}
+                  <div className="mt-3 flex justify-center text-muted-foreground">
+                    <ShareButton
+                      surface="pricing-tier"
+                      title="MatchLab Club pricing"
+                      text={TIER_SHARE_TEXT[tier.name] ?? "MatchLab Club pricing"}
+                      path="/pricing"
+                      variant="ghost"
+                      label="Share this tier"
+                      iconOnly={false}
+                      className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                      testId={`share-pricing-${tier.name.toLowerCase().replace(/ /g, "-")}`}
+                    />
+                  </div>
                 </div>
               </motion.div>
               );

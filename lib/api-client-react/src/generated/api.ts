@@ -52,6 +52,9 @@ import type {
   CoachFollowUpRecorded,
   CoachFollowUpStats,
   CoachFollowUpTimeline,
+  CompassRead,
+  CompassReadInput,
+  CompassReadList,
   CorrectAuditSourceApp400,
   CorrectAuditSourceApp404,
   CorrectSourceAppInput,
@@ -7274,6 +7277,239 @@ export function useGetTrashPurgeHeartbeat<TData = Awaited<ReturnType<typeof getT
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetTrashPurgeHeartbeatQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListCompassReadsUrl = () => {
+
+
+
+
+  return `/api/compass/reads`
+}
+
+/**
+ * Returns up to 50 compass reads for the signed-in user, or for the
+anonymous-claim browser if no user is signed in. Ordered newest
+first. Soft-deleted rows are excluded.
+
+ * @summary List the current scope's compass reads
+ */
+export const listCompassReads = async ( options?: RequestInit): Promise<CompassReadList> => {
+
+  return customFetch<CompassReadList>(getListCompassReadsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCompassReadsQueryKey = () => {
+    return [
+    `/api/compass/reads`
+    ] as const;
+    }
+
+
+export const getListCompassReadsQueryOptions = <TData = Awaited<ReturnType<typeof listCompassReads>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCompassReads>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCompassReadsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCompassReads>>> = ({ signal }) => listCompassReads({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCompassReads>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCompassReadsQueryResult = NonNullable<Awaited<ReturnType<typeof listCompassReads>>>
+export type ListCompassReadsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List the current scope's compass reads
+ */
+
+export function useListCompassReads<TData = Awaited<ReturnType<typeof listCompassReads>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCompassReads>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCompassReadsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSaveCompassReadUrl = () => {
+
+
+
+
+  return `/api/compass/reads`
+}
+
+/**
+ * Persists a single compass read. Anon-safe: when no user is signed
+in, the row is stamped with the anonymous claim cookie so it can
+be merged into the account on signup.
+
+ * @summary Save a Compatibility Compass read
+ */
+export const saveCompassRead = async (compassReadInput: CompassReadInput, options?: RequestInit): Promise<CompassRead> => {
+
+  return customFetch<CompassRead>(getSaveCompassReadUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      compassReadInput,)
+  }
+);}
+
+
+
+
+export const getSaveCompassReadMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCompassRead>>, TError,{data: BodyType<CompassReadInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveCompassRead>>, TError,{data: BodyType<CompassReadInput>}, TContext> => {
+
+const mutationKey = ['saveCompassRead'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveCompassRead>>, {data: BodyType<CompassReadInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveCompassRead(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveCompassReadMutationResult = NonNullable<Awaited<ReturnType<typeof saveCompassRead>>>
+    export type SaveCompassReadMutationBody = BodyType<CompassReadInput>
+    export type SaveCompassReadMutationError = ErrorType<void>
+
+    /**
+ * @summary Save a Compatibility Compass read
+ */
+export const useSaveCompassRead = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCompassRead>>, TError,{data: BodyType<CompassReadInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveCompassRead>>,
+        TError,
+        {data: BodyType<CompassReadInput>},
+        TContext
+      > => {
+      return useMutation(getSaveCompassReadMutationOptions(options));
+    }
+
+export const getGetCompassReadUrl = (id: number,) => {
+
+
+
+
+  return `/api/compass/reads/${id}`
+}
+
+/**
+ * @summary Fetch a single compass read by id
+ */
+export const getCompassRead = async (id: number, options?: RequestInit): Promise<CompassRead> => {
+
+  return customFetch<CompassRead>(getGetCompassReadUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCompassReadQueryKey = (id: number,) => {
+    return [
+    `/api/compass/reads/${id}`
+    ] as const;
+    }
+
+
+export const getGetCompassReadQueryOptions = <TData = Awaited<ReturnType<typeof getCompassRead>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCompassRead>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCompassReadQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCompassRead>>> = ({ signal }) => getCompassRead(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCompassRead>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCompassReadQueryResult = NonNullable<Awaited<ReturnType<typeof getCompassRead>>>
+export type GetCompassReadQueryError = ErrorType<void>
+
+
+/**
+ * @summary Fetch a single compass read by id
+ */
+
+export function useGetCompassRead<TData = Awaited<ReturnType<typeof getCompassRead>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCompassRead>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCompassReadQueryOptions(id,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

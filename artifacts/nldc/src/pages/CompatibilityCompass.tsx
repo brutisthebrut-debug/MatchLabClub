@@ -6,9 +6,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { WelcomePanel } from "@/components/WelcomePanel";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Sparkles, Compass, RefreshCw, AlertCircle } from "lucide-react";
+import { Loader2, Compass, RefreshCw, AlertCircle, ChevronDown, Check, History } from "lucide-react";
 import { ShareButton } from "@/components/echo/ShareButton";
-import { useEnhanceAi } from "@workspace/api-client-react";
+import {
+  useEnhanceAi,
+  useSaveCompassRead,
+  useListCompassReads,
+  getListCompassReadsQueryKey,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
 import { FallbackNotice } from "@/components/FallbackNotice";
 import { FallbackRateBadge } from "@/components/FallbackRateBadge";
@@ -177,10 +183,41 @@ export default function CompatibilityCompass() {
   const [notes, setNotes] = useState("");
   const [result, setResult] = useState<CompassResult | null>(null);
   const [usedFallback, setUsedFallback] = useState(false);
+  const [savedId, setSavedId] = useState<number | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const enhance = useEnhanceAi();
   const loading = enhance.isPending;
+  const queryClient = useQueryClient();
+  const saveRead = useSaveCompassRead();
+  const history = useListCompassReads({
+    query: { queryKey: getListCompassReadsQueryKey() },
+  });
   const { isAuthenticated } = useAuth();
   const isBrandNewUser = isAuthenticated && !result;
+
+  async function persistRead(
+    deterministic: CompassResult,
+    aiResult: CompassResult | null,
+    style: string,
+    pats: string[],
+    note: string,
+  ) {
+    try {
+      const saved = await saveRead.mutateAsync({
+        data: {
+          connectionStyle: style,
+          patterns: pats,
+          notes: note.trim() ? note.trim() : null,
+          deterministicResult: deterministic as unknown as Record<string, unknown>,
+          aiResult: aiResult as unknown as Record<string, unknown> | null,
+        },
+      });
+      setSavedId(saved.id);
+      await queryClient.invalidateQueries({ queryKey: getListCompassReadsQueryKey() });
+    } catch {
+      setSavedId(null);
+    }
+  }
 
   function togglePattern(p: string) {
     setPatterns(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
@@ -222,6 +259,7 @@ export default function CompatibilityCompass() {
 
   async function handleAnalyze() {
     if (!ownStyle) return;
+    setSavedId(null);
     const deterministic = analyzeCompass(ownStyle, patterns, notes);
     try {
       const ai = await enhance.mutateAsync({
@@ -250,14 +288,38 @@ export default function CompatibilityCompass() {
       if (ai.isFallback || validationFailed || !ai.output.trim()) {
         setUsedFallback(true);
         setResult(deterministic);
+        void persistRead(deterministic, null, ownStyle, patterns, notes);
         return;
       }
       const parsed = tryParseCompass(ai.output);
       setUsedFallback(parsed == null);
       setResult(parsed ?? deterministic);
+      void persistRead(deterministic, parsed, ownStyle, patterns, notes);
     } catch {
       setUsedFallback(true);
       setResult(deterministic);
+      void persistRead(deterministic, null, ownStyle, patterns, notes);
+    }
+  }
+
+  function loadHistorical(read: {
+    id: number;
+    connectionStyle: string;
+    patterns: string[];
+    notes?: string | null;
+    deterministicResult: Record<string, unknown>;
+    aiResult?: Record<string, unknown> | null;
+  }) {
+    const ai = read.aiResult ?? null;
+    const picked = (ai ?? read.deterministicResult) as unknown as CompassResult;
+    setOwnStyle(read.connectionStyle);
+    setPatterns(read.patterns ?? []);
+    setNotes(read.notes ?? "");
+    setResult(picked);
+    setUsedFallback(ai == null);
+    setSavedId(read.id);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
 
@@ -356,6 +418,22 @@ export default function CompatibilityCompass() {
                   testId="button-retry-compass"
                 />
               )}
+              {!isDemo && (
+                <div className="flex items-center justify-end mb-3">
+                  {savedId !== null ? (
+                    <span
+                      data-testid="compass-saved-pill"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-[hsl(142_55%_60%/0.12)] text-[hsl(142_55%_72%)] border border-[hsl(142_55%_60%/0.25)]"
+                    >
+                      <Check className="w-3 h-3" />Saved
+                    </span>
+                  ) : saveRead.isPending ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium text-muted-foreground border border-white/10">
+                      <Loader2 className="w-3 h-3 animate-spin" />Saving
+                    </span>
+                  ) : null}
+                </div>
+              )}
               <div className="space-y-4">
                 <div className="glass border border-white/8 rounded-2xl p-6">
                   <p className="font-semibold text-foreground text-sm mb-3 flex items-center gap-2">
@@ -409,6 +487,65 @@ export default function CompatibilityCompass() {
               )}
             </motion.div>
           </AnimatePresence>
+
+          {(history.data?.reads.length ?? 0) > 0 && (
+            <motion.section
+              {...fadeUp(0.15)}
+              className="mt-8 glass border border-white/8 rounded-2xl overflow-hidden"
+              data-testid="compass-history"
+            >
+              <button
+                type="button"
+                onClick={() => setHistoryOpen(o => !o)}
+                className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left"
+                aria-expanded={historyOpen}
+              >
+                <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <History className="w-4 h-4 text-[hsl(248_62%_62%)]" />
+                  Your past compass reads
+                  <span className="text-xs font-normal text-muted-foreground">
+                    ({history.data?.reads.length ?? 0})
+                  </span>
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 text-muted-foreground transition-transform ${historyOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {historyOpen && (
+                <ul className="divide-y divide-white/5 border-t border-white/5">
+                  {(history.data?.reads ?? []).slice(0, 10).map(r => {
+                    const d = new Date(r.createdAt);
+                    const dateLabel = Number.isFinite(d.getTime())
+                      ? d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+                      : "";
+                    const isCurrent = savedId === r.id;
+                    return (
+                      <li key={r.id}>
+                        <button
+                          type="button"
+                          onClick={() => loadHistorical(r)}
+                          className={`w-full flex items-center justify-between gap-3 px-5 py-3 text-left hover:bg-white/5 transition-colors ${isCurrent ? "bg-white/5" : ""}`}
+                          data-testid={`compass-history-item-${r.id}`}
+                        >
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {r.connectionStyle}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{dateLabel}</p>
+                          </div>
+                          {isCurrent && (
+                            <span className="text-[10px] uppercase tracking-wider text-[hsl(142_55%_72%)]">
+                              viewing
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </motion.section>
+          )}
         </div>
       </div>
     </AppLayout>

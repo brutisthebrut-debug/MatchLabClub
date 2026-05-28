@@ -1787,6 +1787,73 @@ export interface CreateInstagramPasteResult {
 }
 
 /**
+ * The deterministic compass output shown to the user.
+ */
+export type CompassReadInputDeterministicResult = { [key: string]: unknown };
+
+/**
+ * The AI-enhanced compass output when present, otherwise null.
+ * @nullable
+ */
+export type CompassReadInputAiResult = { [key: string]: unknown } | null;
+
+export interface CompassReadInput {
+  /**
+     * The connection-style label the user picked.
+     * @minLength 1
+     * @maxLength 200
+     */
+  connectionStyle: string;
+  /** @maxItems 20 */
+  patterns: string[];
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  notes?: string | null;
+  /** The deterministic compass output shown to the user. */
+  deterministicResult: CompassReadInputDeterministicResult;
+  /**
+     * The AI-enhanced compass output when present, otherwise null.
+     * @nullable
+     */
+  aiResult?: CompassReadInputAiResult;
+}
+
+export type CompassReadDeterministicResult = { [key: string]: unknown };
+
+/**
+ * @nullable
+ */
+export type CompassReadAiResult = { [key: string]: unknown } | null;
+
+export type CompassReadMode = typeof CompassReadMode[keyof typeof CompassReadMode];
+
+
+export const CompassReadMode = {
+  live: 'live',
+  fallback: 'fallback',
+  'setup-needed': 'setup-needed',
+} as const;
+
+export interface CompassRead {
+  id: number;
+  connectionStyle: string;
+  patterns: string[];
+  /** @nullable */
+  notes?: string | null;
+  deterministicResult: CompassReadDeterministicResult;
+  /** @nullable */
+  aiResult?: CompassReadAiResult;
+  mode: CompassReadMode;
+  createdAt: string;
+}
+
+export interface CompassReadList {
+  reads: CompassRead[];
+}
+
+/**
  * Opaque session token — `Bearer <sid>`.
  */
 export type AuthorizationSessionHeaderParameter = string;

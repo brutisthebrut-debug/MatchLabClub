@@ -248,7 +248,7 @@ export default function SelfHub() {
           setIgCaptions("");
           toast({
             title: "We got it",
-            description: "Tone read coming in a future build.",
+            description: "Your tone read will be ready in a minute.",
           });
         },
         onError: () => {

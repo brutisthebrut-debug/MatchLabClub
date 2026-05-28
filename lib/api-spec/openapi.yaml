@@ -2450,6 +2450,75 @@ paths:
               schema:
                 $ref: "#/components/schemas/AiError"
 
+  /compass/reads:
+    get:
+      tags: [mirror]
+      operationId: listCompassReads
+      summary: List the current scope's compass reads
+      description: |
+        Returns up to 50 compass reads for the signed-in user, or for the
+        anonymous-claim browser if no user is signed in. Ordered newest
+        first. Soft-deleted rows are excluded.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        "200":
+          description: Compass reads list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompassReadList"
+    post:
+      tags: [mirror]
+      operationId: saveCompassRead
+      summary: Save a Compatibility Compass read
+      description: |
+        Persists a single compass read. Anon-safe: when no user is signed
+        in, the row is stamped with the anonymous claim cookie so it can
+        be merged into the account on signup.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompassReadInput"
+      responses:
+        "201":
+          description: Saved compass read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompassRead"
+        "400":
+          description: Invalid payload
+
+  /compass/reads/{id}:
+    get:
+      tags: [mirror]
+      operationId: getCompassRead
+      summary: Fetch a single compass read by id
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Compass read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompassRead"
+        "404":
+          description: Not found or not owned
+
 components:
   parameters:
     AuthorizationSessionHeader:
@@ -4853,3 +4922,68 @@ components:
         uploadedAt:
           type: string
           format: date-time
+
+    CompassReadInput:
+      type: object
+      required: [connectionStyle, patterns, deterministicResult]
+      properties:
+        connectionStyle:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: The connection-style label the user picked.
+        patterns:
+          type: array
+          maxItems: 20
+          default: []
+          items:
+            type: string
+            minLength: 1
+            maxLength: 200
+        notes:
+          type: [string, "null"]
+          maxLength: 2000
+        deterministicResult:
+          type: object
+          additionalProperties: true
+          description: The deterministic compass output shown to the user.
+        aiResult:
+          type: [object, "null"]
+          additionalProperties: true
+          description: The AI-enhanced compass output when present, otherwise null.
+
+    CompassRead:
+      type: object
+      required: [id, connectionStyle, patterns, deterministicResult, mode, createdAt]
+      properties:
+        id:
+          type: integer
+        connectionStyle:
+          type: string
+        patterns:
+          type: array
+          items:
+            type: string
+        notes:
+          type: [string, "null"]
+        deterministicResult:
+          type: object
+          additionalProperties: true
+        aiResult:
+          type: [object, "null"]
+          additionalProperties: true
+        mode:
+          type: string
+          enum: [live, fallback, setup-needed]
+        createdAt:
+          type: string
+          format: date-time
+
+    CompassReadList:
+      type: object
+      required: [reads]
+      properties:
+        reads:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompassRead"

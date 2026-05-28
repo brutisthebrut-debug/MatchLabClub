@@ -24,6 +24,7 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId, readAnonymousIds } from "@/lib/anonymousIds";
 import { Shield, Loader2, Mail, TrendingUp, AlertTriangle, CheckCircle, Clock, ChevronDown, ChevronUp, X, Filter, Trash2, RefreshCw, LogIn } from "lucide-react";
 import { WelcomePanel } from "@/components/WelcomePanel";
+import { ShareButton } from "@/components/echo/ShareButton";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const UNDO_WINDOW_MS = 5000;
@@ -595,6 +596,20 @@ export default function Insights() {
                 {!analysis && (
                   <div className="text-center py-2">
                     <p className="text-sm text-muted-foreground font-medium">Example analysis output</p>
+                  </div>
+                )}
+                {analysis !== null && (
+                  <div className="flex justify-end -mb-2">
+                    <ShareButton
+                      surface="insights-result"
+                      title="What my messages reveal about me"
+                      text="Just ran my messages through MatchLab Club. The patterns it surfaces are kind of confronting."
+                      path="/insights"
+                      variant="ghost"
+                      label="Share these insights"
+                      copiedLabel="Link copied"
+                      testId="share-insights-result"
+                    />
                   </div>
                 )}
                 <div className={!analysis ? "opacity-60" : ""}>

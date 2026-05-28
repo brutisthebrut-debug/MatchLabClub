@@ -3196,3 +3196,82 @@ export const GetTrashPurgeHeartbeatResponse = zod.object({
 })
 
 
+/**
+ * Returns up to 50 compass reads for the signed-in user, or for the
+anonymous-claim browser if no user is signed in. Ordered newest
+first. Soft-deleted rows are excluded.
+
+ * @summary List the current scope's compass reads
+ */
+export const ListCompassReadsHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const ListCompassReadsResponse = zod.object({
+  "reads": zod.array(zod.object({
+  "id": zod.number(),
+  "connectionStyle": zod.string(),
+  "patterns": zod.array(zod.string()),
+  "notes": zod.string().nullish(),
+  "deterministicResult": zod.record(zod.string(), zod.unknown()),
+  "aiResult": zod.record(zod.string(), zod.unknown()).nullish(),
+  "mode": zod.enum(['live', 'fallback', 'setup-needed']),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * Persists a single compass read. Anon-safe: when no user is signed
+in, the row is stamped with the anonymous claim cookie so it can
+be merged into the account on signup.
+
+ * @summary Save a Compatibility Compass read
+ */
+export const SaveCompassReadHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const saveCompassReadBodyConnectionStyleMax = 200;
+
+export const saveCompassReadBodyPatternsItemMax = 200;
+
+export const saveCompassReadBodyPatternsDefault = [];
+export const saveCompassReadBodyPatternsMax = 20;
+
+export const saveCompassReadBodyNotesMax = 2000;
+
+
+
+export const SaveCompassReadBody = zod.object({
+  "connectionStyle": zod.string().min(1).max(saveCompassReadBodyConnectionStyleMax).describe('The connection-style label the user picked.'),
+  "patterns": zod.array(zod.string().min(1).max(saveCompassReadBodyPatternsItemMax)).max(saveCompassReadBodyPatternsMax).default(saveCompassReadBodyPatternsDefault),
+  "notes": zod.string().max(saveCompassReadBodyNotesMax).nullish(),
+  "deterministicResult": zod.record(zod.string(), zod.unknown()).describe('The deterministic compass output shown to the user.'),
+  "aiResult": zod.record(zod.string(), zod.unknown()).nullish().describe('The AI-enhanced compass output when present, otherwise null.')
+})
+
+
+/**
+ * @summary Fetch a single compass read by id
+ */
+export const GetCompassReadParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetCompassReadHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetCompassReadResponse = zod.object({
+  "id": zod.number(),
+  "connectionStyle": zod.string(),
+  "patterns": zod.array(zod.string()),
+  "notes": zod.string().nullish(),
+  "deterministicResult": zod.record(zod.string(), zod.unknown()),
+  "aiResult": zod.record(zod.string(), zod.unknown()).nullish(),
+  "mode": zod.enum(['live', 'fallback', 'setup-needed']),
+  "createdAt": zod.coerce.date()
+})
+
+

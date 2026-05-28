@@ -14,7 +14,9 @@ export type EchoSurface =
   | "self-hub"
   | "blog-post"
   | "landing"
-  | "waitlist";
+  | "waitlist"
+  | "insights-result"
+  | "pricing-tier";
 
 type Variant = "primary" | "ghost" | "pill";
 
