@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMeta } from "@/hooks/useMeta";
 import { capturePurchaseInterest } from "@/lib/apiClient";
+import { trackEvent } from "@/lib/analytics";
 import {
   CheckCircle2, Sparkles, Lock, ArrowRight, ExternalLink,
   Zap, Star, Crown, AlertTriangle, Tag
@@ -121,6 +122,7 @@ function PaidForm({ product }: { product: Product }) {
       <div className="space-y-4">
         <a
           href={stripeLink}
+          onClick={() => trackEvent("checkout_clicked", { product, destination: "stripe" })}
           className={`flex items-center justify-center gap-2 w-full bg-gradient-to-r ${config.gradient} text-white font-semibold rounded-xl h-12 text-base hover:opacity-90 transition-opacity`}
         >
           <Lock className="w-4 h-4" />

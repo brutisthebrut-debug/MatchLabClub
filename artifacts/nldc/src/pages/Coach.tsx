@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { trackEvent } from "@/lib/analytics";
 import { useMeta } from "@/hooks/useMeta";
 import { useSavedContext } from "@/hooks/useSavedContext";
 import { SavedContextChip } from "@/components/SavedContextChip";
@@ -262,6 +263,7 @@ export default function Coach() {
       });
       rememberAnonymousId("messageSessions", session.id);
       const coaching = await coachMessage.mutateAsync({ id: session.id });
+      trackEvent("coach_session_completed", { session_id: session.id, source_app: appForRequest ?? "unknown", has_goal: Boolean(goal) });
       setResult(coaching as CoachingResult);
       setResultApp(appForRequest);
       setResultSessionId(session.id);

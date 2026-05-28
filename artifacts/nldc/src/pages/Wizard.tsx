@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, ArrowLeft, Loader2, CheckCircle, Sparkles } from "lucide-react";
 import { useCreateAudit, useGenerateAuditReport } from "@workspace/api-client-react";
+import { trackEvent } from "@/lib/analytics";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListAuditsQueryKey } from "@workspace/api-client-react";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
@@ -109,6 +110,12 @@ export default function Wizard() {
       setTipIndex(i => (i + 1) % LOADING_TIPS.length);
     }, 1800);
 
+    trackEvent("audit_started", {
+      goal: form.datingGoal,
+      apps: form.currentApps.join(",") || "other",
+      bio_length: form.bio.trim().length,
+    });
+
     try {
       // We pack pronouns + seeking into existing free-text fields rather than
       // expanding the API schema in this sprint — keeps the contract stable while
@@ -137,9 +144,11 @@ export default function Wizard() {
       rememberAnonymousId("audits", audit.id);
       await generateReport.mutateAsync({ id: audit.id });
       queryClient.invalidateQueries({ queryKey: getListAuditsQueryKey() });
+      trackEvent("audit_completed", { audit_id: audit.id, goal: form.datingGoal });
       clearInterval(tipInterval);
       setLocation(`/report/${audit.id}`);
     } catch (e) {
+      trackEvent("audit_failed", { goal: form.datingGoal });
       clearInterval(tipInterval);
     }
   }

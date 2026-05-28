@@ -8,6 +8,7 @@ import { WelcomePanel } from "@/components/WelcomePanel";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCreateAudit, useGenerateAuditReport, getListAuditsQueryKey } from "@workspace/api-client-react";
+import { trackEvent } from "@/lib/analytics";
 import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { useQueryClient } from "@tanstack/react-query";
@@ -128,6 +129,7 @@ export default function SignalCheck() {
     setLoading(true);
     setLoadingStep(0);
     const interval = setInterval(() => setLoadingStep(s => Math.min(s + 1, LOADING_STEPS.length - 1)), 1600);
+    trackEvent("signal_check_started", { goal: goal || "find a relationship", bio_length: bio.trim().length });
     try {
       const audit = await createAudit.mutateAsync({
         data: {

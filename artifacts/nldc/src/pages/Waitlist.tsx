@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { useJoinWaitlist, useGetWaitlistStats, getGetWaitlistStatsQueryKey } from "@workspace/api-client-react";
+import { trackEvent } from "@/lib/analytics";
 import { useQueryClient } from "@tanstack/react-query";
 import { Headphones, Users, CheckCircle, ArrowRight, Share2, Loader2, Clock, Quote, Sparkles } from "lucide-react";
 import { Link } from "wouter";
@@ -39,6 +40,7 @@ export default function Waitlist() {
       const entry = await joinWaitlist.mutateAsync({
         data: { firstName: firstName.trim(), email: email.trim(), podcastSource: source || null, interestedIn: interest || null },
       });
+      trackEvent("waitlist_joined", { source: source || "direct", interest: interest || "unspecified" });
       setSubmitted(entry as WaitlistEntry);
       queryClient.invalidateQueries({ queryKey: getGetWaitlistStatsQueryKey() });
     } catch {

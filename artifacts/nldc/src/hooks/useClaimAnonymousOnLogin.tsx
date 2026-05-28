@@ -23,6 +23,7 @@ import {
 } from "@/lib/handoffLink";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
+import { trackEvent } from "@/lib/analytics";
 
 /**
  * Classify a redeem error so the UI can show a specific message instead of a
@@ -161,6 +162,14 @@ export function useClaimAnonymousOnLogin(): void {
           clearAnonymousIds();
           invalidateDashboardQueries();
           toastClaimed(result.claimed);
+          trackEvent("signup_claim_success", {
+            audits: result.claimed.audits,
+            profiles: result.claimed.profiles,
+            messages: result.claimed.messages,
+            insights: result.claimed.insights,
+            follow_ups: result.claimed.followUps,
+            channel: "cookie",
+          });
         },
         onError: () => {
           // Allow retry on next mount/auth change.
@@ -201,6 +210,14 @@ export function useClaimAnonymousOnLogin(): void {
           clearPendingHandoff();
           invalidateDashboardQueries();
           toastClaimed(result.claimed);
+          trackEvent("signup_claim_success", {
+            audits: result.claimed.audits,
+            profiles: result.claimed.profiles,
+            messages: result.claimed.messages,
+            insights: result.claimed.insights,
+            follow_ups: result.claimed.followUps,
+            channel: "handoff",
+          });
         },
         onError: (error) => {
           // The handoff token is short-lived (15 min) and single-use in
