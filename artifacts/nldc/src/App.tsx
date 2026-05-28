@@ -63,6 +63,7 @@ import Quiz from "@/pages/Quiz";
 import Gallery from "@/pages/Gallery";
 import ConnectionCenter from "@/pages/ConnectionCenter";
 import DataVault from "@/pages/DataVault";
+import Imports from "@/pages/Imports";
 import DatingWinsLog from "@/pages/DatingWinsLog";
 import PatternBreaker from "@/pages/PatternBreaker";
 import WhatChanged from "@/pages/WhatChanged";
@@ -162,6 +163,7 @@ function Router() {
       <Route path="/gallery" component={Gallery} />
       <Route path="/connections" component={ConnectionCenter} />
       <Route path="/vault" component={DataVault} />
+      <Route path="/imports" component={Imports} />
       <Route path="/progress/wins" component={DatingWinsLog} />
       <Route path="/progress/pattern-breaker" component={PatternBreaker} />
       <Route path="/copilot/what-changed" component={WhatChanged} />

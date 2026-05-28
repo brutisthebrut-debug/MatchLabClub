@@ -1854,6 +1854,49 @@ export interface CompassReadList {
 }
 
 /**
+ * Structured summary derived from the upload. Shape varies per
+source. For Hinge imports it includes a `counts` object, a
+`derivedStats` object, and optionally an `aiRead` object when
+the Anthropic enrichment succeeded, or `aiError` when it did
+not.
+
+ * @nullable
+ */
+export type ImportSourceParsedSummary = { [key: string]: unknown } | null;
+
+export interface ImportSource {
+  id: number;
+  /** Which source app the export came from. */
+  source: string;
+  /** Lifecycle state. One of pending, complete, fallback, parsing, failed. */
+  status: string;
+  /** @nullable */
+  originalFilename?: string | null;
+  /**
+     * Structured summary derived from the upload. Shape varies per
+  source. For Hinge imports it includes a `counts` object, a
+  `derivedStats` object, and optionally an `aiRead` object when
+  the Anthropic enrichment succeeded, or `aiError` when it did
+  not.
+
+     * @nullable
+     */
+  parsedSummary?: ImportSourceParsedSummary;
+  uploadedAt: string;
+  /** @nullable */
+  processedAt?: string | null;
+}
+
+export interface ImportSourceList {
+  imports: ImportSource[];
+}
+
+export interface DeleteImportResult {
+  deleted: true;
+  id: number;
+}
+
+/**
  * Opaque session token — `Bearer <sid>`.
  */
 export type AuthorizationSessionHeaderParameter = string;

@@ -138,6 +138,7 @@ export const PACKAGES: Package[] = [
       { name: "Wellness Center",   href: "/wellness",      desc: "8 dimensions of your readiness" },
       { name: "Data Vault",        href: "/vault",         desc: "Preview, export, or delete your data" },
       { name: "Connection Center", href: "/connections",   desc: "Bring in context — on your terms" },
+      { name: "Data Imports",      href: "/imports",       desc: "Bring in your Hinge history for a real read" },
       { name: "User Control",      href: "/user-control",  desc: "Approve, edit, export, or delete" },
       { name: "Privacy Policy",    href: "/privacy",       desc: "How we handle your data" },
     ],
@@ -148,6 +149,6 @@ export const PACKAGES: Package[] = [
     ],
     hubHref: "/wellness",
     hubLabel: "View all Settings & Trust",
-    activeHrefs: ["/wellness", "/vault", "/connections", "/life-context", "/user-control", "/integrations", "/privacy", "/feedback", "/account"],
+    activeHrefs: ["/wellness", "/vault", "/connections", "/imports", "/life-context", "/user-control", "/integrations", "/privacy", "/feedback", "/account"],
   },
 ];

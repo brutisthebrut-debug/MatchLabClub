@@ -22,6 +22,7 @@ import postDateNotesRouter from "./postDateNotes";
 import wellnessRouter from "./wellness";
 import meImportsRouter from "./meImports";
 import compassRouter from "./compass";
+import importsRouter from "./imports";
 
 const router: IRouter = Router();
 
@@ -48,5 +49,6 @@ router.use(postDateNotesRouter);
 router.use(wellnessRouter);
 router.use(meImportsRouter);
 router.use(compassRouter);
+router.use(importsRouter);
 
 export default router;

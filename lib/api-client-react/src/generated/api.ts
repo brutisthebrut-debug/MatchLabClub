@@ -65,6 +65,7 @@ import type {
   DatingProfileInput,
   DatingProfileUpdate,
   DeleteAuditResult,
+  DeleteImportResult,
   DeleteInsightResult,
   DeleteJournalEntryResult,
   DeleteMyAccountResult,
@@ -86,6 +87,8 @@ import type {
   GetAuditReportVersion404,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
+  ImportSource,
+  ImportSourceList,
   InsightsRollup,
   JournalEntry,
   JournalEntryInput,
@@ -7521,4 +7524,306 @@ export function useGetCompassRead<TData = Awaited<ReturnType<typeof getCompassRe
 
 
 
+
+export const getUploadHingeImportUrl = () => {
+
+
+
+
+  return `/api/imports/hinge`
+}
+
+/**
+ * Accepts a Hinge GDPR data-export ZIP (max 50MB), parses it in
+memory, and persists a structured summary to `imported_sources`.
+The raw ZIP is never persisted. For signed-in users a
+fire-and-forget Anthropic call enriches the row with a narrative
+read. Anonymous users get the parsed counts only; they must claim
+and sign in to receive the AI read.
+
+ * @summary Upload a Hinge GDPR data export ZIP
+ */
+export const uploadHingeImport = async (uploadHingeImportBody: Blob, options?: RequestInit): Promise<ImportSource> => {
+
+  return customFetch<ImportSource>(getUploadHingeImportUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/octet-stream', ...options?.headers },
+    body: JSON.stringify(
+      uploadHingeImportBody,)
+  }
+);}
+
+
+
+
+export const getUploadHingeImportMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadHingeImport>>, TError,{data: BodyType<Blob>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof uploadHingeImport>>, TError,{data: BodyType<Blob>}, TContext> => {
+
+const mutationKey = ['uploadHingeImport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadHingeImport>>, {data: BodyType<Blob>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  uploadHingeImport(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadHingeImportMutationResult = NonNullable<Awaited<ReturnType<typeof uploadHingeImport>>>
+    export type UploadHingeImportMutationBody = BodyType<Blob>
+    export type UploadHingeImportMutationError = ErrorType<void>
+
+    /**
+ * @summary Upload a Hinge GDPR data export ZIP
+ */
+export const useUploadHingeImport = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadHingeImport>>, TError,{data: BodyType<Blob>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof uploadHingeImport>>,
+        TError,
+        {data: BodyType<Blob>},
+        TContext
+      > => {
+      return useMutation(getUploadHingeImportMutationOptions(options));
+    }
+
+export const getListImportsUrl = () => {
+
+
+
+
+  return `/api/imports`
+}
+
+/**
+ * @summary List the caller's data imports
+ */
+export const listImports = async ( options?: RequestInit): Promise<ImportSourceList> => {
+
+  return customFetch<ImportSourceList>(getListImportsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListImportsQueryKey = () => {
+    return [
+    `/api/imports`
+    ] as const;
+    }
+
+
+export const getListImportsQueryOptions = <TData = Awaited<ReturnType<typeof listImports>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listImports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListImportsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listImports>>> = ({ signal }) => listImports({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listImports>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListImportsQueryResult = NonNullable<Awaited<ReturnType<typeof listImports>>>
+export type ListImportsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List the caller's data imports
+ */
+
+export function useListImports<TData = Awaited<ReturnType<typeof listImports>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listImports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListImportsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetImportUrl = (id: number,) => {
+
+
+
+
+  return `/api/imports/${id}`
+}
+
+/**
+ * @summary Fetch a single import by id
+ */
+export const getImport = async (id: number, options?: RequestInit): Promise<ImportSource> => {
+
+  return customFetch<ImportSource>(getGetImportUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetImportQueryKey = (id: number,) => {
+    return [
+    `/api/imports/${id}`
+    ] as const;
+    }
+
+
+export const getGetImportQueryOptions = <TData = Awaited<ReturnType<typeof getImport>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetImportQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getImport>>> = ({ signal }) => getImport(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getImport>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetImportQueryResult = NonNullable<Awaited<ReturnType<typeof getImport>>>
+export type GetImportQueryError = ErrorType<void>
+
+
+/**
+ * @summary Fetch a single import by id
+ */
+
+export function useGetImport<TData = Awaited<ReturnType<typeof getImport>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetImportQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getDeleteImportUrl = (id: number,) => {
+
+
+
+
+  return `/api/imports/${id}`
+}
+
+/**
+ * @summary Hard-delete an import the caller owns
+ */
+export const deleteImport = async (id: number, options?: RequestInit): Promise<DeleteImportResult> => {
+
+  return customFetch<DeleteImportResult>(getDeleteImportUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteImportMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteImport>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteImport>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteImport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteImport>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteImport(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteImportMutationResult = NonNullable<Awaited<ReturnType<typeof deleteImport>>>
+
+    export type DeleteImportMutationError = ErrorType<void>
+
+    /**
+ * @summary Hard-delete an import the caller owns
+ */
+export const useDeleteImport = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteImport>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteImport>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteImportMutationOptions(options));
+    }
 

@@ -16,6 +16,7 @@ export type EchoSurface =
   | "landing"
   | "waitlist"
   | "insights-result"
+  | "hinge-import"
   | "pricing-tier";
 
 type Variant = "primary" | "ghost" | "pill";

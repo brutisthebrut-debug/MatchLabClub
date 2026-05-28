@@ -2519,6 +2519,107 @@ paths:
         "404":
           description: Not found or not owned
 
+  /imports/hinge:
+    post:
+      tags: [insights]
+      operationId: uploadHingeImport
+      summary: Upload a Hinge GDPR data export ZIP
+      description: |
+        Accepts a Hinge GDPR data-export ZIP (max 50MB), parses it in
+        memory, and persists a structured summary to `imported_sources`.
+        The raw ZIP is never persisted. For signed-in users a
+        fire-and-forget Anthropic call enriches the row with a narrative
+        read. Anonymous users get the parsed counts only; they must claim
+        and sign in to receive the AI read.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        description: |
+          A multipart/form-data POST with a single `file` field containing
+          the Hinge export ZIP. Not modeled as a typed body in the
+          generated client; callers should construct a `FormData` and POST
+          it via `fetch` directly.
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "201":
+          description: Import accepted and parsed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportSource"
+        "400":
+          description: Invalid or unreadable upload.
+        "413":
+          description: File exceeded the 50MB limit.
+        "415":
+          description: Unsupported file type. Must be a ZIP.
+
+  /imports:
+    get:
+      tags: [insights]
+      operationId: listImports
+      summary: List the caller's data imports
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        "200":
+          description: Most recent imports for this user or anonymous browser.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportSourceList"
+
+  /imports/{id}:
+    get:
+      tags: [insights]
+      operationId: getImport
+      summary: Fetch a single import by id
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Import row.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportSource"
+        "404":
+          description: Not found or not owned.
+    delete:
+      tags: [insights]
+      operationId: deleteImport
+      summary: Hard-delete an import the caller owns
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Import deleted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteImportResult"
+        "404":
+          description: Not found or not owned.
+
 components:
   parameters:
     AuthorizationSessionHeader:
@@ -4987,3 +5088,52 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CompassRead"
+
+    ImportSource:
+      type: object
+      required: [id, source, status, uploadedAt]
+      properties:
+        id:
+          type: integer
+        source:
+          type: string
+          description: Which source app the export came from.
+        status:
+          type: string
+          description: Lifecycle state. One of pending, complete, fallback, parsing, failed.
+        originalFilename:
+          type: [string, "null"]
+        parsedSummary:
+          type: [object, "null"]
+          additionalProperties: true
+          description: |
+            Structured summary derived from the upload. Shape varies per
+            source. For Hinge imports it includes a `counts` object, a
+            `derivedStats` object, and optionally an `aiRead` object when
+            the Anthropic enrichment succeeded, or `aiError` when it did
+            not.
+        uploadedAt:
+          type: string
+          format: date-time
+        processedAt:
+          type: [string, "null"]
+          format: date-time
+
+    ImportSourceList:
+      type: object
+      required: [imports]
+      properties:
+        imports:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportSource"
+
+    DeleteImportResult:
+      type: object
+      required: [deleted, id]
+      properties:
+        deleted:
+          type: boolean
+          const: true
+        id:
+          type: integer

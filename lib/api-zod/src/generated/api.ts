@@ -3275,3 +3275,77 @@ export const GetCompassReadResponse = zod.object({
 })
 
 
+/**
+ * Accepts a Hinge GDPR data-export ZIP (max 50MB), parses it in
+memory, and persists a structured summary to `imported_sources`.
+The raw ZIP is never persisted. For signed-in users a
+fire-and-forget Anthropic call enriches the row with a narrative
+read. Anonymous users get the parsed counts only; they must claim
+and sign in to receive the AI read.
+
+ * @summary Upload a Hinge GDPR data export ZIP
+ */
+export const UploadHingeImportHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+
+/**
+ * @summary List the caller's data imports
+ */
+export const ListImportsHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const ListImportsResponse = zod.object({
+  "imports": zod.array(zod.object({
+  "id": zod.number(),
+  "source": zod.string().describe('Which source app the export came from.'),
+  "status": zod.string().describe('Lifecycle state. One of pending, complete, fallback, parsing, failed.'),
+  "originalFilename": zod.string().nullish(),
+  "parsedSummary": zod.record(zod.string(), zod.unknown()).nullish().describe('Structured summary derived from the upload. Shape varies per\nsource. For Hinge imports it includes a `counts` object, a\n`derivedStats` object, and optionally an `aiRead` object when\nthe Anthropic enrichment succeeded, or `aiError` when it did\nnot.\n'),
+  "uploadedAt": zod.coerce.date(),
+  "processedAt": zod.coerce.date().nullish()
+}))
+})
+
+
+/**
+ * @summary Fetch a single import by id
+ */
+export const GetImportParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetImportHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetImportResponse = zod.object({
+  "id": zod.number(),
+  "source": zod.string().describe('Which source app the export came from.'),
+  "status": zod.string().describe('Lifecycle state. One of pending, complete, fallback, parsing, failed.'),
+  "originalFilename": zod.string().nullish(),
+  "parsedSummary": zod.record(zod.string(), zod.unknown()).nullish().describe('Structured summary derived from the upload. Shape varies per\nsource. For Hinge imports it includes a `counts` object, a\n`derivedStats` object, and optionally an `aiRead` object when\nthe Anthropic enrichment succeeded, or `aiError` when it did\nnot.\n'),
+  "uploadedAt": zod.coerce.date(),
+  "processedAt": zod.coerce.date().nullish()
+})
+
+
+/**
+ * @summary Hard-delete an import the caller owns
+ */
+export const DeleteImportParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteImportHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const DeleteImportResponse = zod.object({
+  "deleted": zod.boolean(),
+  "id": zod.number()
+})
+
+

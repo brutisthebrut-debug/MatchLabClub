@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { withAlpha } from "@/lib/brandColor";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
-import { ArrowRight, CheckCircle, Shield, Sparkles, Headphones, Eye, Clock, FileText } from "lucide-react";
+import { ArrowRight, CheckCircle, Shield, Sparkles, Headphones, Eye, Clock, FileText, Compass, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMeta } from "@/hooks/useMeta";
 import { TrustBadge } from "@/components/TrustBadge";
@@ -50,7 +53,7 @@ export default function Landing() {
               className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed mb-9"
               {...fadeUp(0.15)}
             >
-              See exactly why you're getting skipped, and the <span className="text-foreground/80 font-medium">one specific fix</span> that changes it. The honest read no friend will give you.
+              Your <span className="text-foreground/80 font-medium">dating second brain.</span>
             </motion.p>
 
             {/* PRIMARY CTA — single, oversized, unmissable. Everything else lives below the proof. */}
@@ -103,81 +106,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── Before / After — LIFTED above-the-fold proof ── */}
-      <section className="py-20 md:py-28 relative overflow-hidden border-t border-foreground/5">
-        <div className="orb orb-plum absolute w-80 h-80 -left-40 top-20 opacity-50 pointer-events-none" />
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-14">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-3">The Transformation</p>
-            <h2 className="text-3xl md:text-5xl font-bold text-foreground">
-              See what changes when you're{" "}
-              <span className="gradient-text-violet italic">seen accurately.</span>
-            </h2>
-            <p className="text-xs text-muted-foreground/60 mt-3">Illustrative example. The kind of rewrite our coaching engine produces.</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            <motion.div
-              className="glass rounded-3xl p-7 relative border border-foreground/8"
-              initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
-            >
-              <div className="absolute -top-3 left-6">
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[hsl(248_40%_94%)] text-muted-foreground border border-foreground/8">
-                  Before Your Audit
-                </span>
-              </div>
-              <div className="flex items-center gap-3 mb-5 mt-3">
-                <div className="w-10 h-10 rounded-full bg-[hsl(248_40%_92%)] flex items-center justify-center text-sm font-bold text-muted-foreground">J</div>
-                <div>
-                  <p className="font-semibold text-foreground/70 text-sm">Jordan, 31</p>
-                  <p className="text-xs text-muted-foreground/60">Signal Score: 42/100</p>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed italic">
-                "Software engineer who loves hiking and cooking. Big foodie. Looking for someone who is adventurous and loves to have fun. I'm told I'm easy to talk to and have a great sense of humor."
-              </p>
-              <div className="flex flex-wrap gap-2 mt-5">
-                {["⚠ Vague", "⚠ Cliché language", "⚠ No hook", "⚠ Invisible"].map((tag, i) => (
-                  <span key={i} className="px-2.5 py-1 rounded-full text-xs bg-[hsl(0_60%_50%/0.08)] text-[hsl(0_60%_45%)] border border-[hsl(0_60%_50%/0.2)]">{tag}</span>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div
-              className="relative"
-              initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
-            >
-              {/* Badge lives OUTSIDE the shimmer card — shimmer uses overflow:hidden
-                  to clip its moving gradient, which would otherwise clip this -top-3 pill. */}
-              <div className="absolute -top-3 left-6 z-10">
-                <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] text-white shadow-[0_2px_12px_hsl(248_62%_52%/0.4)]">
-                  ✦ After Your Audit
-                </span>
-              </div>
-              <div
-                className="glass rounded-3xl p-7 relative shimmer"
-                style={{ border: "1px solid hsl(var(--brand-indigo) / 0.3)", boxShadow: "0 0 40px hsl(var(--brand-indigo) / 0.08)" }}
-              >
-              <div className="flex items-center gap-3 mb-5 mt-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] flex items-center justify-center text-sm font-bold text-white shadow-[0_0_12px_hsl(248_62%_52%/0.4)]">J</div>
-                <div>
-                  <p className="font-semibold text-foreground text-sm">Jordan, 31</p>
-                  <p className="text-xs text-[hsl(43_65%_50%)] font-medium">Signal Score: 78/100 ↑</p>
-                </div>
-              </div>
-              <p className="text-sm text-foreground leading-relaxed">
-                "I make a genuinely great first date. I'll pick somewhere unexpected, actually listen, and probably make you laugh at something you didn't expect to. Currently: too invested in my sourdough starter, rewatching things I've already seen, trying to find someone worth getting off the couch for."
-              </p>
-              <div className="flex flex-wrap gap-2 mt-5">
-                {["✓ Specific", "✓ Memorable", "✓ Conversation hook", "✓ Distinctly you"].map((tag, i) => (
-                  <span key={i} className="px-2.5 py-1 rounded-full text-xs tag-strength border">{tag}</span>
-                ))}
-              </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
+      {/* ── Interactive 3-tab preview ── */}
+      <PreviewSection />
 
       {/* ── Cost anchor — what bad signal actually costs you ── */}
       <section className="py-16 md:py-20 border-t border-foreground/5 relative overflow-hidden">
@@ -474,5 +404,450 @@ export default function Landing() {
         </div>
       </section>
     </AppLayout>
+  );
+}
+
+// ── Interactive preview helpers (client-side deterministic so the page
+//    always renders, even when the API server is unreachable) ─────────
+
+type BioPreviewResult = {
+  score: number;
+  category: string;
+  strengths: string[];
+  fixes: string[];
+  rewriteHook: string;
+};
+
+function previewBio(bio: string): BioPreviewResult {
+  const text = bio.trim();
+  const words = text.split(/\s+/).filter(Boolean);
+  const wordCount = words.length;
+  const cliches = [
+    "love to laugh", "looking for my partner in crime", "fluent in sarcasm",
+    "foodie", "adventurous", "easy to talk to", "good sense of humor",
+    "love to travel", "live life to the fullest", "just ask",
+  ];
+  const lower = text.toLowerCase();
+  const clicheHits = cliches.filter((c) => lower.includes(c));
+  const hasNumbers = /\d/.test(text);
+  const hasProperNouns = /\b[A-Z][a-z]{2,}\b/.test(text.replace(/^[A-Z]/, ""));
+  const hasQuestion = /\?/.test(text);
+  const hasSpecific = hasNumbers || hasProperNouns;
+
+  let score = 50;
+  if (wordCount > 30) score += 8;
+  if (wordCount > 60) score += 6;
+  if (hasSpecific) score += 14;
+  if (hasQuestion) score += 6;
+  score -= clicheHits.length * 9;
+  score = Math.max(18, Math.min(92, score));
+
+  const category =
+    score >= 75
+      ? "Specific and inviting"
+      : score >= 55
+      ? "Pleasant but forgettable"
+      : "Generic. Reads as background noise.";
+
+  const strengths: string[] = [];
+  if (hasSpecific) strengths.push("You name actual things. Specific details give people something to reply to.");
+  if (hasQuestion) strengths.push("You leave an opening. Questions and prompts pull a response.");
+  if (wordCount >= 40 && wordCount <= 90) strengths.push("Length is in the sweet spot. Long enough to mean something, short enough to read.");
+  if (strengths.length === 0) strengths.push("There's a person in here. The raw material is fine. The signal is just not turned up yet.");
+
+  const fixes: string[] = [];
+  if (clicheHits.length > 0) {
+    fixes.push(`Cut the clichés. "${clicheHits[0]}" appears in roughly 1 in 4 profiles. It tells no one anything about you.`);
+  }
+  if (!hasSpecific) {
+    fixes.push("Add one specific detail. A neighborhood, a band, a recurring habit. Specifics are what people screenshot.");
+  }
+  if (wordCount < 25) {
+    fixes.push("You're under-writing. People can't decide on three lines. Give them 60 to 90 words.");
+  }
+  if (wordCount > 140) {
+    fixes.push("Trim it. Long bios get skimmed, not read. Aim for 60 to 90 words of the strongest stuff.");
+  }
+  if (fixes.length === 0) {
+    fixes.push("Tighten the opener. The first line is the only line most people actually read.");
+  }
+
+  const rewriteHook =
+    "Try opening with a specific weeknight. A Tuesday. A Wednesday. The thing you actually do on that day. That single move tends to lift reply quality more than any other edit.";
+
+  return { score, category, strengths: strengths.slice(0, 2), fixes: fixes.slice(0, 3), rewriteHook };
+}
+
+type CompassPreviewResult = {
+  bestDynamic: string;
+  watchFor: string;
+  falseSpark: string;
+};
+
+function previewCompass(style: string, patterns: string[]): CompassPreviewResult {
+  const styleMap: Record<string, string> = {
+    "Spark Chaser": "Someone consistent enough to keep you grounded and interesting enough to keep you engaged. The spark needs to deepen into substance, not stay the whole thing.",
+    "Slow Burn": "Someone patient enough to let you arrive, ideally someone investing slowly too. Mutual slow-burn dynamics produce the most durable connections.",
+    "Anxious Confirmer": "Someone who communicates proactively and consistently, who can hold your care without reading it as too much. Secure attachment on their end is the most stabilizing fit.",
+    "Avoidant Editor": "Someone secure enough not to need frequent reassurance, who can give you space without reading it as rejection.",
+    "Secure Builder": "Someone doing their own work, building alongside you rather than anchoring to your steadiness.",
+  };
+  const bestDynamic =
+    styleMap[style] ??
+    "A dynamic with genuine reciprocity. Both people investing, both people honest about what they want, both willing to do the slower work of actually knowing each other.";
+
+  let watchFor = "Dynamics where the exciting early stage never develops into real substance.";
+  if (patterns.includes("Attracted to unavailable people")) {
+    watchFor = "Emotionally unavailable people, where the distance creates the pull. Unavailability is not depth. It is just distance.";
+  } else if (patterns.includes("Great starts that slowly fizzle")) {
+    watchFor = "People who are great at the beginning and unclear about the middle. The ones who can generate connection but not sustain it.";
+  } else if (patterns.includes("Moving too fast")) {
+    watchFor = "Connections that move very fast at the start, where early intensity substitutes for the slower work of actually knowing someone.";
+  } else if (patterns.includes("They pull back once I'm invested")) {
+    watchFor = "Asymmetric dynamics where you consistently pursue more than you are pursued. Consistent asymmetry is data, not a phase.";
+  }
+
+  const falseSparkMap: Record<string, string> = {
+    "Spark Chaser": "Unavailability mistaken for depth. When someone is just out of reach, the feeling reads like intensity but is mostly anxiety.",
+    "Slow Burn": "Intrigue mistaken for compatibility. Mystery that never resolves is not depth, it is withholding.",
+    "Anxious Confirmer": "Relief mistaken for love. When the person who usually produces anxiety suddenly reassures you, the relief feels profound. It is not. It is the absence of pain.",
+    "Avoidant Editor": "Distance mistaken for self-respect. When someone does not need you, it can feel like they have something worth wanting.",
+    "Secure Builder": "Neediness mistaken for passion. Heavy early investment can read as chemistry. Sometimes it is urgency unrelated to you.",
+  };
+  const falseSpark =
+    falseSparkMap[style] ??
+    "Intensity mistaken for compatibility. Strong early feeling overshadows the slower signals that actually predict whether something will last.";
+
+  return { bestDynamic, watchFor, falseSpark };
+}
+
+type MessagesPreviewResult = {
+  tone: string;
+  patterns: string[];
+  oneLine: string;
+};
+
+function previewMessages(text: string): MessagesPreviewResult {
+  const lower = text.toLowerCase();
+  const lines = text.split("\n").filter((l) => l.trim().length > 0);
+  const questionCount = (text.match(/\?/g) ?? []).length;
+  const exclaimCount = (text.match(/!/g) ?? []).length;
+  const hahaCount = (lower.match(/\b(haha|lol|lmao)\b/g) ?? []).length;
+  const avgLen = lines.length > 0 ? text.length / lines.length : text.length;
+
+  let tone = "Even and measured.";
+  if (hahaCount >= 3 || exclaimCount >= 4) tone = "Light and warm. Both sides are engaged.";
+  else if (questionCount === 0) tone = "Flat. Lots of statements, no questions, low pull.";
+  else if (avgLen > 140) tone = "Long-winded. You are doing more of the talking than they are.";
+
+  const patterns: string[] = [];
+  if (questionCount === 0) patterns.push("No questions in your last few messages. That tends to stall a thread within a day or two.");
+  if (lower.includes("been meaning to") || lower.includes("we should")) {
+    patterns.push("Soft date-floating. Phrases like 'we should' read as interest but give nothing concrete to say yes to.");
+  }
+  if (lines.length >= 8 && !/\b(when|free|tonight|weekend|tomorrow|thursday|friday|saturday|sunday|monday|tuesday|wednesday)\b/.test(lower)) {
+    patterns.push("Eight-plus messages in and no time anchor. Real rapport is usually ready by message 5 to 7.");
+  }
+  if (patterns.length === 0) patterns.push("Balanced back-and-forth. The thread has momentum.");
+
+  const oneLine =
+    questionCount === 0
+      ? "Pick the most interesting thing they said and ask one specific follow-up. Direction over volume."
+      : "You have enough rapport to move. Propose a specific day, the cost of asking is almost always lower than people think.";
+
+  return { tone, patterns: patterns.slice(0, 3), oneLine };
+}
+
+const PREVIEW_PATTERNS = [
+  "Attracted to unavailable people",
+  "Great starts that slowly fizzle",
+  "They pull back once I'm invested",
+  "Moving too fast",
+] as const;
+
+const PREVIEW_STYLES = [
+  "Spark Chaser",
+  "Slow Burn",
+  "Anxious Confirmer",
+  "Avoidant Editor",
+  "Secure Builder",
+] as const;
+
+const EXAMPLE_BIO =
+  "Software engineer who loves hiking and cooking. Big foodie. Looking for someone who is adventurous and loves to have fun. I'm told I'm easy to talk to and have a great sense of humor.";
+
+const EXAMPLE_MESSAGES = `Them: Have you tried that new ramen place on 4th?
+Me: Not yet but I've been meaning to
+Them: It's so good, the black garlic broth is unreal
+Me: Okay now I have to go
+Them: You should!
+Me: We should both go honestly, I keep saying I will and never do`;
+
+function PreviewSection() {
+  const [bio, setBio] = useState(EXAMPLE_BIO);
+  const [bioResult, setBioResult] = useState<BioPreviewResult | null>(null);
+
+  const [style, setStyle] = useState<string>("Spark Chaser");
+  const [patterns, setPatterns] = useState<string[]>(["Great starts that slowly fizzle"]);
+  const [compassResult, setCompassResult] = useState<CompassPreviewResult | null>(null);
+
+  const [messages, setMessages] = useState(EXAMPLE_MESSAGES);
+  const [msgResult, setMsgResult] = useState<MessagesPreviewResult | null>(null);
+
+  function togglePattern(p: string) {
+    setPatterns((prev) => {
+      if (prev.includes(p)) return prev.filter((x) => x !== p);
+      if (prev.length >= 2) return [prev[1], p];
+      return [...prev, p];
+    });
+  }
+
+  return (
+    <section className="py-20 md:py-24 relative overflow-hidden border-t border-foreground/5">
+      <div className="orb orb-plum absolute w-80 h-80 -left-40 top-20 opacity-50 pointer-events-none" />
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="text-center mb-10 max-w-2xl mx-auto">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-3">Try it</p>
+          <h2 className="text-3xl md:text-5xl font-bold text-foreground">
+            Try it before you{" "}
+            <span className="gradient-text-violet italic">sign up.</span>
+          </h2>
+          <p className="text-sm text-muted-foreground mt-3">
+            Pick a tool. We&apos;ll show you what it sees.
+          </p>
+        </div>
+
+        <div className="max-w-3xl mx-auto">
+          <Tabs defaultValue="bio" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 h-auto p-1 rounded-2xl glass border border-foreground/8 bg-[hsl(248_40%_96%/0.6)] dark:bg-[hsl(248_50%_10%/0.6)]">
+              <TabsTrigger
+                value="bio"
+                className="rounded-xl py-2.5 text-xs sm:text-sm flex items-center gap-2 data-[state=active]:bg-background"
+                data-testid="tab-preview-bio"
+              >
+                <FileText className="w-3.5 h-3.5" /> Audit my bio
+              </TabsTrigger>
+              <TabsTrigger
+                value="compass"
+                className="rounded-xl py-2.5 text-xs sm:text-sm flex items-center gap-2 data-[state=active]:bg-background"
+                data-testid="tab-preview-compass"
+              >
+                <Compass className="w-3.5 h-3.5" /> Run a compass read
+              </TabsTrigger>
+              <TabsTrigger
+                value="messages"
+                className="rounded-xl py-2.5 text-xs sm:text-sm flex items-center gap-2 data-[state=active]:bg-background"
+                data-testid="tab-preview-messages"
+              >
+                <MessageCircle className="w-3.5 h-3.5" /> Read my messages
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Bio tab */}
+            <TabsContent value="bio" className="mt-5">
+              <div className="glass border border-foreground/8 rounded-3xl p-6 md:p-7">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Paste your bio. We&apos;ll tell you what it actually reads as, what&apos;s working, and the one fix worth making first.
+                </p>
+                <Textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  rows={5}
+                  className="resize-none text-sm"
+                  data-testid="textarea-preview-bio"
+                />
+                <div className="flex flex-wrap items-center gap-3 mt-4">
+                  <Button
+                    onClick={() => setBioResult(previewBio(bio))}
+                    className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white"
+                    data-testid="button-preview-bio-show"
+                  >
+                    Show me <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <span className="text-[11px] text-muted-foreground/70">Runs in your browser. Nothing is saved.</span>
+                </div>
+
+                {bioResult ? (
+                  <div className="mt-6 grid gap-4" data-testid="result-preview-bio">
+                    <div className="flex flex-wrap items-baseline gap-3 pb-3 border-b border-foreground/8">
+                      <p className="text-3xl font-bold text-foreground" style={{ color: "hsl(var(--brand-indigo))" }}>{bioResult.score}<span className="text-base text-muted-foreground">/100</span></p>
+                      <p className="text-sm font-semibold text-foreground">{bioResult.category}</p>
+                    </div>
+                    {bioResult.strengths.length > 0 ? (
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(142_55%_50%)] mb-2">What&apos;s working</p>
+                        <ul className="space-y-1.5">
+                          {bioResult.strengths.map((s, i) => (
+                            <li key={i} className="text-sm text-foreground/85 leading-relaxed">{s}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(326_100%_59%)] mb-2">Fix this first</p>
+                      <ul className="space-y-1.5">
+                        {bioResult.fixes.map((f, i) => (
+                          <li key={i} className="text-sm text-foreground/85 leading-relaxed">{f}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="rounded-2xl p-4 bg-[hsl(248_62%_52%/0.05)] border border-[hsl(248_62%_52%/0.18)]">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(248_62%_52%)] mb-1.5">One rewrite move</p>
+                      <p className="text-sm text-foreground/85 leading-relaxed">{bioResult.rewriteHook}</p>
+                    </div>
+                    <PreviewFooterCta label="See the full audit" />
+                  </div>
+                ) : null}
+              </div>
+            </TabsContent>
+
+            {/* Compass tab */}
+            <TabsContent value="compass" className="mt-5">
+              <div className="glass border border-foreground/8 rounded-3xl p-6 md:p-7">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Pick your connection style and up to two patterns you keep seeing. We&apos;ll show your best-fit dynamic and the false spark to watch.
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70 mb-2">Your connection style</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {PREVIEW_STYLES.map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setStyle(s)}
+                          className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                            style === s
+                              ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)] border-[hsl(248_62%_52%/0.4)]"
+                              : "border-foreground/12 text-muted-foreground hover:border-foreground/25 hover:text-foreground"
+                          }`}
+                          data-testid={`button-preview-style-${s.toLowerCase().replace(/ /g, "-")}`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70 mb-2">Patterns you keep seeing (pick up to 2)</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {PREVIEW_PATTERNS.map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => togglePattern(p)}
+                          className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                            patterns.includes(p)
+                              ? "bg-[hsl(326_100%_59%/0.15)] text-[hsl(326_100%_65%)] border-[hsl(326_100%_59%/0.4)]"
+                              : "border-foreground/12 text-muted-foreground hover:border-foreground/25 hover:text-foreground"
+                          }`}
+                          data-testid={`button-preview-pattern-${p.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 mt-5">
+                  <Button
+                    onClick={() => setCompassResult(previewCompass(style, patterns))}
+                    className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white"
+                    data-testid="button-preview-compass-show"
+                  >
+                    Show me <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <span className="text-[11px] text-muted-foreground/70">A short read. The full Compass goes deeper.</span>
+                </div>
+
+                {compassResult ? (
+                  <div className="mt-6 grid gap-4" data-testid="result-preview-compass">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(248_62%_52%)] mb-1.5">Best-fit dynamic</p>
+                      <p className="text-sm text-foreground/85 leading-relaxed">{compassResult.bestDynamic}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(43_65%_50%)] mb-1.5">Watch for</p>
+                      <p className="text-sm text-foreground/85 leading-relaxed">{compassResult.watchFor}</p>
+                    </div>
+                    <div className="rounded-2xl p-4 bg-[hsl(326_100%_59%/0.05)] border border-[hsl(326_100%_59%/0.18)]">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(326_100%_59%)] mb-1.5">Your false spark</p>
+                      <p className="text-sm text-foreground/85 leading-relaxed">{compassResult.falseSpark}</p>
+                    </div>
+                    <PreviewFooterCta label="See the full read" />
+                  </div>
+                ) : null}
+              </div>
+            </TabsContent>
+
+            {/* Messages tab */}
+            <TabsContent value="messages" className="mt-5">
+              <div className="glass border border-foreground/8 rounded-3xl p-6 md:p-7">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Paste a recent chat. We&apos;ll read the tone, name the pattern, and tell you the one move that fits.
+                </p>
+                <Textarea
+                  value={messages}
+                  onChange={(e) => setMessages(e.target.value)}
+                  rows={7}
+                  className="resize-none text-sm font-mono"
+                  data-testid="textarea-preview-messages"
+                />
+                <div className="flex flex-wrap items-center gap-3 mt-4">
+                  <Button
+                    onClick={() => setMsgResult(previewMessages(messages))}
+                    className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white"
+                    data-testid="button-preview-messages-show"
+                  >
+                    Show me <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <span className="text-[11px] text-muted-foreground/70">Runs locally. Your chat does not leave the page.</span>
+                </div>
+
+                {msgResult ? (
+                  <div className="mt-6 grid gap-4" data-testid="result-preview-messages">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(190_55%_50%)] mb-1.5">Tone</p>
+                      <p className="text-sm text-foreground/85 leading-relaxed">{msgResult.tone}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(43_65%_50%)] mb-2">What we noticed</p>
+                      <ul className="space-y-1.5">
+                        {msgResult.patterns.map((p, i) => (
+                          <li key={i} className="text-sm text-foreground/85 leading-relaxed">{p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="rounded-2xl p-4 bg-[hsl(248_62%_52%/0.05)] border border-[hsl(248_62%_52%/0.18)]">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(248_62%_52%)] mb-1.5">One move that fits</p>
+                      <p className="text-sm text-foreground/85 leading-relaxed">{msgResult.oneLine}</p>
+                    </div>
+                    <PreviewFooterCta label="See the full read" />
+                  </div>
+                ) : null}
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <p className="text-center text-[11px] text-muted-foreground/60 mt-4">
+            Preview runs on a local deterministic engine so you can try it instantly. The signed-in tools go deeper and save your history.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PreviewFooterCta({ label }: { label: string }) {
+  return (
+    <div className="pt-2">
+      <Link
+        href="/start"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-[hsl(248_62%_62%)] hover:text-[hsl(248_62%_52%)] transition-colors"
+        data-testid="link-preview-cta"
+      >
+        {label} <ArrowRight className="w-4 h-4" />
+      </Link>
+    </div>
   );
 }
