@@ -503,7 +503,306 @@ const BOUNDARY_BLUEPRINT: Quiz = {
   },
 };
 
-export const QUIZZES: Quiz[] = [LOVE_PACE, CONFLICT_INSTINCT, ENERGY_SOURCES, BOUNDARY_BLUEPRINT];
+// ── Quiz 5: Attachment Style ────────────────────────────────────────────────
+const ATTACHMENT_STYLE: Quiz = {
+  slug: "attachment-style",
+  title: "What's your dating attachment style?",
+  pitch: "Five questions to surface the pattern you actually run when someone starts to matter. Built on real attachment research, no horoscope vibes.",
+  durationSec: 75,
+  emoji: "🧷",
+  feeds: ["attachment.style", "attachment.activation", "attachment.deactivation"],
+  questions: [
+    {
+      q: "Three days of light texting, then they go quiet for a day. Your head goes where first?",
+      options: [
+        { label: "Probably busy. I'll get back to my day.", scores: { secure: 2 }, wellness: { questionId: "attachment.activation", dimension: "attachment", category: "activation", questionText: "How do you respond to a normal delay in early dating?", answer: "I assume normal life and stay regulated." } },
+        { label: "Did I say something off? I reread the thread.", scores: { anxious: 2 }, wellness: { questionId: "attachment.activation", dimension: "attachment", category: "activation", questionText: "How do you respond to a normal delay in early dating?", answer: "I scan for what I might have done wrong." } },
+        { label: "Cool. Less pressure. I get more done.", scores: { avoidant: 2 }, wellness: { questionId: "attachment.activation", dimension: "attachment", category: "activation", questionText: "How do you respond to a normal delay in early dating?", answer: "I feel relief at the space." } },
+        { label: "Part of me wants more, part of me wants out. Both loud.", scores: { fearful: 2 } },
+      ],
+    },
+    {
+      q: "Second date went well. They want to lock plans in for next week. You feel...",
+      options: [
+        { label: "Good. I like clarity.", scores: { secure: 2 } },
+        { label: "Relieved, and a little watchful. Don't want to seem too eager.", scores: { anxious: 1, secure: 1 } },
+        { label: "A flicker of pressure. The week felt open a second ago.", scores: { avoidant: 2 } },
+        { label: "Excited and weirdly nervous at the same time.", scores: { fearful: 2, anxious: 1 } },
+      ],
+    },
+    {
+      q: "They share something vulnerable on date three. What's your honest first move?",
+      options: [
+        { label: "Listen, ask one real question, share something back that fits.", scores: { secure: 2 } },
+        { label: "Hold it carefully. Reassure them. Track how I'm doing later.", scores: { anxious: 2 } },
+        { label: "Acknowledge it, then steer us somewhere lighter.", scores: { avoidant: 2 } },
+        { label: "Match their depth, then panic a little about what I just shared.", scores: { fearful: 2 } },
+      ],
+    },
+    {
+      q: "Things are going well for a month. What's the thought you don't say out loud?",
+      options: [
+        { label: "Honestly, no big secret thought. I'm just present.", scores: { secure: 2 }, wellness: { questionId: "attachment.deactivation", dimension: "attachment", category: "deactivation", questionText: "When things are going well, what's your private inner experience?", answer: "I'm regulated and present." } },
+        { label: "Waiting for the moment they pull back so I can prepare.", scores: { anxious: 2 }, wellness: { questionId: "attachment.deactivation", dimension: "attachment", category: "deactivation", questionText: "When things are going well, what's your private inner experience?", answer: "I'm bracing for the pullback." } },
+        { label: "Noticing little things about them that bother me more than they should.", scores: { avoidant: 2 }, wellness: { questionId: "attachment.deactivation", dimension: "attachment", category: "deactivation", questionText: "When things are going well, what's your private inner experience?", answer: "I start finding flaws as things deepen." } },
+        { label: "Wanting to disappear for a few days, then immediately wanting them close.", scores: { fearful: 2 }, wellness: { questionId: "attachment.deactivation", dimension: "attachment", category: "deactivation", questionText: "When things are going well, what's your private inner experience?", answer: "I swing between wanting space and wanting closeness." } },
+      ],
+    },
+    {
+      q: "Hard conversation needed. They go quiet for an evening to process. You...",
+      options: [
+        { label: "Give them the evening. Pick it up tomorrow.", scores: { secure: 2 } },
+        { label: "Send one follow-up message to check we're okay.", scores: { anxious: 2 } },
+        { label: "Quietly enjoy the quiet, even if I know we still need to talk.", scores: { avoidant: 2 } },
+        { label: "Spiral, then send something, then wish I hadn't.", scores: { fearful: 2, anxious: 1 } },
+      ],
+    },
+  ],
+  archetypes: {
+    secure: {
+      name: "Secure Base",
+      emoji: "🌳",
+      tagline: "You can want closeness without needing it to prove something. People feel steadier around you, often without knowing why.",
+      insight: "Secure attachment in dating doesn't mean nothing rattles you. It means your nervous system has a wide window and a soft landing. Your edge is patience with people who don't have your baseline yet. The growth move: notice when someone's wobble pulls you into managing them, and let them have their own process without absorbing it.",
+      nextStep: "On your next date, share something that's actually true about you instead of the version that's easy to like. Watch how that lands.",
+      cta: { label: "Read about attachment on the apps", href: "/blog/attachment-styles-on-dating-apps" },
+      color: "150 45% 55%",
+    },
+    anxious: {
+      name: "The Tuner",
+      emoji: "🎻",
+      tagline: "You feel people. You catch the small shifts. Your superpower is attunement, and your tax is overreading.",
+      insight: "Anxious attachment in early dating sounds like you giving someone else's silence a script. The cost: you're often soothing a story that isn't happening. The skill: noticing the activation, naming it to yourself, and waiting one full day before acting on it. Most of what you're reading as warning signal turns out to be their normal life.",
+      nextStep: "Next time their reply takes longer than feels comfortable, write what you want to send. Save it. Reread it tomorrow. Send only what still feels true.",
+      cta: { label: "Read about attachment on the apps", href: "/blog/attachment-styles-on-dating-apps" },
+      color: "326 75% 65%",
+    },
+    avoidant: {
+      name: "The Independent",
+      emoji: "🪨",
+      tagline: "You like your own space and you keep your own counsel. Closeness is welcome, but never at the cost of your sovereignty.",
+      insight: "Avoidant patterns in dating look like noticing flaws right when things get good, going quiet right when they ask for more, wanting the space more than the person sometimes. None of that means you're broken. It means closeness reads as a small threat to your system. The growth edge: name the pullback out loud instead of just doing it. 'I'm noticing I want some space this week' is a complete sentence.",
+      nextStep: "When you feel the urge to ghost or fade, send one honest sentence about needing a beat. Then take the beat. Don't disappear without the sentence.",
+      cta: { label: "Read about attachment on the apps", href: "/blog/attachment-styles-on-dating-apps" },
+      color: "228 22% 60%",
+    },
+    fearful: {
+      name: "The Push-Pull",
+      emoji: "🌊",
+      tagline: "You want closeness and you're scared of it, often in the same hour. Your inner world is louder than most people guess.",
+      insight: "Fearful avoidant patterns mean closeness and threat live close together in your nervous system. Wanting it and bolting from it isn't contradiction, it's the wiring. The work isn't to pick a side. It's to slow down enough that you can feel both, name both to the person if it's safe, and let the relationship metabolise both. The right partner can hold this. Many can't. That's information.",
+      nextStep: "Next time you feel both pulls at once, write 'I want closer and I want space' in your phone. Don't act on either for 24 hours. See which one survives a night's sleep.",
+      cta: { label: "Read about attachment on the apps", href: "/blog/attachment-styles-on-dating-apps" },
+      color: "270 50% 65%",
+    },
+  },
+};
+
+// ── Quiz 6: Post-Date Instinct ──────────────────────────────────────────────
+const POST_DATE_INSTINCT: Quiz = {
+  slug: "post-date-instinct",
+  title: "How do you actually process a date?",
+  pitch: "What you do in the hour after a date predicts more than the date itself. Find your processing pattern.",
+  durationSec: 60,
+  emoji: "🪞",
+  feeds: ["reflection.style", "reflection.recall", "reflection.action"],
+  questions: [
+    {
+      q: "You walk away from the date. First instinct in the next ten minutes?",
+      options: [
+        { label: "Body check. Am I lighter or heavier than when I arrived?", scores: { feeler: 2 }, wellness: { questionId: "reflection.style", dimension: "reflection", category: "style", questionText: "How do you process a date in the first ten minutes after?", answer: "I check my body before my thoughts." } },
+        { label: "Rebuild the conversation in my head. What did they actually say?", scores: { thinker: 2 }, wellness: { questionId: "reflection.style", dimension: "reflection", category: "style", questionText: "How do you process a date in the first ten minutes after?", answer: "I replay the conversation analytically." } },
+        { label: "Text the friend who's waiting for the recap.", scores: { narrator: 2 }, wellness: { questionId: "reflection.style", dimension: "reflection", category: "style", questionText: "How do you process a date in the first ten minutes after?", answer: "I narrate it to someone immediately." } },
+        { label: "Already imagining the next date. Or the next person.", scores: { forecaster: 2 }, wellness: { questionId: "reflection.style", dimension: "reflection", category: "style", questionText: "How do you process a date in the first ten minutes after?", answer: "I jump straight to what's next." } },
+      ],
+    },
+    {
+      q: "Two days later, what part of the date do you actually remember?",
+      options: [
+        { label: "How I felt sitting across from them. The mood of it.", scores: { feeler: 2 } },
+        { label: "Three specific things they said and what I thought about each one.", scores: { thinker: 2 } },
+        { label: "The version I told my friend. Whatever I left in becomes the date.", scores: { narrator: 2 } },
+        { label: "Whether it moved us toward a second one. The trajectory.", scores: { forecaster: 2 } },
+      ],
+    },
+    {
+      q: "They text the morning after: 'Had a great time.' Your first move?",
+      options: [
+        { label: "Sit with my reaction for a minute. See what comes up.", scores: { feeler: 2 } },
+        { label: "Read it twice. Notice the punctuation. Then respond.", scores: { thinker: 2, narrator: 1 } },
+        { label: "Screenshot it to a friend first, then write back.", scores: { narrator: 2 } },
+        { label: "Reply quick and start thinking about when to suggest the next one.", scores: { forecaster: 2 } },
+      ],
+    },
+    {
+      q: "Something in the date felt off but you can't name it. You...",
+      options: [
+        { label: "Trust the feeling. I usually know before I know.", scores: { feeler: 2 }, wellness: { questionId: "reflection.recall", dimension: "reflection", category: "recall", questionText: "What do you do with an unnamed bad feeling about a date?", answer: "I trust the gut signal and let it inform me." } },
+        { label: "Try to find the moment that caused it. Forensics mode.", scores: { thinker: 2 }, wellness: { questionId: "reflection.recall", dimension: "reflection", category: "recall", questionText: "What do you do with an unnamed bad feeling about a date?", answer: "I analyse for the specific moment." } },
+        { label: "Talk it out with a friend until I find the words.", scores: { narrator: 2 }, wellness: { questionId: "reflection.recall", dimension: "reflection", category: "recall", questionText: "What do you do with an unnamed bad feeling about a date?", answer: "I talk it out until language lands." } },
+        { label: "Wait and see if it changes by the next interaction.", scores: { forecaster: 2 }, wellness: { questionId: "reflection.recall", dimension: "reflection", category: "recall", questionText: "What do you do with an unnamed bad feeling about a date?", answer: "I park it and let the next data point decide." } },
+      ],
+    },
+    {
+      q: "If you wrote one note about each date the night of, you'd most naturally capture...",
+      options: [
+        { label: "How my body felt across the evening. Energy, tension, ease.", scores: { feeler: 2 }, wellness: { questionId: "reflection.action", dimension: "reflection", category: "action", questionText: "If you logged one post-date note, what would it capture?", answer: "Somatic and emotional read." } },
+        { label: "What they revealed about themselves and what I'm still unsure about.", scores: { thinker: 2 }, wellness: { questionId: "reflection.action", dimension: "reflection", category: "action", questionText: "If you logged one post-date note, what would it capture?", answer: "Insight about them and open questions." } },
+        { label: "The story version. The moments that became the moments.", scores: { narrator: 2 }, wellness: { questionId: "reflection.action", dimension: "reflection", category: "action", questionText: "If you logged one post-date note, what would it capture?", answer: "Narrative beats and memorable lines." } },
+        { label: "Whether I want a second date and why. One sentence, decision-shaped.", scores: { forecaster: 2 }, wellness: { questionId: "reflection.action", dimension: "reflection", category: "action", questionText: "If you logged one post-date note, what would it capture?", answer: "A clear next-step verdict." } },
+      ],
+    },
+  ],
+  archetypes: {
+    feeler: {
+      name: "The Body Reader",
+      emoji: "🫧",
+      tagline: "You know how a date went before your brain finishes the sentence. Your body keeps the receipts.",
+      insight: "Somatic processors are usually the most accurate readers in the room, and the most likely to second-guess what they already know. Your work isn't sharper analysis. It's learning to trust the first signal and then check it against the second date, not against your friend's opinion of the texts.",
+      nextStep: "After your next date, write one sentence about how your body felt at minute thirty. Before any analysis. Keep the note and reread it after date two.",
+      cta: { label: "Read the post-date reflection guide", href: "/blog/post-date-reflection-questions" },
+      color: "190 60% 60%",
+    },
+    thinker: {
+      name: "The Analyst",
+      emoji: "🔍",
+      tagline: "You don't move until you understand. You collect details others miss and pattern them later.",
+      insight: "Analytical processors catch things early. The cost: sometimes you over-investigate a person before you've actually been around them enough for the data to mean anything. Three dates of presence beats thirty hours of forensics on three messages.",
+      nextStep: "After your next date, write your usual analysis. Then write one sentence about what you'd do if you only trusted the feel of the evening. Both are real.",
+      cta: { label: "Read the post-date reflection guide", href: "/blog/post-date-reflection-questions" },
+      color: "248 62% 62%",
+    },
+    narrator: {
+      name: "The Storyteller",
+      emoji: "🎙️",
+      tagline: "The version you tell your friend becomes the version that's real. You make sense of people by giving them a shape.",
+      insight: "Story-making is how you metabolise dating, and that's a real strength. The catch: the framing locks in fast, and the friend you tell sometimes votes louder than the actual evening did. The skill is noticing which details you left out of the telling, because that's usually where the truth is hiding.",
+      nextStep: "After your next date, before the friend recap, write the version you'd tell yourself if no one else was listening. Compare them later.",
+      cta: { label: "Read the post-date reflection guide", href: "/blog/post-date-reflection-questions" },
+      color: "326 75% 65%",
+    },
+    forecaster: {
+      name: "The Forward Planner",
+      emoji: "🧭",
+      tagline: "You don't dwell. You decide. Dates are inputs to a question you're already answering.",
+      insight: "Forecasters keep dating moving and they don't get stuck. The shadow: the decision-orientation can skip past the present moment, and you can end up choosing the trajectory you can already see instead of the one this person could actually become. Slow down for date two and three even when your gut wants to call it.",
+      nextStep: "After your next date, before you decide anything about a second, list three things you noticed that weren't about whether to see them again. Then decide.",
+      cta: { label: "Read the post-date reflection guide", href: "/blog/post-date-reflection-questions" },
+      color: "43 65% 62%",
+    },
+  },
+};
+
+// ── Quiz 7: Message Stamina ─────────────────────────────────────────────────
+const MESSAGE_STAMINA: Quiz = {
+  slug: "message-stamina",
+  title: "What's your message stamina?",
+  pitch: "Some people open hot and fade. Some warm up slow. Five questions to find out what kind of texter you actually are.",
+  durationSec: 60,
+  emoji: "💬",
+  feeds: ["messaging.opener", "messaging.pace", "messaging.fade"],
+  questions: [
+    {
+      q: "Match. First message goes out. When?",
+      options: [
+        { label: "Within an hour. Strike while it's hot.", scores: { sprinter: 2 }, wellness: { questionId: "messaging.opener", dimension: "messaging", category: "opener", questionText: "When do you typically send the first message after a match?", answer: "Within the hour." } },
+        { label: "Same day, when I have something specific to say.", scores: { pacer: 2 }, wellness: { questionId: "messaging.opener", dimension: "messaging", category: "opener", questionText: "When do you typically send the first message after a match?", answer: "Same day, when I have a real opener." } },
+        { label: "Two or three days in. I like to see who's still around.", scores: { slowStarter: 2 }, wellness: { questionId: "messaging.opener", dimension: "messaging", category: "opener", questionText: "When do you typically send the first message after a match?", answer: "After a few days." } },
+        { label: "I usually wait for them to open.", scores: { stayer: 1, slowStarter: 1 } },
+      ],
+    },
+    {
+      q: "Day three of messaging. The energy from your side is...",
+      options: [
+        { label: "Honestly, lower. I'm ready to move it offline or move on.", scores: { sprinter: 2 } },
+        { label: "Steady. Same effort as day one.", scores: { pacer: 2, stayer: 1 } },
+        { label: "Warmer than day one. I open up slowly.", scores: { slowStarter: 2 } },
+        { label: "More invested. The longer it builds, the more I bring.", scores: { stayer: 2 } },
+      ],
+    },
+    {
+      q: "They reply less often than you'd like but still engaged. You...",
+      options: [
+        { label: "Match their pace down. I'm not chasing.", scores: { sprinter: 1, pacer: 1 } },
+        { label: "Keep my pace. Their rhythm is theirs.", scores: { pacer: 2 } },
+        { label: "Read it as space and lean back further.", scores: { slowStarter: 2 } },
+        { label: "Stay warm and consistent. The drop isn't on me.", scores: { stayer: 2 } },
+      ],
+    },
+    {
+      q: "Honest read on when you tend to lose interest in a thread?",
+      options: [
+        { label: "Fast. If we don't get a date set in a week, I'm gone.", scores: { sprinter: 2 }, wellness: { questionId: "messaging.fade", dimension: "messaging", category: "fade", questionText: "When do you typically lose interest in a messaging thread?", answer: "Within a week if no date is set." } },
+        { label: "When the conversation goes circular. Effort matters more than time.", scores: { pacer: 2 }, wellness: { questionId: "messaging.fade", dimension: "messaging", category: "fade", questionText: "When do you typically lose interest in a messaging thread?", answer: "When effort drops, not on a clock." } },
+        { label: "When I realise I'm putting in more than they are.", scores: { slowStarter: 2, stayer: 1 } },
+        { label: "Slowly. I'll stay longer than I should.", scores: { stayer: 2 }, wellness: { questionId: "messaging.fade", dimension: "messaging", category: "fade", questionText: "When do you typically lose interest in a messaging thread?", answer: "Slowly. I tend to overstay." } },
+      ],
+    },
+    {
+      q: "When you ask someone out, it usually happens...",
+      options: [
+        { label: "Quickly. I'd rather meet than text forever.", scores: { sprinter: 2, pacer: 1 } },
+        { label: "When the conversation has hit a moment that earns it.", scores: { pacer: 2 } },
+        { label: "Later than feels normal. I want to feel comfortable first.", scores: { slowStarter: 2 } },
+        { label: "When they ask me, usually. I'd rather they decide.", scores: { stayer: 1, slowStarter: 1 } },
+      ],
+    },
+  ],
+  archetypes: {
+    sprinter: {
+      name: "The Sprinter",
+      emoji: "⚡",
+      tagline: "You open hot and you don't believe in long text relationships. You want the actual person, fast.",
+      insight: "Sprinters convert matches into dates better than most. The cost: the people who need more runway never get a fair shot with you, and you can come across as more intense than you actually are. The skill: noticing whether someone's slower pace is disinterest or just a different rhythm, and giving the rhythm one more beat before you decide.",
+      nextStep: "Next match where you'd usually push for a date by day four, hold for one extra day. See what they bring when you stop carrying the tempo.",
+      cta: { label: "Read the three-message test", href: "/blog/three-message-test" },
+      color: "0 78% 60%",
+    },
+    pacer: {
+      name: "The Pacer",
+      emoji: "🎯",
+      tagline: "You match what's in front of you. Effort meets effort, depth meets depth. People feel met by you because they actually are.",
+      insight: "Pacers are the most replicable kind of dater. Your edge is calibration. Your edge case: when someone is a slow starter, your perfect matching can feel like indifference because you give back exactly what they give. Sometimes the move is to slightly outpace them in one specific way that says you're paying attention.",
+      nextStep: "On your next thread, send one message a little warmer than what they last gave you. Notice what comes back.",
+      cta: { label: "Read the three-message test", href: "/blog/three-message-test" },
+      color: "150 45% 55%",
+    },
+    slowStarter: {
+      name: "The Slow Starter",
+      emoji: "🌱",
+      tagline: "You warm up. Your early messages are not your best ones, and that's fine because your real self shows up around day five.",
+      insight: "Slow starters often miss out on people who needed a stronger early signal to stay invested. The good news: your stamina is high once a thread takes. The skill: front-loading one specific, real, slightly riskier message in the first three exchanges so the people who would love your full self get a reason to wait for it.",
+      nextStep: "In your next opening exchange, share one specific true thing that isn't easy to say in three words. Watch which people lean in.",
+      cta: { label: "Read the three-message test", href: "/blog/three-message-test" },
+      color: "190 60% 60%",
+    },
+    stayer: {
+      name: "The Stayer",
+      emoji: "🪵",
+      tagline: "You bring sustained warmth. People feel held by you for longer than they're used to. This is rare and worth protecting.",
+      insight: "Stayers are who people remember and miss. The shadow: you can outstay your own interest because leaving feels worse than continuing, and you can over-invest in threads that aren't reciprocating because consistency is your default. The growth edge: noticing when sustained warmth is care and when it's avoidance of the harder move of ending it.",
+      nextStep: "Audit your last three fading threads. Was the right move to keep showing up, or to send one clean closing message? Practice the closing message next time.",
+      cta: { label: "Read the three-message test", href: "/blog/three-message-test" },
+      color: "43 65% 62%",
+    },
+  },
+};
+
+export const QUIZZES: Quiz[] = [
+  LOVE_PACE,
+  CONFLICT_INSTINCT,
+  ENERGY_SOURCES,
+  BOUNDARY_BLUEPRINT,
+  ATTACHMENT_STYLE,
+  POST_DATE_INSTINCT,
+  MESSAGE_STAMINA,
+];
+
+export const QUIZ_BY_BLOG_SLUG: Record<string, string> = {
+  "attachment-styles-on-dating-apps": "attachment-style",
+  "post-date-reflection-questions": "post-date-instinct",
+  "three-message-test": "message-stamina",
+};
 
 export function getQuizBySlug(slug: string): Quiz | undefined {
   return QUIZZES.find(q => q.slug === slug);

@@ -6,7 +6,9 @@ import { useMeta } from "@/hooks/useMeta";
 import { motion } from "framer-motion";
 import { Clock, ArrowLeft, ArrowRight, Sparkles, BookOpen } from "lucide-react";
 import { ARTICLES } from "@/lib/blogArticles";
+import { QUIZ_BY_BLOG_SLUG, getQuizBySlug } from "@/lib/quizzes";
 import { trackEvent } from "@/lib/analytics";
+import { ShareButton } from "@/components/echo/ShareButton";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -1274,6 +1276,46 @@ export default function BlogPost({ slug }: { slug: string }) {
               </motion.div>
             );
           })()}
+
+          {/* Related quiz (if blog post has a matching quiz) */}
+          {(() => {
+            const quizSlug = QUIZ_BY_BLOG_SLUG[article.slug];
+            const quiz = quizSlug ? getQuizBySlug(quizSlug) : undefined;
+            if (!quiz) return null;
+            return (
+              <motion.div
+                {...fadeUp(0.22)}
+                className="mt-8 glass rounded-2xl p-6"
+                style={{ borderColor: withAlpha(article.color, 0.25), borderWidth: "1px", borderStyle: "solid" }}
+              >
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 mb-2">Related quiz</p>
+                <h3 className="font-serif text-lg font-bold text-foreground mb-2">{quiz.emoji} {quiz.title}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{quiz.pitch}</p>
+                <Link
+                  href={`/quiz/${quiz.slug}`}
+                  onClick={() => trackEvent("blog_related_quiz_click", { blog_slug: article.slug, quiz_slug: quiz.slug })}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition-colors text-sm font-semibold text-foreground"
+                >
+                  Take the quiz <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </motion.div>
+            );
+          })()}
+
+          {/* Share */}
+          <motion.div {...fadeUp(0.23)} className="mt-8 flex justify-center">
+            <ShareButton
+              surface="blog-post"
+              title={article.title}
+              text={article.excerpt}
+              path={`/blog/${article.slug}`}
+              ref={article.slug}
+              variant="ghost"
+              label="Share this piece"
+              copiedLabel="Link copied"
+              testId={`share-blog-${article.slug}`}
+            />
+          </motion.div>
 
           {/* Prev/next */}
           {(prev || next) && (
