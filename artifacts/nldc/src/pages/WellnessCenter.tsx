@@ -423,20 +423,54 @@ function ProgressRing({ pct, color, size = 56 }: { pct: number; color: string; s
 
 const FEATURE_ORDER: FeatureKey[] = ["compass", "coach", "report", "insights"];
 
+const FEATURE_CHIP_COLOR: Record<FeatureKey, string> = {
+  compass:  "hsl(248 62% 62%)",
+  coach:    "hsl(190 55% 60%)",
+  report:   "hsl(326 100% 65%)",
+  insights: "hsl(43 65% 72%)",
+};
+
 function FeatureBadges({ dimensionId }: { dimensionId: string }) {
   const features = getFeaturesForDimension(dimensionId);
   if (!features.length) return null;
   return (
     <div className="flex flex-wrap gap-1 mt-2">
-      {features.map(f => (
-        <span
-          key={f}
-          className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full border border-white/10 bg-white/3 text-muted-foreground/70"
-        >
-          Feeds {FEATURE_META[f].label}
-        </span>
-      ))}
+      <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/40 self-center">
+        Feeds
+      </span>
+      {features.map(f => {
+        const c = FEATURE_CHIP_COLOR[f];
+        return (
+          <span
+            key={f}
+            className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full border"
+            style={{ color: c, borderColor: withAlpha(c, 0.3), background: withAlpha(c, 0.08) }}
+          >
+            {FEATURE_META[f].short}
+          </span>
+        );
+      })}
     </div>
+  );
+}
+
+type DimensionState = "answered" | "partial" | "empty";
+
+function StateChip({ state }: { state: DimensionState }) {
+  const meta: Record<DimensionState, { label: string; color: string }> = {
+    answered: { label: "Answered", color: "hsl(var(--brand-green))" },
+    partial:  { label: "Partial",  color: "hsl(var(--brand-gold))" },
+    empty:    { label: "Empty",    color: "hsl(220 10% 55%)" },
+  };
+  const m = meta[state];
+  return (
+    <span
+      className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border"
+      style={{ color: m.color, borderColor: withAlpha(m.color, 0.3), background: withAlpha(m.color, 0.08) }}
+      data-testid={`dimension-state-${state}`}
+    >
+      {m.label}
+    </span>
   );
 }
 
@@ -459,16 +493,23 @@ function DimensionInlineRow({
 
   if (!meta) return null;
 
+  const state: DimensionState = answered === 0 ? "empty" : answered >= total ? "answered" : "partial";
+
   return (
-    <div className="rounded-xl border border-white/8 bg-white/2 overflow-hidden">
-      <div className="flex items-start gap-3 p-4">
+    <div className="rounded-xl border border-white/8 bg-white/2 overflow-hidden" data-testid={`dimension-row-${dimensionId}`}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-start gap-3 p-4 text-left hover:bg-white/3 transition-colors"
+      >
         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
           style={{ background: withAlpha(meta.color, 0.13) }}>
           <Icon className="w-4 h-4" style={{ color: meta.color }} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold text-foreground">{meta.label}</p>
+            <StateChip state={state} />
             <span className="text-[10px] tabular-nums text-muted-foreground/60">
               {answered}/{total}
             </span>
@@ -477,17 +518,13 @@ function DimensionInlineRow({
           <FeatureBadges dimensionId={dimensionId} />
         </div>
         <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setOpen(o => !o)}
-            className="rounded-full text-[11px] h-7 px-3 border-white/15"
-          >
+          <span className="inline-flex items-center gap-1 rounded-full text-[11px] h-7 px-3 border border-white/15 text-foreground/80">
             {open ? "Close" : pct === 0 ? "Start" : pct === 100 ? "Review" : "Continue"}
-          </Button>
+            {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </span>
           <span className="text-[9px] tabular-nums text-muted-foreground/50">{pct}%</span>
         </div>
-      </div>
+      </button>
       <div className="px-4 pb-2">
         <Progress value={pct} className="h-1 bg-white/8" />
       </div>
@@ -533,9 +570,14 @@ function DomainCard({
   const total = allQuestions.length;
   const pct = total === 0 ? 0 : Math.round((answered / total) * 100);
 
+  const dimsWithData = domain.dimensionIds.filter(dim =>
+    WELLNESS_QUESTIONS.some(q => q.dimension === dim && answeredIds.has(q.id)),
+  ).length;
+
   return (
     <button
       onClick={onToggle}
+      data-testid={`domain-card-${domain.id}`}
       className={`text-left rounded-2xl border p-4 transition-all w-full ${
         expanded ? "border-white/20 bg-white/4" : "border-white/8 bg-white/2 hover:border-white/15"
       }`}
@@ -547,7 +589,7 @@ function DomainCard({
           <p className="text-sm font-semibold text-foreground leading-tight">{domain.label}</p>
           <p className="text-[11px] text-muted-foreground/70 leading-snug mt-1">{domain.description}</p>
           <p className="text-[10px] text-muted-foreground/50 mt-2 tabular-nums">
-            {answered} of {total} questions answered · {domain.dimensionIds.length} dimensions
+            {dimsWithData} of {domain.dimensionIds.length} dimensions with data · {answered}/{total} questions
           </p>
         </div>
       </div>
@@ -574,22 +616,42 @@ function DomainOverview({
   return (
     <motion.div {...fadeUp(0.14)} className="mb-6">
       {/* Top-level horizontal progress */}
-      <div className="glass-strong rounded-2xl border border-white/5 p-5 mb-4">
-        <div className="flex items-center justify-between gap-3 mb-2">
+      <div className="glass-strong rounded-2xl border border-white/5 p-5 mb-4" data-testid="wellness-density-summary">
+        <div className="flex items-center justify-between gap-4 mb-3 flex-wrap">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Overall progress</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Wellness density</p>
             <p className="text-sm font-semibold text-foreground mt-0.5">
-              {dimensionsExplored} of 18 dimensions explored
+              {dimensionsExplored} of 18 dimensions have data
+            </p>
+            <p className="text-[11px] text-muted-foreground/60 mt-0.5 leading-relaxed">
+              Density grows as you touch more dimensions. Depth grows as you answer more questions in each.
             </p>
           </div>
-          <div className="text-right">
-            <p className="text-2xl font-bold tabular-nums text-foreground">{overallPct}%</p>
-            <p className="text-[9px] uppercase tracking-widest text-muted-foreground/50">
-              {totalAnswered} of {totalQuestions} answered
-            </p>
+          <div className="flex items-center gap-5">
+            <div className="text-right">
+              <p className="text-2xl font-bold tabular-nums" style={{ color: "hsl(248 62% 65%)" }}>
+                {Math.round((dimensionsExplored / 18) * 100)}%
+              </p>
+              <p className="text-[9px] uppercase tracking-widest text-muted-foreground/50">density</p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold tabular-nums text-foreground">{overallPct}%</p>
+              <p className="text-[9px] uppercase tracking-widest text-muted-foreground/50">
+                depth · {totalAnswered}/{totalQuestions}
+              </p>
+            </div>
           </div>
         </div>
-        <Progress value={overallPct} className="h-2 bg-white/8" />
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 w-14">Density</span>
+            <Progress value={Math.round((dimensionsExplored / 18) * 100)} className="h-1.5 bg-white/8 flex-1" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] uppercase tracking-widest text-muted-foreground/40 w-14">Depth</span>
+            <Progress value={overallPct} className="h-1.5 bg-white/8 flex-1" />
+          </div>
+        </div>
       </div>
 
       {/* Domain grid */}

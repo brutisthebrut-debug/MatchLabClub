@@ -131,8 +131,8 @@ export default function YourMirror() {
           <p className="mt-3 max-w-2xl text-base text-muted-foreground md:text-lg">
             The deterministic view: what keeps coming up as a strength, what
             keeps coming up as a risk, and how your score has moved since you
-            started. No external AI — every signal here is computed from your
-            own audit history.
+            started. Every signal here is computed from your own audit history
+            by the deterministic engine. No Claude pass on this page.
           </p>
         </motion.div>
 
@@ -368,7 +368,7 @@ export default function YourMirror() {
                     Deterministic engine
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    v{data.engineVersion} · no external AI
+                    v{data.engineVersion} · deterministic only on this view
                   </p>
                 </CardContent>
               </Card>

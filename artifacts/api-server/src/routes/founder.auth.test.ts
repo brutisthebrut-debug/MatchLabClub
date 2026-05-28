@@ -48,8 +48,8 @@ describe("founder route auth", () => {
       expect(res.status).toBe(401);
     });
 
-    it("returns 401 with a wrong query key", async () => {
-      const res = await request(app).get(`${route}?key=wrongkey`);
+    it("returns 401 with a query-param key (no longer accepted)", async () => {
+      const res = await request(app).get(`${route}?key=${VALID_KEY}`);
       expect(res.status).toBe(401);
     });
 
@@ -57,12 +57,6 @@ describe("founder route auth", () => {
       const res = await request(app)
         .get(route)
         .set("x-founder-key", VALID_KEY);
-      expect(res.status).not.toBe(401);
-    });
-
-    it("passes auth with a valid query key", async () => {
-      const sep = route.includes("?") ? "&" : "?";
-      const res = await request(app).get(`${route}${sep}key=${VALID_KEY}`);
       expect(res.status).not.toBe(401);
     });
   });

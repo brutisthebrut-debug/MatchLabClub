@@ -10,7 +10,9 @@ import {
   getOcrPendingRules, approveOcrRule, rejectOcrRule, getOcrRuleReviewLog,
   getAlertSettings, updateAlertSettings, resetAlertSettings,
   getMatchingQueue, getMatchingPool, setMatchingProposalStatus, addMatchingProposalNote,
+  getReferralAttribution, getEchoUserSignals,
   type MatchingQueueItem, type MatchingPoolItem,
+  type ReferralAttributionResponse, type EchoUserSignalsResponse,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
   type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
   type AiThresholdChange, type RollupHeartbeatResponse,
@@ -27,6 +29,15 @@ import { useListAudits, useGetWaitlistStats, useGetCoachFollowUpTimeline, useGet
 import { Lock, LogOut, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock, Share2, Heart, MapPin } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
 import { EchoPlaybookPanel } from "@/components/founder/EchoPlaybookPanel";
+import {
+  nextStepForUser,
+  whatEchoWouldNotDo,
+  voiceNoteForTomorrow,
+  pricingNudgeForUser,
+  conciergeFlagForUser,
+  type EchoDecision,
+  type EchoUserSignals,
+} from "@workspace/echo";
 import { toast } from "@/hooks/use-toast";
 
 type AiMode = "live" | "fallback" | "setup-needed";
@@ -1256,6 +1267,344 @@ function TierFlipPanel({ founderKey }: { founderKey: string }) {
           <span>{err}</span>
         </div>
       )}
+    </div>
+  );
+}
+
+function EchoCopilotPanel({ founderKey }: { founderKey: string }) {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [signals, setSignals] = useState<EchoUserSignals | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const run = async () => {
+    if (loading) return;
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed || !trimmed.includes("@")) {
+      setErr("Enter a valid email.");
+      setSignals(null);
+      return;
+    }
+    setLoading(true);
+    setErr(null);
+    setSignals(null);
+    try {
+      const res: EchoUserSignalsResponse = await getEchoUserSignals(founderKey, trimmed);
+      setSignals(res.signals);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to load user signals.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const decisions: Array<{ key: string; label: string; decision: EchoDecision | null }> = signals
+    ? [
+        { key: "next", label: "Next step Echo would take", decision: nextStepForUser(signals) },
+        { key: "not", label: "What Echo would NOT do", decision: whatEchoWouldNotDo(signals) },
+        { key: "voice", label: "Voice note for tomorrow", decision: voiceNoteForTomorrow(signals) },
+        { key: "pricing", label: "Pricing read", decision: pricingNudgeForUser(signals) },
+        { key: "concierge", label: "Concierge flag", decision: conciergeFlagForUser(signals) },
+      ]
+    : [];
+
+  return (
+    <div className="glass rounded-2xl p-6 space-y-4" data-testid="echo-copilot-panel">
+      <div className="space-y-1">
+        <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
+          Echo copilot
+        </p>
+        <p className="text-base font-semibold text-foreground">
+          What Echo would do
+        </p>
+        <p className="text-xs text-muted-foreground/80">
+          Look up a user by email. Echo reads their signals and tells you the next step, what to avoid, and a paste-ready voice note. Read-only. You decide and act elsewhere.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex-1 min-w-[220px]">
+          <label className="block text-xs text-muted-foreground/80 mb-1" htmlFor="echo-copilot-email">
+            User email
+          </label>
+          <input
+            id="echo-copilot-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="user@example.com"
+            data-testid="input-echo-copilot-email"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                void run();
+              }
+            }}
+            className="w-full rounded-xl px-3 py-2 text-sm bg-background/40 border border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => void run()}
+          disabled={loading}
+          data-testid="button-echo-copilot-read"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_72%)] border border-[hsl(248_62%_52%/0.4)] hover:bg-[hsl(248_62%_52%/0.3)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+        >
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+          {loading ? "Reading…" : "Read this user"}
+        </button>
+      </div>
+
+      {err && (
+        <div
+          className="rounded-xl p-3 border flex items-start gap-2 text-sm"
+          style={{
+            background: "hsl(348 55% 58% / 0.10)",
+            borderColor: "hsl(348 55% 58% / 0.40)",
+            color: "hsl(348 55% 78%)",
+          }}
+          data-testid="echo-copilot-error"
+        >
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>{err}</span>
+        </div>
+      )}
+
+      {signals && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="echo-copilot-signals">
+            <div className="glass rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Tier</p>
+              <p className="text-sm font-bold text-foreground mt-1">{signals.tier ?? "unpaid"}</p>
+            </div>
+            <div className="glass rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Age (days)</p>
+              <p className="text-sm font-bold text-foreground mt-1">{signals.ageDays ?? "—"}</p>
+            </div>
+            <div className="glass rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Audits</p>
+              <p className="text-sm font-bold text-foreground mt-1">{signals.auditCount}</p>
+            </div>
+            <div className="glass rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Wellness answers</p>
+              <p className="text-sm font-bold text-foreground mt-1">{signals.wellnessAnswerCount}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {decisions.map(({ key, label, decision }) => {
+              if (!decision) {
+                return (
+                  <div
+                    key={key}
+                    className="glass rounded-xl p-4 space-y-2 opacity-60"
+                    data-testid={`echo-copilot-card-${key}`}
+                  >
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">
+                      {label}
+                    </p>
+                    <p className="text-sm text-muted-foreground/70">Echo has nothing to say here right now.</p>
+                  </div>
+                );
+              }
+              return (
+                <div
+                  key={key}
+                  className="glass rounded-xl p-4 space-y-2"
+                  data-testid={`echo-copilot-card-${key}`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">
+                      {label}
+                    </p>
+                    <span
+                      className="text-[9px] uppercase tracking-wider text-muted-foreground/50 px-1.5 py-0.5 rounded bg-white/5 border border-white/5 font-mono"
+                      data-testid={`echo-copilot-fn-${key}`}
+                    >
+                      {decision.fn}
+                    </span>
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">{decision.title}</p>
+                  <p className="text-xs text-muted-foreground/80 leading-relaxed">{decision.body}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReferralAttributionPanel({ founderKey }: { founderKey: string }) {
+  const [data, setData] = useState<ReferralAttributionResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setErr(null);
+    getReferralAttribution(founderKey)
+      .then((res) => {
+        if (!cancelled) setData(res);
+      })
+      .catch((e) => {
+        if (!cancelled) setErr(e instanceof Error ? e.message : "Failed to load attribution");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [founderKey, reloadKey]);
+
+  const totals = data?.totals;
+  const topReferrers = data?.topReferrers ?? [];
+  const topSurfaces = data?.topSurfaces ?? [];
+  const maxSurfaceCount = topSurfaces.reduce((m, s) => Math.max(m, s.count), 0);
+  const invitersWithConversion = topReferrers.filter((r) => r.paidConversions > 0).length;
+  const overallPct = totals ? Math.round(totals.overallConversionRate * 1000) / 10 : 0;
+
+  return (
+    <div className="glass rounded-2xl p-6 space-y-4" data-testid="referral-attribution-panel">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="space-y-1">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
+            Referral attribution
+          </p>
+          <p className="text-base font-semibold text-foreground">
+            Who brings paying customers in
+          </p>
+          <p className="text-xs text-muted-foreground/80">
+            Paid means tier is reset or wingman. Surfaces show where the share link was tapped before signup.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setReloadKey((k) => k + 1)}
+          disabled={loading}
+          data-testid="button-refresh-referral-attribution"
+          className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-colors disabled:opacity-60"
+        >
+          {loading ? "Loading…" : "Refresh"}
+        </button>
+      </div>
+
+      {err && (
+        <div
+          className="rounded-xl p-3 border flex items-start gap-2 text-sm"
+          style={{
+            background: "hsl(348 55% 58% / 0.10)",
+            borderColor: "hsl(348 55% 58% / 0.40)",
+            color: "hsl(348 55% 78%)",
+          }}
+          data-testid="referral-attribution-error"
+        >
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>{err}</span>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="glass rounded-xl p-3" data-testid="stat-referral-total">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Total referrals</p>
+          <p className="text-xl font-bold text-foreground mt-1">{totals?.totalReferrals ?? "0"}</p>
+        </div>
+        <div className="glass rounded-xl p-3" data-testid="stat-referral-inviters-converting">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Inviters converting</p>
+          <p className="text-xl font-bold text-foreground mt-1">{data ? invitersWithConversion : "0"}</p>
+        </div>
+        <div className="glass rounded-xl p-3" data-testid="stat-referral-paid-converts">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Paid converts</p>
+          <p className="text-xl font-bold text-foreground mt-1">{totals?.totalPaidConverts ?? "0"}</p>
+        </div>
+        <div className="glass rounded-xl p-3" data-testid="stat-referral-conversion-rate">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Overall conversion</p>
+          <p className="text-xl font-bold text-foreground mt-1">{totals ? `${overallPct}%` : "0%"}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="glass rounded-xl p-4 space-y-3" data-testid="referral-top-inviters">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">Top inviters</p>
+          {loading && !data ? (
+            <p className="text-xs text-muted-foreground/70">Loading…</p>
+          ) : topReferrers.length === 0 ? (
+            <p className="text-xs text-muted-foreground/70">No referrals yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-left text-muted-foreground/60">
+                    <th className="py-1.5 pr-3 font-medium">#</th>
+                    <th className="py-1.5 pr-3 font-medium">Inviter</th>
+                    <th className="py-1.5 pr-3 font-medium text-right">Invited</th>
+                    <th className="py-1.5 pr-3 font-medium text-right">Paid</th>
+                    <th className="py-1.5 font-medium text-right">Rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topReferrers.map((r, idx) => {
+                    const ratePct = Math.round(r.conversionRate * 1000) / 10;
+                    const label = r.inviterFirstName
+                      ? `${r.inviterFirstName} (${r.inviterEmail || "no email"})`
+                      : r.inviterEmail || r.inviterUserId;
+                    return (
+                      <tr
+                        key={r.inviterUserId}
+                        className="border-t border-white/5"
+                        data-testid={`referral-inviter-row-${r.inviterUserId}`}
+                      >
+                        <td className="py-1.5 pr-3 text-muted-foreground/70">{idx + 1}</td>
+                        <td className="py-1.5 pr-3 text-foreground truncate max-w-[220px]" title={label}>{label}</td>
+                        <td className="py-1.5 pr-3 text-right text-foreground">{r.inviteeCount}</td>
+                        <td className="py-1.5 pr-3 text-right text-foreground">{r.paidConversions}</td>
+                        <td className="py-1.5 text-right text-foreground">{ratePct}%</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="glass rounded-xl p-4 space-y-3" data-testid="referral-top-surfaces">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">Surfaces driving referrals</p>
+          {loading && !data ? (
+            <p className="text-xs text-muted-foreground/70">Loading…</p>
+          ) : topSurfaces.length === 0 ? (
+            <p className="text-xs text-muted-foreground/70">No surface data yet.</p>
+          ) : (
+            <ul className="space-y-2">
+              {topSurfaces.map((s) => {
+                const pct = maxSurfaceCount > 0 ? (s.count / maxSurfaceCount) * 100 : 0;
+                return (
+                  <li
+                    key={s.surface}
+                    className="space-y-1"
+                    data-testid={`referral-surface-row-${s.surface}`}
+                  >
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-foreground truncate pr-3">{s.surface}</span>
+                      <span className="text-muted-foreground/80 tabular-nums">{s.count}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${pct}%`, background: "hsl(var(--brand-indigo))" }}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -3438,6 +3787,8 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
           <BackgroundJobsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
           <TrashPurgePanel founderKey={FOUNDER_KEY} onPurged={() => setRefreshKey((k) => k + 1)} />
           <TierFlipPanel founderKey={FOUNDER_KEY} />
+          <ReferralAttributionPanel founderKey={FOUNDER_KEY} />
+          <EchoCopilotPanel founderKey={FOUNDER_KEY} />
           <GeoipRefreshPanel founderKey={FOUNDER_KEY} />
           <OcrMismatchesPanel refreshKey={refreshKey} />
           <AiMetricsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />

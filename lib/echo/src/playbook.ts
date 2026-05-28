@@ -72,3 +72,201 @@ export const PLAYBOOK: readonly PlaybookEntry[] = [
 export function getPlaybookEntry(id: string): PlaybookEntry | undefined {
   return PLAYBOOK.find(e => e.id === id);
 }
+
+/**
+ * Echo decision helpers used by the founder dashboard copilot (T122).
+ *
+ * The PLAYBOOK above is the strategic decision log (long-form, dated entries
+ * for the founder). These helpers are the per-user inference layer: given the
+ * signals the founder dashboard has on a single user, what would Echo
+ * actually do next? They are deliberately small and deterministic so the
+ * founder can read them, debug them, and trust them. When a decision needs
+ * to become a real product mutation, lift it out of here into a proper
+ * service. For now this is the read-only Echo copilot's brain.
+ */
+
+export interface EchoUserSignals {
+  email: string;
+  tier: "free" | "reset" | "wingman" | null;
+  createdAt: string | null;
+  ageDays: number | null;
+  auditCount: number;
+  lastAuditAt: string | null;
+  wellnessAnswerCount: number;
+  lifePulseCount: number;
+  consentGranted: boolean;
+  invitedByUserId: string | null;
+  invitedAt: string | null;
+}
+
+export interface EchoDecision {
+  /** Name of the playbook function that produced this decision. */
+  fn: string;
+  /** Short title (founder-facing). */
+  title: string;
+  /** One to three sentences, Echo voice, paste-ready. */
+  body: string;
+}
+
+/**
+ * What Echo would do next for this user. Returns one concrete next action.
+ */
+export function nextStepForUser(s: EchoUserSignals): EchoDecision {
+  const fn = "nextStepForUser";
+  const age = s.ageDays ?? 0;
+  if (s.tier === "wingman") {
+    return {
+      fn,
+      title: "Mark for concierge intro this week",
+      body: "Wingman tier. They paid for human contact. Add to the concierge intro queue and reach out personally within seven days.",
+    };
+  }
+  if (s.tier === "reset" && s.wellnessAnswerCount >= 6) {
+    return {
+      fn,
+      title: "Offer the Wingman upgrade conversation",
+      body: "Reset tier with a meaningful wellness profile. The product moat is now built. Worth a low-pressure Wingman conversation.",
+    };
+  }
+  if (s.tier === null && s.auditCount >= 2 && age >= 3) {
+    return {
+      fn,
+      title: "Send the Day-3 nudge",
+      body: "Two or more audits run, three or more days in, still unpaid. Send the Day-3 nudge that points back to their own readiness score.",
+    };
+  }
+  if (s.tier === null && s.auditCount === 0 && age >= 1) {
+    return {
+      fn,
+      title: "Send the empty-account ping",
+      body: "Signed up, no audits run. Send the gentle ping with the sample report link so they can see the value before committing to their own data.",
+    };
+  }
+  if (s.tier === null && s.auditCount >= 1 && age < 3) {
+    return {
+      fn,
+      title: "Wait. They are still in the first 72 hours.",
+      body: "First three days are the user's, not ours. Let the product do its job. Re-check on Day 3.",
+    };
+  }
+  return {
+    fn,
+    title: "Wait 7 days, no action",
+    body: "Nothing in their signals warrants an interruption. Re-read next week.",
+  };
+}
+
+/**
+ * The thing Echo would explicitly avoid doing for this user. Pairs with
+ * nextStepForUser to keep the founder from over-reaching.
+ */
+export function whatEchoWouldNotDo(s: EchoUserSignals): EchoDecision {
+  const fn = "whatEchoWouldNotDo";
+  if (s.tier === "wingman") {
+    return {
+      fn,
+      title: "Do not auto-email this user",
+      body: "Wingman customers get human contact only. Generic broadcasts erode the tier's promise. If something automated needs to go out, exclude this address.",
+    };
+  }
+  if (s.tier === null && (s.ageDays ?? 0) < 1) {
+    return {
+      fn,
+      title: "Do not pitch pricing yet",
+      body: "Less than a day in. They have not seen enough of the product to evaluate the offer. A pricing email now reads as a shakedown.",
+    };
+  }
+  if (s.auditCount === 0) {
+    return {
+      fn,
+      title: "Do not send a results email",
+      body: "No audits on file. There is no result to reference. Any results-shaped email will land hollow.",
+    };
+  }
+  return {
+    fn,
+    title: "Do not broadcast at them this week",
+    body: "Their signal is steady. A generic newsletter blast at this account adds noise and erodes future open rates.",
+  };
+}
+
+/**
+ * Paste-ready Echo voice line the founder can drop into an email or DM. No
+ * em dashes (voice rule). One short, specific sentence the founder could
+ * legitimately send.
+ */
+export function voiceNoteForTomorrow(s: EchoUserSignals): EchoDecision {
+  const fn = "voiceNoteForTomorrow";
+  if (s.tier === "wingman") {
+    return {
+      fn,
+      title: "Send tomorrow",
+      body: "I want to set up a thirty minute intro this week. Bring one screenshot you would like me to look at first.",
+    };
+  }
+  if (s.tier === "reset") {
+    return {
+      fn,
+      title: "Send tomorrow",
+      body: "You have been steady with the audits. If you want a sharper read on patterns, I can do a Wingman style session this month. No pressure either way.",
+    };
+  }
+  if (s.tier === null && s.auditCount >= 2) {
+    return {
+      fn,
+      title: "Send tomorrow",
+      body: "Two audits in. The pattern I would watch for next is whether the same line keeps showing up in different bios. If it does, that is the one to rewrite first.",
+    };
+  }
+  if (s.tier === null && s.auditCount === 0 && (s.ageDays ?? 0) >= 1) {
+    return {
+      fn,
+      title: "Send tomorrow",
+      body: "If you do not have a screenshot handy, the sample report shows the format. Tell me which section you would want sharper on your own bio and I will start there.",
+    };
+  }
+  return {
+    fn,
+    title: "Hold for now",
+    body: "Nothing to send tomorrow. The right note will write itself once they take the next action.",
+  };
+}
+
+/**
+ * Whether Echo thinks a pricing nudge is currently appropriate. Returns null
+ * when the answer is no (i.e. do not surface a card).
+ */
+export function pricingNudgeForUser(s: EchoUserSignals): EchoDecision | null {
+  const fn = "pricingNudgeForUser";
+  if (s.tier !== null) return null;
+  if (s.auditCount < 3) return null;
+  if ((s.ageDays ?? 0) < 5) return null;
+  return {
+    fn,
+    title: "Pricing nudge is on the table",
+    body: "Three or more audits, five or more days, still unpaid. Reset at ninety seven dollars is the natural ask. Wingman is not the right pitch yet.",
+  };
+}
+
+/**
+ * Whether to flag this user for concierge attention regardless of tier.
+ * Returns null when no flag is warranted.
+ */
+export function conciergeFlagForUser(s: EchoUserSignals): EchoDecision | null {
+  const fn = "conciergeFlagForUser";
+  if (s.tier === "wingman") {
+    return {
+      fn,
+      title: "Concierge queue",
+      body: "Wingman tier always flags for concierge. Add to this week's intro list if not already there.",
+    };
+  }
+  if (s.tier === "reset" && s.wellnessAnswerCount >= 8 && s.lifePulseCount >= 3) {
+    return {
+      fn,
+      title: "Concierge worth a look",
+      body: "Reset customer with a deep wellness profile and consistent life pulses. They are behaving like a Wingman without paying for it. Worth one personal note.",
+    };
+  }
+  return null;
+}

@@ -266,6 +266,56 @@ export const getMatchingQueue = (
 export const getMatchingPool = (founderKey: string) =>
   founderJson<MatchingPoolResponse>("/founder/matching/pool", founderKey);
 
+export interface ReferralAttributionInviter {
+  inviterUserId: string;
+  inviterEmail: string;
+  inviterFirstName: string | null;
+  inviteeCount: number;
+  paidConversions: number;
+  conversionRate: number;
+}
+
+export interface ReferralAttributionSurface {
+  surface: string;
+  count: number;
+}
+
+export interface ReferralAttributionResponse {
+  topReferrers: ReferralAttributionInviter[];
+  topSurfaces: ReferralAttributionSurface[];
+  totals: {
+    totalReferrals: number;
+    totalInviters: number;
+    totalPaidConverts: number;
+    overallConversionRate: number;
+  };
+}
+
+export const getReferralAttribution = (founderKey: string) =>
+  founderJson<ReferralAttributionResponse>("/founder/referrals/attribution", founderKey);
+
+export interface EchoUserSignalsResponse {
+  signals: {
+    email: string;
+    tier: "free" | "reset" | "wingman" | null;
+    createdAt: string | null;
+    ageDays: number | null;
+    auditCount: number;
+    lastAuditAt: string | null;
+    wellnessAnswerCount: number;
+    lifePulseCount: number;
+    consentGranted: boolean;
+    invitedByUserId: string | null;
+    invitedAt: string | null;
+  };
+}
+
+export const getEchoUserSignals = (founderKey: string, email: string) =>
+  founderJson<EchoUserSignalsResponse>(
+    `/founder/users/by-email/${encodeURIComponent(email)}/echo-signals`,
+    founderKey,
+  );
+
 export const setMatchingProposalStatus = (
   founderKey: string,
   id: string,

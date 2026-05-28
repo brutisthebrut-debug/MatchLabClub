@@ -462,11 +462,11 @@ export const FEATURE_USAGE_MAP: Record<FeatureKey, string[]> = {
   ],
 };
 
-export const FEATURE_META: Record<FeatureKey, { label: string; blurb: string }> = {
-  compass: { label: "Compatibility Compass", blurb: "Reads compatibility between two people." },
-  coach:   { label: "Coach",                  blurb: "Drafts and refines messages in your voice." },
-  report:  { label: "Mirror Report",          blurb: "Your readiness portrait and growth themes." },
-  insights:{ label: "Insight tags",           blurb: "Short tags that summarise patterns in your answers." },
+export const FEATURE_META: Record<FeatureKey, { label: string; short: string; blurb: string }> = {
+  compass: { label: "Compatibility Compass", short: "Compass",      blurb: "Reads compatibility between two people." },
+  coach:   { label: "Coach",                  short: "Coach",        blurb: "Drafts and refines messages in your voice." },
+  report:  { label: "Mirror",                 short: "Mirror",       blurb: "Your readiness portrait and growth themes." },
+  insights:{ label: "Profile read",           short: "Profile read", blurb: "Short tags that summarise patterns in your answers." },
 };
 
 /** Which features draw on a given dimension. */

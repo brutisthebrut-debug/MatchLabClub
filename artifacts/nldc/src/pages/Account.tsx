@@ -105,8 +105,8 @@ export default function Account() {
       toast({
         title: next ? "Deep AI lane: on" : "Deep AI lane: off",
         description: next
-          ? "Anthropic Claude is now layered on top of the deterministic baseline for tools that benefit from it."
-          : "You're back on the deterministic baseline. Everything still works — just without the semantic layer.",
+          ? "Anthropic Claude is now layered on top of the deterministic baseline for tools that benefit from it. Prompts run under Anthropic's zero-retention API policy."
+          : "You're back on the deterministic baseline. Every feature still works, just without the Claude layer on top.",
       });
     } catch (err) {
       toast({
@@ -334,10 +334,11 @@ export default function Account() {
                 <div className="flex-1 min-w-0">
                   <h3 className="font-serif text-lg font-bold text-foreground">Deep AI lane</h3>
                   <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                    Hybrid setup. The deterministic engine is always on — fast, free, never rate-limited.
+                    Hybrid setup. The deterministic engine is always on. Fast, free, never rate-limited.
                     With this on, Anthropic Claude is layered on top for tools that benefit from semantic depth:
-                    bio rewrites, message coaching, Compatibility Compass reads, import summaries.
-                    Off = baseline only. Nothing breaks either way.
+                    bio rewrites, message coaching, Compatibility Compass reads, Hinge import summaries, Instagram tone extraction.
+                    Anthropic processes prompts under their zero-retention API policy. We never sell or train on your content.
+                    Off means baseline only. Nothing breaks either way.
                   </p>
                 </div>
               </div>

@@ -5,10 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
-import { ArrowRight, CheckCircle, Shield, Sparkles, Headphones, Eye, Clock, FileText, Compass, MessageCircle } from "lucide-react";
+import { ArrowRight, CheckCircle, Shield, Sparkles, Headphones, Eye, Clock, FileText, Compass, MessageCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMeta } from "@/hooks/useMeta";
 import { TrustBadge } from "@/components/TrustBadge";
+import {
+  useCreateAudit,
+  useGenerateAuditReport,
+  useSaveCompassRead,
+  useCreateInsight,
+  useAnalyzeInsight,
+} from "@workspace/api-client-react";
+import { rememberAnonymousId } from "@/lib/anonymousIds";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 28 },
@@ -345,7 +353,7 @@ export default function Landing() {
               Your private sanctuary.
             </h2>
             <p className="text-muted-foreground leading-relaxed text-sm">
-              Dating is vulnerable. We treat everything you share with the highest level of respect, security, and discretion. Hybrid AI: a deterministic baseline runs on our servers with no external calls. Deeper analysis through Anthropic Claude is opt-in per account, off by default, and you can turn it off anytime.
+              Dating is vulnerable. We treat it that way. Two layers, and you decide how deep. The deterministic engine runs on every account by default. No keys, no external calls, no rate limits. Anthropic Claude is layered on for a handful of tools (bio rewrites, message coaching, Compatibility Compass, import summaries) and stays off until you turn it on. When Claude is in the loop, Anthropic processes the prompt under their zero-retention API policy. We never sell your content. We never train on it. One toggle in Settings controls all of it.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
@@ -583,16 +591,32 @@ Me: Okay now I have to go
 Them: You should!
 Me: We should both go honestly, I keep saying I will and never do`;
 
+type BioCardResult = BioPreviewResult & { auditId: number | null };
+type CompassCardResult = CompassPreviewResult & { savedId: number | null };
+type MessagesCardResult = MessagesPreviewResult & {
+  attachmentStyle: string | null;
+  insightId: number | null;
+};
+
 function PreviewSection() {
   const [bio, setBio] = useState(EXAMPLE_BIO);
-  const [bioResult, setBioResult] = useState<BioPreviewResult | null>(null);
+  const [bioResult, setBioResult] = useState<BioCardResult | null>(null);
+  const [bioLoading, setBioLoading] = useState(false);
 
   const [style, setStyle] = useState<string>("Spark Chaser");
   const [patterns, setPatterns] = useState<string[]>(["Great starts that slowly fizzle"]);
-  const [compassResult, setCompassResult] = useState<CompassPreviewResult | null>(null);
+  const [compassResult, setCompassResult] = useState<CompassCardResult | null>(null);
+  const [compassLoading, setCompassLoading] = useState(false);
 
   const [messages, setMessages] = useState(EXAMPLE_MESSAGES);
-  const [msgResult, setMsgResult] = useState<MessagesPreviewResult | null>(null);
+  const [msgResult, setMsgResult] = useState<MessagesCardResult | null>(null);
+  const [msgLoading, setMsgLoading] = useState(false);
+
+  const createAudit = useCreateAudit();
+  const generateReport = useGenerateAuditReport();
+  const saveCompassRead = useSaveCompassRead();
+  const createInsight = useCreateInsight();
+  const analyzeInsight = useAnalyzeInsight();
 
   function togglePattern(p: string) {
     setPatterns((prev) => {
@@ -600,6 +624,124 @@ function PreviewSection() {
       if (prev.length >= 2) return [prev[1], p];
       return [...prev, p];
     });
+  }
+
+  async function runBioAudit() {
+    const trimmed = bio.trim();
+    if (!trimmed) return;
+    setBioLoading(true);
+    const local = previewBio(trimmed);
+    try {
+      const audit = await createAudit.mutateAsync({
+        data: {
+          firstName: "You",
+          age: 0,
+          gender: "not specified",
+          orientation: "not specified",
+          currentApps: [],
+          datingGoal: "find a relationship",
+          biggestChallenge: "Not sure how I come across",
+          bio: trimmed,
+          prompts: null,
+          recentMessageSample: null,
+          photoCount: null,
+          relationshipHistory: null,
+        },
+      });
+      rememberAnonymousId("audits", audit.id);
+      const report = (await generateReport.mutateAsync({ id: audit.id })) as {
+        readinessScore?: number;
+        risks?: string[];
+        rewrittenBio?: string;
+      };
+      const score = typeof report.readinessScore === "number" ? report.readinessScore : local.score;
+      const firstFix = report.risks?.[0] ?? local.fixes[0];
+      const rewriteHook = report.rewrittenBio
+        ? report.rewrittenBio.split(".").slice(0, 2).join(".").trim() + "."
+        : local.rewriteHook;
+      setBioResult({
+        score,
+        category:
+          score >= 75
+            ? "Specific and inviting"
+            : score >= 55
+            ? "Pleasant but forgettable"
+            : "Generic. Reads as background noise.",
+        strengths: local.strengths,
+        fixes: [firstFix, ...local.fixes.filter((f) => f !== firstFix)].slice(0, 3),
+        rewriteHook,
+        auditId: audit.id,
+      });
+    } catch {
+      setBioResult({ ...local, auditId: null });
+    } finally {
+      setBioLoading(false);
+    }
+  }
+
+  async function runCompassRead() {
+    if (!style) return;
+    setCompassLoading(true);
+    const local = previewCompass(style, patterns);
+    try {
+      const saved = await saveCompassRead.mutateAsync({
+        data: {
+          connectionStyle: style,
+          patterns,
+          notes: null,
+          deterministicResult: local as unknown as Record<string, unknown>,
+          aiResult: null,
+        },
+      });
+      rememberAnonymousId("compass", saved.id);
+      setCompassResult({ ...local, savedId: saved.id });
+    } catch {
+      setCompassResult({ ...local, savedId: null });
+    } finally {
+      setCompassLoading(false);
+    }
+  }
+
+  async function runMessageRead() {
+    const trimmed = messages.trim();
+    if (!trimmed) return;
+    setMsgLoading(true);
+    const local = previewMessages(trimmed);
+    try {
+      const insight = await createInsight.mutateAsync({
+        data: {
+          sourceLabel: "Landing preview",
+          pastedContent: trimmed,
+          consentGiven: false,
+          sourceApp: null,
+        },
+      });
+      rememberAnonymousId("insights", insight.id);
+      const analysis = (await analyzeInsight.mutateAsync({ id: insight.id })) as {
+        attachmentStyle?: string;
+        growthAreas?: string[];
+        datingProfileTips?: string[];
+      };
+      const tip =
+        analysis.datingProfileTips?.[0] ??
+        analysis.growthAreas?.[0] ??
+        local.oneLine;
+      setMsgResult({
+        tone: local.tone,
+        patterns: local.patterns,
+        oneLine: tip,
+        attachmentStyle: analysis.attachmentStyle ?? null,
+        insightId: insight.id,
+      });
+    } catch {
+      setMsgResult({
+        ...local,
+        attachmentStyle: null,
+        insightId: null,
+      });
+    } finally {
+      setMsgLoading(false);
+    }
   }
 
   return (
@@ -619,27 +761,27 @@ function PreviewSection() {
 
         <div className="max-w-3xl mx-auto">
           <Tabs defaultValue="bio" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 h-auto p-1 rounded-2xl glass border border-foreground/8 bg-[hsl(248_40%_96%/0.6)] dark:bg-[hsl(248_50%_10%/0.6)]">
+            <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 h-auto p-1 rounded-2xl glass border border-foreground/8 bg-[hsl(248_40%_96%/0.6)] dark:bg-[hsl(248_50%_10%/0.6)] gap-1">
               <TabsTrigger
                 value="bio"
-                className="rounded-xl py-2.5 text-xs sm:text-sm flex items-center gap-2 data-[state=active]:bg-background"
+                className="rounded-xl py-2.5 text-xs sm:text-sm flex items-center justify-center gap-2 data-[state=active]:bg-background"
                 data-testid="tab-preview-bio"
               >
                 <FileText className="w-3.5 h-3.5" /> Audit my bio
               </TabsTrigger>
               <TabsTrigger
                 value="compass"
-                className="rounded-xl py-2.5 text-xs sm:text-sm flex items-center gap-2 data-[state=active]:bg-background"
+                className="rounded-xl py-2.5 text-xs sm:text-sm flex items-center justify-center gap-2 data-[state=active]:bg-background"
                 data-testid="tab-preview-compass"
               >
                 <Compass className="w-3.5 h-3.5" /> Run a compass read
               </TabsTrigger>
               <TabsTrigger
                 value="messages"
-                className="rounded-xl py-2.5 text-xs sm:text-sm flex items-center gap-2 data-[state=active]:bg-background"
+                className="rounded-xl py-2.5 text-xs sm:text-sm flex items-center justify-center gap-2 data-[state=active]:bg-background"
                 data-testid="tab-preview-messages"
               >
-                <MessageCircle className="w-3.5 h-3.5" /> Read my messages
+                <MessageCircle className="w-3.5 h-3.5" /> What your messages say
               </TabsTrigger>
             </TabsList>
 
@@ -658,13 +800,18 @@ function PreviewSection() {
                 />
                 <div className="flex flex-wrap items-center gap-3 mt-4">
                   <Button
-                    onClick={() => setBioResult(previewBio(bio))}
+                    onClick={runBioAudit}
+                    disabled={bioLoading || bio.trim().length === 0}
                     className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white"
                     data-testid="button-preview-bio-show"
                   >
-                    Show me <ArrowRight className="ml-2 h-4 w-4" />
+                    {bioLoading ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reading your bio</>
+                    ) : (
+                      <>Show me <ArrowRight className="ml-2 h-4 w-4" /></>
+                    )}
                   </Button>
-                  <span className="text-[11px] text-muted-foreground/70">Runs in your browser. Nothing is saved.</span>
+                  <span className="text-[11px] text-muted-foreground/70">Hybrid AI. No account needed.</span>
                 </div>
 
                 {bioResult ? (
@@ -695,7 +842,10 @@ function PreviewSection() {
                       <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(248_62%_52%)] mb-1.5">One rewrite move</p>
                       <p className="text-sm text-foreground/85 leading-relaxed">{bioResult.rewriteHook}</p>
                     </div>
-                    <PreviewFooterCta label="See the full audit" />
+                    <PreviewFooterCta
+                      label="See the full audit"
+                      href={bioResult.auditId ? `/report/${bioResult.auditId}` : "/start"}
+                    />
                   </div>
                 ) : null}
               </div>
@@ -751,11 +901,16 @@ function PreviewSection() {
                 </div>
                 <div className="flex flex-wrap items-center gap-3 mt-5">
                   <Button
-                    onClick={() => setCompassResult(previewCompass(style, patterns))}
+                    onClick={runCompassRead}
+                    disabled={compassLoading || !style}
                     className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white"
                     data-testid="button-preview-compass-show"
                   >
-                    Show me <ArrowRight className="ml-2 h-4 w-4" />
+                    {compassLoading ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Running your read</>
+                    ) : (
+                      <>Show me <ArrowRight className="ml-2 h-4 w-4" /></>
+                    )}
                   </Button>
                   <span className="text-[11px] text-muted-foreground/70">A short read. The full Compass goes deeper.</span>
                 </div>
@@ -774,7 +929,10 @@ function PreviewSection() {
                       <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(326_100%_59%)] mb-1.5">Your false spark</p>
                       <p className="text-sm text-foreground/85 leading-relaxed">{compassResult.falseSpark}</p>
                     </div>
-                    <PreviewFooterCta label="See the full read" />
+                    <PreviewFooterCta
+                      label="See the full read"
+                      href={compassResult.savedId ? `/compass/${compassResult.savedId}` : "/compass"}
+                    />
                   </div>
                 ) : null}
               </div>
@@ -795,17 +953,28 @@ function PreviewSection() {
                 />
                 <div className="flex flex-wrap items-center gap-3 mt-4">
                   <Button
-                    onClick={() => setMsgResult(previewMessages(messages))}
+                    onClick={runMessageRead}
+                    disabled={msgLoading || messages.trim().length === 0}
                     className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white"
                     data-testid="button-preview-messages-show"
                   >
-                    Show me <ArrowRight className="ml-2 h-4 w-4" />
+                    {msgLoading ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reading your style</>
+                    ) : (
+                      <>Show me <ArrowRight className="ml-2 h-4 w-4" /></>
+                    )}
                   </Button>
-                  <span className="text-[11px] text-muted-foreground/70">Runs locally. Your chat does not leave the page.</span>
+                  <span className="text-[11px] text-muted-foreground/70">Hybrid AI. No account needed.</span>
                 </div>
 
                 {msgResult ? (
                   <div className="mt-6 grid gap-4" data-testid="result-preview-messages">
+                    {msgResult.attachmentStyle ? (
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(248_62%_52%)] mb-1.5">Attachment style</p>
+                        <p className="text-sm text-foreground/85 leading-relaxed">{msgResult.attachmentStyle}</p>
+                      </div>
+                    ) : null}
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(190_55%_50%)] mb-1.5">Tone</p>
                       <p className="text-sm text-foreground/85 leading-relaxed">{msgResult.tone}</p>
@@ -822,7 +991,7 @@ function PreviewSection() {
                       <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(248_62%_52%)] mb-1.5">One move that fits</p>
                       <p className="text-sm text-foreground/85 leading-relaxed">{msgResult.oneLine}</p>
                     </div>
-                    <PreviewFooterCta label="See the full read" />
+                    <PreviewFooterCta label="See the full read" href="/insights" />
                   </div>
                 ) : null}
               </div>
@@ -830,7 +999,7 @@ function PreviewSection() {
           </Tabs>
 
           <p className="text-center text-[11px] text-muted-foreground/60 mt-4">
-            Preview runs on a local deterministic engine so you can try it instantly. The signed-in tools go deeper and save your history.
+            Each tab runs the real hybrid AI on your input. Anonymous by default. The signed-in tools go deeper and save your history.
           </p>
         </div>
       </div>
@@ -838,11 +1007,11 @@ function PreviewSection() {
   );
 }
 
-function PreviewFooterCta({ label }: { label: string }) {
+function PreviewFooterCta({ label, href = "/start" }: { label: string; href?: string }) {
   return (
     <div className="pt-2">
       <Link
-        href="/start"
+        href={href}
         className="inline-flex items-center gap-2 text-sm font-semibold text-[hsl(248_62%_62%)] hover:text-[hsl(248_62%_52%)] transition-colors"
         data-testid="link-preview-cta"
       >

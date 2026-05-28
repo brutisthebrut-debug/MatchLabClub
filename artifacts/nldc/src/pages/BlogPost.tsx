@@ -20,6 +20,701 @@ const fadeUp = (delay = 0) => ({
 // ── Article content ──────────────────────────────────────────────────────────
 
 const ARTICLE_CONTENT: Record<string, React.ReactNode> = {
+  "what-actually-predicts-second-dates": (
+    <>
+      <p>
+        I asked a handful of thirty-something friends what they thought predicted a second date. They guessed chemistry. They guessed attractiveness. They guessed whether you laughed. They were wrong about the order.
+      </p>
+      <p>
+        The thing that predicts a second date most reliably is whether both people felt slightly more themselves at the end of the date than at the start.
+      </p>
+      <p>
+        Not impressed. Not entertained. Themselves.
+      </p>
+      <p>
+        That sounds soft. It is not. There is a specific behavioral signature when someone feels more themselves after spending time with you. They make a callback joke to something you said an hour earlier. They text the next day before you do. They are not "interested" in some abstract way. They are uncurled.
+      </p>
+      <p>
+        Most date post-mortems chase the wrong variable. People review what they said, what they wore, whether the conversation flowed. The relevant question is downstream of all of that. Did the person across the table get smaller or larger inside themselves while sitting there.
+      </p>
+      <p>
+        You can usually tell.
+      </p>
+      <p>
+        I had a date in March that I thought was a disaster. I rambled about a podcast for too long. I knocked over a beer. The lighting in the bar was unflattering and I knew it. She texted the next morning. She wanted to see me again. I asked her why later, after we had been seeing each other for a few weeks. She said she had felt allowed to be sarcastic. I had laughed at something dry she said early in the date and from there she stopped editing herself. The beer did not matter. The podcast did not matter. The fact that she did not have to perform did.
+      </p>
+
+      <h2>The four micro-signals that actually correlate</h2>
+      <p>
+        Across the post-date debriefs I have looked at in the Mirror, four signals show up over and over in the dates that lead to second ones. None of them are about chemistry in the way the word usually gets used.
+      </p>
+      <p>
+        <strong>One. Specific recall.</strong> After the date, you can name three things they said, not three things you said. If your post-date narrative is mostly about your own performance, you were on stage. They probably were too.
+      </p>
+      <p>
+        <strong>Two. Unhurried pacing.</strong> Forty-five minutes can feel generous. Two hours can feel pressured. The variable is not duration. It is whether either of you was running an internal clock the whole time.
+      </p>
+      <p>
+        <strong>Three. A surprise turn.</strong> Some part of the conversation went somewhere neither of you planned to go. This is the single best signal that the date had any real contact in it. Predictable conversations almost never lead to second dates.
+      </p>
+      <p>
+        <strong>Four. Self-deprecation that landed safely.</strong> One of you admitted a small thing about yourself, and the other did not make a face that said "noted." Real warmth has a specific shape, and that is the shape.
+      </p>
+
+      <h2>What does not predict it</h2>
+      <p>
+        A lot of what people grade themselves on does not actually matter. Whether you were "funny enough." Whether you had a strong opener. Whether they were obviously attracted to you in the first thirty seconds. These are real, but they predict a first impression. They do not predict the second date.
+      </p>
+      <p>
+        The first impression is the entry fee. The second date is paid for by something else, and that something else is mostly atmospheric. It is the quality of attention each of you brought.
+      </p>
+
+      <h2>The thing about attention</h2>
+      <p>
+        I am suspicious of the word "presence." It has been worn smooth by yoga studios. But there is a real thing it points to.
+      </p>
+      <p>
+        A friend of mine who is a therapist told me once that she can tell within five minutes of a first session whether someone is going to make progress. The signal is not what they say. It is whether they are listening to themselves while they say it. People who land on their own sentences make progress. People who deliver pre-written sentences do not.
+      </p>
+      <p>
+        The same thing applies to dates. You can usually tell whether the person across from you is reaching for something in real time or reciting. Reaching is contagious. Reciting closes a room.
+      </p>
+
+      <h2>The follow-up text is downstream</h2>
+      <p>
+        People obsess about the follow-up text. Whether to send it first. How long to wait. What it should say.
+      </p>
+      <p>
+        In practice the text writes itself when the date had genuine contact in it. You will know what to reference. There will be a callback. The decision will not feel like a strategy problem.
+      </p>
+      <p>
+        If you find yourself drafting and redrafting the next-day text, that itself is information. You are trying to manufacture something the date did not produce. Sometimes the date still leads to a second one. More often it does not.
+      </p>
+
+      <h2>How to run a useful post-mortem</h2>
+      <p>
+        Skip the question "did it go well?" It is too vague to debug. Try these instead.
+      </p>
+      <p>
+        What did they say that I am still thinking about?
+      </p>
+      <p>
+        When did I feel most like myself?
+      </p>
+      <p>
+        When did I feel least like myself?
+      </p>
+      <p>
+        Was there a moment one of us steered the conversation somewhere unexpected? Who steered it?
+      </p>
+      <p>
+        If you can answer those, you will know whether to ask for a second date, and you will have a better sense of whether they will say yes.
+      </p>
+      <p>
+        I keep these in my Mirror because I forget otherwise. Three weeks later you cannot reconstruct the texture of a date from memory. You can reconstruct the headline. The headline is rarely the useful thing.
+      </p>
+    </>
+  ),
+
+  "values-mismatch-shows-up-early": (
+    <>
+      <p>
+        The cliché is that values mismatches reveal themselves over time. In my experience the opposite is true. They show up by date three. The reason people miss them is that values rarely announce themselves in the language of values.
+      </p>
+      <p>
+        They show up as small frictions you talk yourself out of.
+      </p>
+      <p>
+        You suggest splitting the bill. He looks faintly disappointed. You explain to yourself that he is old-fashioned, that this is sweet, that you are being a feminist about something that does not matter. What actually happened: he runs a money script you do not run, and it will become a louder script later.
+      </p>
+      <p>
+        Or. She asks where you grew up and you say "small town in the Midwest" and she says "oh, weird" with a half-smile, and you laugh, and you do not bring it up again. What happened: she has a worldview about geography and class that you have absorbed as a joke. It will not stay a joke.
+      </p>
+
+      <h2>The shape of an early values signal</h2>
+      <p>
+        Values do not show up as positions in a debate. They show up as reflexes.
+      </p>
+      <p>
+        The reflex of who reaches for the bill. The reflex of how someone refers to their family. The reflex of what they say when a barista is rude. The reflex of how they describe their last partner. None of these are conversations. They are the data underneath the conversations.
+      </p>
+      <p>
+        A friend of mine spent four months with someone whose only red flag, in retrospect, was the way he talked about his ex. Not the words. The tone. There was a specific scorn that she registered and dismissed. She told me about it the first week. By month three, the scorn was being aimed at her sister. By month four it was being aimed at her.
+      </p>
+      <p>
+        Reflexes scale. They never stay confined to the people they started with.
+      </p>
+
+      <h2>The "I'll figure that out later" voice</h2>
+      <p>
+        There is a voice that goes off in the third hour of a third date. It says: this is not quite right but it is fine and I will figure it out later.
+      </p>
+      <p>
+        That voice is almost always picking up on a values thing. Logistics and personality you can usually solve. Values you can only accept or leave. The voice knows the difference even when you have not articulated it yet.
+      </p>
+      <p>
+        I would rather you trust that voice early than romance it away and discover it again in eight months, after you have rearranged your apartment.
+      </p>
+
+      <h2>Five common early signals</h2>
+      <p>
+        <strong>One.</strong> How they treat people whose attention they do not need. Servers, drivers, the person at the next table. This is the cleanest values test in dating and it shows up by date one.
+      </p>
+      <p>
+        <strong>Two.</strong> How they describe their own work when it is going badly. Do they take responsibility for outcomes or assign it elsewhere by default? You are listening for the default, not the truth of the specific story.
+      </p>
+      <p>
+        <strong>Three.</strong> What they spend money on without thinking about it. Not big purchases. The small reflexes. The tip. The Uber when they could walk. The bottle of wine that is forty dollars instead of twenty. Money is a values fingerprint.
+      </p>
+      <p>
+        <strong>Four.</strong> How they talk about their parents in a casual aside. Not the formal answer to "how are you with your family." The throwaway sentence in the middle of a different story.
+      </p>
+      <p>
+        <strong>Five.</strong> What they do with silence. Some people fill it because they cannot tolerate it. Some people use it. Some people weaponise it. The relationship with silence is a values relationship even though it does not look like one.
+      </p>
+
+      <h2>What is not a values mismatch</h2>
+      <p>
+        A lot of early friction is not values. It is taste, or mood, or context. He likes loud restaurants and you do not. She thinks brunch is a waste of a Sunday and you do not. These are real and they will create wear over time, but they are negotiable in a way values are not.
+      </p>
+      <p>
+        The test is whether the friction implies a different worldview underneath it. Loud restaurants do not imply a worldview. Loud restaurants because "what is the point of being out if you cannot be heard" is starting to imply one.
+      </p>
+      <p>
+        I keep getting this wrong in both directions. Sometimes I treat a taste difference as a values gap and sabotage something workable. Sometimes I treat a values gap as a taste difference and walk into a wall. The Mirror helps because writing it down forces me to distinguish them.
+      </p>
+
+      <h2>The conversation that actually works</h2>
+      <p>
+        The standard "let us align on values" conversation does not work. Both people present polished, prepared answers. Of course you both want honesty and growth and a partner you can laugh with. Everyone wants those.
+      </p>
+      <p>
+        The conversation that works is much smaller. It is a specific story. "Tell me about a time you and a friend disagreed about money." "What was the last argument you had with your sibling about?" "When was the last time you changed your mind about something important?"
+      </p>
+      <p>
+        The answers are not the point. The texture of the answers is the point. Whether they have an example at all. Whether they take responsibility inside the story. Whether they think their position is interesting or obvious.
+      </p>
+
+      <h2>What to do with what you notice</h2>
+      <p>
+        You do not have to act on every signal immediately. Most early signals are tentative. But you do have to write them down. Otherwise the third one will feel like the first one because you will have forgotten the previous two.
+      </p>
+      <p>
+        I keep a running line in my Mirror for anyone I am seeing more than once. It is not a scorecard. It is a memory aid. Three weeks in, when something starts to bother me, I want to be able to check whether it has been bothering me from the start or whether it is genuinely new.
+      </p>
+      <p>
+        If a signal has been there from the start, that is information about who they are, not about you.
+      </p>
+    </>
+  ),
+
+  "conflict-instinct-is-a-compatibility-signal": (
+    <>
+      <p>
+        Most people audition partners on a calm Tuesday. They go to a wine bar. They tell good stories. They behave. That tells you almost nothing about who they will be in a relationship.
+      </p>
+      <p>
+        What predicts the relationship is what each of you does on the third bad Wednesday in a row. The instinct under pressure is the data. Almost everything else is presentation.
+      </p>
+      <p>
+        I am not talking about whether someone is "good at conflict." That phrasing has been overused into uselessness. I am talking about something more specific. When a small thing goes wrong between you, what is the very first move each of you makes inside your own head, before any words come out.
+      </p>
+
+      <h2>The four conflict instincts</h2>
+      <p>
+        Across the people I have watched up close, I see four reliable defaults. They are not personality types. They are first moves.
+      </p>
+      <p>
+        <strong>Pursue.</strong> When something is off, the pursuer wants to talk about it now. The silence is unbearable. Distance feels like the actual problem. They will keep moving toward the other person until something gives.
+      </p>
+      <p>
+        <strong>Withdraw.</strong> When something is off, the withdrawer needs to be alone in a room to think. Talking about it before they are ready feels like being grabbed. They are not avoiding. They are buffering.
+      </p>
+      <p>
+        <strong>Manage.</strong> When something is off, the manager tries to lower the temperature first and address the thing second. They make food. They change the subject. They are not denying. They are stabilising.
+      </p>
+      <p>
+        <strong>Sharpen.</strong> When something is off, the sharpener gets cooler and more precise. They use exact words. They reach for examples. They are not attacking. They are debugging.
+      </p>
+      <p>
+        None of these is wrong. All of them work with the right partner. The compatibility question is not which instinct each of you has. It is which pairings degrade and which ones strengthen each other.
+      </p>
+
+      <h2>The pairings that quietly destroy things</h2>
+      <p>
+        Pursue plus withdraw is the most documented pairing in couples therapy and the most common in early dating, and it is the one that ends most quietly. The pursuer reads withdrawal as rejection. The withdrawer reads pursuit as suffocation. Both of them are wrong about the other person's intent and both of them keep being right about the experience.
+      </p>
+      <p>
+        It is not unworkable. But it requires both people to learn a second language, and most couples do not realise they need to until they are years in.
+      </p>
+      <p>
+        Sharpen plus manage is the other quiet killer. The sharpener wants to name the thing exactly. The manager wants the room to come down first. The sharpener experiences the manager's de-escalation as deflection. The manager experiences the sharpener's precision as cold. Neither is acting in bad faith.
+      </p>
+
+      <h2>What you can actually observe early</h2>
+      <p>
+        You will not see a real fight on date three. That is fine. You can see something more useful. Watch how they respond to small frictions that are not about you.
+      </p>
+      <p>
+        The waiter brings the wrong drink. The Uber is late. They get a slightly annoying email while sitting across from you. What is the first thing they do.
+      </p>
+      <p>
+        Do they go quiet for a second and then say something measured. Do they make a sharp joke at the situation's expense. Do they get visibly hot and then visibly try to come back down. Do they immediately try to fix it. The default is right there. It is just running on a different target than you.
+      </p>
+      <p>
+        A friend of mine dated a guy for two months. Their first real argument was about a flight booking, and she said the thing that stopped her cold was not the argument itself. It was that he started using a slightly formal voice, the kind you use in a customer service call. She had seen that voice once before, at dinner, when his food had come out wrong. She had not registered it then. She did now.
+      </p>
+
+      <h2>The mistake of grading conflict by outcome</h2>
+      <p>
+        People often grade an early conflict by whether it got resolved. That is the wrong metric. Of course it got resolved. You barely know each other. Nobody has anything serious at stake yet.
+      </p>
+      <p>
+        The better question is: how did each of you feel inside your body twenty minutes after the thing was over. Both calmer. One calmer and one quietly still revved. Both still revved and pretending. The body answer is more honest than the verbal one.
+      </p>
+      <p>
+        I had a relationship that ended in part because every disagreement officially resolved and I officially felt fine, but my shoulders were always a little high for the rest of the day. I treated the resolution as the data. The shoulders were the data.
+      </p>
+
+      <h2>What to do with it</h2>
+      <p>
+        You cannot pick a partner with the same conflict instinct as you. The pool is not that big and the matching is not that clean. What you can do is notice your default, name theirs, and pay attention to which pairings energise both of you and which ones grind.
+      </p>
+      <p>
+        Compatibility is not the absence of friction. It is friction that produces heat instead of wear. Same instinct, different instinct, complementary instinct, it does not matter. What matters is whether your defaults can metabolise each other or whether they cancel each other out.
+      </p>
+      <p>
+        If you have logged a few small conflicts in the Mirror, you can usually tell which one it is by the second month. Before that you are guessing. After that you are choosing.
+      </p>
+    </>
+  ),
+
+  "the-love-pace-conversation": (
+    <>
+      <p>
+        Two people can want the same thing and still tear each other apart because one of them wants it in six months and the other wants it in three years.
+      </p>
+      <p>
+        Pace is a compatibility dimension hiding in plain sight. It rarely gets named because the headline answers seem to match. Both of you want a serious relationship. Both of you want to move in eventually. Both of you want kids, maybe. The shape of what you want lines up. The clock you want it on does not.
+      </p>
+      <p>
+        That clock is the thing that does most of the damage in years one and two.
+      </p>
+
+      <h2>Why nobody asks about pace</h2>
+      <p>
+        Pace feels weird to ask about. Asking "how fast do you want this to move" on date three sounds like a pressure test. So people skip it. They check for the headline match, decide it is a green light, and then discover six months later that their version of "moving forward" and the other person's version of "moving forward" are two completely different things.
+      </p>
+      <p>
+        I have watched this happen four or five times in the last few years to friends I would describe as emotionally literate. The fail mode is consistent. They both said they wanted commitment. They both meant it. They were on completely different timelines and neither of them said so out loud.
+      </p>
+
+      <h2>The three pace signals you can see early</h2>
+      <p>
+        You do not need to interview anyone. You can read it from three small signals.
+      </p>
+      <p>
+        <strong>The lag between dates.</strong> Not the calendar number. The energy. If two weeks pass and neither of you feels weird, that is a pace tell. If three days pass and one of you is climbing the walls, that is a different pace tell. Neither is wrong. They are just different rhythms.
+      </p>
+      <p>
+        <strong>What "soon" means in their sentences.</strong> Listen to how they use the word "soon" when they talk about their own life. "I want to move soon" from a person who has been thinking about moving for three years means something different than "I want to move soon" from someone who applied for an apartment yesterday. Their personal pace bleeds into their relationship pace.
+      </p>
+      <p>
+        <strong>How they describe their last relationship's arc.</strong> Did it move fast and they thought it was perfect and then it imploded. Did it crawl for two years and then settle. The pattern they describe is usually the pattern they are about to repeat with you, unless they have done specific work to change it.
+      </p>
+
+      <h2>The conversation, in plain language</h2>
+      <p>
+        Once the relationship has shape, somewhere between week four and week eight, you can have a version of the pace conversation that does not feel like an interrogation.
+      </p>
+      <p>
+        Try something like: "I notice we have been doing this thing for about six weeks. I am happy with it. Out of curiosity, when you imagine us in three months, what does that picture look like to you, just roughly."
+      </p>
+      <p>
+        The point is not to lock anything in. The point is to surface the mental model. Their three-month picture and yours might be remarkably aligned. Or one of you might be picturing weekend trips and the other might be picturing apartment hunting. Either is fine. Not knowing is what causes the damage.
+      </p>
+      <p>
+        A friend of mine had this conversation in week seven of seeing someone, expecting alignment. Her picture: still casually dating, maybe a label by month four. His picture: meeting her parents the next month. They worked it out. The point is, they would not have worked it out if they had assumed the headline match was the whole story.
+      </p>
+
+      <h2>The three common pace mismatches</h2>
+      <p>
+        <strong>Fast and slow.</strong> One of you is ready to define things by week three. The other gets visibly tight at any version of the "what are we" conversation before month four. Both versions can be healthy. They cannot coexist by accident.
+      </p>
+      <p>
+        <strong>Bursty and steady.</strong> One of you wants intense weekends and long stretches apart. The other wants four evenings a week of low-key time together. Same total time, different distribution. This one looks like a logistical disagreement and is actually a temperament gap.
+      </p>
+      <p>
+        <strong>Front-loaded and back-loaded.</strong> One of you treats the first six months as the time to "build" the relationship and expects to coast on that foundation later. The other treats the early months as casual and expects the relationship to deepen mostly in years two and three. Both are real patterns. They are not compatible without an explicit deal.
+      </p>
+
+      <h2>What pace is not</h2>
+      <p>
+        Pace is not the same thing as readiness. Someone who has just gotten out of a long relationship may genuinely want commitment and still need a slower pace. Someone who has been single for three years may want to take their time and still want to see you four times a week. Do not confuse the speed of the rhythm with the depth of the intent.
+      </p>
+      <p>
+        Pace is also not the same thing as effort. A slower pace does not mean someone cares less. A faster pace does not mean someone cares more. Both of these things get treated as effort signals when they are actually just personal cadence.
+      </p>
+
+      <h2>The check-in nobody does</h2>
+      <p>
+        The thing that prevents most pace blowups is a single recurring conversation. Once a month, roughly: "Are we moving at a pace that feels right to both of us, or is one of us pulling and the other one drag-footing."
+      </p>
+      <p>
+        Most couples never ask this question because it sounds clinical. It is not. It is the closest thing to a single-question compatibility tune-up that exists. Skip it and the rate at which the relationship deepens becomes an invisible negotiation. Ask it and it becomes a conversation. Conversations are recoverable. Invisible negotiations rarely are.
+      </p>
+    </>
+  ),
+
+  "chemistry-is-not-compatibility": (
+    <>
+      <p>
+        Chemistry is what makes the first three dates feel like a movie. Compatibility is what determines whether you are still in the same room on a Wednesday in February two years later.
+      </p>
+      <p>
+        They feel similar from the inside. They are not the same thing. Confusing them is, by some distance, the single most expensive mistake people make in their dating lives. It costs years.
+      </p>
+
+      <h2>What chemistry actually is</h2>
+      <p>
+        Chemistry is a nervous-system response. It is the specific feeling of a new pattern hitting your defaults in a way that produces alertness. Your heart rate is up. Your jokes are sharper. Your apartment looks nicer. You can feel where they are in a room without looking.
+      </p>
+      <p>
+        This is a real signal. It is not nothing. But it is a signal about the contact itself, not about the long-term viability of the situation.
+      </p>
+      <p>
+        Some of the strongest chemistry I have personally felt has been with people I would not be remotely compatible with on a sustained basis. Some of the most sustainable relationships I have watched friends build started with chemistry that they described as "warm" rather than "electric."
+      </p>
+
+      <h2>What compatibility actually is</h2>
+      <p>
+        Compatibility is whether your defaults rest comfortably against each other when neither of you is performing.
+      </p>
+      <p>
+        Do you fight in similar tempos. Do you spend money in similar ways. Do you handle other people's feelings the same way. Do you have similar relationships to sleep, to alcohol, to your phones, to your families, to ambition, to risk. Do you laugh at the same kind of thing without trying.
+      </p>
+      <p>
+        Compatibility is a hundred small overlaps in autopilot. It is not loud and it is not the thing you notice on a date. It is the thing you notice in month four, when one of you is mildly sick and the other has to be near you for three days, and either it is fine or you both want to crawl out of your skin.
+      </p>
+
+      <h2>Why the confusion is so common</h2>
+      <p>
+        Chemistry produces a vivid memory. Compatibility produces an absence of friction, which produces no memory at all. The brain can describe a charged dinner from two years ago in clear detail. It cannot describe the texture of a calm Sunday because there was nothing to describe.
+      </p>
+      <p>
+        This means people audit their relationships using chemistry as the metric because chemistry is what they can see. They do not see compatibility. They feel its absence as boredom and they feel its presence as nothing in particular.
+      </p>
+      <p>
+        I have a friend who broke up with a man she described as "boring" and then spent four years dating people she described as "electric" and ended each of those relationships when the electricity blew up the wiring. She is now back with the "boring" one. She told me he was never boring. He was just compatible, and she had not learned the difference yet.
+      </p>
+
+      <h2>How to tell which you have</h2>
+      <p>
+        Three rough tests, none of them clean but all of them useful.
+      </p>
+      <p>
+        <strong>The empty Sunday test.</strong> Spend a full day with the person where nothing is planned. Do not curate it. Do not perform. If most of the day feels light and easy, that is compatibility. If most of the day feels like work and the spark only re-ignites at dinner, that is chemistry without compatibility.
+      </p>
+      <p>
+        <strong>The bad mood test.</strong> When one of you is in a quiet bad mood that is not about the other person, what happens. Do you get more careful with each other, more tender, more matter-of-fact. Or does the bad mood become a fight by 9pm. Compatibility absorbs bad moods. Chemistry tends to amplify them.
+      </p>
+      <p>
+        <strong>The third-party test.</strong> Watch how they interact with the people you have known longest. Not whether your friends "approve." Whether the interaction is low-friction. Compatible partners tend to slot into the existing rhythm of your life. Chemistry-driven partners often require everyone around you to adjust.
+      </p>
+
+      <h2>Can you have both</h2>
+      <p>
+        Yes, and that is the actual goal. But the order matters.
+      </p>
+      <p>
+        If you start with chemistry, you have to test for compatibility before you commit. The pull of chemistry will make you minimise structural mismatches because the body wants what it wants. People marry chemistry-first partners they were never compatible with, every day.
+      </p>
+      <p>
+        If you start with compatibility, you have to give chemistry time to build. It often does. The "warm" feeling can become the "electric" feeling at month six, once trust has done its work. People walk away from compatibility-first partners because they expected chemistry to be there on date one. Sometimes it just was not there yet.
+      </p>
+
+      <h2>The trap of "settling"</h2>
+      <p>
+        Choosing compatibility over chemistry is not "settling." That word has done immense damage. Settling is choosing someone you do not respect. Choosing someone whose defaults match yours, even if the first three dates were not a movie, is not settling. It is selection.
+      </p>
+      <p>
+        The flip side is also true. Walking away from a partner who is compatible but chemistry-free is not always shallow. Sometimes the body knows something the head has not articulated yet. The point is not to override either signal. The point is to know which one you are reading.
+      </p>
+
+      <h2>What to do with this</h2>
+      <p>
+        For the next three people you see more than twice, write down two things. What does the chemistry feel like. What does the compatibility feel like. Use different words for the two.
+      </p>
+      <p>
+        After a few months you will notice the words you keep using. The pattern is almost always more revealing than any single relationship. You will see whether you have been chasing chemistry and calling it compatibility, or coasting on compatibility and calling it chemistry. Both happen. Both are fixable, but only if you are willing to call them by their right names.
+      </p>
+    </>
+  ),
+
+  "money-family-kids-the-conversations-everyone-delays": (
+    <>
+      <p>
+        The four heavy topics are money, family, kids, and ambition. Almost nobody brings them up in the first two months because doing so feels intense, presumptuous, or unromantic. So they get deferred. They get deferred until both people are already attached, at which point the answers feel like betrayals instead of information.
+      </p>
+      <p>
+        Earlier is kinder. Earlier is also more honest. And earlier does not have to mean "interview-style on date two." It just means not waiting until you are six months in to find out that they want three kids and you want zero.
+      </p>
+
+      <h2>Why people delay</h2>
+      <p>
+        Three reasons, in roughly this order.
+      </p>
+      <p>
+        One. They are afraid the other person will leave if the answers do not match. So they bank attachment first and hope the answers will quietly evolve. They almost never do.
+      </p>
+      <p>
+        Two. They have not actually answered the questions for themselves yet. Asking the other person forces them to answer. They are not ready.
+      </p>
+      <p>
+        Three. They believe romantic chemistry will solve the underlying mismatch later. It will not. Romantic chemistry has never solved a money difference, a family expectation, or a child question. It just delays the bill.
+      </p>
+
+      <h2>Money</h2>
+      <p>
+        The conversation people imagine: "how much do you earn, how much do you save, what are your investments." This is the wrong conversation. Numbers are downstream of the actual variable.
+      </p>
+      <p>
+        The actual variable is your relationship to money. What it means to you. What it represents. Whether it is for security or for freedom or for status or for experience. What you feel when you spend it. What you feel when you do not have enough of it.
+      </p>
+      <p>
+        Two people on very different incomes can be deeply money-compatible if they share a relationship to money. Two people on the same income can be money-incompatible if one of them treats it as oxygen and the other treats it as fuel.
+      </p>
+      <p>
+        Useful questions to surface this, by month two: "What did money feel like in your house growing up." "What is the most ridiculous thing you have ever spent money on, and do you regret it." "If you got a thirty percent raise tomorrow, where would the money actually go in your life."
+      </p>
+
+      <h2>Family</h2>
+      <p>
+        Family is the conversation people are most afraid to have because the answers feel non-negotiable. They are right that the answers are non-negotiable. They are wrong that this means the conversation is risky.
+      </p>
+      <p>
+        The risky thing is not knowing. Finding out at month nine that they call their mother three times a day and you call yours twice a year is not a logistical problem. It is a worldview gap that will sit at every holiday for the rest of your relationship.
+      </p>
+      <p>
+        The conversation is not "tell me about your family." That gets you a polished answer. The conversation is more like: "What role do you imagine your family playing in your life in five years." "How often do you want to see them, realistically, not aspirationally." "If your parents and I ever disagreed about something important, what does that scenario look like to you."
+      </p>
+      <p>
+        A friend of mine spent two years with a guy whose mother had a key to his apartment. She thought she could solve this by being patient. She could not. The structure was the structure. He liked it that way. She found that out at month four. She left at month twenty-six. Eighteen months were spent trying to negotiate a thing that was not negotiable.
+      </p>
+
+      <h2>Kids</h2>
+      <p>
+        The kids conversation is the one people defer the longest and pay for the most.
+      </p>
+      <p>
+        The "I want kids" / "I do not want kids" headline is just the beginning. The harder questions are downstream of that. When. How many. With how much help. With what division of labour. With what life sacrifices. Most kids-related breakups are not "yes" versus "no." They are different "yes" answers that turned out to be incompatible.
+      </p>
+      <p>
+        You do not have to lock anything in. You do have to know what each of you currently thinks. By month three, ideally. Not on date one, which is performative. Not at month nine, which is too late to walk away from cheaply.
+      </p>
+      <p>
+        A useful frame: "If I asked you to describe your ideal life at forty-five, in two sentences, what would those two sentences include." The answer reveals more than any direct question. People do not lie about the picture in their head when you ask it like that.
+      </p>
+
+      <h2>Ambition</h2>
+      <p>
+        Ambition is the most underrated of the four. People think of it as a career topic. It is not. It is a worldview topic.
+      </p>
+      <p>
+        Two people with mismatched ambition will burn each other out. Not because one is "trying harder." Because one of them organises their life around a project and the other organises their life around presence, and these are different relationships to time. They show up in how each of you treats weekends, how each of you treats free hours, how each of you treats your phone after 7pm.
+      </p>
+      <p>
+        Ambition does not have to match. It has to fit. Two ambitious people can build a working relationship if they have a shared understanding of how the ambition is going to feel in the room. One ambitious and one present-oriented can work if both of them name what is happening and what each will give up. The pairings that explode are the ones where neither person admits which side they are on.
+      </p>
+
+      <h2>How to actually have these conversations</h2>
+      <p>
+        Not all at once. Not as a syllabus. One topic per dinner across two or three months, woven into conversations that are already happening. The trigger sentence is almost always something the other person said first.
+      </p>
+      <p>
+        They mention an annoying family text. You ask the family question. They mention a coworker getting promoted. You ask the ambition question. They mention a friend who just had a baby. You ask the kids question. Anchor each conversation to something real, not a calendar.
+      </p>
+      <p>
+        And write down what they say. Not as evidence. As memory. Three months later you will not remember the texture of what they said about their mother. You will remember the headline. The headline is rarely the useful thing.
+      </p>
+    </>
+  ),
+
+  "fixable-vs-structural-mismatch": (
+    <>
+      <p>
+        Some incompatibilities resolve. Some never do. Most people cannot tell the difference in the moment, so they either bail on workable problems or grind for years against unworkable ones. Both errors cost about the same amount of life.
+      </p>
+      <p>
+        The categories are clearer than they look from the inside.
+      </p>
+
+      <h2>The two-axis test</h2>
+      <p>
+        Ask two questions about any given mismatch.
+      </p>
+      <p>
+        One. Is the underlying thing about a skill or about a structure. Skills can be learned. Structures cannot, or at least not without rebuilding the person.
+      </p>
+      <p>
+        Two. Does the person treat it as their thing to work on, or as something they expect the world to accommodate. People who own their patterns can usually shift them. People who treat their patterns as identity rarely do.
+      </p>
+      <p>
+        Most "is this fixable" questions answer themselves once you separate skill from structure and ownership from expectation.
+      </p>
+
+      <h2>What is almost always fixable</h2>
+      <p>
+        <strong>Communication habits.</strong> Most early communication problems are skill problems. He does not initiate text threads. She gets defensive when asked direct questions. He goes quiet for hours when stressed. These look like personality. They are usually muscle memory from previous relationships, and muscle memory rebuilds in months, not years, if both people are working at it.
+      </p>
+      <p>
+        <strong>Logistical wiring.</strong> One of you runs five minutes late to everything. One of you needs everything calendared. One of you cannot fall asleep with the bedroom warmer than 18 degrees. These create wear but they are negotiable. Couples build operating systems around them all the time.
+      </p>
+      <p>
+        <strong>Sex frequency and shape.</strong> This is the one people are most afraid is structural. It mostly is not, in year one. It is often a stress, sleep, novelty, or context problem that responds to conversation. Real structural sex mismatches exist, but they take longer to confirm than people think and most early gaps are not them.
+      </p>
+      <p>
+        <strong>Most aesthetic differences.</strong> She likes the apartment minimalist. He has framed concert posters. This is preference. It is not load-bearing. Couples solve it.
+      </p>
+
+      <h2>What is almost never fixable</h2>
+      <p>
+        <strong>Different fundamental relationships to honesty.</strong> If one of you considers omission a tool and the other considers it a wound, this does not converge. You can patch over it for a long time. It will still be true at year five.
+      </p>
+      <p>
+        <strong>Different definitions of monogamy or commitment.</strong> Not "do we want commitment." That is mostly a pace question. The structural version is: what does loyalty actually look like to you in practice. If your two answers differ at the level of definition, no amount of conversation merges them.
+      </p>
+      <p>
+        <strong>Different baselines for emotional regulation.</strong> If one of you can sit with a feeling for twelve hours and the other cannot tolerate fifteen minutes of discomfort without making it the room's problem, this is not a skill gap. It is a wiring gap. It can be partially managed. It does not disappear.
+      </p>
+      <p>
+        <strong>Different relationships to growth.</strong> One of you treats your life as something to keep editing. The other treats their life as something to defend from edits. This is structural. People who do not want to change do not change.
+      </p>
+      <p>
+        <strong>Kids, location, and core lifestyle.</strong> The big logistical "yes / no" answers. Not because the topics are sacred. Because the costs of accommodating someone else's "yes" or "no" on these are too high to fake.
+      </p>
+
+      <h2>The "if only" trap</h2>
+      <p>
+        The clearest sign you are facing a structural mismatch is the recurrence of the sentence "this would be perfect if only X." If you have been thinking that sentence about the same X for more than three months, X is structural.
+      </p>
+      <p>
+        Fixable problems get smaller as you both work on them. Structural problems stay the same size or get bigger. They get bigger because tolerance for them erodes over time, not because the thing itself is changing.
+      </p>
+      <p>
+        I had a relationship where the recurring "if only" was about a specific kind of withdrawal during stress. I told myself this was a skill problem for a year. It was not. He had been doing that since he was nine. He was not interested in changing it. The thing did not need to be fixable. He needed to want to fix it. He did not. That was the actual data.
+      </p>
+
+      <h2>The other trap</h2>
+      <p>
+        Treating fixable things as structural is the other failure mode and it costs about the same. People walk away from genuinely workable relationships because they confuse early friction with destiny.
+      </p>
+      <p>
+        Skills look like personality early. He is "bad at conflict." She is "emotionally unavailable." He "cannot communicate." These descriptions feel like they are pointing at structure. Usually they are pointing at habits that no one ever required either person to update.
+      </p>
+      <p>
+        The test is whether the person, given specific feedback, takes the feedback seriously without making the feedback itself a fight. If yes, almost certainly fixable. If no, almost certainly structural.
+      </p>
+
+      <h2>The conversation that tells you which one you have</h2>
+      <p>
+        At the three-month mark, take the single mismatch that is bothering you most. Describe it once, clearly, in a single sentence. Not a list. One sentence.
+      </p>
+      <p>
+        Watch what they do with it. Do they get curious. Do they get defensive. Do they say "yeah, I know, I have been working on that." Do they say "well, you do X" before you have finished talking.
+      </p>
+      <p>
+        Their response, more than the content of the mismatch itself, is the data. It will tell you whether you are looking at something that has six months of work in it or twenty years.
+      </p>
+      <p>
+        You can love someone deeply and still owe yourself the truth about which one it is.
+      </p>
+    </>
+  ),
+
+  "compatibility-is-mostly-about-defaults": (
+    <>
+      <p>
+        When people talk about compatibility they usually describe shared interests. We both love hiking. We both watch the same shows. We both grew up in similar towns. This is the version of compatibility that fits on a dating app.
+      </p>
+      <p>
+        It is also not the version that predicts whether a relationship lasts.
+      </p>
+      <p>
+        The thing that actually predicts whether a couple stays a couple is whether their unconscious defaults line up. What each of you does on autopilot is most of the relationship. The interests are decoration on top.
+      </p>
+
+      <h2>What I mean by defaults</h2>
+      <p>
+        Defaults are the things you do without choosing to do them.
+      </p>
+      <p>
+        What you do when you get home and the apartment is empty. What you do when you have forty unstructured minutes. What you do when someone you love is upset. What you do when you are upset. What you do when a stranger is rude. What you do when you are bored. What you do at 11pm on a weeknight. What you do when you are happy.
+      </p>
+      <p>
+        Most of life is defaults. Big choices are rare. The shape of an ordinary Tuesday is almost entirely default behavior, and the shape of an ordinary Tuesday is the actual texture of a relationship.
+      </p>
+
+      <h2>The default categories that matter most</h2>
+      <p>
+        <strong>The decompression default.</strong> How does each of you wind down after a hard day. Some people need quiet alone time. Some need to talk it out. Some need a walk. Some need a screen. Two partners with very different decompression defaults can spend years feeling subtly let down by each other without ever being able to name why.
+      </p>
+      <p>
+        <strong>The hospitality default.</strong> How do you each treat people who come into your shared space. One of you may treat hosting as a small event that requires preparation. The other may treat it as an extension of normal life. Neither is wrong. They are completely different operating systems and they will not auto-merge.
+      </p>
+      <p>
+        <strong>The repair default.</strong> When something has gone wrong between you, what is the first move each of you makes to make it less wrong. Some people apologise immediately. Some need to think before they can apologise honestly. Some make food. Some make jokes. Some get quiet and tender. The repair default is the single best predictor of recovery time after conflict.
+      </p>
+      <p>
+        <strong>The Sunday default.</strong> How does each of you treat unstructured time. One of you may default to productivity. One to social contact. One to rest. One to long projects that have no deadline. This is a values default disguised as a logistical one.
+      </p>
+      <p>
+        <strong>The information default.</strong> When something happens in your life, how soon does the person you are with hear about it, and at what level of detail. Some people share by reflex. Some share by request. Some share late and edited. Mismatched information defaults create a slow asymmetry that looks like the more-sharing person caring more. Often they just default differently.
+      </p>
+
+      <h2>Why defaults are hard to read early</h2>
+      <p>
+        On dates, almost nobody is on default. They are dressed, they are performing some version of themselves, they are running a higher-effort program than they will run at month nine. You cannot read someone's defaults from a date.
+      </p>
+      <p>
+        You can read them from texture moments. The morning after a late night. A long car ride. An afternoon at someone else's house. A small inconvenience that they did not see coming. These are the moments where the default leaks out around the performance.
+      </p>
+      <p>
+        I noticed once, on a fourth date, that my date stood up to greet a friend's parent when the parent walked into the room. He did it without thinking. That was a default. I had spent the previous three dates trying to read his personality. I had not learned anything as useful as that one unconscious half-second of standing up.
+      </p>
+
+      <h2>How to test for default alignment</h2>
+      <p>
+        Spend a weekend with the person without a plan. No tickets, no reservations, no agenda. Just two days of empty time in proximity.
+      </p>
+      <p>
+        Pay attention to what each of you reaches for. Who suggests food first. Who needs to go for a walk. Who wants the TV on. Who wants quiet. Who picks up the phone. Who puts it down. Who suggests something and who responds. By Sunday night you will know more about your default compatibility than you would learn in six months of curated dates.
+      </p>
+      <p>
+        You can also do this with a smaller experiment. The first time you are at their apartment when neither of you is feeling great. Watch what they do. Watch what you do. Watch what happens between you. The data is right there and most of it is unconscious.
+      </p>
+
+      <h2>What to do when the defaults do not match</h2>
+      <p>
+        Defaults can be adjusted at the margins, by both partners, with conscious effort. Defaults cannot be replaced. Knowing the difference is the entire game.
+      </p>
+      <p>
+        Two people with different decompression defaults can build a workable arrangement where one of them gets thirty minutes of quiet on arrival home before any conversation happens. That is an adjustment. Asking the alone-time person to switch to being a talk-it-out person is a replacement, and replacements do not work.
+      </p>
+      <p>
+        Most "we just want different things" breakups are actually "we have different defaults and neither of us was willing to adjust at the margins." The defaults themselves were not the problem. The unwillingness to design around them was.
+      </p>
+
+      <h2>The point</h2>
+      <p>
+        You are not looking for someone whose interests overlap with yours. You can find someone interesting in five minutes. You are looking for someone whose unconscious autopilot fits next to yours without grinding.
+      </p>
+      <p>
+        That is not a romantic-sounding sentence. It is the truer one. The relationships that last are the ones where, on the most ordinary Tuesday, two sets of defaults sit comfortably in the same room and neither person notices they are doing it. That non-noticing is the thing.
+      </p>
+    </>
+  ),
+
   "what-your-dating-profile-is-actually-communicating": (
     <>
       <p>
@@ -1871,6 +2566,2151 @@ const ARTICLE_CONTENT: Record<string, React.ReactNode> = {
       </p>
       <p>
         This is the entire move. Stop arguing that you are qualified. Start showing what the evening looks like. The right people will accept the invitation.
+      </p>
+    </>
+  ),
+
+  "the-death-of-hey": (
+    <>
+      <p>
+        I have a folder on my desktop called "screenshots people send me" and somewhere in the high hundreds of those screenshots is a one-word opener. Usually it is "Hey." Sometimes "Hi" or "Heya" or, in the worst cases, "Yo." The person who sent the screenshot is always asking the same question, which is some version of: why is nobody replying to me.
+      </p>
+      <p>
+        The honest answer is that "hey" does not give the person on the other end anything to do with their thumbs. And on a Tuesday night at 9:47pm, when they are lying in bed and have already swiped through forty profiles and answered seven other messages, what they need from you is not a greeting. They need a reason to keep going.
+      </p>
+      <p>
+        I am not the first person to say this. There are tweets about it. There are TikToks. There are dating coaches in fluorescent ring lights who have been saying for five years that "hey" does not work. And yet I still see the folder fill up, every week, with new screenshots.
+      </p>
+      <p>
+        So I want to actually look at why this is.
+      </p>
+
+      <h2>What "hey" does in the receiver's brain</h2>
+      <p>
+        When a stranger sends you a single-word message, your brain does a tiny piece of math. It compares the effort they put in to the effort it would take you to reply. "Hey" is roughly four keystrokes of effort. A real reply, the kind that builds anything, is probably two to four sentences. That is a 20x effort imbalance and the receiver feels it immediately, even if they do not name it.
+      </p>
+      <p>
+        So they triage. The hottest 10% of profiles get a "hey" reply back, because the receiver wants to keep the door open and is willing to absorb the cost. Everyone else gets nothing. The math is brutal and almost entirely invisible to the sender.
+      </p>
+
+      <h2>The opener does not need to be clever</h2>
+      <p>
+        The biggest mistake people make when they finally give up on "hey" is to swing to the other extreme. They write an opener that is structurally a small essay. Three sentences. A joke. A compliment. A question. By the end of it the receiver feels like they have been pitched, which is its own kind of off-putting.
+      </p>
+      <p>
+        The opener that consistently outperforms both poles is short, specific, and tied to one thing in the other person's profile. One observation, one question, done.
+      </p>
+      <blockquote>"That photo of you with the dog at the lake is excellent. Whose lake?"</blockquote>
+      <p>
+        That is twelve words. It does three things at once. It tells them you actually looked. It compliments without being weird about appearance. And it asks a question that requires four words to answer but invites more.
+      </p>
+
+      <h2>Specificity is the entire trick</h2>
+      <p>
+        Here is the test I run on every opener. Could this same opener have been sent to anyone else on the app, with nothing changed? If the answer is yes, the opener is dead on arrival. It does not matter how warm it sounds or how confident it reads. It is generic, and generic gets the same brain math as "hey."
+      </p>
+      <p>
+        Compare "Your profile is amazing" with "You said your favourite restaurant in Sydney is Continental Deli and I have made two of my friends move there for the wine specifically. Are you a wine person or did you go for something else."
+      </p>
+      <p>
+        The first one could be sent to literally every woman on Hinge. The second one could only be sent to her. The cost of writing the second one is maybe thirty seconds of actually reading her profile. The lift in reply rate, in my experience helping people draft these, is somewhere between 3x and 8x depending on how good the underlying profile is.
+      </p>
+
+      <h2>What about when they have nothing in their profile</h2>
+      <p>
+        Sometimes the receiver has a sparse profile. Three photos, no prompts, a one-line bio. The temptation here is to just send "hey" because what else are you supposed to grab onto. The move is not to grab onto content. The move is to grab onto the absence of content.
+      </p>
+      <blockquote>"Your profile is the most efficiently empty profile I have seen this week. Are you on here on a dare or genuinely trying."</blockquote>
+      <p>
+        It is dry. It is specific to what you actually noticed. It gives them something to defend or laugh about. The reply rate on lines like this is genuinely surprising the first time you watch it work. The receiver is not stupid. They know their profile is thin. The thing they do not get from anyone is honesty about it.
+      </p>
+
+      <h2>"Hey" is not the disease. It is the symptom.</h2>
+      <p>
+        People who default to "hey" are usually not lazy. They are usually anxious. They have been ghosted before. They have written long, careful openers that got nothing back. So they have rationally reduced their effort to match the expected payoff, which is zero.
+      </p>
+      <p>
+        The fix is not to bully yourself into writing better openers from the place of anxiety. The fix is to lower the stakes of any single opener. Send three a night. Send observations, not pitches. If one in five gets a reply, you are doing better than the median user on every major app.
+      </p>
+      <p>
+        If you treat openers like art pieces you have to nail every time, you will keep falling back to "hey," because "hey" is the only line that costs nothing when it fails.
+      </p>
+
+      <h2>What I would actually do this week</h2>
+      <p>
+        Open your top three matches that have not replied to your "hey" in the last week. Do not double text "hey hey" or send a follow-up about whether they are still there. Both of those are worse than the original "hey."
+      </p>
+      <p>
+        Instead, open their profile again. Find one specific thing. Send a new message that grabs that thing and asks one short question about it. Do not reference the previous "hey" at all. Pretend it never happened.
+      </p>
+      <p>
+        Half of those will still go nowhere. That is fine. The other half will surprise you, because the receiver had also forgotten about the original "hey," and what they are actually responding to is the new message arriving like it was written by a person who saw them.
+      </p>
+      <p>
+        That is the entire move. Stop greeting strangers. Start noticing them out loud.
+      </p>
+    </>
+  ),
+
+  "reply-rhythm-and-when-silence-means-something": (
+    <>
+      <p>
+        I want to talk about the gap between messages. Not the messages themselves. The pause. The thing that happens in the white space between when you sent yours and when theirs arrives, or doesn't.
+      </p>
+      <p>
+        I have spent a lot of time on this, partly because the people I help draft messages are usually more anxious about reply rhythm than about the messages themselves. They want to know what it means that he took four hours, or what it means that she replied in twelve seconds and then went quiet for two days, or whether they should match the other person's cadence on purpose.
+      </p>
+      <p>
+        Most of the advice on this topic is wrong, in opposite directions. So I want to lay out what I actually believe after looking at a lot of threads.
+      </p>
+
+      <h2>Cadence is not a code</h2>
+      <p>
+        The dominant narrative online is that response time is a signal. Fast means interested. Slow means cooling off. Match their pace or look needy. There are entire TikTok subcultures built around the idea that the person who waits longer wins.
+      </p>
+      <p>
+        This is mostly nonsense. It treats messaging like poker, where every move is a tell. In real life, a four-hour gap on a Tuesday afternoon usually means the person had a meeting. A nine-hour gap overnight usually means they were asleep. A two-day gap on a weekend usually means they had a weekend. The base rate of "I was busy" is extremely high and people consistently underestimate it.
+      </p>
+      <p>
+        What is true is that across the whole arc of a conversation, the rhythm tells you something. Not from any single gap. From the pattern.
+      </p>
+
+      <h2>The patterns that actually mean something</h2>
+      <p>
+        If you watch the cadence over a week, three patterns reliably mean something.
+      </p>
+      <p>
+        The first is symmetrical decay. Both of you are replying slower than you were on day one. The messages are still warm. The gaps are just longer. This usually means the conversation has hit a natural ceiling and it needs to move to a phone call or a plan, or it will quietly evaporate. Neither of you is doing anything wrong. Threads have lifespans and you are at the end of one.
+      </p>
+      <p>
+        The second is asymmetrical decay. You are replying within an hour and they are replying the next morning, every time, for four days in a row. This one does mean something. It means they are interested enough to keep responding but not interested enough to prioritize. The polite version of this is "they are juggling and you are not the top of the queue." The honest version is to ask them to make a plan, and if they hedge, save your energy.
+      </p>
+      <p>
+        The third is the dead drop. They were replying within minutes. Then nothing. For sixteen hours, twenty four, forty eight. This one feels like the worst but it is actually the cleanest. Either they got busy and will come back with an explanation, or they got distracted and will come back without one, or they faded. The thing not to do is to fill the silence with three follow-up messages. That converts a possibly-recoverable thread into a definitely-dead one.
+      </p>
+
+      <h2>Why people send the second message too fast</h2>
+      <p>
+        The single most common thing I watch people do is reply within ninety seconds of getting a message. They were waiting. They had the phone face up. They saw the notification, opened it, typed back instantly.
+      </p>
+      <p>
+        This is fine in long-running relationships where the cadence is already established. In the first two weeks of talking to a stranger, it does one thing, which is to slowly recalibrate the other person's expectation of your availability. They learn that you are always there. Then when you are not there, for a perfectly normal reason, it reads louder than it should.
+      </p>
+      <p>
+        I am not telling you to play hard to get. I am telling you that batching your replies, even just twice a day for the first week, protects you from a dynamic where your silence becomes information.
+      </p>
+
+      <h2>The double text rules everyone gets wrong</h2>
+      <p>
+        There is a piece of internet wisdom that you should never double text. This is wrong. Double texting is fine. The actual rule is that the second text needs to add value, not request validation.
+      </p>
+      <p>
+        A double text that adds value: "Just saw a guy on the train wearing the exact shirt from your fourth photo. Either you have a twin or that shirt is in heavy circulation in Newtown." That is a gift. They get to laugh. They get to reply or not.
+      </p>
+      <p>
+        A double text that requests validation: "Hey, did you see my last message?" or "Just checking you didn't ghost me lol." Both of these put the receiver in a position where their next move has to be defense or apology, which is never a good frame for what comes after.
+      </p>
+      <p>
+        If you have a thing to say, say it. If you are just looking for reassurance, send it to a friend, not to them.
+      </p>
+
+      <h2>When silence actually means something</h2>
+      <p>
+        In my experience, silence past about seventy-two hours, with no explanation when they come back, is the signal. Not the four hours. Not the overnight gap. The three-day no-reply followed by them surfacing again with no acknowledgement of the gap.
+      </p>
+      <p>
+        That is a person telling you, gently, that you are not the priority and they would rather you stop expecting them to be. Sometimes you can have a perfectly nice text relationship with that person. You will probably never have a relationship of any other shape.
+      </p>
+      <p>
+        The error I watch people make is to read the surface message and ignore the silence. He sent a "hey how was your weekend" after disappearing for four days, so things must be back on track. They are not back on track. They are on his terms now, and his terms are intermittent.
+      </p>
+
+      <h2>The honest move</h2>
+      <p>
+        If you find yourself watching the timestamp on your phone and doing math about whether two hours is too long to wait before replying, that is the actual signal. Not about them. About you.
+      </p>
+      <p>
+        That much vigilance is exhausting and almost always a sign that the thread is not giving you what you want, regardless of cadence. The fix is rarely to play the cadence game better. The fix is usually to ask for a plan, or to start a thread with someone who does not require this much math.
+      </p>
+      <p>
+        Reply rhythm is real. It tells you something. But the thing it usually tells you is not what they are doing. It is what you are doing.
+      </p>
+    </>
+  ),
+
+  "how-to-rescue-a-dead-thread": (
+    <>
+      <p>
+        Dead threads. We all have them. A conversation that started well, went somewhere interesting for a day or two, and then went quiet. Maybe you sent the last message. Maybe they did. Either way, three weeks have passed and the thread is sitting there in your inbox like a piece of unfinished homework.
+      </p>
+      <p>
+        The instinct most people have is to either pretend it never happened and ghost back, or to send a "hey stranger" message that performs casualness while signalling slight resentment. Both of these are bad. There is a better move, and it works more often than you would think.
+      </p>
+
+      <h2>Why threads die in the first place</h2>
+      <p>
+        Before you can rescue one, you need to know how they die. There are three common deaths.
+      </p>
+      <p>
+        The natural fade. The conversation hit a topic ceiling. You ran out of obvious things to say. Both of you got distracted by life. Neither of you was less interested. The thread just lost momentum.
+      </p>
+      <p>
+        The mismatched signal. One of you tried to escalate (asked to meet, asked for a number, suggested a call) and the other one was not ready, so they got vague, and the vagueness made the first person retreat. Now you are both in stalemate, waiting for the other one to do something.
+      </p>
+      <p>
+        The actual disinterest. They were never that into it and were politely letting it taper. This is the death you cannot rescue and you should learn to spot it quickly so you stop wasting energy.
+      </p>
+      <p>
+        The first two are recoverable. The third one is not. The difference is mostly about what their last message looked like. If their last message was warm and just trailed off, it was probably a fade. If their last message was a polite one-word answer to a question you asked, it was probably actual disinterest.
+      </p>
+
+      <h2>The rescue move</h2>
+      <p>
+        The thing that consistently rescues a dead thread is what I think of as the low-stakes specific re-entry. You come back with something concrete, something that does not reference the silence, and something that does not put any pressure on them to explain themselves.
+      </p>
+      <p>
+        The structure is roughly: a thing that just happened, in your actual life, that reminded you of them. Specific enough that it could only have reminded you of them. With a question that takes ten seconds to answer.
+      </p>
+      <p>
+        Example. Three weeks of silence. Their last message had mentioned they were really into a particular Korean fried chicken place in Surry Hills. Your re-entry:
+      </p>
+      <blockquote>"Walked past Gami last night and remembered you said the cheese version is the move. Did I dream that or do I owe you a try."</blockquote>
+      <p>
+        That is twenty-one words. It does not say "hey, sorry for the silence." It does not say "thought I'd check in." It does not explain itself. It just lands like a person who remembered.
+      </p>
+      <p>
+        The reply rate on these, in my experience, is genuinely surprising. Conversations I had given up for dead come back within six hours.
+      </p>
+
+      <h2>Why this works</h2>
+      <p>
+        Two things are happening in the receiver's brain when this message arrives.
+      </p>
+      <p>
+        The first is relief. They were sitting on a small social debt to you and now you have removed it without making them apologize. That is a gift.
+      </p>
+      <p>
+        The second is recognition. You remembered a specific thing they said three weeks ago. Almost no one does that. The mere fact that you did says more about you than any clever opener could.
+      </p>
+
+      <h2>What not to do</h2>
+      <p>
+        A short list of moves that kill any chance of rescue.
+      </p>
+      <p>
+        The guilt re-entry: "Long time no talk, hope you didn't forget about me." This is a small accusation in a friendly font. They will read it as one.
+      </p>
+      <p>
+        The reset re-entry: "Hey, I know it's been a while, life has been crazy, but I'd love to catch up." This is a tiny essay about you that requires them to respond with their own tiny essay about why they were also busy. Nobody wants this.
+      </p>
+      <p>
+        The pity re-entry: "Last try, I promise." Now you have given them a graceful exit and most people will take it.
+      </p>
+      <p>
+        The clean-slate re-entry: "Starting over. Hi, I'm Tom." Cute in theory. Reads as anxious in practice.
+      </p>
+      <p>
+        All of these draw attention to the silence. The silence is exactly the thing you do not want to draw attention to. Re-entry works when it feels like a natural continuation of a conversation that never really stopped, not like a rescue mission.
+      </p>
+
+      <h2>When to not even try</h2>
+      <p>
+        If their last message was a polite one-liner that closed a question without opening anything new, leave it. Examples: "Haha yeah", "True", "Same here". These are graceful end-of-conversation signals. Trying to rescue them just confirms you did not read the room.
+      </p>
+      <p>
+        If you sent the last two messages and got nothing back, do not send a third. The thread is asking you to stop.
+      </p>
+      <p>
+        If they have posted a new prompt or photo on their profile since the last message and still have not responded, they have actively chosen not to reply while being active on the app. This is not a fade. This is information.
+      </p>
+
+      <h2>The longest gap I have seen recover</h2>
+      <p>
+        A friend of mine had a thread go dark for nine weeks. He had given up. He went on three other dates in the meantime. Then he was at a wedding and saw someone wearing the exact pattern of socks that this person had mentioned, in passing, as a joke about her dad. He sent a photo of the socks with the message "your dad's wedding twin spotted in Newtown."
+      </p>
+      <p>
+        She replied in seven minutes. They went out the next weekend. They are still together.
+      </p>
+      <p>
+        I am not saying every dead thread is recoverable. Most are not. But the rescue move costs you almost nothing and works often enough that it is worth the swing, especially on threads that started with real promise.
+      </p>
+      <p>
+        The rule is the same as the rule for the original opener. Notice something specific. Say it out loud. Ask a small question. The fact that you waited three weeks is a non-issue if your re-entry sounds like a person, not like an apology.
+      </p>
+    </>
+  ),
+
+  "when-to-ask-them-out": (
+    <>
+      <p>
+        The question I get most, by a wide margin, is when to ask someone out. People want a rule. Three days. Twenty messages. Two days of consistent conversation. Some sort of timer that, when it goes off, gives them permission.
+      </p>
+      <p>
+        The honest answer is that there is no timer. There is a moment. And the people who consistently move from text to date are people who have trained themselves to feel that moment instead of counting.
+      </p>
+      <p>
+        But because "feel the moment" is not a usable answer, let me try to be more specific.
+      </p>
+
+      <h2>The cost of waiting too long</h2>
+      <p>
+        The mistake people make most often is waiting too long. The conversation goes well. Then it goes well for another day. Then another. Then another. And by day six, both of you have used up the easy material, the energy is starting to flatten, and there is now a tiny dread in the receiver's stomach every time your name comes up, because they know the date question is coming and the conversation has gone on so long that the date now has to live up to a week of expectation.
+      </p>
+      <p>
+        I have watched this happen many times. The thread starts strong, peaks around day three or four, and then dies in the gap between "we should hang out sometime" and an actual plan. The window for asking was day three. By day six you have missed it and you do not get a second one.
+      </p>
+
+      <h2>The cost of asking too early</h2>
+      <p>
+        The other failure mode, less common but real, is asking too early. You match Tuesday at 9pm. You send two messages back and forth. You ask her out at 11pm. She has not even decided yet whether she finds you interesting and you have made her decide whether to spend her Saturday night on you.
+      </p>
+      <p>
+        The bar for "yes" goes up. She gets cautious. The conversation that should have built rapport collapses into a planning conversation she did not want to have yet.
+      </p>
+      <p>
+        The frame I use is that you are not asking permission to meet. You are extending a natural next step from a conversation that has already become interesting. If the conversation has not gotten interesting yet, the ask is premature.
+      </p>
+
+      <h2>The actual signal that it is time</h2>
+      <p>
+        The moment is usually a specific kind of message they send, not a number of days that have passed.
+      </p>
+      <p>
+        The most reliable signal: they reference something specific you would do together. "You'd love this place." "Have you been to that bar." "I'm trying to find someone to go to this gig with." These are open doors. They are inviting you to walk through.
+      </p>
+      <p>
+        The second most reliable signal: they ask you a question that only makes sense if they are picturing meeting you. "Are you actually as tall as your photos suggest." "Do you have a weekend regular or are you more spontaneous." These questions are them building the mental model of what hanging out would be like.
+      </p>
+      <p>
+        The third signal: the conversation has a natural rhythm and both of you are clearly enjoying it, but you are starting to repeat yourselves. This is the conversation telling you it has done its job and the next phase needs to be in person.
+      </p>
+      <p>
+        If any of these are happening, the moment is now. Not tomorrow. Not after one more day. Now.
+      </p>
+
+      <h2>How to actually ask</h2>
+      <p>
+        The most important thing is to not pose it as a question that requires a yes or no.
+      </p>
+      <p>
+        "Would you want to maybe grab a drink sometime" is the worst version. It is vague. It is hedged. It puts the entire weight of the decision on her and gives her no useful information.
+      </p>
+      <p>
+        "There is a wine bar on Crown St I have been wanting to try. Are you free Thursday or Saturday." is the right structure. You have done the work. You have proposed a thing. You have given her two options. She can say yes to one, or counter with a different day, or say no. All of those are easy for her to do.
+      </p>
+      <p>
+        The hidden cost of vague asks is that they make the other person do the work of planning the date in their head before they even agree to it. Most people will not bother. They will say "yeah let's do that sometime" and that "sometime" will never come.
+      </p>
+
+      <h2>When she is busy vs when she is dodging</h2>
+      <p>
+        A common confusion. She said yes she wants to go out but cannot do Thursday or Saturday. How do you read this.
+      </p>
+      <p>
+        If she counters with a specific other day, she is in. Plan it.
+      </p>
+      <p>
+        If she says "I'm slammed this week, can we sort something next week" with no specific day, she is probably in but you should take her at her word and not push. Wait three days, then come back with one specific suggestion for the following week.
+      </p>
+      <p>
+        If she says "let me check my schedule and get back to you," she is not in. She might be, in some other timeline, but right now she is not. Do not chase. If she comes back, treat it like a fresh ask. If she does not, that was your answer.
+      </p>
+
+      <h2>The thing I had to learn the hard way</h2>
+      <p>
+        For a long time I treated the ask as the hardest part of the conversation. I would build up to it. I would over-rehearse it. I would send it after seven careful drafts.
+      </p>
+      <p>
+        The actual hardest part is the conversation before the ask. If the conversation is good, the ask is a tiny administrative step. If the conversation is mediocre, no version of the ask will save it.
+      </p>
+      <p>
+        So the move, mostly, is to stop optimizing the ask and start paying attention to whether the conversation has earned the ask. If it has, almost any version of "hey, want to grab a drink Thursday" will work. If it has not, no perfect script will rescue it.
+      </p>
+
+      <h2>A simple test</h2>
+      <p>
+        Read your last three messages back to back. If you, as an outside observer reading the thread, would think "these two should clearly meet up," it is time to ask. If you would think "these two are still figuring out whether they like each other," it is not.
+      </p>
+      <p>
+        That is the entire signal. Trust it. The window does not stay open forever.
+      </p>
+    </>
+  ),
+
+  "voice-notes-are-a-cheat-code": (
+    <>
+      <p>
+        I will admit something. For two years I was the person who, when someone sent me a voice note on a dating app, would visibly recoil. I would let it sit unplayed for hours. I had a small theory that voice notes were performative, that they were a way to dodge the actual work of writing a clean sentence, and that anyone who sent them was probably also the kind of person who insisted on FaceTime before meeting.
+      </p>
+      <p>
+        I was wrong. Or, more precisely, I was right about a specific kind of voice note and wrong about the form in general. Done well, a voice note is one of the most efficient moves you can make on a dating app. Done badly, it confirms every fear the receiver has about voice notes.
+      </p>
+      <p>
+        So I want to be specific about the difference.
+      </p>
+
+      <h2>What voice notes actually do that text cannot</h2>
+      <p>
+        A text message communicates words. A voice note communicates words, tone, pace, accent, energy, breath, what your laugh sounds like, and whether you are someone the receiver might enjoy actually being around. That is an enormous amount of information for a thirty-second clip.
+      </p>
+      <p>
+        The reason this matters is that the gap between "this person seems great in text" and "I'd want to spend a Saturday night with this person" is exactly the gap that voice fills. Text can be polished and rehearsed. Voice cannot. The receiver hears whether you actually sound like a relaxed adult or whether you sound like someone who is performing being one.
+      </p>
+      <p>
+        This is why a good voice note often pulls the conversation forward faster than a week of texts. The receiver gets the answer to the question they were going to wait until the first date to answer.
+      </p>
+
+      <h2>The voice notes that work</h2>
+      <p>
+        Three structural patterns I see consistently work.
+      </p>
+      <p>
+        The first is the answer voice note. They asked you a question that was hard to answer in text. Instead of typing five paragraphs, you record forty-five seconds. It feels natural, it gives them your actual thought process, and it ends with you asking them something back. The whole thing took you under a minute and gave them more information than ten text messages would have.
+      </p>
+      <p>
+        The second is the in-the-moment voice note. You are walking somewhere. You just saw something that reminded you of the conversation. You record fifteen seconds of you describing what you just saw, with the ambient sound of the street in the background. This works because it shows them a real moment of your day, which is intimate in a way that a typed message cannot be.
+      </p>
+      <p>
+        The third is the laugh voice note. They sent something funny. Instead of typing "haha," you record yourself actually laughing and then saying one sentence. Your laugh is a piece of information about you. They will remember it. Typed laughs are forgettable.
+      </p>
+
+      <h2>The voice notes that do not work</h2>
+      <p>
+        Three patterns I see consistently fail.
+      </p>
+      <p>
+        The introductory voice note. First message in the thread, three minutes long, you explaining who you are. This is too much. The receiver has not earned the audio commitment yet and the volume of your voice without context lands as pushy.
+      </p>
+      <p>
+        The monologue. Anything over ninety seconds. Even if the content is great, you have asked the receiver to give you their undivided attention for a length of time they did not consent to. They will skip ahead. They will not catch the punchline. They will feel a low-grade obligation to write a long response.
+      </p>
+      <p>
+        The performative voice note. The one where you can hear that you are trying. You are using your radio voice. You have rehearsed. The receiver hears all of this. The thing voice is good at is conveying actual personality. The moment you fake it, you waste the entire advantage of the medium.
+      </p>
+
+      <h2>When to send the first one</h2>
+      <p>
+        The rule of thumb I use, and recommend, is to wait until they have asked you a question that genuinely benefits from a voice answer. Then send the voice note as the answer. This solves the consent problem because they asked.
+      </p>
+      <p>
+        "What's the actual story with the photo of you and the goose" is a question that wants a voice note. "Where are you from" is a question that wants a text answer.
+      </p>
+      <p>
+        You can usually tell the difference because one of them is a setup for a story and the other one is a setup for a one-line fact.
+      </p>
+
+      <h2>The accent thing</h2>
+      <p>
+        People who are self-conscious about their voice or accent often resist voice notes because they think their accent is a liability. In my experience this is almost always wrong. Your accent is information. The receiver gets to decide whether they like it. Most of the time, on dating apps, the receiver has already seen photos and read enough to have made some prior decision, and the voice is just confirmation either way.
+      </p>
+      <p>
+        The thing that does not work is putting on a voice that is not yours. People can hear it, even on a short clip, and it reads as inauthentic in a way that no amount of perfect text grammar can recover from.
+      </p>
+
+      <h2>The format that almost always works</h2>
+      <p>
+        If you have never sent a voice note on a dating app and want to start, here is the format with the highest hit rate.
+      </p>
+      <p>
+        A question they asked, that requires a short story. You answer it in thirty to forty-five seconds. You end with a question back to them. You do not rehearse. You record once. You send it. If you mess up a word, leave it.
+      </p>
+      <p>
+        The fact that you do not rehearse is doing more work than the content. They can hear that you were comfortable enough to just send the take.
+      </p>
+
+      <h2>What I tell people who say "but I hate my voice"</h2>
+      <p>
+        Everyone hates their voice. This is a well-known fact about recorded audio. The first time you hear yourself you sound like a stranger to yourself. Other people do not hear what you hear. They hear what they have been hearing in your photos and your texts, just with the extra dimension of how you actually sound.
+      </p>
+      <p>
+        If you cannot get past the voice-hating, send one anyway. The one you send will be fine. The hundred you do not send because you are too self-conscious to start are the actual cost.
+      </p>
+      <p>
+        The medium is a cheat code if you use it sparingly and well. Use it like a spice, not a base.
+      </p>
+    </>
+  ),
+
+  "the-question-that-actually-tells-you-something": (
+    <>
+      <p>
+        Most questions on dating apps are filler. "What do you do?" "Where are you from?" "What are you doing this weekend?" These questions are not bad, exactly. They are just airline-magazine small talk that fills space without telling either of you anything you did not already know from the profile.
+      </p>
+      <p>
+        I want to talk about the other category of questions. The ones that, in two sentences, give you more information about the other person than a week of small talk would. They are not magic. They are just better designed.
+      </p>
+
+      <h2>What a useful question does</h2>
+      <p>
+        A useful question has three properties. It cannot be answered with a fact. It requires the other person to make a choice or notice something about themselves. And the answer reveals something about how they think, not just what they have done.
+      </p>
+      <p>
+        "Where are you from" fails all three. The answer is a fact. There is no choice to make. And the answer tells you nothing about how they think.
+      </p>
+      <p>
+        "What is the most overrated thing in your hometown" passes all three. It cannot be answered without a small judgment. They have to choose. And whatever they pick tells you what they notice and what irritates them, which is much more useful information than the name of the town.
+      </p>
+
+      <h2>A short list of questions that consistently produce real conversation</h2>
+      <p>
+        These are not gotcha questions. They are not trick questions. They are just questions designed to give the other person something interesting to chew on.
+      </p>
+      <p>
+        "What is something everyone in your industry pretends to enjoy but actually finds boring." This produces honest answers from people who work in any field with a culture. They often have very specific complaints they have never gotten to voice. They will remember that you asked.
+      </p>
+      <p>
+        "What is a small luxury you justify even though it is not very justifiable." This invites them to describe one of the things they actually love, in a slightly self-aware way. The answer always tells you something about their values and their sense of humour.
+      </p>
+      <p>
+        "What do your parents think you do for a living, and how wrong are they." This is great for people who have non-traditional careers. It also reveals their relationship with their parents in passing.
+      </p>
+      <p>
+        "What is the worst piece of advice you keep getting." This taps into something they have actively thought about. The answer is usually specific and slightly funny.
+      </p>
+      <p>
+        I am not saying memorize these and deploy them. I am saying notice the shape. A useful question gives the other person an interesting thing to think about that they have probably not been asked before.
+      </p>
+
+      <h2>Why "what do you do for fun" is a dead question</h2>
+      <p>
+        The reason "what do you do for fun" almost always produces a boring answer is that the question itself is boring. The person on the other end answers with the same three things they have listed on their profile. Read books, go to the gym, see friends. You have learned nothing.
+      </p>
+      <p>
+        A better version of the same question: "what is something you have been quietly obsessed with this month." This is structurally a much better question because it is time-bound (this month) and tone-bound (quietly obsessed). They have to actually think. The answer might be a TV show, a recipe, a person they cannot stop thinking about, a small project. Whatever it is will tell you something specific.
+      </p>
+
+      <h2>The question I ask on every first date</h2>
+      <p>
+        The one I have stolen and used dozens of times: "What is something you used to be really into that you have somehow stopped doing, and you do not know why."
+      </p>
+      <p>
+        This question lands every single time. People give surprisingly vulnerable answers. They had a band in college. They used to write. They used to skateboard. They used to call their grandmother every Sunday. The answer always reveals a small grief, and the conversation that follows is always more honest than the one before it.
+      </p>
+      <p>
+        I am not saying you should send this one on a dating app cold. It is too heavy for a third message. But on a first date, twenty minutes in, after a glass of wine, it is a key that opens the door from small talk to real conversation.
+      </p>
+
+      <h2>The questions to avoid</h2>
+      <p>
+        Three categories of questions consistently fail.
+      </p>
+      <p>
+        Big philosophical questions in early messages. "What is your love language" or "what are you looking for on here" lands as too much, too soon. The receiver has not given consent to that level of self-disclosure yet and the question reads as an interrogation.
+      </p>
+      <p>
+        Past relationship questions. Anything that asks about their last relationship, their ex, their dating history, in the first week. This is information the receiver controls and gets to share when they choose. Asking too early signals that you are using the conversation to triage for risk rather than to actually meet the person.
+      </p>
+      <p>
+        Questions you do not actually want the answer to. Sometimes people ask questions out of politeness, with no interest in the answer. The other person can usually tell. If you do not actually care about their favourite season, do not ask.
+      </p>
+
+      <h2>The reciprocity bit</h2>
+      <p>
+        A useful question is doing twice the work if you also answer it yourself. The structure is: ask, get their answer, give yours. Skipping the "give yours" step makes the conversation feel like an interview. Skipping the "ask" step makes it a monologue.
+      </p>
+      <p>
+        The version of you that is good at this on a date is the version of you that asks a real question, listens to the answer, and then offers your own answer to the same question without being prompted. Three exchanges of this and the conversation has become a real one.
+      </p>
+
+      <h2>What this all adds up to</h2>
+      <p>
+        The shift you want to make, both in texting and in person, is from questions that collect facts to questions that produce thinking. The fact-collection questions are fine for the first thirty seconds of meeting someone. After that, they are filler that wastes the limited attention you have with each other.
+      </p>
+      <p>
+        A better question costs you nothing. You can ask it instead of the boring one. The other person will tell you something that matters. You will remember it. The conversation will have texture that the next ten conversations they have, with other people, will not have. That texture is most of what they will use to decide whether they want to see you again.
+      </p>
+    </>
+  ),
+
+  "wyd-and-other-conversational-dead-ends": (
+    <>
+      <p>
+        There are a small number of messages that, when you send them, are almost guaranteed to either kill a conversation or to drag it into a flat plain where nothing interesting happens. I want to make a list, because some of these are not obviously bad and people send them constantly.
+      </p>
+      <p>
+        The patron saint of the list is "wyd." Three letters that contain almost no information, ask the receiver to summarize their entire existence, and signal a low-effort kind of attention. I have never seen "wyd" produce a good thread. Not once. And yet it remains, on every app, the most common late-night message sent.
+      </p>
+
+      <h2>Why "wyd" fails</h2>
+      <p>
+        "wyd" forces the receiver into one of three answers. They can lie ("just chilling"). They can describe something boring ("just got home from the gym"). Or they can refuse to engage ("nothing much, you?"). None of these answers go anywhere.
+      </p>
+      <p>
+        Compare it to "what does your Tuesday night usually look like." Same energy. Same approximate topic. Vastly different invitation. The second version gives them something to actually describe and signals that you are interested in the texture of their week, not just their immediate availability.
+      </p>
+
+      <h2>The other dead ends</h2>
+      <p>
+        A short tour of the messages that consistently kill conversations.
+      </p>
+      <p>
+        "How was your day?" Generic. The honest answer is almost always "fine" and the honest follow-up is almost always nothing. If you actually want to know about their day, ask about a specific part of it. "How did that thing on Wednesday go" tells them you remembered. "How was your day" tells them you were searching for something to say.
+      </p>
+      <p>
+        "Tell me about yourself." The receiver has to choose what to share with no context. Half of them will give a tiny version of their resume. Most of them will not bother. This question is structurally an interview question and lands as one.
+      </p>
+      <p>
+        "What are you up to this weekend?" In isolation, this is fine. The problem is when it is used as filler instead of as a setup to make a plan. If you are not going to follow it up with a suggestion, do not ask.
+      </p>
+      <p>
+        "How was your weekend?" Same problem as "how was your day." Generic, requires the receiver to summarize, almost never produces more than two sentences of follow-up. Replaceable with any specific question about a part of the weekend you actually have reason to ask about.
+      </p>
+      <p>
+        "Sup." See "hey." Same disease, different decade.
+      </p>
+      <p>
+        "You up?" The receiver knows what this is. There is a time and place for this message and it is week three with a person you have already slept with. Not week one. Not ever, really, on a first thread.
+      </p>
+      <p>
+        "Where you at?" If they have not given you their address yet, this is presumptuous. If they have, why are you texting it instead of meeting them.
+      </p>
+
+      <h2>The pattern under the pattern</h2>
+      <p>
+        All of these messages have the same structural failure. They put the work of finding something interesting to say onto the receiver, while giving them nothing to grab onto. The receiver, on the other end, is now in the position of having to be the entertaining one, the specific one, the person who turns the message into a conversation.
+      </p>
+      <p>
+        Some of them will rise to it, the first few times. Almost none of them will do it twice. By the second "wyd," they have decided that talking to you is going to be effortful in a one-sided way, and they will stop responding.
+      </p>
+
+      <h2>The fix is not to write essays</h2>
+      <p>
+        The fix for dead-end messages is not to swing to the other extreme and write three-paragraph messages with multiple questions and a setup. That has its own failure mode, which is overwhelming the receiver.
+      </p>
+      <p>
+        The fix is to send messages that contain a specific piece of information from your day or a specific reference to their last message, with a small open question attached.
+      </p>
+      <p>
+        Instead of "wyd": "Just got out of a meeting that should have been one email, kind of want to get a beer, what does your Tuesday actually look like."
+      </p>
+      <p>
+        Instead of "how was your day": "I made an actual lasagna last night for the first time and I have a strange amount of pride about it. How was yours."
+      </p>
+      <p>
+        Instead of "tell me about yourself": "I keep meaning to ask, what was the actual story with the photo at the lake."
+      </p>
+      <p>
+        Each of these costs you maybe twenty seconds of thought. The reply rate, compared to the dead-end versions, is dramatically higher.
+      </p>
+
+      <h2>The "good morning" trap</h2>
+      <p>
+        A separate category of message that deserves its own warning: the daily "good morning" text. People send these thinking they are warm and consistent. The receiver, especially in the first two weeks, reads them as a small daily obligation. There is now an expectation that they must reply with their own "good morning" message, and the days they forget will produce a tiny static of guilt.
+      </p>
+      <p>
+        If you want to text in the morning, send something specific. The dream you just had. The thing the coffee shop person said. The fact that you saw a dog in a tiny coat on the way to the train. "Good morning" by itself is wallpaper, and wallpaper does not earn replies.
+      </p>
+
+      <h2>What the conversation actually wants from you</h2>
+      <p>
+        In every thread, the receiver is doing a small ongoing calculation. They are weighing what it costs them to reply versus what they get back from replying. Dead-end messages tilt this calculation against them every time. Specific, slightly observed messages tilt it in their favour.
+      </p>
+      <p>
+        You do not need to be clever. You do not need to be impressive. You just need to send messages that are not wallpaper. The bar is low and most people fail it because they are doing what is easy on autopilot.
+      </p>
+      <p>
+        The single move that fixes most threads is to read your own last message back, ask "could this have been sent to anyone," and if the answer is yes, do not send it. Send the next thought instead. The one with something specific in it.
+      </p>
+    </>
+  ),
+
+  "small-talk-to-real-talk-in-three-moves": (
+    <>
+      <p>
+        Every conversation on a dating app starts as small talk. The question is whether it stays there. The threads that turn into dates, and the dates that turn into something more, are almost always the ones where, at some specific point, the conversation moved from the surface to a layer below. From small talk to real talk.
+      </p>
+      <p>
+        This shift is not random. There is a fairly reliable three-move sequence that does it. I have used it many times. I have watched other people use it. It works often enough that I want to write it down.
+      </p>
+
+      <h2>Move one: the specific noticing</h2>
+      <p>
+        The first move is to notice something about their last message that they probably did not realize they were giving you. Not a fact. A texture. The way they phrased something. The thing they implied without saying. The detail that landed sideways.
+      </p>
+      <p>
+        Example. They said "I just got back from a wedding in Newcastle and I am exhausted." A small-talk reply is "oh nice, how was it." A real-talk reply notices the texture: "Whose wedding makes you exhausted in a good way and whose makes you exhausted in a bad way. That sentence could go either direction."
+      </p>
+      <p>
+        You have just told them that you read their message carefully and that you have an ear for what they are not quite saying. This is the move that signals to them that the conversation is going to be different from the other ones in their inbox.
+      </p>
+
+      <h2>Move two: the trade</h2>
+      <p>
+        Once the texture is in the air, the second move is to trade. You make a small specific disclosure of your own, in the same key. Not a big one. Not a confession. Just enough to signal that you are willing to play at this level too.
+      </p>
+      <p>
+        If they said the wedding was draining because their family was there, you might say "the last family wedding I went to I left two hours in and sat in my car for twenty minutes deciding whether to go back. I went back. I wish I had not." That is a real thing. It is specific. It admits something small without making it the focal point.
+      </p>
+      <p>
+        This is the move most people skip. They want the other person to keep disclosing without giving anything back. That asymmetry kills the real-talk frame within two messages. The other person notices they are doing all the volunteering, and they will retreat.
+      </p>
+      <p>
+        A trade is not the same as a competition. You are not topping their disclosure. You are matching it, in tone and in size. If they say something light and slightly vulnerable, you say something light and slightly vulnerable. If they go a bit deeper, you can too.
+      </p>
+
+      <h2>Move three: the soft question</h2>
+      <p>
+        The third move is the question that asks them to go one click further, but gives them an easy out if they do not want to.
+      </p>
+      <p>
+        The structure is: "If it is not too weird to ask," or "tell me as much or as little as you want," followed by a question that follows naturally from what you just traded.
+      </p>
+      <p>
+        "If it is not too weird to ask, was the going back the right call or do you wish you had stayed in the car." That question is doing several things at once. It mirrors the structure of their original disclosure. It gives them permission to either go shallow or deeper. It does not demand a particular answer.
+      </p>
+      <p>
+        The opt-out matters. Without it, the question reads as pushing. With it, the question reads as caring whether they want to push themselves.
+      </p>
+
+      <h2>The shape that emerges</h2>
+      <p>
+        These three moves, in sequence, look like a small ladder. Notice, trade, soft question. Each step is just a tiny bit further into the territory than the last one. By the time you have done all three, the conversation is in a completely different place than it was four messages ago.
+      </p>
+      <p>
+        This is not therapy. It is not interrogation. It is the structure of how good friends actually talk. They notice. They share. They ask. They do this almost without thinking, because they have been doing it for years.
+      </p>
+      <p>
+        On a dating app, with a stranger, you have to do it more on purpose because you do not have the years of accumulated trust. But the moves are the same.
+      </p>
+
+      <h2>When the move fails</h2>
+      <p>
+        Sometimes you will run the sequence and the other person will not engage. They will deflect. They will joke. They will go back to small talk. This is not always a bad sign. Some people need three or four passes of this kind of message before they trust that you are not a weirdo.
+      </p>
+      <p>
+        The wrong response, when they deflect, is to push harder. The right response is to back off, return to slightly lighter territory, and try again two days later. Real-talk is something they have to choose. You can offer the door. You cannot drag them through it.
+      </p>
+      <p>
+        If they consistently deflect across multiple attempts, that is information. They might be a person who is great over coffee but does not do depth in text. Or they might be a person who does not do depth at all. The first one is fine and you can meet them. The second one is something you will want to know early.
+      </p>
+
+      <h2>Why this works on apps in particular</h2>
+      <p>
+        The bar for any given message on a dating app is very low because the median message is so bland. The first message that has any texture at all gets a disproportionate amount of attention. The first message that goes one layer below the surface, and does it gracefully, often gets remembered by the receiver as the moment the conversation actually started.
+      </p>
+      <p>
+        I have had a number of people tell me, weeks into a relationship, that they remember the exact message where they first thought "oh, this person might be different." It is almost always a message that ran some version of the noticing-trading-asking sequence.
+      </p>
+      <p>
+        You do not need to be good at this. You need to do it once. The one time you do it, in a sea of small talk, is the moment the thread turns into something else.
+      </p>
+    </>
+  ),
+
+  "attachment-styles-without-the-tiktok": (
+    <>
+      <p>
+        Attachment theory has been chewed up by short-form video and spit back out as a personality quiz. Anxious, avoidant, secure, disorganised. Pick one. Post about it. Use it as the reason you ghosted.
+      </p>
+      <p>
+        That is not what the theory says, and it is not what it is useful for.
+      </p>
+      <p>
+        Attachment is a tendency that shows up under stress. Specifically: the stress of getting close to someone who might leave. It is not a label you wear at brunch. It is a gravity you feel, often without naming it, when a connection starts to matter.
+      </p>
+
+      <h2>The honest version</h2>
+      <p>
+        Four broad tendencies. None of them are identities. All of them are normal under the right conditions.
+      </p>
+      <p>
+        <strong>Secure.</strong> When something feels off, you ask. When something feels good, you say so. You can tolerate the other person having a mood that is not about you. You do not need a same-day reply to feel safe. About half of adults look like this most of the time. They are also boring to make videos about, which is why you do not see them on your For You page.
+      </p>
+      <p>
+        <strong>Anxious.</strong> Closeness feels good but precarious. You read tone in messages that have no tone. A two-hour gap can become a full afternoon of theories. You over-give early to lock in the connection, then resent that you over-gave. Your nervous system has decided that more contact equals more safety, and the math, painfully, does not always work that way.
+      </p>
+      <p>
+        <strong>Avoidant.</strong> You want connection. You also need a door. When someone starts mattering, you feel a quiet pressure that you might describe as "needing space" or "not feeling it anymore." The wanting is real. The closing is also real. Both are happening at once and the closing usually wins because it is older.
+      </p>
+      <p>
+        <strong>Disorganised.</strong> Closeness pulls you in and makes you flinch at the same time. The push-pull is internal, not strategic. The person you most want to be near is also the person whose voice note you cannot bring yourself to open. This one is rarer and almost never what TikTok means when it uses the word.
+      </p>
+
+      <h2>What it looks like at week two</h2>
+      <p>
+        Attachment does not show up on the first date. It shows up around the time you start to care.
+      </p>
+      <p>
+        A friend of mine, secure-leaning, told me about meeting someone she really liked. The guy went quiet for thirty-six hours after a great second date. She noticed it, felt a small ping, then went to the gym and went to sleep. He texted on day two. She replied like the ping had not happened. They are still together two years later. The gravity was small enough that she could move through it.
+      </p>
+      <p>
+        Another friend, anxious-leaning, told me about the same situation, different guy. Thirty-six hours of silence after a great second date. By hour ten she had drafted, deleted, and re-drafted four messages. By hour twenty she had decided she had been "too much." By hour twenty-eight she had sent a long apology for something neither of them had named. The guy was at his grandmother's funeral. He needed twelve more hours. The relationship did not survive the apology.
+      </p>
+      <p>
+        Same external event. Two completely different inner weathers.
+      </p>
+
+      <h2>The useful question</h2>
+      <p>
+        Most people use attachment language to explain other people. Why he pulled away. Why she got clingy. Why this was doomed from the start.
+      </p>
+      <p>
+        Useful attachment language goes the other way. It asks: when this connection started to feel like it mattered, what did my body do? Did I lean in harder than the situation called for? Did I find a reason to be busy? Did I pick a small fight to test the temperature?
+      </p>
+      <p>
+        That is the question that does work. The one about them is mostly gossip.
+      </p>
+
+      <h2>What does not help</h2>
+      <p>
+        Telling someone on date two that you are anxious-attached. They cannot do anything with that information yet, and you have just handed them a frame for everything that goes slightly wrong from here on out. You are not warning them. You are pre-blaming yourself.
+      </p>
+      <p>
+        Using your style as a reason. "I am avoidant, so." That sentence ends a conversation. It does not start one. The thing that actually moves you toward secure-feeling relationships is not announcing your style. It is staying in the room when your style wants to bolt.
+      </p>
+
+      <h2>What does</h2>
+      <p>
+        Noticing, naming, and then doing the small uncomfortable thing your style does not want to do. If you are anxious, that often means waiting four hours before sending the thing. If you are avoidant, that often means staying on the phone for the extra ten minutes when your skin is buzzing to hang up. If you are secure, it usually means not assuming everyone else has your settings.
+      </p>
+      <p>
+        Attachment style is a starting condition, not a sentence. Most people move toward secure across their twenties and thirties if they are around people who do not punish them for the moves they make under stress. Some people move toward less secure when they are around people who do.
+      </p>
+      <p>
+        The theory is useful when it makes you more curious about your own behaviour. It is useless, and often actively bad, when it gives you a four-letter excuse not to be.
+      </p>
+    </>
+  ),
+
+  "the-im-bad-at-dating-reframe": (
+    <>
+      <p>
+        "I am just bad at dating."
+      </p>
+      <p>
+        I have heard this sentence, or some version of it, from probably a hundred people. Smart people. Warm people. People who are excellent at their actual lives. They say it the way you say something you have already decided.
+      </p>
+      <p>
+        It is almost never true in the way they mean it.
+      </p>
+
+      <h2>What people actually mean</h2>
+      <p>
+        When someone says they are bad at dating, they almost always mean one of these things, and they almost never mean all of them. Untangling which one matters.
+      </p>
+      <p>
+        Sometimes they mean: I have a pattern I cannot see, and I keep ending up in the same disappointing place. That is a skill issue and skills can be learned.
+      </p>
+      <p>
+        Sometimes they mean: I am attracted to a type of person who is not good for me, and I keep choosing them even though I know better. That is a calibration issue and calibration shifts with attention.
+      </p>
+      <p>
+        Sometimes they mean: I do not know how to flirt without feeling like I am pretending. That is a permission issue and it eases when you stop trying to perform a thing called flirting and start actually noticing the person in front of you.
+      </p>
+      <p>
+        Sometimes they mean: I am scared, and I have been scared for years, and I am running out of patience with myself about it. That is a real thing and it deserves more than a reframe.
+      </p>
+      <p>
+        Sometimes they mean: dating has been awful for me lately, and saying "I am bad at it" feels less raw than saying "I have been hurt."
+      </p>
+
+      <h2>The cost of the sentence</h2>
+      <p>
+        The problem with "I am bad at dating" is the noun. It turns a temporary set of behaviours into a fixed identity. And identities resist change because identities recruit evidence.
+      </p>
+      <p>
+        Once you have decided you are bad at dating, you will notice every bad date and store it as confirmation. You will not notice the date that went fine and just did not turn into anything. You will not notice the message exchange that built nicely for a week. You will store the no-shows and the awkward silences and the matches that ghosted, because those are the data points your story needs.
+      </p>
+      <p>
+        It is not paranoia. It is just how stories work. The brain is loyal to the explanation it already has.
+      </p>
+
+      <h2>The reframe</h2>
+      <p>
+        The reframe is not "you are actually great at dating." That is a lie and you will not believe it.
+      </p>
+      <p>
+        The reframe is changing the noun. Not "I am bad at dating" but "I have a few habits in dating that are costing me." The first sentence is a verdict. The second sentence is a to-do list.
+      </p>
+      <p>
+        Habits are specific. They are also editable. A verdict is not.
+      </p>
+
+      <h2>How to actually find the habit</h2>
+      <p>
+        Pull the last six dating things. Matches that went nowhere, dates that went sideways, situationships that ended badly. Write one sentence per thing. Not a story. A sentence.
+      </p>
+      <p>
+        Then read the six sentences as if a friend handed them to you and asked what they had in common.
+      </p>
+      <p>
+        You will almost always find something. The thing is usually quieter than you expect. Often it is something you do early, in the first three messages or the first two dates, and it sets a tone you cannot recover from later. Sometimes it is the opposite. You do something at the four-week mark, every time, that closes the door from the inside.
+      </p>
+      <p>
+        Whatever it is, that is the habit. Not your personality. A habit.
+      </p>
+
+      <h2>What changes when the noun changes</h2>
+      <p>
+        I worked through this with someone last year who was certain she was bad at dating. She was thirty-one, four years out of a long relationship, six months into a stretch where every match seemed to end the same way. We pulled the six sentences. The pattern was clear inside four minutes.
+      </p>
+      <p>
+        She was, every single time, the first person to say "we should make this exclusive" somewhere around week three. Sometimes the guy agreed and then pulled away. Sometimes the guy did not agree and she ended it because she had already framed it as rejection. In both cases the conversation she had started was the conversation that ended it.
+      </p>
+      <p>
+        She was not bad at dating. She had a specific habit that was running on a specific timeline. We talked about what the habit was trying to do for her, which was mostly to convert ambiguity into safety. We did not pretend she could stop doing the thing by force of will. We did agree she could notice when she was about to do it and ask herself one question first: what would happen if I gave this another two weeks?
+      </p>
+      <p>
+        That was the whole intervention. She started dating someone in April. They are still together.
+      </p>
+
+      <h2>One sentence to keep</h2>
+      <p>
+        You are not bad at dating. You are running a habit, in a context that is genuinely hard, with limited feedback and no recovery time between attempts. That is a different sentence and it points at a different door.
+      </p>
+    </>
+  ),
+
+  "self-knowledge-is-the-pressure-point": (
+    <>
+      <p>
+        Most dating advice is about other people. How to read them. How to attract them. How to spot the ones who will hurt you. How to send the message that gets the reply.
+      </p>
+      <p>
+        Almost none of it is about you. Which is strange, because you are the only variable in the dating equation that you actually control.
+      </p>
+      <p>
+        Self-knowledge is the pressure point. The small place where a little real pressure changes everything downstream. Done honestly, it outperforms tactics. By a lot.
+      </p>
+
+      <h2>What self-knowledge is not</h2>
+      <p>
+        It is not knowing your Myers-Briggs type. It is not knowing your love language. It is not knowing that you are an Enneagram 4 with a 5 wing. Those are vocabularies, not knowledge. Some of them are useful as starter prompts and most of them turn into excuses inside two months.
+      </p>
+      <p>
+        It is also not the thing where you list your flaws to a partner on date three and call it vulnerability. That is performance. It buys you nothing.
+      </p>
+
+      <h2>What it actually is</h2>
+      <p>
+        Self-knowledge, in a dating context, is being able to answer four questions out loud, in your own words, without rehearsing.
+      </p>
+      <p>
+        What do I actually want from a relationship right now, this season, not in theory. Who do I become when I am attracted to someone, what shifts in my behaviour, what gets louder, what goes quiet. What is the move I make under stress, the one that usually makes things worse. What am I avoiding by being on the apps, or by not being on the apps.
+      </p>
+      <p>
+        Four questions. None of them tactical. All of them pointed at you.
+      </p>
+      <p>
+        Most people, in my experience, can answer maybe one and a half of these clearly. The rest sit in the corner of their head as vague feelings they have not put into sentences.
+      </p>
+
+      <h2>Why this outperforms tactics</h2>
+      <p>
+        A good opener gets you a reply. Then you have to be a person on the other side of the reply. A flattering profile gets you matches. Then you have to do the actual dating. A perfect first date question gets you a fifteen-minute story. Then you have to keep dating that person, possibly for years.
+      </p>
+      <p>
+        Tactics get you to the next step. Self-knowledge is what determines what happens after the next step. And after that. And after the next forty-two.
+      </p>
+      <p>
+        Two people with identical message-coaching skills will have radically different outcomes if one of them knows that she gets quietly contemptuous around men who admire her too quickly and the other does not. The tactic is the same. The relationship arc is not.
+      </p>
+
+      <h2>The hardest part</h2>
+      <p>
+        The hardest part of self-knowledge is not gathering it. The hardest part is admitting the parts you would rather not.
+      </p>
+      <p>
+        Almost everyone has a thing they do in early dating that they are not proud of. Pulling away the moment someone gets warm. Picking apart small flaws to manage your own anxiety. Saying yes to plans you do not want to keep because the no feels harder. Going cold for two days when you feel rejected, then pretending you were busy.
+      </p>
+      <p>
+        Knowing the thing is not the same as fixing the thing. But the fix cannot start without the knowing. And the knowing, by itself, slows you down enough that the move sometimes does not get made. That alone is worth most of the work.
+      </p>
+
+      <h2>How to actually build it</h2>
+      <p>
+        Read your own messages back. The ones you sent six months ago, when you were in something. Notice what you sound like. Notice what you avoid asking. Notice where you are warm and where you are cool, and what triggered the shift.
+      </p>
+      <p>
+        Talk to a friend who has watched you date. Ask them what they have noticed. Then sit through whatever they say without defending yourself. Friends are usually more accurate than therapists about the shape of your dating life because they have more data and less script.
+      </p>
+      <p>
+        Write down the version of yourself you become when you are interested in someone. Not the version you wish you were. The actual one. The one that texts back too fast or too slow. The one that gets quieter or louder. The one that lies a little about their schedule.
+      </p>
+      <p>
+        Notice the gap between that version and your idle-state self. That gap is the most useful piece of information you will ever have about your dating life.
+      </p>
+
+      <h2>What changes</h2>
+      <p>
+        Once you can see yourself with some accuracy, three things start happening on their own. You stop chasing people whose profiles flatter a part of you that you no longer want to feed. You start noticing the small moments in early dating where you usually self-sabotage, and you sometimes choose not to. And you stop reading every disappointment as confirmation that the dating pool is broken, because you can see your own contribution to the disappointment.
+      </p>
+      <p>
+        None of that is glamorous. None of it makes a good caption. It is also the thing that quietly separates the people who keep cycling from the people who eventually do not.
+      </p>
+    </>
+  ),
+
+  "healing-and-avoidance-look-the-same-from-the-outside": (
+    <>
+      <p>
+        Same app break. Same journal. Same therapist. Same six months "focusing on myself." From the outside, healing and avoidance are identical.
+      </p>
+      <p>
+        From the inside they feel different, but most people have not been taught what to listen for, and the difference is easy to miss when you want to be doing one and are actually doing the other.
+      </p>
+
+      <h2>Why they look the same</h2>
+      <p>
+        Both involve stepping back. Both involve more solitude than usual. Both involve a vocabulary of self-work, boundaries, capacity, nervous system. Both look responsible. Both photograph well.
+      </p>
+      <p>
+        The difference is not in the activities. It is in what the activities are pointed at.
+      </p>
+      <p>
+        Healing is metabolising something. Avoidance is stepping around it. The journal that is healing is the journal where you write the sentence you have been afraid to write. The journal that is avoidance is the journal where you write around it for thirty pages and feel productive.
+      </p>
+
+      <h2>The test</h2>
+      <p>
+        Here is the test I use, on myself and out loud with friends when they ask.
+      </p>
+      <p>
+        Healing tends to involve approaching a specific thing. A specific person, a specific feeling, a specific event. The work is moving toward, even slowly. After a healing session, you usually feel tired and slightly more honest. Sometimes you feel worse for a day. The relief, when it comes, comes from having looked at the thing.
+      </p>
+      <p>
+        Avoidance tends to involve diffuse activity around the general area of the thing without ever touching the thing. You meditate for a month, you take the app break, you go on the retreat, you read the book. You feel calmer. The calmness, when it comes, comes from having successfully not looked at the thing.
+      </p>
+      <p>
+        Calmness from looking and calmness from not looking are different textures. You can tell which one you are in if you ask honestly. The body knows.
+      </p>
+
+      <h2>An example</h2>
+      <p>
+        A friend of mine got out of a relationship in March of last year. The breakup was bad. She did everything right, on paper. Therapy weekly. App delete. Six months of "not dating to date but dating to learn." Yoga. A trip alone to Portugal. Read four books with the word boundary in the title.
+      </p>
+      <p>
+        In November, eight months in, she told me she felt calmer but not different. The same feeling she had been trying to get away from was still there, in the same place, waiting.
+      </p>
+      <p>
+        We talked about the breakup, which she had told the story of probably forty times by then. I asked what the worst sentence she could say about it was. She thought for a long time. She said something that was not in any version of the story she had told before. It was about a thing she had done, not a thing he had done, and she had not said it out loud to anyone.
+      </p>
+      <p>
+        She cried for about an hour. Then she went home and slept for eleven hours. The next week she said something had shifted. The thing she had been calmly working around for eight months had been the thing she had to say.
+      </p>
+      <p>
+        The eight months were not wasted. They built the capacity to say it. But the saying was the move. The eight months on their own would have been avoidance dressed as growth.
+      </p>
+
+      <h2>What avoidance sounds like</h2>
+      <p>
+        Avoidance has a vocabulary. It sounds wise. It says things like, I am not ready to date again. I am still working on myself. I need to be whole on my own first. I do not want to bring my baggage into something new.
+      </p>
+      <p>
+        Sometimes these sentences are true. Sometimes they are protection. The way to tell is to ask: is there a specific thing I am protecting myself from, and am I doing anything to actually face it, or am I just running out the clock until it feels safer to look.
+      </p>
+      <p>
+        Running out the clock does not work. The thing does not get smaller while you wait. Sometimes it gets quieter, which you can mistake for smaller, until something normal happens and it is right there again at full volume.
+      </p>
+
+      <h2>What healing sounds like</h2>
+      <p>
+        Healing has a different vocabulary, often less articulate. It sounds like, I had a hard week. I noticed I did the thing I always do, and I do not know yet what to do about it. I said the thing to my therapist that I had been avoiding for a year. I am still scared but I am tired of being scared.
+      </p>
+      <p>
+        Healing is rarely tidy. It is rarely linear. It often makes you, briefly, less functional than you were when you were avoiding. That is part of the test. If your "healing" never costs you a week of being slightly worse, you might want to look at whether you are doing it or performing it.
+      </p>
+
+      <h2>Why this matters for dating</h2>
+      <p>
+        Dating brings up the thing. Even when you are not looking for it to. You meet someone and the old shape arrives in the room. If you have been healing, you can feel it without being run by it. If you have been avoiding, you find yourself doing the thing again, in a slightly different costume, with someone new.
+      </p>
+      <p>
+        The break from dating is not the work. The break creates the space for the work. The work is the part where you sit with what arrives. Most people skip that part, take a long enough break that the feeling goes underground, and call it healed.
+      </p>
+      <p>
+        That is the most common mistake I see. It is not a moral failing. The instinct to step around the thing is older than any of us. But the relationship that follows the break is going to ask, very directly, whether the work happened. And it will know.
+      </p>
+    </>
+  ),
+
+  "what-wellness-actually-means-when-youre-dating": (
+    <>
+      <p>
+        Wellness has been colonised by a particular aesthetic. Matcha. Pilates. A morning routine that begins at five-fifteen. A sober October. A specific shade of beige.
+      </p>
+      <p>
+        None of that is wrong. Most of it is fine. Almost none of it is what wellness actually means when you are dating.
+      </p>
+
+      <h2>The working definition</h2>
+      <p>
+        Wellness, in a dating context, is your capacity to feel a thing and still be legible to the person across from you.
+      </p>
+      <p>
+        That is the whole definition. The rest is mechanics.
+      </p>
+      <p>
+        If you are jealous and can name it without it eating the evening, that is wellness. If you are anxious about a slow reply and can hold the feeling without sending eight follow-ups, that is wellness. If you are excited and can let it land without rushing the timeline, that is wellness. If you are disappointed and can say so in a sentence that does not punish anyone, that is wellness.
+      </p>
+
+      <h2>What it depends on</h2>
+      <p>
+        Capacity is not abstract. It is built from very concrete inputs that most wellness content underplays because they are not photogenic.
+      </p>
+      <p>
+        <strong>Sleep.</strong> Almost every fight I have had with a partner in the early stages of dating was downstream of one of us being underslept. Six hours twice in a row, and my reading of tone goes haywire. Five hours twice in a row, and a normal text feels like a slap. Sleep is the first wellness lever and it is free.
+      </p>
+      <p>
+        <strong>Friends.</strong> If your only emotional outlet about a new person is the new person, the relationship is being asked to do too much. A friend who has known you for ten years and will tell you, gently, that you are spiralling, is worth more than three therapists you have just met. The wellness move is calling them before you call him.
+      </p>
+      <p>
+        <strong>Rage.</strong> A wellness culture that pretends anger is a sign of poor regulation will quietly teach you to swallow legitimate frustrations until they come out sideways at week six. Rage is information. The capacity to feel it, name it, and let it move through you without performing it on the person who caused it, is one of the most underrated wellness skills in dating.
+      </p>
+      <p>
+        <strong>The body.</strong> Not the gym. The body. Knowing when you are hungry. Knowing when you are tired. Knowing when you are turned on and when you are pretending. People who have lost touch with the body cannot tell, often for years, that a relationship is not working. The body knew at month two. They could not feel it because they had stopped feeling much of anything.
+      </p>
+
+      <h2>What it does not depend on</h2>
+      <p>
+        It does not depend on having your whole life sorted. I have known plenty of people in chaotic life seasons who dated well, because they were honest about the chaos and did not ask the new person to fix it. I have also known people with perfectly arranged lives who dated badly, because the arrangement was the avoidance.
+      </p>
+      <p>
+        It does not depend on never being a mess. Wellness is not the absence of mess. It is the ability to be a mess and tell the truth about it. Most of the worst dating behaviour I have seen was from people performing wellness at someone, not people being honest about not feeling well.
+      </p>
+
+      <h2>The dating-specific check</h2>
+      <p>
+        Three questions I think are more useful than any wellness quiz when you are about to start dating again.
+      </p>
+      <p>
+        One. Can I currently feel a strong feeling, name it accurately, and still function the next day. If the answer is no, that is not a moral problem, that is a capacity problem, and you should know it about yourself before you start.
+      </p>
+      <p>
+        Two. Do I have at least one person in my life I would tell the truth to about a date that went badly, without spinning it first. Not a group chat. A person. If the answer is no, your support structure is too thin to date well, and you should fix that before fixing your bio.
+      </p>
+      <p>
+        Three. Is there a feeling I have been running from for more than six months, that dating will bring up. If yes, dating will not solve it and might make it sharper. That is not a reason not to date. It is a reason to be honest with yourself, early, about what is going to come up.
+      </p>
+
+      <h2>The thing nobody puts on the wellness page</h2>
+      <p>
+        The single most predictive wellness signal in early dating, in my experience, is whether you can tolerate a small disappointment without dramatising it. Not a betrayal. A small disappointment. The cancelled plan, the slightly cooler text, the off night.
+      </p>
+      <p>
+        People who can tolerate that without escalating are people who tend to end up in good relationships. People who cannot, usually because the small disappointment lands on top of an older one and detonates, tend to keep getting close and then blowing it up.
+      </p>
+      <p>
+        That tolerance is the wellness skill. Everything else is staging.
+      </p>
+    </>
+  ),
+
+  "the-question-you-keep-not-asking-yourself": (
+    <>
+      <p>
+        Most of the questions you ask yourself about dating are about them. Are they into me. Why did they go quiet. Are they playing games. Is this going somewhere. Do I like them, or do I just like the attention.
+      </p>
+      <p>
+        There is one question that is about you and you almost never ask it. Most of what is going wrong in your dating life lives downstream of not asking it.
+      </p>
+
+      <h2>The question</h2>
+      <p>
+        What slot is this person filling for me right now.
+      </p>
+      <p>
+        Not what do I like about them. Not what is the future here. Not are they good for me. The question is what slot. What role in your interior life is this person, right this minute, being recruited into.
+      </p>
+      <p>
+        It is an awkward question. It feels reductive. It is also extremely clarifying, and you probably do not ask it because you already half-know the answer.
+      </p>
+
+      <h2>The slots</h2>
+      <p>
+        There are a handful of common ones. Most people have a favourite, and most people are running it without seeing it.
+      </p>
+      <p>
+        <strong>The proof slot.</strong> This person is proof that you have moved on, that you are desirable, that you are not the person your last partner said you were. Their job is to confirm something about you. Whether they want to do that job is a separate question.
+      </p>
+      <p>
+        <strong>The distraction slot.</strong> Something in your life is unbearable right now and this person is somewhere else to put your attention. The relationship is functioning as the screen between you and the unbearable thing. Often it works. For a while.
+      </p>
+      <p>
+        <strong>The rescue slot.</strong> You are lonely, or sad, or scared about a milestone, and you are looking for someone to take the edge off the underlying state. They are not a partner yet. They are a temperature change.
+      </p>
+      <p>
+        <strong>The almost-right slot.</strong> Someone who looks close enough to the thing you actually want that you can let yourself stay, but is reliably wrong in a specific way you have already noticed and are pretending not to. This one is the most painful because it can run for years.
+      </p>
+      <p>
+        <strong>The repair slot.</strong> You had a painful past relationship and this person is going to be the version that works. They are being asked to fix a wound they did not make. They will sometimes try. They will eventually resent it.
+      </p>
+      <p>
+        <strong>The partner slot.</strong> This is rarer than people think early on. This is when you can answer the question and the answer is, honestly, that the slot is being a partner. No other job. Just that one.
+      </p>
+
+      <h2>Why this is uncomfortable</h2>
+      <p>
+        Because it implies you are using someone, which sounds bad. We have a cultural rule that any relationship that is not pure is exploitative.
+      </p>
+      <p>
+        That is not what I am saying. Most relationships fill more than one slot at once. The question is not whether they fill a slot. The question is whether you can see which slot they are filling, and whether you are being honest about it with yourself and, eventually, with them.
+      </p>
+      <p>
+        A relationship that is mostly the distraction slot, where both people know it, is one thing. A relationship that is mostly the distraction slot, where you are calling it love because love is the only word you let yourself use, is another. The first one might be fine. The second one ends badly.
+      </p>
+
+      <h2>How to actually ask it</h2>
+      <p>
+        Pick a person you are dating, or thinking about, or stuck on. Write their name on a piece of paper. Underneath, write the sentence, the slot I am asking this person to fill is.
+      </p>
+      <p>
+        Finish the sentence without revising. Whatever comes out, keep it. Do not soften it.
+      </p>
+      <p>
+        Then ask: would I be okay if this person knew that was the slot. If the answer is yes, you probably have a real relationship or the start of one. If the answer is no, you have information.
+      </p>
+      <p>
+        Information is not a verdict. Sometimes you keep dating the person anyway, with more honesty about what you are doing. Sometimes you let them go because keeping them was costing both of you. Sometimes you realise the slot is the partner slot and you have been hiding from how much you actually want this.
+      </p>
+
+      <h2>What changes</h2>
+      <p>
+        Once you can ask this question reliably, your swipe behaviour starts to shift. You stop matching with people whose only function is to fill an old slot you are tired of running. You stop chasing connections whose appeal is mostly about something you are running from.
+      </p>
+      <p>
+        You also stop blaming people for not being the thing you secretly hired them to be. Which is a lot of what bitterness in dating is. Bitterness at people for failing a job interview they did not know they were in.
+      </p>
+      <p>
+        Asking the slot question is, in the end, a kindness to both of you. It does not make you mercenary. It makes you slightly harder to surprise by your own behaviour.
+      </p>
+    </>
+  ),
+
+  "you-are-not-your-pattern": (
+    <>
+      <p>
+        There is a stage of self-awareness that is genuinely useful and a stage right after it that is a trap.
+      </p>
+      <p>
+        The useful stage is when you finally see your pattern. The chronic move you make, the kind of person you reliably pick, the spot in week three where you always do the thing. Seeing it is a relief, even when it stings. The trap is what happens about six months later, when the pattern has stopped being something you do and started being something you are.
+      </p>
+
+      <h2>The shift</h2>
+      <p>
+        It sounds like this. I am an anxious attacher. I am someone who self-sabotages. I am a runner. I am the type who falls for unavailable people. I am too much. I am not enough. I am someone who needs a lot of space.
+      </p>
+      <p>
+        Notice the verb. I am. Not, I tend to. Not, I have noticed I sometimes. The pattern has become a noun. A noun about you. A noun you carry around.
+      </p>
+      <p>
+        Nouns are sticky. Once you have one, you stop noticing the days when you do not match it. You stop noticing the date where you did not do the thing. You stop noticing the conversation where the pattern did not show up. The noun edits the data so that the noun keeps being true.
+      </p>
+
+      <h2>Why this is worse than not knowing</h2>
+      <p>
+        Not knowing your pattern is bad because you keep running it without seeing it. Knowing your pattern but having become it is, in a strange way, worse, because you have added a layer of fatalism on top of the pattern.
+      </p>
+      <p>
+        A friend told me last spring that she had decided she was just an anxious attacher and was going to look for people who could "handle that." She said it with a kind of finality. The reading of attachment theory she had done had given her a vocabulary that mostly served to lock the pattern in. She did not see herself as someone who sometimes got anxious about closeness. She saw herself as a type. The type came with predictions, and the predictions came with permission.
+      </p>
+      <p>
+        It is hard to change a behaviour that you think is the truth about you. It is much easier to change a behaviour that you think is a habit you are running.
+      </p>
+
+      <h2>Describing versus prescribing</h2>
+      <p>
+        This is the distinction most of self-help gets wrong. A description is, when I am stressed, I tend to pull away. A prescription is, I am avoidant.
+      </p>
+      <p>
+        Description leaves room for the exception, the slow change, the season where the thing was less true. Prescription does not. Prescription is identity, and identity asks for loyalty.
+      </p>
+      <p>
+        You can use the same vocabulary in either mode. The difference is in the verb and in what you do with the data the next time the pattern does not appear. If the data is allowed to count, you are describing. If the data has to be explained away to keep the story intact, you are prescribing.
+      </p>
+
+      <h2>The test, again</h2>
+      <p>
+        Last month, did the pattern hold every single time. If yes, it is probably a pattern. If no, it is a pattern with exceptions, and the exceptions are interesting.
+      </p>
+      <p>
+        Exceptions tell you something. They tell you the conditions under which the pattern does not run. Maybe it does not run when you are sleeping enough. Maybe it does not run with people whose energy is unusually calm. Maybe it does not run when you have not had a drink. Whatever it is, the exception is where the change lives.
+      </p>
+      <p>
+        If you have made yourself into the noun, the exception just looks like a fluke. If you have kept yourself as the person who sometimes runs the pattern, the exception looks like a clue.
+      </p>
+
+      <h2>What I keep saying to people</h2>
+      <p>
+        You have a pattern. The pattern is real. The pattern probably has a cause that started a long time before any of this. You are not making it up.
+      </p>
+      <p>
+        And. You are not the pattern. The pattern is a thing you do, sometimes more, sometimes less, depending on conditions you have more control over than the noun makes it sound.
+      </p>
+      <p>
+        That distinction is small and it is most of the work. People who change their dating lives do it from the side of, I have noticed I do this. People who get stuck do it from the side of, this is who I am.
+      </p>
+
+      <h2>The danger of the vocabulary</h2>
+      <p>
+        The reason I am wary of the current state of dating discourse is that it makes it very easy to acquire the prescription without doing the work. You can call yourself avoidant on Tuesday based on three TikToks and a quiz, and by Friday it is fused with your identity. You have skipped the noticing-yourself step entirely. You have just adopted a label that, conveniently, predicts the next time you blow something up.
+      </p>
+      <p>
+        That is not insight. That is borrowed fatalism.
+      </p>
+      <p>
+        Real self-knowledge is more boring and slower. It is noticing. It is keeping the verb soft. It is letting the exceptions count. It is being suspicious of any sentence about yourself that starts with I am and ends with a clinical category.
+      </p>
+      <p>
+        You are not your pattern. You are the person who can watch the pattern arrive and, sometimes, decide what to do next.
+      </p>
+    </>
+  ),
+
+  "picking-right-is-not-the-skill": (
+    <>
+      <p>
+        The culture sells dating as a selection problem. Get the algorithm right. Read the signs early. Spot the red flags. Filter harder. The implicit promise is that if you just pick the right person, the rest will mostly take care of itself.
+      </p>
+      <p>
+        This is almost the opposite of what people in long, good relationships will tell you when they are being honest.
+      </p>
+
+      <h2>What the data quietly says</h2>
+      <p>
+        The most carefully designed studies on relationship satisfaction find, again and again, that who you pick matters less than how the two of you behave together. The variance between "compatible" couples and "incompatible" couples on intake is small. The variance between couples who do certain things repeatedly and couples who do not is enormous.
+      </p>
+      <p>
+        Pick anyone, behave badly, the relationship ends badly. Pick anyone reasonable, behave well, the relationship usually works. There is a floor below which selection cannot save you and a ceiling above which selection mostly does not matter.
+      </p>
+      <p>
+        Most people are well above the floor and well below the ceiling. Most of the time, then, selection is not the lever.
+      </p>
+
+      <h2>The skills nobody calls skills</h2>
+      <p>
+        Calibration. The ability to read how the other person is doing today, and adjust without making them work for the adjustment. It is small and it is not glamorous. It is most of what loving someone over years actually consists of.
+      </p>
+      <p>
+        Repair. The ability, after a fight or a misunderstanding, to come back to the room and say the thing that closes the gap. Not the apology that re-litigates. The repair sentence. People who can do this stay together. People who cannot do this break up with people who would have been fine.
+      </p>
+      <p>
+        Showing up. The basic, unglamorous practice of doing what you said you would do, when you said you would do it, even when you are tired or distracted or in a mood. The reliability of small promises is, over time, a larger predictor of relationship health than chemistry, intelligence, or shared values.
+      </p>
+      <p>
+        Tolerating difference. Noticing that the person you picked is not, in fact, a slightly modified version of you, and finding that interesting rather than threatening. Most couples I have watched come apart did so over differences they had logically known about from the first month and emotionally never accepted.
+      </p>
+
+      <h2>The Esther Perel thing</h2>
+      <p>
+        Perel said something years ago that I keep coming back to. We have asked one person to be everything to us, and then we are surprised when it does not work.
+      </p>
+      <p>
+        The implication is not that you should expect less. The implication is that you should expect to do more, with the person you have, rather than spending your thirties looking for the person you would have to do less with.
+      </p>
+      <p>
+        That person does not exist. Or rather, that person exists for about eleven weeks and then becomes a real human whose needs are also annoying.
+      </p>
+
+      <h2>What picking is for</h2>
+      <p>
+        Selection is not pointless. It rules out the genuinely bad fits. Major value mismatches. Repeated dishonesty. The dynamic that, in the first three weeks, makes you smaller in a way you do not recover from. You do need to be able to walk away from those.
+      </p>
+      <p>
+        But that is a floor exercise, not a ceiling one. Most of the people who survive your floor checks are workable, if you are workable, and most of the time the difference between them is not large enough to predict the trajectory.
+      </p>
+      <p>
+        The trajectory is mostly about you. What you do at the four-week mark. What you do the first time you are disappointed. What you do when they reveal a part of themselves that did not show up in the first month.
+      </p>
+
+      <h2>The question I would put on every dating app</h2>
+      <p>
+        Not, do I like this person. Not, are they my type. Not, are they the one. Just, who do I become when I am with them.
+      </p>
+      <p>
+        Do I become more honest or more performed. Do I become more generous or more measured. Do I become more curious about them, or more focused on what they think of me. Do I sleep better or worse. Do I see my friends more or less. Do I feel more like myself or like someone slightly adjacent to myself.
+      </p>
+      <p>
+        Those are answerable questions, often by date four. They are almost never the questions people are actually asking. The questions people are actually asking are about them.
+      </p>
+      <p>
+        Who you become with them is what you are picking. Not them. The version of you that exists in their presence. That is the only real thing on offer. The skill is reading that version honestly and choosing accordingly.
+      </p>
+
+      <h2>Why this is hopeful, actually</h2>
+      <p>
+        If picking were the skill, your dating life would be mostly luck. The odds of finding the right person on the apps in your particular city in your particular season would govern your romantic future. That is a bleak math.
+      </p>
+      <p>
+        If picking is the floor and behaving together is the skill, then your dating life is in your hands. Not all of it. But the part that determines the trajectory once you are with someone reasonable. Which is most of it.
+      </p>
+      <p>
+        That is the actually hopeful version. Less filtering, more building. Less verdict, more practice. The people who end up in long, good relationships are not the people who picked perfectly. They are the people who got reasonably good at the unglamorous work, with someone reasonable, over time.
+      </p>
+    </>
+  ),
+
+  "dating-fatigue-is-real-and-its-fixable": (
+    <>
+      <p>
+        A few weeks ago I sat down to swipe and realised I had been doing it for eleven minutes without registering a single face. I had become a thumb. The faces were a slide deck.
+      </p>
+      <p>
+        That is dating fatigue. Not boredom. Not depression. A specific, narrow exhaustion that comes from running a low-grade cognitive task for thousands of reps without any real outcome attached.
+      </p>
+      <p>
+        Most people I talk to think the fatigue is moral failure. They think they are losing the thread because they are picky, or shallow, or not trying hard enough. None of that is what is happening. The brain you brought to the apps is the same brain it has always been. It just got asked to do a thing it was not built for, and the thing has no end state.
+      </p>
+      <p>
+        Let me describe the texture, since you probably recognise it.
+      </p>
+      <p>
+        You open Hinge. You make seventy small evaluations in three minutes. You match with someone. You feel a small flat sensation that is not excitement. You exchange six messages. The conversation peters out. You go back to swiping. Two days later you cannot remember any of the names.
+      </p>
+      <p>
+        If you ran any other system this way for months you would call it broken. We do not call dating apps broken because we have stopped expecting them to feel different.
+      </p>
+
+      <h2>What fatigue actually is</h2>
+      <p>
+        When your brain processes a face it does an enormous amount of low-level work. Symmetry, expression, age estimation, vibe parse, comparison against thousands of other faces you have already seen this week. None of that work is voluntary. It happens whether you want it to or not.
+      </p>
+      <p>
+        Stack 200 of those a day for six weeks and the system runs out of headroom. The faces start to look the same. The bios start to read the same. Your taste flattens because flat is what an overtaxed face-evaluator outputs.
+      </p>
+      <p>
+        This is not a character flaw. It is bandwidth. Pilots get this. Air-traffic controllers get this. The fix is not to try harder.
+      </p>
+
+      <h2>The fixes that do not work</h2>
+      <p>
+        Switching apps. You will get a small novelty bump for forty-eight hours. Then you are processing the same faces with a slightly different UI.
+      </p>
+      <p>
+        Upgrading to premium. You will get more matches. The fatigue is downstream of the volume already. Adding volume is the opposite of the medicine.
+      </p>
+      <p>
+        Forcing yourself to be "more open." This is the worst one. You start matching with people you have no interest in, going on dates that confirm you have no interest in them, and then telling yourself you are bad at dating. You are not bad at dating. You are bad at ignoring your own data.
+      </p>
+
+      <h2>The fixes that do work</h2>
+      <p>
+        Cap your reps. I went from open-ended swiping to ten minutes a day with a timer. The dating did not get worse. The matches did not drop. The fatigue lifted in about a week.
+      </p>
+      <p>
+        Process each conversation to a decision point before opening the next one. If you have four threads going and none of them have a date in motion, you have zero threads. Pick one. Move it forward or close it. Then open the next one.
+      </p>
+      <p>
+        Treat the apps as a tool, not a feed. The feed framing is what does the damage. Tools you pick up and put down. Feeds you scroll because the scroll itself is the reward. The apps want to be feeds. They do not have to be.
+      </p>
+
+      <h2>The bigger frame</h2>
+      <p>
+        Dating fatigue is also a signal that the rest of your life is contributing too little. When the apps are the most stimulating thing in your week, they will exhaust you. When they are one input among many, they sit at the right size.
+      </p>
+      <p>
+        I went through a stretch this year where my social life had thinned out. I was new in a city. The apps got loud because nothing else was making noise. I added two standing things to my week, a Tuesday run with a friend and a Sunday writing session at a café, and the apps quieted on their own. They had less to do.
+      </p>
+      <p>
+        This is not "go touch grass." That advice is condescending and useless. It is more specific than that. The apps swell to fill whatever space your life leaves them. Give them less space and they shrink without any willpower on your end.
+      </p>
+
+      <h2>When the fatigue is something else</h2>
+      <p>
+        Sometimes what reads as fatigue is actually grief, or post-relationship dysregulation, or burnout from the rest of your life that is leaking into this corner. The tell is whether breaks help.
+      </p>
+      <p>
+        If you stop using the apps for two weeks and feel relieved, it was fatigue, and the fixes above work.
+      </p>
+      <p>
+        If you stop for two weeks and feel worse, the apps were holding something at bay. You are not actually tired of dating. You are tired of being alone with whatever surfaces when the distraction stops. That is a different problem, and the answer is not the apps either way.
+      </p>
+
+      <h2>The point about practice</h2>
+      <p>
+        I keep a short log of how each app session felt. Not the matches. The session. Did I close the app feeling sharper or duller than when I opened it. Three sentences. That data adds up quickly.
+      </p>
+      <p>
+        After a month you can see the pattern. The sessions that felt good were almost always short, had a specific intent, and ended at a decision point. The sessions that felt bad were almost always long, drifting, and ended because I got bored, not because I was done.
+      </p>
+      <p>
+        The fatigue is fixable. The fix is mostly structural. You do not have to want to date less. You have to want to swipe less. Those are different sentences, and the second one is the one that actually changes anything.
+      </p>
+    </>
+  ),
+
+  "the-reset-week-and-why-it-works": (
+    <>
+      <p>
+        I run a reset week about every six weeks. Not because some app told me to. Because if I do not, the dating part of my life starts to leak everywhere and I get worse at all of it.
+      </p>
+      <p>
+        A reset week is exactly what it sounds like. Seven days off the apps, off the live conversations, off the planning. The bar is low. Nothing happens. That is the whole point.
+      </p>
+      <p>
+        People think a reset is a luxury or a hippie thing. It is not. It is maintenance. Same category as sleeping, eating, taking your laptop off your lap before your thigh goes numb.
+      </p>
+      <p>
+        Let me explain what it actually does, because the surface description sounds like permission to do nothing, which is the wrong frame.
+      </p>
+
+      <h2>What a reset week actually changes</h2>
+      <p>
+        Five things move during a reset week, in roughly this order.
+      </p>
+      <p>
+        First, your face-recognition system reboots. The numbing flatness that comes from grading a thousand profiles in a month softens. You can tell because by day four faces start to look like individual faces again, not categories.
+      </p>
+      <p>
+        Second, your sense of standards comes back. Burned-out daters develop a strange relationship to the bar. Either it drops to almost zero, because every match is just one more thing to grind through, or it gets unreasonably high, because every flaw is one more reason to abandon the whole project. Off the apps for a week, you stop grading at all, and the actual sense of what you want resurfaces.
+      </p>
+      <p>
+        Third, the obsessive replay loop dims. You know the one. Where you keep relitigating a date from three weeks ago, a thread that died last Sunday, a thing you said that did not land. With nothing live to feed the loop, it runs out of fuel.
+      </p>
+      <p>
+        Fourth, your social life expands by the exact amount the apps were taking up. This is not poetic. It is arithmetic. Two hours a week reclaimed shows up as two hours of friend time, exercise, sleep, or whatever you actually wanted.
+      </p>
+      <p>
+        Fifth, and this is the one most people do not anticipate, you remember what it feels like to not be in motion romantically. Most people who have been actively dating for over a year have forgotten what stillness feels like. Stillness is information. It tells you what you actually miss versus what was just habit.
+      </p>
+
+      <h2>How to actually run one</h2>
+      <p>
+        I have learned through trial and error what makes a reset week work versus what makes it a tease.
+      </p>
+      <p>
+        Delete the apps from your phone. Do not just hide them in a folder. Do not just turn off notifications. Delete. You can reinstall in two minutes after the week. The friction is the medicine.
+      </p>
+      <p>
+        Tell two people you trust. Not for accountability theatre. For the small thing where saying a thing out loud makes it more real.
+      </p>
+      <p>
+        Do not replace the apps with a new shiny dating thing. Do not sign up for a singles event. Do not try out a new platform. The point is not "different dating." The point is no dating.
+      </p>
+      <p>
+        Do not journal about dating during the week either. The reset has to extend to the meta-layer. You are not allowed to analyse your dating life this week. Same brain, different topic.
+      </p>
+      <p>
+        Cook one real meal alone. This is oddly important. Eating something you made for yourself, slowly, without a screen, is a small ritual that does something specific. I cannot fully explain why it works. It works.
+      </p>
+
+      <h2>What goes wrong</h2>
+      <p>
+        The first time I tried a reset week I checked the apps on day three because I was bored. I told myself it was research. It was not. I had to start over.
+      </p>
+      <p>
+        The second time I went on a date in the middle, with someone I had matched with the week before. I told myself it did not count. It counted.
+      </p>
+      <p>
+        The third time I made it through clean. The difference on the other side was significant. Not a personality change. A volume change. The noise had gone down. I could hear what I actually thought.
+      </p>
+
+      <h2>What it is not</h2>
+      <p>
+        A reset week is not a cleanse. There is no toxin you are flushing. It is not a punishment for swiping too much. It is not a guarantee that you will come back rejuvenated and meet someone in the first hour.
+      </p>
+      <p>
+        What it is, mostly, is permission to stop performing for seven days. Dating involves a lot of performance. Even if you do not feel like you are performing, your nervous system is doing low-grade vigilance the whole time. Vigilance is expensive.
+      </p>
+
+      <h2>When to run one</h2>
+      <p>
+        The signals are pretty clear once you know them. Conversations feel like work. You find yourself irritated at matches before they have done anything. You cannot remember the last time you laughed at someone's prompt. You are checking the apps more but enjoying them less.
+      </p>
+      <p>
+        If any two of those apply, you are due. If three or four apply, you were due last week.
+      </p>
+      <p>
+        After enough reps I started noticing the early signal, which is when I open the app and feel a small tired thing before the first profile loads. That is the dashboard light. When it comes on, I know a reset is coming, and I would rather run it on purpose than crash into one.
+      </p>
+    </>
+  ),
+
+  "journaling-without-making-it-homework": (
+    <>
+      <p>
+        I tried to journal about dating for the first time at twenty-six. I bought a leather notebook. I sat down on a Sunday with a cup of coffee. I wrote two pages, hated all of it, and did not open the notebook again for nineteen months.
+      </p>
+      <p>
+        The reason was simple. I had treated journaling as homework, and the only consistent thing about me is that I do not do homework.
+      </p>
+      <p>
+        Most journaling advice gets this wrong. It tells you to write every day. It tells you to write for thirty minutes. It tells you to "process your emotions," which is a phrase invented by someone who has not had to actually do it. None of that works for normal humans with normal jobs and normal attention.
+      </p>
+      <p>
+        The version that does work is much smaller, and it is built around the specific texture of dating, which is fast, episodic, and full of moments that disappear if you do not catch them.
+      </p>
+
+      <h2>What dating journaling is actually for</h2>
+      <p>
+        Two things, mostly.
+      </p>
+      <p>
+        One. Holding onto the specifics you will forget. Three weeks from now you will not remember the exact phrase someone used that bothered you. You will remember that you were bothered. The exact phrase is the data. The bothered is the conclusion. Skip the data and you cannot learn anything.
+      </p>
+      <p>
+        Two. Watching yourself across multiple dates and conversations and noticing the repeating moves. You cannot see your own pattern from one entry. You can see it from twelve. Twelve is achievable. Twelve is not "every day for a year."
+      </p>
+      <p>
+        That is the whole purpose. Anything beyond that is a bonus.
+      </p>
+
+      <h2>The shape that works</h2>
+      <p>
+        A dating journal entry is three to six sentences. Not a paragraph. Not a free-write. Three to six sentences.
+      </p>
+      <p>
+        The structure I use is: what happened, what I felt, what I notice now.
+      </p>
+      <p>
+        Example. Drinks with R on Thursday. Felt sharper than I expected, also a little defensive when she asked about my last relationship. Notice now that I get defensive specifically when the question is sympathetic. I have a thing about being pitied.
+      </p>
+      <p>
+        That is the entry. It took ninety seconds. It will be useful in six weeks when I am wondering why a different conversation went sideways.
+      </p>
+
+      <h2>When to write</h2>
+      <p>
+        Not at a set time. The set-time framing is what kills journaling for most people. Write within four hours of the thing. Not before, not days later. Within four hours, while the texture is still available.
+      </p>
+      <p>
+        A date is the obvious trigger. A hard conversation. A surprising message. A moment in your own head where you noticed something you had not noticed before. Those are the things you write about. Not "today I felt." That direction never goes anywhere.
+      </p>
+      <p>
+        If nothing happened, do not write. There is no value in performing journaling on an empty week. Skip it. The notebook will wait.
+      </p>
+
+      <h2>Format does not matter</h2>
+      <p>
+        I use Notes on my phone for ninety percent of mine. I have a notebook for the longer ones. I sometimes write into the Mirror in the app when I want it to feed into the pattern view across dates.
+      </p>
+      <p>
+        The medium is not the point. The friction-cost is the point. Whatever lets you write the three sentences in ninety seconds without a setup ritual is the right tool. If the tool requires opening a laptop, finding the file, formatting the date header, you will not do it. I will not do it. Nobody does it.
+      </p>
+
+      <h2>What not to journal about</h2>
+      <p>
+        Skip the meta. Do not write about your dating "journey." Do not write about how you are growing. Do not write the kind of entry that sounds like it was written for an audience of one future therapist. Those entries are emotionally pleasing to produce and useless to read later.
+      </p>
+      <p>
+        The useful entries are small, specific, slightly embarrassing. They are about a moment you cannot stop replaying, or a thing you said you wish you had not, or a feeling you cannot place. Those are the ones that show you something six months from now.
+      </p>
+
+      <h2>What to do with the entries</h2>
+      <p>
+        Mostly nothing. They sit there. Once a month, maybe every six weeks, read the last batch in one sitting.
+      </p>
+      <p>
+        Reading them is where the actual learning happens. In the moment each one feels small. Stacked, they reveal patterns that no single one shows. I have noticed things about myself from these reads that I had been doing for years without seeing.
+      </p>
+      <p>
+        A specific example. I read three months of entries last spring and noticed I had used the phrase "felt safe" about every woman I went on a second date with, and "felt interesting" about almost everyone I did not. That was useful information. I had not known I was tracking that distinction. Now I do.
+      </p>
+
+      <h2>The pace that is sustainable</h2>
+      <p>
+        Two to four entries a week, in active dating periods. Zero entries a week, in fallow periods. No guilt in either direction.
+      </p>
+      <p>
+        The trap is thinking journaling is a virtue. It is not. It is a tool. Tools you use when they help and put down when they do not. If your dating journal feels like a tax, it is the wrong shape and you should change it until it is not.
+      </p>
+      <p>
+        That is the whole method. Three sentences. Within four hours. Specific over reflective. Read monthly. Put down when nothing is happening.
+      </p>
+      <p>
+        If that sounds underwhelming, good. The underwhelming version is the one you will actually do.
+      </p>
+    </>
+  ),
+
+  "post-date-reflection-without-the-spiral": (
+    <>
+      <p>
+        The hour after a date is the most dangerous hour of the week, if you are the kind of person who reflects.
+      </p>
+      <p>
+        I do not mean dangerous physically. I mean dangerous to your ability to read the date accurately.
+      </p>
+      <p>
+        In that first hour your brain is flooded with the freshest possible version of the data, and also the most distorted version of it. You are running on whatever drink you had, the residual adrenaline of being looked at across a table, and a half-formed verdict about how it went. Whatever you write, think, or text in that hour will warp the date in your memory for weeks.
+      </p>
+      <p>
+        So the question is not whether to reflect. It is when, and how, without the spiral.
+      </p>
+
+      <h2>What the spiral looks like</h2>
+      <p>
+        You leave the bar. You walk to the train. By the time you sit down on the train you have already convicted yourself or them. You text your friend. Your friend asks one question. You give a version of the night already shaped by your conviction. Your friend responds to that version, which reinforces it.
+      </p>
+      <p>
+        By the time you get home the date in your memory is not the date that happened. It is a polemic, with you as either the prosecutor or the defendant.
+      </p>
+      <p>
+        This is universal. This is not a sign of weakness. This is what the human brain does with high-stimulus social events. It compresses them into a shape that makes them easier to file.
+      </p>
+      <p>
+        The problem is the shape is almost always wrong.
+      </p>
+
+      <h2>The two-pass method</h2>
+      <p>
+        I have a rule for myself that has saved me a lot of misery. I am not allowed to draw conclusions about a date until twelve hours later.
+      </p>
+      <p>
+        First pass, in the immediate aftermath, I am allowed to write down only facts and only sentences they said that I can quote.
+      </p>
+      <p>
+        What time it ended. Where we went. Three things they said, verbatim. One thing I said, verbatim. Whether we hugged. Whether one of us suggested another drink. Whether the goodbye felt long or short.
+      </p>
+      <p>
+        That is it. No verdict. No feelings. No predictions. Facts only.
+      </p>
+      <p>
+        Second pass, the next morning, with coffee, I write the actual reflection. Now I can ask the better questions. What did I notice that I want to keep noticing. Where did the conversation go somewhere I did not expect. What did they do that made me want to see them again, if anything. What did I do that I want to do less of.
+      </p>
+      <p>
+        The morning version is almost always more accurate than the night version. Not always. Almost always.
+      </p>
+
+      <h2>What to skip</h2>
+      <p>
+        Skip the "did they like me" question. It is the wrong question and it is also unanswerable in the first twelve hours. Your read on it will swing wildly with your blood sugar.
+      </p>
+      <p>
+        Skip the strategic reflection. Whether to text first, when to text, what to say. Those are downstream questions. If the date had genuine contact in it, the text writes itself. If it did not, no amount of strategising will manufacture one.
+      </p>
+      <p>
+        Skip the comparison to other dates. Every date is its own object. Stacking it against the last three flattens what was specific about this one.
+      </p>
+
+      <h2>The one question worth asking immediately</h2>
+      <p>
+        There is exactly one question worth asking in the first hour. When did I feel most like myself.
+      </p>
+      <p>
+        That is it. It is fast, it is honest, and it does not require any conclusions about how it went or what comes next. It just marks a moment for you. Later you can look back and ask what was happening in that moment, and that is usually where the real signal lives.
+      </p>
+      <p>
+        I went on a date last fall where the only moment I felt fully like myself was a five-minute stretch about the bus system. Sounds ridiculous. It was. But that moment told me something about her, which was that she was actually listening, and something about me, which was that I am a person who comes alive when allowed to be a little weird. Those were both worth knowing.
+      </p>
+
+      <h2>When the spiral is information</h2>
+      <p>
+        Sometimes the spiral is not noise. Sometimes it is telling you something specific you do not want to face.
+      </p>
+      <p>
+        If you cannot stop replaying a particular moment, that moment is doing work. Either it landed badly and you know it, or it landed well and you are scared of how much you wanted it to land well. Both of those are worth sitting with, just not in the first hour.
+      </p>
+      <p>
+        If you find yourself drafting a text apology for something they did not actually mind, you are in a self-attack spiral. Different problem, different fix, mostly involves not sending the text.
+      </p>
+      <p>
+        If you find yourself preemptively writing them off before they have even had a chance to text you, you are running an avoidance pattern. Worth noticing. Not worth obeying.
+      </p>
+
+      <h2>The longer game</h2>
+      <p>
+        The point of post-date reflection is not to grade the date. It is to get slightly better at reading what happens between you and another person. That is a skill. It compounds.
+      </p>
+      <p>
+        You will get better at it by writing small notes, twelve hours after the event, that are honest about what you noticed. You will not get better at it by analysing each date to death the same night.
+      </p>
+      <p>
+        The spiral feels productive. It is mostly not.
+      </p>
+    </>
+  ),
+
+  "when-to-delete-the-apps-actually": (
+    <>
+      <p>
+        I have deleted the dating apps from my phone seven times. I have reinstalled them six. The math suggests I will keep doing this. The math is probably right.
+      </p>
+      <p>
+        The question is not whether deleting is a permanent solution. It is not. The question is when it actually helps versus when it is theatre.
+      </p>
+      <p>
+        Most "I deleted the apps" announcements are theatre. The person is performing a decision they have not actually made. They will be back inside ten days, often inside three.
+      </p>
+      <p>
+        That is fine. The theatre is sometimes useful. But you should know which version you are doing, because the real one and the theatrical one require different reasons.
+      </p>
+
+      <h2>When you should actually delete</h2>
+      <p>
+        There is a specific cluster of signals that tells you a real delete is the right call. These are the signs that the apps are extracting more from you than they are giving back, by a margin that has stopped being sustainable.
+      </p>
+      <p>
+        You open the app and immediately feel a small dread before you swipe.
+      </p>
+      <p>
+        You can no longer remember the names of the people you matched with this week.
+      </p>
+      <p>
+        You have had three or more dates in a row where you knew within fifteen minutes that you were not interested, and went through with them anyway because you had nothing else going on.
+      </p>
+      <p>
+        Your last good first date was over four months ago.
+      </p>
+      <p>
+        You have stopped opening matches' profiles before replying to their first message.
+      </p>
+      <p>
+        You catch yourself thinking "what is the point of this" multiple times a week, not as a thought to engage with but as ambient static.
+      </p>
+      <p>
+        Three or more of those, and a delete is overdue.
+      </p>
+
+      <h2>When deleting is a mistake</h2>
+      <p>
+        There is also a cluster that tells you deleting will hurt more than help. You should not delete when the apps are mostly fine and a single hard interaction has thrown you off. Take a 48-hour break instead.
+      </p>
+      <p>
+        You should not delete after a date that did not go well, in the immediate aftermath, while you are still vibrating from it. You will reinstall in three days, feel worse for having reinstalled, and convict yourself for being weak. Wait until you are calm.
+      </p>
+      <p>
+        You should not delete because someone you respect told you to. The instinct is correct. The reasoning needs to be yours. You will not stick to a decision someone else made for you.
+      </p>
+      <p>
+        You should not delete to send a signal to a specific person. That is not deleting. That is messaging. They will not see it. You will be the only person affected.
+      </p>
+
+      <h2>The half-delete that does not work</h2>
+      <p>
+        A lot of people do the half-delete where they turn off notifications, hide the apps in a folder, and tell themselves they will only check once a day. Inside a week the once-a-day rule is gone.
+      </p>
+      <p>
+        The half-delete does not work because the friction is not high enough. The whole point of deleting is to put a small barrier between the impulse and the action. A folder is not a barrier. Notifications-off is not a barrier. The home screen icon being absent is a barrier. The reinstall flow is a barrier. The login again is a barrier.
+      </p>
+      <p>
+        If you want a real break, take a real one. If you want to keep checking, keep checking, just without lying to yourself about it.
+      </p>
+
+      <h2>What to do during the delete</h2>
+      <p>
+        Almost nothing. That is the part most people skip.
+      </p>
+      <p>
+        There is an instinct to fill the time with self-improvement. New workout plan. Reading list. Better skincare. The instinct is well-meaning. The execution is suspicious.
+      </p>
+      <p>
+        The point of the delete is not to come back as a better version of yourself who deserves better matches. The point is to come back as the same version of yourself who has remembered what your dating life is supposed to feel like.
+      </p>
+      <p>
+        That second thing requires nothing. It requires sitting in the slight discomfort of an unoccupied attentional space until something about that space starts to teach you.
+      </p>
+      <p>
+        A delete that is structured as a self-improvement sprint is not really a delete. It is just a different kind of busyness with the same exhaustion at the end.
+      </p>
+
+      <h2>The reinstall</h2>
+      <p>
+        Most reinstalls are sloppy. You reinstall because you got bored, or because a friend mentioned someone, or because it is a Friday night and you are lonely.
+      </p>
+      <p>
+        The clean reinstall has a reason. The reason can be small. I am ready to be in conversation with strangers again. I am curious about who is in the pool right now. I want one specific thing, which is a Sunday afternoon coffee with someone new.
+      </p>
+      <p>
+        If you cannot finish the sentence "I am reinstalling because," do not reinstall yet. The apps will be there in a week. The desire to reinstall without a reason is the same desire that exhausted you last time.
+      </p>
+
+      <h2>The pattern</h2>
+      <p>
+        After the seventh delete I started writing down the reason each time. The reasons cluster. About a third of mine are real fatigue. About a third are post-bad-date reactions, where I had no business deleting. About a third are quiet hopelessness that the apps did not cause.
+      </p>
+      <p>
+        That data is useful. Most of my deletes were responses to feelings that were not really about the apps. The apps were the closest available object to throw the feeling at.
+      </p>
+      <p>
+        Knowing that does not stop me from doing it. It just makes the next reinstall a little less embarrassing.
+      </p>
+    </>
+  ),
+
+  "taking-a-real-break-vs-avoiding": (
+    <>
+      <p>
+        There is a difference between resting from dating and hiding from it. The two look identical from the outside. They feel identical from the inside, for a while. The difference shows up later, and by then you have either built something or wasted a season.
+      </p>
+      <p>
+        A real break is a deliberate pause. You step away because the pace was too much, or because something in your life needs your attention, or because you want to come back sharper. You know roughly when you will come back. You are not making any decisions during the break. You are letting your nervous system reset so the next round of decisions is cleaner.
+      </p>
+      <p>
+        Avoidance looks the same on day one. You delete the apps. You cancel a planned date. You stop telling friends to set you up. You tell yourself you are taking time.
+      </p>
+      <p>
+        The difference is what is happening underneath.
+      </p>
+
+      <h2>The structural test</h2>
+      <p>
+        There is one question that separates the two. Honest answer required.
+      </p>
+      <p>
+        What scares me about being available right now.
+      </p>
+      <p>
+        If you can answer that, and the answer is something specific, you might be in avoidance dressed as rest. If you cannot answer that, or the answer is "nothing, I am just tired," you are probably actually resting.
+      </p>
+      <p>
+        My answers, when I have been honest, have included things like: I am scared of what I will be asked to give up if I meet someone right now. I am scared of being seen at the weight I am currently at. I am scared of the conversations about my last relationship. I am scared of starting over for the fourth time this year.
+      </p>
+      <p>
+        Those are real things. They are not bad things. They are not character flaws. But they are not "I am tired and need a break." They are reasons that need to be met directly, and a break alone will not meet them.
+      </p>
+
+      <h2>How avoidance behaves</h2>
+      <p>
+        Avoidance has a specific texture. It is the version of rest that does not actually rest you.
+      </p>
+      <p>
+        A real break, after two or three weeks, leaves you feeling lighter. Curiosity comes back. You start noticing strangers again on the train. You start thinking about a specific date scenario without flinching.
+      </p>
+      <p>
+        Avoidance, after two or three weeks, leaves you in the same place. The flinch is still there. The thought of being available still feels heavy. You start making a case for staying out indefinitely. You start telling yourself you are happier alone, in a tone that does not sound like someone who is happier alone.
+      </p>
+      <p>
+        The tell is the tone. People who are actually content single talk about it lightly. People who are avoiding talk about it with a small edge.
+      </p>
+
+      <h2>What to do if it is avoidance</h2>
+      <p>
+        The first thing is not to start dating again right away. That is a common mistake. The reasoning is "I need to push through it." The result is forcing yourself onto a few dates that confirm all the fears, which strengthens the avoidance.
+      </p>
+      <p>
+        The better move is to address what you are avoiding directly, separately from the apps. If the fear is about your body, work with that. If the fear is about being asked about your last relationship, write your answer down so it stops being a panic surface. If the fear is about starting over, name that out loud to a friend.
+      </p>
+      <p>
+        The apps come back online when the fear is not running the show. Not before. You can tell because the thought of an opening message feels neutral instead of nauseating.
+      </p>
+
+      <h2>What to do if it is rest</h2>
+      <p>
+        Different protocol. With rest, the work is to actually rest, which is harder than it sounds.
+      </p>
+      <p>
+        Stop researching dating. Stop reading the discourse. Stop following the dating creators. Stop having the conversations with friends about who is dating whom. Stop tracking the meta-game.
+      </p>
+      <p>
+        The reset only works if you stop the meta as well as the actual swiping. Otherwise the system stays activated and the break stops being a break.
+      </p>
+      <p>
+        Set a soft end. Three weeks is a good default. You can extend it. You should not shorten it. The shortening impulse is almost always the wrong impulse.
+      </p>
+      <p>
+        Plan one thing for after that has nothing to do with dating. A trip with a friend. A class. A weekend you have not had for a year. Something that lives entirely in your single life and does not require a partner to be good.
+      </p>
+      <p>
+        Then actually stop thinking about dating for the duration. The not-thinking is the medicine.
+      </p>
+
+      <h2>The harder version</h2>
+      <p>
+        Sometimes the right call is neither a rest nor a continued grind. It is sitting with whatever is showing up when the dating stops, and not running back to the dating to avoid it.
+      </p>
+      <p>
+        This is the hardest version. Almost nobody volunteers for it. I did it once, accidentally, after a hard breakup, and it changed the shape of my next year in a way I would not undo.
+      </p>
+      <p>
+        I did not learn anything mystical. I just learned what I was using dating to outrun. Mostly it was the loneliness of evenings, which I had been spackling over with conversations that did not need to happen. Once I could sit through the evenings without the spackle, the version of dating I came back to was different. I had less to ask of it. The dates were better because they were not also providing emergency relief.
+      </p>
+
+      <h2>The part that has to be yours</h2>
+      <p>
+        I am not going to tell you which one you are doing. I do not know. You know. The question is whether you are willing to ask yourself honestly enough to find out.
+      </p>
+      <p>
+        The two versions look the same for the first ten days. They diverge on day fourteen. If by week three you still cannot tell, that is itself information. Probably avoidance. Probably not fatal. Probably worth a conversation with someone who knows you well enough to push back.
+      </p>
+    </>
+  ),
+
+  "micro-rituals-between-dates": (
+    <>
+      <p>
+        A friend of mine has a thing she does before every first date. She walks the long way to the venue, takes a slightly different route than her phone recommends, and on the walk she lists three things in her week she is actually looking forward to that have nothing to do with the date.
+      </p>
+      <p>
+        She told me this in passing. I have stolen it. It is one of the best dating habits I have picked up from another human.
+      </p>
+      <p>
+        She did not call it a ritual. She called it "the walk." That is exactly the right register for what micro-rituals between dates should be. Small. Specific. Unromantic about themselves. They do their work in the background.
+      </p>
+
+      <h2>Why micro-rituals matter</h2>
+      <p>
+        Dating is full of high-stakes moments and almost no infrastructure between them. You go on a date. The date ends. Then there is a stretch of hours or days where nothing structurally is happening but a lot is happening in your head.
+      </p>
+      <p>
+        Without something to do with that space, the space fills with rumination, replay, and the slow accumulation of low-grade anxiety about the next interaction. With something to do, even something tiny, the space stays clean.
+      </p>
+      <p>
+        The rituals are not about being calm. They are about giving the in-between time a shape, so it stops bleeding into the dates themselves.
+      </p>
+
+      <h2>The shape that works</h2>
+      <p>
+        A micro-ritual has four properties.
+      </p>
+      <p>
+        It is short. Under fifteen minutes, usually under five.
+      </p>
+      <p>
+        It is specific. The same thing each time, not a vague intention.
+      </p>
+      <p>
+        It is physical. Something you do with your body, not just your thoughts. The body remembers what the mind forgets.
+      </p>
+      <p>
+        It is not about the dating. The ritual exists adjacent to the dating, not in service of it. The moment it becomes a strategy, it stops working.
+      </p>
+      <p>
+        Most rituals that fail fail because they are too big, too vague, too cerebral, or too instrumental.
+      </p>
+
+      <h2>Examples that work for me</h2>
+      <p>
+        Before a first date. Twenty minutes earlier than I need to leave. I sit on my couch with a glass of water and listen to one song. The same song each time. It has nothing to do with romance. It is a song I associate with a specific friend who is dead and whose company I would have wanted before doing a thing like this. It centers me without me having to perform centering myself.
+      </p>
+      <p>
+        After a first date. A walk home, even if I took transit there. Even ten minutes of walking. I do not let myself text anyone about the date during the walk. I let the date stay just mine for that walk.
+      </p>
+      <p>
+        The morning after. I make a real coffee, in the French press, not the espresso machine. Slower process. It forces me to spend four extra minutes standing in the kitchen, which is when I usually write the second-pass note about the date.
+      </p>
+      <p>
+        Between threads with the same person. Before I reply to a long message, I read it twice. The second read always tells me something the first did not. The reply gets sent slower as a result. The reply is also almost always better.
+      </p>
+      <p>
+        None of these are profound. That is the point. They are tiny grooves in the week that hold the dating part of my life from sloshing into the rest.
+      </p>
+
+      <h2>Examples I have stolen from other people</h2>
+      <p>
+        A woman I know writes the venue's address on her arm in pen before a first date. She has used GPS plenty of times. She does it anyway. She says the act of writing the address is a small announcement to herself that the night is real and she has chosen it.
+      </p>
+      <p>
+        A friend of mine has a "no apps after 10pm" rule on weeknights. Not aspirational. Actual. His phone literally hides them after ten. He told me his dating got noticeably less anxious within a month of starting it.
+      </p>
+      <p>
+        Another friend has a small box on her desk where she puts a folded piece of paper after every date with a one-word verdict on it. "Sharp." "Boring." "Curious." "No." Once a quarter she empties the box and reads the words. She says it shows her things her brain has been hiding.
+      </p>
+
+      <h2>What does not count as a ritual</h2>
+      <p>
+        Lighting a candle and journaling about your worth for forty minutes is not a ritual. It is a performance of self-care, and you will not do it next week.
+      </p>
+      <p>
+        Going to a yoga class because you have a date that night is not a ritual. It is just yoga, with a date attached.
+      </p>
+      <p>
+        Calling your friend after every date is not a ritual. It is offloading. The ritual would be sitting with the date for a defined period before you call.
+      </p>
+      <p>
+        The line between a ritual and a coping strategy is thin. Coping strategies are reactive. Rituals are anticipatory. Coping strategies discharge feeling. Rituals contain it.
+      </p>
+
+      <h2>Building your own</h2>
+      <p>
+        Start with one. Not three. Not a system. One.
+      </p>
+      <p>
+        Pick the moment in your dating week that consistently feels the worst. Not the worst once. The reliably worst. For most people it is the hour after a date, or the morning after a non-response, or the Sunday evening of a slow week.
+      </p>
+      <p>
+        Build the smallest possible thing you will do in that moment. It can be a song. A walk. A specific drink. A page of writing. Whatever you will actually do.
+      </p>
+      <p>
+        Do it for a month. Do not evaluate it until then. The rituals that work are the ones that compound, and you cannot feel the compound after two reps.
+      </p>
+      <p>
+        Then maybe add a second. Maybe not. One real ritual beats four aspirational ones.
+      </p>
+      <p>
+        The dating itself will not be different because of the ritual. You will be different because of the ritual. That difference shows up in the dating.
+      </p>
+    </>
+  ),
+
+  "the-sunday-night-wind-down-with-yourself": (
+    <>
+      <p>
+        Sunday night is the most underrated hour in a dater's week. Most people waste it on dread about Monday. The ones who use it well get something back that no other time of the week offers.
+      </p>
+      <p>
+        I started running what I call a wind-down conversation with myself on Sunday nights about two years ago. It takes between twenty and forty minutes. It does not require a notebook, though I sometimes use one. It does not require any app, though the Mirror in this one is useful for the last part. It mostly requires being alone, slightly tired, and willing to ask three or four questions honestly.
+      </p>
+      <p>
+        I am going to walk you through the version I run. You can steal the parts that work and discard the rest.
+      </p>
+
+      <h2>Why Sunday night specifically</h2>
+      <p>
+        Sunday night sits at a useful place in the week. You have enough distance from the week's events to see them with some perspective. You do not yet have Monday on top of you, demanding you be functional. You are usually slightly soft from the weekend, which makes you more honest with yourself than the harder weekday version of you tends to be.
+      </p>
+      <p>
+        If the week had anything dating-related in it, by Sunday you have stopped reacting to it and started seeing it. Reactions are loud. Seeing is quiet. Sunday is quiet.
+      </p>
+
+      <h2>The structure</h2>
+      <p>
+        Four questions, in order. The order matters. The order is doing work even if it does not look like it.
+      </p>
+      <p>
+        One. What actually happened this week.
+      </p>
+      <p>
+        Not how I felt about it. Not what I made of it. What happened. Two dates. Three threads. A match I ghosted. A friend who said something useful. The bare events. Naming them in your head, or on a piece of paper, is the first move. You cannot reflect on a week you have not named.
+      </p>
+      <p>
+        Two. Where was I sharp and where was I dull.
+      </p>
+      <p>
+        This is a behavior question, not a personality one. Where did I show up well, where did I show up poorly. Specific moments. The reply I drafted carefully. The reply I fired off without reading. The date where I asked the second question. The date where I monologued for ten minutes about my job. The texture of my own performance over the week.
+      </p>
+      <p>
+        Three. What did I notice about other people that I want to keep noticing.
+      </p>
+      <p>
+        This one is easy to skip and important not to skip. It pulls the attention off the self-grading. You are not the only person who showed up this week. The thing the person across the table from you said on Tuesday is worth holding onto. Their pause when you asked something. Their face when you said the wrong thing. Their small kindness when you were nervous. These build the library of how to read people, which is the actual skill underneath dating.
+      </p>
+      <p>
+        Four. What am I bringing into next week, on purpose.
+      </p>
+      <p>
+        Not goals. Not resolutions. Just one or two things you are choosing to carry. A question you want to ask on the next first date. A pattern you noticed in yourself you want to interrupt. A conversation with a friend you want to have. A specific person you want to text. Small. Specific. Pickable.
+      </p>
+
+      <h2>What it is not</h2>
+      <p>
+        It is not a planning session. Resist the urge to schedule the week, or to draft messages, or to pre-think dates. The wind-down is a different mode. Planning will hijack it if you let it.
+      </p>
+      <p>
+        It is not a venting session. Venting feels good and accomplishes nothing. If you find yourself slipping into a vent, redirect with the second question. Sharp and dull. Specific moments. That keeps you from spiraling into general dissatisfaction.
+      </p>
+      <p>
+        It is not a journal entry. The wind-down can produce notes, but the notes are a byproduct. The point is the thinking, not the artifact.
+      </p>
+
+      <h2>What changes after a few months of it</h2>
+      <p>
+        Three things, in my experience.
+      </p>
+      <p>
+        You stop being surprised by your own week. The week stops washing over you in a blur. You start the next week with a clearer sense of what is actually happening in your dating life, which means fewer decisions get made out of fog.
+      </p>
+      <p>
+        You start to see your patterns earlier. The thing that took six months to notice last year takes six weeks to notice now. The compound on the noticing is real.
+      </p>
+      <p>
+        You start to like Sunday night. This was the most surprising thing for me. The night I used to half-dread became, after maybe three months, the night I looked forward to most. Not because the rest of the week got worse. Because Sunday night got more useful.
+      </p>
+
+      <h2>When to skip it</h2>
+      <p>
+        Sometimes you should not run the wind-down. Weeks where something hard happened. Weeks where you are sick. Weeks where you went to bed early on Sunday because Sunday brunch ran long. Skip those. The practice should serve you, not the other way around.
+      </p>
+      <p>
+        A wind-down that becomes obligatory is a wind-down that has lost the plot. The point is to use the time well. If using it well looks like sleep this week, sleep is the right call.
+      </p>
+
+      <h2>The version that lasts</h2>
+      <p>
+        The version of this practice that lasts is the version you would still do if no one ever found out. No one is watching. The point is not to become the kind of person who has a Sunday ritual. The point is to spend twenty minutes of one night a week being honest with yourself about a part of your life that mostly happens too fast to see clearly.
+      </p>
+      <p>
+        If you do that, with no audience, with no commitment longer than this Sunday, you will look up in a season and see that you have been paying attention to your own life. Which is, eventually, the thing that changes everything else.
       </p>
     </>
   ),

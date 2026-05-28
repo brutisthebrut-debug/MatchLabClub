@@ -25,6 +25,7 @@ import {
   matchPoolMembershipTable,
   matchPreferencesTable,
   compatibilityReadsTable,
+  lifePulsesTable,
 } from "@workspace/db";
 import { and, count, sql, desc, gte, asc, eq, isNotNull, lt, inArray, lte } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -690,6 +691,92 @@ router.get("/founder/referrals", requireFounder, async (_req, res): Promise<void
     topInviters,
     surfaceBreakdown,
     recentReferrals,
+  });
+});
+
+// Attribution view: paid is defined by users.tier IN ('reset','wingman'),
+// the founder-stamped source of truth for paid customers (post Stripe). This
+// differs from /founder/referrals above, which leans on purchase_interest.
+router.get("/founder/referrals/attribution", requireFounder, async (req, res): Promise<void> => {
+  const inviter = alias(usersTable, "inviter_attr");
+  const invitee = alias(usersTable, "invitee_attr");
+
+  const [totalsRow] = await db
+    .select({
+      totalReferrals: sql<number>`count(*)::int`,
+      totalInviters: sql<number>`count(distinct ${referralsTable.inviterUserId})::int`,
+      totalPaidConverts: sql<number>`count(${referralsTable.inviteeUserId}) filter (where ${invitee.tier} in ('reset','wingman'))::int`,
+    })
+    .from(referralsTable)
+    .leftJoin(invitee, eq(invitee.id, referralsTable.inviteeUserId));
+
+  const totalReferrals = Number(totalsRow?.totalReferrals ?? 0);
+  const totalInviters = Number(totalsRow?.totalInviters ?? 0);
+  const totalPaidConverts = Number(totalsRow?.totalPaidConverts ?? 0);
+
+  const topReferrerRows = await db
+    .select({
+      inviterUserId: referralsTable.inviterUserId,
+      inviterEmail: inviter.email,
+      inviterFirstName: inviter.firstName,
+      inviteeCount: sql<number>`count(${referralsTable.inviteeUserId})::int`,
+      paidConversions: sql<number>`count(${referralsTable.inviteeUserId}) filter (where ${invitee.tier} in ('reset','wingman'))::int`,
+    })
+    .from(referralsTable)
+    .leftJoin(inviter, eq(inviter.id, referralsTable.inviterUserId))
+    .leftJoin(invitee, eq(invitee.id, referralsTable.inviteeUserId))
+    .groupBy(referralsTable.inviterUserId, inviter.email, inviter.firstName)
+    .orderBy(desc(sql`count(${referralsTable.inviteeUserId})`))
+    .limit(25);
+
+  const topReferrers = topReferrerRows.map((r) => {
+    const inviteeCount = Number(r.inviteeCount ?? 0);
+    const paidConversions = Number(r.paidConversions ?? 0);
+    return {
+      inviterUserId: r.inviterUserId,
+      inviterEmail: r.inviterEmail ?? "",
+      inviterFirstName: r.inviterFirstName ?? null,
+      inviteeCount,
+      paidConversions,
+      conversionRate: inviteeCount > 0 ? paidConversions / inviteeCount : 0,
+    };
+  });
+
+  const surfaceRows = await db
+    .select({
+      surface: referralsTable.surface,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(referralsTable)
+    .groupBy(referralsTable.surface)
+    .orderBy(desc(sql`count(*)`))
+    .limit(15);
+
+  const topSurfaces = surfaceRows.map((r) => ({
+    surface: r.surface ?? "(unknown)",
+    count: Number(r.count ?? 0),
+  }));
+
+  req.log.info(
+    {
+      totalReferrals,
+      totalInviters,
+      totalPaidConverts,
+      topReferrerCount: topReferrers.length,
+      surfaceCount: topSurfaces.length,
+    },
+    "founder.referrals.attribution served",
+  );
+
+  res.json({
+    topReferrers,
+    topSurfaces,
+    totals: {
+      totalReferrals,
+      totalInviters,
+      totalPaidConverts,
+      overallConversionRate: totalReferrals > 0 ? totalPaidConverts / totalReferrals : 0,
+    },
   });
 });
 
@@ -1875,6 +1962,77 @@ router.get(
           genderPreference: row.genderPreference ?? null,
         },
       })),
+    });
+  },
+);
+
+// T122 Echo copilot: consolidated per-user signals for the founder dashboard
+// "What Echo would do" panel. Read-only. The frontend feeds these into
+// playbook.ts decision helpers; this route just shapes the data.
+router.get(
+  "/founder/users/by-email/:email/echo-signals",
+  requireFounder,
+  async (req, res): Promise<void> => {
+    const emailRaw = typeof req.params.email === "string" ? req.params.email.trim().toLowerCase() : "";
+    if (!emailRaw || !emailRaw.includes("@")) {
+      res.status(400).json({ error: "A valid email is required." });
+      return;
+    }
+    const userRows = await db
+      .select({
+        id: usersTable.id,
+        email: usersTable.email,
+        tier: usersTable.tier,
+        tierGrantedAt: usersTable.tierGrantedAt,
+        createdAt: usersTable.createdAt,
+        aiContentConsentGranted: usersTable.aiContentConsentGranted,
+        invitedByUserId: usersTable.invitedByUserId,
+        invitedAt: usersTable.invitedAt,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.email, emailRaw))
+      .limit(1);
+    if (userRows.length === 0) {
+      res.status(404).json({ error: `No user with email ${emailRaw}.` });
+      return;
+    }
+    const user = userRows[0]!;
+
+    const [auditAgg] = await db
+      .select({
+        total: count(),
+        lastAt: sql<Date | null>`max(${auditsTable.createdAt})`,
+      })
+      .from(auditsTable)
+      .where(eq(auditsTable.userId, user.id));
+    const [wellnessAgg] = await db
+      .select({ total: count() })
+      .from(wellnessAnswersTable)
+      .where(eq(wellnessAnswersTable.userId, user.id));
+    const [lifePulseAgg] = await db
+      .select({ total: count() })
+      .from(lifePulsesTable)
+      .where(eq(lifePulsesTable.userId, user.id));
+
+    const tier = user.tier === "reset" || user.tier === "wingman" || user.tier === "free" ? user.tier : null;
+    const createdAt = user.createdAt instanceof Date ? user.createdAt : null;
+    const ageDays = createdAt ? Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24)) : null;
+    const lastAuditAt = auditAgg?.lastAt instanceof Date ? auditAgg.lastAt.toISOString() : null;
+
+    res.json({
+      signals: {
+        email: user.email ?? emailRaw,
+        tier,
+        createdAt: createdAt ? createdAt.toISOString() : null,
+        ageDays,
+        auditCount: Number(auditAgg?.total ?? 0),
+        lastAuditAt,
+        wellnessAnswerCount: Number(wellnessAgg?.total ?? 0),
+        lifePulseCount: Number(lifePulseAgg?.total ?? 0),
+        consentGranted: Boolean(user.aiContentConsentGranted),
+        invitedByUserId: user.invitedByUserId ?? null,
+        invitedAt: user.invitedAt instanceof Date ? user.invitedAt.toISOString() : null,
+      },
     });
   },
 );

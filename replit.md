@@ -2,6 +2,10 @@
 
 AI-powered "second brain for your dating life" — a companion web + mobile app that sits alongside Tinder/Hinge/Bumble. Audits profiles, rewrites bios, coaches messages, surfaces communication patterns, and (post-pivot) runs Compatibility Compass reads + ingests Hinge GDPR exports. Hybrid AI: deterministic baseline always-on, Anthropic Claude layered on top for semantic depth, opt-in per account.
 
+## Privacy & AI in one paragraph
+
+Two layers. The deterministic engine (`aiEngine.ts`) runs on every account by default: no keys, no external calls, no rate limits. On top of that, Anthropic Claude is opt-in via a single per-account toggle (`ai_content_consent`, surfaced in `/account` as "Deep AI lane"). The Claude layer covers bio rewrites, message coaching, Compatibility Compass synthesis, Hinge import summaries, and Instagram tone extraction. When the toggle is off, or when a Claude call fails or hits the daily cap, the deterministic engine handles the request and nothing breaks. Anthropic processes prompts under their zero-retention API policy. We never sell, share, or train on user content. Users can export and delete everything from their account at any time. Any marketing copy that says "no external AI" without qualification is stale and should be rewritten.
+
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)

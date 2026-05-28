@@ -50,7 +50,7 @@ const LEVELS = [
     modules: ["Dating Diagnosis", "Profile Audit", "Message Lab", "Signal Check"],
     module_links: ["/diagnosis", "/start", "/lab", "/signal-check"],
     insight: "The foundation of everything. All coaching is derived from what you explicitly share — nothing is assumed, nothing is scraped.",
-    technical: "Deterministic coaching engine. No external AI API. Ships without keys, never rate-limits.",
+    technical: "Deterministic coaching engine, always on. No keys, no external calls, never rate-limited. Anthropic Claude is layered on top for select tools when Deep AI lane is on in Settings.",
     accentColor: "hsl(142 55% 62%)",
   },
   {

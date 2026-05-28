@@ -1,11 +1,16 @@
 import type { Request, Response, NextFunction } from "express";
 
-const FOUNDER_KEY = process.env.FOUNDER_KEY?.trim() || "nldc2024";
+const RAW_KEY = process.env.FOUNDER_KEY?.trim();
+if (!RAW_KEY) {
+  throw new Error(
+    "FOUNDER_KEY env var is required. Set it in Replit Secrets before starting the API server.",
+  );
+}
+const FOUNDER_KEY: string = RAW_KEY;
 
 export function requireFounder(req: Request, res: Response, next: NextFunction): void {
   const headerKey = (req.header("x-founder-key") ?? "").trim();
-  const queryKey = typeof req.query.key === "string" ? req.query.key.trim() : "";
-  if (headerKey === FOUNDER_KEY || queryKey === FOUNDER_KEY) {
+  if (headerKey && headerKey === FOUNDER_KEY) {
     next();
     return;
   }

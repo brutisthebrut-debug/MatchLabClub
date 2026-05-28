@@ -4,6 +4,7 @@ const KEYS = {
   messageSessions: "nldc:anon:messageSessionIds",
   insights: "nldc:anon:insightIds",
   followUps: "nldc:anon:followUpIds",
+  compass: "nldc:anon:compassIds",
 } as const;
 
 export type AnonymousKind = keyof typeof KEYS;

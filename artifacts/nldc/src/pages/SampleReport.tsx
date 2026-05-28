@@ -497,7 +497,7 @@ export default function SampleReport() {
             </Collapsible>
             <Collapsible title="Is this real AI or template content?">
               <p className="text-sm text-muted-foreground leading-relaxed pt-1">
-                The AI coaching engine generates output specific to what you share — it's not a template fill-in. It runs on a deterministic coaching model we built in-house (no external API, no rate limits, always available). The founder review note is written by a human. The sample report above was written by hand for illustration.
+                The AI coaching engine generates output specific to what you share, not a template fill-in. The deterministic engine ships with every account by default: built in-house, no external calls, no rate limits, always available. If Deep AI lane is on in Settings, Anthropic Claude is layered on top for tools that benefit from semantic depth (bio rewrites, message coaching, Compatibility Compass, imports), processed under their zero-retention API policy. The founder review note is written by a human. The sample report above was written by hand for illustration.
               </p>
             </Collapsible>
             <Collapsible title="Is this for everyone — not just straight/cis daters?">
