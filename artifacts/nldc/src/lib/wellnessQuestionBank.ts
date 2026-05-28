@@ -477,3 +477,92 @@ export function getFeaturesForDimension(dimensionId: string): FeatureKey[] {
   });
   return out;
 }
+
+export type FeatureReadiness = {
+  feature: FeatureKey;
+  coveredDimensions: number;   // dimensions feeding this feature with ≥1 answer
+  totalDimensions: number;     // dimensions this feature draws on
+  answeredQuestions: number;   // total questions answered across those dimensions
+  totalQuestions: number;      // total questions across those dimensions
+  coveragePct: number;         // 0..100, integer
+  nextQuestions: WellnessQuestion[]; // up to `take` unanswered questions, prioritised by uncovered dimensions first
+};
+
+/**
+ * Compute readiness for one feature given the set of answered question IDs.
+ *
+ * Coverage prioritises BREADTH over depth: an unanswered question in a
+ * completely-uncovered dimension ranks above a second question in an
+ * already-touched dimension. Sensitive questions are de-prioritised so we
+ * never recommend them as the very next step.
+ */
+export function getFeatureReadiness(
+  feature: FeatureKey,
+  answeredIds: Set<string> | ReadonlySet<string>,
+  take = 3,
+): FeatureReadiness {
+  const safeTake = Math.max(0, Math.floor(take));
+  const dims = FEATURE_USAGE_MAP[feature];
+  const dimQuestions = dims.map(d => ({
+    dimension: d,
+    questions: WELLNESS_QUESTIONS.filter(q => q.dimension === d),
+  }));
+
+  let answered = 0;
+  let total = 0;
+  let coveredDims = 0;
+  for (const { questions } of dimQuestions) {
+    total += questions.length;
+    const answeredHere = questions.filter(q => answeredIds.has(q.id)).length;
+    answered += answeredHere;
+    if (answeredHere > 0) coveredDims++;
+  }
+
+  // Build a ranked list of unanswered questions: uncovered-dimension first,
+  // then sensitive last within each tier.
+  const ranked: WellnessQuestion[] = [];
+  // Tier 1: uncovered dimensions, non-sensitive
+  for (const { questions } of dimQuestions) {
+    const hasAny = questions.some(q => answeredIds.has(q.id));
+    if (hasAny) continue;
+    const first = questions.find(q => !q.sensitive && !answeredIds.has(q.id));
+    if (first) ranked.push(first);
+  }
+  // Tier 2: partially-covered dimensions, next non-sensitive
+  for (const { questions } of dimQuestions) {
+    const hasAny = questions.some(q => answeredIds.has(q.id));
+    if (!hasAny) continue;
+    const next = questions.find(q => !q.sensitive && !answeredIds.has(q.id));
+    if (next) ranked.push(next);
+  }
+  // Tier 3: anything else unanswered (incl. sensitive) as a fallback.
+  // We prefer questions in uncovered dimensions before partially-covered
+  // ones so the strict "uncovered first" contract holds even at this tier.
+  if (ranked.length < safeTake) {
+    const orderedDims = [
+      ...dimQuestions.filter(({ questions }) => !questions.some(q => answeredIds.has(q.id))),
+      ...dimQuestions.filter(({ questions }) =>  questions.some(q => answeredIds.has(q.id))),
+    ];
+    for (const { questions } of orderedDims) {
+      for (const q of questions) {
+        if (answeredIds.has(q.id)) continue;
+        if (ranked.find(r => r.id === q.id)) continue;
+        ranked.push(q);
+        if (ranked.length >= safeTake * 2) break;
+      }
+      if (ranked.length >= safeTake * 2) break;
+    }
+  }
+
+  const coveragePct = total === 0 ? 0 : Math.round((answered / total) * 100);
+
+  return {
+    feature,
+    coveredDimensions: coveredDims,
+    totalDimensions: dims.length,
+    answeredQuestions: answered,
+    totalQuestions: total,
+    coveragePct,
+    nextQuestions: ranked.slice(0, safeTake),
+  };
+}

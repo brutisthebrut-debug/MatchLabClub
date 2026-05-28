@@ -29,6 +29,7 @@ import {
   FEATURE_META,
   getDimensionsByDomain,
   getFeaturesForDimension,
+  getFeatureReadiness,
   getQuestionsByDimension,
   type FeatureKey,
   type WellnessQuestion,
@@ -744,6 +745,97 @@ function WhatThisPowers() {
   );
 }
 
+function FeatureReadinessPanel({ answeredIds }: { answeredIds: Set<string> }) {
+  return (
+    <motion.div
+      {...fadeUp(0.16)}
+      className="mb-6 glass-strong rounded-2xl border border-white/5 p-4 sm:p-5"
+      data-testid="panel-feature-readiness"
+    >
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(248_62%_62%)]">
+          Where your answers go
+        </p>
+        <p className="text-[10px] text-muted-foreground/50">
+          Live coverage per feature
+        </p>
+      </div>
+      <p className="text-sm text-muted-foreground/80 mb-4 leading-relaxed">
+        Each tool reads a specific slice of your profile. The percentage is how
+        much of that slice you've filled in. The questions below are the
+        highest-impact next steps for each.
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {FEATURE_ORDER.map(f => {
+          const r = getFeatureReadiness(f, answeredIds, 3);
+          const color = FEATURE_CHIP_COLOR[f];
+          const meta = FEATURE_META[f];
+          return (
+            <div
+              key={f}
+              className="rounded-xl border border-white/5 bg-white/2 p-3 flex flex-col gap-3"
+              data-testid={`feature-readiness-${f}`}
+              style={{ borderColor: withAlpha(color, 0.18) }}
+            >
+              <div className="flex items-center gap-3">
+                <ProgressRing pct={r.coveragePct} color={color} size={52} />
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-foreground truncate">
+                    {meta.label}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground/70 leading-snug">
+                    {r.coveredDimensions}/{r.totalDimensions} dimensions ·{" "}
+                    {r.answeredQuestions}/{r.totalQuestions} answers
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/55 mt-1 leading-snug">
+                    {meta.blurb}
+                  </p>
+                </div>
+              </div>
+              {r.nextQuestions.length > 0 ? (
+                <div className="space-y-1.5">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/40">
+                    Lift this next
+                  </p>
+                  <ul className="space-y-1">
+                    {r.nextQuestions.map(q => (
+                      <li
+                        key={q.id}
+                        className="text-[11px] text-foreground/85 leading-snug flex items-start gap-1.5"
+                        data-testid={`feature-${f}-next-${q.id}`}
+                      >
+                        <span
+                          className="mt-1 w-1 h-1 rounded-full flex-shrink-0"
+                          style={{ background: color }}
+                          aria-hidden="true"
+                        />
+                        <span>
+                          <span className="text-muted-foreground/50">
+                            {DIMENSION_META[q.dimension]?.label ?? q.dimension}
+                            {" · "}
+                          </span>
+                          {q.text}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div className="rounded-md bg-[hsl(142_55%_60%/0.08)] border border-[hsl(142_55%_60%/0.2)] px-2 py-1.5">
+                  <p className="text-[11px] text-[hsl(142_55%_72%)] font-medium">
+                    Fully covered. Every question feeding {meta.short} is
+                    answered.
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function WellnessCenter() {
@@ -843,6 +935,10 @@ export default function WellnessCenter() {
 
           {/* Matching readiness */}
           <MatchingReadinessPanel profile={profileData} />
+
+          {/* Per-feature readiness — shows live coverage + next best questions
+              for each downstream tool (Compass, Coach, Mirror, Insights). */}
+          <FeatureReadinessPanel answeredIds={answeredIds} />
 
           {/* Insight tags (if any) */}
           {tags.length > 0 && <InsightTagsPanel tags={tags} />}

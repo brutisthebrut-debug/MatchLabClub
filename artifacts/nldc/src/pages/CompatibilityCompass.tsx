@@ -594,7 +594,22 @@ export default function CompatibilityCompass() {
   }
 
   function handleRetry() {
-    if (resultMode === "reflection") void handleReflectionAnalyze();
+    // Re-run whichever mode produced the current result. Previously this
+    // only re-ran reflection, which silently no-op'd retries from paste /
+    // screenshot results. Screenshot mode needs the original File, which
+    // we don't retain past upload, so we fall back to a noop there with a
+    // friendly toast prompting re-upload.
+    if (resultMode === "reflection") {
+      void handleReflectionAnalyze();
+    } else if (resultMode === "paste") {
+      void handlePasteAnalyze();
+    } else if (resultMode === "screenshot") {
+      // Screenshot mode needs the original File object, which we drop after
+      // upload. Surface a hint via the existing OCR error channel so the
+      // user knows to re-pick the file.
+      setActiveTab("screenshot");
+      setOcrError("Re-upload the screenshot to retry this read.");
+    }
   }
 
   function loadHistorical(read: {
