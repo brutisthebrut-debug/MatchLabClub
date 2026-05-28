@@ -13,6 +13,13 @@ import {
   lifePulsesTable,
   journalEntriesTable,
   postDateNotesTable,
+  wellnessAnswersTable,
+  wellnessTagsTable,
+  compatibilityReadsTable,
+  importedSourcesTable,
+  waitlistTable,
+  coachFollowUpsTable,
+  loginNotificationsTable,
 } from "@workspace/db";
 import {
   ExportMyDataResponse,
@@ -597,6 +604,22 @@ router.delete("/account", async (req, res): Promise<void> => {
   await Promise.all([
     db.delete(journalEntriesTable).where(eq(journalEntriesTable.userId, userId)),
     db.delete(postDateNotesTable).where(eq(postDateNotesTable.userId, userId)),
+  ]);
+
+  // Pivot-era surfaces: wellness self-rating answers + system-derived tags,
+  // compatibility compass reads, GDPR imported sources (Hinge etc.), coach
+  // follow-up reminders, waitlist signup, and per-device login-notification
+  // throttle rows. All are user-scoped first-party data — must go when the
+  // account goes. Each is best-effort independent; one failure shouldn't
+  // strand the rest.
+  await Promise.all([
+    db.delete(wellnessAnswersTable).where(eq(wellnessAnswersTable.userId, userId)),
+    db.delete(wellnessTagsTable).where(eq(wellnessTagsTable.userId, userId)),
+    db.delete(compatibilityReadsTable).where(eq(compatibilityReadsTable.userId, userId)),
+    db.delete(importedSourcesTable).where(eq(importedSourcesTable.userId, userId)),
+    db.delete(coachFollowUpsTable).where(eq(coachFollowUpsTable.userId, userId)),
+    db.delete(waitlistTable).where(eq(waitlistTable.userId, userId)),
+    db.delete(loginNotificationsTable).where(eq(loginNotificationsTable.userId, userId)),
   ]);
 
   // Delete every active session belonging to this user (session JSONB

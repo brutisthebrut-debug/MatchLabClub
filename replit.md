@@ -1,6 +1,6 @@
 # MatchLab Club
 
-AI-powered dating profile and messaging coaching web app that audits profiles, rewrites bios, coaches messages, and surfaces communication patterns — all without any external AI API.
+AI-powered "second brain for your dating life" — a companion web + mobile app that sits alongside Tinder/Hinge/Bumble. Audits profiles, rewrites bios, coaches messages, surfaces communication patterns, and (post-pivot) runs Compatibility Compass reads + ingests Hinge GDPR exports. Hybrid AI: deterministic baseline always-on, Anthropic Claude layered on top for semantic depth, opt-in per account.
 
 ## Run & Operate
 
@@ -58,7 +58,7 @@ The updater fetches current GeoLite2 CSV files directly from MaxMind, converts t
 
 ## Architecture decisions
 
-- **No external AI API** — the coaching engine is entirely deterministic, built on structured prompt-to-output logic in `aiEngine.ts`. Ships without API keys, never fails from rate limits.
+- **Hybrid AI** — deterministic `aiEngine.ts` is the always-on baseline (no keys required, never rate-limited). Anthropic Claude (via Replit AI Integration, no key needed from the user) is layered on for semantic depth on tools that benefit: bio rewrites, message coaching, Compatibility Compass synthesis, Hinge import summarization, Instagram tone extraction. Provider routing lives in `aiService.ts`. Per-account `ai_content_consent` gate — see `requireContentConsent` in `aiService.ts`. When consent is off or a provider fails, calls fall back to the deterministic engine automatically.
 - **Consent-first integrations** — Integrations page is UI-only (coming soon), with explicit consent toggles and clear "what we access / never touch" breakdowns.
 - **Demo data as fallback** — Every page has hardcoded demo data so the UI never looks empty, even before a user completes their first audit.
 - **Contract-first API** — OpenAPI spec → Orval codegen → typed hooks. Server and client share Zod schemas.

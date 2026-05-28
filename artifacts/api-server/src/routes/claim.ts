@@ -13,6 +13,7 @@ import {
   postDateNotesTable,
   compatibilityReadsTable,
   importedSourcesTable,
+  wellnessAnswersTable,
 } from "@workspace/db";
 import {
   ClaimAnonymousDataBody,
@@ -199,10 +200,12 @@ async function claimByAnonToken(
   // Life pulses are not tracked by ID on the client (they're auto-collected
   // background signals), so claim them in bulk by anon token instead of by
   // explicit ID list. The token check is the same IDOR-safe filter used above.
-  // Same pattern applies to compatibility_reads (the pre-signup compass run)
-  // and imported_sources (Hinge/Tinder/Bumble GDPR exports) — both are
-  // single-row-per-action surfaces where the client never needs to enumerate
-  // ids and the token alone is a sufficiently scoped, IDOR-safe filter.
+  // Same pattern applies to compatibility_reads (the pre-signup compass run),
+  // imported_sources (Hinge/Tinder/Bumble GDPR exports), and wellness_answers
+  // (the pre-signup compatibility quiz, captured under the anon token so the
+  // results survive signup). All are single-row-per-action surfaces where the
+  // client never needs to enumerate ids and the token alone is a sufficiently
+  // scoped, IDOR-safe filter.
   await Promise.all([
     db
       .update(lifePulsesTable)
@@ -229,6 +232,15 @@ async function claimByAnonToken(
         and(
           isNull(importedSourcesTable.userId),
           eq(importedSourcesTable.anonymousClaimToken, anonToken),
+        ),
+      ),
+    db
+      .update(wellnessAnswersTable)
+      .set({ userId, anonymousClaimToken: null })
+      .where(
+        and(
+          isNull(wellnessAnswersTable.userId),
+          eq(wellnessAnswersTable.anonymousClaimToken, anonToken),
         ),
       ),
   ]);

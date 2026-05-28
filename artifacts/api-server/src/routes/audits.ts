@@ -491,7 +491,7 @@ router.post("/audits/:id/correct-source-app", async (req, res): Promise<void> =>
       sourceApp: correctedApp,
       ocrCorrections: Object.keys(updatedCorrections).length > 0 ? updatedCorrections : null,
     })
-    .where(eq(auditsTable.id, id));
+    .where(and(eq(auditsTable.id, id), activeOwnerScope(req)));
 
   res.json({ success: true, sourceApp: correctedApp });
 });
@@ -516,7 +516,7 @@ router.delete("/audits/:id", async (req, res): Promise<void> => {
   await db
     .update(auditsTable)
     .set({ deletedAt: new Date() })
-    .where(eq(auditsTable.id, id));
+    .where(and(eq(auditsTable.id, id), activeOwnerScope(req)));
 
   res.json(DeleteAuditResponse.parse({ success: true, deletedId: id }));
 });
@@ -547,7 +547,7 @@ router.post("/audits/:id/restore", async (req, res): Promise<void> => {
   await db
     .update(auditsTable)
     .set({ deletedAt: null })
-    .where(eq(auditsTable.id, id));
+    .where(and(eq(auditsTable.id, id), ownerScope(req)));
 
   res.json(
     GetAuditResponse.parse(serializeAudit({ ...audit, deletedAt: null })),

@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, leadsTable } from "@workspace/db";
 import { z } from "zod/v4";
 import { desc } from "drizzle-orm";
+import { requireFounder } from "../middlewares/founderAuth";
 
 const router: IRouter = Router();
 
@@ -26,7 +27,7 @@ router.post("/leads", async (req, res): Promise<void> => {
   });
 });
 
-router.get("/leads", async (req, res): Promise<void> => {
+router.get("/leads", requireFounder, async (req, res): Promise<void> => {
   const leads = await db.select().from(leadsTable).orderBy(desc(leadsTable.createdAt));
   res.json(
     leads.map((l) => ({

@@ -74,12 +74,15 @@ interface AnthropicMessageResponse {
 }
 interface AnthropicClient {
   messages: {
-    create: (args: {
-      model: string;
-      max_tokens: number;
-      system?: string;
-      messages: Array<{ role: "user" | "assistant"; content: string }>;
-    }) => Promise<AnthropicMessageResponse>;
+    create: (
+      args: {
+        model: string;
+        max_tokens: number;
+        system?: string;
+        messages: Array<{ role: "user" | "assistant"; content: string }>;
+      },
+      options?: { timeout?: number },
+    ) => Promise<AnthropicMessageResponse>;
   };
 }
 let cachedAnthropicClient: AnthropicClient | null = null;
@@ -297,6 +300,15 @@ interface RawCallResult {
   error?: string;
 }
 
+/**
+ * Hard ceiling on time we'll spend waiting for a single LLM call. Without
+ * this, a hung upstream provider ties up the Node event loop indefinitely
+ * (no built-in timeout on either OpenAI or Anthropic SDKs at the request
+ * level). 30s is generous for the response sizes we ask for; longer than
+ * that, we'd rather fall back deterministically and keep the API responsive.
+ */
+const PROVIDER_CALL_TIMEOUT_MS = 30_000;
+
 async function callModelOnce(
   client: OpenAI,
   opts: GenerateOptions,
@@ -304,16 +316,19 @@ async function callModelOnce(
   userContent: string,
 ): Promise<RawCallResult> {
   try {
-    const response = await client.chat.completions.create({
-      model,
-      temperature: opts.temperature ?? 0.7,
-      max_tokens: opts.maxTokens ?? 600,
-      messages: [
-        { role: "system", content: opts.system },
-        { role: "user", content: userContent },
-      ],
-      ...(opts.expectJson ? { response_format: { type: "json_object" as const } } : {}),
-    });
+    const response = await client.chat.completions.create(
+      {
+        model,
+        temperature: opts.temperature ?? 0.7,
+        max_tokens: opts.maxTokens ?? 600,
+        messages: [
+          { role: "system", content: opts.system },
+          { role: "user", content: userContent },
+        ],
+        ...(opts.expectJson ? { response_format: { type: "json_object" as const } } : {}),
+      },
+      { timeout: PROVIDER_CALL_TIMEOUT_MS },
+    );
     const text = response.choices[0]?.message?.content?.trim() ?? "";
     return { ok: text.length > 0, text };
   } catch (err) {
@@ -329,12 +344,15 @@ async function callAnthropicOnce(
   userContent: string,
 ): Promise<RawCallResult> {
   try {
-    const response = await client.messages.create({
-      model,
-      max_tokens: opts.maxTokens ?? 8192,
-      system: opts.system,
-      messages: [{ role: "user", content: userContent }],
-    });
+    const response = await client.messages.create(
+      {
+        model,
+        max_tokens: opts.maxTokens ?? 8192,
+        system: opts.system,
+        messages: [{ role: "user", content: userContent }],
+      },
+      { timeout: PROVIDER_CALL_TIMEOUT_MS },
+    );
     const block = response.content.find((b) => b.type === "text");
     const text = (block?.text ?? "").trim();
     return { ok: text.length > 0, text };
