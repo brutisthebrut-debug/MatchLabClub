@@ -5,6 +5,7 @@ import { useMeta } from "@/hooks/useMeta";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight, Star, Shield, Copy, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
+import { ShareButton } from "@/components/echo/ShareButton";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -527,6 +528,18 @@ export default function SampleReport() {
               </Link>
             </div>
             <p className="text-xs text-muted-foreground/40">Free forever · no credit card · no account required to start</p>
+            <div className="pt-2 flex items-center justify-center">
+              <ShareButton
+                surface="sample-report"
+                title="What MatchLab Club's profile report looks like"
+                text="Found this sample dating-profile audit on MatchLab Club — Signal Score, blueprint, AI rewrite, message strategy. Worth a look."
+                path="/sample"
+                ref="sample-report"
+                variant="pill"
+                label="Share this sample"
+                testId="button-share-sample"
+              />
+            </div>
           </motion.div>
 
           {/* Trust promise */}

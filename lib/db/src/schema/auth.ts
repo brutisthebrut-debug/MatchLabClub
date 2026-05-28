@@ -38,6 +38,10 @@ export const usersTable = pgTable("users", {
   aiContentConsentGranted: boolean("ai_content_consent_granted").notNull().default(false),
   aiContentConsentGrantedAt: timestamp("ai_content_consent_granted_at", { withTimezone: true }),
   aiContentConsentRevokedAt: timestamp("ai_content_consent_revoked_at", { withTimezone: true }),
+  // Referral attribution — populated on signup from the `mlc_ref` cookie if
+  // the user landed via an Echo share URL with `?ref=user-<inviterId>`.
+  invitedByUserId: varchar("invited_by_user_id"),
+  invitedAt: timestamp("invited_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

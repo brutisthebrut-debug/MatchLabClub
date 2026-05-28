@@ -7,6 +7,7 @@ import { WelcomePanel } from "@/components/WelcomePanel";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Sparkles, Compass, RefreshCw, AlertCircle } from "lucide-react";
+import { ShareButton } from "@/components/echo/ShareButton";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { FallbackNotice } from "@/components/FallbackNotice";
@@ -322,6 +323,20 @@ export default function CompatibilityCompass() {
               className="w-full rounded-full h-11 font-semibold bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 glow-pulse disabled:opacity-50">
               {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" />Reading your compass…</> : <><Compass className="mr-2 h-4 w-4" />Find My Compass</>}
             </Button>
+            {!isDemo && result && (
+              <div className="flex items-center justify-center pt-1">
+                <ShareButton
+                  surface="compass-read"
+                  title="My Compatibility Compass read"
+                  text={`Just ran a Compatibility Compass read on MatchLab Club. The pattern read is real. Try one →`}
+                  path="/compatibility-compass"
+                  ref="compass-share"
+                  variant="pill"
+                  label="Share my compass"
+                  testId="button-share-compass"
+                />
+              </div>
+            )}
           </motion.div>
 
           <AnimatePresence>
