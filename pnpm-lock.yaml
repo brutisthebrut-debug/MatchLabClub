@@ -928,6 +928,8 @@ importers:
         specifier: 'catalog:'
         version: 4.21.0
 
+  lib/echo: {}
+
   lib/integrations-anthropic-ai:
     dependencies:
       '@anthropic-ai/sdk':

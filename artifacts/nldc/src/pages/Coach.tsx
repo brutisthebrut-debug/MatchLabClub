@@ -27,6 +27,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Clock, ArrowRight, Sparkles, Send, Upload, X, AlertCircle, TrendingUp, TrendingDown, Minus, Moon, Sunrise } from "lucide-react";
+import { ShareButton } from "@/components/echo/ShareButton";
 import {
   useCoachNudgePrefs,
   buildWebSnoozeChips,
@@ -1048,6 +1049,20 @@ export default function Coach() {
                     </div>
                     <p className="text-sm text-foreground/85 leading-relaxed">{showResult.coachTip}</p>
                   </div>
+                  {result && isAuthenticated && (
+                    <div className="flex items-center justify-center pt-1">
+                      <ShareButton
+                        surface="message-coach"
+                        title="Message Coach result"
+                        text="Just ran a message through MatchLab Club's coach. Three drafts and the reasoning behind each. Worth trying."
+                        path="/coach"
+                        ref="coach-share"
+                        variant="pill"
+                        label="Share the coach"
+                        testId="button-share-coach"
+                      />
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}

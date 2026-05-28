@@ -10,6 +10,7 @@ export type EchoSurface =
   | "audit-report"
   | "sample-report"
   | "compass-read"
+  | "message-coach"
   | "self-hub"
   | "blog-post"
   | "landing"
