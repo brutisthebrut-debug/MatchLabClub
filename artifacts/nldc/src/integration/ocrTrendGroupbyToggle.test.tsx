@@ -38,6 +38,14 @@ const ocrPayload = {
 
 vi.mock("@workspace/api-client-react", () => ({
   useListAudits: () => ({ data: [] }),
+  useAskFounderCopilot: () => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(async () => ({ answer: "", citations: [] })),
+    isPending: false,
+    isError: false,
+    data: null,
+    reset: vi.fn(),
+  }),
   useGetWaitlistStats: () => ({ data: { totalCount: 0, spotsRemaining: 0, nextMilestone: 0 } }),
   useGetCoachFollowUpTimeline: () => ({ data: { buckets: [] }, isLoading: false, isError: false }),
 }));
@@ -91,6 +99,12 @@ vi.mock("@/lib/apiClient", () => {
     updateAlertSettings: async (_key: string, minutes: number) => ({ rebreachCooldownMinutes: minutes }),
     approveOcrRule: async () => {},
     rejectOcrRule: async () => {},
+    getReferralAttribution: async () => ({
+      summary: { totalReferrals: 0, totalInviters: 0, totalConverted: 0, overallConversionRate: 0 },
+      topInviters: [],
+      surfaces: [],
+    }),
+    getEchoUserSignals: async () => ({ signals: null }),
   };
 });
 

@@ -72,6 +72,15 @@ vi.mock("@workspace/api-client-react", () => ({
   getGetCoachFollowUpTimelineQueryKey: () => ["coach-followup-timeline"],
   useRecordCoachFollowUp: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useExtractMessageScreenshot: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  // Compass
+  useSaveCompassRead: () => ({
+    mutateAsync: vi.fn(async () => ({ id: 1 })),
+    isPending: false,
+  }),
+  useListCompassReads: () => ({ data: { reads: [] }, isLoading: false }),
+  getListCompassReadsQueryKey: () => ["list-compass-reads"],
+  useGetAiContentConsent: () => ({ data: { consent: false }, isLoading: false }),
+  getGetAiContentConsentQueryKey: () => ["ai-content-consent"],
 }));
 
 vi.mock("@/components/layout/AppLayout", () => ({

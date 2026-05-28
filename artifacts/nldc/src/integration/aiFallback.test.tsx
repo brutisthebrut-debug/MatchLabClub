@@ -42,6 +42,14 @@ vi.mock("@workspace/api-client-react", () => ({
   useListMessageCoachingSessions: () => ({ data: [], isLoading: false }),
   getListAuditsQueryKey: () => ["list-audits"],
   getListMessageCoachingSessionsQueryKey: () => ["list-coaching-sessions"],
+  useSaveCompassRead: () => ({
+    mutateAsync: vi.fn(async () => ({ id: 1 })),
+    isPending: false,
+  }),
+  useListCompassReads: () => ({ data: { reads: [] }, isLoading: false }),
+  getListCompassReadsQueryKey: () => ["list-compass-reads"],
+  useGetAiContentConsent: () => ({ data: { consent: false }, isLoading: false }),
+  getGetAiContentConsentQueryKey: () => ["ai-content-consent"],
 }));
 
 // AppLayout pulls in Navbar/Footer which depend on auth + routing — pass through

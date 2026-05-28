@@ -312,10 +312,24 @@ vi.mock("@/lib/apiClient", () => ({
   updateAlertSettings: vi.fn(async (_key: string, minutes: number) => ({ rebreachCooldownMinutes: minutes })),
   approveOcrRule: vi.fn(async () => {}),
   rejectOcrRule: vi.fn(async () => {}),
+  getReferralAttribution: vi.fn(async () => ({
+    summary: { totalReferrals: 0, totalInviters: 0, totalConverted: 0, overallConversionRate: 0 },
+    topInviters: [],
+    surfaces: [],
+  })),
+  getEchoUserSignals: vi.fn(async () => ({ signals: null })),
 }));
 
 vi.mock("@workspace/api-client-react", () => ({
   useListAudits: () => ({ data: [] as unknown[] }),
+  useAskFounderCopilot: () => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(async () => ({ answer: "", citations: [] })),
+    isPending: false,
+    isError: false,
+    data: null,
+    reset: vi.fn(),
+  }),
   useGetWaitlistStats: () => ({ data: { totalCount: 0 } }),
   useGetCoachFollowUpTimeline: () => ({ data: { buckets: [] }, isLoading: false, isError: false }),
 }));
