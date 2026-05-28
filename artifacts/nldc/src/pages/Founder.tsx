@@ -21,8 +21,8 @@ import {
   type AiToolCooldownState,
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
-import { useListAudits, useGetWaitlistStats, useGetCoachFollowUpTimeline } from "@workspace/api-client-react";
-import { Lock, LogOut, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock } from "lucide-react";
+import { useListAudits, useGetWaitlistStats, useGetCoachFollowUpTimeline, useGetFounderReferrals } from "@workspace/api-client-react";
+import { Lock, LogOut, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock, Share2 } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
 import { EchoPlaybookPanel } from "@/components/founder/EchoPlaybookPanel";
 import { toast } from "@/hooks/use-toast";
@@ -3226,7 +3226,7 @@ function LockedView({ onSubmit }: { onSubmit: (key: string) => void }) {
   );
 }
 
-type Tab = "overview" | "leads" | "audits" | "purchases" | "waitlist" | "emails" | "testing" | "ocr-mismatches";
+type Tab = "overview" | "leads" | "audits" | "purchases" | "waitlist" | "emails" | "testing" | "ocr-mismatches" | "referrals";
 
 
 function Dashboard({ onSignOut }: { onSignOut: () => void }) {
@@ -3258,6 +3258,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
     { id: "emails",    label: "Email Templates",                       icon: Mail           },
     { id: "testing",   label: "Testing Checklist",                     icon: ClipboardCheck },
     { id: "ocr-mismatches", label: "OCR Mismatches",                   icon: ScanLine       },
+    { id: "referrals", label: "Referrals",                              icon: Share2         },
   ];
 
   return (
@@ -3453,9 +3454,174 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
       {/* Testing Checklist */}
       {tab === "testing" && <TestingChecklistPanel />}
 
+      {/* Referrals */}
+      {tab === "referrals" && <ReferralsPanel founderKey={FOUNDER_KEY} refreshKey={refreshKey} />}
+
       <p className="text-xs text-muted-foreground/30 mt-12 text-center">
         Founder demo mode · Full auth + multi-user coming in V3
       </p>
+    </div>
+  );
+}
+
+/* ─── Referrals Panel ───────────────────────────────────────────────── */
+
+function ReferralsPanel({ founderKey, refreshKey }: { founderKey: string; refreshKey: number }) {
+  const { data, isLoading, isError, refetch } = useGetFounderReferrals(
+    { key: founderKey },
+  );
+
+  useEffect(() => {
+    void refetch();
+  }, [refreshKey, refetch]);
+
+  if (isLoading) {
+    return (
+      <div className="glass rounded-2xl p-8 flex items-center gap-3 text-sm text-muted-foreground">
+        <Loader2 className="w-4 h-4 animate-spin" />
+        Loading referral data...
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="glass rounded-2xl p-8 text-sm text-muted-foreground">
+        Could not load referral data. Check the founder key and try again.
+      </div>
+    );
+  }
+
+  const pct = (n: number) => `${Math.round(n * 1000) / 10}%`;
+
+  return (
+    <div className="space-y-6" data-testid="referrals-panel">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatCard
+          label="Total referrals"
+          value={data.totalReferrals}
+          icon={Share2}
+          color="hsl(248 62% 62%)"
+        />
+        <StatCard
+          label="Unique inviters"
+          value={data.uniqueInviters}
+          icon={Users}
+          color="hsl(190 55% 52%)"
+        />
+        <StatCard
+          label="Overall conversion"
+          value={pct(data.overallConversionRate)}
+          icon={CheckCircle2}
+          color="hsl(142 55% 50%)"
+        />
+      </div>
+
+      <div className="glass rounded-2xl p-6 space-y-3">
+        <div>
+          <h2 className="font-semibold text-foreground">Top inviters</h2>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">
+            Ranked by how many signups they brought in. Conversion is the share of those signups with a paid purchase.
+          </p>
+        </div>
+        {data.topInviters.length === 0 ? (
+          <p className="text-sm text-muted-foreground/60 italic py-6 text-center">
+            No one has referred a signup yet. Share links will show up here once a friend lands and signs up.
+          </p>
+        ) : (
+          <TableShell
+            headers={["#", "Inviter", "Email", "Invited", "Paid", "Conversion"]}
+            rows={data.topInviters.map((r, i) => [
+              i + 1,
+              r.inviterDisplayName ?? "(no name)",
+              r.inviterEmail || "(no email)",
+              r.invitedCount,
+              r.paidCount,
+              pct(r.conversionRate),
+            ])}
+          />
+        )}
+      </div>
+
+      <div className="glass rounded-2xl p-6 space-y-3">
+        <div>
+          <h2 className="font-semibold text-foreground">Surface breakdown</h2>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">
+            Where the share link was clicked from. Rows tagged "(unknown)" came from a link with no surface set.
+          </p>
+        </div>
+        {data.surfaceBreakdown.length === 0 ? (
+          <p className="text-sm text-muted-foreground/60 italic py-6 text-center">
+            No referral surfaces tracked yet.
+          </p>
+        ) : (
+          <TableShell
+            headers={["Surface", "Count", "Paid", "Conversion"]}
+            rows={data.surfaceBreakdown.map((r) => [
+              r.surface,
+              r.count,
+              r.paidCount,
+              pct(r.conversionRate),
+            ])}
+          />
+        )}
+      </div>
+
+      <div className="glass rounded-2xl p-6 space-y-3">
+        <div>
+          <h2 className="font-semibold text-foreground">Recent referrals</h2>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">
+            The last 50 referral rows, newest first. The Paid badge means the invitee has a paid purchase on file.
+          </p>
+        </div>
+        {data.recentReferrals.length === 0 ? (
+          <p className="text-sm text-muted-foreground/60 italic py-6 text-center">
+            No referral activity yet. Once someone lands via a share link and signs up, the row will appear here.
+          </p>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-white/8">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/8 bg-white/3">
+                  {["When", "Inviter", "Invitee", "Surface", "Invited at", "Status"].map((h) => (
+                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {data.recentReferrals.map((r, i) => (
+                  <tr key={i} className="border-b border-white/5 hover:bg-white/3 transition-colors">
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{fmtDate(r.createdAt)}</td>
+                    <td className="px-4 py-3 text-muted-foreground max-w-[200px] truncate">{r.inviterEmail || "(no email)"}</td>
+                    <td className="px-4 py-3 text-muted-foreground max-w-[200px] truncate">{r.inviteeEmail || "(no email)"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {r.surface ?? <span className="text-muted-foreground/40 italic">(unknown)</span>}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                      {r.invitedAt ? fmtDate(r.invitedAt) : <span className="text-muted-foreground/30 italic">none</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      {r.invitedConverted ? (
+                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
+                          style={{ color: "hsl(142 55% 50%)", borderColor: "hsl(142 55% 50% / 0.35)", background: "hsl(142 55% 50% / 0.12)" }}>
+                          Paid
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
+                          style={{ color: "hsl(220 10% 70%)", borderColor: "hsl(220 10% 70% / 0.25)", background: "hsl(220 10% 70% / 0.08)" }}>
+                          Pending
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

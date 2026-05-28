@@ -2450,6 +2450,46 @@ paths:
               schema:
                 $ref: "#/components/schemas/AiError"
 
+  /founder/referrals:
+    get:
+      operationId: getFounderReferrals
+      tags: [founder]
+      summary: Referral attribution summary for the founder dashboard
+      description: |
+        Aggregates the `referrals` table joined to `users` and `purchase_interest`
+        to show who is referring who and how those signups convert.
+
+        A referred user is counted as "paid" if they have any matching
+        `purchase_interest` row with `status = 'paid'`. This matches the rest
+        of the founder dashboard's purchase view, which treats `status = 'paid'`
+        as the canonical signal that money actually moved.
+
+        Requires founder key.
+      parameters:
+        - name: x-founder-key
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: key
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Referral attribution summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FounderReferralsSummary"
+        "401":
+          description: Founder key required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiError"
+
   /compass/reads:
     get:
       tags: [mirror]
@@ -4220,6 +4260,80 @@ components:
         stale:
           type: boolean
           description: True when the job has never run or last ran longer ago than staleThresholdMs.
+
+    FounderReferralsSummary:
+      type: object
+      required: [totalReferrals, uniqueInviters, overallConversionRate, topInviters, surfaceBreakdown, recentReferrals]
+      properties:
+        totalReferrals:
+          type: integer
+          description: Total number of rows in the referrals table.
+        uniqueInviters:
+          type: integer
+          description: Count of distinct inviter user ids across all referrals.
+        overallConversionRate:
+          type: number
+          format: float
+          description: Fraction of invited users with at least one paid purchase_interest row. Zero when there are no invitees.
+        topInviters:
+          type: array
+          description: Top 20 inviters by invited count, sorted descending.
+          items:
+            type: object
+            required: [inviterUserId, inviterEmail, inviterDisplayName, invitedCount, paidCount, conversionRate]
+            properties:
+              inviterUserId:
+                type: string
+              inviterEmail:
+                type: string
+              inviterDisplayName:
+                type: [string, 'null']
+              invitedCount:
+                type: integer
+              paidCount:
+                type: integer
+              conversionRate:
+                type: number
+                format: float
+                description: paidCount divided by invitedCount. Zero when invitedCount is zero.
+        surfaceBreakdown:
+          type: array
+          description: All referral surfaces ordered by count desc. Rows with no surface tag are bucketed under "(unknown)".
+          items:
+            type: object
+            required: [surface, count, paidCount, conversionRate]
+            properties:
+              surface:
+                type: string
+              count:
+                type: integer
+              paidCount:
+                type: integer
+              conversionRate:
+                type: number
+                format: float
+        recentReferrals:
+          type: array
+          description: Last 50 referrals, newest first.
+          items:
+            type: object
+            required: [createdAt, inviterEmail, inviteeEmail, surface, invitedAt, invitedConverted]
+            properties:
+              createdAt:
+                type: string
+                format: date-time
+              inviterEmail:
+                type: string
+              inviteeEmail:
+                type: string
+              surface:
+                type: [string, 'null']
+              invitedAt:
+                type: [string, 'null']
+                format: date-time
+              invitedConverted:
+                type: boolean
+                description: True when the invitee user has at least one paid purchase_interest row.
 
     LifePulseInput:
       type: object

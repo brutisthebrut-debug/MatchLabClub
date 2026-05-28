@@ -3197,6 +3197,56 @@ export const GetTrashPurgeHeartbeatResponse = zod.object({
 
 
 /**
+ * Aggregates the `referrals` table joined to `users` and `purchase_interest`
+to show who is referring who and how those signups convert.
+
+A referred user is counted as "paid" if they have any matching
+`purchase_interest` row with `status = 'paid'`. This matches the rest
+of the founder dashboard's purchase view, which treats `status = 'paid'`
+as the canonical signal that money actually moved.
+
+Requires founder key.
+
+ * @summary Referral attribution summary for the founder dashboard
+ */
+export const GetFounderReferralsQueryParams = zod.object({
+  "key": zod.coerce.string().optional()
+})
+
+export const GetFounderReferralsHeader = zod.object({
+  "x-founder-key": zod.string().optional()
+})
+
+export const GetFounderReferralsResponse = zod.object({
+  "totalReferrals": zod.number().describe('Total number of rows in the referrals table.'),
+  "uniqueInviters": zod.number().describe('Count of distinct inviter user ids across all referrals.'),
+  "overallConversionRate": zod.number().describe('Fraction of invited users with at least one paid purchase_interest row. Zero when there are no invitees.'),
+  "topInviters": zod.array(zod.object({
+  "inviterUserId": zod.string(),
+  "inviterEmail": zod.string(),
+  "inviterDisplayName": zod.string().nullable(),
+  "invitedCount": zod.number(),
+  "paidCount": zod.number(),
+  "conversionRate": zod.number().describe('paidCount divided by invitedCount. Zero when invitedCount is zero.')
+})).describe('Top 20 inviters by invited count, sorted descending.'),
+  "surfaceBreakdown": zod.array(zod.object({
+  "surface": zod.string(),
+  "count": zod.number(),
+  "paidCount": zod.number(),
+  "conversionRate": zod.number()
+})).describe('All referral surfaces ordered by count desc. Rows with no surface tag are bucketed under \"(unknown)\".'),
+  "recentReferrals": zod.array(zod.object({
+  "createdAt": zod.coerce.date(),
+  "inviterEmail": zod.string(),
+  "inviteeEmail": zod.string(),
+  "surface": zod.string().nullable(),
+  "invitedAt": zod.coerce.date().nullable(),
+  "invitedConverted": zod.boolean().describe('True when the invitee user has at least one paid purchase_interest row.')
+})).describe('Last 50 referrals, newest first.')
+})
+
+
+/**
  * Returns up to 50 compass reads for the signed-in user, or for the
 anonymous-claim browser if no user is signed in. Ordered newest
 first. Soft-deleted rows are excluded.

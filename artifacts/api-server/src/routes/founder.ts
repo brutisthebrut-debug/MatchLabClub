@@ -6,6 +6,8 @@ import {
   auditsTable,
   waitlistTable,
   messageCoachingSessionsTable,
+  referralsTable,
+  usersTable,
   aiRequestMetricsTable,
   aiRequestMetricsDailyTable,
   aiAlertThresholdsTable,
@@ -20,6 +22,7 @@ import {
   wellnessTagsTable,
 } from "@workspace/db";
 import { and, count, sql, desc, gte, asc, eq, isNotNull } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { z } from "zod/v4";
 import { requireFounder } from "../middlewares/founderAuth";
 import type { OcrCorrectionsRecord, OcrCorrectionField } from "@workspace/db";
@@ -475,6 +478,130 @@ router.get("/founder/trash-purge-heartbeat", requireFounder, async (_req, res): 
     ageMs,
     staleThresholdMs,
     stale: ageMs > staleThresholdMs,
+  });
+});
+
+// Paid signal: purchase_interest.status = 'paid' (the only status the rest of
+// the founder dashboard treats as money-in). purchase_interest has no userId
+// column, so we join on email — the same key Stripe checkout sessions are
+// created with. Users without an email on file can never be marked converted.
+router.get("/founder/referrals", requireFounder, async (_req, res): Promise<void> => {
+  const inviter = alias(usersTable, "inviter");
+  const invitee = alias(usersTable, "invitee");
+
+  const paidEmailRows = await db
+    .selectDistinct({ email: purchaseInterestTable.email })
+    .from(purchaseInterestTable)
+    .where(eq(purchaseInterestTable.status, "paid"));
+  const paidEmails = new Set(
+    paidEmailRows
+      .map((r) => (r.email ?? "").toLowerCase())
+      .filter((e) => e.length > 0),
+  );
+
+  const [{ total = 0, unique = 0 } = { total: 0, unique: 0 }] = await db
+    .select({
+      total: sql<number>`count(*)::int`,
+      unique: sql<number>`count(distinct ${referralsTable.inviterUserId})::int`,
+    })
+    .from(referralsTable);
+
+  const inviterRows = await db
+    .select({
+      inviterUserId: referralsTable.inviterUserId,
+      inviterEmail: inviter.email,
+      inviterFirstName: inviter.firstName,
+      inviterLastName: inviter.lastName,
+      invitedCount: sql<number>`count(${referralsTable.inviteeUserId})::int`,
+      paidCount: sql<number>`count(${referralsTable.inviteeUserId}) filter (where lower(${invitee.email}) in (
+        select lower(email) from ${purchaseInterestTable} where ${purchaseInterestTable.status} = 'paid' and email is not null
+      ))::int`,
+    })
+    .from(referralsTable)
+    .leftJoin(inviter, eq(inviter.id, referralsTable.inviterUserId))
+    .leftJoin(invitee, eq(invitee.id, referralsTable.inviteeUserId))
+    .groupBy(referralsTable.inviterUserId, inviter.email, inviter.firstName, inviter.lastName)
+    .orderBy(desc(sql`count(${referralsTable.inviteeUserId})`))
+    .limit(20);
+
+  const topInviters = inviterRows.map((r) => {
+    const invitedCount = Number(r.invitedCount ?? 0);
+    const paidCount = Number(r.paidCount ?? 0);
+    const first = (r.inviterFirstName ?? "").trim();
+    const last = (r.inviterLastName ?? "").trim();
+    const display = [first, last].filter((s) => s.length > 0).join(" ");
+    return {
+      inviterUserId: r.inviterUserId,
+      inviterEmail: r.inviterEmail ?? "",
+      inviterDisplayName: display.length > 0 ? display : null,
+      invitedCount,
+      paidCount,
+      conversionRate: invitedCount > 0 ? paidCount / invitedCount : 0,
+    };
+  });
+
+  const surfaceRows = await db
+    .select({
+      surface: referralsTable.surface,
+      count: sql<number>`count(*)::int`,
+      paidCount: sql<number>`count(*) filter (where lower(${invitee.email}) in (
+        select lower(email) from ${purchaseInterestTable} where ${purchaseInterestTable.status} = 'paid' and email is not null
+      ))::int`,
+    })
+    .from(referralsTable)
+    .leftJoin(invitee, eq(invitee.id, referralsTable.inviteeUserId))
+    .groupBy(referralsTable.surface)
+    .orderBy(desc(sql`count(*)`));
+
+  const surfaceBreakdown = surfaceRows.map((r) => {
+    const count = Number(r.count ?? 0);
+    const paidCount = Number(r.paidCount ?? 0);
+    return {
+      surface: r.surface ?? "(unknown)",
+      count,
+      paidCount,
+      conversionRate: count > 0 ? paidCount / count : 0,
+    };
+  });
+
+  const recentRows = await db
+    .select({
+      createdAt: referralsTable.landedAt,
+      inviterEmail: inviter.email,
+      inviteeEmail: invitee.email,
+      surface: referralsTable.surface,
+      invitedAt: invitee.invitedAt,
+    })
+    .from(referralsTable)
+    .leftJoin(inviter, eq(inviter.id, referralsTable.inviterUserId))
+    .leftJoin(invitee, eq(invitee.id, referralsTable.inviteeUserId))
+    .orderBy(desc(referralsTable.landedAt))
+    .limit(50);
+
+  const recentReferrals = recentRows.map((r) => {
+    const inviteeEmail = (r.inviteeEmail ?? "").toLowerCase();
+    return {
+      createdAt: (r.createdAt instanceof Date ? r.createdAt : new Date(r.createdAt as unknown as string)).toISOString(),
+      inviterEmail: r.inviterEmail ?? "",
+      inviteeEmail: r.inviteeEmail ?? "",
+      surface: r.surface ?? null,
+      invitedAt: r.invitedAt
+        ? (r.invitedAt instanceof Date ? r.invitedAt : new Date(r.invitedAt as unknown as string)).toISOString()
+        : null,
+      invitedConverted: inviteeEmail.length > 0 && paidEmails.has(inviteeEmail),
+    };
+  });
+
+  const totalInvited = Number(total);
+  const totalPaid = surfaceBreakdown.reduce((sum, s) => sum + s.paidCount, 0);
+
+  res.json({
+    totalReferrals: totalInvited,
+    uniqueInviters: Number(unique),
+    overallConversionRate: totalInvited > 0 ? totalPaid / totalInvited : 0,
+    topInviters,
+    surfaceBreakdown,
+    recentReferrals,
   });
 });
 

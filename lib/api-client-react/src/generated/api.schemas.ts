@@ -1237,6 +1237,51 @@ export interface TrashPurgeHeartbeat {
   stale: boolean;
 }
 
+export type FounderReferralsSummaryTopInvitersItem = {
+  inviterUserId: string;
+  inviterEmail: string;
+  /** @nullable */
+  inviterDisplayName: string | null;
+  invitedCount: number;
+  paidCount: number;
+  /** paidCount divided by invitedCount. Zero when invitedCount is zero. */
+  conversionRate: number;
+};
+
+export type FounderReferralsSummarySurfaceBreakdownItem = {
+  surface: string;
+  count: number;
+  paidCount: number;
+  conversionRate: number;
+};
+
+export type FounderReferralsSummaryRecentReferralsItem = {
+  createdAt: string;
+  inviterEmail: string;
+  inviteeEmail: string;
+  /** @nullable */
+  surface: string | null;
+  /** @nullable */
+  invitedAt: string | null;
+  /** True when the invitee user has at least one paid purchase_interest row. */
+  invitedConverted: boolean;
+};
+
+export interface FounderReferralsSummary {
+  /** Total number of rows in the referrals table. */
+  totalReferrals: number;
+  /** Count of distinct inviter user ids across all referrals. */
+  uniqueInviters: number;
+  /** Fraction of invited users with at least one paid purchase_interest row. Zero when there are no invitees. */
+  overallConversionRate: number;
+  /** Top 20 inviters by invited count, sorted descending. */
+  topInviters: FounderReferralsSummaryTopInvitersItem[];
+  /** All referral surfaces ordered by count desc. Rows with no surface tag are bucketed under "(unknown)". */
+  surfaceBreakdown: FounderReferralsSummarySurfaceBreakdownItem[];
+  /** Last 50 referrals, newest first. */
+  recentReferrals: FounderReferralsSummaryRecentReferralsItem[];
+}
+
 export interface LifePulseInput {
   /**
      * Subjective sleep quality last night (1 worst, 5 best).
@@ -2119,6 +2164,10 @@ key?: string;
 };
 
 export type RefreshGeoipParams = {
+key?: string;
+};
+
+export type GetFounderReferralsParams = {
 key?: string;
 };
 

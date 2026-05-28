@@ -82,9 +82,11 @@ import type {
   ExpiringTrashedAudits,
   ExtractMessageScreenshot400,
   ExtractScreenshot400,
+  FounderReferralsSummary,
   GeoipRefreshResult,
   GetAiFallbackRateParams,
   GetAuditReportVersion404,
+  GetFounderReferralsParams,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
   ImportSource,
@@ -7280,6 +7282,100 @@ export function useGetTrashPurgeHeartbeat<TData = Awaited<ReturnType<typeof getT
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetTrashPurgeHeartbeatQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetFounderReferralsUrl = (params?: GetFounderReferralsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/founder/referrals?${stringifiedParams}` : `/api/founder/referrals`
+}
+
+/**
+ * Aggregates the `referrals` table joined to `users` and `purchase_interest`
+to show who is referring who and how those signups convert.
+
+A referred user is counted as "paid" if they have any matching
+`purchase_interest` row with `status = 'paid'`. This matches the rest
+of the founder dashboard's purchase view, which treats `status = 'paid'`
+as the canonical signal that money actually moved.
+
+Requires founder key.
+
+ * @summary Referral attribution summary for the founder dashboard
+ */
+export const getFounderReferrals = async (params?: GetFounderReferralsParams, options?: RequestInit): Promise<FounderReferralsSummary> => {
+
+  return customFetch<FounderReferralsSummary>(getGetFounderReferralsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFounderReferralsQueryKey = (params?: GetFounderReferralsParams,) => {
+    return [
+    `/api/founder/referrals`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetFounderReferralsQueryOptions = <TData = Awaited<ReturnType<typeof getFounderReferrals>>, TError = ErrorType<AiError>>(params?: GetFounderReferralsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFounderReferrals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFounderReferralsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFounderReferrals>>> = ({ signal }) => getFounderReferrals(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFounderReferrals>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFounderReferralsQueryResult = NonNullable<Awaited<ReturnType<typeof getFounderReferrals>>>
+export type GetFounderReferralsQueryError = ErrorType<AiError>
+
+
+/**
+ * @summary Referral attribution summary for the founder dashboard
+ */
+
+export function useGetFounderReferrals<TData = Awaited<ReturnType<typeof getFounderReferrals>>, TError = ErrorType<AiError>>(
+ params?: GetFounderReferralsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFounderReferrals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFounderReferralsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
