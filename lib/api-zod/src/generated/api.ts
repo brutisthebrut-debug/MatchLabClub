@@ -3483,3 +3483,223 @@ export const DeleteImportResponse = zod.object({
 })
 
 
+/**
+ * Returns the combined matching envelope used by the Matching page:
+the user's saved preferences (or null when none are set), pool
+membership row, tier marker, a deterministic readiness score with
+per-source breakdown, the city-density count for the user's
+cityHint, and the total pool count. No AI calls. Safe to hit on
+every page load.
+
+ * @summary Get the signed-in user's matching readiness, preferences, and pool status
+ */
+export const GetMatchingStateHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const getMatchingStateResponseReadinessScoreMin = 0;
+export const getMatchingStateResponseReadinessScoreMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownCompassMin = 0;
+export const getMatchingStateResponseReadinessBreakdownCompassMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownJournalMin = 0;
+export const getMatchingStateResponseReadinessBreakdownJournalMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownWellnessMin = 0;
+export const getMatchingStateResponseReadinessBreakdownWellnessMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownHingeImportMin = 0;
+export const getMatchingStateResponseReadinessBreakdownHingeImportMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownPostDateMin = 0;
+export const getMatchingStateResponseReadinessBreakdownPostDateMax = 100;
+
+export const getMatchingStateResponseCityDensityMin = 0;
+
+export const getMatchingStateResponseTotalPoolCountMin = 0;
+
+
+
+export const GetMatchingStateResponse = zod.object({
+  "preferences": zod.union([zod.object({
+  "userId": zod.string(),
+  "ageMin": zod.number().nullable(),
+  "ageMax": zod.number().nullable(),
+  "distanceKm": zod.number().nullable(),
+  "genderPreference": zod.string().nullable(),
+  "dealBreakers": zod.array(zod.string()).nullable(),
+  "mustHaves": zod.array(zod.string()).nullable(),
+  "cityHint": zod.string().nullable(),
+  "updatedAt": zod.coerce.date()
+}),zod.null()]),
+  "poolStatus": zod.enum(['off', 'building', 'ready', 'paused', 'concierge_only']),
+  "tier": zod.union([zod.literal('free'),zod.literal('reset'),zod.literal('wingman'),zod.literal(null)]).nullable(),
+  "readiness": zod.object({
+  "score": zod.number().min(getMatchingStateResponseReadinessScoreMin).max(getMatchingStateResponseReadinessScoreMax),
+  "breakdown": zod.object({
+  "compass": zod.number().min(getMatchingStateResponseReadinessBreakdownCompassMin).max(getMatchingStateResponseReadinessBreakdownCompassMax),
+  "journal": zod.number().min(getMatchingStateResponseReadinessBreakdownJournalMin).max(getMatchingStateResponseReadinessBreakdownJournalMax),
+  "wellness": zod.number().min(getMatchingStateResponseReadinessBreakdownWellnessMin).max(getMatchingStateResponseReadinessBreakdownWellnessMax),
+  "hingeImport": zod.number().min(getMatchingStateResponseReadinessBreakdownHingeImportMin).max(getMatchingStateResponseReadinessBreakdownHingeImportMax),
+  "postDate": zod.number().min(getMatchingStateResponseReadinessBreakdownPostDateMin).max(getMatchingStateResponseReadinessBreakdownPostDateMax)
+})
+}),
+  "cityDensity": zod.number().min(getMatchingStateResponseCityDensityMin),
+  "totalPoolCount": zod.number().min(getMatchingStateResponseTotalPoolCountMin)
+})
+
+
+/**
+ * Inserts or updates the caller's row in `match_preferences`. Every
+field is optional. Pass null to clear a value. Age and distance
+bounds are validated server-side.
+
+ * @summary Upsert the signed-in user's match preferences
+ */
+export const UpdateMatchingPreferencesHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const updateMatchingPreferencesBodyAgeMinMin = 18;
+export const updateMatchingPreferencesBodyAgeMinMax = 120;
+
+export const updateMatchingPreferencesBodyAgeMaxMin = 18;
+export const updateMatchingPreferencesBodyAgeMaxMax = 120;
+
+export const updateMatchingPreferencesBodyDistanceKmMin = 0;
+export const updateMatchingPreferencesBodyDistanceKmMax = 20000;
+
+export const updateMatchingPreferencesBodyGenderPreferenceMax = 64;
+
+export const updateMatchingPreferencesBodyDealBreakersItemMax = 120;
+
+export const updateMatchingPreferencesBodyDealBreakersMax = 50;
+
+export const updateMatchingPreferencesBodyMustHavesItemMax = 120;
+
+export const updateMatchingPreferencesBodyMustHavesMax = 50;
+
+export const updateMatchingPreferencesBodyCityHintMax = 120;
+
+
+
+export const UpdateMatchingPreferencesBody = zod.object({
+  "ageMin": zod.number().min(updateMatchingPreferencesBodyAgeMinMin).max(updateMatchingPreferencesBodyAgeMinMax).nullish(),
+  "ageMax": zod.number().min(updateMatchingPreferencesBodyAgeMaxMin).max(updateMatchingPreferencesBodyAgeMaxMax).nullish(),
+  "distanceKm": zod.number().min(updateMatchingPreferencesBodyDistanceKmMin).max(updateMatchingPreferencesBodyDistanceKmMax).nullish(),
+  "genderPreference": zod.string().max(updateMatchingPreferencesBodyGenderPreferenceMax).nullish(),
+  "dealBreakers": zod.array(zod.string().min(1).max(updateMatchingPreferencesBodyDealBreakersItemMax)).max(updateMatchingPreferencesBodyDealBreakersMax).nullish(),
+  "mustHaves": zod.array(zod.string().min(1).max(updateMatchingPreferencesBodyMustHavesItemMax)).max(updateMatchingPreferencesBodyMustHavesMax).nullish(),
+  "cityHint": zod.string().max(updateMatchingPreferencesBodyCityHintMax).nullish()
+})
+
+export const UpdateMatchingPreferencesResponse = zod.object({
+  "userId": zod.string(),
+  "ageMin": zod.number().nullable(),
+  "ageMax": zod.number().nullable(),
+  "distanceKm": zod.number().nullable(),
+  "genderPreference": zod.string().nullable(),
+  "dealBreakers": zod.array(zod.string()).nullable(),
+  "mustHaves": zod.array(zod.string()).nullable(),
+  "cityHint": zod.string().nullable(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * Inserts or updates the caller's row in `match_pool_membership`.
+Accepted client-facing statuses: `off`, `building`, `ready`,
+`paused`. When the caller's tier is `wingman` and the client
+sends `building`, the server may upgrade the stored status to
+`concierge_only` for founder-curated routing.
+
+ * @summary Upsert the signed-in user's match pool membership status
+ */
+export const UpdateMatchingPoolMembershipHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const updateMatchingPoolMembershipBodyPausedReasonMax = 280;
+
+
+
+export const UpdateMatchingPoolMembershipBody = zod.object({
+  "status": zod.enum(['off', 'building', 'ready', 'paused']),
+  "pausedReason": zod.string().max(updateMatchingPoolMembershipBodyPausedReasonMax).nullish()
+})
+
+export const UpdateMatchingPoolMembershipResponse = zod.object({
+  "userId": zod.string(),
+  "status": zod.enum(['off', 'building', 'ready', 'paused', 'concierge_only']),
+  "readyAt": zod.coerce.date().nullable(),
+  "pausedReason": zod.string().nullable(),
+  "tier": zod.union([zod.literal('free'),zod.literal('reset'),zod.literal('wingman'),zod.literal(null)]).nullable(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * Persists a paste of a profile the caller is already talking to and
+returns a compatibility read. Reuses the Compatibility Compass
+synthesis path, tagged with `mode='matching_external'`. The result
+is also captured as a `match_proposals` row with
+`source='external_paste'` so the founder review queue can act on it.
+
+ * @summary Score a pasted external profile against the signed-in user
+ */
+export const CreateMatchingExternalReadHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const createMatchingExternalReadBodyProfileTextMax = 20000;
+
+
+
+export const CreateMatchingExternalReadBody = zod.object({
+  "profileText": zod.string().min(1).max(createMatchingExternalReadBodyProfileTextMax),
+  "source": zod.enum(['hinge', 'tinder', 'bumble', 'other'])
+})
+
+export const createMatchingExternalReadResponseScoreMin = 0;
+export const createMatchingExternalReadResponseScoreMax = 100;
+
+
+
+export const CreateMatchingExternalReadResponse = zod.object({
+  "score": zod.number().min(createMatchingExternalReadResponseScoreMin).max(createMatchingExternalReadResponseScoreMax),
+  "highlights": zod.array(zod.string()),
+  "frictions": zod.array(zod.string()),
+  "summary": zod.string().nullable()
+})
+
+
+/**
+ * Returns the caller's proposals ordered by createdAt desc. Empty for
+most users today; founder seeds rows as the internal pool grows.
+
+ * @summary List the signed-in user's current match proposals
+ */
+export const GetMatchingProposalsHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const getMatchingProposalsResponseCompatibilityScoreMin = 0;
+export const getMatchingProposalsResponseCompatibilityScoreMax = 100;
+
+
+
+export const GetMatchingProposalsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "userId": zod.string(),
+  "proposedToUserId": zod.string().nullable(),
+  "source": zod.enum(['internal', 'external_paste', 'concierge']),
+  "compatibilityScore": zod.number().min(getMatchingProposalsResponseCompatibilityScoreMin).max(getMatchingProposalsResponseCompatibilityScoreMax),
+  "summary": zod.string().nullable(),
+  "status": zod.enum(['proposed', 'user_yes', 'user_no', 'mutual_yes', 'expired', 'completed']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const GetMatchingProposalsResponse = zod.array(GetMatchingProposalsResponseItem)
+
+

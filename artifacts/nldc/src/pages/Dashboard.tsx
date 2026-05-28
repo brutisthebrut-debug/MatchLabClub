@@ -269,9 +269,9 @@ const ACTION_GROUPS = [
 
 const WINGMAN_NOTES = [
   { note: "Your opener doesn't need to be clever. It needs to be specific. One real detail beats three perfect lines.", action: "Try Next Message", href: "/next-message" },
-  { note: "If you haven't messaged them in 3 days, send the re-engage option — low-pressure, no explanation required.", action: "Open Message Coach", href: "/coach" },
+  { note: "If you haven't messaged them in 3 days, send the re-engage option. Low-pressure, no explanation required.", action: "Open Message Coach", href: "/coach" },
   { note: "The bio rewrite that works best is the one that sounds like you'd actually say it out loud.", action: "Profile Glow-Up", href: "/glow-up" },
-  { note: "Most people don't 'catch up' — they just start somewhere. What's the one move available to you right now?", action: "See My Plan", href: "/copilot/weekly-plan" },
+  { note: "Most people don't 'catch up'. They just start somewhere. What's the one move available to you right now?", action: "See My Plan", href: "/copilot/weekly-plan" },
   { note: "Weekend energy: lower the bar. A short, genuine message beats a perfect long one every time.", action: "Help Me Reply", href: "/copilot/reply" },
   { note: "If something went well this week, log it in your Timeline before the detail fades. Small wins compound.", action: "My Timeline", href: "/progress/timeline" },
   { note: "Specificity is your superpower. The more specific your profile, the more specific the people who match you.", action: "Improve My Profile", href: "/copilot/profile" },
@@ -280,7 +280,7 @@ const WINGMAN_NOTES = [
 const PACKAGE_CARDS = [
   {
     name: "The Dating Reset",
-    tagline: "Find exactly what to fix — score, bio rewrite, and 7-day plan.",
+    tagline: "Find exactly what to fix: score, bio rewrite, and 7-day plan.",
     hint: "Start with a free Signal Check →",
     hintHref: "/signal-check",
     color: "hsl(var(--brand-indigo))",
@@ -294,7 +294,7 @@ const PACKAGE_CARDS = [
   },
   {
     name: "Message Lab",
-    tagline: "Turn any conversation into a clear next move — replies ready to copy.",
+    tagline: "Turn any conversation into a clear next move. Replies ready to copy.",
     hint: "Start with Chemistry Lab →",
     hintHref: "/lab",
     color: "hsl(190 55% 60%)",
@@ -322,7 +322,7 @@ const PACKAGE_CARDS = [
   },
   {
     name: "Context + Trust",
-    tagline: "Build your compatibility profile — 18 dimensions, consent-first, coaching by default.",
+    tagline: "Build your compatibility profile: 18 dimensions, consent-first, coaching by default.",
     hint: "Build Compatibility Profile →",
     hintHref: "/wellness",
     color: "hsl(228 30% 62%)",
@@ -358,7 +358,7 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
     return {
       label: "Recommended",
       title: "Your score has clear room to grow",
-      desc: "Dating Diagnosis will show you exactly what category of issue to fix first — fast.",
+      desc: "Dating Diagnosis will show you exactly what category of issue to fix first. Fast.",
       href: "/diagnosis",
       color: "hsl(var(--brand-rose))",
       cta: "Run My Diagnosis",
@@ -367,7 +367,7 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
   if (latestScore < 75) {
     return {
       label: "Next Best Move",
-      title: "Your profile is solid — now sharpen your messages",
+      title: "Your profile is solid. Now sharpen your messages",
       desc: "Most matches are won or lost in the first few exchanges. Message Coach gets you 3 ready-to-send replies.",
       href: "/coach",
       color: "hsl(var(--brand-gold))",
@@ -377,7 +377,7 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
   return {
     label: "Keep the Momentum",
     title: "Strong score. Now see how you actually communicate.",
-    desc: "Style Map maps 9 dimensions of your communication — warmth, clarity, directness, and more.",
+    desc: "Style Map maps 9 dimensions of your communication: warmth, clarity, directness, and more.",
     href: "/style-map",
     color: "hsl(var(--brand-green))",
     cta: "Map My Style",
@@ -408,7 +408,7 @@ function parseAuditFiltersFromSearch(search: string): {
 }
 
 export default function Dashboard() {
-  useMeta("Your Dashboard", "Your Signal Score history, recent audits, coaching sessions, and quick actions — all in one place.");
+  useMeta("Your Dashboard", "Your Signal Score history, recent audits, coaching sessions, and quick actions, all in one place.");
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -1002,6 +1002,54 @@ export default function Dashboard() {
     ? latestAuditFromQuery ?? (audits && audits[0]) ?? null
     : null;
 
+  // High-contrast empty state: authenticated user with zero real audits.
+  // Replaces the demo-flavored dashboard so the first ask is unmissable.
+  const showRealEmptyState =
+    isAuthenticated && !accountDataLoading && !hasRealAudits;
+
+  if (showRealEmptyState) {
+    return (
+      <AppLayout>
+        <div className="min-h-screen mesh-bg py-16 px-4 flex items-center">
+          <div className="orb orb-violet fixed w-[500px] h-[500px] -top-40 -right-40 opacity-40 pointer-events-none" />
+          <div className="orb orb-gold fixed w-[300px] h-[300px] bottom-10 -left-20 opacity-30 pointer-events-none" />
+          <div className="max-w-2xl mx-auto text-center relative z-10" data-testid="dashboard-real-empty-state">
+            <div className="inline-flex w-20 h-20 rounded-3xl items-center justify-center mb-6 bg-[hsl(248_62%_52%/0.15)] border border-[hsl(248_62%_52%/0.3)]">
+              <Sparkles className="w-9 h-9 text-[hsl(248_62%_65%)]" />
+            </div>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground tracking-tight mb-4">
+              No audits yet
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed mb-10">
+              Run your first audit and we'll show you exactly what your profile is communicating.
+            </p>
+            <Button
+              asChild
+              className="rounded-full h-14 px-10 text-base bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 font-semibold glow-pulse"
+              data-testid="button-real-empty-state-start"
+            >
+              <Link href="/start">
+                Run my first audit <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <div className="mt-6">
+              <Link
+                href="/sample"
+                className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 decoration-white/20 hover:decoration-white/40 transition-colors"
+                data-testid="link-real-empty-state-sample"
+              >
+                See a sample report
+              </Link>
+            </div>
+            <p className="text-xs text-muted-foreground/60 mt-10">
+              Free. No credit card. Takes about 3 minutes.
+            </p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
       <div className="min-h-screen mesh-bg py-10 px-4">
@@ -1226,7 +1274,7 @@ export default function Dashboard() {
               icon={<Sparkles className="w-7 h-7" />}
               eyebrow="Welcome to MatchLab Club"
               title="Your dashboard is ready for its first signal"
-              description="Start your free Signal Audit and we'll fill this page with your real score, strengths, growth areas, and a 7-day action plan — all in about 3 minutes."
+              description="Start your free Signal Audit and we'll fill this page with your real score, strengths, growth areas, and a 7-day action plan, all in about 3 minutes."
               testId="dashboard-empty-state"
               delay={0.1}
               wrapperClassName="mb-5"
@@ -1333,7 +1381,7 @@ export default function Dashboard() {
             <motion.div {...fadeUp(0.06)} className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-white/3 border border-white/8 mb-4">
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
                 <span className="w-1.5 h-1.5 rounded-full bg-[hsl(43_65%_65%)] inline-block flex-shrink-0" />
-                <span>You're looking at <strong className="text-foreground/70">sample data</strong> — your real score appears after your first Signal Audit.</span>
+                <span>You're looking at <strong className="text-foreground/70">sample data</strong>. Your real score appears after your first Signal Audit.</span>
               </div>
               <Link href="/signal-check" className="text-xs font-semibold text-[hsl(248_62%_52%)] hover:text-[hsl(248_62%_62%)] transition-colors whitespace-nowrap flex-shrink-0">Get my score →</Link>
             </motion.div>
@@ -1360,7 +1408,7 @@ export default function Dashboard() {
             </motion.div>
 
             {/* Score History */}
-            <motion.div {...fadeUp(0.1)} className="glass border border-white/8 rounded-3xl p-5 md:col-span-2">
+            <motion.div {...fadeUp(0.1)} className="glass border border-white/8 rounded-3xl p-5 md:col-span-2 min-w-0 overflow-hidden">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <div className="flex items-center gap-2">
@@ -1702,7 +1750,7 @@ export default function Dashboard() {
                   <Sparkles className="w-6 h-6 text-[hsl(248_62%_62%)]" />
                 </div>
                 <p className="font-semibold text-foreground mb-1">No audits yet</p>
-                <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto leading-relaxed">Your first audit sets the baseline — Signal Score, bio critique, and a 7-day action plan.</p>
+                <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto leading-relaxed">Your first audit sets the baseline: Signal Score, bio critique, and a 7-day action plan.</p>
                 <Button asChild className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 font-semibold" data-testid="button-start-first-audit">
                   <Link href="/start">Get My Free Signal Audit <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
                 </Button>
@@ -1883,13 +1931,13 @@ export default function Dashboard() {
             <div className="orb orb-violet absolute w-64 h-64 -right-20 -top-20 opacity-60 pointer-events-none" />
             <div className="relative z-10">
               <div className="line-accent max-w-xs mx-auto mb-4" />
-              <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_65%)] mb-2">Unlock Everything</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_65%)] mb-2">Reveal Everything</p>
               <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-3">Ready for The Dating Reset?</h3>
               <p className="text-muted-foreground mb-5 max-w-lg mx-auto text-sm leading-relaxed">
                 Complete profile rewrite, Signal Spectrum, Dating Diagnosis, Chemistry Lab, and a 7-day action plan. One payment.
               </p>
               <Button asChild className="rounded-full px-8 bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 font-semibold glow-pulse" data-testid="button-upgrade-cta">
-                <Link href="/pricing">The Dating Reset — $97 <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link href="/pricing">The Dating Reset: $97 <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
             </div>
           </motion.div>

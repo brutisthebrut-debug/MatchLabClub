@@ -1989,6 +1989,262 @@ export interface AskFounderCopilotResult {
   tokensUsed?: number;
 }
 
+export interface MatchPreferences {
+  userId: string;
+  /** @nullable */
+  ageMin: number | null;
+  /** @nullable */
+  ageMax: number | null;
+  /** @nullable */
+  distanceKm: number | null;
+  /** @nullable */
+  genderPreference: string | null;
+  /** @nullable */
+  dealBreakers: string[] | null;
+  /** @nullable */
+  mustHaves: string[] | null;
+  /** @nullable */
+  cityHint: string | null;
+  updatedAt: string;
+}
+
+export interface MatchPreferencesInput {
+  /**
+     * @minimum 18
+     * @maximum 120
+     * @nullable
+     */
+  ageMin?: number | null;
+  /**
+     * @minimum 18
+     * @maximum 120
+     * @nullable
+     */
+  ageMax?: number | null;
+  /**
+     * @minimum 0
+     * @maximum 20000
+     * @nullable
+     */
+  distanceKm?: number | null;
+  /**
+     * @maxLength 64
+     * @nullable
+     */
+  genderPreference?: string | null;
+  /**
+     * @maxItems 50
+     * @nullable
+     */
+  dealBreakers?: string[] | null;
+  /**
+     * @maxItems 50
+     * @nullable
+     */
+  mustHaves?: string[] | null;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  cityHint?: string | null;
+}
+
+export type MatchPoolMembershipStatus = typeof MatchPoolMembershipStatus[keyof typeof MatchPoolMembershipStatus];
+
+
+export const MatchPoolMembershipStatus = {
+  off: 'off',
+  building: 'building',
+  ready: 'ready',
+  paused: 'paused',
+  concierge_only: 'concierge_only',
+} as const;
+
+/**
+ * @nullable
+ */
+export type MatchPoolMembershipTier = typeof MatchPoolMembershipTier[keyof typeof MatchPoolMembershipTier] | null;
+
+
+export const MatchPoolMembershipTier = {
+  free: 'free',
+  reset: 'reset',
+  wingman: 'wingman',
+} as const;
+
+export interface MatchPoolMembership {
+  userId: string;
+  status: MatchPoolMembershipStatus;
+  /** @nullable */
+  readyAt: string | null;
+  /** @nullable */
+  pausedReason: string | null;
+  /** @nullable */
+  tier: MatchPoolMembershipTier;
+  updatedAt: string;
+}
+
+export type MatchPoolMembershipInputStatus = typeof MatchPoolMembershipInputStatus[keyof typeof MatchPoolMembershipInputStatus];
+
+
+export const MatchPoolMembershipInputStatus = {
+  off: 'off',
+  building: 'building',
+  ready: 'ready',
+  paused: 'paused',
+} as const;
+
+export interface MatchPoolMembershipInput {
+  status: MatchPoolMembershipInputStatus;
+  /**
+     * @maxLength 280
+     * @nullable
+     */
+  pausedReason?: string | null;
+}
+
+export type MatchProposalSource = typeof MatchProposalSource[keyof typeof MatchProposalSource];
+
+
+export const MatchProposalSource = {
+  internal: 'internal',
+  external_paste: 'external_paste',
+  concierge: 'concierge',
+} as const;
+
+export type MatchProposalStatus = typeof MatchProposalStatus[keyof typeof MatchProposalStatus];
+
+
+export const MatchProposalStatus = {
+  proposed: 'proposed',
+  user_yes: 'user_yes',
+  user_no: 'user_no',
+  mutual_yes: 'mutual_yes',
+  expired: 'expired',
+  completed: 'completed',
+} as const;
+
+export interface MatchProposal {
+  id: string;
+  userId: string;
+  /** @nullable */
+  proposedToUserId: string | null;
+  source: MatchProposalSource;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  compatibilityScore: number;
+  /** @nullable */
+  summary: string | null;
+  status: MatchProposalStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type MatchExternalReadInputSource = typeof MatchExternalReadInputSource[keyof typeof MatchExternalReadInputSource];
+
+
+export const MatchExternalReadInputSource = {
+  hinge: 'hinge',
+  tinder: 'tinder',
+  bumble: 'bumble',
+  other: 'other',
+} as const;
+
+export interface MatchExternalReadInput {
+  /**
+     * @minLength 1
+     * @maxLength 20000
+     */
+  profileText: string;
+  source: MatchExternalReadInputSource;
+}
+
+export interface MatchExternalReadResult {
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  score: number;
+  highlights: string[];
+  frictions: string[];
+  /** @nullable */
+  summary: string | null;
+}
+
+export interface MatchReadinessBreakdown {
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  compass: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  journal: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  wellness: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  hingeImport: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  postDate: number;
+}
+
+export interface MatchReadiness {
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  score: number;
+  breakdown: MatchReadinessBreakdown;
+}
+
+export type MatchingStatePoolStatus = typeof MatchingStatePoolStatus[keyof typeof MatchingStatePoolStatus];
+
+
+export const MatchingStatePoolStatus = {
+  off: 'off',
+  building: 'building',
+  ready: 'ready',
+  paused: 'paused',
+  concierge_only: 'concierge_only',
+} as const;
+
+/**
+ * @nullable
+ */
+export type MatchingStateTier = typeof MatchingStateTier[keyof typeof MatchingStateTier] | null;
+
+
+export const MatchingStateTier = {
+  free: 'free',
+  reset: 'reset',
+  wingman: 'wingman',
+} as const;
+
+export interface MatchingState {
+  preferences: MatchPreferences | null;
+  poolStatus: MatchingStatePoolStatus;
+  /** @nullable */
+  tier: MatchingStateTier;
+  readiness: MatchReadiness;
+  /** @minimum 0 */
+  cityDensity: number;
+  /** @minimum 0 */
+  totalPoolCount: number;
+}
+
 /**
  * Opaque session token — `Bearer <sid>`.
  */

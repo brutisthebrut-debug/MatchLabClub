@@ -103,6 +103,35 @@ export function Navbar() {
               >
                 My Hub
               </Link>
+              <Link
+                href="/matching"
+                onClick={closeAll}
+                aria-current={isActive("/matching") ? "page" : undefined}
+                className={`flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+                  isActive("/matching")
+                    ? "text-[hsl(248_62%_52%)] bg-[hsl(248_62%_52%/0.08)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                }`}
+                data-testid="link-matching"
+              >
+                Matching
+                <span className="ml-0.5 text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-full bg-[hsl(326_100%_60%/0.12)] text-[hsl(326_100%_50%)]">
+                  Beta
+                </span>
+              </Link>
+              <Link
+                href="/vault"
+                onClick={closeAll}
+                aria-current={isActive("/vault") ? "page" : undefined}
+                className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+                  isActive("/vault")
+                    ? "text-[hsl(248_62%_52%)] bg-[hsl(248_62%_52%/0.08)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                }`}
+                data-testid="link-data-vault"
+              >
+                Data Vault
+              </Link>
             </>
           )}
 
@@ -200,6 +229,35 @@ export function Navbar() {
                   data-testid="link-self-hub-mobile"
                 >
                   My Hub
+                </Link>
+                <Link
+                  href="/matching"
+                  onClick={closeAll}
+                  aria-current={isActive("/matching") ? "page" : undefined}
+                  className={`flex items-center gap-2 text-base font-medium py-2.5 transition-colors ${
+                    isActive("/matching")
+                      ? "text-[hsl(248_62%_52%)]"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  data-testid="link-matching-mobile"
+                >
+                  Matching
+                  <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-full bg-[hsl(326_100%_60%/0.12)] text-[hsl(326_100%_50%)]">
+                    Beta
+                  </span>
+                </Link>
+                <Link
+                  href="/vault"
+                  onClick={closeAll}
+                  aria-current={isActive("/vault") ? "page" : undefined}
+                  className={`text-base font-medium py-2.5 transition-colors ${
+                    isActive("/vault")
+                      ? "text-[hsl(248_62%_52%)]"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  data-testid="link-data-vault-mobile"
+                >
+                  Data Vault
                 </Link>
               </>
             )}

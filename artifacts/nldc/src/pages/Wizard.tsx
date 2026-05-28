@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,9 +75,31 @@ export default function Wizard() {
   const [, setLocation] = useLocation();
   const [tipIndex, setTipIndex] = useState(0);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const createAudit = useCreateAudit();
   const generateReport = useGenerateAuditReport();
+
+  // Carry-over from the 3-minute Signal Check. If the user landed here from
+  // /signal-check we prefill their bio so they don't have to paste twice.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const carried = window.sessionStorage.getItem("matchlab.signalCheckBio");
+      if (carried && carried.trim().length > 0) {
+        setForm((f) => (f.bio.trim().length === 0 ? { ...f, bio: carried } : f));
+        window.sessionStorage.removeItem("matchlab.signalCheckBio");
+        toast({
+          title: "Carrying over your Signal Check bio.",
+          description: "You can edit it before generating the full audit.",
+        });
+      }
+    } catch {
+      // sessionStorage unavailable; ignore.
+    }
+    // run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const totalSteps = 5;
   const progress = ((step - 1) / totalSteps) * 100;

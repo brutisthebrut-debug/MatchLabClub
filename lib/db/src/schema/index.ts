@@ -30,3 +30,4 @@ export * from "./compatibility_reads";
 export * from "./imported_sources";
 export * from "./referrals";
 export * from "./ai_usage_counters";
+export * from "./matching";

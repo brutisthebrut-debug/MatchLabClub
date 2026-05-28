@@ -25,6 +25,9 @@ import {
   referralsTable,
   purchaseInterestTable,
   aiUsageCountersTable,
+  matchPreferencesTable,
+  matchPoolMembershipTable,
+  matchProposalsTable,
 } from "@workspace/db";
 import {
   ExportMyDataResponse,
@@ -931,6 +934,31 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         )
         .returning({ sid: sessionsTable.sid });
       tables["sessions"] = sessionDel.length;
+
+      // match_preferences / match_pool_membership / match_proposals have NO
+      // FK to users.id (same rationale as ai_usage_counters). Explicit wipe.
+      const matchPrefsDel = await tx
+        .delete(matchPreferencesTable)
+        .where(eq(matchPreferencesTable.userId, userId))
+        .returning({ userId: matchPreferencesTable.userId });
+      tables["match_preferences"] = matchPrefsDel.length;
+
+      const matchPoolDel = await tx
+        .delete(matchPoolMembershipTable)
+        .where(eq(matchPoolMembershipTable.userId, userId))
+        .returning({ userId: matchPoolMembershipTable.userId });
+      tables["match_pool_membership"] = matchPoolDel.length;
+
+      const matchProposalsDel = await tx
+        .delete(matchProposalsTable)
+        .where(
+          or(
+            eq(matchProposalsTable.userId, userId),
+            eq(matchProposalsTable.proposedToUserId, userId),
+          ),
+        )
+        .returning({ id: matchProposalsTable.id });
+      tables["match_proposals"] = matchProposalsDel.length;
 
       // ai_usage_counters has NO FK to users.id (so anon traffic can bucket
       // under a sentinel without FK violations). That means user deletes do

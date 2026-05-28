@@ -37,7 +37,7 @@ type TeaseReport = {
 const DEMO_TEASE: TeaseReport = {
   score: 64,
   category: "The Hidden Gem",
-  keyImprovement: "Generic language is masking your actual personality. Phrases like 'loves hiking and cooking' appear in thousands of profiles and become invisible. The fix is replacing general with specific — one sentence can change everything.",
+  keyImprovement: "Generic language is masking your actual personality. Phrases like 'loves hiking and cooking' appear in thousands of profiles and become invisible. The fix is replacing general with specific: one specific sentence clarifies your intent.",
   rewrittenLine: "I make a genuinely great first date — I'll pick somewhere unexpected, actually listen, and probably make you laugh at something you didn't expect to.",
   originalLine: "Software engineer who loves hiking and cooking. I'm told I'm easy to talk to and have a great sense of humor.",
   suggestedOpener: "Okay I have a question about your [specific thing from profile] — what's the actual story there?",
@@ -169,6 +169,13 @@ export default function SignalCheck() {
         suggestedOpener: DEMO_TEASE.suggestedOpener,
         auditId: audit.id,
       });
+      if (typeof window !== "undefined" && bio.trim().length > 0) {
+        try {
+          window.sessionStorage.setItem("matchlab.signalCheckBio", bio);
+        } catch {
+          // sessionStorage may be unavailable (Safari private mode). Carry-over is a nicety, not a contract.
+        }
+      }
       queryClient.invalidateQueries({ queryKey: getListAuditsQueryKey() });
     } catch {
       setResult({ ...DEMO_TEASE, category: getCategory(DEMO_TEASE.score, goal) });
@@ -340,7 +347,7 @@ export default function SignalCheck() {
                     <p className="text-xs text-muted-foreground mb-5 max-w-xs leading-relaxed">Your Signal Check is just the surface. The Full Dating Blueprint goes 6× deeper.</p>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 font-semibold glow-pulse" data-testid="button-signal-full-audit">
-                        <Link href="/start">Start My Full Audit <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                        <Link href="/start?from=signal-check">Start My Full Audit <ArrowRight className="ml-2 h-4 w-4" /></Link>
                       </Button>
                       <Button asChild variant="ghost" className="rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5" data-testid="button-signal-waitlist">
                         <Link href="/waitlist">Join Waitlist — 40% off</Link>

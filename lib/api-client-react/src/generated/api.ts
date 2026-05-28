@@ -112,6 +112,14 @@ import type {
   ListPostDateNotesParams,
   ListWellnessAnswersParams,
   LogoutSuccess,
+  MatchExternalReadInput,
+  MatchExternalReadResult,
+  MatchPoolMembership,
+  MatchPoolMembershipInput,
+  MatchPreferences,
+  MatchPreferencesInput,
+  MatchProposal,
+  MatchingState,
   MeConsent,
   MessageCoachingInput,
   MessageCoachingResponse,
@@ -8174,4 +8182,397 @@ export const useDeleteImport = <TError = ErrorType<void>,
       > => {
       return useMutation(getDeleteImportMutationOptions(options));
     }
+
+export const getGetMatchingStateUrl = () => {
+
+
+
+
+  return `/api/me/matching/state`
+}
+
+/**
+ * Returns the combined matching envelope used by the Matching page:
+the user's saved preferences (or null when none are set), pool
+membership row, tier marker, a deterministic readiness score with
+per-source breakdown, the city-density count for the user's
+cityHint, and the total pool count. No AI calls. Safe to hit on
+every page load.
+
+ * @summary Get the signed-in user's matching readiness, preferences, and pool status
+ */
+export const getMatchingState = async ( options?: RequestInit): Promise<MatchingState> => {
+
+  return customFetch<MatchingState>(getGetMatchingStateUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMatchingStateQueryKey = () => {
+    return [
+    `/api/me/matching/state`
+    ] as const;
+    }
+
+
+export const getGetMatchingStateQueryOptions = <TData = Awaited<ReturnType<typeof getMatchingState>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMatchingState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMatchingStateQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMatchingState>>> = ({ signal }) => getMatchingState({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMatchingState>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMatchingStateQueryResult = NonNullable<Awaited<ReturnType<typeof getMatchingState>>>
+export type GetMatchingStateQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the signed-in user's matching readiness, preferences, and pool status
+ */
+
+export function useGetMatchingState<TData = Awaited<ReturnType<typeof getMatchingState>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMatchingState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMatchingStateQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateMatchingPreferencesUrl = () => {
+
+
+
+
+  return `/api/me/matching/preferences`
+}
+
+/**
+ * Inserts or updates the caller's row in `match_preferences`. Every
+field is optional. Pass null to clear a value. Age and distance
+bounds are validated server-side.
+
+ * @summary Upsert the signed-in user's match preferences
+ */
+export const updateMatchingPreferences = async (matchPreferencesInput: MatchPreferencesInput, options?: RequestInit): Promise<MatchPreferences> => {
+
+  return customFetch<MatchPreferences>(getUpdateMatchingPreferencesUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      matchPreferencesInput,)
+  }
+);}
+
+
+
+
+export const getUpdateMatchingPreferencesMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMatchingPreferences>>, TError,{data: BodyType<MatchPreferencesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMatchingPreferences>>, TError,{data: BodyType<MatchPreferencesInput>}, TContext> => {
+
+const mutationKey = ['updateMatchingPreferences'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMatchingPreferences>>, {data: BodyType<MatchPreferencesInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateMatchingPreferences(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMatchingPreferencesMutationResult = NonNullable<Awaited<ReturnType<typeof updateMatchingPreferences>>>
+    export type UpdateMatchingPreferencesMutationBody = BodyType<MatchPreferencesInput>
+    export type UpdateMatchingPreferencesMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Upsert the signed-in user's match preferences
+ */
+export const useUpdateMatchingPreferences = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMatchingPreferences>>, TError,{data: BodyType<MatchPreferencesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateMatchingPreferences>>,
+        TError,
+        {data: BodyType<MatchPreferencesInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateMatchingPreferencesMutationOptions(options));
+    }
+
+export const getUpdateMatchingPoolMembershipUrl = () => {
+
+
+
+
+  return `/api/me/matching/pool-membership`
+}
+
+/**
+ * Inserts or updates the caller's row in `match_pool_membership`.
+Accepted client-facing statuses: `off`, `building`, `ready`,
+`paused`. When the caller's tier is `wingman` and the client
+sends `building`, the server may upgrade the stored status to
+`concierge_only` for founder-curated routing.
+
+ * @summary Upsert the signed-in user's match pool membership status
+ */
+export const updateMatchingPoolMembership = async (matchPoolMembershipInput: MatchPoolMembershipInput, options?: RequestInit): Promise<MatchPoolMembership> => {
+
+  return customFetch<MatchPoolMembership>(getUpdateMatchingPoolMembershipUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      matchPoolMembershipInput,)
+  }
+);}
+
+
+
+
+export const getUpdateMatchingPoolMembershipMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMatchingPoolMembership>>, TError,{data: BodyType<MatchPoolMembershipInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMatchingPoolMembership>>, TError,{data: BodyType<MatchPoolMembershipInput>}, TContext> => {
+
+const mutationKey = ['updateMatchingPoolMembership'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMatchingPoolMembership>>, {data: BodyType<MatchPoolMembershipInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateMatchingPoolMembership(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMatchingPoolMembershipMutationResult = NonNullable<Awaited<ReturnType<typeof updateMatchingPoolMembership>>>
+    export type UpdateMatchingPoolMembershipMutationBody = BodyType<MatchPoolMembershipInput>
+    export type UpdateMatchingPoolMembershipMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Upsert the signed-in user's match pool membership status
+ */
+export const useUpdateMatchingPoolMembership = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMatchingPoolMembership>>, TError,{data: BodyType<MatchPoolMembershipInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateMatchingPoolMembership>>,
+        TError,
+        {data: BodyType<MatchPoolMembershipInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateMatchingPoolMembershipMutationOptions(options));
+    }
+
+export const getCreateMatchingExternalReadUrl = () => {
+
+
+
+
+  return `/api/me/matching/external-read`
+}
+
+/**
+ * Persists a paste of a profile the caller is already talking to and
+returns a compatibility read. Reuses the Compatibility Compass
+synthesis path, tagged with `mode='matching_external'`. The result
+is also captured as a `match_proposals` row with
+`source='external_paste'` so the founder review queue can act on it.
+
+ * @summary Score a pasted external profile against the signed-in user
+ */
+export const createMatchingExternalRead = async (matchExternalReadInput: MatchExternalReadInput, options?: RequestInit): Promise<MatchExternalReadResult> => {
+
+  return customFetch<MatchExternalReadResult>(getCreateMatchingExternalReadUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      matchExternalReadInput,)
+  }
+);}
+
+
+
+
+export const getCreateMatchingExternalReadMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMatchingExternalRead>>, TError,{data: BodyType<MatchExternalReadInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMatchingExternalRead>>, TError,{data: BodyType<MatchExternalReadInput>}, TContext> => {
+
+const mutationKey = ['createMatchingExternalRead'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMatchingExternalRead>>, {data: BodyType<MatchExternalReadInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createMatchingExternalRead(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMatchingExternalReadMutationResult = NonNullable<Awaited<ReturnType<typeof createMatchingExternalRead>>>
+    export type CreateMatchingExternalReadMutationBody = BodyType<MatchExternalReadInput>
+    export type CreateMatchingExternalReadMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Score a pasted external profile against the signed-in user
+ */
+export const useCreateMatchingExternalRead = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMatchingExternalRead>>, TError,{data: BodyType<MatchExternalReadInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createMatchingExternalRead>>,
+        TError,
+        {data: BodyType<MatchExternalReadInput>},
+        TContext
+      > => {
+      return useMutation(getCreateMatchingExternalReadMutationOptions(options));
+    }
+
+export const getGetMatchingProposalsUrl = () => {
+
+
+
+
+  return `/api/me/matching/proposals`
+}
+
+/**
+ * Returns the caller's proposals ordered by createdAt desc. Empty for
+most users today; founder seeds rows as the internal pool grows.
+
+ * @summary List the signed-in user's current match proposals
+ */
+export const getMatchingProposals = async ( options?: RequestInit): Promise<MatchProposal[]> => {
+
+  return customFetch<MatchProposal[]>(getGetMatchingProposalsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMatchingProposalsQueryKey = () => {
+    return [
+    `/api/me/matching/proposals`
+    ] as const;
+    }
+
+
+export const getGetMatchingProposalsQueryOptions = <TData = Awaited<ReturnType<typeof getMatchingProposals>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMatchingProposals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMatchingProposalsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMatchingProposals>>> = ({ signal }) => getMatchingProposals({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMatchingProposals>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMatchingProposalsQueryResult = NonNullable<Awaited<ReturnType<typeof getMatchingProposals>>>
+export type GetMatchingProposalsQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary List the signed-in user's current match proposals
+ */
+
+export function useGetMatchingProposals<TData = Awaited<ReturnType<typeof getMatchingProposals>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMatchingProposals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMatchingProposalsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 

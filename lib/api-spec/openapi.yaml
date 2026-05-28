@@ -2793,6 +2793,180 @@ paths:
         "404":
           description: Not found or not owned.
 
+  /me/matching/state:
+    get:
+      tags: [Matching]
+      operationId: getMatchingState
+      summary: Get the signed-in user's matching readiness, preferences, and pool status
+      description: |
+        Returns the combined matching envelope used by the Matching page:
+        the user's saved preferences (or null when none are set), pool
+        membership row, tier marker, a deterministic readiness score with
+        per-source breakdown, the city-density count for the user's
+        cityHint, and the total pool count. No AI calls. Safe to hit on
+        every page load.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Current matching state envelope.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchingState'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/matching/preferences:
+    put:
+      tags: [Matching]
+      operationId: updateMatchingPreferences
+      summary: Upsert the signed-in user's match preferences
+      description: |
+        Inserts or updates the caller's row in `match_preferences`. Every
+        field is optional. Pass null to clear a value. Age and distance
+        bounds are validated server-side.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchPreferencesInput'
+      responses:
+        '200':
+          description: Preferences after the update.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchPreferences'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/matching/pool-membership:
+    put:
+      tags: [Matching]
+      operationId: updateMatchingPoolMembership
+      summary: Upsert the signed-in user's match pool membership status
+      description: |
+        Inserts or updates the caller's row in `match_pool_membership`.
+        Accepted client-facing statuses: `off`, `building`, `ready`,
+        `paused`. When the caller's tier is `wingman` and the client
+        sends `building`, the server may upgrade the stored status to
+        `concierge_only` for founder-curated routing.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchPoolMembershipInput'
+      responses:
+        '200':
+          description: Membership after the update.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchPoolMembership'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/matching/external-read:
+    post:
+      tags: [Matching]
+      operationId: createMatchingExternalRead
+      summary: Score a pasted external profile against the signed-in user
+      description: |
+        Persists a paste of a profile the caller is already talking to and
+        returns a compatibility read. Reuses the Compatibility Compass
+        synthesis path, tagged with `mode='matching_external'`. The result
+        is also captured as a `match_proposals` row with
+        `source='external_paste'` so the founder review queue can act on it.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchExternalReadInput'
+      responses:
+        '200':
+          description: Compatibility read result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchExternalReadResult'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/matching/proposals:
+    get:
+      tags: [Matching]
+      operationId: getMatchingProposals
+      summary: List the signed-in user's current match proposals
+      description: |
+        Returns the caller's proposals ordered by createdAt desc. Empty for
+        most users today; founder seeds rows as the internal pool grows.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: List of proposals.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MatchProposal'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
 components:
   parameters:
     AuthorizationSessionHeader:
@@ -5449,3 +5623,219 @@ components:
         tokensUsed:
           type: integer
           description: Approximate tokens consumed by the model call, when reported by the provider.
+
+    MatchPreferences:
+      type: object
+      required: [userId, ageMin, ageMax, distanceKm, genderPreference, dealBreakers, mustHaves, cityHint, updatedAt]
+      properties:
+        userId:
+          type: string
+        ageMin:
+          type: [integer, 'null']
+        ageMax:
+          type: [integer, 'null']
+        distanceKm:
+          type: [integer, 'null']
+        genderPreference:
+          type: [string, 'null']
+        dealBreakers:
+          type: [array, 'null']
+          items:
+            type: string
+        mustHaves:
+          type: [array, 'null']
+          items:
+            type: string
+        cityHint:
+          type: [string, 'null']
+        updatedAt:
+          type: string
+          format: date-time
+
+    MatchPreferencesInput:
+      type: object
+      properties:
+        ageMin:
+          type: [integer, 'null']
+          minimum: 18
+          maximum: 120
+        ageMax:
+          type: [integer, 'null']
+          minimum: 18
+          maximum: 120
+        distanceKm:
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 20000
+        genderPreference:
+          type: [string, 'null']
+          maxLength: 64
+        dealBreakers:
+          type: [array, 'null']
+          items:
+            type: string
+            minLength: 1
+            maxLength: 120
+          maxItems: 50
+        mustHaves:
+          type: [array, 'null']
+          items:
+            type: string
+            minLength: 1
+            maxLength: 120
+          maxItems: 50
+        cityHint:
+          type: [string, 'null']
+          maxLength: 120
+
+    MatchPoolMembership:
+      type: object
+      required: [userId, status, readyAt, pausedReason, tier, updatedAt]
+      properties:
+        userId:
+          type: string
+        status:
+          type: string
+          enum: [off, building, ready, paused, concierge_only]
+        readyAt:
+          type: [string, 'null']
+          format: date-time
+        pausedReason:
+          type: [string, 'null']
+        tier:
+          type: [string, 'null']
+          enum: [free, reset, wingman, null]
+        updatedAt:
+          type: string
+          format: date-time
+
+    MatchPoolMembershipInput:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [off, building, ready, paused]
+        pausedReason:
+          type: [string, 'null']
+          maxLength: 280
+
+    MatchProposal:
+      type: object
+      required: [id, userId, proposedToUserId, source, compatibilityScore, summary, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+        proposedToUserId:
+          type: [string, 'null']
+        source:
+          type: string
+          enum: [internal, external_paste, concierge]
+        compatibilityScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        summary:
+          type: [string, 'null']
+        status:
+          type: string
+          enum: [proposed, user_yes, user_no, mutual_yes, expired, completed]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    MatchExternalReadInput:
+      type: object
+      required: [profileText, source]
+      properties:
+        profileText:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        source:
+          type: string
+          enum: [hinge, tinder, bumble, other]
+
+    MatchExternalReadResult:
+      type: object
+      required: [score, highlights, frictions, summary]
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        highlights:
+          type: array
+          items:
+            type: string
+        frictions:
+          type: array
+          items:
+            type: string
+        summary:
+          type: [string, 'null']
+
+    MatchReadinessBreakdown:
+      type: object
+      required: [compass, journal, wellness, hingeImport, postDate]
+      properties:
+        compass:
+          type: integer
+          minimum: 0
+          maximum: 100
+        journal:
+          type: integer
+          minimum: 0
+          maximum: 100
+        wellness:
+          type: integer
+          minimum: 0
+          maximum: 100
+        hingeImport:
+          type: integer
+          minimum: 0
+          maximum: 100
+        postDate:
+          type: integer
+          minimum: 0
+          maximum: 100
+
+    MatchReadiness:
+      type: object
+      required: [score, breakdown]
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        breakdown:
+          $ref: '#/components/schemas/MatchReadinessBreakdown'
+
+    MatchingState:
+      type: object
+      required: [preferences, poolStatus, tier, readiness, cityDensity, totalPoolCount]
+      properties:
+        preferences:
+          oneOf:
+            - $ref: '#/components/schemas/MatchPreferences'
+            - type: 'null'
+        poolStatus:
+          type: string
+          enum: [off, building, ready, paused, concierge_only]
+        tier:
+          type: [string, 'null']
+          enum: [free, reset, wingman, null]
+        readiness:
+          $ref: '#/components/schemas/MatchReadiness'
+        cityDensity:
+          type: integer
+          minimum: 0
+        totalPoolCount:
+          type: integer
+          minimum: 0

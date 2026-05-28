@@ -78,6 +78,7 @@ import BlogPost from "@/pages/BlogPost";
 import Quizzes from "@/pages/Quizzes";
 import QuizPlay from "@/pages/QuizPlay";
 import SelfHub from "@/pages/SelfHub";
+import Matching from "@/pages/Matching";
 
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 import { usePageTracking } from "@/hooks/usePageTracking";
@@ -157,6 +158,7 @@ function Router() {
       <Route path="/copilot/demo" component={FounderDemoJourney} />
       <Route path="/copilot/flirt" component={FlirtCoach} />
       <Route path="/me" component={SelfHub} />
+      <Route path="/matching" component={Matching} />
       <Route path="/account" component={Account} />
       <Route path="/account/sessions" component={Sessions} />
       <Route path="/quiz" component={Quiz} />

@@ -40,6 +40,8 @@ import {
   getGetAiContentConsentQueryKey,
   useSetAiContentConsent,
   useCreateInstagramPaste,
+  useGetMatchingState,
+  getGetMatchingStateQueryKey,
 } from "@workspace/api-client-react";
 import { ShareButton } from "@/components/echo/ShareButton";
 
@@ -172,6 +174,9 @@ export default function SelfHub() {
   });
   const postDate = useListPostDateNotes(undefined, {
     query: { queryKey: getListPostDateNotesQueryKey(), enabled: isAuthenticated },
+  });
+  const matchingState = useGetMatchingState({
+    query: { queryKey: getGetMatchingStateQueryKey(), enabled: isAuthenticated },
   });
 
   // Derive completeness: count distinct dimensions answered, out of 18.
@@ -307,6 +312,19 @@ export default function SelfHub() {
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xs uppercase tracking-widest text-[hsl(248_62%_52%)] font-bold">Self Hub</span>
             <span className="text-xs text-muted-foreground">· /me</span>
+          </div>
+          <div className="mb-4">
+            <Link
+              href="/matching"
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold border border-[hsl(326_100%_60%/0.3)] bg-[hsl(326_100%_60%/0.06)] text-[hsl(326_100%_45%)] hover:bg-[hsl(326_100%_60%/0.12)] transition-colors"
+              data-testid="link-self-hub-matching-readiness"
+            >
+              <Heart className="w-3.5 h-3.5" aria-hidden="true" />
+              {matchingState.data && matchingState.data.readiness.score > 0
+                ? `Match readiness: ${matchingState.data.readiness.score}%`
+                : "Build your match readiness"}
+              <ArrowRight className="w-3 h-3" aria-hidden="true" />
+            </Link>
           </div>
           <h1 className="font-serif text-3xl md:text-5xl font-bold text-foreground leading-tight">
             Hi{user?.firstName ? `, ${user.firstName}` : ""}. Here&rsquo;s what we know about you.
