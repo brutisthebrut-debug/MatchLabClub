@@ -355,7 +355,7 @@ const drivers: Driver[] = [
     Page: CompatibilityCompass,
     emptyStateTestId: "compass-empty-state",
     // Anonymous users see the demo compass result.
-    anonymousDemoMatcher: /Example output — select your style above to get yours/i,
+    anonymousDemoMatcher: /Example output\. Pick a tab above to run your own/i,
     runTool: async () => {
       // Select the first style pill ("Spark Chaser — …")
       const stylePills = screen.getAllByRole("button", { name: /Spark Chaser/i });
