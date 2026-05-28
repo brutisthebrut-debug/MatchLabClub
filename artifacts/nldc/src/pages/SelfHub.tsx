@@ -32,6 +32,7 @@ import {
   useGetAiContentConsent,
   getGetAiContentConsentQueryKey,
 } from "@workspace/api-client-react";
+import { ShareButton } from "@/components/echo/ShareButton";
 
 const WELLNESS_DIMENSION_COUNT = 18;
 
@@ -376,6 +377,29 @@ export default function SelfHub() {
             <Button asChild variant="outline" size="sm" className="rounded-full font-semibold" data-testid="link-data-trash">
               <Link href="/trash">Open Trash</Link>
             </Button>
+          </div>
+        </motion.div>
+
+        {/* Invite — Echo referral surface */}
+        <motion.div {...fadeUp(0.24)} className="glass rounded-2xl p-6 md:p-7 border border-[hsl(326_100%_60%/0.2)] bg-gradient-to-br from-[hsl(326_100%_60%/0.06)] to-transparent">
+          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-serif text-lg font-bold text-foreground mb-1">Pull a friend in</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                The most useful thing here gets better when the people around you can read their own signals too. Send them a quiz — takes 2 minutes, no signup.
+              </p>
+            </div>
+            <ShareButton
+              surface="self-hub"
+              title="Read your dating signals — free in 2 minutes"
+              text={`I've been using MatchLab Club as a second brain for my dating life — quiz, audit, message coach, the whole thing. Try a quiz, see what your patterns actually say about you.`}
+              path="/quizzes"
+              ref={user?.id ? `user-${user.id}` : "self-hub"}
+              variant="primary"
+              label="Send a quiz to a friend"
+              className="bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] text-white hover:opacity-90 flex-shrink-0"
+              testId="button-share-self-hub"
+            />
           </div>
         </motion.div>
 

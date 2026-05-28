@@ -4,7 +4,8 @@ import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
-import { ArrowRight, ArrowLeft, Sparkles, RefreshCw, Loader2, Share2, Check, Award, Info } from "lucide-react";
+import { ArrowRight, ArrowLeft, Sparkles, RefreshCw, Loader2, Award, Info } from "lucide-react";
+import { ShareButton } from "@/components/echo/ShareButton";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useEnhanceAi, useCreateWellnessAnswer } from "@workspace/api-client-react";
@@ -74,7 +75,6 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
   const [result, setResult] = useState<string | null>(null);
   const [override, setOverride] = useState<ArchetypeOverride>({});
   const [usedFallback, setUsedFallback] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [savedToWellness, setSavedToWellness] = useState(false);
 
   const progress = useMemo(() => {
@@ -236,16 +236,6 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
     setOverride({});
     setUsedFallback(false);
     setSavedToWellness(false);
-  }
-
-  function handleShare() {
-    if (!personalised) return;
-    const text = `I just took "${quiz!.title}" on MatchLab Club and got: ${personalised.name} ${personalised.emoji}\n\n${personalised.tagline}\n\nTry it free at`;
-    const url = `${window.location.origin}/quizzes/${quiz!.slug}`;
-    navigator.clipboard?.writeText(`${text} ${url}`).then(
-      () => { setCopied(true); window.setTimeout(() => setCopied(false), 2200); },
-      () => { /* swallow */ },
-    );
   }
 
   const currentQ = quiz.questions[step];
@@ -419,9 +409,17 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                   <Button asChild className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] text-white" data-testid="button-result-cta">
                     <Link href={personalised.cta.href}>{personalised.cta.label} <ArrowRight className="ml-1 w-4 h-4" /></Link>
                   </Button>
-                  <Button variant="ghost" onClick={handleShare} className="rounded-full" data-testid="button-share">
-                    {copied ? (<><Check className="mr-1 w-4 h-4" /> Copied</>) : (<><Share2 className="mr-1 w-4 h-4" /> Share</>)}
-                  </Button>
+                  {personalised && quiz && (
+                    <ShareButton
+                      surface="quiz-result"
+                      title={`I'm a ${personalised.name} ${personalised.emoji}`}
+                      text={`I just took "${quiz.title}" on MatchLab Club and got: ${personalised.name} ${personalised.emoji}\n\n${personalised.tagline}\n\nTry it free →`}
+                      path={`/quizzes/${quiz.slug}`}
+                      ref={`quiz-${quiz.slug}`}
+                      label="Share my badge"
+                      testId="button-share"
+                    />
+                  )}
                   <Button variant="ghost" onClick={handleRetake} className="rounded-full text-muted-foreground" data-testid="button-retake">
                     <RefreshCw className="mr-1 w-4 h-4" /> Retake
                   </Button>

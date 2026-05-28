@@ -17,6 +17,7 @@ import {
   History, ChevronDown, ChevronUp, GitCompare, CheckSquare, Square
 } from "lucide-react";
 import { CompareVersionsDialog } from "@/components/CompareVersionsDialog";
+import { ShareButton } from "@/components/echo/ShareButton";
 
 type ChangeSummary = {
   scoreDelta: number;
@@ -304,22 +305,21 @@ function SourceAppPicker({
   );
 }
 
-function ShareReportBtn() {
-  const [copied, setCopied] = useState(false);
+function ShareReportBtn({ score }: { score?: number | null }) {
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+  const scoreLine = typeof score === "number" ? ` (Signal Score: ${score})` : "";
   return (
-    <button
-      onClick={() => {
-        const href = typeof window !== "undefined" ? window.location.href : "";
-        navigator.clipboard.writeText(href).catch(() => {});
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }}
-      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 bg-white/4 transition-colors"
-      data-testid="button-share-report"
-    >
-      {copied ? <Check className="w-3.5 h-3.5 text-[hsl(142_55%_60%)]" /> : <Copy className="w-3.5 h-3.5" />}
-      {copied ? "Copied!" : "Share"}
-    </button>
+    <ShareButton
+      surface="audit-report"
+      variant="pill"
+      title="My MatchLab Signal Report"
+      text={`Just ran my dating profile through MatchLab Club${scoreLine}. Brutal but useful.`}
+      path={pathname}
+      ref="audit-share"
+      label="Share"
+      copiedLabel="Copied!"
+      testId="button-share-report"
+    />
   );
 }
 
