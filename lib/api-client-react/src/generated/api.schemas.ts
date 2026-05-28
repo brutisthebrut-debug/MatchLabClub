@@ -1159,6 +1159,26 @@ export interface DeleteMyAccountResult {
   deleted: DeleteMyAccountResultDeleted;
 }
 
+export interface DeleteAccountInput {
+  /**
+     * Must equal the signed-in user's email address (case-insensitive). The endpoint compares lowercased values, so any-case input is accepted as long as the trimmed text matches the account email.
+     * @minLength 1
+     * @maxLength 320
+     */
+  confirmation: string;
+}
+
+/**
+ * Row counts deleted per table, keyed by database table name. Always includes every user-scoped table considered, even when the count is zero, so the client can show a faithful summary.
+ */
+export type DeleteAccountResultTables = {[key: string]: number};
+
+export interface DeleteAccountResult {
+  deleted: true;
+  /** Row counts deleted per table, keyed by database table name. Always includes every user-scoped table considered, even when the count is zero, so the client can show a faithful summary. */
+  tables: DeleteAccountResultTables;
+}
+
 export interface RegisterPushTokenInput {
   /**
      * Expo push token obtained via expo-notifications on the device.

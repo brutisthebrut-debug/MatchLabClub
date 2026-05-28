@@ -1,10 +1,11 @@
 import crypto from "crypto";
 import { Router, type IRouter, type Request } from "express";
-import { and, desc, eq, gt, isNull, ne, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import {
   db,
   usersTable,
   auditsTable,
+  auditReportVersionsTable,
   profilesTable,
   messageCoachingSessionsTable,
   emailInsightsTable,
@@ -20,10 +21,16 @@ import {
   waitlistTable,
   coachFollowUpsTable,
   loginNotificationsTable,
+  pushTokensTable,
+  referralsTable,
+  purchaseInterestTable,
+  aiUsageCountersTable,
 } from "@workspace/db";
 import {
   ExportMyDataResponse,
   DeleteMyAccountResponse,
+  DeleteMyAccountConfirmedBody,
+  DeleteMyAccountConfirmedResponse,
   GetAccountSummaryResponse,
   EmailMyDataExportResponse,
   ListMySessionsResponse,
@@ -717,6 +724,257 @@ router.delete("/account", async (req, res): Promise<void> => {
         messages: messages.length,
         insights: insights.length,
       },
+    }),
+  );
+});
+
+/**
+ * POST /api/me/account/delete
+ *
+ * GDPR-grade account delete. POST instead of DELETE because browsers and
+ * some intermediaries strip request bodies from DELETE calls, and we need
+ * the confirmation string in the body. The caller must be a signed-in user
+ * (anon callers have no account to delete) and the body's `confirmation`
+ * field must equal the caller's account email, compared case-insensitively
+ * after trimming. The whole thing runs inside a single transaction so the
+ * account either goes fully or not at all.
+ */
+router.post("/me/account/delete", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const userId = req.user.id;
+
+  const parsed = DeleteMyAccountConfirmedBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Confirmation is required to delete your account." });
+    return;
+  }
+
+  // We need the user's email both to verify the confirmation string and to
+  // clean up email-keyed rows (purchase_interest) further down.
+  const userRow = await db
+    .select({ email: usersTable.email })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
+    .limit(1);
+  const userEmail = userRow[0]?.email ?? null;
+  if (!userEmail) {
+    res.status(400).json({
+      error: "Your account has no email on file, so we can't confirm the delete.",
+    });
+    return;
+  }
+  const expected = userEmail.trim().toLowerCase();
+  const provided = parsed.data.confirmation.trim().toLowerCase();
+  if (provided !== expected) {
+    res.status(400).json({
+      error: "That didn't match your account email. Type it exactly to confirm.",
+    });
+    return;
+  }
+
+  const tables: Record<string, number> = {};
+
+  try {
+    await db.transaction(async (tx) => {
+      // ── Children first ────────────────────────────────────────────────
+      // audit_report_versions has no user_id; it's keyed by audit_id, so
+      // we delete its rows for this user's audits before deleting audits.
+      const auditIdRows = await tx
+        .select({ id: auditsTable.id })
+        .from(auditsTable)
+        .where(eq(auditsTable.userId, userId));
+      const auditIds = auditIdRows.map((r) => r.id);
+      let auditVersionCount = 0;
+      if (auditIds.length > 0) {
+        const versionDel = await tx
+          .delete(auditReportVersionsTable)
+          .where(inArray(auditReportVersionsTable.auditId, auditIds))
+          .returning({ id: auditReportVersionsTable.id });
+        auditVersionCount = versionDel.length;
+      }
+      tables["audit_report_versions"] = auditVersionCount;
+
+      // ── First-party user-scoped data ──────────────────────────────────
+      const auditsDel = await tx
+        .delete(auditsTable)
+        .where(eq(auditsTable.userId, userId))
+        .returning({ id: auditsTable.id });
+      tables["audits"] = auditsDel.length;
+
+      const profilesDel = await tx
+        .delete(profilesTable)
+        .where(eq(profilesTable.userId, userId))
+        .returning({ id: profilesTable.id });
+      tables["dating_profiles"] = profilesDel.length;
+
+      const messagesDel = await tx
+        .delete(messageCoachingSessionsTable)
+        .where(eq(messageCoachingSessionsTable.userId, userId))
+        .returning({ id: messageCoachingSessionsTable.id });
+      tables["message_coaching_sessions"] = messagesDel.length;
+
+      const insightsDel = await tx
+        .delete(emailInsightsTable)
+        .where(eq(emailInsightsTable.userId, userId))
+        .returning({ id: emailInsightsTable.id });
+      tables["email_insights"] = insightsDel.length;
+
+      const journalDel = await tx
+        .delete(journalEntriesTable)
+        .where(eq(journalEntriesTable.userId, userId))
+        .returning({ id: journalEntriesTable.id });
+      tables["journal_entries"] = journalDel.length;
+
+      const postDateDel = await tx
+        .delete(postDateNotesTable)
+        .where(eq(postDateNotesTable.userId, userId))
+        .returning({ id: postDateNotesTable.id });
+      tables["post_date_notes"] = postDateDel.length;
+
+      const lifePulseDel = await tx
+        .delete(lifePulsesTable)
+        .where(eq(lifePulsesTable.userId, userId))
+        .returning({ id: lifePulsesTable.id });
+      tables["life_pulses"] = lifePulseDel.length;
+
+      const wellnessAnswerDel = await tx
+        .delete(wellnessAnswersTable)
+        .where(eq(wellnessAnswersTable.userId, userId))
+        .returning({ id: wellnessAnswersTable.id });
+      tables["wellness_answers"] = wellnessAnswerDel.length;
+
+      const wellnessTagDel = await tx
+        .delete(wellnessTagsTable)
+        .where(eq(wellnessTagsTable.userId, userId))
+        .returning({ id: wellnessTagsTable.id });
+      tables["wellness_tags"] = wellnessTagDel.length;
+
+      const compassDel = await tx
+        .delete(compatibilityReadsTable)
+        .where(eq(compatibilityReadsTable.userId, userId))
+        .returning({ id: compatibilityReadsTable.id });
+      tables["compatibility_reads"] = compassDel.length;
+
+      const importsDel = await tx
+        .delete(importedSourcesTable)
+        .where(eq(importedSourcesTable.userId, userId))
+        .returning({ id: importedSourcesTable.id });
+      tables["imported_sources"] = importsDel.length;
+
+      const followUpDel = await tx
+        .delete(coachFollowUpsTable)
+        .where(eq(coachFollowUpsTable.userId, userId))
+        .returning({ id: coachFollowUpsTable.id });
+      tables["coach_follow_ups"] = followUpDel.length;
+
+      const waitlistDel = await tx
+        .delete(waitlistTable)
+        .where(eq(waitlistTable.userId, userId))
+        .returning({ id: waitlistTable.id });
+      tables["waitlist"] = waitlistDel.length;
+
+      const loginNotifDel = await tx
+        .delete(loginNotificationsTable)
+        .where(eq(loginNotificationsTable.userId, userId))
+        .returning({ userId: loginNotificationsTable.userId });
+      tables["login_notifications"] = loginNotifDel.length;
+
+      const exportTokenDel = await tx
+        .delete(dataExportTokensTable)
+        .where(eq(dataExportTokensTable.userId, userId))
+        .returning({ token: dataExportTokensTable.token });
+      tables["data_export_tokens"] = exportTokenDel.length;
+
+      const pushTokenDel = await tx
+        .delete(pushTokensTable)
+        .where(eq(pushTokensTable.userId, userId))
+        .returning({ token: pushTokensTable.token });
+      tables["push_tokens"] = pushTokenDel.length;
+
+      // Referrals: delete every row where this user is the inviter or the
+      // invitee. (FK is ON DELETE SET NULL / CASCADE respectively, but we
+      // delete explicitly so the row count shows up in the response.)
+      const referralDel = await tx
+        .delete(referralsTable)
+        .where(
+          or(
+            eq(referralsTable.inviterUserId, userId),
+            eq(referralsTable.inviteeUserId, userId),
+          ),
+        )
+        .returning({ id: referralsTable.id });
+      tables["referrals"] = referralDel.length;
+
+      // purchase_interest has no user_id column — it's keyed by email
+      // (lowercased). The founder referrals view uses the same join key to
+      // attribute paid status back to a user. We mirror that here so a
+      // GDPR delete also wipes any checkout interest rows tied to this
+      // user's email address.
+      const purchaseDel = await tx
+        .delete(purchaseInterestTable)
+        .where(sql`lower(${purchaseInterestTable.email}) = ${expected}`)
+        .returning({ id: purchaseInterestTable.id });
+      tables["purchase_interest"] = purchaseDel.length;
+
+      // Sessions: match both the user_id column and the session JSONB
+      // payload (older sessions may only carry the JSONB form).
+      const sessionDel = await tx
+        .delete(sessionsTable)
+        .where(
+          or(
+            eq(sessionsTable.userId, userId),
+            sql`(${sessionsTable.sess} -> 'user' ->> 'id') = ${userId}`,
+          ),
+        )
+        .returning({ sid: sessionsTable.sid });
+      tables["sessions"] = sessionDel.length;
+
+      // ai_usage_counters has NO FK to users.id (so anon traffic can bucket
+      // under a sentinel without FK violations). That means user deletes do
+      // not auto-cascade here; we wipe explicitly.
+      const aiUsageDel = await tx
+        .delete(aiUsageCountersTable)
+        .where(eq(aiUsageCountersTable.userId, userId))
+        .returning({ userId: aiUsageCountersTable.userId });
+      tables["ai_usage_counters"] = aiUsageDel.length;
+
+      // ── Finally the user row itself ───────────────────────────────────
+      const userDel = await tx
+        .delete(usersTable)
+        .where(eq(usersTable.id, userId))
+        .returning({ id: usersTable.id });
+      tables["users"] = userDel.length;
+    });
+  } catch (err) {
+    req.log.error({ err, userId }, "GDPR account delete failed; rolled back");
+    res.status(500).json({
+      error: "Couldn't delete your account. Try again in a moment.",
+    });
+    return;
+  }
+
+  for (const [table, count] of Object.entries(tables)) {
+    req.log.info({ userId, table, count }, "GDPR delete: rows removed");
+  }
+  req.log.info({ userId, tables }, "GDPR account delete complete");
+
+  // Destroy the caller's session record (best-effort; transaction already
+  // wiped the row) and clear the browser session cookie.
+  const sid = getSessionId(req);
+  try {
+    await clearSession(res, sid);
+  } catch (err) {
+    req.log.warn({ err, userId }, "clearSession after account delete failed");
+  }
+  res.clearCookie(SESSION_COOKIE, { path: "/" });
+
+  res.json(
+    DeleteMyAccountConfirmedResponse.parse({
+      deleted: true,
+      tables,
     }),
   );
 });

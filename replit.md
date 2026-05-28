@@ -19,6 +19,19 @@ AI-powered "second brain for your dating life" — a companion web + mobile app 
 - Optional env: `AUDIT_TRASH_PURGE_INTERVAL_HOURS` — how often the background trash purge job runs, in hours (default 24)
 - Optional env: `GEOIP_KEY_MISSING_ALERT_DAYS` — days since the last successful GeoIP refresh before the founder is emailed about a missing/expired MAXMIND_LICENSE_KEY (default 35)
 - Optional env: `GEOIP_ALERT_REBREACH_COOLDOWN_MINUTES` — min healthy minutes after the GeoIP key is restored before another missing-key alert may fire (default 15)
+- Optional env: `SENTRY_DSN_API` — server-side Sentry DSN. When unset, error monitoring is a no-op.
+- Optional env: `VITE_SENTRY_DSN` — client-side Sentry DSN. When unset, frontend Sentry is a no-op.
+
+### Error monitoring
+
+We use Sentry for production error monitoring. The free tier is fine for our volume. Setup:
+
+1. Create a Sentry account and add two projects: one for `nldc-web` (platform: React) and one for `api-server` (platform: Node.js / Express).
+2. Copy each project's DSN.
+3. Paste the api-server DSN into the `SENTRY_DSN_API` env var, and the web DSN into `VITE_SENTRY_DSN` (Replit Secrets, "shared" environment so Vite exposes it).
+4. Restart the `artifacts/api-server: API Server` and `artifacts/nldc: web` workflows so the new env is picked up.
+
+Both SDKs short-circuit to a no-op when their DSN is unset, so it is safe to leave either side unconfigured during local development.
 
 ### Refreshing GeoIP data
 

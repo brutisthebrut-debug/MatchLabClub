@@ -12,6 +12,7 @@ import {
   aiRequestMetricsDailyTable,
   aiAlertThresholdsTable,
   aiAlertThresholdChangesTable,
+  aiUsageCountersTable,
   AI_ALERT_GLOBAL_KEY,
   coachFollowUpsTable,
   aiToolAlertStateTable,
@@ -181,6 +182,40 @@ async function loadThresholds(): Promise<{
   }
   return { global, perTool };
 }
+
+router.get("/founder/ai-usage/today", requireFounder, async (_req, res): Promise<void> => {
+  const today = new Date().toISOString().slice(0, 10);
+
+  const topRows = await db
+    .select({
+      userId: aiUsageCountersTable.userId,
+      provider: aiUsageCountersTable.provider,
+      callCount: aiUsageCountersTable.callCount,
+    })
+    .from(aiUsageCountersTable)
+    .where(eq(aiUsageCountersTable.date, today))
+    .orderBy(desc(aiUsageCountersTable.callCount))
+    .limit(20);
+
+  const [totals] = await db
+    .select({
+      totalCalls: sql<number>`coalesce(sum(${aiUsageCountersTable.callCount}), 0)::int`,
+      uniqueUsers: sql<number>`count(distinct ${aiUsageCountersTable.userId})::int`,
+    })
+    .from(aiUsageCountersTable)
+    .where(eq(aiUsageCountersTable.date, today));
+
+  res.json({
+    date: today,
+    totalCalls: Number(totals?.totalCalls ?? 0),
+    uniqueUsers: Number(totals?.uniqueUsers ?? 0),
+    topUsers: topRows.map((r) => ({
+      userId: r.userId,
+      provider: r.provider,
+      callCount: Number(r.callCount),
+    })),
+  });
+});
 
 router.get("/founder/ai-metrics", requireFounder, async (_req, res): Promise<void> => {
   const { global: globalCfg, perTool: perToolCfg } = await loadThresholds();

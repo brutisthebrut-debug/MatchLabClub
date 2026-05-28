@@ -1,3 +1,12 @@
+// Sentry MUST initialize before any application module is imported so its
+// auto-instrumentation can wrap them. In ESM, static imports are evaluated
+// before the importing module's body runs, so we cannot rely on placing
+// `Sentry.init()` at the top of this file — by the time it executes, `app`
+// has already been loaded. Isolating init in a separate module that we
+// import first guarantees correct ordering.
+import "./sentry";
+import * as Sentry from "@sentry/node";
+
 import app from "./app";
 import { logger } from "./lib/logger";
 import { startAiMetricsRetentionJob } from "./lib/aiMetricsRetention";
@@ -10,6 +19,8 @@ import { refreshLearnedRulesCache } from "./lib/ocrLearning";
 import { startOcrLearningJob } from "./lib/ocrLearningJob";
 import { startAuditTrashPushJob } from "./lib/auditTrashPushJob";
 import { startGeoipUpdateJob } from "./lib/geoipUpdateJob";
+
+Sentry.setupExpressErrorHandler(app);
 
 const rawPort = process.env["PORT"];
 

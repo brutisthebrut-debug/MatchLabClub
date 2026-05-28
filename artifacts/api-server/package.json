@@ -12,6 +12,8 @@
     "update-geoip": "node node_modules/geoip-lite/scripts/updatedb.js license_key=$MAXMIND_LICENSE_KEY"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@sentry/node": "^10.54.0",
     "@workspace/ai-schemas": "workspace:*",
     "@workspace/api-zod": "workspace:*",
     "@workspace/db": "workspace:*",

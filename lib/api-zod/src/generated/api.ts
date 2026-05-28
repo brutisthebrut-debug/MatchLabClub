@@ -801,6 +801,36 @@ export const DeleteMyAccountResponse = zod.object({
 
 
 /**
+ * Permanently removes the authenticated user and cascades the delete
+across every user-owned table in the database. The caller must POST
+a confirmation string equal to their own account email (lowercased)
+in the body, otherwise the request is rejected with 400. The entire
+delete runs inside a single transaction so the account either goes
+fully or not at all. On success the response lists row counts per
+table deleted, the session is destroyed, and the browser session
+cookie is cleared. Anonymous callers are rejected with 401.
+
+ * @summary GDPR delete the signed-in user's account and every row tied to it
+ */
+export const DeleteMyAccountConfirmedHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const deleteMyAccountConfirmedBodyConfirmationMax = 320;
+
+
+
+export const DeleteMyAccountConfirmedBody = zod.object({
+  "confirmation": zod.string().min(1).max(deleteMyAccountConfirmedBodyConfirmationMax).describe('Must equal the signed-in user\'s email address (case-insensitive). The endpoint compares lowercased values, so any-case input is accepted as long as the trimmed text matches the account email.')
+})
+
+export const DeleteMyAccountConfirmedResponse = zod.object({
+  "deleted": zod.boolean(),
+  "tables": zod.record(zod.string(), zod.number()).describe('Row counts deleted per table, keyed by database table name. Always includes every user-scoped table considered, even when the count is zero, so the client can show a faithful summary.')
+})
+
+
+/**
  * Stores an Expo push token server-side so the server can send
 proactive push notifications (e.g. expiring-audit reminders) even
 when the app is closed. Idempotent — re-registering the same token

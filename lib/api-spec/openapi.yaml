@@ -637,6 +637,55 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/account/delete:
+    post:
+      tags: [Auth]
+      operationId: deleteMyAccountConfirmed
+      summary: GDPR delete the signed-in user's account and every row tied to it
+      description: |
+        Permanently removes the authenticated user and cascades the delete
+        across every user-owned table in the database. The caller must POST
+        a confirmation string equal to their own account email (lowercased)
+        in the body, otherwise the request is rejected with 400. The entire
+        delete runs inside a single transaction so the account either goes
+        fully or not at all. On success the response lists row counts per
+        table deleted, the session is destroyed, and the browser session
+        cookie is cleared. Anonymous callers are rejected with 401.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAccountInput'
+      responses:
+        '200':
+          description: Account and every row tied to it were deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteAccountResult'
+        '400':
+          description: Confirmation string was missing or did not match the account email.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '500':
+          description: Delete failed and was rolled back.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /push-tokens:
     post:
       tags: [Auth]
@@ -4246,6 +4295,35 @@ components:
               type: integer
             insights:
               type: integer
+
+    DeleteAccountInput:
+      type: object
+      required: [confirmation]
+      properties:
+        confirmation:
+          type: string
+          minLength: 1
+          maxLength: 320
+          description: >-
+            Must equal the signed-in user's email address (case-insensitive).
+            The endpoint compares lowercased values, so any-case input is
+            accepted as long as the trimmed text matches the account email.
+
+    DeleteAccountResult:
+      type: object
+      required: [deleted, tables]
+      properties:
+        deleted:
+          type: boolean
+          const: true
+        tables:
+          type: object
+          additionalProperties:
+            type: integer
+          description: >-
+            Row counts deleted per table, keyed by database table name.
+            Always includes every user-scoped table considered, even when
+            the count is zero, so the client can show a faithful summary.
 
     RegisterPushTokenInput:
       type: object

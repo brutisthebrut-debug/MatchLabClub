@@ -68,6 +68,8 @@ import type {
   DatingProfile,
   DatingProfileInput,
   DatingProfileUpdate,
+  DeleteAccountInput,
+  DeleteAccountResult,
   DeleteAuditResult,
   DeleteImportResult,
   DeleteInsightResult,
@@ -1886,6 +1888,86 @@ export const useDeleteMyAccount = <TError = ErrorType<AuthErrorEnvelope>,
         TContext
       > => {
       return useMutation(getDeleteMyAccountMutationOptions(options));
+    }
+
+export const getDeleteMyAccountConfirmedUrl = () => {
+
+
+
+
+  return `/api/me/account/delete`
+}
+
+/**
+ * Permanently removes the authenticated user and cascades the delete
+across every user-owned table in the database. The caller must POST
+a confirmation string equal to their own account email (lowercased)
+in the body, otherwise the request is rejected with 400. The entire
+delete runs inside a single transaction so the account either goes
+fully or not at all. On success the response lists row counts per
+table deleted, the session is destroyed, and the browser session
+cookie is cleared. Anonymous callers are rejected with 401.
+
+ * @summary GDPR delete the signed-in user's account and every row tied to it
+ */
+export const deleteMyAccountConfirmed = async (deleteAccountInput: DeleteAccountInput, options?: RequestInit): Promise<DeleteAccountResult> => {
+
+  return customFetch<DeleteAccountResult>(getDeleteMyAccountConfirmedUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      deleteAccountInput,)
+  }
+);}
+
+
+
+
+export const getDeleteMyAccountConfirmedMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyAccountConfirmed>>, TError,{data: BodyType<DeleteAccountInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMyAccountConfirmed>>, TError,{data: BodyType<DeleteAccountInput>}, TContext> => {
+
+const mutationKey = ['deleteMyAccountConfirmed'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMyAccountConfirmed>>, {data: BodyType<DeleteAccountInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  deleteMyAccountConfirmed(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMyAccountConfirmedMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMyAccountConfirmed>>>
+    export type DeleteMyAccountConfirmedMutationBody = BodyType<DeleteAccountInput>
+    export type DeleteMyAccountConfirmedMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary GDPR delete the signed-in user's account and every row tied to it
+ */
+export const useDeleteMyAccountConfirmed = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyAccountConfirmed>>, TError,{data: BodyType<DeleteAccountInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMyAccountConfirmed>>,
+        TError,
+        {data: BodyType<DeleteAccountInput>},
+        TContext
+      > => {
+      return useMutation(getDeleteMyAccountConfirmedMutationOptions(options));
     }
 
 export const getRegisterPushTokenUrl = () => {

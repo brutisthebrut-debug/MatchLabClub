@@ -1,6 +1,6 @@
 import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { motion } from "framer-motion";
@@ -8,9 +8,28 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Shield, Lock, Download, Trash2, Eye, EyeOff, ChevronDown, ChevronUp,
   Image, MessageSquare, FileText, BookOpen, Activity, Check, Heart, ArrowRight,
+  AlertTriangle,
 } from "lucide-react";
-import { useListWellnessAnswers, useListWellnessTags, useDeleteWellnessAnswer } from "@workspace/api-client-react";
+import {
+  useListWellnessAnswers,
+  useListWellnessTags,
+  useDeleteWellnessAnswer,
+  useDeleteMyAccountConfirmed,
+  useGetCurrentAuthUser,
+} from "@workspace/api-client-react";
 import { DIMENSION_META } from "@/lib/wellnessQuestionBank";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -308,6 +327,122 @@ function WellnessDataSection() {
   );
 }
 
+function DeleteAccountCard() {
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const [open, setOpen] = useState(false);
+  const [typed, setTyped] = useState("");
+  const { data: authData } = useGetCurrentAuthUser();
+  const accountEmail = authData?.user?.email ?? null;
+  const expected = (accountEmail ?? "").trim().toLowerCase();
+  const matches = expected.length > 0 && typed.trim().toLowerCase() === expected;
+
+  const { mutate: deleteAccount, isPending } = useDeleteMyAccountConfirmed();
+
+  function handleConfirm() {
+    if (!matches || !accountEmail) return;
+    deleteAccount(
+      { data: { confirmation: accountEmail } },
+      {
+        onSuccess: () => {
+          setOpen(false);
+          toast({
+            title: "Your account is gone. Take care.",
+          });
+          navigate("/");
+        },
+        onError: (err: unknown) => {
+          const message =
+            err && typeof err === "object" && "message" in err && typeof (err as { message?: unknown }).message === "string"
+              ? (err as { message: string }).message
+              : "Couldn't delete your account. Try again in a moment.";
+          toast({
+            title: "Delete failed",
+            description: message,
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  }
+
+  return (
+    <motion.div
+      {...fadeUp(0.05)}
+      className="mt-8 rounded-2xl border border-[hsl(348_55%_55%/0.35)] bg-[hsl(348_55%_30%/0.08)] p-5"
+      data-testid="delete-account-card"
+    >
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[hsl(348_55%_55%/0.15)]">
+          <AlertTriangle className="w-4 h-4 text-[hsl(348_70%_70%)]" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground">Delete my account</p>
+          <p className="text-xs text-muted-foreground/70 mt-1 leading-relaxed">
+            This removes everything we have on you. Audits, coaching sessions, journal entries, wellness answers, compass reads, Hinge imports, the lot. This cannot be undone.
+          </p>
+          <div className="mt-4">
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => {
+                setTyped("");
+                setOpen(true);
+              }}
+              disabled={!accountEmail}
+              data-testid="open-delete-account-dialog"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete my account
+            </Button>
+            {!accountEmail && (
+              <p className="text-[11px] text-muted-foreground/60 mt-2">
+                You need to be signed in with an email on file to delete your account.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Type your account email <strong className="text-foreground">{accountEmail}</strong> exactly to confirm. This permanently removes every row tied to your account and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <Input
+              autoFocus
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              placeholder={accountEmail ?? ""}
+              autoComplete="off"
+              spellCheck={false}
+              data-testid="delete-account-confirm-input"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleConfirm();
+              }}
+              disabled={!matches || isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="confirm-delete-account"
+            >
+              {isPending ? "Deleting..." : "Delete my account"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </motion.div>
+  );
+}
+
 export default function DataVault() {
   useMeta("Personal Data Vault", "Everything you've shared with the app — preview it, export it, or delete it. All of it. Any time.");
   const { toast } = useToast();
@@ -404,6 +539,8 @@ export default function DataVault() {
               </Link>
             </motion.div>
           )}
+
+          <DeleteAccountCard />
         </div>
       </div>
     </AppLayout>

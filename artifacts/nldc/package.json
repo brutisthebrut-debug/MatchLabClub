@@ -83,5 +83,8 @@
     "vitest": "^4.1.6",
     "wouter": "^3.3.5",
     "zod": "catalog:"
+  },
+  "dependencies": {
+    "@sentry/react": "^10.54.0"
   }
 }

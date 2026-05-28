@@ -1,8 +1,8 @@
 import OpenAI from "openai";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { extractAndValidateJson, getAiToolSchema } from "@workspace/ai-schemas";
-import { db, aiRequestMetricsTable, usersTable } from "@workspace/db";
+import { db, aiRequestMetricsTable, usersTable, aiUsageCountersTable } from "@workspace/db";
 import { logger } from "./logger";
 
 export type AiMode = "live" | "fallback" | "setup-needed";
@@ -50,6 +50,12 @@ export interface GenerateResult<T = string> {
   validated?: boolean;
   /** Number of model attempts made (1 = no retry, 2 = one retry). */
   attempts?: number;
+  /** When the call short-circuited to deterministic fallback, why. */
+  fallbackReason?: "consent_required" | "daily_cap_exceeded" | "no_client" | "model_error" | "schema_validation_failed";
+  /** When the daily cap path was taken, how many calls have been used today. */
+  usedToday?: number;
+  /** When the daily cap path was taken, the cap that applied to this user. */
+  capForUser?: number;
 }
 
 const DEFAULT_MODEL = "gpt-4o-mini";
@@ -364,6 +370,77 @@ async function callAnthropicOnce(
 
 type CallOnce = (model: string, userContent: string) => Promise<RawCallResult>;
 
+// Daily per-user cap for hosted LLM calls. The cap protects against a single
+// abuser running thousands of large prompts through Anthropic in a day.
+//
+// Bucketing choices:
+//  - Authed users: keyed by userId. Cap is currently 30/day for everyone.
+//    TODO: when a paid-tier flag lands on users (e.g. usersTable.paidTier),
+//    raise the cap to 200/day for paid tier.
+//  - Anonymous users (no userId): hard-capped at 5/day, keyed by the
+//    sentinel "__anon__". This is a single shared bucket across all anon
+//    callers; we accept the false-positive risk for anon to avoid storing
+//    IP-derived identifiers here.
+const ANON_USER_BUCKET = "__anon__";
+const ANON_DAILY_CAP = 5;
+const FREE_TIER_DAILY_CAP = 30;
+// TODO: paid-tier detection: const PAID_TIER_DAILY_CAP = 200;
+
+function todayDateString(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function resolveCapForUser(userId: string | null): Promise<number> {
+  if (!userId) return ANON_DAILY_CAP;
+  // TODO: when a paid-tier flag is added to usersTable, return
+  // PAID_TIER_DAILY_CAP for paid users. Until then, every authed user gets
+  // the free-tier cap.
+  return FREE_TIER_DAILY_CAP;
+}
+
+export async function checkAndIncrementDailyCap(
+  userId: string | null,
+  provider: "anthropic",
+): Promise<{ allowed: boolean; usedToday: number; capForUser: number }> {
+  const bucketUserId = userId ?? ANON_USER_BUCKET;
+  const date = todayDateString();
+  const capForUser = await resolveCapForUser(userId);
+
+  try {
+    // CTE-gated upsert: only increment when the resulting count would not
+    // exceed the cap. The RETURNING clause gives us the post-increment
+    // count when we did update, or null when we skipped.
+    const result = await db.execute<{ call_count: number; incremented: boolean }>(sql`
+      WITH ins AS (
+        INSERT INTO ai_usage_counters (user_id, date, provider, call_count, updated_at)
+        VALUES (${bucketUserId}, ${date}, ${provider}, 1, now())
+        ON CONFLICT (user_id, date, provider) DO UPDATE
+          SET call_count = ai_usage_counters.call_count + 1,
+              updated_at = now()
+          WHERE ai_usage_counters.call_count < ${capForUser}
+        RETURNING call_count, true AS incremented
+      )
+      SELECT call_count, incremented FROM ins
+      UNION ALL
+      SELECT call_count, false AS incremented
+      FROM ai_usage_counters
+      WHERE user_id = ${bucketUserId} AND date = ${date} AND provider = ${provider}
+        AND NOT EXISTS (SELECT 1 FROM ins)
+      LIMIT 1
+    `);
+    const row = result.rows?.[0];
+    const usedToday = Number(row?.call_count ?? 0);
+    const allowed = Boolean(row?.incremented);
+    return { allowed, usedToday, capForUser };
+  } catch (err) {
+    logger.warn(
+      { err: err instanceof Error ? err.message : String(err), userId },
+      "Daily AI cap check failed; allowing call (fail-open)",
+    );
+    return { allowed: true, usedToday: 0, capForUser };
+  }
+}
+
 export async function generate(
   opts: GenerateOptions,
   fallbackOutput: string,
@@ -433,7 +510,38 @@ async function generateInner(
       model: opts.model ?? (provider === "anthropic" ? DEFAULT_ANTHROPIC_MODEL : DEFAULT_MODEL),
       attempts: 0,
       error: "consent_required",
+      fallbackReason: "consent_required",
     };
+  }
+
+  // Per-user daily cap for Anthropic. We bucket anon callers separately so
+  // one signed-out abuser cannot burn through every authed user's budget.
+  if (provider === "anthropic") {
+    const cap = await checkAndIncrementDailyCap(opts.userId ?? null, "anthropic");
+    if (!cap.allowed) {
+      logger.warn(
+        {
+          metric: "anthropic.cap.hit",
+          userId: opts.userId ?? null,
+          usedToday: cap.usedToday,
+          capForUser: cap.capForUser,
+          toolName: opts.context?.toolName,
+        },
+        "anthropic.cap.hit",
+      );
+      return {
+        mode: "fallback",
+        isFallback: true,
+        output: fallbackOutput,
+        durationMs: Date.now() - start,
+        model: opts.model ?? DEFAULT_ANTHROPIC_MODEL,
+        attempts: 0,
+        error: "daily_cap_exceeded",
+        fallbackReason: "daily_cap_exceeded",
+        usedToday: cap.usedToday,
+        capForUser: cap.capForUser,
+      };
+    }
   }
 
   let model: string;
