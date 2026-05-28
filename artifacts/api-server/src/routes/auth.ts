@@ -58,7 +58,10 @@ function getSafeReturnTo(value: unknown): string {
   return value;
 }
 
-async function upsertUser(claims: Record<string, unknown>) {
+async function upsertUser(
+  claims: Record<string, unknown>,
+  refCookie?: string | null,
+) {
   const userData = {
     id: claims.sub as string,
     email: (claims.email as string) || null,
@@ -69,11 +72,29 @@ async function upsertUser(claims: Record<string, unknown>) {
       | null,
   };
 
+  // Parse Echo referral cookie (`mlc_ref=user-<inviterId>` or just `<inviterId>`).
+  // First-touch attribution — only set on row INSERT, never overwritten.
+  let inviterId: string | null = null;
+  if (refCookie) {
+    const stripped = refCookie.startsWith("user-")
+      ? refCookie.slice(5)
+      : refCookie;
+    if (stripped && stripped.length <= 64 && stripped !== userData.id) {
+      inviterId = stripped;
+    }
+  }
+
+  const insertValues = inviterId
+    ? { ...userData, invitedByUserId: inviterId, invitedAt: new Date() }
+    : userData;
+
   const [user] = await db
     .insert(usersTable)
-    .values(userData)
+    .values(insertValues)
     .onConflictDoUpdate({
       target: usersTable.id,
+      // Intentionally do NOT touch invited_by_user_id / invited_at on conflict
+      // — first-touch attribution wins, returning users keep their original.
       set: {
         ...userData,
         updatedAt: new Date(),
@@ -195,6 +216,7 @@ router.get("/callback", async (req: Request, res: Response) => {
 
   const dbUser = await upsertUser(
     claims as unknown as Record<string, unknown>,
+    (req.cookies?.mlc_ref as string | undefined) ?? null,
   );
 
   const now = Math.floor(Date.now() / 1000);
@@ -286,6 +308,7 @@ router.post(
 
       const dbUser = await upsertUser(
         claims as unknown as Record<string, unknown>,
+        (req.cookies?.mlc_ref as string | undefined) ?? null,
       );
 
       const now = Math.floor(Date.now() / 1000);
