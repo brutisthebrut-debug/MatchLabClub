@@ -28,6 +28,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { ReplyCard } from "@/components/ReplyCard";
 import { ScreenHeader } from "@/components/ScreenHeader";
+import { ShareButton } from "@/components/echo/ShareButton";
 import { useColors } from "@/hooks/useColors";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { useAuth } from "@/lib/auth";
@@ -1551,6 +1552,21 @@ export default function CoachScreen() {
             />
           ))}
         </View>
+
+        {!showingDemo && display.length > 0 ? (
+          <View style={styles.shareRow}>
+            <ShareButton
+              surface="message-coach"
+              title="Three replies, three tones"
+              text="Pasted a tricky message into the coach and got three replies in different tones. Way better than overthinking on my own."
+              path="/coach"
+              ref="mobile-coach"
+              variant="pill"
+              label="Share the coach"
+              testId="button-share-coach-mobile"
+            />
+          </View>
+        ) : null}
       </KeyboardAwareScrollView>
     </View>
   );
@@ -2129,6 +2145,10 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   repliesList: { gap: 12 },
+  shareRow: {
+    marginTop: 16,
+    alignItems: "center",
+  },
   followUpCard: {
     borderWidth: 1,
     borderRadius: 18,

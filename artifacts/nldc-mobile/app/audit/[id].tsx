@@ -26,6 +26,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CopyButton } from "@/components/CopyButton";
+import { ShareButton } from "@/components/echo/ShareButton";
 import { ScoreRing } from "@/components/ScoreRing";
 import { useColors } from "@/hooks/useColors";
 
@@ -598,6 +599,19 @@ export default function AuditDetailScreen() {
                   </Text>
                 </Pressable>
               </View>
+            ) : null}
+            {report ? (
+              <ShareButton
+                surface="audit-report"
+                title={`My dating profile mini-report${audit.firstName ? ` for ${audit.firstName}` : ""}`}
+                text={`Just ran a quick read on my dating profile. Grade ${report.overallGrade}. Curious what yours would say?`}
+                path="/start"
+                ref="mobile-audit-report"
+                variant="pill"
+                label="Share this read"
+                testId="button-share-audit-mobile"
+                style={styles.shareRow}
+              />
             ) : null}
           </View>
         ) : null}
@@ -2118,6 +2132,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
     alignItems: "center",
     gap: 8,
+  },
+  shareRow: {
+    marginTop: 12,
+    alignSelf: "center",
   },
   staleBadge: {
     flexDirection: "row",

@@ -206,6 +206,29 @@ vi.mock("@expo/vector-icons", () => ({
   Feather: () => null,
 }));
 
+vi.mock("expo-clipboard", () => ({
+  setStringAsync: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock("@/hooks/useColors", () => ({
+  useColors: () => ({
+    background: "#000",
+    foreground: "#fff",
+    mutedForeground: "#888",
+    card: "#111",
+    cardBorder: "#222",
+    border: "#333",
+    input: "#222",
+    primary: "#a78bfa",
+    primaryForeground: "#000",
+    accent: "#a78bfa",
+    violet: "#a78bfa",
+    destructive: "#ef4444",
+    gold: "#f5c542",
+    success: "#22c55e",
+  }),
+}));
+
 vi.mock("expo-image-picker", () => ({
   requestMediaLibraryPermissionsAsync: vi.fn(),
   launchImageLibraryAsync: vi.fn(),
