@@ -77,7 +77,7 @@ async function loadResend(): Promise<ResendConstructor | null> {
 function getFrom(): string {
   return (
     process.env["MAIL_FROM"] ||
-    "MatchLab Club <noreply@nextleveldatingclub.local>"
+    "MatchLab Club <noreply@n.com>"
   );
 }
 

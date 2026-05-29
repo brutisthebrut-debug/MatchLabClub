@@ -26,8 +26,8 @@ const fadeUp = (delay = 0) => ({
 
 export default function Landing() {
   useMeta(
-  "Free Dating Profile Audit & Message Coaching",
-  "Find out what your dating profile is really saying, and get it rewritten. Free 3-min Signal Check or the full Profile Signal Audit. No account needed to start.",
+  "Turn your real dating signals into real matches",
+  "MatchLab Club is a second brain for your dating life. It reads the real signals you already generate, your profile, your messages, your dates, builds a readiness score you can watch grow, and uses it to introduce you to real people. Start free with the Signal Check, no account needed.",
   );
   return (
   <AppLayout>
@@ -50,18 +50,17 @@ export default function Landing() {
   className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-bold tracking-tight leading-[0.98] mb-6"
   {...fadeUp(0.08)}
   >
-  <span className="text-foreground">Stop being</span>{" "}
-  <span className="gradient-text-violet italic">overlooked.</span>
+  <span className="text-foreground">Turn real signals</span>{" "}
+  <span className="gradient-text-violet italic">into</span>
   <br />
-  <span className="text-foreground">Start being</span>{" "}
-  <span className="gradient-text">chosen.</span>
+  <span className="gradient-text italic">real matches.</span>
   </motion.h1>
 
   <motion.p
   className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed mb-9"
   {...fadeUp(0.15)}
   >
-  Your <span className="text-foreground/80 font-medium">dating second brain.</span>
+  A second brain for your dating life. It turns the real signals you already generate, your profile, your messages, your dates, into a <span className="text-foreground/80 font-medium">readiness score that grows toward real introductions.</span> The free Signal Check is where it starts.
   </motion.p>
 
   {/* PRIMARY CTA, single, oversized, unmissable. Everything else lives below the proof. */}
@@ -219,36 +218,36 @@ export default function Landing() {
   <section id="how-it-works" className="py-20 md:py-24 border-t border-foreground/5 bg-[hsl(248_40%_98%/0.5)] dark:bg-[hsl(248_50%_8%/0.5)]">
   <div className="container mx-auto px-4">
   <div className="text-center mb-12">
-  <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-3">How it works</p>
+  <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-3">How the engine works</p>
   <h2 className="text-3xl md:text-5xl font-bold text-foreground">
-  Three steps. <span className="gradient-text italic">No guesswork.</span>
+  Signals in. <span className="gradient-text italic">Matches out.</span>
   </h2>
   <p className="text-muted-foreground max-w-xl mx-auto mt-4 leading-relaxed text-sm">
-  From an honest read of your profile to a plan you can actually act on this week.
+  Everything you do here feeds one engine. The more real signal it has, the better it knows who to put in front of you.
   </p>
   </div>
   <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
   {[
   {
   step: "01",
-  title: "Check your signal",
-  desc: "Paste your bio (and optionally your prompts or a recent message). Takes 3 minutes. No account needed to start.",
+  title: "Feed it real signals",
+  desc: "Your bio, your messages, your dates, your wins, your reflections, even a Hinge export. Start with the free Signal Check. No account needed.",
   color: "hsl(var(--brand-indigo))",
   cta: { label: "Start the check", href: "/signal-check" },
   },
   {
   step: "02",
-  title: "Get your honest report",
-  desc: "Receive a Signal Score, the category your profile reads as, specific critiques, and rewritten bio + prompt lines.",
+  title: "Watch readiness grow",
+  desc: "Every signal moves one real number, your readiness score. The app always shows the next step worth taking, not generic advice.",
   color: "hsl(var(--brand-gold))",
   cta: { label: "See a sample", href: "/sample-report" },
   },
   {
   step: "03",
-  title: "Follow your 7-day plan",
-  desc: "A prioritised plan built around your specific audit, not generic advice. Track your score as you implement.",
+  title: "Get introduced",
+  desc: "When you are ready, your profile becomes introductions to a small number of well considered people. Founder curated on Wingman, algorithmic for everyone. No swipe carousel.",
   color: "hsl(142 55% 50%)",
-  cta: { label: "Track your progress", href: "/pricing" },
+  cta: { label: "See how matching works", href: "/matching" },
   },
   ].map((item, i) => (
   <motion.div

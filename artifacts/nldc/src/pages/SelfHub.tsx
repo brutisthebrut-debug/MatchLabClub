@@ -57,6 +57,7 @@ import {
   getGetDatingWinsQueryKey,
 } from "@workspace/api-client-react";
 import { ShareButton } from "@/components/echo/ShareButton";
+import { NextStepCard } from "@/components/NextStepCard";
 
 const WELLNESS_DIMENSION_COUNT = 18;
 
@@ -526,6 +527,8 @@ export default function SelfHub() {
   const compassReadsCount = compassReads.data?.reads.length ?? 0;
   const importsCount = imports.data?.imports.length ?? 0;
   const winsCount = datingWins.data?.length ?? 0;
+  const nextActions = matchingState.data?.nextActions ?? [];
+  const matchEligible = matchingState.data?.eligible ?? false;
 
   const insightRows = (insights.data ?? []) as RecentInsight[];
 
@@ -571,10 +574,17 @@ export default function SelfHub() {
   Hi{user?.firstName ? `, ${user.firstName}` : ""}. Here&rsquo;s what we know about you.
   </h1>
   <p className="text-muted-foreground mt-3 max-w-2xl leading-relaxed">
-  Your second brain, exposed. Everything below is yours, exportable, and deletable at any time.
-  This page is the source of truth for what we have and what we&rsquo;ve done with it.
+  Your second brain for dating. Every signal below feeds one readiness score that grows toward real matches.
+  It is all yours, exportable, and deletable at any time.
   </p>
   </motion.div>
+
+  {/* Engine spine: your next best step toward a match */}
+  {(nextActions.length > 0 || matchEligible) && (
+  <motion.div {...fadeUp(0.04)} className="mb-6 md:mb-8">
+  <NextStepCard actions={nextActions} eligible={matchEligible} testId="self-hub-next-step" />
+  </motion.div>
+  )}
 
   {/* Wellness completeness ring */}
   <motion.div {...fadeUp(0.05)} className="glass rounded-3xl p-6 md:p-8 mb-6 md:mb-8" data-testid="card-wellness-ring">

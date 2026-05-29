@@ -197,8 +197,8 @@ const drivers: ToolDriver[] = [
     retryTestId: "button-retry-reflection",
     drive: () => {
       clickChipByText("Excited / hopeful");
-      clickChipByText("Like myself — relaxed and real");
-      clickChipByText("Yes — effort and interest felt balanced");
+      clickChipByText("Like myself, relaxed and real");
+      clickChipByText("Yes, effort and interest felt balanced");
       clickChipByText("They reached out");
       return screen.getByRole("button", { name: /Get My Reflection/i });
     },
@@ -273,11 +273,11 @@ const drivers: ToolDriver[] = [
       // Click the first option of each of the 6 quiz questions.
       const firstOptionPerQuestion = [
         "Feel anxious and wonder what you did wrong",
-        "Go all-in fast — you feel it and you act on it",
-        "Bring it up — you'd rather address it than let it sit",
+        "Go all-in fast, you feel it and you act on it",
+        "Bring it up, you'd rather address it than let it sit",
         "Something I want and move toward",
-        "Feel fully present and excited — you're in",
-        "It's exhausting — I want to know quickly whether this is real",
+        "Feel fully present and excited, you're in",
+        "It's exhausting. I want to know quickly whether this is real",
       ];
       for (const label of firstOptionPerQuestion) {
         clickChipByText(label);

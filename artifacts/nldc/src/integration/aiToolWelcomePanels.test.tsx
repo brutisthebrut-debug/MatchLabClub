@@ -45,6 +45,10 @@ const coachMessageMutateAsync = vi.fn(async () => ({
   coachTip: "You're doing great.",
 }));
 
+// Stateful store backing the Dating Wins hooks so that saving a win flips the
+// component out of its brand-new/empty state on the next render.
+let winsStore: Array<{ id: number; category: string; body: string; createdAt: string }> = [];
+
 vi.mock("@workspace/api-client-react", () => ({
   useEnhanceAi: () => ({ mutateAsync: enhanceMutateAsync, isPending: false }),
   useCreateAudit: () => ({ mutateAsync: createAuditMutateAsync, isPending: false }),
@@ -81,6 +85,27 @@ vi.mock("@workspace/api-client-react", () => ({
   getListCompassReadsQueryKey: () => ["list-compass-reads"],
   useGetAiContentConsent: () => ({ data: { consent: false }, isLoading: false }),
   getGetAiContentConsentQueryKey: () => ["ai-content-consent"],
+  // Dating Wins (stateful so a save flips the empty state)
+  useGetDatingWins: () => ({ data: winsStore, isLoading: false }),
+  useCreateDatingWin: () => ({
+    mutate: (vars: { data: { category: string; body: string } }, opts?: { onSuccess?: () => void }) => {
+      winsStore = [
+        ...winsStore,
+        { id: Date.now() + winsStore.length, category: vars.data.category, body: vars.data.body, createdAt: new Date().toISOString() },
+      ];
+      opts?.onSuccess?.();
+    },
+    isPending: false,
+  }),
+  useDeleteDatingWin: () => ({
+    mutate: (vars: { id: number }, opts?: { onSuccess?: () => void }) => {
+      winsStore = winsStore.filter((w) => w.id !== vars.id);
+      opts?.onSuccess?.();
+    },
+    isPending: false,
+  }),
+  getGetDatingWinsQueryKey: () => ["dating-wins"],
+  getGetMatchingStateQueryKey: () => ["matching-state"],
 }));
 
 vi.mock("@/components/layout/AppLayout", () => ({
@@ -170,6 +195,7 @@ beforeEach(() => {
   coachMessageMutateAsync.mockClear();
   qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   localStorage.clear();
+  winsStore = [];
 });
 
 afterEach(() => {
@@ -201,7 +227,7 @@ const drivers: Driver[] = [
     name: "Profile Reader",
     Page: ProfileReader,
     emptyStateTestId: "profile-reader-empty-state",
-    anonymousDemoMatcher: /Example output — paste a profile above/i,
+    anonymousDemoMatcher: /Example output, paste a profile above/i,
     runTool: async () => {
       const textarea = screen.getByPlaceholderText(/Paste their bio/i);
       fireEvent.change(textarea, {
@@ -217,7 +243,7 @@ const drivers: Driver[] = [
     name: "Next Message",
     Page: NextMessage,
     emptyStateTestId: "next-message-empty-state",
-    anonymousDemoMatcher: /Example options — fill in context above/i,
+    anonymousDemoMatcher: /Example options, fill in context above/i,
     runTool: async () => {
       const conv = screen.getByPlaceholderText(/Paste the conversation/i);
       fireEvent.change(conv, {
@@ -309,7 +335,7 @@ const drivers: Driver[] = [
     emptyStateTestId: "blueprint-empty-state",
     // Anonymous users see the demo blueprint (isDemo = !result = true when
     // result is null). The watermark text below the results is the marker.
-    anonymousDemoMatcher: /Example blueprint — fill in the form above to get yours/i,
+    anonymousDemoMatcher: /Example blueprint, fill in the form above to get yours/i,
     runTool: async () => {
       const textarea = screen.getByPlaceholderText(/Be as honest or vague as you like/i);
       fireEvent.change(textarea, {
@@ -333,7 +359,7 @@ const drivers: Driver[] = [
     // Anonymous users also have isDemo=true (no wins in localStorage) but
     // isBrandNewUser is false because they're not authenticated. They see
     // the demo wins list with its "sample wins" label.
-    anonymousDemoMatcher: /Sample wins — your log starts the moment you add one/i,
+    anonymousDemoMatcher: /Sample wins, your log starts the moment you add one/i,
     runTool: async () => {
       const logBtn = screen.getByRole("button", { name: /Log a win/i });
       fireEvent.click(logBtn);
@@ -383,13 +409,13 @@ const drivers: Driver[] = [
       // Q2: "When someone you like pulls back..."
       fireEvent.click(screen.getByRole("button", { name: /Feel anxious and reach out to check in/i }));
       // Q3: "What you value most in early dating..."
-      fireEvent.click(screen.getByRole("button", { name: /The electric spark — you'll know it when you feel it/i }));
+      fireEvent.click(screen.getByRole("button", { name: /The electric spark, you'll know it when you feel it/i }));
       // Q4: "Your biggest challenge in dating..."
       fireEvent.click(screen.getByRole("button", { name: /You fall fast and it doesn't usually work out/i }));
       // Q5: "After a great first date..."
       fireEvent.click(screen.getByRole("button", { name: /Text them that night or early the next morning/i }));
       // Q6: "In a relationship that's going well..."
-      fireEvent.click(screen.getByRole("button", { name: /Dive deep — you're all in once you decide/i }));
+      fireEvent.click(screen.getByRole("button", { name: /Dive deep, you're all in once you decide/i }));
 
       const submitBtn = screen.getByRole("button", { name: /Reveal My Archetype/i });
       fireEvent.click(submitBtn);
@@ -426,7 +452,7 @@ const drivers: Driver[] = [
     Page: Lab,
     emptyStateTestId: "lab-empty-state",
     // Anonymous users see the demo lab results.
-    anonymousDemoMatcher: /Example output — paste your message above to get yours/i,
+    anonymousDemoMatcher: /Example output, paste your message above to get yours/i,
     runTool: async () => {
       const msgArea = screen.getByTestId("textarea-lab-message");
       fireEvent.change(msgArea, {
@@ -447,7 +473,7 @@ const drivers: Driver[] = [
     Page: Coach,
     emptyStateTestId: "coach-empty-state",
     // Anonymous users see the demo coaching banner.
-    anonymousDemoMatcher: /Example coaching output — fill in the form above to get yours/i,
+    anonymousDemoMatcher: /Example coaching output, fill in the form above to get yours/i,
     runTool: async () => {
       const lastMsgInput = screen.getByTestId("input-last-message");
       fireEvent.change(lastMsgInput, {
@@ -468,15 +494,15 @@ const drivers: Driver[] = [
     Page: Reflection,
     emptyStateTestId: "reflection-empty-state",
     // Anonymous users see the demo reflection results.
-    anonymousDemoMatcher: /Example output — complete the form above to get yours/i,
+    anonymousDemoMatcher: /Example output, complete the form above to get yours/i,
     runTool: async () => {
       // Click one chip in each required group: before, during, mutual, afterward.
       // FELT_BEFORE[0] = "Excited / hopeful"
       fireEvent.click(screen.getByRole("button", { name: /Excited \/ hopeful/i }));
-      // DURING_FEEL[0] = "Like myself — relaxed and real"
-      fireEvent.click(screen.getByRole("button", { name: /Like myself — relaxed and real/i }));
-      // MUTUAL_FEEL[0] = "Yes — effort and interest felt balanced"
-      fireEvent.click(screen.getByRole("button", { name: /Yes — effort and interest felt balanced/i }));
+      // DURING_FEEL[0] = "Like myself, relaxed and real"
+      fireEvent.click(screen.getByRole("button", { name: /Like myself, relaxed and real/i }));
+      // MUTUAL_FEEL[0] = "Yes, effort and interest felt balanced"
+      fireEvent.click(screen.getByRole("button", { name: /Yes, effort and interest felt balanced/i }));
       // AFTERWARD[0] = "They reached out"
       fireEvent.click(screen.getByRole("button", { name: /They reached out/i }));
 
@@ -492,7 +518,7 @@ const drivers: Driver[] = [
     Page: StyleMap,
     emptyStateTestId: "stylemap-empty-state",
     // Anonymous users see the demo style map results.
-    anonymousDemoMatcher: /Example output — paste your messages above to get yours/i,
+    anonymousDemoMatcher: /Example output, paste your messages above to get yours/i,
     runTool: async () => {
       const conv = screen.getByPlaceholderText(/Paste the conversation thread here/i);
       fireEvent.change(conv, {
@@ -510,7 +536,7 @@ const drivers: Driver[] = [
     Page: MirrorProfile,
     emptyStateTestId: "mirror-empty-state",
     // Anonymous users see the demo mirror results.
-    anonymousDemoMatcher: /Example output — paste your bio above to get yours/i,
+    anonymousDemoMatcher: /Example output, paste your bio above to get yours/i,
     runTool: async () => {
       const bioArea = screen.getByPlaceholderText(/Paste your current dating profile bio/i);
       fireEvent.change(bioArea, {
@@ -528,7 +554,7 @@ const drivers: Driver[] = [
     Page: GlowUp,
     emptyStateTestId: "glowup-empty-state",
     // Anonymous users see the demo glow-up rewrites.
-    anonymousDemoMatcher: /Example rewrites — paste your bio above to get yours/i,
+    anonymousDemoMatcher: /Example rewrites, paste your bio above to get yours/i,
     runTool: async () => {
       const bioArea = screen.getByPlaceholderText(/Paste your current dating profile bio here/i);
       fireEvent.change(bioArea, {

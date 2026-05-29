@@ -165,7 +165,7 @@ const fadeUp = (delay = 0) => ({
 });
 
 export default function Pricing() {
-  useMeta("Pricing: Free, $29, $97 & $197 Coaching", "Four ways to get your dating profile working. Free Signal Check, $29 one-time audit, The Dating Reset ($97), or Monthly Wingman coaching ($197/mo).");
+  useMeta("Pricing: Free, $29, $97 & $197 Coaching", "Four ways to feed the engine that turns your real signals into real matches. Start free with the Signal Check, go deeper with a one-time audit or the Dating Reset, or get founder-curated intros with Wingman.");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
@@ -212,10 +212,10 @@ export default function Pricing() {
 
           {/* Header */}
           <motion.div {...fadeUp(0.07)} className="text-center mb-14">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-3">Invest in clarity</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-3">From signal to match</p>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Simple, honest pricing.</h1>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed mb-5">
-              Start free. Upgrade when you see the quality. Cancel or delete anytime.
+              Start the engine free. Pay to go deeper and faster toward real matches. Cancel or delete anytime.
             </p>
             <Link href="/sample-report"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[hsl(248_62%_52%/0.25)] hover:border-[hsl(248_62%_52%/0.5)] hover:bg-[hsl(248_62%_52%/0.06)] transition-all group text-xs font-semibold text-muted-foreground hover:text-foreground">

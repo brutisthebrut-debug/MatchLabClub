@@ -80,23 +80,53 @@ type NavSection = {
   links: NavLink[];
 };
 
+// Engine-aligned navigation. Leads with the readiness engine and where it goes
+// (matching), then the signals that feed it (tools, wingman, reflection, data).
+// Every existing route is preserved, only regrouped, reordered, and relabeled.
 const OVERVIEW: NavLink[] = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Self Hub", href: "/me", icon: Brain },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
 ];
 
 const SECTIONS: NavSection[] = [
   {
-    id: "tools",
-    label: "Tools",
+    id: "readiness",
+    label: "Your readiness",
     links: [
+      { name: "Readiness", href: "/progress/readiness", icon: Gauge },
+      { name: "Scorecard", href: "/progress/scorecard", icon: Gauge },
+      { name: "Timeline", href: "/progress/timeline", icon: History },
+      { name: "Patterns", href: "/progress/patterns", icon: Layers },
+      { name: "Activity Feed", href: "/progress/feed", icon: Rss },
+      { name: "Wins Log", href: "/progress/wins", icon: Trophy },
+      { name: "Follow-Up", href: "/progress/followup", icon: ListChecks },
+      { name: "Experiments", href: "/progress/experiments", icon: Beaker },
+      { name: "Pattern Breaker", href: "/progress/pattern-breaker", icon: Unplug },
+      { name: "Companion", href: "/progress/companion", icon: MessagesSquare },
+      { name: "Control Center", href: "/progress/control", icon: SlidersHorizontal },
+      { name: "Insights Roadmap", href: "/progress/insights-roadmap", icon: MapIcon },
+    ],
+  },
+  {
+    id: "matching",
+    label: "Matching",
+    links: [
+      { name: "Matching", href: "/matching", icon: HeartHandshake, badge: "Beta" },
+      { name: "Connection Center", href: "/connections", icon: Plug },
+      { name: "Future Connections", href: "/future-connections", icon: Users },
+    ],
+  },
+  {
+    id: "tools",
+    label: "Signal tools",
+    links: [
+      { name: "Signal Check", href: "/signal-check", icon: Activity },
       { name: "Message Coach", href: "/coach", icon: MessageCircle },
       { name: "Chemistry Lab", href: "/lab", icon: FlaskConical },
       { name: "Profile Reader", href: "/profile-reader", icon: ScanSearch },
       { name: "Next Message", href: "/next-message", icon: PenLine },
       { name: "Glow-Up Bio", href: "/glow-up", icon: Sparkles },
       { name: "Photo Scan", href: "/scan", icon: ImageUp },
-      { name: "Signal Check", href: "/signal-check", icon: Activity },
       { name: "Diagnosis", href: "/diagnosis", icon: Stethoscope },
       { name: "Compatibility Compass", href: "/compatibility-compass", icon: Compass },
       { name: "Style Map", href: "/style-map", icon: Grid3x3 },
@@ -120,26 +150,8 @@ const SECTIONS: NavSection[] = [
     ],
   },
   {
-    id: "progress",
-    label: "Progress",
-    links: [
-      { name: "Timeline", href: "/progress/timeline", icon: History },
-      { name: "Patterns", href: "/progress/patterns", icon: Layers },
-      { name: "Scorecard", href: "/progress/scorecard", icon: Gauge },
-      { name: "Readiness", href: "/progress/readiness", icon: Gauge },
-      { name: "Experiments", href: "/progress/experiments", icon: Beaker },
-      { name: "Follow-Up", href: "/progress/followup", icon: ListChecks },
-      { name: "Companion", href: "/progress/companion", icon: MessagesSquare },
-      { name: "Insights Roadmap", href: "/progress/insights-roadmap", icon: MapIcon },
-      { name: "Activity Feed", href: "/progress/feed", icon: Rss },
-      { name: "Control Center", href: "/progress/control", icon: SlidersHorizontal },
-      { name: "Wins Log", href: "/progress/wins", icon: Trophy },
-      { name: "Pattern Breaker", href: "/progress/pattern-breaker", icon: Unplug },
-    ],
-  },
-  {
     id: "reflection",
-    label: "Mirror & Reflection",
+    label: "Reflection & journal",
     links: [
       { name: "Mirror Profile", href: "/mirror", icon: Aperture },
       { name: "Your Mirror", href: "/your-mirror", icon: Eye },
@@ -151,16 +163,13 @@ const SECTIONS: NavSection[] = [
   },
   {
     id: "connections",
-    label: "Connections & Data",
+    label: "Data & privacy",
     links: [
-      { name: "Connection Center", href: "/connections", icon: Plug },
       { name: "Imports", href: "/imports", icon: Download },
       { name: "Wellness Center", href: "/wellness", icon: Heart },
       { name: "Life Context", href: "/life-context", icon: Briefcase },
       { name: "Communication Insights", href: "/insights", icon: Lightbulb },
       { name: "Integrations Roadmap", href: "/integrations", icon: Network },
-      { name: "Future Connections", href: "/future-connections", icon: Users },
-      { name: "Matching", href: "/matching", icon: HeartHandshake, badge: "Beta" },
       { name: "Data Vault", href: "/vault", icon: Database },
       { name: "Privacy & Control", href: "/user-control", icon: ShieldCheck },
     ],
