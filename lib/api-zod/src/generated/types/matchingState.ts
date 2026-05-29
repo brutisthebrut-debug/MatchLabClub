@@ -16,6 +16,14 @@ export interface MatchingState {
   /** @nullable */
   tier: MatchingStateTier;
   readiness: MatchReadiness;
+  /** True when readiness.score is at or above readinessThreshold. The client uses this to gate the pool opt-in switch. */
+  eligible: boolean;
+  /**
+     * Minimum readiness score required to join the matching pool, set by the MATCHING_READINESS_THRESHOLD env var (default 50).
+     * @minimum 0
+     * @maximum 100
+     */
+  readinessThreshold: number;
   /** @minimum 0 */
   cityDensity: number;
   /** @minimum 0 */

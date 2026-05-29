@@ -115,6 +115,7 @@ import type {
   LogoutSuccess,
   MatchExternalReadInput,
   MatchExternalReadResult,
+  MatchPoolIneligible,
   MatchPoolMembership,
   MatchPoolMembershipInput,
   MatchPreferences,
@@ -8453,7 +8454,7 @@ export const updateMatchingPoolMembership = async (matchPoolMembershipInput: Mat
 
 
 
-export const getUpdateMatchingPoolMembershipMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+export const getUpdateMatchingPoolMembershipMutationOptions = <TError = ErrorType<AuthErrorEnvelope | MatchPoolIneligible>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMatchingPoolMembership>>, TError,{data: BodyType<MatchPoolMembershipInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateMatchingPoolMembership>>, TError,{data: BodyType<MatchPoolMembershipInput>}, TContext> => {
 
@@ -8482,12 +8483,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateMatchingPoolMembershipMutationResult = NonNullable<Awaited<ReturnType<typeof updateMatchingPoolMembership>>>
     export type UpdateMatchingPoolMembershipMutationBody = BodyType<MatchPoolMembershipInput>
-    export type UpdateMatchingPoolMembershipMutationError = ErrorType<AuthErrorEnvelope>
+    export type UpdateMatchingPoolMembershipMutationError = ErrorType<AuthErrorEnvelope | MatchPoolIneligible>
 
     /**
  * @summary Upsert the signed-in user's match pool membership status
  */
-export const useUpdateMatchingPoolMembership = <TError = ErrorType<AuthErrorEnvelope>,
+export const useUpdateMatchingPoolMembership = <TError = ErrorType<AuthErrorEnvelope | MatchPoolIneligible>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMatchingPoolMembership>>, TError,{data: BodyType<MatchPoolMembershipInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof updateMatchingPoolMembership>>,

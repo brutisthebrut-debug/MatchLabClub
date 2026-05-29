@@ -22,6 +22,7 @@ import {
   Wrench,
   FlaskConical,
   Sparkles,
+  Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -122,6 +123,25 @@ const LIVE: Connector[] = [
       "Any ability to create, edit, or delete events on your calendar",
     ],
     cta: { href: "/imports", label: "Open Calendar paste" },
+  },
+  {
+    id: "matching-cohort",
+    title: "Matching cohort",
+    icon: Users,
+    color: "hsl(326 100% 62%)",
+    blurb:
+      "Opt in to the private intro pool once your signals say you are ready. We hold your spot, count how many people near you are also building a profile, and route Wingman members to founder-curated intros. Off by default. One switch removes you and stops any future intro.",
+    returns: "A spot in the intro pool plus a readiness read that shows what is still thin.",
+    access: [
+      "Your match preferences and the readiness score built from signals you already gave us",
+      "Your city hint, used only to count how many nearby people are also in the pool",
+    ],
+    excludes: [
+      "Any intro before your readiness clears the threshold",
+      "Your identity shown to anyone without your yes",
+      "Any swipe feed, public profile, or infinite scroll",
+    ],
+    cta: { href: "/matching", label: "Open Matching" },
   },
 ];
 

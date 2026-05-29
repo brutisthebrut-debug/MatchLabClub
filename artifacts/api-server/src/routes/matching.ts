@@ -169,6 +169,14 @@ async function computeReadiness(userId: string): Promise<Readiness> {
   return { score, breakdown };
 }
 
+// Minimum readiness score required to activate pool membership. Tunable via
+// MATCHING_READINESS_THRESHOLD; clamped to 0-100, defaults to 50.
+function readinessThreshold(): number {
+  const raw = Number(process.env.MATCHING_READINESS_THRESHOLD);
+  if (!Number.isFinite(raw)) return 50;
+  return Math.max(0, Math.min(100, Math.round(raw)));
+}
+
 const POOL_VISIBLE_STATUSES = ["building", "ready", "concierge_only"] as const;
 
 async function totalPoolCount(): Promise<number> {
@@ -213,11 +221,14 @@ router.get("/me/matching/state", async (req, res): Promise<void> => {
     density = Number(cityRows[0]?.count ?? 0);
   }
 
+  const threshold = readinessThreshold();
   res.json({
     preferences: prefs ? serializePreferences(prefs) : null,
     poolStatus: membership?.status ?? "off",
     tier,
     readiness,
+    eligible: readiness.score >= threshold,
+    readinessThreshold: threshold,
     cityDensity: density,
     totalPoolCount: total,
   });
@@ -288,12 +299,30 @@ router.put("/me/matching/pool-membership", async (req, res): Promise<void> => {
     return;
   }
   const userId = req.user.id;
+  const requested = parsed.data.status;
+  // Cohort gate: joining the pool (building/ready) requires enough signal
+  // density. Leaving (off) and pausing (paused) are always allowed so a user
+  // can never get stuck in the pool.
+  if (requested === "building" || requested === "ready") {
+    const [readiness, threshold] = [
+      await computeReadiness(userId),
+      readinessThreshold(),
+    ];
+    if (readiness.score < threshold) {
+      res.status(422).json({
+        error: `You need a readiness of ${threshold} to join the matching pool. You are at ${readiness.score} right now. Add a compass read, a wellness pass, or a Hinge import to close the gap.`,
+        readinessScore: readiness.score,
+        readinessThreshold: threshold,
+      });
+      return;
+    }
+  }
   const [existing, tier] = await Promise.all([
     loadMembership(userId),
     loadUserTier(userId),
   ]);
   let nextStatus: "off" | "building" | "ready" | "paused" | "concierge_only" =
-    parsed.data.status;
+    requested;
   if (nextStatus === "building" && tier === "wingman") {
     nextStatus = "concierge_only";
     req.log.info(

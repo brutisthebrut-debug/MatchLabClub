@@ -2930,6 +2930,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
+        '422':
+          description: >-
+            Readiness is below the cohort threshold. Returned only when the
+            caller tries to activate pool membership (status `building` or
+            `ready`). Leaving (`off`) and pausing (`paused`) are always allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchPoolIneligible'
 
   /me/matching/external-read:
     post:
@@ -5860,7 +5869,7 @@ components:
 
     MatchingState:
       type: object
-      required: [preferences, poolStatus, tier, readiness, cityDensity, totalPoolCount]
+      required: [preferences, poolStatus, tier, readiness, eligible, readinessThreshold, cityDensity, totalPoolCount]
       properties:
         preferences:
           oneOf:
@@ -5874,9 +5883,36 @@ components:
           enum: [free, reset, wingman, null]
         readiness:
           $ref: '#/components/schemas/MatchReadiness'
+        eligible:
+          type: boolean
+          description: >-
+            True when readiness.score is at or above readinessThreshold. The
+            client uses this to gate the pool opt-in switch.
+        readinessThreshold:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: >-
+            Minimum readiness score required to join the matching pool, set by
+            the MATCHING_READINESS_THRESHOLD env var (default 50).
         cityDensity:
           type: integer
           minimum: 0
         totalPoolCount:
           type: integer
           minimum: 0
+
+    MatchPoolIneligible:
+      type: object
+      required: [error, readinessScore, readinessThreshold]
+      properties:
+        error:
+          type: string
+        readinessScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        readinessThreshold:
+          type: integer
+          minimum: 0
+          maximum: 100

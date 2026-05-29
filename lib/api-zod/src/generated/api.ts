@@ -3538,6 +3538,9 @@ export const getMatchingStateResponseReadinessBreakdownHingeImportMax = 100;
 export const getMatchingStateResponseReadinessBreakdownPostDateMin = 0;
 export const getMatchingStateResponseReadinessBreakdownPostDateMax = 100;
 
+export const getMatchingStateResponseReadinessThresholdMin = 0;
+export const getMatchingStateResponseReadinessThresholdMax = 100;
+
 export const getMatchingStateResponseCityDensityMin = 0;
 
 export const getMatchingStateResponseTotalPoolCountMin = 0;
@@ -3568,6 +3571,8 @@ export const GetMatchingStateResponse = zod.object({
   "postDate": zod.number().min(getMatchingStateResponseReadinessBreakdownPostDateMin).max(getMatchingStateResponseReadinessBreakdownPostDateMax)
 })
 }),
+  "eligible": zod.boolean().describe('True when readiness.score is at or above readinessThreshold. The client uses this to gate the pool opt-in switch.'),
+  "readinessThreshold": zod.number().min(getMatchingStateResponseReadinessThresholdMin).max(getMatchingStateResponseReadinessThresholdMax).describe('Minimum readiness score required to join the matching pool, set by the MATCHING_READINESS_THRESHOLD env var (default 50).'),
   "cityDensity": zod.number().min(getMatchingStateResponseCityDensityMin),
   "totalPoolCount": zod.number().min(getMatchingStateResponseTotalPoolCountMin)
 })

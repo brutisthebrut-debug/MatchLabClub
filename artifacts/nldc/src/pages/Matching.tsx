@@ -215,6 +215,13 @@ export default function Matching() {
   const tier = state.data?.tier ?? null;
   const poolStatus = state.data?.poolStatus ?? "off";
   const poolToggleOn = poolStatus !== "off" && poolStatus !== "paused";
+  const eligible = state.data?.eligible ?? false;
+  const readinessThreshold = state.data?.readinessThreshold ?? 50;
+  // Block turning the pool on until readiness clears the bar. Turning it off is
+  // always allowed, so users who are already in never get stuck. Only lock once
+  // we have confirmed server state, so a load or error never flashes a false
+  // ineligible message.
+  const poolLocked = Boolean(state.data) && !poolToggleOn && !eligible;
 
   const cityLabel = useMemo(() => prefs?.cityHint ?? cityHint, [prefs, cityHint]);
 
@@ -261,8 +268,16 @@ export default function Matching() {
           ? "You're on the matching list."
           : "Removed from the matching list.",
       });
-    } catch {
-      toast({ title: "Couldn't update your status. Try again." });
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response
+        ?.status;
+      if (status === 422) {
+        toast({
+          title: `You need a readiness of ${readinessThreshold} first. You are at ${readinessScore} right now.`,
+        });
+      } else {
+        toast({ title: "Couldn't update your status. Try again." });
+      }
     }
   }
 
@@ -476,11 +491,22 @@ export default function Matching() {
                     <> Your Wingman tier routes you to the concierge queue.</>
                   )}
                 </p>
+                {poolLocked && (
+                  <p
+                    className="text-sm mt-2 text-[hsl(326_100%_50%)] font-medium"
+                    data-testid="text-pool-locked"
+                  >
+                    The pool opens at a readiness of {readinessThreshold}. You
+                    are at {readinessScore} right now. Run a compass read, answer
+                    a wellness prompt, or import your Hinge data to close the
+                    gap.
+                  </p>
+                )}
               </div>
               <Switch
                 checked={poolToggleOn}
                 onCheckedChange={handleTogglePool}
-                disabled={updatePool.isPending}
+                disabled={updatePool.isPending || poolLocked}
                 data-testid="switch-pool-membership"
               />
             </CardContent>

@@ -151,6 +151,7 @@ export * from './matchExternalReadResult';
 export * from './matchingState';
 export * from './matchingStatePoolStatus';
 export * from './matchingStateTier';
+export * from './matchPoolIneligible';
 export * from './matchPoolMembership';
 export * from './matchPoolMembershipInput';
 export * from './matchPoolMembershipInputStatus';
