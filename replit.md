@@ -134,6 +134,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
+- **Navigation shell is conditional in `AppLayout.tsx`** — every page renders `AppLayout` itself. `AppLayout` shows the persistent left sidebar (`components/layout/AppSidebar.tsx`) when `isAuthenticated && !isMarketingRoute(location)`, otherwise it falls back to the marketing top-nav (`Navbar`) + `Footer`. Marketing/public routes (`/`, `/pricing`, `/blog`, `/quizzes`, legal, checkout, etc.) always keep the top-nav, even when signed in. To make a new app page reachable, add it to a section in `AppSidebar.tsx`; to keep a page on the top-nav shell, add its prefix to `MARKETING_PREFIXES` in `AppLayout.tsx`. `/founder` (internal admin) and `/report/:id` (contextual detail) are intentionally excluded from the sidebar.
 - Do not run `pnpm dev` at the workspace root — use workflow restart instead
 - `pnpm --filter @workspace/nldc run typecheck` for frontend type checking (not `build`)
 - CSS: Google Fonts `@import url(...)` must appear at the very top of `index.css` (before Tailwind imports)
