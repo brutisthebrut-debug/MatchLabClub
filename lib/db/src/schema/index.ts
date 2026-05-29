@@ -31,3 +31,6 @@ export * from "./imported_sources";
 export * from "./referrals";
 export * from "./ai_usage_counters";
 export * from "./matching";
+export * from "./dating_wins";
+export * from "./matching_readiness_snapshots";
+export * from "./matching_nudge_state";

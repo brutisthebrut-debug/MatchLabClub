@@ -2208,6 +2208,11 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   postDate: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  wins: number;
 }
 
 export interface MatchReadiness {
@@ -2217,6 +2222,48 @@ export interface MatchReadiness {
      */
   score: number;
   breakdown: MatchReadinessBreakdown;
+}
+
+export interface ReadinessNextAction {
+  /** Stable identifier for the signal this action strengthens. */
+  key: string;
+  /** Short imperative label, e.g. "Run a compass read". */
+  label: string;
+  /** One spoken-English line on why this moves the needle. */
+  detail: string;
+  /**
+     * Approximate readiness points this action would add.
+     * @minimum 0
+     * @maximum 100
+     */
+  points: number;
+  /** In-app route the user should go to. */
+  href: string;
+}
+
+export interface ReadinessHistoryPoint {
+  /** Calendar day (YYYY-MM-DD, UTC) of the snapshot. */
+  day: string;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  score: number;
+}
+
+export interface OutcomeInsight {
+  /** @minimum 0 */
+  totalDates: number;
+  /** @minimum 0 */
+  anotherDate: number;
+  /** @minimum 0 */
+  noMore: number;
+  /** @minimum 0 */
+  ghosted: number;
+  /** @minimum 0 */
+  unsure: number;
+  /** One spoken-English read of the user's recent date outcomes. */
+  headline: string;
 }
 
 export type MatchingStatePoolStatus = typeof MatchingStatePoolStatus[keyof typeof MatchingStatePoolStatus];
@@ -2260,6 +2307,49 @@ export interface MatchingState {
   cityDensity: number;
   /** @minimum 0 */
   totalPoolCount: number;
+  /** Ranked "do this next" steps that would move readiness toward the threshold most. Empty when the user is already eligible. */
+  nextActions: ReadinessNextAction[];
+  /** Daily readiness snapshots, oldest first, for the trend line. Up to ~30 points. */
+  history: ReadinessHistoryPoint[];
+  outcomeInsight: OutcomeInsight;
+}
+
+export type DatingWinCategory = typeof DatingWinCategory[keyof typeof DatingWinCategory];
+
+
+export const DatingWinCategory = {
+  'sent-it': 'sent-it',
+  'great-convo': 'great-convo',
+  'got-a-date': 'got-a-date',
+  'noticed-something': 'noticed-something',
+  'personal-win': 'personal-win',
+} as const;
+
+export interface DatingWin {
+  id: number;
+  category: DatingWinCategory;
+  body: string;
+  createdAt: string;
+}
+
+export type DatingWinInputCategory = typeof DatingWinInputCategory[keyof typeof DatingWinInputCategory];
+
+
+export const DatingWinInputCategory = {
+  'sent-it': 'sent-it',
+  'great-convo': 'great-convo',
+  'got-a-date': 'got-a-date',
+  'noticed-something': 'noticed-something',
+  'personal-win': 'personal-win',
+} as const;
+
+export interface DatingWinInput {
+  category: DatingWinInputCategory;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  body: string;
 }
 
 export interface MatchPoolIneligible {

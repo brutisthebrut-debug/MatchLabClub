@@ -2980,6 +2980,95 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/dating-wins:
+    get:
+      tags: [Matching]
+      operationId: getDatingWins
+      summary: List the signed-in user's logged dating wins
+      description: |
+        Returns the caller's non-deleted dating wins, newest first. Dating
+        wins are small moments of courage and progress; logging them feeds
+        matching readiness as a low-weight signal.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: List of dating wins.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DatingWin'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+    post:
+      tags: [Matching]
+      operationId: createDatingWin
+      summary: Log a new dating win
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatingWinInput'
+      responses:
+        '201':
+          description: The created dating win.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatingWin'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/dating-wins/{id}:
+    delete:
+      tags: [Matching]
+      operationId: deleteDatingWin
+      summary: Delete one of the signed-in user's dating wins
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Deleted.
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Not found or not owned by the caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/matching/proposals:
     get:
       tags: [Matching]
@@ -5833,7 +5922,7 @@ components:
 
     MatchReadinessBreakdown:
       type: object
-      required: [compass, journal, wellness, hingeImport, postDate]
+      required: [compass, journal, wellness, hingeImport, postDate, wins]
       properties:
         compass:
           type: integer
@@ -5855,6 +5944,10 @@ components:
           type: integer
           minimum: 0
           maximum: 100
+        wins:
+          type: integer
+          minimum: 0
+          maximum: 100
 
     MatchReadiness:
       type: object
@@ -5867,9 +5960,66 @@ components:
         breakdown:
           $ref: '#/components/schemas/MatchReadinessBreakdown'
 
+    ReadinessNextAction:
+      type: object
+      required: [key, label, detail, points, href]
+      properties:
+        key:
+          type: string
+          description: Stable identifier for the signal this action strengthens.
+        label:
+          type: string
+          description: Short imperative label, e.g. "Run a compass read".
+        detail:
+          type: string
+          description: One spoken-English line on why this moves the needle.
+        points:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Approximate readiness points this action would add.
+        href:
+          type: string
+          description: In-app route the user should go to.
+
+    ReadinessHistoryPoint:
+      type: object
+      required: [day, score]
+      properties:
+        day:
+          type: string
+          description: Calendar day (YYYY-MM-DD, UTC) of the snapshot.
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+
+    OutcomeInsight:
+      type: object
+      required: [totalDates, anotherDate, noMore, ghosted, unsure, headline]
+      properties:
+        totalDates:
+          type: integer
+          minimum: 0
+        anotherDate:
+          type: integer
+          minimum: 0
+        noMore:
+          type: integer
+          minimum: 0
+        ghosted:
+          type: integer
+          minimum: 0
+        unsure:
+          type: integer
+          minimum: 0
+        headline:
+          type: string
+          description: One spoken-English read of the user's recent date outcomes.
+
     MatchingState:
       type: object
-      required: [preferences, poolStatus, tier, readiness, eligible, readinessThreshold, cityDensity, totalPoolCount]
+      required: [preferences, poolStatus, tier, readiness, eligible, readinessThreshold, cityDensity, totalPoolCount, nextActions, history, outcomeInsight]
       properties:
         preferences:
           oneOf:
@@ -5901,6 +6051,48 @@ components:
         totalPoolCount:
           type: integer
           minimum: 0
+        nextActions:
+          type: array
+          description: >-
+            Ranked "do this next" steps that would move readiness toward the
+            threshold most. Empty when the user is already eligible.
+          items:
+            $ref: '#/components/schemas/ReadinessNextAction'
+        history:
+          type: array
+          description: >-
+            Daily readiness snapshots, oldest first, for the trend line. Up to
+            ~30 points.
+          items:
+            $ref: '#/components/schemas/ReadinessHistoryPoint'
+        outcomeInsight:
+          $ref: '#/components/schemas/OutcomeInsight'
+
+    DatingWin:
+      type: object
+      required: [id, category, body, createdAt]
+      properties:
+        id:
+          type: integer
+        category:
+          type: string
+          enum: [sent-it, great-convo, got-a-date, noticed-something, personal-win]
+        body:
+          type: string
+        createdAt:
+          type: string
+
+    DatingWinInput:
+      type: object
+      required: [category, body]
+      properties:
+        category:
+          type: string
+          enum: [sent-it, great-convo, got-a-date, noticed-something, personal-win]
+        body:
+          type: string
+          minLength: 1
+          maxLength: 2000
 
     MatchPoolIneligible:
       type: object

@@ -12,9 +12,19 @@ import {
   Heart,
   MapPin,
   Sparkles,
+  TrendingUp,
+  Trophy,
   Users,
   X,
 } from "lucide-react";
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -41,6 +51,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { NextStepCard } from "@/components/NextStepCard";
 import {
   useGetMatchingState,
   getGetMatchingStateQueryKey,
@@ -60,7 +71,7 @@ const fadeUp = (delay = 0) => ({
 });
 
 interface BreakdownRow {
-  key: "compass" | "journal" | "wellness" | "hingeImport" | "postDate";
+  key: "compass" | "journal" | "wellness" | "hingeImport" | "postDate" | "wins";
   label: string;
   blurb: string;
   href: string;
@@ -97,7 +108,7 @@ const BREAKDOWN_ROWS: BreakdownRow[] = [
     key: "journal",
     label: "Journal cadence",
     blurb: "Ten entries shows us your patterns, not just one moment.",
-    href: "/me/journal",
+    href: "/mirror/journal",
     cta: "Add a journal entry",
     icon: BookOpen,
   },
@@ -108,6 +119,14 @@ const BREAKDOWN_ROWS: BreakdownRow[] = [
     href: "/mirror/dates",
     cta: "Log a post-date note",
     icon: Calendar,
+  },
+  {
+    key: "wins",
+    label: "Dating wins",
+    blurb: "Small wins you log show momentum and how you keep showing up.",
+    href: "/progress/wins",
+    cta: "Log a win",
+    icon: Trophy,
   },
 ];
 
@@ -209,7 +228,11 @@ export default function Matching() {
     wellness: 0,
     hingeImport: 0,
     postDate: 0,
+    wins: 0,
   };
+  const nextActions = state.data?.nextActions ?? [];
+  const history = state.data?.history ?? [];
+  const outcomeInsight = state.data?.outcomeInsight ?? null;
   const cityDensity = state.data?.cityDensity ?? 0;
   const totalPool = state.data?.totalPoolCount ?? 0;
   const tier = state.data?.tier ?? null;
@@ -453,6 +476,112 @@ export default function Matching() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Next best step */}
+        {(nextActions.length > 0 || eligible) && (
+          <motion.div {...fadeUp(0.07)}>
+            <NextStepCard
+              actions={nextActions}
+              eligible={eligible}
+              className="mb-6"
+            />
+          </motion.div>
+        )}
+
+        {/* Readiness trend */}
+        {history.length >= 2 && (
+          <motion.div {...fadeUp(0.08)}>
+            <Card className="mb-6" data-testid="card-readiness-trend">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-[hsl(248_62%_52%)]" aria-hidden="true" />
+                  Your readiness over time
+                </CardTitle>
+                <CardDescription>
+                  Every signal you add moves this line. Here is the last month.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-44 w-full" data-testid="chart-readiness-trend">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={history}
+                      margin={{ top: 8, right: 8, bottom: 0, left: -24 }}
+                    >
+                      <XAxis
+                        dataKey="day"
+                        tick={{ fontSize: 10 }}
+                        tickFormatter={(d: string) => d.slice(5)}
+                        stroke="hsl(var(--muted-foreground))"
+                      />
+                      <YAxis
+                        domain={[0, 100]}
+                        tick={{ fontSize: 10 }}
+                        stroke="hsl(var(--muted-foreground))"
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          background: "hsl(var(--background))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: 12,
+                          fontSize: 12,
+                        }}
+                        formatter={(v: number) => [`${v}%`, "Readiness"]}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="score"
+                        stroke="hsl(326 100% 50%)"
+                        strokeWidth={2}
+                        dot={{ r: 2 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Outcome insight: patterns from your dates */}
+        {outcomeInsight && outcomeInsight.totalDates > 0 && (
+          <motion.div {...fadeUp(0.09)}>
+            <Card className="mb-6" data-testid="card-outcome-insight">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-[hsl(326_100%_50%)]" aria-hidden="true" />
+                  Patterns from your dates
+                </CardTitle>
+                <CardDescription>{outcomeInsight.headline}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { label: "Another date", value: outcomeInsight.anotherDate },
+                    { label: "No more", value: outcomeInsight.noMore },
+                    { label: "Ghosted", value: outcomeInsight.ghosted },
+                    { label: "Unsure", value: outcomeInsight.unsure },
+                  ].map((cell) => (
+                    <div
+                      key={cell.label}
+                      className="rounded-2xl border border-foreground/8 p-4 text-center"
+                      data-testid={`outcome-${cell.label.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
+                      <div className="text-2xl font-bold">{cell.value}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {cell.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-3">
+                  These outcomes feed every compatibility read, so the scores get
+                  sharper the more dates you reflect on.
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* City density */}
         <motion.div {...fadeUp(0.1)}>

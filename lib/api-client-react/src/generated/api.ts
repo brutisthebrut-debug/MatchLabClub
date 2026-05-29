@@ -69,6 +69,8 @@ import type {
   DatingProfile,
   DatingProfileInput,
   DatingProfileUpdate,
+  DatingWin,
+  DatingWinInput,
   DeleteAccountInput,
   DeleteAccountResult,
   DeleteAuditResult,
@@ -8574,6 +8576,228 @@ export const useCreateMatchingExternalRead = <TError = ErrorType<AuthErrorEnvelo
         TContext
       > => {
       return useMutation(getCreateMatchingExternalReadMutationOptions(options));
+    }
+
+export const getGetDatingWinsUrl = () => {
+
+
+
+
+  return `/api/me/dating-wins`
+}
+
+/**
+ * Returns the caller's non-deleted dating wins, newest first. Dating
+wins are small moments of courage and progress; logging them feeds
+matching readiness as a low-weight signal.
+
+ * @summary List the signed-in user's logged dating wins
+ */
+export const getDatingWins = async ( options?: RequestInit): Promise<DatingWin[]> => {
+
+  return customFetch<DatingWin[]>(getGetDatingWinsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDatingWinsQueryKey = () => {
+    return [
+    `/api/me/dating-wins`
+    ] as const;
+    }
+
+
+export const getGetDatingWinsQueryOptions = <TData = Awaited<ReturnType<typeof getDatingWins>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDatingWins>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDatingWinsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDatingWins>>> = ({ signal }) => getDatingWins({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDatingWins>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDatingWinsQueryResult = NonNullable<Awaited<ReturnType<typeof getDatingWins>>>
+export type GetDatingWinsQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary List the signed-in user's logged dating wins
+ */
+
+export function useGetDatingWins<TData = Awaited<ReturnType<typeof getDatingWins>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDatingWins>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDatingWinsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateDatingWinUrl = () => {
+
+
+
+
+  return `/api/me/dating-wins`
+}
+
+/**
+ * @summary Log a new dating win
+ */
+export const createDatingWin = async (datingWinInput: DatingWinInput, options?: RequestInit): Promise<DatingWin> => {
+
+  return customFetch<DatingWin>(getCreateDatingWinUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      datingWinInput,)
+  }
+);}
+
+
+
+
+export const getCreateDatingWinMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDatingWin>>, TError,{data: BodyType<DatingWinInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDatingWin>>, TError,{data: BodyType<DatingWinInput>}, TContext> => {
+
+const mutationKey = ['createDatingWin'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDatingWin>>, {data: BodyType<DatingWinInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createDatingWin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDatingWinMutationResult = NonNullable<Awaited<ReturnType<typeof createDatingWin>>>
+    export type CreateDatingWinMutationBody = BodyType<DatingWinInput>
+    export type CreateDatingWinMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Log a new dating win
+ */
+export const useCreateDatingWin = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDatingWin>>, TError,{data: BodyType<DatingWinInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createDatingWin>>,
+        TError,
+        {data: BodyType<DatingWinInput>},
+        TContext
+      > => {
+      return useMutation(getCreateDatingWinMutationOptions(options));
+    }
+
+export const getDeleteDatingWinUrl = (id: number,) => {
+
+
+
+
+  return `/api/me/dating-wins/${id}`
+}
+
+/**
+ * @summary Delete one of the signed-in user's dating wins
+ */
+export const deleteDatingWin = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteDatingWinUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteDatingWinMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDatingWin>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteDatingWin>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteDatingWin'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteDatingWin>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteDatingWin(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteDatingWinMutationResult = NonNullable<Awaited<ReturnType<typeof deleteDatingWin>>>
+
+    export type DeleteDatingWinMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Delete one of the signed-in user's dating wins
+ */
+export const useDeleteDatingWin = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDatingWin>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteDatingWin>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteDatingWinMutationOptions(options));
     }
 
 export const getGetMatchingProposalsUrl = () => {

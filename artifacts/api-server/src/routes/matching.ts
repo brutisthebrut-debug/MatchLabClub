@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import {
   db,
   usersTable,
@@ -11,6 +11,8 @@ import {
   postDateNotesTable,
   wellnessAnswersTable,
   importedSourcesTable,
+  datingWinsTable,
+  matchingReadinessSnapshotsTable,
 } from "@workspace/db";
 import {
   UpdateMatchingPreferencesBody,
@@ -18,6 +20,19 @@ import {
   CreateMatchingExternalReadBody,
 } from "@workspace/api-zod";
 import { generate, parseStructured } from "../lib/aiService";
+import {
+  computeBreakdown,
+  computeNextActions,
+  computeOutcomeInsight,
+  scoreFromBreakdown,
+  type OutcomeInsight,
+  type ReadinessBreakdown,
+  type ReadinessNextAction,
+} from "../lib/readiness";
+
+// Minimum substantive journal length (chars) to count toward readiness. A
+// lazy one-liner should not move the needle; a real reflection should.
+const SUBSTANTIVE_JOURNAL_CHARS = 120;
 
 async function loadUserTier(userId: string): Promise<string | null> {
   const rows = await db
@@ -95,14 +110,6 @@ async function loadMembership(userId: string): Promise<PoolRow | null> {
   return rows[0] ?? null;
 }
 
-interface ReadinessBreakdown {
-  compass: number;
-  journal: number;
-  wellness: number;
-  hingeImport: number;
-  postDate: number;
-}
-
 interface Readiness {
   score: number;
   breakdown: ReadinessBreakdown;
@@ -115,10 +122,18 @@ async function computeReadiness(userId: string): Promise<Readiness> {
     .where(eq(compatibilityReadsTable.userId, userId));
   const compassCount = Number(compassRows[0]?.count ?? 0);
 
+  // Only substantive journal entries count: a real reflection moves readiness,
+  // a one-line note does not.
   const journalRows = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(journalEntriesTable)
-    .where(eq(journalEntriesTable.userId, userId));
+    .where(
+      and(
+        eq(journalEntriesTable.userId, userId),
+        isNull(journalEntriesTable.deletedAt),
+        sql`char_length(trim(${journalEntriesTable.body})) >= ${SUBSTANTIVE_JOURNAL_CHARS}`,
+      ),
+    );
   const journalCount = Number(journalRows[0]?.count ?? 0);
 
   const wellnessRows = await db
@@ -140,33 +155,122 @@ async function computeReadiness(userId: string): Promise<Readiness> {
     );
   const hingeCount = Number(hingeRows[0]?.count ?? 0);
 
+  // Only post-date notes the user actually reflected on count: an outcome set
+  // or a filled reflection field. An empty stub does not.
   const postDateRows = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(postDateNotesTable)
-    .where(eq(postDateNotesTable.userId, userId));
-  const postDateCount = Number(postDateRows[0]?.count ?? 0);
+    .where(
+      and(
+        eq(postDateNotesTable.userId, userId),
+        isNull(postDateNotesTable.deletedAt),
+        sql`(
+          ${postDateNotesTable.outcome} is not null
+          or char_length(trim(coalesce(${postDateNotesTable.whatWentWell}, ''))) > 0
+          or char_length(trim(coalesce(${postDateNotesTable.whatDidnt}, ''))) > 0
+        )`,
+      ),
+    );
+  const postDateReflected = Number(postDateRows[0]?.count ?? 0);
 
-  const pct = (numerator: number, denominator: number) =>
-    Math.min(100, Math.round((numerator / denominator) * 100));
+  const winsRows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(datingWinsTable)
+    .where(
+      and(
+        eq(datingWinsTable.userId, userId),
+        isNull(datingWinsTable.deletedAt),
+      ),
+    );
+  const winsCount = Number(winsRows[0]?.count ?? 0);
 
-  const breakdown: ReadinessBreakdown = {
-    compass: pct(compassCount, 5),
-    journal: pct(journalCount, 10),
-    wellness: pct(wellnessDistinct, 18),
-    hingeImport: hingeCount > 0 ? 100 : 0,
-    postDate: pct(postDateCount, 3),
-  };
+  const breakdown = computeBreakdown({
+    compass: compassCount,
+    journal: journalCount,
+    wellnessDistinct,
+    hingeImport: hingeCount,
+    postDateReflected,
+    wins: winsCount,
+  });
 
-  // Weights: 25, 15, 25, 20, 15 (sum 100)
-  const score = Math.round(
-    breakdown.compass * 0.25 +
-      breakdown.journal * 0.15 +
-      breakdown.wellness * 0.25 +
-      breakdown.hingeImport * 0.2 +
-      breakdown.postDate * 0.15,
-  );
+  return { score: scoreFromBreakdown(breakdown), breakdown };
+}
 
-  return { score, breakdown };
+async function computeOutcomeInsightForUser(
+  userId: string,
+): Promise<OutcomeInsight> {
+  const rows = await db
+    .select({
+      outcome: postDateNotesTable.outcome,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(postDateNotesTable)
+    .where(
+      and(
+        eq(postDateNotesTable.userId, userId),
+        isNull(postDateNotesTable.deletedAt),
+        sql`${postDateNotesTable.outcome} is not null`,
+      ),
+    )
+    .groupBy(postDateNotesTable.outcome);
+
+  const counts = { anotherDate: 0, noMore: 0, ghosted: 0, unsure: 0 };
+  for (const row of rows) {
+    const n = Number(row.count ?? 0);
+    if (row.outcome === "another_date") counts.anotherDate = n;
+    else if (row.outcome === "no_more") counts.noMore = n;
+    else if (row.outcome === "ghosted") counts.ghosted = n;
+    else if (row.outcome === "unsure") counts.unsure = n;
+  }
+  return computeOutcomeInsight(counts);
+}
+
+interface ReadinessHistoryPoint {
+  day: string;
+  score: number;
+}
+
+async function loadReadinessHistory(
+  userId: string,
+): Promise<ReadinessHistoryPoint[]> {
+  const rows = await db
+    .select({
+      day: matchingReadinessSnapshotsTable.day,
+      score: matchingReadinessSnapshotsTable.score,
+    })
+    .from(matchingReadinessSnapshotsTable)
+    .where(eq(matchingReadinessSnapshotsTable.userId, userId))
+    .orderBy(asc(matchingReadinessSnapshotsTable.day))
+    .limit(30);
+  return rows.map((r) => ({ day: r.day, score: Number(r.score) }));
+}
+
+function todayUtc(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function writeReadinessSnapshot(
+  userId: string,
+  readiness: Readiness,
+): Promise<void> {
+  await db
+    .insert(matchingReadinessSnapshotsTable)
+    .values({
+      userId,
+      day: todayUtc(),
+      score: readiness.score,
+      breakdown: readiness.breakdown,
+    })
+    .onConflictDoUpdate({
+      target: [
+        matchingReadinessSnapshotsTable.userId,
+        matchingReadinessSnapshotsTable.day,
+      ],
+      set: {
+        score: readiness.score,
+        breakdown: readiness.breakdown,
+      },
+    });
 }
 
 // Minimum readiness score required to activate pool membership. Tunable via
@@ -195,13 +299,15 @@ router.get("/me/matching/state", async (req, res): Promise<void> => {
     return;
   }
   const userId = req.user.id;
-  const [prefs, membership, readiness, total, tier] = await Promise.all([
-    loadPreferences(userId),
-    loadMembership(userId),
-    computeReadiness(userId),
-    totalPoolCount(),
-    loadUserTier(userId),
-  ]);
+  const [prefs, membership, readiness, total, tier, outcomeInsight] =
+    await Promise.all([
+      loadPreferences(userId),
+      loadMembership(userId),
+      computeReadiness(userId),
+      totalPoolCount(),
+      loadUserTier(userId),
+      computeOutcomeInsightForUser(userId),
+    ]);
   const cityHint = prefs?.cityHint ?? null;
   let density = total;
   if (cityHint && cityHint.trim().length > 0) {
@@ -222,15 +328,32 @@ router.get("/me/matching/state", async (req, res): Promise<void> => {
   }
 
   const threshold = readinessThreshold();
+  const eligible = readiness.score >= threshold;
+
+  // Persist today's score so the trend line has fresh data, then read the
+  // (now-current) history back. A failed snapshot must not break the state read.
+  try {
+    await writeReadinessSnapshot(userId, readiness);
+  } catch (err) {
+    req.log.warn({ err }, "Failed to write readiness snapshot");
+  }
+  const [history, nextActions] = await Promise.all([
+    loadReadinessHistory(userId),
+    Promise.resolve(computeNextActions(readiness.breakdown, eligible)),
+  ]);
+
   res.json({
     preferences: prefs ? serializePreferences(prefs) : null,
     poolStatus: membership?.status ?? "off",
     tier,
     readiness,
-    eligible: readiness.score >= threshold,
+    eligible,
     readinessThreshold: threshold,
     cityDensity: density,
     totalPoolCount: total,
+    nextActions,
+    history,
+    outcomeInsight,
   });
 });
 
@@ -444,11 +567,22 @@ router.post("/me/matching/external-read", async (req, res): Promise<void> => {
   const userId = req.user.id;
   const deterministic = deterministicExternalRead(parsed.data.profileText);
 
-  const system = [
+  // Forward loop: feed the user's own recent date outcomes into the read so the
+  // coach leans toward what has actually been working for them.
+  const outcomeInsight = await computeOutcomeInsightForUser(userId);
+
+  const systemLines = [
     "You are Echo, a candid dating coach reading an external dating-app profile",
     "(Hinge/Tinder/Bumble) the user has pasted in. Score how worth-engaging this",
     "profile looks for them, name specific signals, name specific frictions, and",
     "give a 2-3 sentence read in plain spoken English.",
+  ];
+  if (outcomeInsight.totalDates > 0) {
+    systemLines.push(
+      `Context on this user's recent dates: ${outcomeInsight.anotherDate} led to another date, ${outcomeInsight.noMore} were a no, ${outcomeInsight.ghosted} ghosted, ${outcomeInsight.unsure} unsure. Use this to judge fit, but read the pasted profile on its own merits.`,
+    );
+  }
+  systemLines.push(
     "Voice rules: no em dashes. No filler like 'unlock', 'elevate', 'dive in',",
     "'game-changer', 'in today's world', 'seamless', 'buckle up'. Vary sentence",
     "length. Be specific, not generic.",
@@ -457,7 +591,8 @@ router.post("/me/matching/external-read", async (req, res): Promise<void> => {
     '  "highlights": ["3-6 specific things in the profile worth leaning on"],',
     '  "frictions": ["1-4 specific things to watch out for, or empty"],',
     '  "summary": "2-3 sentence Echo-voice read" }',
-  ].join("\n");
+  );
+  const system = systemLines.join("\n");
 
   const aiResult = await generate(
     {

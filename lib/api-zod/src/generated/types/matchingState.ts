@@ -9,6 +9,9 @@ import type { MatchingStatePoolStatus } from './matchingStatePoolStatus';
 import type { MatchingStateTier } from './matchingStateTier';
 import type { MatchPreferences } from './matchPreferences';
 import type { MatchReadiness } from './matchReadiness';
+import type { OutcomeInsight } from './outcomeInsight';
+import type { ReadinessHistoryPoint } from './readinessHistoryPoint';
+import type { ReadinessNextAction } from './readinessNextAction';
 
 export interface MatchingState {
   preferences: MatchPreferences | null;
@@ -28,4 +31,9 @@ export interface MatchingState {
   cityDensity: number;
   /** @minimum 0 */
   totalPoolCount: number;
+  /** Ranked "do this next" steps that would move readiness toward the threshold most. Empty when the user is already eligible. */
+  nextActions: ReadinessNextAction[];
+  /** Daily readiness snapshots, oldest first, for the trend line. Up to ~30 points. */
+  history: ReadinessHistoryPoint[];
+  outcomeInsight: OutcomeInsight;
 }

@@ -32,4 +32,9 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   postDate: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  wins: number;
 }

@@ -24,6 +24,7 @@ import meImportsRouter from "./meImports";
 import compassRouter from "./compass";
 import importsRouter from "./imports";
 import matchingRouter from "./matching";
+import datingWinsRouter from "./datingWins";
 
 const router: IRouter = Router();
 
@@ -52,5 +53,6 @@ router.use(meImportsRouter);
 router.use(compassRouter);
 router.use(importsRouter);
 router.use(matchingRouter);
+router.use(datingWinsRouter);
 
 export default router;

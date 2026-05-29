@@ -3538,12 +3538,31 @@ export const getMatchingStateResponseReadinessBreakdownHingeImportMax = 100;
 export const getMatchingStateResponseReadinessBreakdownPostDateMin = 0;
 export const getMatchingStateResponseReadinessBreakdownPostDateMax = 100;
 
+export const getMatchingStateResponseReadinessBreakdownWinsMin = 0;
+export const getMatchingStateResponseReadinessBreakdownWinsMax = 100;
+
 export const getMatchingStateResponseReadinessThresholdMin = 0;
 export const getMatchingStateResponseReadinessThresholdMax = 100;
 
 export const getMatchingStateResponseCityDensityMin = 0;
 
 export const getMatchingStateResponseTotalPoolCountMin = 0;
+
+export const getMatchingStateResponseNextActionsItemPointsMin = 0;
+export const getMatchingStateResponseNextActionsItemPointsMax = 100;
+
+export const getMatchingStateResponseHistoryItemScoreMin = 0;
+export const getMatchingStateResponseHistoryItemScoreMax = 100;
+
+export const getMatchingStateResponseOutcomeInsightTotalDatesMin = 0;
+
+export const getMatchingStateResponseOutcomeInsightAnotherDateMin = 0;
+
+export const getMatchingStateResponseOutcomeInsightNoMoreMin = 0;
+
+export const getMatchingStateResponseOutcomeInsightGhostedMin = 0;
+
+export const getMatchingStateResponseOutcomeInsightUnsureMin = 0;
 
 
 
@@ -3568,13 +3587,33 @@ export const GetMatchingStateResponse = zod.object({
   "journal": zod.number().min(getMatchingStateResponseReadinessBreakdownJournalMin).max(getMatchingStateResponseReadinessBreakdownJournalMax),
   "wellness": zod.number().min(getMatchingStateResponseReadinessBreakdownWellnessMin).max(getMatchingStateResponseReadinessBreakdownWellnessMax),
   "hingeImport": zod.number().min(getMatchingStateResponseReadinessBreakdownHingeImportMin).max(getMatchingStateResponseReadinessBreakdownHingeImportMax),
-  "postDate": zod.number().min(getMatchingStateResponseReadinessBreakdownPostDateMin).max(getMatchingStateResponseReadinessBreakdownPostDateMax)
+  "postDate": zod.number().min(getMatchingStateResponseReadinessBreakdownPostDateMin).max(getMatchingStateResponseReadinessBreakdownPostDateMax),
+  "wins": zod.number().min(getMatchingStateResponseReadinessBreakdownWinsMin).max(getMatchingStateResponseReadinessBreakdownWinsMax)
 })
 }),
   "eligible": zod.boolean().describe('True when readiness.score is at or above readinessThreshold. The client uses this to gate the pool opt-in switch.'),
   "readinessThreshold": zod.number().min(getMatchingStateResponseReadinessThresholdMin).max(getMatchingStateResponseReadinessThresholdMax).describe('Minimum readiness score required to join the matching pool, set by the MATCHING_READINESS_THRESHOLD env var (default 50).'),
   "cityDensity": zod.number().min(getMatchingStateResponseCityDensityMin),
-  "totalPoolCount": zod.number().min(getMatchingStateResponseTotalPoolCountMin)
+  "totalPoolCount": zod.number().min(getMatchingStateResponseTotalPoolCountMin),
+  "nextActions": zod.array(zod.object({
+  "key": zod.string().describe('Stable identifier for the signal this action strengthens.'),
+  "label": zod.string().describe('Short imperative label, e.g. \"Run a compass read\".'),
+  "detail": zod.string().describe('One spoken-English line on why this moves the needle.'),
+  "points": zod.number().min(getMatchingStateResponseNextActionsItemPointsMin).max(getMatchingStateResponseNextActionsItemPointsMax).describe('Approximate readiness points this action would add.'),
+  "href": zod.string().describe('In-app route the user should go to.')
+})).describe('Ranked \"do this next\" steps that would move readiness toward the threshold most. Empty when the user is already eligible.'),
+  "history": zod.array(zod.object({
+  "day": zod.string().describe('Calendar day (YYYY-MM-DD, UTC) of the snapshot.'),
+  "score": zod.number().min(getMatchingStateResponseHistoryItemScoreMin).max(getMatchingStateResponseHistoryItemScoreMax)
+})).describe('Daily readiness snapshots, oldest first, for the trend line. Up to ~30 points.'),
+  "outcomeInsight": zod.object({
+  "totalDates": zod.number().min(getMatchingStateResponseOutcomeInsightTotalDatesMin),
+  "anotherDate": zod.number().min(getMatchingStateResponseOutcomeInsightAnotherDateMin),
+  "noMore": zod.number().min(getMatchingStateResponseOutcomeInsightNoMoreMin),
+  "ghosted": zod.number().min(getMatchingStateResponseOutcomeInsightGhostedMin),
+  "unsure": zod.number().min(getMatchingStateResponseOutcomeInsightUnsureMin),
+  "headline": zod.string().describe('One spoken-English read of the user\'s recent date outcomes.')
+})
 })
 
 
@@ -3699,6 +3738,55 @@ export const CreateMatchingExternalReadResponse = zod.object({
   "highlights": zod.array(zod.string()),
   "frictions": zod.array(zod.string()),
   "summary": zod.string().nullable()
+})
+
+
+/**
+ * Returns the caller's non-deleted dating wins, newest first. Dating
+wins are small moments of courage and progress; logging them feeds
+matching readiness as a low-weight signal.
+
+ * @summary List the signed-in user's logged dating wins
+ */
+export const GetDatingWinsHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetDatingWinsResponseItem = zod.object({
+  "id": zod.number(),
+  "category": zod.enum(['sent-it', 'great-convo', 'got-a-date', 'noticed-something', 'personal-win']),
+  "body": zod.string(),
+  "createdAt": zod.string()
+})
+export const GetDatingWinsResponse = zod.array(GetDatingWinsResponseItem)
+
+
+/**
+ * @summary Log a new dating win
+ */
+export const CreateDatingWinHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const createDatingWinBodyBodyMax = 2000;
+
+
+
+export const CreateDatingWinBody = zod.object({
+  "category": zod.enum(['sent-it', 'great-convo', 'got-a-date', 'noticed-something', 'personal-win']),
+  "body": zod.string().min(1).max(createDatingWinBodyBodyMax)
+})
+
+
+/**
+ * @summary Delete one of the signed-in user's dating wins
+ */
+export const DeleteDatingWinParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteDatingWinHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
 })
 
 

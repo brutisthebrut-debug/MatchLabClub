@@ -28,6 +28,9 @@ import {
   matchPreferencesTable,
   matchPoolMembershipTable,
   matchProposalsTable,
+  datingWinsTable,
+  matchingReadinessSnapshotsTable,
+  matchingNudgeStateTable,
 } from "@workspace/db";
 import {
   ExportMyDataResponse,
@@ -615,6 +618,13 @@ router.delete("/account", async (req, res): Promise<void> => {
   await Promise.all([
     db.delete(journalEntriesTable).where(eq(journalEntriesTable.userId, userId)),
     db.delete(postDateNotesTable).where(eq(postDateNotesTable.userId, userId)),
+    db.delete(datingWinsTable).where(eq(datingWinsTable.userId, userId)),
+    db
+      .delete(matchingReadinessSnapshotsTable)
+      .where(eq(matchingReadinessSnapshotsTable.userId, userId)),
+    db
+      .delete(matchingNudgeStateTable)
+      .where(eq(matchingNudgeStateTable.userId, userId)),
   ]);
 
   // Pivot-era surfaces: wellness self-rating answers + system-derived tags,

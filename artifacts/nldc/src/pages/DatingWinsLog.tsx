@@ -1,18 +1,27 @@
 import { withAlpha } from "@/lib/brandColor";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Plus, Trash2, Calendar, MessageSquare, Sparkles, Eye, Star, Heart, Shield } from "lucide-react";
+import { Trophy, Plus, Trash2, Calendar, MessageSquare, Sparkles, Eye, Star, Shield } from "lucide-react";
 import { WelcomePanel } from "@/components/WelcomePanel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  useGetDatingWins,
+  useCreateDatingWin,
+  useDeleteDatingWin,
+  getGetDatingWinsQueryKey,
+  getGetMatchingStateQueryKey,
+  type DatingWin,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 
-type WinCategory = "got-a-date" | "great-convo" | "sent-it" | "noticed-something" | "personal-win";
+type WinCategory = DatingWin["category"];
 
-interface Win {
-  id: string;
+interface DisplayWin {
+  id: number | string;
   category: WinCategory;
   text: string;
   date: string;
@@ -26,20 +35,7 @@ const CATEGORIES: { id: WinCategory; label: string; icon: React.ElementType; col
   { id: "personal-win", label: "Personal Win", icon: Star, color: "hsl(var(--brand-rose))", prompt: "What felt different about how you showed up today?" },
 ];
 
-const STORAGE_KEY = "nldc_dating_wins";
-
-function loadWins(): Win[] {
-  try {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  return raw ? (JSON.parse(raw) as Win[]) : [];
-  } catch { return []; }
-}
-
-function saveWins(wins: Win[]) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(wins)); } catch {}
-}
-
-const DEMO_WINS: Win[] = [
+const DEMO_WINS: DisplayWin[] = [
   { id: "demo-1", category: "sent-it", text: "Sent a follow-up I'd been overthinking for 3 days. Kept it to one sentence. She replied in 20 minutes.", date: new Date(Date.now() - 2 * 864e5).toISOString() },
   { id: "demo-2", category: "noticed-something", text: "Realised I always wait for the other person to suggest meeting. Decided to just ask this time.", date: new Date(Date.now() - 5 * 864e5).toISOString() },
   { id: "demo-3", category: "great-convo", text: "Conversation went 45 minutes and felt like 10. We covered the same weird topic from completely different angles.", date: new Date(Date.now() - 8 * 864e5).toISOString() },
@@ -54,42 +50,53 @@ const fadeUp = (delay = 0) => ({
 export default function DatingWinsLog() {
   useMeta("Dating Wins Log", "Log small wins, moments of courage, and patterns you notice, they compound more than you think.");
 
-  const [wins, setWins] = useState<Win[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [category, setCategory] = useState<WinCategory>("sent-it");
   const [text, setText] = useState("");
-  const [isDemo, setIsDemo] = useState(false);
   const { isAuthenticated } = useAuth();
-  const isBrandNewUser = isAuthenticated && isDemo;
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-  const stored = loadWins();
-  if (stored.length > 0) { setWins(stored); } else { setIsDemo(true); }
-  }, []);
+  const { data: winsData } = useGetDatingWins({
+    query: { queryKey: getGetDatingWinsQueryKey(), enabled: isAuthenticated },
+  });
+  const createWin = useCreateDatingWin();
+  const removeWin = useDeleteDatingWin();
 
+  const wins: DisplayWin[] = (winsData ?? []).map((w) => ({
+    id: w.id,
+    category: w.category,
+    text: w.body,
+    date: w.createdAt,
+  }));
+
+  // Signed-out visitors and brand-new accounts see sample wins so the page is
+  // never empty. The real log starts the moment a signed-in user adds one.
+  const isDemo = !isAuthenticated || wins.length === 0;
+  const isBrandNewUser = isAuthenticated && wins.length === 0;
   const displayed = isDemo ? DEMO_WINS : wins;
 
-  const addWin = () => {
-  if (!text.trim()) return;
-  const newWin: Win = {
-  id: typeof crypto !== "undefined" ? crypto.randomUUID() : String(Date.now()),
-  category,
-  text: text.trim(),
-  date: new Date().toISOString(),
-  };
-  const updated = [newWin,...wins];
-  setWins(updated);
-  saveWins(updated);
-  setIsDemo(false);
-  setText("");
-  setShowForm(false);
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: getGetDatingWinsQueryKey() });
+    void queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() });
   };
 
-  const deleteWin = (id: string) => {
-  const updated = wins.filter(w => w.id !== id);
-  setWins(updated);
-  saveWins(updated);
-  if (updated.length === 0) setIsDemo(true);
+  const addWin = () => {
+    if (!text.trim() || !isAuthenticated) return;
+    createWin.mutate(
+      { data: { category, body: text.trim() } },
+      {
+        onSuccess: () => {
+          setText("");
+          setShowForm(false);
+          invalidate();
+        },
+      },
+    );
+  };
+
+  const deleteWin = (id: number | string) => {
+    if (typeof id !== "number") return;
+    removeWin.mutate({ id }, { onSuccess: invalidate });
   };
 
   const selectedCat = CATEGORIES.find(c => c.id === category)!;
@@ -111,7 +118,7 @@ export default function DatingWinsLog() {
   <h1 className="text-3xl font-bold text-foreground mb-2">Dating Wins Log</h1>
   <p className="text-muted-foreground text-sm leading-relaxed max-w-lg">
   Small wins compound. Log moments of courage, good conversations, things you noticed, anything that felt like forward movement.
-  Stored locally in your browser. Private to you.
+  Saved to your account and counted as a real signal toward matching.
   </p>
   </motion.div>
 
@@ -177,11 +184,11 @@ export default function DatingWinsLog() {
   <div className="flex gap-2">
   <Button
   onClick={addWin}
-  disabled={!text.trim()}
+  disabled={!text.trim() || !isAuthenticated || createWin.isPending}
   size="sm"
   className="rounded-lg bg-[hsl(43_65%_60%)] text-foreground hover:opacity-90 border-0"
   >
-  Save win
+  {createWin.isPending ? "Saving..." : "Save win"}
   </Button>
   <Button
   onClick={() => { setShowForm(false); setText(""); }}
@@ -191,6 +198,9 @@ export default function DatingWinsLog() {
   Cancel
   </Button>
   </div>
+  {!isAuthenticated && (
+  <p className="text-xs text-muted-foreground/50">Sign in to save wins to your account and count them toward matching.</p>
+  )}
   </motion.div>
   )}
   </AnimatePresence>
@@ -262,8 +272,8 @@ export default function DatingWinsLog() {
   <motion.div {...fadeUp(0.45)} className="mt-8 glass border border-white/5 rounded-2xl p-4 flex items-start gap-3">
   <Shield className="w-4 h-4 text-muted-foreground/30 flex-shrink-0 mt-0.5" />
   <p className="text-xs text-muted-foreground/45 leading-relaxed">
-  <strong className="text-muted-foreground/60">Stored locally in your browser.</strong>{" "}
-  Nothing here is synced, shared, or sent anywhere. It's a private note to yourself, you control it and can clear it any time.
+  <strong className="text-muted-foreground/60">Private to your account.</strong>{" "}
+  Your wins count toward matching readiness and are never shared with anyone. You can delete any entry, or wipe everything from your account, at any time.
   </p>
   </motion.div>
 

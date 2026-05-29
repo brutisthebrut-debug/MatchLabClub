@@ -28,6 +28,7 @@ import {
   MessageSquare,
   Plug,
   Sparkles,
+  Trophy,
   Upload,
   Wallet,
 } from "lucide-react";
@@ -48,6 +49,12 @@ import {
   getGetMatchingStateQueryKey,
   useListInsights,
   getListInsightsQueryKey,
+  useListCompassReads,
+  getListCompassReadsQueryKey,
+  useListImports,
+  getListImportsQueryKey,
+  useGetDatingWins,
+  getGetDatingWinsQueryKey,
 } from "@workspace/api-client-react";
 import { ShareButton } from "@/components/echo/ShareButton";
 
@@ -385,6 +392,15 @@ export default function SelfHub() {
   const insights = useListInsights({
   query: { queryKey: getListInsightsQueryKey(), enabled: isAuthenticated },
   });
+  const compassReads = useListCompassReads({
+  query: { queryKey: getListCompassReadsQueryKey(), enabled: isAuthenticated },
+  });
+  const imports = useListImports({
+  query: { queryKey: getListImportsQueryKey(), enabled: isAuthenticated },
+  });
+  const datingWins = useGetDatingWins({
+  query: { queryKey: getGetDatingWinsQueryKey(), enabled: isAuthenticated },
+  });
 
   // Derive completeness: count distinct dimensions answered, out of 18.
   const wellnessRows = (wellness.data?.answers ?? []) as Array<{ dimension?: string }>;
@@ -507,8 +523,9 @@ export default function SelfHub() {
   }
 
   const summaryData = summary.data ?? { audits: 0, profiles: 0, messages: 0, insights: 0, journalEntries: 0, postDateNotes: 0 };
-  const compassReadsCount = 0; // Placeholder until T005/T006 ship the /compass/reads endpoint
-  const importsCount = 0; // Placeholder until T007/T008 ship /imports
+  const compassReadsCount = compassReads.data?.reads.length ?? 0;
+  const importsCount = imports.data?.imports.length ?? 0;
+  const winsCount = datingWins.data?.length ?? 0;
 
   const insightRows = (insights.data ?? []) as RecentInsight[];
 
@@ -521,6 +538,7 @@ export default function SelfHub() {
   { key: "postdate", label: "Post-date notes", icon: Heart, active: summaryData.postDateNotes > 0, href: "/mirror/dates", state: "live" },
   { key: "compass", label: "Compass reads", icon: Compass, active: compassReadsCount > 0, href: "/compatibility-compass", state: "live" },
   { key: "imports", label: "Hinge import", icon: Upload, active: importsCount > 0, href: "/imports", state: "live" },
+  { key: "wins", label: "Dating wins", icon: Trophy, active: winsCount > 0, href: "/progress/wins", state: "live" },
   { key: "forwarding", label: "Forwarding inbox", icon: Mail, active: false, state: "building" },
   { key: "plaid", label: "Spending signals", icon: Wallet, active: false, state: "building" },
   { key: "calendar", label: "Calendar paste", icon: Calendar, active: false, href: "/imports", state: "live" },
@@ -617,17 +635,28 @@ export default function SelfHub() {
   icon={Compass}
   label="Compass reads"
   value={compassReadsCount}
-  sub="Coming soon"
+  sub={compassReadsCount === 0 ? "Run your first read" : "Compatibility reads saved"}
   href="/compatibility-compass"
-  cta="Try the compass"
+  cta={compassReadsCount === 0 ? "Try the compass" : "Open the compass"}
   testId="stat-compass"
   />
   <StatCard
   icon={Upload}
   label="Imported sources"
   value={importsCount}
-  sub="Hinge / Tinder / Bumble, coming soon"
+  sub={importsCount === 0 ? "Hinge / Tinder / Bumble" : "Exports on file"}
+  href="/imports"
+  cta={importsCount === 0 ? "Import your data" : "Manage imports"}
   testId="stat-imports"
+  />
+  <StatCard
+  icon={Trophy}
+  label="Dating wins"
+  value={winsCount}
+  sub={winsCount === 0 ? "Log your first win" : "Moments worth keeping"}
+  href="/progress/wins"
+  cta={winsCount === 0 ? "Log a win" : "Open wins log"}
+  testId="stat-wins"
   />
   <StatCard
   icon={BookOpen}
