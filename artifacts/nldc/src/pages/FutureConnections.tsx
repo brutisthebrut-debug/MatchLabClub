@@ -210,7 +210,7 @@ export default function FutureConnections() {
   <div>
   <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-1">Your Signal Strength</p>
   <h3 className="font-serif text-lg font-semibold">
-  {ready ? "Profile ready for matching" : "Building your matching signal"}
+  {ready ? "Your matching signal is looking strong" : "Building your matching signal"}
   </h3>
   <p className="text-xs text-muted-foreground mt-1">
   {approvedDims.length} of {dims.length} dimensions contributing signal

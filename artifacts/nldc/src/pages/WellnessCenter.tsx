@@ -331,34 +331,37 @@ function MatchingReadinessPanel({ profile }: { profile: WellnessProfile | undefi
   <motion.div {...fadeUp(0.2)} className="glass-strong rounded-2xl border border-[hsl(248_62%_52%/0.18)] p-5 mb-6">
   <div className="flex items-start justify-between gap-4 mb-4">
   <div>
-  <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-1">Matching Readiness</p>
+  <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-1">Match Readiness Signal</p>
   <h3 className="font-serif text-lg font-semibold text-foreground">
-  {mr.readyForMatching ? "Profile ready for matching" : "Keep building your profile"}
+  {mr.readyForMatching ? "Your wellness map is looking strong" : "Keep building your wellness map"}
   </h3>
   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
   {mr.readyForMatching
-  ? "You've answered enough to begin compatibility matching when it opens."
-  : `Complete ${5 - (mr.strongDimensions?.length ?? 0)} more dimension areas to reach matching readiness.`}
+  ? "This is one of five signals we use for matching, and yours is well covered."
+  : `Answer ${5 - (mr.strongDimensions?.length ?? 0)} more dimension areas to deepen this signal.`}
   </p>
   </div>
   <div className="flex flex-col items-center flex-shrink-0">
   <span className="text-3xl font-bold tabular-nums" style={{ color }}>{pct}%</span>
-  <span className="text-[9px] text-muted-foreground/50 uppercase tracking-widest mt-0.5">complete</span>
+  <span className="text-[9px] text-muted-foreground/50 uppercase tracking-widest mt-0.5">covered</span>
   </div>
   </div>
   <Progress value={pct} className="h-2 bg-white/8 mb-3" />
-  <div className="flex items-center gap-2">
+  <div className="flex flex-wrap items-center justify-between gap-2">
   {mr.readyForMatching ? (
   <div className="flex items-center gap-1.5 text-xs text-[hsl(142_55%_60%)]">
   <CheckCircle2 className="w-3.5 h-3.5" />
-  <span>Matching pool, when feature opens, your profile will be considered</span>
+  <span>Strong wellness coverage feeding your match profile</span>
   </div>
   ) : (
   <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
   <Lock className="w-3.5 h-3.5" />
-  <span>Matching opens at 30% profile completion with 5+ strong dimensions</span>
+  <span>Your wellness map is one of five signals that build match readiness</span>
   </div>
   )}
+  <Link href="/matching" className="inline-flex items-center gap-1 text-xs font-semibold text-[hsl(248_62%_62%)] hover:underline" data-testid="link-wellness-matching">
+  See full match readiness <ArrowRight className="w-3 h-3" />
+  </Link>
   </div>
   </motion.div>
   );

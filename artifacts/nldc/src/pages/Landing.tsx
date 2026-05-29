@@ -302,6 +302,56 @@ export default function Landing() {
   </div>
   </section>
 
+  {/* ── The destination, where every signal leads: being matched ── */}
+  <section className="py-20 md:py-24 border-t border-foreground/5 relative overflow-hidden">
+  <div className="orb orb-violet absolute w-[460px] h-[460px] -left-40 top-10 opacity-50 pointer-events-none" />
+  <div className="container mx-auto px-4 relative z-10">
+  <motion.div className="text-center mb-12 max-w-2xl mx-auto" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+  <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(326_100%_55%)] mb-3">Where this is going</p>
+  <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+  The audit is step one. <span className="gradient-text italic">Being matched is the point.</span>
+  </h2>
+  <p className="text-sm text-muted-foreground leading-relaxed">
+  This was never another swipe app. Every signal you build here, your bio, your wellness map, your compass reads, becomes a profile we use to introduce you to people. No carousel. No infinite scroll. A small number of well considered people, chosen from who you actually are.
+  </p>
+  </motion.div>
+
+  <div className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+  <motion.div className="glass rounded-3xl p-7 card-hover" style={{ border: "1px solid hsl(var(--brand-indigo) / 0.2)" }} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-[hsl(248_62%_52%/0.12)] border border-[hsl(248_62%_52%/0.25)]">
+  <Compass className="w-5 h-5 text-[hsl(248_62%_52%)]" />
+  </div>
+  <h3 className="font-bold text-foreground mb-2">Algorithmic, for everyone</h3>
+  <p className="text-sm text-muted-foreground leading-relaxed">Matches built from the signals you have already given us. The deeper your profile, the sharper the introduction. Free and paid members both build toward it.</p>
+  </motion.div>
+  <motion.div className="glass rounded-3xl p-7 card-hover" style={{ border: "1px solid hsl(326 100% 59% / 0.22)" }} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.08 }}>
+  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-[hsl(326_100%_59%/0.12)] border border-[hsl(326_100%_59%/0.25)]">
+  <Sparkles className="w-5 h-5 text-[hsl(326_100%_55%)]" />
+  </div>
+  <h3 className="font-bold text-foreground mb-2">Founder curated, for Wingman</h3>
+  <p className="text-sm text-muted-foreground leading-relaxed">On the Wingman tier, the founder hand picks your first few intros after a short intake call. Real attention, not a queue.</p>
+  </motion.div>
+  </div>
+
+  <motion.div className="max-w-3xl mx-auto mt-5 glass-elevated rounded-2xl p-5 text-center" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.12 }}>
+  <p className="text-xs text-muted-foreground leading-relaxed">
+  You build readiness by using the tools. Compass reads, your wellness map, a Hinge import, journal cadence, post date notes. Five signals, one readiness score.
+  </p>
+  </motion.div>
+
+  <motion.div className="text-center mt-9" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.16 }}>
+  <Button asChild size="lg" className="h-12 px-8 text-sm font-semibold rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white shadow-[0_4px_24px_hsl(248_62%_52%/0.4)]" data-testid="button-destination-start">
+  <Link href="/start">Start building your match profile <ArrowRight className="ml-2 h-4 w-4" /></Link>
+  </Button>
+  <div className="mt-3">
+  <Link href="/matching" className="inline-flex items-center gap-1.5 text-xs font-semibold text-[hsl(248_62%_62%)] hover:underline" data-testid="link-destination-matching">
+  See how matching works <ArrowRight className="w-3 h-3" />
+  </Link>
+  </div>
+  </motion.div>
+  </div>
+  </section>
+
   {/* ── Trust. Early access / founder reviewed ── */}
   <section className="py-20 md:py-24 border-t border-foreground/5 relative overflow-hidden">
   <div className="orb orb-gold absolute w-96 h-96 right-0 top-20 opacity-40 pointer-events-none" />
