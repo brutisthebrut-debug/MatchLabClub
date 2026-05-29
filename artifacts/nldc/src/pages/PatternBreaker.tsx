@@ -17,68 +17,68 @@ interface ActionItem {
 
 const ACTIONS: ActionItem[] = [
   {
-    id: "a1", category: "message",
-    text: "Send one message today without editing it more than once.",
-    why: "Over-editing signals anxiety. One-pass messages tend to sound more natural and confident.",
+  id: "a1", category: "message",
+  text: "Send one message today without editing it more than once.",
+  why: "Over-editing signals anxiety. One-pass messages tend to sound more natural and confident.",
   },
   {
-    id: "a2", category: "profile",
-    text: "Swap one generic word in your bio for a specific one. 'Coffee' → the café name. 'Travel' → the place.",
-    why: "Specific details do more work than categories. One swap is enough to test the difference.",
+  id: "a2", category: "profile",
+  text: "Swap one generic word in your bio for a specific one. 'Coffee' → the café name. 'Travel' → the place.",
+  why: "Specific details do more work than categories. One swap is enough to test the difference.",
   },
   {
-    id: "a3", category: "mindset",
-    text: "Before opening the app today, decide what kind of interaction you actually have energy for.",
-    why: "Dating from a depleted state produces the worst outcomes. A 10-second check-in changes your tone.",
+  id: "a3", category: "mindset",
+  text: "Before opening the app today, decide what kind of interaction you actually have energy for.",
+  why: "Dating from a depleted state produces the worst outcomes. A 10-second check-in changes your tone.",
   },
   {
-    id: "a4", category: "real-world",
-    text: "Do one thing this week that isn't about dating — something you'd tell a match about.",
-    why: "Your life off the app is the raw material for your profile. Interesting people do interesting things.",
+  id: "a4", category: "real-world",
+  text: "Do one thing this week that isn't about dating, something you'd tell a match about.",
+  why: "Your life off the app is the raw material for your profile. Interesting people do interesting things.",
   },
   {
-    id: "a5", category: "message",
-    text: "The next time you feel the urge to send a 'just checking in' message, try a specific question or observation instead.",
-    why: "Check-ins ask for nothing. A real question gives someone something to actually respond to.",
+  id: "a5", category: "message",
+  text: "The next time you feel the urge to send a 'just checking in' message, try a specific question or observation instead.",
+  why: "Check-ins ask for nothing. A real question gives someone something to actually respond to.",
   },
   {
-    id: "a6", category: "profile",
-    text: "Read your profile out loud. Anything that sounds stiff or written → rewrite it in your speaking voice.",
-    why: "If you wouldn't say it out loud, it probably shouldn't be in your profile. The read-aloud test is brutal and useful.",
+  id: "a6", category: "profile",
+  text: "Read your profile out loud. Anything that sounds stiff or written → rewrite it in your speaking voice.",
+  why: "If you wouldn't say it out loud, it probably shouldn't be in your profile. The read-aloud test is brutal and useful.",
   },
   {
-    id: "a7", category: "mindset",
-    text: "Identify one pattern from your last three conversations that you'd like to change.",
-    why: "Patterns only shift when you can name them. You don't have to fix it this week — just see it clearly.",
+  id: "a7", category: "mindset",
+  text: "Identify one pattern from your last three conversations that you'd like to change.",
+  why: "Patterns only shift when you can name them. You don't have to fix it this week, just see it clearly.",
   },
   {
-    id: "a8", category: "message",
-    text: "Write a first message that references something specific from their profile — not their photos.",
-    why: "Photo compliments are forgettable. Profile-specific openers show you actually looked and were curious.",
+  id: "a8", category: "message",
+  text: "Write a first message that references something specific from their profile, not their photos.",
+  why: "Photo compliments are forgettable. Profile-specific openers show you actually looked and were curious.",
   },
   {
-    id: "a9", category: "mindset",
-    text: "Give yourself a 2-hour no-app window today. Notice whether that changes your energy when you open it again.",
-    why: "Constant low-grade checking drains focus and creates a scarcity feeling that comes through in your messages.",
+  id: "a9", category: "mindset",
+  text: "Give yourself a 2-hour no-app window today. Notice whether that changes your energy when you open it again.",
+  why: "Constant low-grade checking drains focus and creates a scarcity feeling that comes through in your messages.",
   },
   {
-    id: "a10", category: "real-world",
-    text: "Ask a friend who knows you well: 'What's one thing you'd put in my dating profile that I'd never think to write?'",
-    why: "We're notoriously bad at describing ourselves. The people who know us best see things we've normalised.",
+  id: "a10", category: "real-world",
+  text: "Ask a friend who knows you well: 'What's one thing you'd put in my dating profile that I'd never think to write?'",
+  why: "We're notoriously bad at describing ourselves. The people who know us best see things we've normalised.",
   },
 ];
 
 const CATEGORY_COLORS: Record<ActionItem["category"], string> = {
-  "profile":    "hsl(var(--brand-indigo))",
-  "message":    "hsl(190 55% 60%)",
-  "mindset":    "hsl(var(--brand-gold))",
+  "profile": "hsl(var(--brand-indigo))",
+  "message": "hsl(190 55% 60%)",
+  "mindset": "hsl(var(--brand-gold))",
   "real-world": "hsl(var(--brand-green))",
 };
 
 const CATEGORY_LABELS: Record<ActionItem["category"], string> = {
-  "profile":    "Profile",
-  "message":    "Message",
-  "mindset":    "Mindset",
+  "profile": "Profile",
+  "message": "Message",
+  "mindset": "Mindset",
   "real-world": "Real World",
 };
 
@@ -104,17 +104,17 @@ function pickRandom(n: number): string[] {
 
 function loadState(): StoredState {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { weekKey: getWeekKey(), checked: [], selectedIds: pickRandom(5) };
-    const state = JSON.parse(raw) as StoredState;
-    if (state.weekKey !== getWeekKey()) {
-      const fresh = { weekKey: getWeekKey(), checked: [], selectedIds: pickRandom(5) };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
-      return fresh;
-    }
-    return state;
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return { weekKey: getWeekKey(), checked: [], selectedIds: pickRandom(5) };
+  const state = JSON.parse(raw) as StoredState;
+  if (state.weekKey !== getWeekKey()) {
+  const fresh = { weekKey: getWeekKey(), checked: [], selectedIds: pickRandom(5) };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
+  return fresh;
+  }
+  return state;
   } catch {
-    return { weekKey: getWeekKey(), checked: [], selectedIds: pickRandom(5) };
+  return { weekKey: getWeekKey(), checked: [], selectedIds: pickRandom(5) };
   }
 }
 
@@ -129,14 +129,14 @@ const fadeUp = (delay = 0) => ({
 });
 
 export default function PatternBreaker() {
-  useMeta("Pattern Breaker", "Five small pattern-breaking actions for this week — resets every Sunday.");
+  useMeta("Pattern Breaker", "Five small pattern-breaking actions for this week, resets every Sunday.");
 
   const [state, setState] = useState<StoredState>(() => ({ weekKey: "", checked: [], selectedIds: [] }));
   const [expandedWhy, setExpandedWhy] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    setState(loadState());
+  setState(loadState());
   }, []);
 
   const selectedActions = ACTIONS.filter(a => state.selectedIds.includes(a.id));
@@ -144,161 +144,161 @@ export default function PatternBreaker() {
   const isBrandNewUser = isAuthenticated && doneCount === 0;
 
   const toggle = (id: string) => {
-    const checked = state.checked.includes(id)
-      ? state.checked.filter(c => c !== id)
-      : [...state.checked, id];
-    const next = { ...state, checked };
-    setState(next);
-    saveState(next);
+  const checked = state.checked.includes(id)
+  ? state.checked.filter(c => c !== id)
+  : [...state.checked, id];
+  const next = {...state, checked };
+  setState(next);
+  saveState(next);
   };
 
   const refresh = () => {
-    const next: StoredState = { weekKey: getWeekKey(), checked: [], selectedIds: pickRandom(5) };
-    setState(next);
-    saveState(next);
+  const next: StoredState = { weekKey: getWeekKey(), checked: [], selectedIds: pickRandom(5) };
+  setState(next);
+  saveState(next);
   };
 
   if (state.selectedIds.length === 0) return null;
 
   return (
-    <AppLayout>
-      <div className="min-h-screen mesh-bg py-10 px-4">
-        <div className="orb orb-violet fixed w-[400px] h-[400px] -top-20 left-1/2 -translate-x-1/2 opacity-20 pointer-events-none" />
-        <div className="max-w-2xl mx-auto relative z-10">
+  <AppLayout>
+  <div className="min-h-screen mesh-bg py-10 px-4">
+  <div className="orb orb-violet fixed w-[400px] h-[400px] -top-20 left-1/2 -translate-x-1/2 opacity-20 pointer-events-none" />
+  <div className="max-w-2xl mx-auto relative z-10">
 
-          {/* Hero */}
-          <motion.div {...fadeUp(0)} className="mb-8">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(190_55%_60%)] flex items-center justify-center shadow-[0_0_16px_hsl(248_62%_52%/0.4)]">
-                <Zap className="w-4 h-4 text-white" />
-              </div>
-              <p className="text-sm font-semibold text-[hsl(248_62%_62%)]">Growth Tracker</p>
-            </div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Pattern Breaker</h1>
-            <p className="text-muted-foreground text-sm leading-relaxed max-w-lg">
-              Five small actions for this week. Each one targets a common pattern that keeps people stuck.
-              You don't have to do all five — even two shifts something.
-            </p>
-          </motion.div>
+  {/* Hero */}
+  <motion.div {...fadeUp(0)} className="mb-8">
+  <div className="flex items-center gap-2.5 mb-3">
+  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(190_55%_60%)] flex items-center justify-center shadow-[0_0_16px_hsl(248_62%_52%/0.4)]">
+  <Zap className="w-4 h-4 text-white" />
+  </div>
+  <p className="text-sm font-semibold text-[hsl(248_62%_62%)]">Growth Tracker</p>
+  </div>
+  <h1 className="text-3xl font-bold text-foreground mb-2">Pattern Breaker</h1>
+  <p className="text-muted-foreground text-sm leading-relaxed max-w-lg">
+  Five small actions for this week. Each one targets a common pattern that keeps people stuck.
+  You don't have to do all five, even two shifts something.
+  </p>
+  </motion.div>
 
-          {isBrandNewUser && (
-            <WelcomePanel
-              variant="shimmer"
-              tint="violet-green"
-              icon={<Zap className="w-6 h-6" />}
-              eyebrow="Welcome to Pattern Breaker"
-              title="Break your first pattern"
-              description="Check off any action below this week. Even one small shift starts to interrupt the loops that keep people stuck."
-              testId="pattern-breaker-empty-state"
-              delay={0.04}
-            />
-          )}
+  {isBrandNewUser && (
+  <WelcomePanel
+  variant="shimmer"
+  tint="violet-green"
+  icon={<Zap className="w-6 h-6" />}
+  eyebrow="Welcome to Pattern Breaker"
+  title="Break your first pattern"
+  description="Check off any action below this week. Even one small shift starts to interrupt the loops that keep people stuck."
+  testId="pattern-breaker-empty-state"
+  delay={0.04}
+  />
+  )}
 
-          {/* Progress */}
-          <motion.div {...fadeUp(0.06)} className="glass border border-white/8 rounded-2xl p-5 mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="font-semibold text-foreground text-sm">{doneCount} of 5 done this week</p>
-                <p className="text-xs text-muted-foreground/60 mt-0.5">Resets every Sunday</p>
-              </div>
-              <button
-                onClick={refresh}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
-              >
-                <RefreshCw className="w-3 h-3" />
-                New list
-              </button>
-            </div>
-            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(142_55%_60%)]"
-                initial={{ width: 0 }}
-                animate={{ width: `${(doneCount / 5) * 100}%` }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              />
-            </div>
-          </motion.div>
+  {/* Progress */}
+  <motion.div {...fadeUp(0.06)} className="glass border border-white/8 rounded-2xl p-5 mb-6">
+  <div className="flex items-center justify-between mb-3">
+  <div>
+  <p className="font-semibold text-foreground text-sm">{doneCount} of 5 done this week</p>
+  <p className="text-xs text-muted-foreground/60 mt-0.5">Resets every Sunday</p>
+  </div>
+  <button
+  onClick={refresh}
+  className="flex items-center gap-1.5 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+  >
+  <RefreshCw className="w-3 h-3" />
+  New list
+  </button>
+  </div>
+  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+  <motion.div
+  className="h-full rounded-full bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(142_55%_60%)]"
+  initial={{ width: 0 }}
+  animate={{ width: `${(doneCount / 5) * 100}%` }}
+  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+  />
+  </div>
+  </motion.div>
 
-          {/* Action list */}
-          <div className="space-y-3">
-            {selectedActions.map((action, i) => {
-              const done = state.checked.includes(action.id);
-              const color = CATEGORY_COLORS[action.category];
-              const whyOpen = expandedWhy === action.id;
-              return (
-                <motion.div key={action.id} {...fadeUp(0.1 + i * 0.05)}
-                  className={`glass border rounded-2xl overflow-hidden transition-all ${done ? "border-[hsl(142_55%_60%/0.3)] opacity-70" : "border-white/8"}`}
-                >
-                  <div className="p-4 flex items-start gap-3">
-                    <button
-                      onClick={() => toggle(action.id)}
-                      className="flex-shrink-0 mt-0.5 transition-colors"
-                    >
-                      {done
-                        ? <CheckCircle2 className="w-5 h-5 text-[hsl(142_55%_60%)]" />
-                        : <Circle className="w-5 h-5 text-muted-foreground/30 hover:text-muted-foreground/60" />
-                      }
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
-                          style={{ color, borderColor: withAlpha(color, 0.3), background: withAlpha(color, 0.1) }}>
-                          {CATEGORY_LABELS[action.category]}
-                        </span>
-                      </div>
-                      <p className={`text-sm leading-relaxed ${done ? "line-through text-muted-foreground/40" : "text-foreground"}`}>
-                        {action.text}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="border-t border-white/5">
-                    <button
-                      onClick={() => setExpandedWhy(whyOpen ? null : action.id)}
-                      className="w-full flex items-center justify-between px-4 py-2.5 text-xs text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors"
-                    >
-                      <span className="font-semibold uppercase tracking-wider text-[9px]">Why this works</span>
-                      {whyOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                    </button>
-                    {whyOpen && (
-                      <p className="px-4 pb-4 text-xs text-muted-foreground/60 leading-relaxed">{action.why}</p>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+  {/* Action list */}
+  <div className="space-y-3">
+  {selectedActions.map((action, i) => {
+  const done = state.checked.includes(action.id);
+  const color = CATEGORY_COLORS[action.category];
+  const whyOpen = expandedWhy === action.id;
+  return (
+  <motion.div key={action.id} {...fadeUp(0.1 + i * 0.05)}
+  className={`glass border rounded-2xl overflow-hidden transition-all ${done ? "border-[hsl(142_55%_60%/0.3)] opacity-70" : "border-white/8"}`}
+  >
+  <div className="p-4 flex items-start gap-3">
+  <button
+  onClick={() => toggle(action.id)}
+  className="flex-shrink-0 mt-0.5 transition-colors"
+  >
+  {done
+  ? <CheckCircle2 className="w-5 h-5 text-[hsl(142_55%_60%)]" />
+  : <Circle className="w-5 h-5 text-muted-foreground/30 hover:text-muted-foreground/60" />
+  }
+  </button>
+  <div className="flex-1 min-w-0">
+  <div className="flex items-center gap-2 mb-1.5">
+  <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
+  style={{ color, borderColor: withAlpha(color, 0.3), background: withAlpha(color, 0.1) }}>
+  {CATEGORY_LABELS[action.category]}
+  </span>
+  </div>
+  <p className={`text-sm leading-relaxed ${done ? "line-through text-muted-foreground/40" : "text-foreground"}`}>
+  {action.text}
+  </p>
+  </div>
+  </div>
+  <div className="border-t border-white/5">
+  <button
+  onClick={() => setExpandedWhy(whyOpen ? null : action.id)}
+  className="w-full flex items-center justify-between px-4 py-2.5 text-xs text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors"
+  >
+  <span className="font-semibold uppercase tracking-wider text-[9px]">Why this works</span>
+  {whyOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+  </button>
+  {whyOpen && (
+  <p className="px-4 pb-4 text-xs text-muted-foreground/60 leading-relaxed">{action.why}</p>
+  )}
+  </div>
+  </motion.div>
+  );
+  })}
+  </div>
 
-          {doneCount === 5 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mt-6 glass border border-[hsl(142_55%_60%/0.3)] rounded-2xl p-5 text-center"
-            >
-              <CheckCircle2 className="w-8 h-8 text-[hsl(142_55%_60%)] mx-auto mb-2" />
-              <p className="font-semibold text-foreground mb-1">Full set done this week.</p>
-              <p className="text-sm text-muted-foreground">That's five pattern interrupts in one week. Log a win in your Dating Wins Log if any of them led to something.</p>
-              <Button
-                onClick={refresh}
-                variant="outline"
-                size="sm"
-                className="mt-3 rounded-xl text-xs border-white/10 text-muted-foreground hover:text-foreground"
-              >
-                <RefreshCw className="w-3 h-3 mr-1.5" />
-                Get a fresh set
-              </Button>
-            </motion.div>
-          )}
+  {doneCount === 5 && (
+  <motion.div
+  initial={{ opacity: 0, scale: 0.95 }}
+  animate={{ opacity: 1, scale: 1 }}
+  className="mt-6 glass border border-[hsl(142_55%_60%/0.3)] rounded-2xl p-5 text-center"
+  >
+  <CheckCircle2 className="w-8 h-8 text-[hsl(142_55%_60%)] mx-auto mb-2" />
+  <p className="font-semibold text-foreground mb-1">Full set done this week.</p>
+  <p className="text-sm text-muted-foreground">That's five pattern interrupts in one week. Log a win in your Dating Wins Log if any of them led to something.</p>
+  <Button
+  onClick={refresh}
+  variant="outline"
+  size="sm"
+  className="mt-3 rounded-xl text-xs border-white/10 text-muted-foreground hover:text-foreground"
+  >
+  <RefreshCw className="w-3 h-3 mr-1.5" />
+  Get a fresh set
+  </Button>
+  </motion.div>
+  )}
 
-          {/* Trust note */}
-          <motion.div {...fadeUp(0.5)} className="mt-8 glass border border-white/5 rounded-2xl p-4 flex items-start gap-3">
-            <Shield className="w-4 h-4 text-muted-foreground/30 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-muted-foreground/45 leading-relaxed">
-              <strong className="text-muted-foreground/60">Coaching suggestions, not clinical advice.</strong>{" "}
-              Your checklist is stored locally and resets each week. Nothing is tracked or shared.
-            </p>
-          </motion.div>
-        </div>
-      </div>
-    </AppLayout>
+  {/* Trust note */}
+  <motion.div {...fadeUp(0.5)} className="mt-8 glass border border-white/5 rounded-2xl p-4 flex items-start gap-3">
+  <Shield className="w-4 h-4 text-muted-foreground/30 flex-shrink-0 mt-0.5" />
+  <p className="text-xs text-muted-foreground/45 leading-relaxed">
+  <strong className="text-muted-foreground/60">Coaching suggestions, not clinical advice.</strong>{" "}
+  Your checklist is stored locally and resets each week. Nothing is tracked or shared.
+  </p>
+  </motion.div>
+  </div>
+  </div>
+  </AppLayout>
   );
 }

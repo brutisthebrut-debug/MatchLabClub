@@ -28,18 +28,18 @@ function writeCookie(name: string, value: string) {
 
 export function CaptureRef(): null {
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const ref = params.get("ref");
-    if (!ref) return;
-    const existing = readCookie(COOKIE_NAME);
-    if (existing) return; // First-touch wins.
-    writeCookie(COOKIE_NAME, ref);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, ref);
-    } catch {
-      // private mode / quota / disabled — cookie still wins.
-    }
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get("ref");
+  if (!ref) return;
+  const existing = readCookie(COOKIE_NAME);
+  if (existing) return; // First-touch wins.
+  writeCookie(COOKIE_NAME, ref);
+  try {
+  window.localStorage.setItem(STORAGE_KEY, ref);
+  } catch {
+  // private mode / quota / disabled, cookie still wins.
+  }
   }, []);
   return null;
 }

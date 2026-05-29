@@ -73,7 +73,7 @@ const BREAKDOWN_ROWS: BreakdownRow[] = [
     key: "compass",
     label: "Compass reads",
     blurb: "Five compass reads sharpens what you actually respond to.",
-    href: "/compass/new",
+    href: "/compatibility-compass",
     cta: "Run a compass read",
     icon: Compass,
   },
@@ -664,7 +664,7 @@ export default function Matching() {
               <p className="text-xs text-muted-foreground">
                 Want the full Compatibility Compass with screenshot support?
                 <Link
-                  href="/compass/new"
+                  href="/compatibility-compass"
                   className="ml-1 underline text-foreground"
                   data-testid="link-compass-new"
                 >

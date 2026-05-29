@@ -300,6 +300,7 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
                 type="button"
                 onClick={() => setOpen((prev) => ({ ...prev, [section.id]: !prev[section.id] }))}
                 aria-expanded={isOpen}
+                aria-controls={`sidebar-panel-${section.id}`}
                 className="flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-foreground/50 transition-colors hover:text-foreground/80"
                 data-testid={`sidebar-section-${section.id}`}
               >
@@ -310,7 +311,7 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
                 />
               </button>
               {isOpen && (
-                <div className="mt-1 space-y-0.5">
+                <div id={`sidebar-panel-${section.id}`} className="mt-1 space-y-0.5">
                   {section.links.map((link) => (
                     <NavRow
                       key={link.href}
