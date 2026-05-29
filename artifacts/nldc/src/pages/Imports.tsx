@@ -102,7 +102,7 @@ function CalendarSummaryView({ row }: { row: ImportRow }) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatChip label="Events read" value={counts?.totalEvents ?? 0} />
           <StatChip label="Per week" value={rhythm.eventsPerWeek} />
-          <StatChip label="Busiest day" value={rhythm.busiestDay ?? "—"} />
+          <StatChip label="Busiest day" value={rhythm.busiestDay ?? "No clear day yet"} />
           <StatChip label="Weekend share" value={`${rhythm.weekendShare}%`} />
         </div>
       )}

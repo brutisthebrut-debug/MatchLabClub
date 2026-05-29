@@ -554,9 +554,10 @@ router.post(
         userId: userId ?? null,
         anonymousClaimToken: anonToken,
         source: "calendar-ics",
-        status: "ready",
+        status: "complete",
         originalFilename: null,
         parsedSummary: summary as unknown as Record<string, unknown>,
+        processedAt: new Date(),
       })
       .returning();
 
