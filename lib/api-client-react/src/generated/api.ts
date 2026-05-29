@@ -47,6 +47,7 @@ import type {
   BeginBrowserLoginParams,
   BulkDeleteAuditsInput,
   BulkDeleteAuditsResult,
+  CalendarImportBody,
   ChatScreenshotExtractInput,
   ChatScreenshotExtractResult,
   ClaimAnonymousInput,
@@ -7957,6 +7958,84 @@ export const useUploadHingeImport = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getUploadHingeImportMutationOptions(options));
+    }
+
+export const getUploadCalendarImportUrl = () => {
+
+
+
+
+  return `/api/imports/calendar`
+}
+
+/**
+ * Accepts pasted .ics calendar file contents, parses event rhythm
+in memory, and stores a structured summary in `imported_sources`
+with source `calendar-ics`. No external fetch is made and the raw
+text is not persisted, only the derived summary. Anon-first:
+anonymous callers receive a claim token so the import reassigns to
+their account on signup.
+
+ * @summary Import a calendar by pasting .ics contents
+ */
+export const uploadCalendarImport = async (calendarImportBody: CalendarImportBody, options?: RequestInit): Promise<ImportSource> => {
+
+  return customFetch<ImportSource>(getUploadCalendarImportUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      calendarImportBody,)
+  }
+);}
+
+
+
+
+export const getUploadCalendarImportMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadCalendarImport>>, TError,{data: BodyType<CalendarImportBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof uploadCalendarImport>>, TError,{data: BodyType<CalendarImportBody>}, TContext> => {
+
+const mutationKey = ['uploadCalendarImport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadCalendarImport>>, {data: BodyType<CalendarImportBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  uploadCalendarImport(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadCalendarImportMutationResult = NonNullable<Awaited<ReturnType<typeof uploadCalendarImport>>>
+    export type UploadCalendarImportMutationBody = BodyType<CalendarImportBody>
+    export type UploadCalendarImportMutationError = ErrorType<void>
+
+    /**
+ * @summary Import a calendar by pasting .ics contents
+ */
+export const useUploadCalendarImport = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadCalendarImport>>, TError,{data: BodyType<CalendarImportBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof uploadCalendarImport>>,
+        TError,
+        {data: BodyType<CalendarImportBody>},
+        TContext
+      > => {
+      return useMutation(getUploadCalendarImportMutationOptions(options));
     }
 
 export const getListImportsUrl = () => {

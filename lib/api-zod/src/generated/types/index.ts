@@ -49,6 +49,7 @@ export * from './authUserEnvelope';
 export * from './beginBrowserLoginParams';
 export * from './bulkDeleteAuditsInput';
 export * from './bulkDeleteAuditsResult';
+export * from './calendarImportBody';
 export * from './chatScreenshotExtractInput';
 export * from './chatScreenshotExtractResult';
 export * from './chatSpeakerTurn';

@@ -105,6 +105,24 @@ const LIVE: Connector[] = [
     returns: "A readiness map that sharpens every other tool in the product.",
     cta: { href: "/wellness", label: "Open Wellness Center" },
   },
+  {
+    id: "calendar-ics",
+    title: "Calendar paste",
+    icon: CalendarDays,
+    color: "hsl(248 62% 60%)",
+    blurb:
+      "Paste the contents of your calendar's .ics export. We read event times and recurrence to surface your free nights, your weekend rhythm, and recurring rituals. Read only. We never write to your calendar and we never store the raw file.",
+    returns: "A picture of when you are actually free and what your week tends to look like.",
+    access: [
+      "Event titles, times, and recurrence patterns from the .ics text you paste",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "OAuth access to Google or Apple Calendar",
+      "Any ability to create, edit, or delete events on your calendar",
+    ],
+    cta: { href: "/imports", label: "Open Calendar paste" },
+  },
 ];
 
 // What we're actively building, in roughly the order we'll ship.
@@ -150,24 +168,6 @@ const BUILDING: Connector[] = [
     comingNote: "Beat 3 of the connection roadmap. Lands after the forwarding inbox.",
   },
   {
-    id: "calendar-ics",
-    title: "Calendar paste",
-    icon: CalendarDays,
-    color: "hsl(248 62% 60%)",
-    blurb:
-      "Paste your Google or Apple calendar private .ics URL. We read events to surface your free nights, your weekend rhythm, and recurring rituals. Read only. We never write to your calendar.",
-    returns: "A picture of when you are actually free and what your week tends to look like.",
-    access: [
-      "Event titles, times, and recurrence patterns from the .ics URL you paste",
-    ],
-    excludes: [
-      "Anything you do not paste in",
-      "OAuth access to Google or Apple Calendar",
-      "Any ability to create, edit, or delete events on your calendar",
-    ],
-    comingNote: "Beat 5 of the connection roadmap.",
-  },
-  {
     id: "spotify",
     title: "Spotify",
     icon: Music2,
@@ -185,7 +185,7 @@ const BUILDING: Connector[] = [
       "Your playlists you have not chosen to share",
       "Any ability to play, queue, or change what you are listening to",
     ],
-    comingNote: "Sequenced after calendar paste.",
+    comingNote: "Sequenced behind the spending connector.",
   },
 ];
 

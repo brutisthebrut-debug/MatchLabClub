@@ -3425,6 +3425,29 @@ export const UploadHingeImportHeader = zod.object({
 
 
 /**
+ * Accepts pasted .ics calendar file contents, parses event rhythm
+in memory, and stores a structured summary in `imported_sources`
+with source `calendar-ics`. No external fetch is made and the raw
+text is not persisted, only the derived summary. Anon-first:
+anonymous callers receive a claim token so the import reassigns to
+their account on signup.
+
+ * @summary Import a calendar by pasting .ics contents
+ */
+export const UploadCalendarImportHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const uploadCalendarImportBodyIcsContentMax = 2000000;
+
+
+
+export const UploadCalendarImportBody = zod.object({
+  "icsContent": zod.string().min(1).max(uploadCalendarImportBodyIcsContentMax).describe('The full text contents of a .ics calendar file.')
+})
+
+
+/**
  * @summary List the caller's data imports
  */
 export const ListImportsHeader = zod.object({

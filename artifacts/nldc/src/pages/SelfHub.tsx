@@ -523,7 +523,7 @@ export default function SelfHub() {
     { key: "imports", label: "Hinge import", icon: Upload, active: importsCount > 0, href: "/imports", state: "live" },
     { key: "forwarding", label: "Forwarding inbox", icon: Mail, active: false, state: "building" },
     { key: "plaid", label: "Spending signals", icon: Wallet, active: false, state: "building" },
-    { key: "calendar", label: "Calendar paste", icon: Calendar, active: false, state: "building" },
+    { key: "calendar", label: "Calendar paste", icon: Calendar, active: false, href: "/imports", state: "live" },
   ];
 
   return (

@@ -1923,6 +1923,15 @@ export interface CompassScreenshotExtractResult {
   text: string;
 }
 
+export interface CalendarImportBody {
+  /**
+     * The full text contents of a .ics calendar file.
+     * @minLength 1
+     * @maxLength 2000000
+     */
+  icsContent: string;
+}
+
 /**
  * Structured summary derived from the upload. Shape varies per
 source. For Hinge imports it includes a `counts` object, a

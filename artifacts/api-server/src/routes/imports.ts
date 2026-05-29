@@ -10,6 +10,7 @@ import {
   getOrCreateAnonClaimToken,
 } from "../lib/anonClaimToken";
 import { generate } from "../lib/aiService";
+import { parseCalendarIcs } from "../lib/calendarParser";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
@@ -512,6 +513,63 @@ router.post(
         });
       });
     }
+  },
+);
+
+const CalendarImportInput = z.object({
+  icsContent: z.string().min(1).max(2_000_000),
+});
+
+router.post(
+  "/imports/calendar",
+  async (req: Request, res: Response): Promise<void> => {
+    const parsed = CalendarImportInput.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Paste the contents of a .ics calendar file." });
+      return;
+    }
+
+    let summary;
+    try {
+      summary = parseCalendarIcs(parsed.data.icsContent);
+    } catch {
+      res.status(400).json({ error: "That does not look like a calendar (.ics) file." });
+      return;
+    }
+
+    if (summary.counts.totalEvents === 0) {
+      res.status(400).json({
+        error:
+          "No calendar events found in that paste. Make sure you copied the whole .ics file.",
+      });
+      return;
+    }
+
+    const userId = req.user?.id;
+    const anonToken = userId ? null : getOrCreateAnonClaimToken(req, res);
+
+    const [inserted] = await db
+      .insert(importedSourcesTable)
+      .values({
+        userId: userId ?? null,
+        anonymousClaimToken: anonToken,
+        source: "calendar-ics",
+        status: "ready",
+        originalFilename: null,
+        parsedSummary: summary as unknown as Record<string, unknown>,
+      })
+      .returning();
+
+    req.log.info(
+      {
+        userId: userId ?? null,
+        importId: inserted?.id,
+        events: summary.counts.totalEvents,
+      },
+      "Captured calendar .ics import",
+    );
+
+    res.status(201).json(serialize(inserted!));
   },
 );
 

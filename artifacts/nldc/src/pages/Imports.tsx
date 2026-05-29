@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Upload, FileArchive, CheckCircle2, AlertCircle, Loader2, Clock } from "lucide-react";
+import { Upload, FileArchive, CheckCircle2, AlertCircle, Loader2, Clock, CalendarDays } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import {
   Accordion,
@@ -45,6 +46,18 @@ interface ParsedSummary {
   };
   aiRead?: HingeAiRead;
   aiError?: string;
+  rhythm?: {
+    eventsPerWeek: number;
+    busiestDay: string | null;
+    weekendShare: number;
+    eveningShare: number;
+    earliestEventAt: string | null;
+    latestEventAt: string | null;
+    spanDays: number;
+  };
+  dayBreakdown?: { day: string; count: number }[];
+  topRecurring?: string[];
+  reads?: string[];
 }
 
 interface ImportRow {
@@ -75,7 +88,67 @@ function StatChip({ label, value }: { label: string; value: string | number }) {
   );
 }
 
+function CalendarSummaryView({ row }: { row: ImportRow }) {
+  const s = row.parsedSummary ?? {};
+  const counts = s.counts as { totalEvents?: number } | undefined;
+  const rhythm = s.rhythm;
+  const reads = s.reads ?? [];
+  const days = s.dayBreakdown ?? [];
+  const maxDay = days.reduce((m, d) => Math.max(m, d.count), 0) || 1;
+
+  return (
+    <div className="space-y-4">
+      {rhythm && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatChip label="Events read" value={counts?.totalEvents ?? 0} />
+          <StatChip label="Per week" value={rhythm.eventsPerWeek} />
+          <StatChip label="Busiest day" value={rhythm.busiestDay ?? "—"} />
+          <StatChip label="Weekend share" value={`${rhythm.weekendShare}%`} />
+        </div>
+      )}
+
+      {days.length > 0 && (
+        <div className="rounded-2xl border border-white/10 bg-white/4 p-5">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
+            Your week at a glance
+          </div>
+          <div className="flex items-end gap-2 h-28">
+            {days.map((d) => (
+              <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
+                <div className="w-full flex-1 flex items-end">
+                  <div
+                    className="w-full rounded-t-md bg-primary/70"
+                    style={{ height: `${Math.round((d.count / maxDay) * 100)}%` }}
+                    title={`${d.count} events`}
+                  />
+                </div>
+                <div className="text-[10px] text-muted-foreground">{d.day.slice(0, 3)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {reads.length > 0 && (
+        <div className="rounded-2xl border border-white/10 bg-white/4 p-5 space-y-2">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+            Echo's read
+          </div>
+          <ul className="list-disc list-inside space-y-1 text-sm leading-relaxed">
+            {reads.map((r, i) => (
+              <li key={i}>{r}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SummaryView({ row }: { row: ImportRow }) {
+  if (row.source === "calendar-ics") {
+    return <CalendarSummaryView row={row} />;
+  }
   const s = row.parsedSummary ?? {};
   const counts = s.counts;
   const stats = s.derivedStats;
@@ -342,6 +415,52 @@ export default function Imports() {
     }
   }
 
+  const [icsText, setIcsText] = useState("");
+  const [calSubmitting, setCalSubmitting] = useState(false);
+
+  async function handleCalendarPaste() {
+    const trimmed = icsText.trim();
+    if (!trimmed) {
+      toast({
+        title: "Nothing to read",
+        description: "Paste the contents of your .ics calendar file first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setCalSubmitting(true);
+    try {
+      const res = await fetch("/api/imports/calendar", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ icsContent: trimmed }),
+      });
+      const body = await res.json().catch(() => null);
+      if (res.status === 201 && body) {
+        const row: ImportRow = body;
+        setImports((prev) => [row, ...prev.filter((r) => r.id !== row.id)]);
+        setActiveId(row.id);
+        setExpandedId(row.id);
+        setIcsText("");
+        toast({
+          title: "Calendar read",
+          description: "We mapped your weekly rhythm. See it below.",
+        });
+      } else {
+        toast({
+          title: "Could not read that",
+          description: body?.error ?? "Make sure you pasted a full .ics file.",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({ title: "Network error", description: "Please try again.", variant: "destructive" });
+    } finally {
+      setCalSubmitting(false);
+    }
+  }
+
   const activeRow = activeId ? imports.find((r) => r.id === activeId) ?? null : null;
 
   return (
@@ -349,10 +468,11 @@ export default function Imports() {
       <div className="max-w-5xl mx-auto px-4 py-10 w-full space-y-10">
         <section className="space-y-3">
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Bring your Hinge history into the light.
+            Bring your history into the light.
           </h1>
           <p className="text-muted-foreground max-w-2xl">
-            Upload your GDPR export. We'll show you what your match patterns actually say about you.
+            Drop your Hinge GDPR export or paste your calendar. We'll show you what your
+            patterns and your weekly rhythm actually say about you.
           </p>
         </section>
 
@@ -415,30 +535,30 @@ export default function Imports() {
             </CardContent>
           </Card>
 
-          <Card className="border-white/10 opacity-60">
+          <Card className="border-white/10 md:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FileArchive className="w-5 h-5" /> Tinder
+                <CalendarDays className="w-5 h-5" /> Calendar
               </CardTitle>
-              <p className="text-xs text-muted-foreground">Coming soon</p>
+              <p className="text-xs text-muted-foreground">
+                Live. Paste your .ics export. Read only, never stored as raw text.
+              </p>
             </CardHeader>
-            <CardContent>
-              <Button variant="secondary" className="w-full" disabled>
-                Not yet supported
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-white/10 opacity-60">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileArchive className="w-5 h-5" /> Bumble
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">Coming soon</p>
-            </CardHeader>
-            <CardContent>
-              <Button variant="secondary" className="w-full" disabled>
-                Not yet supported
+            <CardContent className="space-y-3">
+              <Textarea
+                value={icsText}
+                onChange={(e) => setIcsText(e.target.value)}
+                placeholder="Paste the contents of your .ics calendar file here..."
+                className="min-h-[120px] font-mono text-xs"
+                data-testid="calendar-ics-input"
+              />
+              <Button
+                className="w-full"
+                onClick={handleCalendarPaste}
+                disabled={calSubmitting}
+                data-testid="button-read-calendar"
+              >
+                {calSubmitting ? "Reading..." : "Read my rhythm"}
               </Button>
             </CardContent>
           </Card>

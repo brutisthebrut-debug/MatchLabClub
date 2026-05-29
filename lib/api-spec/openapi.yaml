@@ -2733,6 +2733,37 @@ paths:
         "415":
           description: Unsupported file type. Must be a ZIP.
 
+  /imports/calendar:
+    post:
+      tags: [insights]
+      operationId: uploadCalendarImport
+      summary: Import a calendar by pasting .ics contents
+      description: |
+        Accepts pasted .ics calendar file contents, parses event rhythm
+        in memory, and stores a structured summary in `imported_sources`
+        with source `calendar-ics`. No external fetch is made and the raw
+        text is not persisted, only the derived summary. Anon-first:
+        anonymous callers receive a claim token so the import reassigns to
+        their account on signup.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalendarImportBody'
+      responses:
+        "201":
+          description: Calendar parsed and stored.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportSource"
+        "400":
+          description: Missing, unreadable, or empty calendar paste.
+
   /imports:
     get:
       tags: [insights]
@@ -5546,6 +5577,16 @@ components:
         text:
           type: string
           description: The raw OCR-extracted text from the uploaded screenshot.
+
+    CalendarImportBody:
+      type: object
+      required: [icsContent]
+      properties:
+        icsContent:
+          type: string
+          description: The full text contents of a .ics calendar file.
+          minLength: 1
+          maxLength: 2000000
 
     ImportSource:
       type: object
