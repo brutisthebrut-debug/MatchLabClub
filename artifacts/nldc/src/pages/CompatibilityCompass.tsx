@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -932,6 +933,19 @@ export default function CompatibilityCompass() {
   >
   <RefreshCw className="w-3.5 h-3.5" />Start over
   </button>
+  </div>
+  )}
+  {result && (
+  <div className="mt-6">
+  <ToolHandoff
+  testId="compass-handoff"
+  fedLine="This read sharpens what the machine knows about your compatibility, which powers better matches near you."
+  steps={[
+  { label: "Map your wellness", href: "/wellness", desc: "Cover more dimensions to raise your readiness." },
+  { label: "See matching", href: "/matching", desc: "How readiness unlocks introductions." },
+  { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+  ]}
+  />
   </div>
   )}
   </motion.div>

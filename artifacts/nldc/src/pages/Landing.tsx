@@ -248,7 +248,7 @@ export default function Landing() {
                 </div>
               </Link>
               <Link
-                href="/start"
+                href="/signal-check"
                 className="rounded-[2rem] p-8 flex items-start gap-6 hover:shadow-xl transition-all hover:-translate-y-1"
                 style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo) / 0.15), hsl(326 100% 59% / 0.15))", border: "1px solid hsl(var(--brand-indigo) / 0.4)" }}
               >
@@ -256,8 +256,8 @@ export default function Landing() {
                   <FileText className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1 min-w-0 pt-1">
-                  <p className="text-xl font-bold text-foreground mb-2">Skip to the full Audit</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed font-medium">8-dimension breakdown, full rewrites, and a 7-day action plan.</p>
+                  <p className="text-xl font-bold text-foreground mb-2">Start my free Signal Check</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed font-medium">Three minutes, no account. Your readiness trail starts here.</p>
                 </div>
               </Link>
             </div>

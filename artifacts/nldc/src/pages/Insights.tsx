@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -723,6 +724,18 @@ export default function Insights() {
   ))}
   </ul>
   </div>
+  </div>
+
+  <div className="mt-6">
+  <ToolHandoff
+  testId="insights-handoff"
+  fedLine="These patterns become part of how the machine understands you, which sharpens your matches. Put one insight to work next."
+  steps={[
+  { label: "Coach a reply", href: "/coach", desc: "Apply your patterns to a real conversation." },
+  { label: "Go deeper on you", href: "/wellness", desc: "Answer a few questions to raise your readiness." },
+  { label: "Check your readiness", href: "/me", desc: "See how this fed your Match Readiness." },
+  ]}
+  />
   </div>
 
   {/* Previous Imports */}

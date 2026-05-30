@@ -80,14 +80,69 @@ import Quizzes from "@/pages/Quizzes";
 import QuizPlay from "@/pages/QuizPlay";
 import SelfHub from "@/pages/SelfHub";
 import Matching from "@/pages/Matching";
+import Onboarding from "@/pages/Onboarding";
 
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
 import { usePageTracking } from "@/hooks/usePageTracking";
+import { useAuth } from "@workspace/replit-auth-web";
+import {
+  useGetAccountSummary,
+  getGetAccountSummaryQueryKey,
+  useListWellnessAnswers,
+  getListWellnessAnswersQueryKey,
+} from "@workspace/api-client-react";
+import { hasCompletedOnboarding } from "@/lib/onboardingState";
 
 const queryClient = new QueryClient();
 
 function ClaimAnonymousGate() {
   useClaimAnonymousOnLogin();
+  return null;
+}
+
+// First-run gate. Sends a brand-new authenticated user into the guided onboarding
+// flow exactly once, only when they land on a home surface (/dashboard or /me) and
+// the account has no real signal yet. A returning user with any data, or anyone
+// who has finished or skipped onboarding in this browser, is never redirected.
+const ONBOARDING_ENTRY_ROUTES = new Set(["/dashboard", "/me"]);
+
+function OnboardingGate() {
+  const [location, setLocation] = useLocation();
+  const { isAuthenticated } = useAuth();
+  const enabled = isAuthenticated && !hasCompletedOnboarding();
+
+  const summary = useGetAccountSummary({
+    query: { queryKey: getGetAccountSummaryQueryKey(), enabled },
+  });
+  const wellness = useListWellnessAnswers(undefined, {
+    query: { queryKey: getListWellnessAnswersQueryKey(), enabled },
+  });
+
+  useEffect(() => {
+    if (!enabled) return;
+    if (!ONBOARDING_ENTRY_ROUTES.has(location)) return;
+    if (summary.isLoading || wellness.isLoading) return;
+
+    const s = summary.data;
+    const answerCount = wellness.data?.answers?.length ?? 0;
+    const hasSignal =
+      (s?.audits ?? 0) > 0 ||
+      (s?.profiles ?? 0) > 0 ||
+      (s?.journalEntries ?? 0) > 0 ||
+      (s?.postDateNotes ?? 0) > 0 ||
+      answerCount > 0;
+
+    if (!hasSignal) setLocation("/onboarding");
+  }, [
+    enabled,
+    location,
+    summary.isLoading,
+    summary.data,
+    wellness.isLoading,
+    wellness.data,
+    setLocation,
+  ]);
+
   return null;
 }
 
@@ -170,6 +225,7 @@ function Router() {
       <Route path="/copilot/demo" component={FounderDemoJourney} />
       <Route path="/copilot/flirt" component={FlirtCoach} />
       <Route path="/me" component={SelfHub} />
+      <Route path="/onboarding" component={Onboarding} />
       <Route path="/matching" component={Matching} />
       <Route path="/account" component={Account} />
       <Route path="/account/sessions" component={Sessions} />
@@ -205,6 +261,7 @@ function App() {
         <ClaimAnonymousGate />
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <ScrollToTop />
+          <OnboardingGate />
           <Router />
         </WouterRouter>
         <Toaster />

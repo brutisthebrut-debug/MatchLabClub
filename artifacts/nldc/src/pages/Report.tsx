@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useCopyDurationPref, COPY_DURATION_MS } from "@/lib/copyDurationPref";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,7 +15,7 @@ import {
   CheckCircle, XCircle, AlertCircle, ArrowRight, Copy, Check,
   Trophy, Calendar, Eye, Sparkles, MessageSquare, Camera,
   TrendingUp, Lightbulb, Heart, Zap, RefreshCw, Plus, Minus, ArrowUp, ArrowDown,
-  History, ChevronDown, ChevronUp, GitCompare, CheckSquare, Square
+  History, ChevronDown, ChevronUp, GitCompare, CheckSquare, Square, Lock
 } from "lucide-react";
 import { CompareVersionsDialog } from "@/components/CompareVersionsDialog";
 import { ShareButton } from "@/components/echo/ShareButton";
@@ -328,6 +329,7 @@ export default function Report() {
   const auditId = parseInt(id ?? "0", 10);
   useMeta("Signal Report", "Your full audit. Signal Score, bio critique, AI rewrite, prompt rewrites, photo checklist, and 7-day action plan.");
 
+  const { isAuthenticated, login } = useAuth();
   const queryClient = useQueryClient();
   const { data: audit, isLoading: auditLoading } = useGetAudit(auditId, {
   query: { enabled: !!auditId, queryKey: getGetAuditQueryKey(auditId) }
@@ -500,6 +502,31 @@ export default function Report() {
   <RefreshCw className={`w-3.5 h-3.5 ${regenerating ? "animate-spin" : ""}`} />
   {regenerating ? "Refreshing…" : "Regenerate"}
   </button>
+  </motion.div>
+  ) : null}
+
+  {/* ── Anon save rail: keep this report and start the readiness trail ── */}
+  {!isAuthenticated && auditId ? (
+  <motion.div
+  {...fadeUp(0)}
+  className="rounded-2xl border border-[hsl(326_100%_60%/0.3)] bg-[hsl(326_100%_60%/0.06)] px-5 py-4 flex flex-wrap items-center justify-between gap-3 mb-6"
+  data-testid="card-report-anon-save"
+  >
+  <div className="flex items-start gap-3 flex-1 min-w-[220px]">
+  <Lock className="h-5 w-5 text-[hsl(326_100%_55%)] flex-shrink-0 mt-0.5" aria-hidden="true" />
+  <div>
+  <p className="text-sm font-semibold text-foreground">This report isn&rsquo;t saved yet.</p>
+  <p className="text-xs text-muted-foreground mt-0.5">Create a free account to keep it forever and start building your Match Readiness.</p>
+  </div>
+  </div>
+  <Button
+  onClick={() => login()}
+  size="sm"
+  className="rounded-full px-5 bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 font-semibold text-white whitespace-nowrap"
+  data-testid="button-report-anon-save"
+  >
+  Save my report <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+  </Button>
   </motion.div>
   ) : null}
 

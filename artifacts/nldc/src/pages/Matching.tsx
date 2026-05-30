@@ -70,6 +70,51 @@ const fadeUp = (delay = 0) => ({
   },
 });
 
+// Matching is radius-based in miles. We store kilometers on the server, so the
+// presets map miles to their rounded km equivalent.
+const RADIUS_PRESETS: { value: string; label: string }[] = [
+  { value: "any", label: "Any distance" },
+  { value: "40", label: "Within 25 miles" },
+  { value: "56", label: "Within 35 miles" },
+  { value: "72", label: "Within 45 miles" },
+];
+
+// Snap any stored distance to the nearest preset so the selector always has a
+// matching option, even for historical values saved before presets existed.
+// Returns the "any" sentinel when no distance is set.
+function snapRadiusKm(km: number | null | undefined): string {
+  if (km == null) return "any";
+  let nearest = RADIUS_PRESETS[1];
+  let best = Infinity;
+  for (const preset of RADIUS_PRESETS) {
+    if (preset.value === "any") continue;
+    const diff = Math.abs(Number(preset.value) - km);
+    if (diff < best) {
+      best = diff;
+      nearest = preset;
+    }
+  }
+  return nearest.value;
+}
+
+// Map any stored gender preference (including legacy values like "everyone")
+// onto the current option set, defaulting to "any" so the Select never lands in
+// an invalid state for existing accounts.
+const GENDER_PREFERENCE_OPTIONS = [
+  "any",
+  "women",
+  "men",
+  "nonbinary",
+  "trans-women",
+  "trans-men",
+] as const;
+function normalizeGenderPreference(value: string | null | undefined): string {
+  if (!value) return "any";
+  return (GENDER_PREFERENCE_OPTIONS as readonly string[]).includes(value)
+    ? value
+    : "any";
+}
+
 interface BreakdownRow {
   key: "compass" | "journal" | "wellness" | "hingeImport" | "postDate" | "wins";
   label: string;
@@ -188,7 +233,7 @@ export default function Matching() {
   // Local form state, hydrated from server when prefs land.
   const [ageMin, setAgeMin] = useState<number>(25);
   const [ageMax, setAgeMax] = useState<number>(45);
-  const [distanceKm, setDistanceKm] = useState<string>("");
+  const [distanceKm, setDistanceKm] = useState<string>("any");
   const [genderPreference, setGenderPreference] = useState<string>("any");
   const [cityHint, setCityHint] = useState<string>("");
   const [dealBreakers, setDealBreakers] = useState<string[]>([]);
@@ -214,8 +259,8 @@ export default function Matching() {
     if (!prefs) return;
     if (typeof prefs.ageMin === "number") setAgeMin(prefs.ageMin);
     if (typeof prefs.ageMax === "number") setAgeMax(prefs.ageMax);
-    setDistanceKm(prefs.distanceKm == null ? "" : String(prefs.distanceKm));
-    setGenderPreference(prefs.genderPreference ?? "any");
+    setDistanceKm(snapRadiusKm(prefs.distanceKm));
+    setGenderPreference(normalizeGenderPreference(prefs.genderPreference));
     setCityHint(prefs.cityHint ?? "");
     setDealBreakers(prefs.dealBreakers ?? []);
     setMustHaves(prefs.mustHaves ?? []);
@@ -252,9 +297,9 @@ export default function Matching() {
     (import.meta.env.VITE_CONCIERGE_INTAKE_URL as string | undefined) ?? "";
 
   async function handleSavePreferences() {
-    const distanceNum = distanceKm.trim().length === 0 ? null : Number(distanceKm);
+    const distanceNum = distanceKm === "any" ? null : Number(distanceKm);
     if (distanceNum != null && (!Number.isFinite(distanceNum) || distanceNum < 0)) {
-      toast({ title: "Distance needs to be a positive number." });
+      toast({ title: "Pick a match radius and try again." });
       return;
     }
     try {
@@ -367,8 +412,10 @@ export default function Matching() {
             Matching is coming. Sign in to get to the front of the line.
           </h1>
           <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-            Founder-curated intros for Wingman customers, algorithmic for
-            everyone else. No swipe.
+            AI-driven introductions inside your radius (25, 35, or 45 miles), to
+            people you would never find on your own. Readiness-gated, so the
+            machine matches you only once it truly knows you. Open to all
+            genders and orientations. No swipe.
           </p>
           <div className="mt-6 flex gap-3 justify-center">
             <Button
@@ -404,10 +451,14 @@ export default function Matching() {
             Matching is coming. Here is how you get to the front of the line.
           </h1>
           <p className="text-muted-foreground mt-4 max-w-2xl leading-relaxed">
-            Two lanes. Wingman customers get founder-curated intros, hand
-            picked. Everyone else gets algorithmic matches built from the
-            signals you have already given us. No swipe carousel. No infinite
-            scroll. Just a small number of well-considered people.
+            This is the payoff, not the headline. The more the machine knows
+            you, the better it matches you, so matching stays gated behind your
+            readiness. When it opens, you get AI-driven introductions inside
+            your radius (25, 35, or 45 miles) to people you would never find on
+            your own. Wingman customers also get founder-curated intros, hand
+            picked. Open to every gender and orientation. No swipe carousel, no
+            infinite scroll, just a small number of well-considered people near
+            you.
           </p>
         </motion.div>
 
@@ -864,18 +915,24 @@ export default function Matching() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <Label htmlFor="distance" className="text-sm font-semibold">
-                    Distance (km)
+                    Match radius
                   </Label>
-                  <Input
-                    id="distance"
-                    type="number"
-                    min={0}
-                    max={20000}
-                    value={distanceKm}
-                    onChange={(e) => setDistanceKm(e.target.value)}
-                    placeholder="No limit"
-                    data-testid="input-distance"
-                  />
+                  <Select value={distanceKm} onValueChange={setDistanceKm}>
+                    <SelectTrigger id="distance" data-testid="select-distance">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {RADIUS_PRESETS.map((preset) => (
+                        <SelectItem key={preset.value} value={preset.value}>
+                          {preset.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Introductions stay inside this radius, so the people you meet
+                    are genuinely near you.
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="gender" className="text-sm font-semibold">
@@ -889,13 +946,18 @@ export default function Matching() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="any">Any</SelectItem>
+                      <SelectItem value="any">Open to everyone</SelectItem>
                       <SelectItem value="women">Women</SelectItem>
                       <SelectItem value="men">Men</SelectItem>
-                      <SelectItem value="nonbinary">Nonbinary</SelectItem>
-                      <SelectItem value="everyone">Everyone</SelectItem>
+                      <SelectItem value="nonbinary">Nonbinary people</SelectItem>
+                      <SelectItem value="trans-women">Trans women</SelectItem>
+                      <SelectItem value="trans-men">Trans men</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Every gender and orientation is welcome here. Pick what fits
+                    you.
+                  </p>
                 </div>
               </div>
 

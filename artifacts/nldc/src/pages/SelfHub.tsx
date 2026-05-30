@@ -547,6 +547,10 @@ export default function SelfHub() {
   { key: "calendar", label: "Calendar paste", icon: Calendar, active: false, href: "/imports", state: "live" },
   ];
 
+  const readinessScore = matchingState.data?.readiness?.score ?? 0;
+  const activeSources = signalSources.filter(s => s.active).length;
+  const liveSources = signalSources.filter(s => s.state === "live").length;
+
   return (
   <AppLayout>
   <div className="container mx-auto px-4 md:px-6 py-10 md:py-14 max-w-6xl">
@@ -554,29 +558,91 @@ export default function SelfHub() {
   {/* Header */}
   <motion.div {...fadeUp(0)} className="mb-8 md:mb-10">
   <div className="flex items-center gap-2 mb-2">
-  <span className="text-xs uppercase tracking-widest text-[hsl(248_62%_52%)] font-bold">Self Hub</span>
+  <span className="text-xs uppercase tracking-widest text-[hsl(248_62%_52%)] font-bold">Home</span>
   <span className="text-xs text-muted-foreground">· /me</span>
   </div>
-  <div className="mb-4">
-  <Link
-  href="/matching"
-  className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold border border-[hsl(326_100%_60%/0.3)] bg-[hsl(326_100%_60%/0.06)] text-[hsl(326_100%_45%)] hover:bg-[hsl(326_100%_60%/0.12)] transition-colors"
-  data-testid="link-self-hub-matching-readiness"
-  >
-  <Heart className="w-3.5 h-3.5" aria-hidden="true" />
-  {matchingState.data && matchingState.data.readiness.score > 0
-  ? `Match readiness: ${matchingState.data.readiness.score}%`
-  : "Build your match readiness"}
-  <ArrowRight className="w-3 h-3" aria-hidden="true" />
-  </Link>
-  </div>
   <h1 className="font-serif text-3xl md:text-5xl font-bold text-foreground leading-tight">
-  Hi{user?.firstName ? `, ${user.firstName}` : ""}. Here&rsquo;s what we know about you.
+  Hi{user?.firstName ? `, ${user.firstName}` : ""}. This is your readiness lab.
   </h1>
   <p className="text-muted-foreground mt-3 max-w-2xl leading-relaxed">
-  Your second brain for dating. Every signal below feeds one readiness score that grows toward real matches.
+  Everything below feeds one Match Readiness score that grows toward real matches near you.
   It is all yours, exportable, and deletable at any time.
   </p>
+  </motion.div>
+
+  {/* Readiness hero: the single meter the whole product climbs toward */}
+  <motion.div
+  {...fadeUp(0.03)}
+  className="mb-6 md:mb-8 rounded-3xl p-6 md:p-8 border border-[hsl(326_100%_60%/0.2)] bg-gradient-to-br from-[hsl(248_62%_52%/0.08)] to-[hsl(326_100%_60%/0.08)]"
+  data-testid="card-readiness-hero"
+  >
+  <div className="grid gap-6 md:grid-cols-[1.1fr_1fr] md:gap-10 md:items-center">
+  {/* Meter */}
+  <div>
+  <div className="flex items-center gap-2 mb-2">
+  <Heart className="h-4 w-4 text-[hsl(326_100%_55%)]" aria-hidden="true" />
+  <span className="text-xs uppercase tracking-widest font-bold text-[hsl(326_100%_45%)]">Match Readiness</span>
+  </div>
+  <div className="flex items-end gap-3">
+  <span className="font-serif text-6xl md:text-7xl font-bold gradient-text leading-none" data-testid="readiness-hero-score">{readinessScore}%</span>
+  <span className="mb-2 text-sm text-muted-foreground">
+  {matchEligible ? "matching unlocked" : "climbing toward your unlock"}
+  </span>
+  </div>
+  <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-foreground/10">
+  <motion.div
+  className="h-full rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B]"
+  initial={{ width: 0 }}
+  animate={{ width: `${readinessScore}%` }}
+  transition={{ duration: 0.8, ease: "easeOut" }}
+  />
+  </div>
+  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+  The more the machine knows you, the better it matches you. Every tool, source, and answer moves this up.
+  </p>
+  <div className="mt-4">
+  <Link
+  href="/matching"
+  className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold bg-foreground text-background hover:opacity-90 transition-opacity"
+  data-testid="readiness-hero-cta"
+  >
+  {matchEligible ? "See your matches" : "View matching"}
+  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+  </Link>
+  </div>
+  </div>
+  {/* Two big levers */}
+  <div className="grid grid-cols-2 gap-3">
+  <Link
+  href="/wellness"
+  className="rounded-2xl border border-foreground/10 bg-background/40 p-4 transition-colors hover:border-foreground/25"
+  data-testid="readiness-lever-wellness"
+  >
+  <Activity className="mb-2 h-5 w-5 text-[hsl(248_62%_52%)]" aria-hidden="true" />
+  <div className="font-serif text-2xl font-bold text-foreground">
+  {distinctDims.size}<span className="text-base text-muted-foreground">/{WELLNESS_DIMENSION_COUNT}</span>
+  </div>
+  <div className="mt-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Wellness depth</div>
+  <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[hsl(248_62%_52%)]">
+  Go deeper <ArrowRight className="h-3 w-3" aria-hidden="true" />
+  </span>
+  </Link>
+  <Link
+  href="/connections"
+  className="rounded-2xl border border-foreground/10 bg-background/40 p-4 transition-colors hover:border-foreground/25"
+  data-testid="readiness-lever-sources"
+  >
+  <Plug className="mb-2 h-5 w-5 text-[hsl(248_62%_52%)]" aria-hidden="true" />
+  <div className="font-serif text-2xl font-bold text-foreground">
+  {activeSources}<span className="text-base text-muted-foreground">/{liveSources}</span>
+  </div>
+  <div className="mt-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Connected sources</div>
+  <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[hsl(248_62%_52%)]">
+  Connect more <ArrowRight className="h-3 w-3" aria-hidden="true" />
+  </span>
+  </Link>
+  </div>
+  </div>
   </motion.div>
 
   {/* Engine spine: your next best step toward a match */}

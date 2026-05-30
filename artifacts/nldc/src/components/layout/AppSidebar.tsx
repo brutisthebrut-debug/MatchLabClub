@@ -77,14 +77,18 @@ type NavLink = {
 type NavSection = {
   id: string;
   label: string;
-  links: NavLink[];
+  // Primary links are shown whenever the section is open. Everything in `more`
+  // sits behind a "Show all" disclosure so the rail reads as a focused spine
+  // while keeping every route one click away. No page is ever orphaned.
+  primary: NavLink[];
+  more: NavLink[];
 };
 
-// Engine-aligned navigation. Leads with the readiness engine and where it goes
-// (matching), then the signals that feed it (tools, wingman, reflection, data).
-// Every existing route is preserved, only regrouped, reordered, and relabeled.
+// The spine: Home, then the readiness engine, the tools that feed it, the data
+// sources that feed it, the matching payoff it unlocks, and account. Every prior
+// route is preserved, only regrouped behind progressive disclosure.
 const OVERVIEW: NavLink[] = [
-  { name: "Self Hub", href: "/me", icon: Brain },
+  { name: "Home", href: "/me", icon: Brain },
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
 ];
 
@@ -92,52 +96,47 @@ const SECTIONS: NavSection[] = [
   {
     id: "readiness",
     label: "Your readiness",
-    links: [
+    primary: [
       { name: "Readiness", href: "/progress/readiness", icon: Gauge },
       { name: "Scorecard", href: "/progress/scorecard", icon: Gauge },
       { name: "Timeline", href: "/progress/timeline", icon: History },
+      { name: "Wins Log", href: "/progress/wins", icon: Trophy },
+    ],
+    more: [
       { name: "Patterns", href: "/progress/patterns", icon: Layers },
       { name: "Activity Feed", href: "/progress/feed", icon: Rss },
-      { name: "Wins Log", href: "/progress/wins", icon: Trophy },
       { name: "Follow-Up", href: "/progress/followup", icon: ListChecks },
       { name: "Experiments", href: "/progress/experiments", icon: Beaker },
       { name: "Pattern Breaker", href: "/progress/pattern-breaker", icon: Unplug },
       { name: "Companion", href: "/progress/companion", icon: MessagesSquare },
       { name: "Control Center", href: "/progress/control", icon: SlidersHorizontal },
       { name: "Insights Roadmap", href: "/progress/insights-roadmap", icon: MapIcon },
-    ],
-  },
-  {
-    id: "matching",
-    label: "Matching",
-    links: [
-      { name: "Matching", href: "/matching", icon: HeartHandshake, badge: "Beta" },
-      { name: "Connection Center", href: "/connections", icon: Plug },
-      { name: "Future Connections", href: "/future-connections", icon: Users },
+      { name: "Reflection", href: "/reflection", icon: Heart },
+      { name: "Blueprint", href: "/blueprint", icon: FileText },
+      { name: "Mirror Profile", href: "/mirror", icon: Aperture },
+      { name: "Your Mirror", href: "/your-mirror", icon: Eye },
+      { name: "Journal", href: "/mirror/journal", icon: BookOpen },
+      { name: "Post-Date Notes", href: "/mirror/dates", icon: CalendarHeart },
     ],
   },
   {
     id: "tools",
     label: "Signal tools",
-    links: [
+    primary: [
       { name: "Signal Check", href: "/signal-check", icon: Activity },
       { name: "Message Coach", href: "/coach", icon: MessageCircle },
+      { name: "Photo Scan", href: "/scan", icon: ImageUp },
+      { name: "Glow-Up Bio", href: "/glow-up", icon: Sparkles },
+      { name: "Compatibility Compass", href: "/compatibility-compass", icon: Compass },
+    ],
+    more: [
       { name: "Chemistry Lab", href: "/lab", icon: FlaskConical },
       { name: "Profile Reader", href: "/profile-reader", icon: ScanSearch },
       { name: "Next Message", href: "/next-message", icon: PenLine },
-      { name: "Glow-Up Bio", href: "/glow-up", icon: Sparkles },
-      { name: "Photo Scan", href: "/scan", icon: ImageUp },
       { name: "Diagnosis", href: "/diagnosis", icon: Stethoscope },
-      { name: "Compatibility Compass", href: "/compatibility-compass", icon: Compass },
       { name: "Style Map", href: "/style-map", icon: Grid3x3 },
       { name: "Connection Style", href: "/connection-style", icon: HeartHandshake },
       { name: "Archetype", href: "/archetype", icon: Drama },
-    ],
-  },
-  {
-    id: "wingman",
-    label: "Wingman",
-    links: [
       { name: "Wingman Studio", href: "/copilot", icon: Bot },
       { name: "Start My Reset", href: "/copilot/reset", icon: RotateCcw },
       { name: "Help Me Reply", href: "/copilot/reply", icon: Reply },
@@ -150,23 +149,14 @@ const SECTIONS: NavSection[] = [
     ],
   },
   {
-    id: "reflection",
-    label: "Reflection & journal",
-    links: [
-      { name: "Mirror Profile", href: "/mirror", icon: Aperture },
-      { name: "Your Mirror", href: "/your-mirror", icon: Eye },
-      { name: "Journal", href: "/mirror/journal", icon: BookOpen },
-      { name: "Post-Date Notes", href: "/mirror/dates", icon: CalendarHeart },
-      { name: "Reflection", href: "/reflection", icon: Heart },
-      { name: "Blueprint", href: "/blueprint", icon: FileText },
-    ],
-  },
-  {
     id: "connections",
-    label: "Data & privacy",
-    links: [
-      { name: "Imports", href: "/imports", icon: Download },
+    label: "Connections & data",
+    primary: [
+      { name: "Connection Center", href: "/connections", icon: Plug },
       { name: "Wellness Center", href: "/wellness", icon: Heart },
+      { name: "Imports", href: "/imports", icon: Download },
+    ],
+    more: [
       { name: "Life Context", href: "/life-context", icon: Briefcase },
       { name: "Communication Insights", href: "/insights", icon: Lightbulb },
       { name: "Integrations Roadmap", href: "/integrations", icon: Network },
@@ -175,18 +165,23 @@ const SECTIONS: NavSection[] = [
     ],
   },
   {
+    id: "matching",
+    label: "Matching",
+    primary: [
+      { name: "Matching", href: "/matching", icon: HeartHandshake, badge: "Beta" },
+      { name: "Future Connections", href: "/future-connections", icon: Users },
+    ],
+    more: [],
+  },
+  {
     id: "account",
     label: "Account",
-    links: [
+    primary: [
       { name: "Account & Billing", href: "/account", icon: Settings },
       { name: "Sessions", href: "/account/sessions", icon: ScrollText },
       { name: "Trash", href: "/trash", icon: Trash2 },
     ],
-  },
-  {
-    id: "more",
-    label: "More",
-    links: [
+    more: [
       { name: "Pricing", href: "/pricing", icon: Tag },
       { name: "Journal", href: "/blog", icon: Newspaper },
       { name: "Roadmap", href: "/roadmap", icon: MapIcon },
@@ -205,9 +200,14 @@ function isActiveHref(location: string, href: string) {
 
 function sectionForLocation(location: string): string | null {
   for (const section of SECTIONS) {
-    if (section.links.some((l) => isActiveHref(location, l.href))) return section.id;
+    const all = [...section.primary, ...section.more];
+    if (all.some((l) => isActiveHref(location, l.href))) return section.id;
   }
   return null;
+}
+
+function moreHasActive(location: string, section: NavSection) {
+  return section.more.some((l) => isActiveHref(location, l.href));
 }
 
 function NavRow({
@@ -249,16 +249,27 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
   const { user, logout } = useAuth();
   const activeSection = sectionForLocation(location);
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [showAll, setShowAll] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (activeSection) setOpen((prev) => ({ ...prev, [activeSection]: true }));
   }, [activeSection]);
 
+  // If the current route lives in a section's "more" bucket, reveal it so the
+  // active link is always visible.
+  useEffect(() => {
+    for (const section of SECTIONS) {
+      if (moreHasActive(location, section)) {
+        setShowAll((prev) => ({ ...prev, [section.id]: true }));
+      }
+    }
+  }, [location]);
+
   return (
     <div className="flex h-full flex-col">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-5">
-        <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-2.5 group">
+        <Link href="/me" onClick={onNavigate} className="flex items-center gap-2.5 group">
           <img
             src="/matchlab-logo.png"
             alt="MatchLab Club"
@@ -303,6 +314,7 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
 
         {SECTIONS.map((section) => {
           const isOpen = open[section.id] ?? false;
+          const expanded = showAll[section.id] ?? false;
           return (
             <div key={section.id} className="pt-2">
               <button
@@ -321,7 +333,7 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
               </button>
               {isOpen && (
                 <div id={`sidebar-panel-${section.id}`} className="mt-1 space-y-0.5">
-                  {section.links.map((link) => (
+                  {section.primary.map((link) => (
                     <NavRow
                       key={link.href}
                       link={link}
@@ -329,6 +341,31 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
                       onNavigate={onNavigate}
                     />
                   ))}
+                  {expanded &&
+                    section.more.map((link) => (
+                      <NavRow
+                        key={link.href}
+                        link={link}
+                        active={isActiveHref(location, link.href)}
+                        onNavigate={onNavigate}
+                      />
+                    ))}
+                  {section.more.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowAll((prev) => ({ ...prev, [section.id]: !prev[section.id] }))
+                      }
+                      className="flex w-full items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground"
+                      data-testid={`sidebar-showall-${section.id}`}
+                    >
+                      <ChevronDown
+                        className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")}
+                        aria-hidden="true"
+                      />
+                      {expanded ? "Show less" : `Show all (${section.more.length} more)`}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
