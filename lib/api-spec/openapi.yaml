@@ -3435,9 +3435,10 @@ components:
         correctedApp:
           type: ["string", "null"]
           description: |
-            The app the user says the audit actually came from — one of "Hinge",
-            "Bumble", "Tinder", "CoffeeMeetsBagel". Pass null to mark the app
-            as unknown/unrecognised.
+            The app the user says the audit actually came from. One of "Hinge",
+            "Bumble", "Tinder", "Grindr", "Feeld", "HER", "OkCupid",
+            "CoffeeMeetsBagel". Pass null to mark the app as
+            unknown/unrecognised.
 
     CorrectSourceAppResult:
       type: object
@@ -5899,7 +5900,7 @@ components:
           maxLength: 20000
         source:
           type: string
-          enum: [hinge, tinder, bumble, other]
+          enum: [hinge, tinder, bumble, grindr, feeld, her, other]
 
     MatchExternalReadResult:
       type: object

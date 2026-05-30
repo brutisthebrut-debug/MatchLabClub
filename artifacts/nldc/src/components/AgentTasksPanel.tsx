@@ -19,7 +19,7 @@ const DEFAULT_TASKS: Omit<AgentTask, "addedAt">[] = [
   { id: "t4", title: "Log a win or observation", desc: "Small notes build patterns you can actually use", href: "/progress/timeline", status: "suggested" },
   { id: "t5", title: "Run a post-date debrief", desc: "Capture what felt good or off while it's still fresh", href: "/copilot/debrief", status: "suggested" },
   { id: "t6", title: "Check your Wellness profile", desc: "8 readiness dimensions, usually takes about 4 minutes", href: "/wellness", status: "suggested" },
-  { id: "t7", title: "Review your next best action", desc: "Your dashboard surfaces the move with the most leverage", href: "/dashboard", status: "suggested" },
+  { id: "t7", title: "Review your next best action", desc: "Your dashboard surfaces the move with the most impact", href: "/dashboard", status: "suggested" },
 ];
 
 const STATUS_COLOR: Record<AgentTask["status"], string> = {

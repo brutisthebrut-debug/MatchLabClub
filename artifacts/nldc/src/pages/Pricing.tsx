@@ -390,7 +390,7 @@ export default function Pricing() {
                 {
                   step: "3",
                   title: "During beta: a personal founder review note",
-                  desc: "For founding beta users, the founder reads your report and writes a personal note on the 1–2 highest-leverage things specific to your situation. This takes up to 48 hours and is not a template.",
+                  desc: "For founding beta users, the founder reads your report and writes a personal note on the 1–2 highest-impact things specific to your situation. This takes up to 48 hours and is not a template.",
                   color: "hsl(var(--brand-gold))",
                 },
                 {

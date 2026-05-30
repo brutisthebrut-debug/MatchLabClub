@@ -199,7 +199,7 @@ export default function Matching() {
   // External read form.
   const [externalText, setExternalText] = useState("");
   const [externalSource, setExternalSource] = useState<
-    "hinge" | "tinder" | "bumble" | "other"
+    "hinge" | "tinder" | "bumble" | "grindr" | "feeld" | "her" | "other"
   >("hinge");
   const [externalResult, setExternalResult] = useState<{
     score: number;
@@ -698,7 +698,7 @@ export default function Matching() {
                 Already talking to someone? Score the match.
               </CardTitle>
               <CardDescription>
-                Paste their Hinge, Tinder, or Bumble profile. We score it
+                Paste their Hinge, Tinder, Bumble, Grindr, or Feeld profile. We score it
                 against what we know about you and save the read.
               </CardDescription>
             </CardHeader>
@@ -729,6 +729,9 @@ export default function Matching() {
                         <SelectItem value="hinge">Hinge</SelectItem>
                         <SelectItem value="tinder">Tinder</SelectItem>
                         <SelectItem value="bumble">Bumble</SelectItem>
+                        <SelectItem value="grindr">Grindr</SelectItem>
+                        <SelectItem value="feeld">Feeld</SelectItem>
+                        <SelectItem value="her">HER</SelectItem>
                         <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>

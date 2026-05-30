@@ -1426,7 +1426,7 @@ const ARTICLE_CONTENT: Record<string, React.ReactNode> = {
   Voice notes on dating apps started as a Hinge novelty and have become a small ritual: the moment in a conversation where the energy is good enough to feel like text isn't quite enough, but a phone call would be too much.
   </p>
   <p>
-  They're also one of the highest-leverage moves on a dating app, because a voice note carries information that text physically can't, and people read that information faster than they realise.
+  They're also one of the highest-impact moves on a dating app, because a voice note carries information that text physically can't, and people read that information faster than they realise.
   </p>
 
   <h2>What a voice note actually transmits</h2>
@@ -1553,7 +1553,7 @@ const ARTICLE_CONTENT: Record<string, React.ReactNode> = {
   <strong>The questions you never ask.</strong> Look at five of your old conversations and count how many times you asked about: their family, their last relationship, what they want in the next year, what their week actually looks like. Patterns of avoidance are visible only when you look at multiple conversations at once.
   </p>
   <p>
-  <strong>Where things stall.</strong> Most of your conversations probably die at the same approximate point, message seven, message twelve, the point where someone needs to suggest a meet-up. If you find that point, you've found your highest-leverage thing to change.
+  <strong>Where things stall.</strong> Most of your conversations probably die at the same approximate point, message seven, message twelve, the point where someone needs to suggest a meet-up. If you find that point, you've found your highest-impact thing to change.
   </p>
 
   <h2>The attachment signature in your messages</h2>
@@ -1580,7 +1580,7 @@ const ARTICLE_CONTENT: Record<string, React.ReactNode> = {
   Write down three things you notice. Don't judge them yet, just notice.
   </p>
   <p>
-  Those three things are usually the same three things across most of your conversations, and they're usually the leverage points where small changes produce large different outcomes.
+  Those three things are usually the same three things across most of your conversations, and they're usually the pressure points where small changes produce outsized outcomes.
   </p>
   </>
   ),
@@ -1764,7 +1764,7 @@ const ARTICLE_CONTENT: Record<string, React.ReactNode> = {
 
   <h2>The "and" reframe</h2>
   <p>
-  One of the highest-leverage skills in boundary work is replacing "but" with "and." Watch:
+  One of the highest-impact skills in boundary work is replacing "but" with "and." Watch:
   </p>
   <p>
   "I can't do this, <strong>but</strong> I want you to know I really like you", the "but" makes the second clause feel like consolation, which makes the first clause feel like rejection.

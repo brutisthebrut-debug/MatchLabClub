@@ -243,7 +243,7 @@ const REPLY_STYLES: Record<string, { gradient: string; emoji: string; border: st
   "Graceful Exit": { gradient: "linear-gradient(135deg, hsl(228 25% 40%), hsl(248 40% 32%))", emoji: "🤍", border: "hsl(228 25% 50% / 0.25)" },
 };
 
-const SOURCE_APPS = ["Hinge", "Bumble", "Tinder", "CoffeeMeetsBagel"] as const;
+const SOURCE_APPS = ["Hinge", "Bumble", "Tinder", "Grindr", "Feeld", "HER", "OkCupid", "CoffeeMeetsBagel"] as const;
 
 function SourceAppPicker({
   current,
@@ -974,7 +974,7 @@ export default function Report() {
   <div className="mt-5 pt-4 border-t border-white/5">
   <p className="text-xs text-muted-foreground leading-relaxed">
   <strong className="text-foreground">What to focus on first:</strong>{" "}
-  Your lowest-scoring dimensions are where the 7-day action plan starts. The plan below sequences the highest-leverage changes in order, start there.
+  Your lowest-scoring dimensions are where the 7-day action plan starts. The plan below sequences the highest-impact changes in order, start there.
   </p>
   </div>
   </motion.div>

@@ -19,7 +19,7 @@ export function Footer() {
   />
   </Link>
   <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
-  A second brain for your dating life. It sits on top of Tinder, Hinge, and Bumble and turns the real signals you already generate into a readiness score, then uses it to introduce you to real people. It never replaces the apps, it makes you better at them.
+  A second brain for your dating life. It sits on top of the apps you already use, Tinder, Hinge, Bumble, Grindr, Feeld, and more, and turns the real signals you already generate into a readiness score, then uses it to introduce you to real people. It never replaces the apps, it makes you better at them.
   </p>
   <p className="text-muted-foreground/60 text-xs mt-4 leading-relaxed max-w-xs">
   Hybrid AI: deterministic baseline always-on, Anthropic Claude layered on top, opt-in per account.

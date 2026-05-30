@@ -6,3 +6,27 @@ id = "ZDp6JAruIywqfbhiGrYXm"
 uri = "file://artifacts/nldc-mobile/assets/images/icon.png"
 type = "image"
 title = "nldc icon"
+
+[[generated]]
+id = "UYitb5rgmMGUkyzOrJ0Py"
+uri = "file://artifacts/nldc/public/couples/couple-gaymen.png"
+type = "image"
+title = "gay male couple cafe"
+
+[[generated]]
+id = "r24c-bTkQGT7M6dgN61r6"
+uri = "file://artifacts/nldc/public/couples/couple-women.png"
+type = "image"
+title = "lesbian couple street"
+
+[[generated]]
+id = "itHh7K0x-hNfJD_WKj1we"
+uri = "file://artifacts/nldc/public/couples/couple-dinner.png"
+type = "image"
+title = "interracial couple dinner"
+
+[[generated]]
+id = "1Lh_kXEap3rCD7Ti0VU5h"
+uri = "file://artifacts/nldc/public/couples/couple-embrace.png"
+type = "image"
+title = "black couple embrace"

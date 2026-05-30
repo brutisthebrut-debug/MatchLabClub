@@ -351,6 +351,43 @@ export default function Landing() {
   </div>
   </section>
 
+  {/* ── Real people band ── */}
+  <section className="py-16 md:py-20 border-t border-foreground/5 relative overflow-hidden">
+  <div className="container mx-auto px-4 relative z-10">
+  <div className="text-center mb-10 max-w-2xl mx-auto">
+  <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(326_100%_58%)] mb-3">Who this is for</p>
+  <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+  Real people, <span className="gradient-text italic">every kind of connection.</span>
+  </h2>
+  <p className="text-sm text-muted-foreground/80 leading-relaxed">
+  Straight, gay, queer, bi, trans, non-binary, mono and poly. The work of being seen clearly is the same. The tools meet you wherever you date.
+  </p>
+  </div>
+  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 max-w-5xl mx-auto">
+  {[
+  { src: "/couples/couple-women.png", alt: "Two women laughing together on a city street at golden hour" },
+  { src: "/couples/couple-gaymen.png", alt: "A gay couple laughing together over coffee" },
+  { src: "/couples/couple-dinner.png", alt: "A couple sharing a laugh across a candlelit dinner table" },
+  { src: "/couples/couple-embrace.png", alt: "A couple smiling warmly in a close embrace at home" },
+  ].map((img, i) => (
+  <motion.div
+  key={img.src}
+  className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-foreground/8"
+  initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}
+  >
+  <img
+  src={img.src}
+  alt={img.alt}
+  loading="lazy"
+  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+  />
+  <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent pointer-events-none" />
+  </motion.div>
+  ))}
+  </div>
+  </div>
+  </section>
+
   {/* ── Trust. Early access / founder reviewed ── */}
   <section className="py-20 md:py-24 border-t border-foreground/5 relative overflow-hidden">
   <div className="orb orb-gold absolute w-96 h-96 right-0 top-20 opacity-40 pointer-events-none" />

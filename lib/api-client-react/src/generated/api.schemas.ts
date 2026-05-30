@@ -320,9 +320,10 @@ export interface Audit {
 
 export interface CorrectSourceAppInput {
   /**
-     * The app the user says the audit actually came from — one of "Hinge",
-  "Bumble", "Tinder", "CoffeeMeetsBagel". Pass null to mark the app
-  as unknown/unrecognised.
+     * The app the user says the audit actually came from. One of "Hinge",
+  "Bumble", "Tinder", "Grindr", "Feeld", "HER", "OkCupid",
+  "CoffeeMeetsBagel". Pass null to mark the app as
+  unknown/unrecognised.
 
      * @nullable
      */
@@ -2158,6 +2159,9 @@ export const MatchExternalReadInputSource = {
   hinge: 'hinge',
   tinder: 'tinder',
   bumble: 'bumble',
+  grindr: 'grindr',
+  feeld: 'feeld',
+  her: 'her',
   other: 'other',
 } as const;
 

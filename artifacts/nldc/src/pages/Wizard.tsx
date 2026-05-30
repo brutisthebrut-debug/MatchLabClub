@@ -17,7 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getListAuditsQueryKey } from "@workspace/api-client-react";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 
-const APPS = ["Hinge", "Bumble", "Tinder", "Coffee Meets Bagel", "The League", "Feeld", "OkCupid", "Other"];
+const APPS = ["Hinge", "Bumble", "Tinder", "Grindr", "Feeld", "HER", "Scruff", "Coffee Meets Bagel", "The League", "OkCupid", "Other"];
 const GOALS = [
   { value: "find a relationship", label: "Find a relationship", desc: "Looking for something real and lasting" },
   { value: "casual dating", label: "Casual dating", desc: "Open to connections without pressure" },

@@ -25,7 +25,7 @@
  *
  * Dashboard rendering notes:
  *   - Brand-new users (no audits / profiles / messages / insights) see a
- *     WelcomePanel with data-testid="dashboard-empty-state" instead of the
+ *     WelcomePanel with data-testid="dashboard-real-empty-state" instead of the
  *     score-ring — the score-ring requires at least one audit.
  *   - The hero landmark + "Your Dating Blueprint" heading are present on the
  *     Dashboard for all authenticated users and are absent from the Landing
@@ -52,7 +52,7 @@ const FAKE_USER = {
  *   2. The Dashboard component mounts and renders its authenticated UI.
  *
  * For a brand-new user (no audits) the dashboard shows the
- * data-testid="dashboard-empty-state" welcome panel rather than the score-ring
+ * data-testid="dashboard-real-empty-state" welcome panel rather than the score-ring
  * (which requires at least one completed audit).
  */
 test("dashboard renders authenticated UI when user is logged in", async ({
@@ -133,13 +133,14 @@ test("dashboard renders authenticated UI when user is logged in", async ({
 
   // Brand-new users see the welcome/empty-state panel (no audits yet).
   // This element is present ONLY on the Dashboard — it never appears on Landing.
-  await expect(page.locator('[data-testid="dashboard-empty-state"]')).toBeVisible({
+  await expect(page.locator('[data-testid="dashboard-real-empty-state"]')).toBeVisible({
     timeout: 20_000,
   });
 
-  // The "Your Dating Blueprint" heading is always shown for authenticated
-  // users on the Dashboard page.
-  await expect(page.locator('h1')).toContainText("Your Dating Blueprint", {
+  // A brand-new authenticated user (zero audits) lands on the real empty
+  // state, whose heading is "No audits yet". The full "Your Dating Blueprint"
+  // dashboard only renders once at least one audit exists.
+  await expect(page.locator('h1')).toContainText("No audits yet", {
     timeout: 5_000,
   });
 });
@@ -385,7 +386,7 @@ test("submit audit through wizard, then /dashboard renders real score-ring and a
 
   // And the empty-state welcome panel must NOT be shown anymore.
   await expect(
-    page.locator('[data-testid="dashboard-empty-state"]'),
+    page.locator('[data-testid="dashboard-real-empty-state"]'),
   ).not.toBeVisible();
 });
 

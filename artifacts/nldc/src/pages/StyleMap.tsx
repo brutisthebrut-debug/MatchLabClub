@@ -92,7 +92,7 @@ function analyzeStyle(text: string): StyleMapResult {
   { label: "Pacing", value: pacing, note: pacing > 70 ? "Moves forward, you're steering toward something, which is good" : pacing > 45 ? "Measured, neither rushing nor stalling" : "Slow, may feel meandering without a clear direction", color: "hsl(326 100% 65%)" },
   { label: "Availability", value: availability, note: availability > 70 ? "High, emotional openness is present and legible" : availability > 45 ? "Present, some warmth is accessible" : "Guarded, emotional availability isn't coming through clearly yet", color: "hsl(var(--brand-green))" },
   { label: "Directness", value: directness, note: directness > 70 ? "High, you say what you mean" : directness > 45 ? "Moderate, direct in some areas, soft-pedaling in others" : "Low, more indirection than serves you; try naming what you want", color: "hsl(190 55% 60%)" },
-  { label: "Pressure", value: pressure, note: pressure > 65 ? "Elevated, the intensity may be creating mild pressure; ease off slightly" : pressure > 35 ? "Moderate, present but not excessive" : "Low, no sense of pressure; relaxed energy", color: "hsl(var(--brand-gold))" },
+  { label: "Pressure", value: pressure, note: pressure > 65 ? "High, the intensity may be creating mild pressure; ease off slightly" : pressure > 35 ? "Moderate, present but not excessive" : "Low, no sense of pressure; relaxed energy", color: "hsl(var(--brand-gold))" },
   { label: "Ambiguity", value: ambiguity, note: ambiguity > 65 ? "High, the intent isn't clear enough; name what you want more explicitly" : ambiguity > 35 ? "Some, a few unclear signals worth tightening" : "Low, signals are clear and legible", color: "hsl(228 18% 65%)" },
   ];
 

@@ -13,5 +13,8 @@ export const MatchExternalReadInputSource = {
   hinge: 'hinge',
   tinder: 'tinder',
   bumble: 'bumble',
+  grindr: 'grindr',
+  feeld: 'feeld',
+  her: 'her',
   other: 'other',
 } as const;

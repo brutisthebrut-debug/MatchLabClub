@@ -4521,7 +4521,7 @@ I wanted to tell you about something we're offering to a small group of early us
 
 The Founder Reviewed Dating Reset is a hands-on package:
 - Full AI profile audit with your score and breakdown
-- A personal note from me on the 1-2 highest-leverage things to fix
+- A personal note from me on the 1-2 highest-impact things to fix
 - Complete bio rewrite + prompt rewrites
 - A tailored 7-day action plan
 

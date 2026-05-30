@@ -65,7 +65,7 @@ function analyzeBlueprint(text: string, pattern: string, misread: string, want: 
   "You tend to move toward connection and then, at some threshold, sometimes conscious, sometimes not, create distance. The pull-back often feels protective in the moment but costs you opportunities that were actually real. The pattern is not random: it tends to activate when things feel like they might actually matter.",
   "You keep finding people who are emotionally, logistically, or situationally unavailable, and somewhere in the dynamic, the unavailability makes them feel safer or more compelling. Availability can feel low-stakes; the chase can feel like proof of worth. Worth examining.",
   "Connections start with real energy, then something dims. Often this is a pacing issue, the early momentum isn't sustained with enough depth or novelty. Sometimes it's that neither person takes the step from 'this is nice' to 'let's make this something.' The fizzle is usually addressable.",
-  "You tend to move at a pace that doesn't match the other person, either arriving fully before they're ready, or holding back while they're already in. Calibrating tempo is one of the highest-leverage skills in early dating; it's learnable.",
+  "You tend to move at a pace that doesn't match the other person, either arriving fully before they're ready, or holding back while they're already in. Calibrating tempo is one of the highest-impact skills in early dating; it's learnable.",
   "You tend to stay past the point of fit, or exit before things have had time to develop. The pattern often has a consistent internal cue, learning to recognize it is the work.",
   ];
 

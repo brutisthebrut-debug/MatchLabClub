@@ -2294,7 +2294,7 @@ export const CorrectAuditSourceAppParams = zod.object({
 })
 
 export const CorrectAuditSourceAppBody = zod.object({
-  "correctedApp": zod.string().nullable().describe('The app the user says the audit actually came from — one of \"Hinge\",\n\"Bumble\", \"Tinder\", \"CoffeeMeetsBagel\". Pass null to mark the app\nas unknown\/unrecognised.\n')
+  "correctedApp": zod.string().nullable().describe('The app the user says the audit actually came from. One of \"Hinge\",\n\"Bumble\", \"Tinder\", \"Grindr\", \"Feeld\", \"HER\", \"OkCupid\",\n\"CoffeeMeetsBagel\". Pass null to mark the app as\nunknown\/unrecognised.\n')
 })
 
 export const CorrectAuditSourceAppResponse = zod.object({
@@ -3725,7 +3725,7 @@ export const createMatchingExternalReadBodyProfileTextMax = 20000;
 
 export const CreateMatchingExternalReadBody = zod.object({
   "profileText": zod.string().min(1).max(createMatchingExternalReadBodyProfileTextMax),
-  "source": zod.enum(['hinge', 'tinder', 'bumble', 'other'])
+  "source": zod.enum(['hinge', 'tinder', 'bumble', 'grindr', 'feeld', 'her', 'other'])
 })
 
 export const createMatchingExternalReadResponseScoreMin = 0;

@@ -654,7 +654,7 @@ export default function SelfHub() {
   icon={Upload}
   label="Imported sources"
   value={importsCount}
-  sub={importsCount === 0 ? "Hinge / Tinder / Bumble" : "Exports on file"}
+  sub={importsCount === 0 ? "Hinge / Grindr / Feeld" : "Exports on file"}
   href="/imports"
   cta={importsCount === 0 ? "Import your data" : "Manage imports"}
   testId="stat-imports"

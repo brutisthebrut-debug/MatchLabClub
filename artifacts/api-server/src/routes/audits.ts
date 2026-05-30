@@ -435,7 +435,7 @@ router.get("/audits/:id", async (req, res): Promise<void> => {
   res.json(GetAuditResponse.parse(serializeAudit(audit)));
 });
 
-const VALID_SOURCE_APPS = new Set(["Hinge", "Bumble", "Tinder", "CoffeeMeetsBagel"]);
+const VALID_SOURCE_APPS = new Set(["Hinge", "Bumble", "Tinder", "Grindr", "Feeld", "HER", "OkCupid", "CoffeeMeetsBagel"]);
 
 const CorrectSourceAppBody = z.object({
   correctedApp: z.string().nullable(),
