@@ -54,7 +54,7 @@ test("AI Reliability drill-in: selector, summary tiles, focused chart, and back 
   const keyInput = page.locator('input[type="password"]');
   await expect(keyInput).toBeVisible();
   await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Unlock Dashboard")').click();
+  await page.locator('button:has-text("Open Dashboard")').click();
 
   // ── 2. Locate the AI Reliability Trends panel ────────────────────────────
   // It lives in the default "overview" tab — no tab click needed.
@@ -97,7 +97,7 @@ test("AI Reliability trends: metric toggle switches displayed metric label", asy
   const keyInput = page.locator('input[type="password"]');
   await expect(keyInput).toBeVisible();
   await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Unlock Dashboard")').click();
+  await page.locator('button:has-text("Open Dashboard")').click();
 
   // ── 2. Wait for the panel to appear and data to load ─────────────────────
   const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
@@ -132,7 +132,7 @@ test("AI Reliability trends: Download CSV button is enabled once data loads and 
   const keyInput = page.locator('input[type="password"]');
   await expect(keyInput).toBeVisible();
   await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Unlock Dashboard")').click();
+  await page.locator('button:has-text("Open Dashboard")').click();
 
   // ── 2. Wait for panel and data ────────────────────────────────────────────
   const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
@@ -161,7 +161,7 @@ test("AI Reliability trends: metric toggle is hidden when a tool is focused and 
   const keyInput = page.locator('input[type="password"]');
   await expect(keyInput).toBeVisible();
   await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Unlock Dashboard")').click();
+  await page.locator('button:has-text("Open Dashboard")').click();
 
   // ── 2. Wait for the panel and seeded tool to be available ────────────────
   const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
@@ -194,7 +194,7 @@ test("AI Reliability trends: Download CSV filename includes focused tool slug su
   const keyInput = page.locator('input[type="password"]');
   await expect(keyInput).toBeVisible();
   await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Unlock Dashboard")').click();
+  await page.locator('button:has-text("Open Dashboard")').click();
 
   // ── 2. Wait for panel and data ────────────────────────────────────────────
   const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
@@ -232,7 +232,7 @@ test("AI Reliability drill-in: focus clears automatically when tool has no data 
   const keyInput = page.locator('input[type="password"]');
   await expect(keyInput).toBeVisible();
   await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Unlock Dashboard")').click();
+  await page.locator('button:has-text("Open Dashboard")').click();
 
   // ── 2. Confirm the panel is in the 90d window (default) ─────────────────
   const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');

@@ -189,7 +189,7 @@ function renderFounder() {
 async function unlockAndOpenOcrTab() {
   const input = await screen.findByPlaceholderText(/Founder key/i);
   fireEvent.change(input, { target: { value: "nldc2024" } });
-  fireEvent.click(screen.getByRole("button", { name: /Unlock Dashboard/i }));
+  fireEvent.click(screen.getByRole("button", { name: /Open Dashboard/i }));
   await screen.findByRole("button", { name: /OCR Mismatches/i });
   fireEvent.click(screen.getByRole("button", { name: /OCR Mismatches/i }));
   await screen.findByTestId("ocr-mismatches-panel");

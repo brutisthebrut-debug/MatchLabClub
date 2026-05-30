@@ -50,7 +50,7 @@ test("OCR trend chart shows Total legend label", async ({ page }) => {
   const keyInput = page.locator('input[type="password"]');
   await expect(keyInput).toBeVisible();
   await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Unlock Dashboard")').click();
+  await page.locator('button:has-text("Open Dashboard")').click();
 
   await page.locator('button:has-text("OCR Mismatches")').click();
 

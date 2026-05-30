@@ -189,7 +189,7 @@ function renderFounder() {
 async function unlockDashboard() {
   const input = await screen.findByPlaceholderText(/Founder key/i);
   fireEvent.change(input, { target: { value: "nldc2024" } });
-  const unlock = screen.getByRole("button", { name: /Unlock Dashboard/i });
+  const unlock = screen.getByRole("button", { name: /Open Dashboard/i });
   fireEvent.click(unlock);
   // Tab nav appears after unlock.
   await screen.findByRole("button", { name: /OCR Mismatches/i });
