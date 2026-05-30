@@ -38,9 +38,9 @@ async function checkRoute(browser, route) {
   let bodyLen = 0;
   let boundary = false;
   try {
-    const resp = await page.goto(BASE + route, { waitUntil: "domcontentloaded", timeout: 12000 });
+    const resp = await page.goto(BASE + route, { waitUntil: "commit", timeout: 8000 });
     status = resp ? resp.status() : "no-resp";
-    await page.waitForTimeout(900);
+    await page.waitForTimeout(700);
     const txt = (await page.evaluate(() => document.body?.innerText || "")).trim();
     bodyLen = txt.length;
     boundary = /something went wrong|unexpected error|error boundary|cannot read prop|is not a function/i.test(txt);
@@ -48,6 +48,8 @@ async function checkRoute(browser, route) {
     pageErrors.push("NAV:" + e.message.split("\n")[0]);
   }
   await ctx.close();
+  const bad = consoleErrors.length || pageErrors.length || boundary || bodyLen < 40 || (typeof status === "number" && status >= 400);
+  console.log(`${bad ? "✗" : "·"} ${route} [s${status} b${bodyLen}${boundary ? " ERR" : ""}${pageErrors.length ? " PE" + pageErrors.length : ""}${consoleErrors.length ? " CE" + consoleErrors.length : ""}]`);
   return { route, status, bodyLen, boundary, consoleErrors, pageErrors };
 }
 
