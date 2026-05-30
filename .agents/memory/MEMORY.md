@@ -2,3 +2,4 @@
 - [CSRF origin guard vs. local smoke tests](csrf-origin-testing.md) — write endpoints 403 unless the test request originates from $REPLIT_DEV_DOMAIN, not localhost.
 - [Source-app list sync](source-app-enum-sync.md) — adding/removing a dating app touches Report SOURCE_APPS, backend VALID_SOURCE_APPS, OpenAPI enum+codegen, and several UI dropdowns in lockstep.
 - [Anonymous claim/handoff signal wiring](anonymous-claim-wiring.md) — new anon signal types must be wired through web+mobile in BOTH cookie-claim and cross-device handoff paths, or rows are silently dropped.
+- [Em-dash voice cleanup](voice-rules-em-dash-cleanup.md) — don't blanket-replace em dashes with commas; clause-joins need period/semicolon, example-lists need colon, only appositives take a comma.

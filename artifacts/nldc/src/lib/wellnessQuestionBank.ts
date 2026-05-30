@@ -55,18 +55,18 @@ export const WELLNESS_QUESTIONS: WellnessQuestion[] = [
   { id: "physical.body_relationship",      dimension: "physical",     category: "body_experience", text: "What's your relationship with your body like?" },
   { id: "physical.energy_style",           dimension: "physical",     category: "energy",          text: "Do you feel energised by activity, or are you more low-key?" },
   { id: "physical.best_habits",            dimension: "physical",     category: "habits",          text: "What physical habits make you feel your best?" },
-  { id: "physical.stress_physically",      dimension: "physical",     category: "stress",          text: "How do you usually handle stress physically — exercise, sleep, movement, quiet time?" },
+  { id: "physical.stress_physically",      dimension: "physical",     category: "stress",          text: "How do you usually handle stress physically: exercise, sleep, movement, quiet time?" },
   { id: "physical.chronic_health",         dimension: "physical",     category: "health",          text: "Do you manage any chronic health conditions?", sensitive: true },
   { id: "physical.mental_health",          dimension: "physical",     category: "health",          text: "Do you manage any mental health challenges?", sensitive: true },
   { id: "physical.energy_window",          dimension: "physical",     category: "energy",          text: "What time of day are you at your best for real conversation?" },
   { id: "physical.fitness_importance",     dimension: "physical",     category: "lifestyle",       text: "How important is fitness or health to your lifestyle?" },
-  { id: "physical.ideal_relaxing_day",     dimension: "physical",     category: "lifestyle",       text: "What's your ideal relaxing day — adventure, couch, outdoors, travel?" },
+  { id: "physical.ideal_relaxing_day",     dimension: "physical",     category: "lifestyle",       text: "What's your ideal relaxing day: adventure, couch, outdoors, travel?" },
 
   // ── Social ─────────────────────────────────────────────────────────────────
   { id: "social.circle_size",              dimension: "social",       category: "style",           text: "Would you describe yourself as someone with a small inner circle or a wide social network?" },
   { id: "social.recharge",                 dimension: "social",       category: "style",           text: "How much do you need alone time to recharge after being social?" },
   { id: "social.friends_role",             dimension: "social",       category: "community",       text: "What role do friends and family play in your life right now?" },
-  { id: "social.offline_dating",           dimension: "social",       category: "dating_context",  text: "How do you currently meet new people — mostly apps, friends, events, or somewhere else?" },
+  { id: "social.offline_dating",           dimension: "social",       category: "dating_context",  text: "How do you currently meet new people: mostly apps, friends, events, or somewhere else?" },
   { id: "social.privacy",                  dimension: "social",       category: "privacy",         text: "Are you a private person or an open book?" },
   { id: "social.share_relationship",       dimension: "social",       category: "privacy",         text: "How much do you like sharing relationship details with others?" },
   { id: "social.support_network",          dimension: "social",       category: "community",       text: "Do you have people you can debrief with after dates?" },
@@ -108,7 +108,7 @@ export const WELLNESS_QUESTIONS: WellnessQuestion[] = [
   { id: "financial.talk_about",            dimension: "financial",    category: "communication",   text: "How comfortable are you talking about money with a partner?", sensitive: true },
 
   // ── Environmental / Home ──────────────────────────────────────────────────
-  { id: "environmental.home_feels",        dimension: "environmental",category: "home",            text: "How would you describe your home environment — calm, social, minimal, cosy?" },
+  { id: "environmental.home_feels",        dimension: "environmental",category: "home",            text: "How would you describe your home environment: calm, social, minimal, cosy?" },
   { id: "environmental.live_anywhere",     dimension: "environmental",category: "location",        text: "Are you open to living somewhere new, or is location a strong preference?" },
   { id: "environmental.spaces_best",       dimension: "environmental",category: "environment",     text: "What kinds of spaces let you be most yourself?" },
   { id: "environmental.routines",          dimension: "environmental",category: "habits",          text: "What routines are important to your wellbeing?" },
@@ -188,7 +188,7 @@ export const WELLNESS_QUESTIONS: WellnessQuestion[] = [
   { id: "lifestyle.morning_night",         dimension: "lifestyle",    category: "rhythm",          text: "Are you an early riser or a night person?" },
   { id: "lifestyle.weekday_rhythm",        dimension: "lifestyle",    category: "rhythm",          text: "What does a typical weekday feel like for you?" },
   { id: "lifestyle.weekend_style",         dimension: "lifestyle",    category: "rhythm",          text: "What's your ideal weekend?" },
-  { id: "lifestyle.adventure_vs_couch",    dimension: "lifestyle",    category: "preference",      text: "On a free day — adventure, couch, outdoors, or social?" },
+  { id: "lifestyle.adventure_vs_couch",    dimension: "lifestyle",    category: "preference",      text: "On a free day: adventure, couch, outdoors, or social?" },
   { id: "lifestyle.travel_importance",     dimension: "lifestyle",    category: "preference",      text: "How important is travel to you?" },
   { id: "lifestyle.health_fitness",        dimension: "lifestyle",    category: "habits",          text: "How does health and fitness fit into your daily life?" },
   { id: "lifestyle.spontaneous_planned",   dimension: "lifestyle",    category: "preference",      text: "Are you more spontaneous or do you prefer plans?" },
@@ -226,7 +226,7 @@ export const WELLNESS_QUESTIONS: WellnessQuestion[] = [
   { id: "culture.background",              dimension: "culture",      category: "identity",        text: "How does your cultural background show up in your daily life?" },
   { id: "culture.important_traditions",    dimension: "culture",      category: "traditions",      text: "What cultural or family traditions are important to you?" },
   { id: "culture.partner_background",      dimension: "culture",      category: "compatibility",   text: "How important is shared cultural background in a relationship?" },
-  { id: "culture.identity",                dimension: "culture",      category: "identity",        text: "How do you describe your identity — race, ethnicity, religion, or other?" },
+  { id: "culture.identity",                dimension: "culture",      category: "identity",        text: "How do you describe your identity: race, ethnicity, religion, or other?" },
 ];
 
 /** Questions grouped by dimension for use in the Progressive Profile Builder */
@@ -234,7 +234,7 @@ export function getQuestionsByDimension(dimension: string): WellnessQuestion[] {
   return WELLNESS_QUESTIONS.filter(q => q.dimension === dimension);
 }
 
-/** A curated set of "starter" questions for the onboarding module — 3 questions, one per key area */
+/** A curated set of "starter" questions for the onboarding module, 3 questions, one per key area */
 export const STARTER_MODULE: WellnessQuestion[] = [
   WELLNESS_QUESTIONS.find(q => q.id === "communication.process_style")!,
   WELLNESS_QUESTIONS.find(q => q.id === "lifestyle.morning_night")!,
@@ -309,7 +309,7 @@ export const PROFILE_MODULES = [
   {
     id: "intimacy_preferences",
     label: "Intimacy preferences",
-    subtitle: "You can skip this entirely — always optional",
+    subtitle: "You can skip this entirely, always optional",
     questions: WELLNESS_QUESTIONS.filter(q => q.dimension === "intimacy"),
     sensitive: true,
   },

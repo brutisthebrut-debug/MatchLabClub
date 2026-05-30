@@ -20,12 +20,12 @@ export const PACKAGES: Package[] = [
   {
     id: "start",
     label: "Start Here",
-    tagline: "Your first 3 minutes — get a real read",
+    tagline: "Your first 3 minutes: get a real read",
     color: "hsl(var(--brand-indigo))",
     icon: Sparkles,
     tools: [
-      { name: "Get your Signal Audit", href: "/start",         desc: "Begin here — 3-min intake wizard" },
-      { name: "Signal Check",          href: "/signal-check",  desc: "Quick read — instant profile score" },
+      { name: "Get your Signal Audit", href: "/start",         desc: "Begin here: 3-min intake wizard" },
+      { name: "Signal Check",          href: "/signal-check",  desc: "Quick read: instant profile score" },
       { name: "Photo Scan",            href: "/scan",          desc: "Upload a photo, get a fast read" },
       { name: "Dating Signal Quiz",    href: "/quiz",          desc: "8 questions → your dating archetype" },
     ],
@@ -131,13 +131,13 @@ export const PACKAGES: Package[] = [
   {
     id: "trust",
     label: "My Profile",
-    tagline: "What we know about you — and what you control",
+    tagline: "What we know about you, and what you control",
     color: "hsl(228 30% 62%)",
     icon: Shield,
     tools: [
       { name: "Wellness Center",   href: "/wellness",      desc: "8 dimensions of your readiness" },
       { name: "Data Vault",        href: "/vault",         desc: "Preview, export, or delete your data" },
-      { name: "Connection Center", href: "/connections",   desc: "Bring in context — on your terms" },
+      { name: "Connection Center", href: "/connections",   desc: "Bring in context, on your terms" },
       { name: "Data Imports",      href: "/imports",       desc: "Bring in your Hinge history for a real read" },
       { name: "User Control",      href: "/user-control",  desc: "Approve, edit, export, or delete" },
       { name: "Privacy Policy",    href: "/privacy",       desc: "How we handle your data" },

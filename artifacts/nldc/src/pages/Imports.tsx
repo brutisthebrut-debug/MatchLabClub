@@ -13,6 +13,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
+import { useMeta } from "@/hooks/useMeta";
 import { ShareButton } from "@/components/echo/ShareButton";
 
 type ImportStatus = "pending" | "complete" | "fallback" | string;
@@ -245,6 +246,10 @@ function SummaryView({ row }: { row: ImportRow }) {
 }
 
 export default function Imports() {
+  useMeta(
+    "Import your dating data",
+    "Bring in your Hinge export and other history so the machine understands your patterns and matches you better.",
+  );
   const { toast } = useToast();
   const [imports, setImports] = useState<ImportRow[]>([]);
   const [uploading, setUploading] = useState(false);

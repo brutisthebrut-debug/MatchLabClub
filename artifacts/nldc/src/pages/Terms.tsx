@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
-import { FileText, Heart, Star, AlertCircle, Ban, Mail } from "lucide-react";
+import { FileText, Heart, Star, AlertCircle, Ban, Mail, X } from "lucide-react";
 
 const Section = ({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) => (
   <div className="glass rounded-2xl p-6 md:p-8 space-y-4">
@@ -71,11 +71,11 @@ export default function Terms() {
   <Section icon={Ban} title="Acceptable use">
   <p>Please don't use MatchLab Club to:</p>
   <ul className="space-y-1.5 list-none">
-  <li className="flex items-start gap-2"><span className="text-red-400/80">✗</span> Harass, deceive, or manipulate other people</li>
-  <li className="flex items-start gap-2"><span className="text-red-400/80">✗</span> Create fake profiles or represent yourself as someone you're not</li>
-  <li className="flex items-start gap-2"><span className="text-red-400/80">✗</span> Submit someone else's private messages without their consent</li>
-  <li className="flex items-start gap-2"><span className="text-red-400/80">✗</span> Automate, scrape, or spam our platform</li>
-  <li className="flex items-start gap-2"><span className="text-red-400/80">✗</span> Violate anyone's privacy or dignity</li>
+  <li className="flex items-start gap-2"><X className="w-4 h-4 mt-0.5 text-red-400/80 flex-shrink-0" aria-hidden="true" /> Harass, deceive, or manipulate other people</li>
+  <li className="flex items-start gap-2"><X className="w-4 h-4 mt-0.5 text-red-400/80 flex-shrink-0" aria-hidden="true" /> Create fake profiles or represent yourself as someone you're not</li>
+  <li className="flex items-start gap-2"><X className="w-4 h-4 mt-0.5 text-red-400/80 flex-shrink-0" aria-hidden="true" /> Submit someone else's private messages without their consent</li>
+  <li className="flex items-start gap-2"><X className="w-4 h-4 mt-0.5 text-red-400/80 flex-shrink-0" aria-hidden="true" /> Automate, scrape, or spam our platform</li>
+  <li className="flex items-start gap-2"><X className="w-4 h-4 mt-0.5 text-red-400/80 flex-shrink-0" aria-hidden="true" /> Violate anyone's privacy or dignity</li>
   </ul>
   <p>We built this for people who want genuine connection. Using it to manipulate or harm people is the opposite of that.</p>
   </Section>

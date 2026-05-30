@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
+import { useMeta } from "@/hooks/useMeta";
 import {
   ArrowLeft,
   Sparkles,
@@ -99,6 +100,10 @@ function fmtShort(iso: string): string {
 }
 
 export default function YourMirror() {
+  useMeta(
+    "Your Mirror",
+    "See your patterns over time, the trends in how you date, and what is moving your readiness.",
+  );
   const { data, isLoading, isError } = useGetMirrorTrends();
   const { data: journalData } = useListJournalEntries({ view: "active", limit: 3 });
   const { data: notesData } = useListPostDateNotes({ view: "active", limit: 3 });
