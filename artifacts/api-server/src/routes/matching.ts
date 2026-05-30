@@ -29,6 +29,7 @@ import {
   type ReadinessBreakdown,
   type ReadinessNextAction,
 } from "../lib/readiness";
+import { describeActiveSignals } from "../lib/signalRegistry";
 
 // Minimum substantive journal length (chars) to count toward readiness. A
 // lazy one-liner should not move the needle; a real reflection should.
@@ -567,9 +568,15 @@ router.post("/me/matching/external-read", async (req, res): Promise<void> => {
   const userId = req.user.id;
   const deterministic = deterministicExternalRead(parsed.data.profileText);
 
-  // Forward loop: feed the user's own recent date outcomes into the read so the
-  // coach leans toward what has actually been working for them.
-  const outcomeInsight = await computeOutcomeInsightForUser(userId);
+  // Forward loop: feed the user's own recent date outcomes AND everything the
+  // signal registry knows about them into the read, so the coach leans toward
+  // what fits this specific person. The "what we know" block is assembled from
+  // the registry, so any newly added signal source shows up here automatically.
+  const [outcomeInsight, readiness] = await Promise.all([
+    computeOutcomeInsightForUser(userId),
+    computeReadiness(userId),
+  ]);
+  const knownSignals = describeActiveSignals(readiness.breakdown);
 
   const systemLines = [
     "You are Echo, a candid dating coach reading an external dating-app profile",
@@ -577,6 +584,12 @@ router.post("/me/matching/external-read", async (req, res): Promise<void> => {
     "profile looks for them, name specific signals, name specific frictions, and",
     "give a 2-3 sentence read in plain spoken English.",
   ];
+  if (knownSignals.length > 0) {
+    systemLines.push(
+      "What the machine already knows about this user (use it to judge fit for them specifically, do not repeat it back):",
+      ...knownSignals.map((line) => `- ${line}`),
+    );
+  }
   if (outcomeInsight.totalDates > 0) {
     systemLines.push(
       `Context on this user's recent dates: ${outcomeInsight.anotherDate} led to another date, ${outcomeInsight.noMore} were a no, ${outcomeInsight.ghosted} ghosted, ${outcomeInsight.unsure} unsure. Use this to judge fit, but read the pasted profile on its own merits.`,

@@ -50,3 +50,6 @@ Thumbs.db
 e2e/test-results/
 e2e/test-results/.last-run.json
 e2e/test-results/
+
+# Throwaway temp dirs from check-schema-drift
+lib/db/.drift-check-*

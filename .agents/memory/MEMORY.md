@@ -1,1 +1,2 @@
-- [Running api-server tests](api-server-test-runner.md) — direct `vitest run` in bash gets OOM/thread-killed (exit -1, no output); use the `api-tests` workflow instead.
+- [Living signal registry](signal-registry.md) — readiness/matching signals are registry-driven (signalRegistry.ts); add a signal by editing SIGNAL_REGISTRY, weights auto-normalize, ids must be unique.
+- [api-server test runner](api-server-test-runner.md) — api-server tests fail via direct bash (EAGAIN/thread cap); run them via the api-tests workflow instead.
