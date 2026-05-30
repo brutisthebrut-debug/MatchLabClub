@@ -7,7 +7,9 @@ import {
   AnalyzeInsightResponse,
   GetInsightsRollupResponse,
 } from "@workspace/api-zod";
-import { generateEmailInsightAnalysis } from "../lib/aiEngine";
+import type { EmailInsightAiOutput } from "@workspace/ai-schemas";
+import { generateEmailInsightAnalysis, type EmailInsightOutput } from "../lib/aiEngine";
+import { generate } from "../lib/aiService";
 import { getOrCreateAnonClaimToken, getAnonClaimToken } from "../lib/anonClaimToken";
 
 const router: IRouter = Router();
@@ -227,6 +229,99 @@ router.delete("/insights/:id", async (req, res): Promise<void> => {
   res.json({ success: true, deletedId: id });
 });
 
+async function enhanceEmailInsightWithAi(
+  base: EmailInsightOutput,
+  input: { pastedContent: string; sourceLabel: string; sourceApp: string | null },
+  userId: string | null | undefined,
+  log: Request["log"],
+): Promise<EmailInsightOutput> {
+  // Anonymous insights stay on the deterministic engine; only authenticated
+  // users with content consent (gated inside generate) reach the Claude lane.
+  if (!userId) return base;
+
+  try {
+    const appLine = input.sourceApp || "an unspecified dating app";
+    const system = [
+      "You are Echo, a candid communication coach for dating. Read the user's",
+      "pasted message history and surface the patterns in how they communicate,",
+      "their likely attachment style, what they do well, where they can grow, and",
+      "concrete dating-profile tips that follow from it.",
+      `Source: ${appLine}.`,
+      "Be specific and honest, grounded in what the messages actually show. No",
+      "generic advice that would apply to anyone.",
+      "Voice rules: no em dashes. No filler like 'unlock', 'elevate', 'dive in',",
+      "'game-changer', 'seamless', 'transformative', 'in today's world', 'buckle up'.",
+      "Vary sentence length.",
+      "Return JSON only, no prose, no code fences:",
+      '{ "communicationPatterns": [{ "pattern": "...", "frequency": "...", "impact": "..." }],',
+      '  "attachmentStyle": "short label plus one clause", "strengths": ["..."],',
+      '  "growthAreas": ["..."], "datingProfileTips": ["..."], "summary": "2-4 sentences" }',
+    ].join("\n");
+
+    const userContent = [
+      `Source label: ${input.sourceLabel}`,
+      `Message history:\n${input.pastedContent}`,
+      `Deterministic baseline (improve on this, do not just echo it):\n${JSON.stringify(
+        {
+          communicationPatterns: base.communicationPatterns,
+          attachmentStyle: base.attachmentStyle,
+          strengths: base.strengths,
+          growthAreas: base.growthAreas,
+          datingProfileTips: base.datingProfileTips,
+          summary: base.summary,
+        },
+        null,
+        2,
+      )}`,
+    ].join("\n\n");
+
+    const aiResult = await generate(
+      {
+        provider: "anthropic",
+        system,
+        user: userContent,
+        expectJson: true,
+        requireContentConsent: true,
+        userId,
+        context: { toolName: "Email Insights" },
+        maxTokens: 1400,
+      },
+      "",
+    );
+
+    if (!aiResult.isFallback && aiResult.validated && aiResult.output) {
+      const parsed = JSON.parse(aiResult.output) as EmailInsightAiOutput;
+      // Overlay only the descriptive fields. `sourceApp` stays deterministic
+      // because it is persisted and drives the rollup grouping/comparisons.
+      return {
+        ...base,
+        communicationPatterns: parsed.communicationPatterns,
+        attachmentStyle: parsed.attachmentStyle,
+        strengths: parsed.strengths,
+        growthAreas: parsed.growthAreas,
+        datingProfileTips: parsed.datingProfileTips,
+        summary: parsed.summary,
+      };
+    }
+    if (aiResult.fallbackReason) {
+      log.info(
+        { userId, fallbackReason: aiResult.fallbackReason },
+        "email insight analysis fell back to deterministic baseline",
+      );
+    }
+    return base;
+  } catch (err) {
+    // generate() handles provider errors internally, but any unexpected throw
+    // (consent lookup, JSON parse, etc.) must never fail the analysis: the
+    // deterministic result already covers it.
+    log.warn(
+      { err, userId },
+      "email insight deep-AI lane threw; using deterministic baseline",
+    );
+    return base;
+  }
+}
+
 router.post("/insights/:id/analyze", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(raw, 10);
@@ -246,11 +341,21 @@ router.post("/insights/:id/analyze", async (req, res): Promise<void> => {
 
   await db.update(emailInsightsTable).set({ status: "analyzing" }).where(eq(emailInsightsTable.id, id));
 
-  const analysis = generateEmailInsightAnalysis({
+  const baseAnalysis = generateEmailInsightAnalysis({
     pastedContent: insight.pastedContent,
     sourceLabel: insight.sourceLabel,
     sourceApp: insight.sourceApp,
   });
+  const analysis = await enhanceEmailInsightWithAi(
+    baseAnalysis,
+    {
+      pastedContent: insight.pastedContent,
+      sourceLabel: insight.sourceLabel,
+      sourceApp: insight.sourceApp,
+    },
+    req.user?.id ?? null,
+    req.log,
+  );
 
   if (analysis.sourceApp && !insight.sourceApp) {
     await db

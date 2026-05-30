@@ -52,6 +52,26 @@ export const bioRewriteSchema = z.object({
 
 export type BioRewriteOutput = z.infer<typeof bioRewriteSchema>;
 
+export const emailInsightSchema = z.object({
+  communicationPatterns: z
+    .array(
+      z.object({
+        pattern: z.string().trim().min(1),
+        frequency: z.string().trim().min(1),
+        impact: z.string().trim().min(1),
+      }),
+    )
+    .min(1)
+    .max(8),
+  attachmentStyle: z.string().trim().min(1),
+  strengths: z.array(z.string().trim().min(1)).min(1).max(8),
+  growthAreas: z.array(z.string().trim().min(1)).min(1).max(8),
+  datingProfileTips: z.array(z.string().trim().min(1)).min(1).max(8),
+  summary: z.string().trim().min(1),
+});
+
+export type EmailInsightAiOutput = z.infer<typeof emailInsightSchema>;
+
 export function parseAiJson<T>(
   schema: z.ZodType<T>,
   raw: string,
@@ -74,6 +94,7 @@ export const aiToolSchemas = {
   "Next Message": nextMessageSchema,
   "Message Coach": messageCoachSchema,
   "Bio Rewrite": bioRewriteSchema,
+  "Email Insights": emailInsightSchema,
 } as const;
 
 export type AiToolName = keyof typeof aiToolSchemas;

@@ -39,6 +39,16 @@ const EnhanceBody = z.object({
   expectJson: z.boolean().optional(),
 });
 
+/**
+ * Tools whose prompt carries the user's own raw content (pasted messages,
+ * screenshot text, reflection notes) to a hosted LLM. These must be routed
+ * through the consent-gated Anthropic lane the same way the dedicated routes
+ * (bio rewrite, message coach, email insights) are. The gate is enforced
+ * server-side here so a direct caller cannot bypass the client-side consent
+ * check. When consent is absent the call falls back to deterministic output.
+ */
+const CONTENT_SENSITIVE_TOOLS = new Set(["Compatibility Compass"]);
+
 router.get("/ai/status", (_req, res) => {
   res.json(getAiStatus());
 });
@@ -122,6 +132,11 @@ router.post(
 
     const fallback = `Coaching note for ${toolName}: Be specific and genuine — the most effective messages and profiles are honest, not strategic. Focus on what makes this moment or person unique, and respond to the actual situation rather than a template. Authenticity almost always outperforms a perfectly crafted line.`;
 
+    // Content-sensitive tools ship the user's own raw text, so they go through
+    // the consent-gated Anthropic lane (gate enforced server-side). Everything
+    // else keeps the prior default-provider behavior.
+    const sensitive = CONTENT_SENSITIVE_TOOLS.has(toolName);
+
     const result = await generate(
       {
         system: coachingPrompt(
@@ -135,6 +150,13 @@ router.post(
         maxTokens: 600,
         temperature: 0.6,
         expectJson,
+        ...(sensitive
+          ? {
+              provider: "anthropic" as const,
+              requireContentConsent: true,
+              userId: req.user?.id,
+            }
+          : {}),
       },
       fallback,
     );

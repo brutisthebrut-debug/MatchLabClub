@@ -11,12 +11,25 @@ aspirational, not a guarantee that every tool calls Claude. **Before trusting th
 grep for `generate(` with `provider: "anthropic"` to see which routes are actually wired.**
 
 **Why:** Several flagship tools historically ran deterministic-only while the docs implied
-Claude was layered on. Now wired: message coach (`/messages/:id/coach`) and audit/bio rewrite
-(both `audits.ts` call sites + `/audits/from-screenshot`, via `enhanceBioRewriteWithAi` which
-overlays only `rewrittenBio`+`bioAudit`, never the score). Remaining gaps as of this writing:
-email insights (`insights.ts`, no AI at all) and Compass synthesis (routes through the generic
-`/ai/enhance`, which is OpenAI-default and NOT consent-gated — a privacy inconsistency). Verify
-current state with grep before trusting this list.
+Claude was layered on. Now wired through the consent-gated Anthropic lane: message coach
+(`/messages/:id/coach`), audit/bio rewrite (both `audits.ts` call sites + `/audits/from-screenshot`,
+via `enhanceBioRewriteWithAi`, overlays only `rewrittenBio`+`bioAudit`, never the score), email
+insights (`/insights/:id/analyze` via `enhanceEmailInsightWithAi`, overlays descriptive fields but
+NOT `sourceApp`, which is persisted and drives the rollup grouping), and Compatibility Compass
+(via the `/ai/enhance` server-side allowlist below). Verify current state with grep before trusting
+this list.
+
+## The /ai/enhance shared-endpoint trap (Compass)
+
+`/ai/enhance` (`ai.ts`) is a generic coaching endpoint many tools hit; it defaults to OpenAI and
+is NOT consent-gated by default. Compatibility Compass historically used it and relied only on the
+*client* gating the call on consent, so a direct API caller could ship two people's profile/message
+content to a hosted LLM with no server check. Fix pattern: keep a server-side `CONTENT_SENSITIVE_TOOLS`
+set and, for those tool names only, pass `provider:"anthropic"`, `requireContentConsent:true`,
+`userId:req.user?.id` into `generate`. Non-sensitive tools keep the prior default-provider behavior.
+**Why:** the gate must live on the server (fail-closed) — client-only gating on a shared endpoint is
+bypassable. **How to apply:** add any new tool that ships raw user content through `/ai/enhance` to
+that set, or give it a dedicated route.
 
 ## House pattern for adding a Claude lane to a tool
 

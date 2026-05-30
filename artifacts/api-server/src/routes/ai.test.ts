@@ -167,4 +167,23 @@ describe("POST /api/ai/enhance", () => {
     const res = await request(app).post("/api/ai/enhance").send({ prompt: "no tool name" });
     expect(res.status).toBe(400);
   });
+
+  it("blocks a content-sensitive tool at the consent gate and never hits the default OpenAI lane", async () => {
+    // A key is present (so a non-sensitive tool would go live), but the
+    // Compatibility Compass prompt ships the user's own content, so it must be
+    // consent-gated server-side. With no authenticated/consented user the call
+    // falls back deterministically and OpenAI is never touched.
+    process.env.OPENAI_API_KEY = "test-key-abc";
+    const app = await makeApp();
+    const res = await request(app)
+      .post("/api/ai/enhance")
+      .send({
+        toolName: "Compatibility Compass",
+        prompt: "Two people: one anxious, one avoidant. Read the dynamic.",
+      });
+    expect(res.status).toBe(200);
+    expect(res.body.isFallback).toBe(true);
+    expect(res.body.fallbackReason).toBe("consent_required");
+    expect(createMock).not.toHaveBeenCalled();
+  });
 });
