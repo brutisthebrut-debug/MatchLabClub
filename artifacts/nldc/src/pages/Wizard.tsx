@@ -241,44 +241,48 @@ export default function Wizard() {
 
   return (
   <AppLayout>
-  <div className="min-h-screen bg-background py-12 px-4">
-  <div className="max-w-2xl mx-auto">
+  <div className="min-h-screen bg-background py-12 px-4 relative overflow-hidden">
+  <div className="orb orb-violet fixed w-[500px] h-[500px] -top-40 -right-40 opacity-30 pointer-events-none" />
+  <div className="orb orb-rose fixed w-[300px] h-[300px] bottom-0 -left-20 opacity-20 pointer-events-none" />
+  
+  <div className="max-w-2xl mx-auto relative z-10">
   {/* Header */}
-  <div className="text-center mb-10">
-  <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider mb-2">
+  <div className="text-center mb-12">
+  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-3 text-[hsl(248_62%_52%)]">
   Step {step} of {totalSteps}
   </p>
-  <Progress value={progress} className="h-1.5 rounded-full mb-6" />
+  <Progress value={progress} className="h-1.5 rounded-full mb-6 bg-secondary/50 [&>div]:bg-gradient-to-r [&>div]:from-[#3D35CC] [&>div]:to-[#FF2D9B]" />
   </div>
 
   <AnimatePresence mode="wait">
   <motion.div
   key={step}
-  initial={{ opacity: 0, x: 24 }}
-  animate={{ opacity: 1, x: 0 }}
-  exit={{ opacity: 0, x: -24 }}
-  transition={{ duration: 0.25 }}
-  className="bg-card border border-card-border rounded-3xl p-8 md:p-12 shadow-sm"
+  initial={{ opacity: 0, y: 15 }}
+  animate={{ opacity: 1, y: 0 }}
+  exit={{ opacity: 0, y: -15 }}
+  transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+  className="glass border border-white/10 rounded-[2rem] p-8 md:p-12 shadow-xl shadow-black/5"
   >
   {step === 1 && (
-  <div className="space-y-6">
-  <div>
-  <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-2">First, the basics</h2>
-  <p className="text-muted-foreground">Just your name and age, takes 5 seconds. We'll go deeper on the next screen.</p>
+  <div className="space-y-8">
+  <div className="text-center">
+  <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-3">First, the basics</h2>
+  <p className="text-muted-foreground text-sm">Just your name and age, takes 5 seconds. We'll go deeper on the next screen.</p>
   </div>
-  <div className="grid sm:grid-cols-2 gap-4">
-  <div className="space-y-2">
-  <Label htmlFor="firstName">First name</Label>
+  <div className="grid sm:grid-cols-2 gap-6">
+  <div className="space-y-2.5">
+  <Label htmlFor="firstName" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">First name</Label>
   <Input
   id="firstName"
   data-testid="input-first-name"
   placeholder="Jordan"
   value={form.firstName}
   onChange={e => setForm(f => ({...f, firstName: e.target.value }))}
+  className="h-12 bg-white/50 dark:bg-black/20 border-white/10 focus-visible:ring-1 focus-visible:ring-[hsl(248_62%_52%)] rounded-xl"
   />
   </div>
-  <div className="space-y-2">
-  <Label htmlFor="age">Age</Label>
+  <div className="space-y-2.5">
+  <Label htmlFor="age" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Age</Label>
   <Input
   id="age"
   data-testid="input-age"
@@ -286,28 +290,30 @@ export default function Wizard() {
   placeholder="28"
   value={form.age}
   onChange={e => setForm(f => ({...f, age: e.target.value }))}
+  className="h-12 bg-white/50 dark:bg-black/20 border-white/10 focus-visible:ring-1 focus-visible:ring-[hsl(248_62%_52%)] rounded-xl"
   />
   </div>
   </div>
-  <div className="space-y-3">
-  <Label>Which apps are you on? <span className="text-muted-foreground font-normal">(optional)</span></Label>
-  <div className="grid grid-cols-2 gap-3">
+  <div className="space-y-4 pt-2">
+  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Which apps are you on? <span className="font-normal opacity-70">(optional)</span></Label>
+  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
   {APPS.map(app => (
-  <label key={app} className="flex items-center gap-3 cursor-pointer" data-testid={`checkbox-app-${app.toLowerCase().replace(/ /g, "-")}`}>
+  <label key={app} className="flex items-center gap-3 cursor-pointer group" data-testid={`checkbox-app-${app.toLowerCase().replace(/ /g, "-")}`}>
   <Checkbox
   checked={form.currentApps.includes(app)}
   onCheckedChange={() => toggleApp(app)}
+  className="border-white/20 data-[state=checked]:bg-[hsl(248_62%_52%)] data-[state=checked]:border-[hsl(248_62%_52%)]"
   />
-  <span className="text-sm font-medium">{app}</span>
+  <span className="text-sm font-medium text-foreground/80 group-hover:text-foreground transition-colors">{app}</span>
   </label>
   ))}
   </div>
   </div>
-  <div className="pt-2 border-t border-border/50">
+  <div className="pt-6 border-t border-border/40 text-center">
   <Link
   href="/sample-report"
   data-testid="link-wizard-sample-report"
-  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[hsl(248_62%_52%)] hover:underline"
+  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[hsl(248_62%_52%)] hover:text-[hsl(248_62%_62%)] transition-colors"
   >
   <Sparkles className="w-3.5 h-3.5" /> Want to see a real example first?
   <ArrowRight className="w-3 h-3" />

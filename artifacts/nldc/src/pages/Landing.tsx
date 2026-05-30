@@ -8,7 +8,6 @@ import { Link } from "wouter";
 import { ArrowRight, CheckCircle, Shield, Sparkles, Headphones, Eye, Clock, FileText, Compass, MessageCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMeta } from "@/hooks/useMeta";
-import { TrustBadge } from "@/components/TrustBadge";
 import {
   useCreateAudit,
   useGenerateAuditReport,
@@ -19,491 +18,267 @@ import {
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 
 const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 28 },
+  initial: { opacity: 0, y: 30 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+  transition: { duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
 });
 
 export default function Landing() {
   useMeta(
-  "Turn your real dating signals into real matches",
-  "MatchLab Club is a second brain for your dating life. It reads the real signals you already generate, your profile, your messages, your dates, builds a readiness score you can watch grow, and uses it to introduce you to real people. Start free with the Signal Check, no account needed.",
+    "Turn your real dating signals into real matches",
+    "MatchLab Club is a second brain for your dating life. It reads the real signals you already generate, your profile, your messages, your dates, builds a readiness score you can watch grow, and uses it to introduce you to real people. Start free with the Signal Check, no account needed.",
   );
   return (
-  <AppLayout>
-  {/* ── Hero. ONE primary action; Audit positioned as the natural next step ── */}
-  <section className="relative mesh-bg overflow-hidden pt-14 md:pt-20 pb-20 md:pb-28">
-  <div className="orb orb-violet absolute w-[600px] h-[600px] -top-60 -right-60 opacity-80 pointer-events-none" />
-  <div className="orb orb-gold absolute w-[400px] h-[400px] bottom-0 left-1/4 opacity-60 pointer-events-none" />
-  <div className="orb orb-plum absolute w-[300px] h-[300px] top-40 left-0 opacity-70 pointer-events-none" />
+    <AppLayout>
+      {/* ── Hero. Monumental typography, deep branding, single CTA ── */}
+      <section className="relative mesh-bg overflow-hidden pt-16 md:pt-28 pb-24 md:pb-32 min-h-[90vh] flex flex-col justify-center">
+        <div className="orb orb-violet absolute w-[800px] h-[800px] -top-60 -right-60 opacity-60 pointer-events-none" />
+        <div className="orb orb-gold absolute w-[500px] h-[500px] bottom-0 left-1/4 opacity-40 pointer-events-none" />
+        <div className="orb orb-plum absolute w-[400px] h-[400px] top-40 -left-20 opacity-50 pointer-events-none" />
 
-  <div className="container mx-auto px-4 relative z-10">
-  <div className="max-w-3xl mx-auto text-center">
-  {/* Trust eyebrow */}
-  <motion.div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-[hsl(248_62%_52%/0.25)] mb-7" {...fadeUp(0.04)}>
-  <span className="w-2 h-2 rounded-full bg-[hsl(142_55%_60%)] animate-pulse" />
-  <span className="text-xs text-muted-foreground">Private beta · Founder reviews every report</span>
-  </motion.div>
+        <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
+          <div className="max-w-4xl mx-auto text-center w-full">
+            {/* Trust eyebrow */}
+            <motion.div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass-elevated border border-[hsl(248_62%_52%/0.3)] mb-10 shadow-sm" {...fadeUp(0.1)}>
+              <span className="w-2.5 h-2.5 rounded-full bg-[hsl(142_55%_60%)] animate-pulse shadow-[0_0_8px_hsl(142_55%_60%)]" />
+              <span className="text-xs md:text-sm font-semibold tracking-wide text-foreground/80 uppercase">Private beta · Founder reviews every report</span>
+            </motion.div>
 
-  {/* Monumental headline */}
-  <motion.h1
-  className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-bold tracking-tight leading-[0.98] mb-6"
-  {...fadeUp(0.08)}
-  >
-  <span className="text-foreground">Turn real signals</span>{" "}
-  <span className="gradient-text-violet italic">into</span>
-  <br />
-  <span className="gradient-text italic">real matches.</span>
-  </motion.h1>
+            {/* Monumental headline */}
+            <motion.h1
+              className="text-5xl sm:text-6xl md:text-7xl lg:text-[6.5rem] font-serif font-bold tracking-tight leading-[1.05] mb-8"
+              {...fadeUp(0.2)}
+            >
+              <span className="text-foreground">Turn real signals</span>{" "}
+              <br className="hidden md:block" />
+              <span className="gradient-text italic pr-2">into real matches.</span>
+            </motion.h1>
 
-  <motion.p
-  className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed mb-9"
-  {...fadeUp(0.15)}
-  >
-  A second brain for your dating life. It turns the real signals you already generate, your profile, your messages, your dates, into a <span className="text-foreground/80 font-medium">readiness score that grows toward real introductions.</span> The free Signal Check is where it starts.
-  </motion.p>
+            <motion.p
+              className="text-lg md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-12 font-medium"
+              {...fadeUp(0.3)}
+            >
+              A second brain for your dating life. It turns the real signals you already generate (your profile, your messages, your dates) into a <span className="text-foreground font-bold">readiness score that grows toward real introductions.</span> The free Signal Check is where it starts.
+            </motion.p>
 
-  {/* PRIMARY CTA, single, oversized, unmissable. Everything else lives below the proof. */}
-  <motion.div className="flex flex-col items-center gap-4" {...fadeUp(0.22)}>
-  <Button
-  asChild
-  size="lg"
-  className="rounded-full font-semibold h-14 px-9 text-base bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 glow-pulse text-white shadow-[0_8px_32px_hsl(248_62%_52%/0.45)] hover:scale-[1.02] transition-transform"
-  data-testid="button-hero-signal-check"
-  >
-  <Link href="/signal-check">Get my free Signal Check <ArrowRight className="ml-2 h-5 w-5" /></Link>
-  </Button>
+            {/* PRIMARY CTA */}
+            <motion.div className="flex flex-col items-center gap-6" {...fadeUp(0.4)}>
+              <Button
+                asChild
+                size="lg"
+                className="rounded-full font-bold h-16 md:h-20 px-10 md:px-12 text-lg md:text-xl bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 glow-pulse text-white shadow-[0_8px_40px_hsl(248_62%_52%/0.5)] hover:scale-[1.02] transition-transform"
+              >
+                <Link href="/signal-check">Get my free Signal Check <ArrowRight className="ml-3 h-6 w-6" /></Link>
+              </Button>
 
-  {/* Trust micro-row */}
-  <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
-  <span className="inline-flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> 3 minutes</span>
-  <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
-  <span className="inline-flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" /> No account needed</span>
-  <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
-  <span className="inline-flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" /> Instant result</span>
-  </div>
-  <p className="text-[11px] text-muted-foreground/70 mt-1">
-  Built for every dating context: straight, gay, queer, bi, trans, non-binary, mono &amp; poly.
-  </p>
-  </motion.div>
-  </div>
+              {/* Trust micro-row */}
+              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-muted-foreground mt-2">
+                <span className="inline-flex items-center gap-2"><Clock className="w-4 h-4 text-[hsl(248_62%_52%)]" /> 3 minutes</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
+                <span className="inline-flex items-center gap-2"><Shield className="w-4 h-4 text-[hsl(142_55%_50%)]" /> No account needed</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
+                <span className="inline-flex items-center gap-2"><Sparkles className="w-4 h-4 text-[hsl(326_100%_59%)]" /> Instant result</span>
+              </div>
+            </motion.div>
+          </div>
+        </div>
 
-  {/* "What you'll get", supports the single CTA without competing for the click */}
-  <motion.div
-  className="max-w-2xl mx-auto mt-14 grid sm:grid-cols-2 gap-3 text-left"
-  initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.05 }}
-  >
-  {[
-  { icon: Sparkles, text: "Your Signal Strength score (0–100)" },
-  { icon: FileText, text: "The category your profile actually reads as" },
-  { icon: CheckCircle, text: "Your #1 specific fix, not generic advice" },
-  { icon: Headphones, text: "One rewritten line that shows what's possible" },
-  ].map((item, i) => {
-  const Icon = item.icon;
-  return (
-  <div key={i} className="flex items-start gap-3 p-3 rounded-xl glass-elevated">
-  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-[hsl(248_62%_52%/0.12)] border border-[hsl(248_62%_52%/0.25)]">
-  <Icon className="w-3.5 h-3.5 text-[hsl(248_62%_52%)]" />
-  </div>
-  <p className="text-sm text-foreground/85 leading-snug pt-0.5">{item.text}</p>
-  </div>
-  );
-  })}
-  </motion.div>
-  </div>
-  </section>
+        {/* Scroll indicator */}
+        <motion.div 
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-muted-foreground/50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5, duration: 1 }}
+        >
+          <span className="text-xs uppercase tracking-widest font-semibold">Scroll</span>
+          <div className="w-px h-12 bg-gradient-to-b from-muted-foreground/50 to-transparent" />
+        </motion.div>
+      </section>
 
-  {/* ── Interactive 3-tab preview ── */}
-  <PreviewSection />
+      {/* ── Cost anchor ── */}
+      <section className="py-24 md:py-32 border-t border-foreground/5 bg-background relative">
+        <div className="container mx-auto px-4 relative z-10">
+          <motion.div className="text-center mb-16 max-w-3xl mx-auto" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <p className="text-sm font-bold uppercase tracking-widest text-[hsl(0_60%_60%)] mb-4">The math you're avoiding</p>
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-6 leading-tight">
+              A bad profile isn't free. <span className="gradient-text italic pr-1">It's the most expensive thing on the apps.</span>
+            </h2>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Most people pay for it in months, not dollars, and don't notice until they look back.
+            </p>
+          </motion.div>
+          
+          <div className="grid sm:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {[
+              { stat: "300+", unit: "hours/year", desc: "Average time singles spend swiping, messaging, and going on dates that don't go anywhere.", color: "hsl(0 60% 55%)" },
+              { stat: "~$420", unit: "spent on apps", desc: "What the average dater spends per year on premium tiers, boosts, and super-likes, all routed through a bio that isn't working.", color: "hsl(var(--brand-gold))" },
+              { stat: "14–18", unit: "months lost", desc: "Typical gap between when something is broken in how you're presenting and when someone actually tells you about it.", color: "hsl(var(--brand-indigo))" },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                className="glass-strong rounded-[2rem] p-8 card-hover"
+                style={{ border: `1px solid ${withAlpha(item.color, 0.2)}`, background: `linear-gradient(135deg, ${withAlpha(item.color, 0.05)}, ${withAlpha(item.color, 0.01)})` }}
+                initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+              >
+                <p className="text-5xl font-serif font-bold mb-2" style={{ color: item.color }}>{item.stat}</p>
+                <p className="text-sm font-bold uppercase tracking-wider text-foreground/80 mb-4">{item.unit}</p>
+                <p className="text-base text-muted-foreground leading-relaxed font-medium">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-  {/* ── Cost anchor, what bad signal actually costs you ── */}
-  <section className="py-16 md:py-20 border-t border-foreground/5 relative overflow-hidden">
-  <div className="orb orb-plum absolute w-72 h-72 -right-32 top-10 opacity-40 pointer-events-none" />
-  <div className="container mx-auto px-4 relative z-10">
-  <motion.div className="text-center mb-10 max-w-2xl mx-auto" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-  <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(0_60%_60%)] mb-3">The math you're avoiding</p>
-  <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-  A bad profile isn't free. <span className="gradient-text italic">It's the most expensive thing on the apps.</span>
-  </h2>
-  <p className="text-sm text-muted-foreground/80 leading-relaxed">
-  Most people pay for it in months, not dollars, and don't notice until they look back.
-  </p>
-  </motion.div>
-  <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
-  {[
-  { stat: "300+", unit: "hours/year", desc: "Average time singles spend swiping, messaging, and going on dates that don't go anywhere.", color: "hsl(0 60% 55%)" },
-  { stat: "~$420", unit: "spent on apps", desc: "What the average dater spends per year on premium tiers, boosts, and super-likes, all routed through a bio that isn't working.", color: "hsl(var(--brand-gold))" },
-  { stat: "14–18", unit: "months lost", desc: "Typical gap between when something is broken in how you're presenting and when someone actually tells you about it.", color: "hsl(var(--brand-indigo))" },
-  ].map((item, i) => (
-  <motion.div
-  key={i}
-  className="glass rounded-2xl p-6 card-hover"
-  style={{ border: `1px solid ${withAlpha(item.color, 0.22)}`, background: `${withAlpha(item.color, 0.04)}` }}
-  initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-  data-testid={`card-cost-${i}`}
-  >
-  <p className="text-4xl font-bold mb-1" style={{ color: item.color }}>{item.stat}</p>
-  <p className="text-xs font-semibold uppercase tracking-wider text-foreground/70 mb-3">{item.unit}</p>
-  <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-  </motion.div>
-  ))}
-  </div>
-  <motion.p
-  className="text-center text-sm text-foreground/80 mt-8 max-w-xl mx-auto leading-relaxed"
-  initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 }}
-  >
-  For the cost of one bad first date you can fix the thing that keeps producing them.{" "}
-  <Link href="/pricing" className="font-semibold text-[hsl(248_62%_62%)] hover:underline">See plans →</Link>
-  </motion.p>
-  </div>
-  </section>
+      {/* ── Interactive 3-tab preview ── */}
+      <PreviewSection />
 
-  {/* ── Take another path, recovery row (sample report · skip-to-audit · risk-reversal) ── */}
-  <section className="py-12 md:py-16 border-t border-foreground/5">
-  <div className="container mx-auto px-4">
-  <div className="max-w-3xl mx-auto">
-  <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-5">Not ready to paste your bio yet?</p>
-  <div className="grid sm:grid-cols-2 gap-3 mb-5">
-  <Link
-  href="/sample-report"
-  className="glass border border-foreground/10 rounded-2xl p-4 flex items-center gap-3 hover:border-[hsl(248_62%_52%/0.4)] hover:bg-[hsl(248_62%_52%/0.04)] transition-all"
-  data-testid="link-hero-sample-report"
-  >
-  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[hsl(248_62%_52%/0.12)] border border-[hsl(248_62%_52%/0.25)]">
-  <Eye className="w-4 h-4 text-[hsl(248_62%_52%)]" />
-  </div>
-  <div className="flex-1 min-w-0">
-  <p className="text-sm font-semibold text-foreground mb-0.5">See an example report first</p>
-  <p className="text-[11px] text-muted-foreground leading-snug">Full sample audit. No paste required.</p>
-  </div>
-  <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-  </Link>
-  <Link
-  href="/start"
-  className="rounded-2xl p-4 flex items-center gap-3 hover:opacity-95 transition-all"
-  style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo) / 0.16), hsl(326 100% 59% / 0.10))", border: "1px solid hsl(var(--brand-indigo) / 0.35)" }}
-  data-testid="button-hero-full-audit"
-  >
-  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] shadow-[0_4px_16px_hsl(248_62%_52%/0.4)]">
-  <FileText className="w-4 h-4 text-white" />
-  </div>
-  <div className="flex-1 min-w-0">
-  <p className="text-sm font-semibold text-foreground mb-0.5">Skip to the full Audit</p>
-  <p className="text-[11px] text-muted-foreground leading-snug">8-dimension breakdown · full rewrites · 7-day plan</p>
-  </div>
-  <ArrowRight className="w-4 h-4 text-[hsl(248_62%_62%)] flex-shrink-0" />
-  </Link>
-  </div>
-  <div
-  className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 px-5 py-2.5 rounded-full glass border border-[hsl(142_55%_60%/0.3)] mx-auto w-fit"
-  data-testid="strip-risk-reversal"
-  >
-  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[hsl(142_55%_72%)]">
-  <CheckCircle className="w-3.5 h-3.5" /> 30-day money-back guarantee
-  </span>
-  <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[hsl(142_55%_72%)]">
-  <Shield className="w-3.5 h-3.5" /> Delete everything anytime
-  </span>
-  <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[hsl(142_55%_72%)]">
-  <Eye className="w-3.5 h-3.5" /> Founder-reviewed in beta
-  </span>
-  </div>
-  </div>
-  </div>
-  </section>
+      {/* ── How It Works ── */}
+      <section className="py-24 md:py-32 border-t border-foreground/5 bg-[hsl(248_40%_98%/0.5)] dark:bg-[hsl(248_50%_8%/0.5)]">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16 max-w-3xl mx-auto">
+            <p className="text-sm font-bold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-4">How the engine works</p>
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground leading-tight">
+              Signals in. <span className="gradient-text italic pr-1">Matches out.</span>
+            </h2>
+            <p className="text-muted-foreground text-lg mt-6 leading-relaxed">
+              Everything you do here feeds one engine. The more real signal it has, the better it knows who to put in front of you.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {[
+              {
+                step: "01",
+                title: "Feed it real signals",
+                desc: "Your bio, your messages, your dates, your wins, your reflections. Start with the free Signal Check. No account needed.",
+                color: "hsl(var(--brand-indigo))",
+                cta: { label: "Start the check", href: "/signal-check" },
+              },
+              {
+                step: "02",
+                title: "Watch readiness grow",
+                desc: "Every signal moves one real number, your readiness score. The app always shows the next step worth taking, not generic advice.",
+                color: "hsl(var(--brand-gold))",
+                cta: { label: "See a sample", href: "/sample-report" },
+              },
+              {
+                step: "03",
+                title: "Get introduced",
+                desc: "When you are ready, your profile becomes introductions to a small number of well considered people. No swipe carousel.",
+                color: "hsl(142 55% 50%)",
+                cta: { label: "See how matching works", href: "/matching" },
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                className="glass rounded-[2rem] p-10 card-hover flex flex-col relative overflow-hidden"
+                style={{ border: `1px solid ${withAlpha(item.color, 0.2)}` }}
+                initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}
+              >
+                <div className="absolute top-0 right-0 p-8 text-8xl font-serif font-bold opacity-5 pointer-events-none" style={{ color: item.color }}>
+                  {item.step}
+                </div>
+                <h3 className="text-2xl font-bold text-foreground mb-4 relative z-10">{item.title}</h3>
+                <p className="text-base text-muted-foreground leading-relaxed mb-8 flex-1 relative z-10 font-medium">{item.desc}</p>
+                <Link
+                  href={item.cta.href}
+                  className="inline-flex items-center gap-2 text-sm font-bold transition-opacity hover:opacity-80 relative z-10 uppercase tracking-wider"
+                  style={{ color: item.color }}
+                >
+                  {item.cta.label} <ArrowRight className="w-4 h-4" />
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-  {/* ── How It Works, the 3-step narrative (demoted below proof + cost) ── */}
-  <section id="how-it-works" className="py-20 md:py-24 border-t border-foreground/5 bg-[hsl(248_40%_98%/0.5)] dark:bg-[hsl(248_50%_8%/0.5)]">
-  <div className="container mx-auto px-4">
-  <div className="text-center mb-12">
-  <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-3">How the engine works</p>
-  <h2 className="text-3xl md:text-5xl font-bold text-foreground">
-  Signals in. <span className="gradient-text italic">Matches out.</span>
-  </h2>
-  <p className="text-muted-foreground max-w-xl mx-auto mt-4 leading-relaxed text-sm">
-  Everything you do here feeds one engine. The more real signal it has, the better it knows who to put in front of you.
-  </p>
-  </div>
-  <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
-  {[
-  {
-  step: "01",
-  title: "Feed it real signals",
-  desc: "Your bio, your messages, your dates, your wins, your reflections, even a Hinge export. Start with the free Signal Check. No account needed.",
-  color: "hsl(var(--brand-indigo))",
-  cta: { label: "Start the check", href: "/signal-check" },
-  },
-  {
-  step: "02",
-  title: "Watch readiness grow",
-  desc: "Every signal moves one real number, your readiness score. The app always shows the next step worth taking, not generic advice.",
-  color: "hsl(var(--brand-gold))",
-  cta: { label: "See a sample", href: "/sample-report" },
-  },
-  {
-  step: "03",
-  title: "Get introduced",
-  desc: "When you are ready, your profile becomes introductions to a small number of well considered people. Founder curated on Wingman, algorithmic for everyone. No swipe carousel.",
-  color: "hsl(142 55% 50%)",
-  cta: { label: "See how matching works", href: "/matching" },
-  },
-  ].map((item, i) => (
-  <motion.div
-  key={i}
-  className="glass rounded-3xl p-7 card-hover flex flex-col"
-  style={{ border: `1px solid ${withAlpha(item.color, 0.18)}` }}
-  initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-  >
-  <div className="text-4xl font-bold mb-4 font-mono" style={{ color: item.color }}>{item.step}</div>
-  <h3 className="text-lg font-semibold text-foreground mb-2.5">{item.title}</h3>
-  <p className="text-sm text-muted-foreground leading-relaxed mb-5 flex-1">{item.desc}</p>
-  <Link
-  href={item.cta.href}
-  className="inline-flex items-center gap-1 text-xs font-semibold transition-opacity hover:opacity-80"
-  style={{ color: item.color }}
-  >
-  {item.cta.label} <ArrowRight className="w-3 h-3" />
-  </Link>
-  </motion.div>
-  ))}
-  </div>
-  </div>
-  </section>
+      {/* ── Real people band ── */}
+      <section className="py-24 md:py-32 border-t border-foreground/5 relative overflow-hidden bg-background">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16 max-w-3xl mx-auto">
+            <p className="text-sm font-bold uppercase tracking-widest text-[hsl(326_100%_58%)] mb-4">Who this is for</p>
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-6 leading-tight">
+              Real people, <span className="gradient-text italic pr-1">every kind of connection.</span>
+            </h2>
+            <p className="text-lg text-muted-foreground leading-relaxed font-medium">
+              Straight, gay, queer, bi, trans, non-binary, mono and poly. The work of being seen clearly is the same. The tools meet you wherever you date.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-6xl mx-auto">
+            {[
+              { src: "/couples/couple-women.png", alt: "Two women laughing together on a city street at golden hour" },
+              { src: "/couples/couple-gaymen.png", alt: "A gay couple laughing together over coffee" },
+              { src: "/couples/couple-dinner.png", alt: "A couple sharing a laugh across a candlelit dinner table" },
+              { src: "/couples/couple-embrace.png", alt: "A couple smiling warmly in a close embrace at home" },
+            ].map((img, i) => (
+              <motion.div
+                key={img.src}
+                className="relative aspect-[3/4] overflow-hidden rounded-[2rem] border border-foreground/10 shadow-lg"
+                initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+              >
+                <img
+                  src={img.src}
+                  alt={img.alt}
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent pointer-events-none" />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-  {/* ── What we fix, 4 pillars ── */}
-  <section className="py-16 md:py-20 border-t border-foreground/5">
-  <div className="container mx-auto px-4">
-  <div className="max-w-5xl mx-auto">
-  <motion.div className="text-center mb-10" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-  <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-3">What we fix</p>
-  <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-  Most dating problems come from <span className="gradient-text italic">the same four places.</span>
-  </h2>
-  </motion.div>
-  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-  {[
-  { num: "01", title: "What you're projecting", desc: "We show you what your profile is actually communicating, and how it reads to someone swiping.", color: "hsl(var(--brand-indigo))" },
-  { num: "02", title: "Your profile text", desc: "Your bio and prompts, rewritten to sound genuinely like you. Specific, memorable, worth responding to.", color: "hsl(var(--brand-gold))" },
-  { num: "03", title: "Your conversations", desc: "Tone analysis and 5 tailored reply options, from warm to direct to date invitation, for every situation.", color: "hsl(190 55% 50%)" },
-  { num: "04", title: "Your action plan", desc: "A concrete, prioritised 7-day plan built around your specific audit, not generic advice.", color: "hsl(142 55% 50%)" },
-  ].map((item, i) => (
-  <motion.div key={i} className="rounded-2xl p-6 card-hover" style={{ background: `${withAlpha(item.color, 0.05)}`, border: `1px solid ${withAlpha(item.color, 0.2)}` }}
-  initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
-  <p className="text-2xl font-bold font-mono mb-3" style={{ color: item.color }}>{item.num}</p>
-  <h3 className="font-bold text-foreground text-sm mb-2">{item.title}</h3>
-  <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-  </motion.div>
-  ))}
-  </div>
-  </div>
-  </div>
-  </section>
-
-  {/* ── The destination, where every signal leads: being matched ── */}
-  <section className="py-20 md:py-24 border-t border-foreground/5 relative overflow-hidden">
-  <div className="orb orb-violet absolute w-[460px] h-[460px] -left-40 top-10 opacity-50 pointer-events-none" />
-  <div className="container mx-auto px-4 relative z-10">
-  <motion.div className="text-center mb-12 max-w-2xl mx-auto" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-  <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(326_100%_55%)] mb-3">Where this is going</p>
-  <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-  The audit is step one. <span className="gradient-text italic">Being matched is the point.</span>
-  </h2>
-  <p className="text-sm text-muted-foreground leading-relaxed">
-  This was never another swipe app. Every signal you build here, your bio, your wellness map, your compass reads, becomes a profile we use to introduce you to people. No carousel. No infinite scroll. A small number of well considered people, chosen from who you actually are.
-  </p>
-  </motion.div>
-
-  <div className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto">
-  <motion.div className="glass rounded-3xl p-7 card-hover" style={{ border: "1px solid hsl(var(--brand-indigo) / 0.2)" }} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-[hsl(248_62%_52%/0.12)] border border-[hsl(248_62%_52%/0.25)]">
-  <Compass className="w-5 h-5 text-[hsl(248_62%_52%)]" />
-  </div>
-  <h3 className="font-bold text-foreground mb-2">Algorithmic, for everyone</h3>
-  <p className="text-sm text-muted-foreground leading-relaxed">Matches built from the signals you have already given us. The deeper your profile, the sharper the introduction. Free and paid members both build toward it.</p>
-  </motion.div>
-  <motion.div className="glass rounded-3xl p-7 card-hover" style={{ border: "1px solid hsl(326 100% 59% / 0.22)" }} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.08 }}>
-  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-[hsl(326_100%_59%/0.12)] border border-[hsl(326_100%_59%/0.25)]">
-  <Sparkles className="w-5 h-5 text-[hsl(326_100%_55%)]" />
-  </div>
-  <h3 className="font-bold text-foreground mb-2">Founder curated, for Wingman</h3>
-  <p className="text-sm text-muted-foreground leading-relaxed">On the Wingman tier, the founder hand picks your first few intros after a short intake call. Real attention, not a queue.</p>
-  </motion.div>
-  </div>
-
-  <motion.div className="max-w-3xl mx-auto mt-5 glass-elevated rounded-2xl p-5 text-center" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.12 }}>
-  <p className="text-xs text-muted-foreground leading-relaxed">
-  You build readiness by using the tools. Compass reads, your wellness map, a Hinge import, journal cadence, post date notes. Five signals, one readiness score.
-  </p>
-  </motion.div>
-
-  <motion.div className="text-center mt-9" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.16 }}>
-  <Button asChild size="lg" className="h-12 px-8 text-sm font-semibold rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white shadow-[0_4px_24px_hsl(248_62%_52%/0.4)]" data-testid="button-destination-start">
-  <Link href="/start">Start building your match profile <ArrowRight className="ml-2 h-4 w-4" /></Link>
-  </Button>
-  <div className="mt-3">
-  <Link href="/matching" className="inline-flex items-center gap-1.5 text-xs font-semibold text-[hsl(248_62%_62%)] hover:underline" data-testid="link-destination-matching">
-  See how matching works <ArrowRight className="w-3 h-3" />
-  </Link>
-  </div>
-  </motion.div>
-  </div>
-  </section>
-
-  {/* ── Real people band ── */}
-  <section className="py-16 md:py-20 border-t border-foreground/5 relative overflow-hidden">
-  <div className="container mx-auto px-4 relative z-10">
-  <div className="text-center mb-10 max-w-2xl mx-auto">
-  <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(326_100%_58%)] mb-3">Who this is for</p>
-  <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-  Real people, <span className="gradient-text italic">every kind of connection.</span>
-  </h2>
-  <p className="text-sm text-muted-foreground/80 leading-relaxed">
-  Straight, gay, queer, bi, trans, non-binary, mono and poly. The work of being seen clearly is the same. The tools meet you wherever you date.
-  </p>
-  </div>
-  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 max-w-5xl mx-auto">
-  {[
-  { src: "/couples/couple-women.png", alt: "Two women laughing together on a city street at golden hour" },
-  { src: "/couples/couple-gaymen.png", alt: "A gay couple laughing together over coffee" },
-  { src: "/couples/couple-dinner.png", alt: "A couple sharing a laugh across a candlelit dinner table" },
-  { src: "/couples/couple-embrace.png", alt: "A couple smiling warmly in a close embrace at home" },
-  ].map((img, i) => (
-  <motion.div
-  key={img.src}
-  className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-foreground/8"
-  initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-  >
-  <img
-  src={img.src}
-  alt={img.alt}
-  loading="lazy"
-  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-  />
-  <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent pointer-events-none" />
-  </motion.div>
-  ))}
-  </div>
-  </div>
-  </section>
-
-  {/* ── Trust. Early access / founder reviewed ── */}
-  <section className="py-20 md:py-24 border-t border-foreground/5 relative overflow-hidden">
-  <div className="orb orb-gold absolute w-96 h-96 right-0 top-20 opacity-40 pointer-events-none" />
-  <div className="container mx-auto px-4 relative z-10">
-  <div className="text-center mb-12">
-  <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(43_65%_50%)] mb-3">Why this isn't another dating app</p>
-  <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-  Built for people doing the work, <span className="gradient-text italic">not chasing tricks.</span>
-  </h2>
-  <p className="text-muted-foreground max-w-2xl mx-auto mt-4 leading-relaxed text-sm">
-  We're in private beta and reviewing every report ourselves. You get founder-level attention on your audit.
-  </p>
-  </div>
-  <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
-  {[
-  { icon: "🔬", title: "Founder-reviewed", desc: "Every audit during private beta is reviewed by the founders personally. You're not getting a generic output. You're getting our full attention on your specific situation.", color: "hsl(var(--brand-indigo))" },
-  { icon: "🤝", title: "You shape the product", desc: "Beta members get direct access to give feedback, request features, and influence what we build next. Help us build the tool you actually wish existed.", color: "hsl(var(--brand-gold))" },
-  { icon: "🔒", title: "Launch pricing, locked in", desc: "Beta members lock in today's pricing for life. As we add more features and move out of beta, the price goes up. Yours doesn't.", color: "hsl(142 55% 50%)" },
-  ].map((card, i) => (
-  <motion.div
-  key={i}
-  className="glass rounded-3xl p-7 flex flex-col card-hover"
-  style={{ border: `1px solid ${withAlpha(card.color, 0.18)}` }}
-  initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-  >
-  <p className="text-3xl mb-3">{card.icon}</p>
-  <h3 className="font-bold text-foreground mb-2">{card.title}</h3>
-  <p className="text-sm text-muted-foreground leading-relaxed flex-1">{card.desc}</p>
-  </motion.div>
-  ))}
-  </div>
-  <motion.div
-  className="text-center mt-10"
-  initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }}
-  >
-  <Link href="/waitlist" className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass border border-[hsl(248_62%_52%/0.3)] text-sm font-semibold text-[hsl(248_62%_52%)] hover:border-[hsl(248_62%_52%/0.55)] transition-all">
-  Join the early cohort <ArrowRight className="w-4 h-4" />
-  </Link>
-  </motion.div>
-  </div>
-  </section>
-
-  {/* ── Privacy Promise ── */}
-  <section className="py-16 md:py-20 border-t border-foreground/5">
-  <div className="container mx-auto px-4">
-  <div className="max-w-3xl mx-auto text-center mb-10">
-  <Shield className="w-9 h-9 text-[hsl(248_62%_52%)] mx-auto mb-4" />
-  <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-  Your private sanctuary.
-  </h2>
-  <p className="text-muted-foreground leading-relaxed text-sm">
-  Dating is vulnerable. We treat it that way. Two layers, and you decide how deep. The deterministic engine runs on every account by default. No keys, no external calls, no rate limits. Anthropic Claude is layered on for a handful of tools (bio rewrites, message coaching, Compatibility Compass, import summaries) and stays off until you turn it on. When Claude is in the loop, Anthropic processes the prompt under their zero-retention API policy. We never sell your content. We never train on it. One toggle in Settings controls all of it.
-  </p>
-  </div>
-  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
-  {[
-  { icon: "🔒", title: "Never sold", desc: "Your data is yours. We never sell it or share it with advertisers." },
-  { icon: "🗑", title: "Delete anytime", desc: "One click permanently removes your account and all history." },
-  { icon: "✋", title: "Consent first", desc: "You control exactly what we analyze. Nothing is assumed." },
-  { icon: "🚫", title: "Zero judgment", desc: "An entirely private space to process your dating life honestly." },
-  ].map((item, i) => (
-  <motion.div
-  key={i}
-  className="glass border border-foreground/8 rounded-2xl p-5 text-center card-hover"
-  initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-  >
-  <p className="text-2xl mb-2">{item.icon}</p>
-  <h3 className="font-semibold text-foreground text-sm mb-1.5">{item.title}</h3>
-  <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-  </motion.div>
-  ))}
-  </div>
-  </div>
-  </section>
-
-  {/* ── Final CTA ── */}
-  <section className="py-20 md:py-28 relative overflow-hidden">
-  <div className="absolute inset-0 bg-gradient-to-br from-[hsl(248_62%_52%/0.1)] via-[hsl(326_100%_59%/0.06)] to-[hsl(43_65%_62%/0.05)]" />
-  <div className="orb orb-violet absolute w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-70" />
-  <div className="container mx-auto px-4 text-center relative z-10">
-  <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
-  <Sparkles className="w-9 h-9 text-[hsl(248_62%_52%)] mx-auto mb-5" />
-  <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4 leading-tight">
-  Ready to be seen<br />
-  <span className="gradient-text italic">for who you actually are?</span>
-  </h2>
-  <p className="text-muted-foreground text-base max-w-xl mx-auto mb-9 leading-relaxed">
-  Free to start. No credit card. Pick the entry point that fits your time.
-  </p>
-  <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-  <Button
-  asChild
-  size="lg"
-  className="h-12 px-8 text-sm font-semibold rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 glow-pulse shadow-[0_4px_30px_hsl(248_62%_52%/0.4)]"
-  data-testid="button-final-cta"
-  >
-  <Link href="/start">
-  Get my full Audit <ArrowRight className="ml-2 h-4 w-4" />
-  </Link>
-  </Button>
-  <Button asChild size="lg" variant="ghost" className="h-12 px-7 rounded-full border border-foreground/12 text-muted-foreground hover:text-foreground hover:bg-foreground/5">
-  <Link href="/signal-check"><Headphones className="mr-2 h-4 w-4" /> Free 3-min Check</Link>
-  </Button>
-  </div>
-  <p className="text-xs text-muted-foreground/60 mt-5">Free · No credit card · Instant Signal Check result</p>
-  <TrustBadge className="mt-3 justify-center" />
-  </motion.div>
-  </div>
-  </section>
-  </AppLayout>
+      {/* ── Take another path, recovery row ── */}
+      <section className="py-24 border-t border-foreground/5 bg-[hsl(248_40%_98%/0.5)] dark:bg-[hsl(248_50%_8%/0.5)]">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <p className="text-center text-sm font-bold uppercase tracking-widest text-muted-foreground mb-8">Ready to start?</p>
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              <Link
+                href="/sample-report"
+                className="glass-strong border border-foreground/10 rounded-[2rem] p-8 flex items-start gap-6 hover:border-[hsl(248_62%_52%/0.4)] hover:shadow-xl transition-all hover:-translate-y-1"
+              >
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 bg-[hsl(248_62%_52%/0.1)] border border-[hsl(248_62%_52%/0.2)]">
+                  <Eye className="w-6 h-6 text-[hsl(248_62%_52%)]" />
+                </div>
+                <div className="flex-1 min-w-0 pt-1">
+                  <p className="text-xl font-bold text-foreground mb-2">See an example report</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed font-medium">Full sample audit. See exactly what you get before pasting your bio.</p>
+                </div>
+              </Link>
+              <Link
+                href="/start"
+                className="rounded-[2rem] p-8 flex items-start gap-6 hover:shadow-xl transition-all hover:-translate-y-1"
+                style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo) / 0.15), hsl(326 100% 59% / 0.15))", border: "1px solid hsl(var(--brand-indigo) / 0.4)" }}
+              >
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] shadow-lg shadow-[hsl(248_62%_52%/0.3)]">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0 pt-1">
+                  <p className="text-xl font-bold text-foreground mb-2">Skip to the full Audit</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed font-medium">8-dimension breakdown, full rewrites, and a 7-day action plan.</p>
+                </div>
+              </Link>
+            </div>
+            
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 px-8 py-4 rounded-full glass border border-[hsl(142_55%_60%/0.3)] mx-auto w-fit shadow-sm">
+              <span className="inline-flex items-center gap-2 text-sm font-bold text-[hsl(142_55%_60%)] dark:text-[hsl(142_55%_72%)]">
+                <CheckCircle className="w-4 h-4" /> 30-day money-back guarantee
+              </span>
+              <span className="hidden sm:block w-1.5 h-1.5 rounded-full bg-[hsl(142_55%_60%/0.3)]" />
+              <span className="inline-flex items-center gap-2 text-sm font-bold text-[hsl(142_55%_60%)] dark:text-[hsl(142_55%_72%)]">
+                <Shield className="w-4 h-4" /> Delete everything anytime
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </AppLayout>
   );
 }
 
-// ── Interactive preview helpers (client-side deterministic so the page
-// always renders, even when the API server is unreachable) ─────────
-
+// ── Interactive preview helpers ─────────
 type BioPreviewResult = {
   score: number;
   category: string;
@@ -831,133 +606,127 @@ function PreviewSection() {
   }
 
   return (
-  <section className="py-20 md:py-24 relative overflow-hidden border-t border-foreground/5">
-  <div className="orb orb-plum absolute w-80 h-80 -left-40 top-20 opacity-50 pointer-events-none" />
+  <section className="py-24 md:py-32 relative overflow-hidden bg-background">
   <div className="container mx-auto px-4 relative z-10">
-  <div className="text-center mb-10 max-w-2xl mx-auto">
-  <p className="text-xs font-semibold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-3">Try it</p>
-  <h2 className="text-3xl md:text-5xl font-bold text-foreground">
-  Try it before you{" "}
-  <span className="gradient-text-violet italic">sign up.</span>
+  <motion.div className="text-center mb-16 max-w-3xl mx-auto" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+  <p className="text-sm font-bold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-4">Try it out</p>
+  <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground">
+  Experience it before you{" "}
+  <span className="gradient-text-violet italic pr-1">sign up.</span>
   </h2>
-  <p className="text-sm text-muted-foreground mt-3">
-  Pick a tool. We&apos;ll show you what it sees.
+  <p className="text-lg text-muted-foreground mt-6 font-medium">
+  Pick a tool. We'll show you what it sees.
   </p>
-  </div>
+  </motion.div>
 
-  <div className="max-w-3xl mx-auto">
+  <div className="max-w-4xl mx-auto">
   <Tabs defaultValue="bio" className="w-full">
-  <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 h-auto p-1 rounded-2xl glass border border-foreground/8 bg-[hsl(248_40%_96%/0.6)] dark:bg-[hsl(248_50%_10%/0.6)] gap-1">
+  <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 h-auto p-2 rounded-2xl glass-strong border border-foreground/10 bg-[hsl(248_40%_96%/0.8)] dark:bg-[hsl(248_50%_10%/0.8)] gap-2 shadow-sm mb-8">
   <TabsTrigger
   value="bio"
-  className="rounded-xl py-2.5 text-xs sm:text-sm flex items-center justify-center gap-2 data-[state=active]:bg-background"
-  data-testid="tab-preview-bio"
+  className="rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2 data-[state=active]:bg-background data-[state=active]:text-[hsl(248_62%_52%)] data-[state=active]:shadow-md transition-all"
   >
-  <FileText className="w-3.5 h-3.5" /> Audit my bio
+  <FileText className="w-4 h-4" /> Audit my bio
   </TabsTrigger>
   <TabsTrigger
   value="compass"
-  className="rounded-xl py-2.5 text-xs sm:text-sm flex items-center justify-center gap-2 data-[state=active]:bg-background"
-  data-testid="tab-preview-compass"
+  className="rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2 data-[state=active]:bg-background data-[state=active]:text-[hsl(248_62%_52%)] data-[state=active]:shadow-md transition-all"
   >
-  <Compass className="w-3.5 h-3.5" /> Run a compass read
+  <Compass className="w-4 h-4" /> Compass read
   </TabsTrigger>
   <TabsTrigger
   value="messages"
-  className="rounded-xl py-2.5 text-xs sm:text-sm flex items-center justify-center gap-2 data-[state=active]:bg-background"
-  data-testid="tab-preview-messages"
+  className="rounded-xl py-3 text-sm font-bold flex items-center justify-center gap-2 data-[state=active]:bg-background data-[state=active]:text-[hsl(248_62%_52%)] data-[state=active]:shadow-md transition-all"
   >
-  <MessageCircle className="w-3.5 h-3.5" /> What your messages say
+  <MessageCircle className="w-4 h-4" /> Message analysis
   </TabsTrigger>
   </TabsList>
 
   {/* Bio tab */}
-  <TabsContent value="bio" className="mt-5">
-  <div className="glass border border-foreground/8 rounded-3xl p-6 md:p-7">
-  <p className="text-sm text-muted-foreground mb-4">
-  Paste your bio. We&apos;ll tell you what it actually reads as, what&apos;s working, and the one fix worth making first.
+  <TabsContent value="bio" className="mt-0">
+  <div className="glass-elevated border border-foreground/10 rounded-[2rem] p-8 md:p-10 shadow-lg">
+  <p className="text-base text-muted-foreground mb-6 font-medium">
+  Paste your bio. We'll tell you what it actually reads as, what's working, and the one fix worth making first.
   </p>
   <Textarea
   value={bio}
   onChange={(e) => setBio(e.target.value)}
   rows={5}
-  className="resize-none text-sm"
-  data-testid="textarea-preview-bio"
+  className="resize-none text-base p-4 rounded-xl border-foreground/15 focus:border-[hsl(248_62%_52%)] focus:ring-[hsl(248_62%_52%/0.2)] bg-background/50"
   />
-  <div className="flex flex-wrap items-center gap-3 mt-4">
+  <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-6">
   <Button
   onClick={runBioAudit}
   disabled={bioLoading || bio.trim().length === 0}
-  className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white"
-  data-testid="button-preview-bio-show"
+  size="lg"
+  className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white font-bold px-8 shadow-md"
   >
   {bioLoading ? (
-  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reading your bio</>
+  <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Reading your bio</>
   ) : (
-  <>Show me <ArrowRight className="ml-2 h-4 w-4" /></>
+  <>Show me <ArrowRight className="ml-2 h-5 w-5" /></>
   )}
   </Button>
-  <span className="text-[11px] text-muted-foreground/70">Hybrid AI. No account needed.</span>
+  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Hybrid AI. No account needed.</span>
   </div>
 
-  {bioResult ? (
-  <div className="mt-6 grid gap-4" data-testid="result-preview-bio">
-  <div className="flex flex-wrap items-baseline gap-3 pb-3 border-b border-foreground/8">
-  <p className="text-3xl font-bold text-foreground" style={{ color: "hsl(var(--brand-indigo))" }}>{bioResult.score}<span className="text-base text-muted-foreground">/100</span></p>
-  <p className="text-sm font-semibold text-foreground">{bioResult.category}</p>
+  {bioResult && (
+  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-10 grid gap-6">
+  <div className="flex flex-wrap items-baseline gap-4 pb-6 border-b border-foreground/10">
+  <p className="text-5xl font-serif font-bold" style={{ color: "hsl(var(--brand-indigo))" }}>{bioResult.score}<span className="text-2xl text-muted-foreground">/100</span></p>
+  <p className="text-lg font-bold text-foreground">{bioResult.category}</p>
   </div>
-  {bioResult.strengths.length > 0 ? (
+  {bioResult.strengths.length > 0 && (
   <div>
-  <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(142_55%_50%)] mb-2">What&apos;s working</p>
-  <ul className="space-y-1.5">
+  <p className="text-sm font-bold uppercase tracking-wider text-[hsl(142_55%_50%)] mb-3">What's working</p>
+  <ul className="space-y-2">
   {bioResult.strengths.map((s, i) => (
-  <li key={i} className="text-sm text-foreground/85 leading-relaxed">{s}</li>
+  <li key={i} className="text-base text-foreground/80 leading-relaxed font-medium">{s}</li>
   ))}
   </ul>
   </div>
-  ) : null}
+  )}
   <div>
-  <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(326_100%_59%)] mb-2">Fix this first</p>
-  <ul className="space-y-1.5">
+  <p className="text-sm font-bold uppercase tracking-wider text-[hsl(326_100%_59%)] mb-3">Fix this first</p>
+  <ul className="space-y-2">
   {bioResult.fixes.map((f, i) => (
-  <li key={i} className="text-sm text-foreground/85 leading-relaxed">{f}</li>
+  <li key={i} className="text-base text-foreground/80 leading-relaxed font-medium">{f}</li>
   ))}
   </ul>
   </div>
-  <div className="rounded-2xl p-4 bg-[hsl(248_62%_52%/0.05)] border border-[hsl(248_62%_52%/0.18)]">
-  <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(248_62%_52%)] mb-1.5">One rewrite move</p>
-  <p className="text-sm text-foreground/85 leading-relaxed">{bioResult.rewriteHook}</p>
+  <div className="rounded-2xl p-6 bg-[hsl(248_62%_52%/0.05)] border border-[hsl(248_62%_52%/0.2)]">
+  <p className="text-sm font-bold uppercase tracking-wider text-[hsl(248_62%_52%)] mb-2">One rewrite move</p>
+  <p className="text-base text-foreground/80 leading-relaxed font-medium">{bioResult.rewriteHook}</p>
   </div>
   <PreviewFooterCta
   label="See the full audit"
   href={bioResult.auditId ? `/report/${bioResult.auditId}` : "/start"}
   />
-  </div>
-  ) : null}
+  </motion.div>
+  )}
   </div>
   </TabsContent>
 
   {/* Compass tab */}
-  <TabsContent value="compass" className="mt-5">
-  <div className="glass border border-foreground/8 rounded-3xl p-6 md:p-7">
-  <p className="text-sm text-muted-foreground mb-4">
-  Pick your connection style and up to two patterns you keep seeing. We&apos;ll show your best-fit dynamic and the false spark to watch.
+  <TabsContent value="compass" className="mt-0">
+  <div className="glass-elevated border border-foreground/10 rounded-[2rem] p-8 md:p-10 shadow-lg">
+  <p className="text-base text-muted-foreground mb-6 font-medium">
+  Pick your connection style and up to two patterns you keep seeing. We'll show your best-fit dynamic and the false spark to watch.
   </p>
-  <div className="space-y-4">
+  <div className="space-y-8">
   <div>
-  <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70 mb-2">Your connection style</p>
-  <div className="flex flex-wrap gap-1.5">
+  <p className="text-sm font-bold uppercase tracking-wider text-foreground/70 mb-4">Your connection style</p>
+  <div className="flex flex-wrap gap-2">
   {PREVIEW_STYLES.map((s) => (
   <button
   key={s}
   type="button"
   onClick={() => setStyle(s)}
-  className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+  className={`px-4 py-2.5 rounded-full border text-sm font-bold transition-all ${
   style === s
-  ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_65%)] border-[hsl(248_62%_52%/0.4)]"
-  : "border-foreground/12 text-muted-foreground hover:border-foreground/25 hover:text-foreground"
+  ? "bg-[hsl(248_62%_52%/0.15)] text-[hsl(248_62%_52%)] border-[hsl(248_62%_52%/0.4)] shadow-sm"
+  : "border-foreground/15 text-muted-foreground hover:border-[hsl(248_62%_52%/0.3)] hover:text-foreground hover:bg-foreground/5"
   }`}
-  data-testid={`button-preview-style-${s.toLowerCase().replace(/ /g, "-")}`}
   >
   {s}
   </button>
@@ -965,19 +734,18 @@ function PreviewSection() {
   </div>
   </div>
   <div>
-  <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70 mb-2">Patterns you keep seeing (pick up to 2)</p>
-  <div className="flex flex-wrap gap-1.5">
+  <p className="text-sm font-bold uppercase tracking-wider text-foreground/70 mb-4">Patterns you keep seeing (pick up to 2)</p>
+  <div className="flex flex-wrap gap-2">
   {PREVIEW_PATTERNS.map((p) => (
   <button
   key={p}
   type="button"
   onClick={() => togglePattern(p)}
-  className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+  className={`px-4 py-2.5 rounded-full border text-sm font-bold transition-all ${
   patterns.includes(p)
-  ? "bg-[hsl(326_100%_59%/0.15)] text-[hsl(326_100%_65%)] border-[hsl(326_100%_59%/0.4)]"
-  : "border-foreground/12 text-muted-foreground hover:border-foreground/25 hover:text-foreground"
+  ? "bg-[hsl(326_100%_59%/0.1)] text-[hsl(326_100%_59%)] border-[hsl(326_100%_59%/0.4)] shadow-sm"
+  : "border-foreground/15 text-muted-foreground hover:border-[hsl(326_100%_59%/0.3)] hover:text-foreground hover:bg-foreground/5"
   }`}
-  data-testid={`button-preview-pattern-${p.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
   >
   {p}
   </button>
@@ -985,124 +753,118 @@ function PreviewSection() {
   </div>
   </div>
   </div>
-  <div className="flex flex-wrap items-center gap-3 mt-5">
+  <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-8">
   <Button
   onClick={runCompassRead}
   disabled={compassLoading || !style}
-  className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white"
-  data-testid="button-preview-compass-show"
+  size="lg"
+  className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white font-bold px-8 shadow-md"
   >
   {compassLoading ? (
-  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Running your read</>
+  <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Running your read</>
   ) : (
-  <>Show me <ArrowRight className="ml-2 h-4 w-4" /></>
+  <>Show me <ArrowRight className="ml-2 h-5 w-5" /></>
   )}
   </Button>
-  <span className="text-[11px] text-muted-foreground/70">A short read. The full Compass goes deeper.</span>
+  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">A short read. The full Compass goes deeper.</span>
   </div>
 
-  {compassResult ? (
-  <div className="mt-6 grid gap-4" data-testid="result-preview-compass">
+  {compassResult && (
+  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-10 grid gap-6">
   <div>
-  <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(248_62%_52%)] mb-1.5">Best-fit dynamic</p>
-  <p className="text-sm text-foreground/85 leading-relaxed">{compassResult.bestDynamic}</p>
+  <p className="text-sm font-bold uppercase tracking-wider text-[hsl(248_62%_52%)] mb-2">Best-fit dynamic</p>
+  <p className="text-base text-foreground/80 leading-relaxed font-medium">{compassResult.bestDynamic}</p>
   </div>
   <div>
-  <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(43_65%_50%)] mb-1.5">Watch for</p>
-  <p className="text-sm text-foreground/85 leading-relaxed">{compassResult.watchFor}</p>
+  <p className="text-sm font-bold uppercase tracking-wider text-[hsl(43_65%_50%)] mb-2">Watch for</p>
+  <p className="text-base text-foreground/80 leading-relaxed font-medium">{compassResult.watchFor}</p>
   </div>
-  <div className="rounded-2xl p-4 bg-[hsl(326_100%_59%/0.05)] border border-[hsl(326_100%_59%/0.18)]">
-  <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(326_100%_59%)] mb-1.5">Your false spark</p>
-  <p className="text-sm text-foreground/85 leading-relaxed">{compassResult.falseSpark}</p>
+  <div className="rounded-2xl p-6 bg-[hsl(326_100%_59%/0.05)] border border-[hsl(326_100%_59%/0.2)]">
+  <p className="text-sm font-bold uppercase tracking-wider text-[hsl(326_100%_59%)] mb-2">Your false spark</p>
+  <p className="text-base text-foreground/80 leading-relaxed font-medium">{compassResult.falseSpark}</p>
   </div>
   <PreviewFooterCta
   label="See the full read"
   href={compassResult.savedId ? `/compass/${compassResult.savedId}` : "/compass"}
   />
-  </div>
-  ) : null}
+  </motion.div>
+  )}
   </div>
   </TabsContent>
 
   {/* Messages tab */}
-  <TabsContent value="messages" className="mt-5">
-  <div className="glass border border-foreground/8 rounded-3xl p-6 md:p-7">
-  <p className="text-sm text-muted-foreground mb-4">
-  Paste a recent chat. We&apos;ll read the tone, name the pattern, and tell you the one move that fits.
+  <TabsContent value="messages" className="mt-0">
+  <div className="glass-elevated border border-foreground/10 rounded-[2rem] p-8 md:p-10 shadow-lg">
+  <p className="text-base text-muted-foreground mb-6 font-medium">
+  Paste a recent chat. We'll read the tone, name the pattern, and tell you the one move that fits.
   </p>
   <Textarea
   value={messages}
   onChange={(e) => setMessages(e.target.value)}
   rows={7}
-  className="resize-none text-sm font-mono"
-  data-testid="textarea-preview-messages"
+  className="resize-none text-sm font-mono p-4 rounded-xl border-foreground/15 focus:border-[hsl(248_62%_52%)] focus:ring-[hsl(248_62%_52%/0.2)] bg-background/50"
   />
-  <div className="flex flex-wrap items-center gap-3 mt-4">
+  <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-6">
   <Button
   onClick={runMessageRead}
   disabled={msgLoading || messages.trim().length === 0}
-  className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white"
-  data-testid="button-preview-messages-show"
+  size="lg"
+  className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 text-white font-bold px-8 shadow-md"
   >
   {msgLoading ? (
-  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reading your style</>
+  <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Reading your style</>
   ) : (
-  <>Show me <ArrowRight className="ml-2 h-4 w-4" /></>
+  <>Show me <ArrowRight className="ml-2 h-5 w-5" /></>
   )}
   </Button>
-  <span className="text-[11px] text-muted-foreground/70">Hybrid AI. No account needed.</span>
+  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Hybrid AI. No account needed.</span>
   </div>
 
-  {msgResult ? (
-  <div className="mt-6 grid gap-4" data-testid="result-preview-messages">
-  {msgResult.attachmentStyle ? (
+  {msgResult && (
+  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-10 grid gap-6">
+  {msgResult.attachmentStyle && (
   <div>
-  <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(248_62%_52%)] mb-1.5">Attachment style</p>
-  <p className="text-sm text-foreground/85 leading-relaxed">{msgResult.attachmentStyle}</p>
+  <p className="text-sm font-bold uppercase tracking-wider text-[hsl(248_62%_52%)] mb-2">Attachment style</p>
+  <p className="text-base text-foreground/80 leading-relaxed font-medium">{msgResult.attachmentStyle}</p>
   </div>
-  ) : null}
+  )}
   <div>
-  <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(190_55%_50%)] mb-1.5">Tone</p>
-  <p className="text-sm text-foreground/85 leading-relaxed">{msgResult.tone}</p>
+  <p className="text-sm font-bold uppercase tracking-wider text-[hsl(190_55%_50%)] mb-2">Tone</p>
+  <p className="text-base text-foreground/80 leading-relaxed font-medium">{msgResult.tone}</p>
   </div>
   <div>
-  <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(43_65%_50%)] mb-2">What we noticed</p>
-  <ul className="space-y-1.5">
+  <p className="text-sm font-bold uppercase tracking-wider text-[hsl(43_65%_50%)] mb-3">What we noticed</p>
+  <ul className="space-y-2">
   {msgResult.patterns.map((p, i) => (
-  <li key={i} className="text-sm text-foreground/85 leading-relaxed">{p}</li>
+  <li key={i} className="text-base text-foreground/80 leading-relaxed font-medium">{p}</li>
   ))}
   </ul>
   </div>
-  <div className="rounded-2xl p-4 bg-[hsl(248_62%_52%/0.05)] border border-[hsl(248_62%_52%/0.18)]">
-  <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(248_62%_52%)] mb-1.5">One move that fits</p>
-  <p className="text-sm text-foreground/85 leading-relaxed">{msgResult.oneLine}</p>
+  <div className="rounded-2xl p-6 bg-[hsl(248_62%_52%/0.05)] border border-[hsl(248_62%_52%/0.2)]">
+  <p className="text-sm font-bold uppercase tracking-wider text-[hsl(248_62%_52%)] mb-2">The Move</p>
+  <p className="text-base text-foreground/80 leading-relaxed font-medium">{msgResult.oneLine}</p>
   </div>
-  <PreviewFooterCta label="See the full read" href="/insights" />
-  </div>
-  ) : null}
+  <PreviewFooterCta
+  label="See the full analysis"
+  href="/insights"
+  />
+  </motion.div>
+  )}
   </div>
   </TabsContent>
   </Tabs>
-
-  <p className="text-center text-[11px] text-muted-foreground/60 mt-4">
-  Each tab runs the real hybrid AI on your input. Anonymous by default. The signed-in tools go deeper and save your history.
-  </p>
   </div>
   </div>
   </section>
   );
 }
 
-function PreviewFooterCta({ label, href = "/start" }: { label: string; href?: string }) {
+function PreviewFooterCta({ label, href }: { label: string; href: string }) {
   return (
-  <div className="pt-2">
-  <Link
-  href={href}
-  className="inline-flex items-center gap-2 text-sm font-semibold text-[hsl(248_62%_62%)] hover:text-[hsl(248_62%_52%)] transition-colors"
-  data-testid="link-preview-cta"
-  >
-  {label} <ArrowRight className="w-4 h-4" />
-  </Link>
+  <div className="mt-6 pt-6 border-t border-foreground/10">
+  <Button asChild variant="outline" className="w-full rounded-xl border-foreground/20 hover:bg-foreground/5 hover:text-foreground font-bold py-6 text-base">
+  <Link href={href}>{label}</Link>
+  </Button>
   </div>
   );
 }
