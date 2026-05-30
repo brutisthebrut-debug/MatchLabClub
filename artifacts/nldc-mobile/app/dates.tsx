@@ -8,6 +8,7 @@ import {
   getListPostDateNotesQueryKey,
   type PostDateNote,
 } from "@workspace/api-client-react";
+import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, Stack, useLocalSearchParams, type Href } from "expo-router";
 import React from "react";
@@ -189,12 +190,13 @@ export default function DatesScreen() {
           summary,
           ...(draftPerson.trim() ? { personLabel: draftPerson.trim() } : {}),
           ...(draftWentWell.trim() ? { whatWentWell: draftWentWell.trim() } : {}),
-          ...(draftDidntWork.trim() ? { whatDidntWork: draftDidntWork.trim() } : {}),
+          ...(draftDidntWork.trim() ? { whatDidnt: draftDidntWork.trim() } : {}),
           ...(draftOutcome ? { outcome: draftOutcome } : {}),
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: (note) => {
+          void rememberAnonymousId("postDateNotes", note.id);
           invalidate();
           setCreateOpen(false);
           setDraftPerson("");

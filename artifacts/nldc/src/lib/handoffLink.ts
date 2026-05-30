@@ -10,6 +10,8 @@ export interface PendingHandoff {
   messageSessionIds: number[];
   insightIds: number[];
   followUpIds: number[];
+  journalEntryIds: number[];
+  postDateNoteIds: number[];
 }
 
 function b64urlEncode(s: string): string {
@@ -48,6 +50,8 @@ export function decodePendingHandoffParam(raw: string): PendingHandoff | null {
       messageSessionIds: sanitizeIds(p.messageSessionIds),
       insightIds: sanitizeIds(p.insightIds),
       followUpIds: sanitizeIds(p.followUpIds),
+      journalEntryIds: sanitizeIds(p.journalEntryIds),
+      postDateNoteIds: sanitizeIds(p.postDateNoteIds),
     };
   } catch {
     return null;
@@ -120,6 +124,8 @@ export function readPendingHandoff(): PendingHandoff | null {
       messageSessionIds: sanitizeIds(p.messageSessionIds),
       insightIds: sanitizeIds(p.insightIds),
       followUpIds: sanitizeIds(p.followUpIds),
+      journalEntryIds: sanitizeIds(p.journalEntryIds),
+      postDateNoteIds: sanitizeIds(p.postDateNoteIds),
     };
   } catch {
     return null;

@@ -9,6 +9,8 @@ import {
   getListProfilesQueryKey,
   getListMessageCoachingSessionsQueryKey,
   getListInsightsQueryKey,
+  getListJournalEntriesQueryKey,
+  getListPostDateNotesQueryKey,
 } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import {
@@ -55,6 +57,8 @@ export function buildClaimedSummary(claimed: {
   messages: number;
   insights: number;
   followUps: number;
+  journalEntries?: number;
+  postDateNotes?: number;
 }): string | null {
   const parts: string[] = [];
   if (claimed.audits > 0) {
@@ -76,6 +80,16 @@ export function buildClaimedSummary(claimed: {
   if (claimed.followUps > 0) {
     parts.push(
       pluralize(claimed.followUps, "follow-up answer", "follow-up answers"),
+    );
+  }
+  if ((claimed.journalEntries ?? 0) > 0) {
+    parts.push(
+      pluralize(claimed.journalEntries ?? 0, "journal entry", "journal entries"),
+    );
+  }
+  if ((claimed.postDateNotes ?? 0) > 0) {
+    parts.push(
+      pluralize(claimed.postDateNotes ?? 0, "date debrief", "date debriefs"),
     );
   }
   if (parts.length === 0) return null;
@@ -107,6 +121,8 @@ export function useClaimAnonymousOnLogin(): void {
       queryKey: getListMessageCoachingSessionsQueryKey(),
     });
     queryClient.invalidateQueries({ queryKey: getListInsightsQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getListJournalEntriesQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getListPostDateNotesQueryKey() });
   }
 
   function toastClaimed(claimed: {
@@ -115,6 +131,8 @@ export function useClaimAnonymousOnLogin(): void {
     messages: number;
     insights: number;
     followUps: number;
+    journalEntries?: number;
+    postDateNotes?: number;
   }): void {
     const summary = buildClaimedSummary(claimed);
     if (summary) {
@@ -168,6 +186,8 @@ export function useClaimAnonymousOnLogin(): void {
             messages: result.claimed.messages,
             insights: result.claimed.insights,
             follow_ups: result.claimed.followUps,
+            journal_entries: result.claimed.journalEntries,
+            post_date_notes: result.claimed.postDateNotes,
             channel: "cookie",
           });
         },
@@ -203,6 +223,8 @@ export function useClaimAnonymousOnLogin(): void {
           messageSessionIds: pending.messageSessionIds,
           insightIds: pending.insightIds,
           followUpIds: pending.followUpIds,
+          journalEntryIds: pending.journalEntryIds,
+          postDateNoteIds: pending.postDateNoteIds,
         },
       },
       {
@@ -216,6 +238,8 @@ export function useClaimAnonymousOnLogin(): void {
             messages: result.claimed.messages,
             insights: result.claimed.insights,
             follow_ups: result.claimed.followUps,
+            journal_entries: result.claimed.journalEntries,
+            post_date_notes: result.claimed.postDateNotes,
             channel: "handoff",
           });
         },

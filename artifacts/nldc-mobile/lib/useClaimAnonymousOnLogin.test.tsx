@@ -47,6 +47,8 @@ vi.mock("@workspace/api-client-react", () => ({
   getListProfilesQueryKey: () => ["profiles"],
   getListMessageCoachingSessionsQueryKey: () => ["message-sessions"],
   getListInsightsQueryKey: () => ["insights"],
+  getListJournalEntriesQueryKey: () => ["journal-entries"],
+  getListPostDateNotesQueryKey: () => ["post-date-notes"],
 }));
 
 // Import AFTER mocks are registered.
@@ -148,6 +150,8 @@ describe("useClaimAnonymousOnLogin (mobile) — anon → login → claim", () =>
         profileIds: [99],
         messageSessionIds: [],
         insightIds: [],
+        journalEntryIds: [],
+        postDateNoteIds: [],
       },
     });
 
@@ -164,6 +168,8 @@ describe("useClaimAnonymousOnLogin (mobile) — anon → login → claim", () =>
         profileIds: [],
         messageSessionIds: [],
         insightIds: [],
+        journalEntryIds: [],
+        postDateNoteIds: [],
       });
     });
 

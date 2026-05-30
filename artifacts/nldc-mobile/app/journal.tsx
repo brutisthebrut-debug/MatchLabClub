@@ -8,6 +8,7 @@ import {
   getListJournalEntriesQueryKey,
   type JournalEntry,
 } from "@workspace/api-client-react";
+import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, Stack, useLocalSearchParams, type Href } from "expo-router";
 import React from "react";
@@ -174,7 +175,8 @@ export default function JournalScreen() {
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: (entry) => {
+          void rememberAnonymousId("journalEntries", entry.id);
           invalidate();
           setCreateOpen(false);
           setDraftPrompt("");

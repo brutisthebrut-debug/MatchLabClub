@@ -9,6 +9,8 @@ interface PendingHandoff {
   messageSessionIds: number[];
   insightIds: number[];
   followUpIds: number[];
+  journalEntryIds: number[];
+  postDateNoteIds: number[];
 }
 
 function b64urlEncode(s: string): string {
@@ -33,6 +35,8 @@ export async function buildMobileHandoffShareUrl(handoff: string): Promise<strin
     messageSessionIds: ids.messageSessionIds,
     insightIds: ids.insightIds,
     followUpIds: [],
+    journalEntryIds: ids.journalEntryIds,
+    postDateNoteIds: ids.postDateNoteIds,
   };
   const param = b64urlEncode(JSON.stringify(payload));
   const base = getWebBaseUrl();

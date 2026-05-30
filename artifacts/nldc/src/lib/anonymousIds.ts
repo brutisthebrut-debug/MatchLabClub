@@ -4,6 +4,8 @@ const KEYS = {
   messageSessions: "nldc:anon:messageSessionIds",
   insights: "nldc:anon:insightIds",
   followUps: "nldc:anon:followUpIds",
+  journalEntries: "nldc:anon:journalEntryIds",
+  postDateNotes: "nldc:anon:postDateNoteIds",
   compass: "nldc:anon:compassIds",
 } as const;
 
@@ -45,6 +47,8 @@ export function readAnonymousIds(): {
   messageSessionIds: number[];
   insightIds: number[];
   followUpIds: number[];
+  journalEntryIds: number[];
+  postDateNoteIds: number[];
 } {
   return {
     auditIds: safeRead(KEYS.audits),
@@ -52,6 +56,8 @@ export function readAnonymousIds(): {
     messageSessionIds: safeRead(KEYS.messageSessions),
     insightIds: safeRead(KEYS.insights),
     followUpIds: safeRead(KEYS.followUps),
+    journalEntryIds: safeRead(KEYS.journalEntries),
+    postDateNoteIds: safeRead(KEYS.postDateNotes),
   };
 }
 
@@ -73,12 +79,16 @@ export function hasAnyAnonymousIds(): boolean {
     messageSessionIds,
     insightIds,
     followUpIds,
+    journalEntryIds,
+    postDateNoteIds,
   } = readAnonymousIds();
   return (
     auditIds.length > 0 ||
     profileIds.length > 0 ||
     messageSessionIds.length > 0 ||
     insightIds.length > 0 ||
-    followUpIds.length > 0
+    followUpIds.length > 0 ||
+    journalEntryIds.length > 0 ||
+    postDateNoteIds.length > 0
   );
 }

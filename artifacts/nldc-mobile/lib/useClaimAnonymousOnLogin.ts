@@ -7,6 +7,8 @@ import {
   getListProfilesQueryKey,
   getListMessageCoachingSessionsQueryKey,
   getListInsightsQueryKey,
+  getListJournalEntriesQueryKey,
+  getListPostDateNotesQueryKey,
 } from "@workspace/api-client-react";
 import {
   readAnonymousIds,
@@ -60,6 +62,12 @@ export function useClaimAnonymousOnLogin(): void {
               queryKey: getListMessageCoachingSessionsQueryKey(),
             });
             queryClient.invalidateQueries({ queryKey: getListInsightsQueryKey() });
+            queryClient.invalidateQueries({
+              queryKey: getListJournalEntriesQueryKey(),
+            });
+            queryClient.invalidateQueries({
+              queryKey: getListPostDateNotesQueryKey(),
+            });
           },
           onError: () => {
             // Allow retry on the next render/auth change.

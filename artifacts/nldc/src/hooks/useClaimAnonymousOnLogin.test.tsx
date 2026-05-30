@@ -35,6 +35,8 @@ vi.mock("@workspace/api-client-react", () => {
     getListProfilesQueryKey: () => ["profiles"],
     getListMessageCoachingSessionsQueryKey: () => ["message-sessions"],
     getListInsightsQueryKey: () => ["insights"],
+    getListJournalEntriesQueryKey: () => ["journal-entries"],
+    getListPostDateNotesQueryKey: () => ["post-date-notes"],
   };
 });
 
@@ -138,6 +140,8 @@ describe("useClaimAnonymousOnLogin — full anon→login→claim flow", () => {
         messageSessionIds: [],
         insightIds: [],
         followUpIds: [],
+        journalEntryIds: [],
+        postDateNoteIds: [],
       },
     });
 
@@ -152,6 +156,8 @@ describe("useClaimAnonymousOnLogin — full anon→login→claim flow", () => {
       messageSessionIds: [],
       insightIds: [],
       followUpIds: [],
+      journalEntryIds: [],
+      postDateNoteIds: [],
     });
 
     const invalidatedKeys = invalidateSpy.mock.calls.map((c) => c[0]?.queryKey?.[0]);
@@ -306,6 +312,8 @@ describe("useClaimAnonymousOnLogin — full anon→login→claim flow", () => {
         messageSessionIds: [],
         insightIds: [],
         followUpIds: [21],
+        journalEntryIds: [],
+        postDateNoteIds: [],
       },
     });
 

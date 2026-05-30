@@ -955,6 +955,8 @@ describe("Cross-device hand-off claim flow", () => {
       messageSessionIds: [],
       insightIds: [],
       followUpIds: [],
+      journalEntryIds: [],
+      postDateNoteIds: [],
     });
     openUrlInActiveBrowser(`/?nldc_handoff=${bogusParam}`);
 

@@ -11,6 +11,7 @@ import {
   useCreatePostDateNote,
   PostDateOutcome,
 } from "@workspace/api-client-react";
+import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { Heart, Loader2, Sparkles, RefreshCw, ArrowLeft, ArrowRight } from "lucide-react";
 
 const fadeUp = (delay = 0) => ({
@@ -122,7 +123,10 @@ export default function DebriefWhatHappened() {
 ...(mappedOutcome ? { outcome: mappedOutcome } : {}),
   },
   },
-  { onError: () => { savedRef.current = false; } },
+  {
+  onSuccess: (note) => { rememberAnonymousId("postDateNotes", note.id); },
+  onError: () => { savedRef.current = false; },
+  },
   );
   }
   const prompt = [

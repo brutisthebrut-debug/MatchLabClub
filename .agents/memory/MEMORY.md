@@ -1,1 +1,2 @@
 - [Source-app list sync](source-app-enum-sync.md) — adding/removing a dating app touches Report SOURCE_APPS, backend VALID_SOURCE_APPS, OpenAPI enum+codegen, and several UI dropdowns in lockstep.
+- [Anonymous claim/handoff signal wiring](anonymous-claim-wiring.md) — new anon signal types must be wired through web+mobile in BOTH cookie-claim and cross-device handoff paths, or rows are silently dropped.

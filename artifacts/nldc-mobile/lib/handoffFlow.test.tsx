@@ -374,6 +374,8 @@ interface HandoffPayload {
   messageSessionIds: number[];
   insightIds: number[];
   followUpIds: number[];
+  journalEntryIds: number[];
+  postDateNoteIds: number[];
 }
 
 function b64urlDecode(s: string): string {
@@ -413,6 +415,8 @@ function HandoffRedeemer({
           messageSessionIds: payload.messageSessionIds,
           insightIds: payload.insightIds,
           followUpIds: payload.followUpIds,
+          journalEntryIds: payload.journalEntryIds,
+          postDateNoteIds: payload.postDateNoteIds,
         },
       },
       {
@@ -486,6 +490,11 @@ describe("Mobile cross-device handoff when cookies are blocked", () => {
       expect(server.audits[0]!.userId).toBeNull();
       expect(server.audits[0]!.anonToken).toBe("anon-device-A-cookie");
 
+      // Anonymous journal + post-date rows live in AsyncStorage too. The
+      // handoff URL must carry them so cross-device redeem doesn't drop them.
+      await rememberAnonymousId("journalEntries", 777);
+      await rememberAnonymousId("postDateNotes", 888);
+
       // 2) Mint a handoff URL on device A. The shareable URL must carry
       //    both the signed token and the anon ID(s) so device B can claim.
       let shareUrl: string | undefined;
@@ -499,6 +508,8 @@ describe("Mobile cross-device handoff when cookies are blocked", () => {
       const payload = decodeShareUrl(shareUrl!);
       expect(payload.handoff).toMatch(/^mockhandoff\./);
       expect(payload.auditIds).toEqual([createdId]);
+      expect(payload.journalEntryIds).toEqual([777]);
+      expect(payload.postDateNoteIds).toEqual([888]);
 
       creator.unmount();
       issuer.unmount();

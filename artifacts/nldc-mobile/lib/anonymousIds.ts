@@ -5,6 +5,8 @@ const KEYS = {
   profiles: "nldc.anon.profileIds",
   messageSessions: "nldc.anon.messageSessionIds",
   insights: "nldc.anon.insightIds",
+  journalEntries: "nldc.anon.journalEntryIds",
+  postDateNotes: "nldc.anon.postDateNoteIds",
 } as const;
 
 export type AnonymousKind = keyof typeof KEYS;
@@ -45,15 +47,32 @@ export async function readAnonymousIds(): Promise<{
   profileIds: number[];
   messageSessionIds: number[];
   insightIds: number[];
+  journalEntryIds: number[];
+  postDateNoteIds: number[];
 }> {
-  const [auditIds, profileIds, messageSessionIds, insightIds] =
-    await Promise.all([
-      safeRead(KEYS.audits),
-      safeRead(KEYS.profiles),
-      safeRead(KEYS.messageSessions),
-      safeRead(KEYS.insights),
-    ]);
-  return { auditIds, profileIds, messageSessionIds, insightIds };
+  const [
+    auditIds,
+    profileIds,
+    messageSessionIds,
+    insightIds,
+    journalEntryIds,
+    postDateNoteIds,
+  ] = await Promise.all([
+    safeRead(KEYS.audits),
+    safeRead(KEYS.profiles),
+    safeRead(KEYS.messageSessions),
+    safeRead(KEYS.insights),
+    safeRead(KEYS.journalEntries),
+    safeRead(KEYS.postDateNotes),
+  ]);
+  return {
+    auditIds,
+    profileIds,
+    messageSessionIds,
+    insightIds,
+    journalEntryIds,
+    postDateNoteIds,
+  };
 }
 
 export async function clearAnonymousIds(): Promise<void> {
@@ -74,6 +93,8 @@ export async function hasAnyAnonymousIds(): Promise<boolean> {
     ids.auditIds.length > 0 ||
     ids.profileIds.length > 0 ||
     ids.messageSessionIds.length > 0 ||
-    ids.insightIds.length > 0
+    ids.insightIds.length > 0 ||
+    ids.journalEntryIds.length > 0 ||
+    ids.postDateNoteIds.length > 0
   );
 }

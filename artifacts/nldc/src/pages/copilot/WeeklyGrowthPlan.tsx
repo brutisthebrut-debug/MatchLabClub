@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEnhanceAi, useCreateJournalEntry } from "@workspace/api-client-react";
+import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { BarChart2, CheckCircle2, Circle, Loader2, Sparkles, RefreshCw, ArrowLeft } from "lucide-react";
 
 const fadeUp = (delay = 0) => ({
@@ -140,7 +141,10 @@ export default function WeeklyGrowthPlan() {
   tags: ["weekly"],
   },
   },
-  { onError: () => { savedRef.current = false; } },
+  {
+  onSuccess: (entry) => { rememberAnonymousId("journalEntries", entry.id); },
+  onError: () => { savedRef.current = false; },
+  },
   );
   }
   const prompt = [
