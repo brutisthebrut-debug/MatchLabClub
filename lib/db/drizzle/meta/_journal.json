@@ -92,6 +92,13 @@
       "when": 1780181181354,
       "tag": "0012_fixed_excalibur",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1780183060714,
+      "tag": "0013_dark_chamber",
+      "breakpoints": true
     }
   ]
 }

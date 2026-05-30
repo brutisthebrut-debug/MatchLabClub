@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import {
-  getFounderStats, getLeads, getPurchaseInterestList, getAiMetrics,
+  getFounderStats, getLeads, setLeadStatus, getPurchaseInterestList, getAiMetrics,
   getAiThresholds, updateAiThresholds, getAiMetricsTrends, getAiThresholdChanges, undoAiThresholdChange,
   getRollupHeartbeat, getOcrMismatches, getBackgroundJobs, purgeTrashNow, refreshGeoip, setUserTier,
   getOcrLearnedRules, runOcrLearn, clearOcrLearnedRules, deleteOcrRule, patchOcrRule, getOcrMismatchesTrends,
@@ -3453,30 +3453,51 @@ const STATUS_COLORS: Record<LeadStatus, { color: string; bg: string }> = {
   "Archived": { color: "hsl(var(--muted-foreground))", bg: "hsl(var(--muted) / 0.3)" },
 };
 
-const LEAD_STATUS_KEY = "nldc_lead_statuses";
-
-function useLeadStatuses() {
-  const [statuses, setStatuses] = useState<Record<string, LeadStatus>>(() => {
-  try { return JSON.parse(localStorage.getItem(LEAD_STATUS_KEY) ?? "{}") as Record<string, LeadStatus>; }
-  catch { return {}; }
-  });
+// Founder triage status is persisted server-side (PATCH /founder/leads/:id/status).
+// We keep an optimistic local override so the dropdown feels instant, falling back
+// to the value the server returned with each lead and reverting on failure.
+function useLeadStatuses(leads: Lead[]) {
+  const [overrides, setOverrides] = useState<Record<string, LeadStatus>>({});
+  // Once the server-refetched lead reflects an override, drop the override so the
+  // server stays the source of truth (e.g. another teammate changes the same row).
+  useEffect(() => {
+    setOverrides((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const l of leads) {
+        const key = String(l.id);
+        if (key in next && next[key] === ((l.status as LeadStatus) || "New")) {
+          delete next[key];
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [leads]);
+  const statusFor = (l: Lead): LeadStatus =>
+    overrides[String(l.id)] ?? ((l.status as LeadStatus) || "New");
   const setStatus = (id: string | number, s: LeadStatus) => {
-  setStatuses(prev => {
-  const next = {...prev, [String(id)]: s };
-  try { localStorage.setItem(LEAD_STATUS_KEY, JSON.stringify(next)); } catch {}
-  return next;
-  });
+    const key = String(id);
+    setOverrides((prev) => ({ ...prev, [key]: s }));
+    void setLeadStatus(FOUNDER_KEY, Number(id), s).catch(() => {
+      // Revert the optimistic value so the row reflects the persisted truth.
+      setOverrides((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    });
   };
-  return { statuses, setStatus };
+  return { statusFor, setStatus };
 }
 
 function LeadsStatusTable({ leads }: { leads: Lead[] }) {
-  const { statuses, setStatus } = useLeadStatuses();
+  const { statusFor, setStatus } = useLeadStatuses(leads);
   if (!leads.length) return <p className="text-sm text-muted-foreground/60 italic py-6 text-center">No leads yet.</p>;
   return (
   <div className="space-y-2">
   {leads.map((l) => {
-  const currentStatus = statuses[String(l.id)] ?? "New";
+  const currentStatus = statusFor(l);
   const sc = STATUS_COLORS[currentStatus];
   return (
   <div key={l.id} className="glass border border-white/8 rounded-xl p-4 flex flex-col sm:flex-row sm:items-start gap-3">

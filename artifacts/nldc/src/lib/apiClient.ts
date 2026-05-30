@@ -19,6 +19,23 @@ async function get<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json();
 }
 
+async function patch<T>(
+  path: string,
+  body: unknown,
+  init?: { headers?: Record<string, string> },
+): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`PATCH ${path} failed (${res.status}): ${text}`);
+  }
+  return res.json();
+}
+
 export interface LeadInput {
   firstName?: string | null;
   email: string;
@@ -53,6 +70,8 @@ export interface Lead {
   source: string;
   interest: string | null;
   metadata: Record<string, unknown> | null;
+  status: string;
+  statusUpdatedAt: string | null;
   createdAt: string;
 }
 
@@ -76,6 +95,11 @@ export const capturePurchaseInterest = (data: PurchaseInterestInput) =>
 
 export const getFounderStats = (founderKey: string) =>
   get<FounderStats>("/founder/stats", { headers: { "x-founder-key": founderKey } });
+
+export const setLeadStatus = (founderKey: string, id: number, status: string) =>
+  patch<Lead>(`/founder/leads/${id}/status`, { status }, {
+    headers: { "x-founder-key": founderKey },
+  });
 
 export interface AiToolMetric {
   toolName: string;

@@ -1,1 +1,1 @@
-- [Wellness capture consent policy](wellness-capture-policy.md) — wellness answers always stored at consentLevel "all", enforced server-side; legacy values still valid; matching counts must include 'matching'+'all'.
+- [Running api-server tests](api-server-test-runner.md) — direct `vitest run` in bash gets OOM/thread-killed (exit -1, no output); use the `api-tests` workflow instead.

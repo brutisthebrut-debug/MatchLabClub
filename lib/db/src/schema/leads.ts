@@ -9,6 +9,10 @@ export const leadsTable = pgTable("leads", {
   source: text("source").notNull(),
   interest: text("interest"),
   metadata: jsonb("metadata"),
+  // Founder-side triage state. Persisted server-side (not browser-local) so the
+  // pipeline survives refreshes and is shared across devices/teammates.
+  status: text("status").notNull().default("New"),
+  statusUpdatedAt: timestamp("status_updated_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
