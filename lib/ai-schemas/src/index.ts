@@ -45,6 +45,13 @@ export const messageCoachSchema = z.object({
 
 export type MessageCoachOutput = z.infer<typeof messageCoachSchema>;
 
+export const bioRewriteSchema = z.object({
+  rewrittenBio: z.string().trim().min(1),
+  bioAudit: z.string().trim().min(1),
+});
+
+export type BioRewriteOutput = z.infer<typeof bioRewriteSchema>;
+
 export function parseAiJson<T>(
   schema: z.ZodType<T>,
   raw: string,
@@ -66,6 +73,7 @@ export const aiToolSchemas = {
   "Personal Blueprint": blueprintSchema,
   "Next Message": nextMessageSchema,
   "Message Coach": messageCoachSchema,
+  "Bio Rewrite": bioRewriteSchema,
 } as const;
 
 export type AiToolName = keyof typeof aiToolSchemas;

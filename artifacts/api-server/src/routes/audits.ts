@@ -21,7 +21,9 @@ import {
   GetAuditReportVersionResponse,
 } from "@workspace/api-zod";
 import { z } from "zod/v4";
-import { generateAuditReport } from "../lib/aiEngine";
+import type { BioRewriteOutput } from "@workspace/ai-schemas";
+import { generateAuditReport, type AuditReportOutput } from "../lib/aiEngine";
+import { generate } from "../lib/aiService";
 import { getRetentionDays } from "../lib/auditTrashPurge";
 import { pruneVersionsForAudit } from "../lib/auditVersionPurge";
 import {
@@ -614,6 +616,100 @@ router.post("/audits/bulk-delete", async (req, res): Promise<void> => {
   );
 });
 
+// Deep AI lane for the bio rewrite. The deterministic report is the always-on
+// baseline; this overlays ONLY the textual `rewrittenBio` and `bioAudit` fields
+// with a Claude-enhanced version. readinessScore, grade, strengths, risks,
+// prompt rewrites, photo guidance, and the action plan stay 100% deterministic
+// so audit history, score filters, and change summaries are unaffected.
+async function enhanceBioRewriteWithAi(
+  base: AuditReportOutput,
+  input: {
+    firstName: string;
+    bio: string;
+    prompts?: string | null;
+    datingGoal: string;
+    currentApps: string[];
+    sourceApp?: string | null;
+  },
+  userId: string | null | undefined,
+  log: Request["log"],
+): Promise<AuditReportOutput> {
+  // Anonymous audits never reach the hosted AI lane; their deterministic rewrite
+  // already covers them. Only authenticated users with content consent (gated
+  // inside generate) get the Claude-enhanced bio.
+  if (!userId) return base;
+
+  try {
+    const appLine =
+      input.currentApps.filter(Boolean).join(", ") || "unspecified";
+    const system = [
+      "You are Echo, a candid dating-profile editor. Rewrite the user's dating",
+      "app bio so it is specific, warm, and true to them, then write a short,",
+      "honest audit of what the original got right and what it got wrong.",
+      `Their app(s): ${appLine}. Their dating goal: ${input.datingGoal}.`,
+      "Keep the rewrite realistic for a real profile: no clichés, no stacking",
+      "adjectives, lead with one concrete specific detail a stranger could ask",
+      "about.",
+      "Voice rules: no em dashes. No filler like 'unlock', 'elevate', 'dive in',",
+      "'game-changer', 'seamless', 'in today's world', 'buckle up'. Vary sentence",
+      "length. Be specific, not generic.",
+      "Return JSON only, no prose, no code fences:",
+      '{ "rewrittenBio": "the improved bio", "bioAudit": "2-4 sentence honest critique" }',
+    ].join("\n");
+
+    const userContent = [
+      `First name: ${input.firstName}`,
+      `Original bio:\n${input.bio}`,
+      input.prompts ? `Prompts:\n${input.prompts}` : null,
+      `Deterministic baseline rewrite (improve on this, do not just echo it):\n${base.rewrittenBio}`,
+    ]
+      .filter((line): line is string => Boolean(line))
+      .join("\n\n");
+
+    const aiResult = await generate(
+      {
+        provider: "anthropic",
+        system,
+        user: userContent,
+        expectJson: true,
+        requireContentConsent: true,
+        userId,
+        context: {
+          toolName: "Bio Rewrite",
+          goals: input.datingGoal ? [input.datingGoal] : undefined,
+        },
+        maxTokens: 1200,
+      },
+      "",
+    );
+
+    if (!aiResult.isFallback && aiResult.validated && aiResult.output) {
+      const parsed = JSON.parse(aiResult.output) as BioRewriteOutput;
+      return {
+        ...base,
+        rewrittenBio: parsed.rewrittenBio,
+        bioAudit: parsed.bioAudit,
+      };
+    }
+    if (aiResult.fallbackReason) {
+      log.info(
+        { userId, fallbackReason: aiResult.fallbackReason },
+        "audit bio rewrite fell back to deterministic baseline",
+      );
+    }
+    return base;
+  } catch (err) {
+    // generate() handles provider errors internally, but any unexpected throw
+    // (consent lookup, JSON parse, etc.) must never fail the audit: the
+    // deterministic report already covers it.
+    log.warn(
+      { err, userId },
+      "audit bio rewrite deep-AI lane threw; using deterministic baseline",
+    );
+    return base;
+  }
+}
+
 router.post("/audits/:id/generate", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(raw, 10);
@@ -637,7 +733,7 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
 
   await db.update(auditsTable).set({ status: "generating" }).where(eq(auditsTable.id, id));
 
-  const report = generateAuditReport({
+  const baseReport = generateAuditReport({
     firstName: audit.firstName,
     bio: audit.bio,
     prompts: audit.prompts,
@@ -647,6 +743,19 @@ router.post("/audits/:id/generate", async (req, res): Promise<void> => {
     recentMessageSample: audit.recentMessageSample,
     sourceApp: audit.sourceApp,
   });
+  const report = await enhanceBioRewriteWithAi(
+    baseReport,
+    {
+      firstName: audit.firstName,
+      bio: audit.bio,
+      prompts: audit.prompts,
+      datingGoal: audit.datingGoal,
+      currentApps: audit.currentApps,
+      sourceApp: audit.sourceApp,
+    },
+    req.user?.id ?? null,
+    req.log,
+  );
 
   const changeSummary = buildChangeSummary(priorReport, priorScore, report);
   const fullReport = {
@@ -1004,7 +1113,7 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
     })
     .returning();
 
-  const report = generateAuditReport({
+  const baseReport = generateAuditReport({
     firstName,
     bio: bioText,
     prompts: promptsText,
@@ -1012,6 +1121,19 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
     currentApps: [sourceApp],
     sourceApp,
   });
+  const report = await enhanceBioRewriteWithAi(
+    baseReport,
+    {
+      firstName,
+      bio: bioText,
+      prompts: promptsText,
+      datingGoal,
+      currentApps: [sourceApp],
+      sourceApp,
+    },
+    req.user?.id ?? null,
+    req.log,
+  );
 
   const fullReport = { auditId: audit.id, ...report };
   const firstGeneratedAt = new Date();

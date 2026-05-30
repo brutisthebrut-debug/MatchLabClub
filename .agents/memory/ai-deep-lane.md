@@ -11,11 +11,12 @@ aspirational, not a guarantee that every tool calls Claude. **Before trusting th
 grep for `generate(` with `provider: "anthropic"` to see which routes are actually wired.**
 
 **Why:** Several flagship tools historically ran deterministic-only while the docs implied
-Claude was layered on. The message coach was one such gap (now wired). Audit/bio rewrite
-(`generateAuditReport`, two call sites in `audits.ts`), email insights (`insights.ts`), and
-Compass synthesis (goes through the generic `/ai/enhance`, which is OpenAI-default and NOT
-consent-gated) remain deterministic / inconsistent as of this writing — candidate gaps to
-close, but verify current state with grep first.
+Claude was layered on. Now wired: message coach (`/messages/:id/coach`) and audit/bio rewrite
+(both `audits.ts` call sites + `/audits/from-screenshot`, via `enhanceBioRewriteWithAi` which
+overlays only `rewrittenBio`+`bioAudit`, never the score). Remaining gaps as of this writing:
+email insights (`insights.ts`, no AI at all) and Compass synthesis (routes through the generic
+`/ai/enhance`, which is OpenAI-default and NOT consent-gated — a privacy inconsistency). Verify
+current state with grep before trusting this list.
 
 ## House pattern for adding a Claude lane to a tool
 
