@@ -1,0 +1,1 @@
+- [AI deep lane (Claude) wiring](ai-deep-lane.md) — docs "Deep AI lane" list is aspirational; grep generate(provider:anthropic) for real call sites. House pattern: deterministic-first + consent-gated generate + registered ai-schema toolName + try/catch fallback.

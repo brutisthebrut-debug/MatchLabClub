@@ -27,6 +27,24 @@ export const nextMessageSchema = z.object({
 
 export type NextMessageOutput = z.infer<typeof nextMessageSchema>;
 
+export const messageCoachReplySchema = z.object({
+  style: z.string().trim().min(1),
+  text: z.string().trim().min(1),
+  rationale: z.string().trim().min(1),
+});
+
+export type MessageCoachReplyOutput = z.infer<typeof messageCoachReplySchema>;
+
+export const messageCoachSchema = z.object({
+  analysis: z.string().trim().min(1),
+  suggestedReplies: z.array(messageCoachReplySchema).min(2).max(6),
+  tone: z.string().trim().min(1),
+  redFlags: z.array(z.string().trim().min(1)).max(8),
+  coachTip: z.string().trim().min(1),
+});
+
+export type MessageCoachOutput = z.infer<typeof messageCoachSchema>;
+
 export function parseAiJson<T>(
   schema: z.ZodType<T>,
   raw: string,
@@ -47,6 +65,7 @@ export function parseAiJson<T>(
 export const aiToolSchemas = {
   "Personal Blueprint": blueprintSchema,
   "Next Message": nextMessageSchema,
+  "Message Coach": messageCoachSchema,
 } as const;
 
 export type AiToolName = keyof typeof aiToolSchemas;
