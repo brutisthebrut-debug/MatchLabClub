@@ -212,7 +212,6 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
             category: item.category ?? null,
             questionText: item.questionText,
             answer: item.answer,
-            consentLevel: "coaching",
           },
         });
         saved += 1;

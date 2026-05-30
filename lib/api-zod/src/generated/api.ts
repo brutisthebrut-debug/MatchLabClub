@@ -1344,7 +1344,7 @@ export const ListWellnessAnswersResponse = zod.object({
   "category": zod.string().nullish(),
   "questionText": zod.string(),
   "answer": zod.string(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research']),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']),
   "deletedAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -1378,7 +1378,7 @@ export const CreateWellnessAnswerBody = zod.object({
   "category": zod.string().max(createWellnessAnswerBodyCategoryMax).nullish(),
   "questionText": zod.string().min(1).max(createWellnessAnswerBodyQuestionTextMax),
   "answer": zod.string().min(1).max(createWellnessAnswerBodyAnswerMax),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research']).optional()
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).optional()
 })
 
 
@@ -1399,7 +1399,7 @@ export const updateWellnessAnswerBodyAnswerMax = 5000;
 
 export const UpdateWellnessAnswerBody = zod.object({
   "answer": zod.string().min(1).max(updateWellnessAnswerBodyAnswerMax).optional(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research']).optional()
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).optional()
 })
 
 export const UpdateWellnessAnswerResponse = zod.object({
@@ -1409,7 +1409,7 @@ export const UpdateWellnessAnswerResponse = zod.object({
   "category": zod.string().nullish(),
   "questionText": zod.string(),
   "answer": zod.string(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research']),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']),
   "deletedAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()

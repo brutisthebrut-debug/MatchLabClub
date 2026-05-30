@@ -97,7 +97,7 @@ router.get("/founder/wellness-stats", requireFounder, async (_req, res): Promise
   const [usersApprovedMatching] = await db
     .select({ c: sql<number>`count(distinct ${wellnessAnswersTable.userId})::int` })
     .from(wellnessAnswersTable)
-    .where(sql`${wellnessAnswersTable.consentLevel} = 'matching'`);
+    .where(sql`${wellnessAnswersTable.consentLevel} in ('matching', 'all')`);
 
   // dimensions answered (distinct dimension values)
   const dimensionRows = await db

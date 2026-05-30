@@ -134,7 +134,6 @@ export default function Onboarding() {
             category: q.category,
             questionText: q.text,
             answer: answer.trim(),
-            consentLevel: "coaching",
           },
         });
       }

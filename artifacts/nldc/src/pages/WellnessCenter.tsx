@@ -62,60 +62,6 @@ const DIMENSION_ICONS: Record<string, React.ElementType> = {
   culture: BookOpen,
 };
 
-// ── Consent level badge ─────────────────────────────────────────────────────
-
-type ConsentLevel = "coaching" | "matching" | "research";
-
-const CONSENT_META: Record<ConsentLevel, { label: string; color: string; blurb: string }> = {
-  coaching: { label: "Coaching only", color: "hsl(190 55% 60%)", blurb: "Used only for your personal coaching and readiness insights." },
-  matching: { label: "Matching", color: "hsl(var(--brand-green))", blurb: "May be used for compatibility matching when you opt in." },
-  research: { label: "Research", color: "hsl(var(--brand-indigo))", blurb: "Anonymised contribution to product research." },
-};
-
-function ConsentBadge({ level, onChange }: { level: ConsentLevel; onChange: (l: ConsentLevel) => void }) {
-  const [open, setOpen] = useState(false);
-  const meta = CONSENT_META[level];
-  const levels: ConsentLevel[] = ["coaching", "matching", "research"];
-  return (
-  <div className="relative">
-  <button
-  onClick={() => setOpen(o => !o)}
-  className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full border transition-all"
-  style={{ color: meta.color, borderColor: withAlpha(meta.color, 0.35), background: withAlpha(meta.color, 0.09) }}
-  >
-  <span className="w-1.5 h-1.5 rounded-full" style={{ background: meta.color }} />
-  {meta.label}
-  <ChevronDown className="w-2.5 h-2.5 ml-0.5" />
-  </button>
-  <AnimatePresence>
-  {open && (
-  <motion.div
-  initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-  className="absolute right-0 top-full mt-1 z-20 glass-strong border border-white/10 rounded-xl p-2 min-w-[180px] shadow-xl"
-  >
-  {levels.map(l => {
-  const m = CONSENT_META[l];
-  return (
-  <button
-  key={l}
-  onClick={() => { onChange(l); setOpen(false); }}
-  className="w-full flex items-start gap-2 px-2.5 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"
-  >
-  <span className="w-2 h-2 rounded-full flex-shrink-0 mt-0.5" style={{ background: m.color }} />
-  <div>
-  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: m.color }}>{m.label}</p>
-  <p className="text-[10px] text-muted-foreground/60 mt-0.5 leading-tight">{m.blurb}</p>
-  </div>
-  </button>
-  );
-  })}
-  </motion.div>
-  )}
-  </AnimatePresence>
-  </div>
-  );
-}
-
 // ── Question card ────────────────────────────────────────────────────────────
 
 function QuestionCard({
@@ -125,10 +71,9 @@ function QuestionCard({
 }: {
   question: WellnessQuestion;
   savedAnswer?: string;
-  onSave: (questionId: string, answer: string, consentLevel: ConsentLevel) => Promise<void>;
+  onSave: (questionId: string, answer: string) => Promise<void>;
 }) {
   const [text, setText] = useState(savedAnswer ?? "");
-  const [consent, setConsent] = useState<ConsentLevel>("coaching");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(!!savedAnswer);
   const [skipped, setSkipped] = useState(false);
@@ -139,7 +84,7 @@ function QuestionCard({
   if (!text.trim()) return;
   setSaving(true);
   try {
-  await onSave(question.id, text.trim(), consent);
+  await onSave(question.id, text.trim());
   setSaved(true);
   } finally {
   setSaving(false);
@@ -172,7 +117,6 @@ function QuestionCard({
   />
   <div className="flex items-center justify-between gap-3 mt-2">
   <div className="flex items-center gap-2">
-  <ConsentBadge level={consent} onChange={setConsent} />
   {question.sensitive && (
   <button onClick={() => setSkipped(true)} className="flex items-center gap-1 text-[10px] text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors">
   <SkipForward className="w-3 h-3" /> Skip
@@ -204,7 +148,7 @@ function ProfileModule({
 }: {
   mod: typeof PROFILE_MODULES[number];
   answeredIds: Set<string>;
-  onSave: (qId: string, answer: string, consent: ConsentLevel) => Promise<void>;
+  onSave: (qId: string, answer: string) => Promise<void>;
   index: number;
 }) {
   const answered = mod.questions.filter(q => answeredIds.has(q.id)).length;
@@ -485,7 +429,7 @@ function DimensionInlineRow({
 }: {
   dimensionId: string;
   answeredIds: Set<string>;
-  onSave: (qId: string, answer: string, consent: ConsentLevel) => Promise<void>;
+  onSave: (qId: string, answer: string) => Promise<void>;
 }) {
   const meta = DIMENSION_META[dimensionId];
   const Icon = DIMENSION_ICONS[dimensionId] ?? Sparkles;
@@ -606,7 +550,7 @@ function DomainOverview({
   onSave,
 }: {
   answeredIds: Set<string>;
-  onSave: (qId: string, answer: string, consent: ConsentLevel) => Promise<void>;
+  onSave: (qId: string, answer: string) => Promise<void>;
 }) {
   const [expandedDomain, setExpandedDomain] = useState<string | null>(DOMAIN_META[0]?.id ?? null);
 
@@ -857,7 +801,7 @@ export default function WellnessCenter() {
   const totalAnswered = answeredIds.size;
   const overallPct = profileData?.matchingReadiness?.overallPct ?? 0;
 
-  async function handleSave(questionId: string, answer: string, consentLevel: ConsentLevel) {
+  async function handleSave(questionId: string, answer: string) {
   const question = PROFILE_MODULES.flatMap(m => m.questions).find(q => q.id === questionId);
   if (!question) return;
   await saveAnswer({
@@ -867,7 +811,6 @@ export default function WellnessCenter() {
   category: question.category,
   questionText: question.text,
   answer,
-  consentLevel,
   },
   });
   }
@@ -892,12 +835,12 @@ export default function WellnessCenter() {
   Build your <span className="gradient-text-violet">compatibility profile</span>
   </h1>
   <p className="text-muted-foreground max-w-2xl leading-relaxed text-sm">
-  Answer at your own pace across 18 wellness dimensions. Every answer stays private unless you explicitly approve it for matching. Skip anything that doesn't feel right.
+  Answer at your own pace across 18 wellness dimensions. Everything you share here powers your coaching and your matching: the more the engine knows you, the better it matches you. You can delete any answer anytime in your Data Vault.
   </p>
   <div className="mt-4 flex flex-wrap items-center gap-3">
   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(248_45%_157%)] border border-white/5 text-xs text-muted-foreground">
   <Shield className="w-3 h-3 text-[hsl(142_55%_60%)]" />
-  Coaching-only by default. You control what's used for matching.
+  Every answer feeds your match readiness. Delete anything anytime.
   </div>
   {totalAnswered > 0 && (
   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(142_55%_60%/0.09)] border border-[hsl(142_55%_60%/0.2)] text-xs text-[hsl(142_55%_72%)]">

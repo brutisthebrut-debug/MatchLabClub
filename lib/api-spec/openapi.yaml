@@ -5329,7 +5329,7 @@ components:
 
     WellnessConsentLevel:
       type: string
-      enum: [coaching, matching, research]
+      enum: [coaching, matching, research, all]
 
     WellnessAnswerInput:
       type: object

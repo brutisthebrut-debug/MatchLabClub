@@ -91,7 +91,11 @@ router.post("/wellness/answers", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { questionId, dimension, category, questionText, answer, consentLevel } = parsed.data;
+  const { questionId, dimension, category, questionText, answer } = parsed.data;
+  // Capture policy is fixed: every wellness answer is stored at "all" for all uses.
+  // We ignore any caller-supplied consentLevel so the policy is enforced server-side,
+  // not just in the UI. Users still control deletion/export from the Data Vault.
+  const consentLevel = "all" as const;
 
   // Upsert: one answer per questionId per user (overwrite if they answer again)
   const existing = await db
@@ -110,7 +114,7 @@ router.post("/wellness/answers", async (req, res): Promise<void> => {
   if (existing.length > 0) {
     const [updated] = await db
       .update(wellnessAnswersTable)
-      .set({ answer, consentLevel: consentLevel ?? "coaching", updatedAt: new Date() })
+      .set({ answer, consentLevel, updatedAt: new Date() })
       .where(eq(wellnessAnswersTable.id, existing[0]!.id))
       .returning();
     row = updated!;
@@ -125,7 +129,7 @@ router.post("/wellness/answers", async (req, res): Promise<void> => {
         category:     category ?? null,
         questionText,
         answer,
-        consentLevel: consentLevel ?? "coaching",
+        consentLevel,
       })
       .returning();
     row = inserted!;
@@ -147,8 +151,8 @@ router.patch("/wellness/answers/:id", async (req, res): Promise<void> => {
   if (!existing) { res.status(404).json({ error: "Not found" }); return; }
 
   const patch: Partial<typeof wellnessAnswersTable.$inferInsert> = { updatedAt: new Date() };
-  if (parsed.data.answer       !== undefined) patch.answer       = parsed.data.answer;
-  if (parsed.data.consentLevel !== undefined) patch.consentLevel = parsed.data.consentLevel;
+  if (parsed.data.answer !== undefined) patch.answer = parsed.data.answer;
+  // consentLevel is fixed at "all" by capture policy; we never let a caller change it here.
 
   const [updated] = await db
     .update(wellnessAnswersTable)

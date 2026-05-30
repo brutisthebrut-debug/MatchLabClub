@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
-import { FileText, Heart, Star, AlertCircle, Ban, Mail, X } from "lucide-react";
+import { FileText, Heart, Star, AlertCircle, Ban, Mail, X, Sparkles } from "lucide-react";
 
 const Section = ({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) => (
   <div className="glass rounded-2xl p-6 md:p-8 space-y-4">
@@ -55,6 +55,12 @@ export default function Terms() {
   <p><strong className="text-foreground">You own what you write.</strong> When you paste your bio, prompts, or message samples into MatchLab Club, those words remain yours. Full stop.</p>
   <p><strong className="text-foreground">The limited licence.</strong> By submitting content, you give us permission to process it to generate your coaching output. That's the entire extent of the licence, we use it to help you, nothing more.</p>
   <p><strong className="text-foreground">Accuracy.</strong> Please only submit content that you created or have the right to submit. Pasting someone else's messages without their knowledge isn't something we encourage, and for any 1:1 coaching that involves a third party's private messages, please get their consent first.</p>
+  </Section>
+
+  <Section icon={Sparkles} title="The Wellness Center and your match profile">
+  <p><strong className="text-foreground">Everything you share here is captured.</strong> The Wellness Center is how the engine gets to know you. When you answer a wellness prompt, log a reflection, or complete a quiz, that answer is saved in full and used across all of what we do for you: personal coaching, compatibility matching, and anonymised product research. There is no per-answer toggle to set, because the whole point is that the more the engine knows you, the better it can match you.</p>
+  <p><strong className="text-foreground">By using the Wellness Center, you agree to this.</strong> Engaging with these prompts is your consent for comprehensive capture across those uses. We keep the same promises we make everywhere else: we never sell your data, we never train external models on your private content, and any research use is anonymised.</p>
+  <p><strong className="text-foreground">You stay in control of the door.</strong> You can view everything we hold in your Data Vault, delete any answer or your whole profile at any time, and export your data whenever you want. Capture is assumed; deletion is always yours.</p>
   </Section>
 
   <Section icon={Star} title="Our coaching output">

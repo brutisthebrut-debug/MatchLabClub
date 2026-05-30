@@ -1670,6 +1670,7 @@ export const WellnessConsentLevel = {
   coaching: 'coaching',
   matching: 'matching',
   research: 'research',
+  all: 'all',
 } as const;
 
 export interface WellnessAnswerInput {

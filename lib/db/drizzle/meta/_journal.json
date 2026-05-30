@@ -85,6 +85,13 @@
       "when": 1780088588284,
       "tag": "0011_lazy_garia",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1780181181354,
+      "tag": "0012_fixed_excalibur",
+      "breakpoints": true
     }
   ]
 }

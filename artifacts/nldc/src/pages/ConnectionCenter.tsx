@@ -52,6 +52,8 @@ type Connector = {
   excludes?: string[];
   cta?: { href: string; label: string };
   comingNote?: string;
+  /** How this source moves the Match Readiness meter, when it fills a lane. */
+  readiness?: string;
 };
 
 // Sources you can plug in right now. Every CTA points to a real working page.
@@ -65,6 +67,7 @@ const LIVE: Connector[] = [
       "Drop in the ZIP from Hinge (Settings, Download My Data). We read your prompts, likes, and matches and build a pattern map you can actually use.",
     returns: "A pattern read of how you write, who you like, and where your tempo drops off.",
     cta: { href: "/imports", label: "Open Hinge import" },
+    readiness: "Fills the Hinge import lane of your Match Readiness in a single drop.",
   },
   {
     id: "instagram-paste",
@@ -105,6 +108,7 @@ const LIVE: Connector[] = [
       "Eighteen self-report dimensions across communication, conflict, attachment, values, and pace. The deepest signal you can give us without plugging in any third party.",
     returns: "A readiness map that sharpens every other tool in the product.",
     cta: { href: "/wellness", label: "Open Wellness Center" },
+    readiness: "The single largest lane of your Match Readiness. The more you answer, the more the machine can match you.",
   },
   {
     id: "calendar-ics",
@@ -142,6 +146,7 @@ const LIVE: Connector[] = [
       "Any swipe feed, public profile, or infinite scroll",
     ],
     cta: { href: "/matching", label: "Open Matching" },
+    readiness: "The payoff lane. This is what every other source has been building toward.",
   },
 ];
 
@@ -336,6 +341,23 @@ function ConnectorCard({
         </div>
       )}
 
+      {card.readiness && (
+        <div
+          className="rounded-xl px-3 py-2.5 flex items-start gap-2"
+          style={{
+            background: withAlpha("hsl(var(--brand-green))", 0.08),
+            border: `1px solid ${withAlpha("hsl(var(--brand-green))", 0.22)}`,
+          }}
+          data-testid={`readiness-${card.id}`}
+        >
+          <Activity className="w-3.5 h-3.5 text-[hsl(var(--brand-green))] flex-shrink-0 mt-0.5" />
+          <p className="text-[11px] text-muted-foreground/85 leading-relaxed">
+            <strong className="text-[hsl(var(--brand-green))]">Match Readiness: </strong>
+            {card.readiness}
+          </p>
+        </div>
+      )}
+
       {card.comingNote && (
         <p className="text-[11px] text-[hsl(var(--brand-indigo))] leading-relaxed italic">
           {card.comingNote}
@@ -412,7 +434,7 @@ export default function ConnectionCenter() {
               Plug things in. Get back what you didn't expect.
             </h1>
             <p className="text-base text-muted-foreground mt-3 max-w-2xl leading-relaxed">
-              Every source you plug in returns a small read of who you actually are when no one is watching. Each one is opt-in, each one shows you exactly what we'll see and what we'll never touch, each one can be removed in one click.
+              Every source you plug in returns a small read of who you actually are when no one is watching, and feeds one rising Match Readiness meter. Some sources fill a readiness lane directly, all of them sharpen the reads matching runs on. The more the machine knows you, the better it matches you. Each one is opt-in, each one shows you exactly what we'll see and what we'll never touch, each one can be removed in one click.
             </p>
           </motion.div>
 

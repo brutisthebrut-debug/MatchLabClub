@@ -262,7 +262,7 @@ function WellnessDataSection() {
   {answers.length} answer{answers.length !== 1 ? "s" : ""}{tags.length > 0 ? ` · ${tags.length} tag${tags.length !== 1 ? "s" : ""}` : ""}
   </span>
   </div>
-  <p className="text-xs text-muted-foreground/55 mt-0.5 leading-relaxed">Your answers across 18 wellness dimensions, used only for your coaching unless you approve matching.</p>
+  <p className="text-xs text-muted-foreground/55 mt-0.5 leading-relaxed">Your answers across 18 wellness dimensions. Everything you share powers your coaching and your matching. You can delete any answer here anytime.</p>
   </div>
   </div>
 

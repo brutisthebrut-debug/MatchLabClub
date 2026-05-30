@@ -16,7 +16,10 @@ import { z } from "zod/v4";
  *   - the question id (stable key from the question bank)
  *   - the category / dimension it belongs to
  *   - the user's free-text (or selected) answer
- *   - consent: "coaching" | "matching" | "research" — user-controlled
+ *   - consent: "all" by default. Everything shared in the wellness center is
+ *     captured comprehensively and used across coaching, matching, and research
+ *     (assumed by use, stated in the Terms). The narrower legacy values
+ *     ("coaching" | "matching" | "research") remain valid for older rows.
  *
  * Soft-delete follows the same pattern as audits / journal entries so the
  * user can delete individual answers from the Data Vault.
@@ -40,10 +43,11 @@ export const wellnessAnswersTable = pgTable(
     questionText: text("question_text").notNull(),
     /** Free-text answer */
     answer: text("answer").notNull(),
-    /** User consent choice for this answer */
+    /** Capture scope for this answer. Defaults to "all" (coaching + matching +
+     *  research); narrower legacy values are retained on older rows. */
     consentLevel: varchar("consent_level", { length: 20 })
       .notNull()
-      .default("coaching"),
+      .default("all"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
     deletedAt: timestamp("deleted_at"),
@@ -60,7 +64,7 @@ export const insertWellnessAnswerSchema = createInsertSchema(wellnessAnswersTabl
   category: z.string().trim().max(80).nullish(),
   questionText: z.string().trim().min(1).max(1000),
   answer: z.string().trim().min(1).max(5000),
-  consentLevel: z.enum(["coaching", "matching", "research"]).default("coaching"),
+  consentLevel: z.enum(["coaching", "matching", "research", "all"]).default("all"),
 }).omit({
   id: true,
   createdAt: true,
