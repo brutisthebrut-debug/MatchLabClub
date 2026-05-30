@@ -30,9 +30,9 @@ export function Footer() {
   <div>
   <h3 className="font-sans font-semibold text-sm text-foreground/70 uppercase tracking-widest mb-5">Try It Free</h3>
   <ul className="space-y-3 text-sm">
-  <li><Link href="/quizzes" className="text-muted-foreground hover:text-foreground transition-colors">Personality quizzes</Link></li>
-  <li><Link href="/signal-check" className="text-muted-foreground hover:text-foreground transition-colors">Signal Check</Link></li>
+  <li><Link href="/signal-check" className="text-muted-foreground hover:text-foreground transition-colors">Free Signal Check</Link></li>
   <li><Link href="/sample-report" className="text-muted-foreground hover:text-foreground transition-colors">Sample audit</Link></li>
+  <li><Link href="/quizzes" className="text-muted-foreground hover:text-foreground transition-colors">Personality quizzes</Link></li>
   <li><Link href="/coach" className="text-muted-foreground hover:text-foreground transition-colors">Message coach</Link></li>
   <li><Link href="/compatibility-compass" className="text-muted-foreground hover:text-foreground transition-colors">Compatibility Compass</Link></li>
   </ul>

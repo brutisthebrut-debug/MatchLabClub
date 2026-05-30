@@ -288,6 +288,38 @@ export default function SignalCheck() {
   <p className="text-xs text-muted-foreground mt-3 leading-relaxed">Personalise the [specific thing] to something real from their profile. Messages that reference something specific convert at 3× the rate of generic openers.</p>
   </div>
 
+  {/* Journey bridge: connect the free result to the readiness engine and real matches */}
+  <div className="glass border border-[hsl(248_62%_52%/0.2)] rounded-3xl p-7" data-testid="card-signal-journey">
+  <div className="flex items-center gap-2 mb-3">
+  <Sparkles className="w-4 h-4 text-[hsl(248_62%_62%)]" />
+  <p className="text-xs font-bold uppercase tracking-widest text-[hsl(248_62%_62%)]">From signal to match</p>
+  </div>
+  <h3 className="text-lg font-bold text-foreground mb-2">This is signal #1 of your readiness</h3>
+  <p className="text-sm text-foreground/80 leading-relaxed mb-5">
+  MatchLab is a second brain for your dating life. It turns every real signal you add, your profile, your messages, your reflections, into a readiness score that grows toward real introductions. You just generated your first one.
+  </p>
+  <div className="space-y-3">
+  {[
+  { label: "Run your Signal Check", sub: "Done. You just did it.", done: true },
+  { label: "Build your readiness", sub: "Full audit, message coach, reflections, imports.", done: false },
+  { label: "Join the intro queue", sub: "Hit the readiness bar and you get to the front of the line for real introductions (beta).", done: false },
+  ].map((step, i) => (
+  <div key={i} className="flex items-start gap-3">
+  <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${step.done ? "bg-[hsl(var(--brand-green)/0.18)] text-[hsl(var(--brand-green))]" : "bg-[hsl(248_62%_52%/0.12)] text-[hsl(248_62%_62%)]"}`}>
+  {step.done ? <CheckCircle className="w-4 h-4" /> : i + 1}
+  </div>
+  <div>
+  <p className="text-sm font-semibold text-foreground">{step.label}</p>
+  <p className="text-xs text-muted-foreground">{step.sub}</p>
+  </div>
+  </div>
+  ))}
+  </div>
+  <Link href="/matching" className="inline-flex items-center gap-1 text-sm font-medium text-[hsl(248_62%_62%)] hover:text-[hsl(248_62%_52%)] mt-5 transition-colors" data-testid="link-signal-matching">
+  See how matching works <ArrowRight className="w-3.5 h-3.5" />
+  </Link>
+  </div>
+
   {/* Email lead capture, soft, non-gating. The Full Audit CTA sits directly below this card,
   so saving an email is genuinely optional, not the dark-pattern "give us your email to continue". */}
   {!leadSaved ? (
