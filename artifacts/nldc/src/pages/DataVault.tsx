@@ -70,7 +70,7 @@ const FALLBACK_STYLE = { icon: Database, color: "hsl(var(--brand-indigo))" };
 const DEMO_ENTRIES: TrustLedgerEntry[] = [
   {
     id: "wellness", label: "Compatibility Profile", origin: "Answers you give in the Profile Builder",
-    noun: "answer", held: true, count: 12, coverage: 64,
+    noun: "answer", held: true, count: 12, storedCount: 12, coverage: 64,
     summary: "A solid read on what you value, how you handle conflict, and what you want next.",
     dimensions: ["values", "communication"], seen: ["Your written answers to wellness prompts"],
     neverTouched: ["Anything you have not chosen to answer"],
@@ -78,7 +78,7 @@ const DEMO_ENTRIES: TrustLedgerEntry[] = [
   },
   {
     id: "audits", label: "Signal Audits", origin: "Profile audits you run",
-    noun: "audit", held: true, count: 3, coverage: 48,
+    noun: "audit", held: true, count: 3, storedCount: 3, coverage: 48,
     summary: "How your profile reads to others, your score history, and where it can sharpen.",
     dimensions: ["presentation"], seen: ["The bio and prompts you submit for audit"],
     neverTouched: ["Your photos are read in the moment, never stored"],
@@ -86,7 +86,7 @@ const DEMO_ENTRIES: TrustLedgerEntry[] = [
   },
   {
     id: "coaching", label: "Message Coaching", origin: "Threads you bring to Message Coach",
-    noun: "session", held: false, count: 0, coverage: 0,
+    noun: "session", held: false, count: 0, storedCount: 0, coverage: 0,
     summary: "Nothing here yet. Coach a thread and the machine learns your conversation style.",
     dimensions: ["communication"], seen: ["The conversation snippet you paste"],
     neverTouched: ["Any names or identifiers of the other person"],
@@ -138,7 +138,7 @@ function SourceRow({
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-foreground">{entry.label}</p>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/10 text-muted-foreground/50 flex-shrink-0">
-                {entry.held ? `${entry.count} ${entry.noun}${entry.count !== 1 ? "s" : ""}` : "nothing yet"}
+                {entry.held ? `${entry.storedCount} ${entry.noun}${entry.storedCount !== 1 ? "s" : ""}` : "nothing yet"}
               </span>
             </div>
             <p className="text-[11px] text-muted-foreground/45 mt-0.5">{entry.origin}</p>
@@ -215,7 +215,7 @@ function SourceRow({
           <AlertDialogHeader>
             <AlertDialogTitle>Purge {entry.label}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently deletes all {entry.count} {entry.noun}{entry.count !== 1 ? "s" : ""} from this source. Your Match Readiness will drop by what this source contributed. This cannot be undone.
+              This permanently deletes all {entry.storedCount} {entry.noun}{entry.storedCount !== 1 ? "s" : ""} from this source. Your Match Readiness will drop by what this source contributed. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

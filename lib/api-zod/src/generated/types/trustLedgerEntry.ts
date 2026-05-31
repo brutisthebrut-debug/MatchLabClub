@@ -15,10 +15,15 @@ export interface TrustLedgerEntry {
   origin: string;
   /** Singular noun for one stored unit, e.g. "read", "note", "import". */
   noun: string;
-  /** Whether the machine currently holds anything from this source. */
+  /** Whether the machine still holds any stored data from this source, i.e. whether a purge would remove anything. Derived from storedCount, not from the readiness signal count. */
   held: boolean;
-  /** How many units of this source the user has stored. */
+  /** How many units of this source count toward Match Readiness. This can be narrower than storedCount, since some stored rows (a one-line journal note, an unreflected post-date stub) are held but do not move readiness. */
   count: number;
+  /**
+     * How many raw units of this source the machine actually holds, i.e. exactly how many rows a purge would remove. Drives held and purgeable.
+     * @minimum 0
+     */
+  storedCount: number;
   /**
      * Normalized coverage of this lane, 0 to 100, the same value that feeds the Match Readiness breakdown.
      * @minimum 0

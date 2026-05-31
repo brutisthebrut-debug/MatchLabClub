@@ -958,6 +958,8 @@ export const GetTrustLedgerHeader = zod.object({
   "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
 })
 
+export const getTrustLedgerResponseEntriesItemStoredCountMin = 0;
+
 export const getTrustLedgerResponseEntriesItemCoverageMin = 0;
 export const getTrustLedgerResponseEntriesItemCoverageMax = 100;
 
@@ -970,8 +972,9 @@ export const GetTrustLedgerResponse = zod.object({
   "label": zod.string().describe('Human-readable name of the source.'),
   "origin": zod.string().describe('Where this source\'s data comes from, in plain language.'),
   "noun": zod.string().describe('Singular noun for one stored unit, e.g. \"read\", \"note\", \"import\".'),
-  "held": zod.boolean().describe('Whether the machine currently holds anything from this source.'),
-  "count": zod.number().describe('How many units of this source the user has stored.'),
+  "held": zod.boolean().describe('Whether the machine still holds any stored data from this source, i.e. whether a purge would remove anything. Derived from storedCount, not from the readiness signal count.'),
+  "count": zod.number().describe('How many units of this source count toward Match Readiness. This can be narrower than storedCount, since some stored rows (a one-line journal note, an unreflected post-date stub) are held but do not move readiness.'),
+  "storedCount": zod.number().min(getTrustLedgerResponseEntriesItemStoredCountMin).describe('How many raw units of this source the machine actually holds, i.e. exactly how many rows a purge would remove. Drives held and purgeable.'),
   "coverage": zod.number().min(getTrustLedgerResponseEntriesItemCoverageMin).max(getTrustLedgerResponseEntriesItemCoverageMax).describe('Normalized coverage of this lane, 0 to 100, the same value that feeds the Match Readiness breakdown.'),
   "summary": zod.string().describe('Plain-English line describing what this source tells the machine at its current coverage, derived from the registry.'),
   "dimensions": zod.array(zod.string()).describe('Wellness dimensions this source contributes to.'),
