@@ -19,6 +19,16 @@ safely. The founder confirmed trust in this cadence.
 typecheck + repo lint + voice rules), then continue. Readiness leads, matching is the
 payoff, and the outside-app tools are never repositioned as the headline.
 
+## Launch gate (durable guardrail)
+The product is beta-complete and coherent as a high-end coaching utility + lead/early-
+revenue collector; matching is honestly framed as an earned, founder-curated payoff, not
+a live marketplace. The thing gating revenue is GO-LIVE, not more features: connect the
+Stripe integration, create the three Payment Links, set the `VITE_STRIPE_*_LINK` env
+vars. Real peer matching and OAuth (Hinge/Tinder/Bumble) are post-launch, not blockers.
+**Why:** the founder's instinct is to keep adding (esp. a full OAuth integrations menu);
+do not let that scope creep block a shippable launch. Connection Center already IS the
+integrations menu. Ship the beta, then grow with the waves below.
+
 ## Wave sequence (money-ranked)
 1. Shareable readiness card — privacy-safe viral acquisition (`/share-card`).
 2. Viral amplifier — public share links with rich OG previews + a "you and a friend
