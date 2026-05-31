@@ -32,7 +32,11 @@ import {
   type ReadinessBreakdown,
   type ReadinessNextAction,
 } from "../lib/readiness";
-import { describeActiveSignals } from "../lib/signalRegistry";
+import {
+  describeActiveSignals,
+  SIGNAL_REGISTRY,
+  type SignalCounts,
+} from "../lib/signalRegistry";
 import {
   loadBrainControls,
   effectiveBaseWeights,
@@ -156,17 +160,6 @@ export async function computeReadiness(userId: string): Promise<Readiness> {
     .where(eq(wellnessAnswersTable.userId, userId));
   const wellnessDistinct = Number(wellnessRows[0]?.count ?? 0);
 
-  const hingeRows = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(importedSourcesTable)
-    .where(
-      and(
-        eq(importedSourcesTable.userId, userId),
-        eq(importedSourcesTable.source, "hinge"),
-      ),
-    );
-  const hingeCount = Number(hingeRows[0]?.count ?? 0);
-
   // Only post-date notes the user actually reflected on count: an outcome set
   // or a filled reflection field. An empty stub does not.
   const postDateRows = await db
@@ -196,25 +189,6 @@ export async function computeReadiness(userId: string): Promise<Readiness> {
     );
   const winsCount = Number(winsRows[0]?.count ?? 0);
 
-  // Latest pasted calendar import. We read only the derived event count from
-  // the stored summary, never the raw .ics or any event titles. A fuller
-  // calendar reads as a fuller life outside dating.
-  const calendarRows = await db
-    .select({
-      events: sql<number>`coalesce((${importedSourcesTable.parsedSummary}->'counts'->>'totalEvents')::int, 0)`,
-    })
-    .from(importedSourcesTable)
-    .where(
-      and(
-        eq(importedSourcesTable.userId, userId),
-        eq(importedSourcesTable.source, "calendar-ics"),
-        isNull(importedSourcesTable.deletedAt),
-      ),
-    )
-    .orderBy(desc(importedSourcesTable.uploadedAt))
-    .limit(1);
-  const calendarEvents = Number(calendarRows[0]?.events ?? 0);
-
   // Profile audits that reached a generated report. Running an audit (profile or
   // photo screenshot) teaches the engine how the user presents themselves, so
   // it feeds the same readiness meter as every other source.
@@ -238,20 +212,6 @@ export async function computeReadiness(userId: string): Promise<Readiness> {
     .where(eq(messageCoachingSessionsTable.userId, userId));
   const coachingCount = Number(coachingRows[0]?.count ?? 0);
 
-  // Instagram tone paste. A read on the user's public-facing voice beyond the
-  // dating apps. We store only the derived tone summary, never the account.
-  const instagramRows = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(importedSourcesTable)
-    .where(
-      and(
-        eq(importedSourcesTable.userId, userId),
-        eq(importedSourcesTable.source, "instagram-paste"),
-        isNull(importedSourcesTable.deletedAt),
-      ),
-    );
-  const instagramCount = Number(instagramRows[0]?.count ?? 0);
-
   // Life pulse check-ins. Energy and headspace over time shape when someone is
   // genuinely ready to date, so the rhythm feeds the brain too.
   const lifePulseRows = await db
@@ -260,19 +220,78 @@ export async function computeReadiness(userId: string): Promise<Readiness> {
     .where(eq(lifePulsesTable.userId, userId));
   const lifePulseCount = Number(lifePulseRows[0]?.count ?? 0);
 
-  const breakdown = computeBreakdown({
+  // First-party counts: each comes from a bespoke query against a dedicated
+  // table above, keyed here by the contributor's countKey.
+  const counts = {
     compass: compassCount,
     journal: journalCount,
     wellnessDistinct,
-    hingeImport: hingeCount,
     postDateReflected,
     wins: winsCount,
-    calendarEvents,
     audits: auditsCount,
     coaching: coachingCount,
-    instagram: instagramCount,
     lifePulse: lifePulseCount,
-  });
+  } as SignalCounts;
+
+  // Import-backed counts, derived from the registry's data-source descriptors so
+  // a new import or paste connector is a registry entry plus a capture route,
+  // with no counting logic to hand-wire here. We never read the raw imported
+  // content: importRows counts how many sources were imported, and
+  // importSummaryCount reads only a single derived number out of the latest
+  // row's parsed summary. Soft-deleted rows are excluded so removing a source
+  // (one toggle purges) drops its signal.
+  const importRowsBySource = new Map<string, number>();
+  const rowGroups = await db
+    .select({
+      source: importedSourcesTable.source,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(importedSourcesTable)
+    .where(
+      and(
+        eq(importedSourcesTable.userId, userId),
+        isNull(importedSourcesTable.deletedAt),
+      ),
+    )
+    .groupBy(importedSourcesTable.source);
+  for (const row of rowGroups) {
+    importRowsBySource.set(row.source, Number(row.count ?? 0));
+  }
+
+  async function latestSummaryCount(
+    source: string,
+    summaryPath: readonly [string, string],
+  ): Promise<number> {
+    const rows = await db
+      .select({
+        value: sql<number>`coalesce((${importedSourcesTable.parsedSummary}->${summaryPath[0]}->>${summaryPath[1]})::int, 0)`,
+      })
+      .from(importedSourcesTable)
+      .where(
+        and(
+          eq(importedSourcesTable.userId, userId),
+          eq(importedSourcesTable.source, source),
+          isNull(importedSourcesTable.deletedAt),
+        ),
+      )
+      .orderBy(desc(importedSourcesTable.uploadedAt))
+      .limit(1);
+    return Number(rows[0]?.value ?? 0);
+  }
+
+  for (const contributor of SIGNAL_REGISTRY) {
+    const ds = contributor.dataSource;
+    if (ds.kind === "importRows") {
+      counts[contributor.countKey] = importRowsBySource.get(ds.source) ?? 0;
+    } else if (ds.kind === "importSummaryCount") {
+      counts[contributor.countKey] = await latestSummaryCount(
+        ds.source,
+        ds.summaryPath,
+      );
+    }
+  }
+
+  const breakdown = computeBreakdown(counts);
 
   // Effective weights come from the founder control center. With no overrides
   // and the re-weighting mode on "hold" this is the exact registry default, so

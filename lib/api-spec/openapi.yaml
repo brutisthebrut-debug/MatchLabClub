@@ -393,6 +393,46 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/source-paste:
+    post:
+      tags: [Auth]
+      operationId: createSourcePaste
+      summary: Capture a consent-first paste for a registry-backed connector
+      description: |
+        Generic capture surface for paste-based Connection Center connectors
+        (taste, lifestyle, and any future paste source). Persists the pasted
+        items into `imported_sources` tagged with the connector's `source`
+        string and a derived item count in `parsedSummary.counts.items`, so the
+        signal feeds Match Readiness, the Mirror, and matching reasoning through
+        the living signal registry. Only the derived count is ever used in
+        scoring; the raw items are stored against the row but never sent to any
+        prompt. The accepted `source` values are derived from the registry's
+        paste-capturable entries, so adding a connector needs no edit here.
+        Anon-safe: with no signed-in user, the row is stamped with the anonymous
+        claim token cookie so it can be merged into the account later.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSourcePasteInput'
+      responses:
+        '201':
+          description: Paste captured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSourcePasteResult'
+        '400':
+          description: Invalid body or unknown source.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/consent/ai-content:
     get:
       tags: [Auth]
@@ -5931,6 +5971,54 @@ components:
         status:
           type: string
           const: pending
+        uploadedAt:
+          type: string
+          format: date-time
+
+    CreateSourcePasteInput:
+      type: object
+      required: [source, items]
+      properties:
+        source:
+          type: string
+          minLength: 1
+          maxLength: 32
+          description: |
+            The connector's source key. Must be one of the registry's
+            paste-capturable sources (for example `taste-paste`,
+            `lifestyle-paste`). Unknown values are rejected with a 400.
+        items:
+          type: array
+          minItems: 1
+          maxItems: 30
+          items:
+            type: string
+            minLength: 1
+            maxLength: 280
+          description: |
+            The pasted items, one per array entry. Empty entries are dropped
+            server-side. Only the count drives scoring; the raw text is stored
+            against the row and never sent to any prompt.
+        note:
+          type: string
+          maxLength: 1000
+          description: Optional free-text context the user adds about the source.
+
+    CreateSourcePasteResult:
+      type: object
+      required: [id, source, status, itemCount, uploadedAt]
+      properties:
+        id:
+          type: integer
+        source:
+          type: string
+          description: The source key the row was tagged with.
+        status:
+          type: string
+          const: complete
+        itemCount:
+          type: integer
+          description: Number of non-empty items stored for this paste.
         uploadedAt:
           type: string
           format: date-time

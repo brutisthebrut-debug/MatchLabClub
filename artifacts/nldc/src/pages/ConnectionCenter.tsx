@@ -139,6 +139,48 @@ const LIVE: Connector[] = [
       "Fills the calendar rhythm lane of your Match Readiness. A fuller week reads as a fuller life outside dating.",
   },
   {
+    id: "taste-paste",
+    title: "Taste paste",
+    icon: Sparkles,
+    color: "hsl(326 70% 60%)",
+    blurb:
+      "Paste the films, shows, music, books, and places you keep coming back to, one per line. Taste says a lot about mood, humour, and what a good night in actually looks like for you.",
+    returns: "A taste read that grounds your profile in what you genuinely love.",
+    access: [
+      "The list of taste items you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "OAuth access to Spotify, Netflix, Letterboxd, or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    cta: { href: "/connections/add/taste", label: "Add taste" },
+    readiness:
+      "Fills the taste lane of your Match Readiness. The more honest the list, the better the machine reads what a night with you feels like.",
+  },
+  {
+    id: "lifestyle-paste",
+    title: "Lifestyle paste",
+    icon: Footprints,
+    color: "hsl(248 62% 60%)",
+    blurb:
+      "Paste the rhythms and habits that make up your week, one per line. Morning runs, a dog, early nights, a side project, time with family. How you actually spend your energy.",
+    returns: "A lifestyle read that grounds your profile in how you really live.",
+    access: [
+      "The list of lifestyle items you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "OAuth access to your calendar, fitness apps, or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    cta: { href: "/connections/add/lifestyle", label: "Add lifestyle" },
+    readiness:
+      "Fills the lifestyle lane of your Match Readiness. A fuller picture of your week reads as a fuller life to match around.",
+  },
+  {
     id: "matching-cohort",
     title: "Matching cohort",
     icon: Users,

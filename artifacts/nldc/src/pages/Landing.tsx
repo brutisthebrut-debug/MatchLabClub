@@ -7,7 +7,7 @@ import {
   ArrowRight, Shield, Clock, Brain, TrendingUp, Users, FileText, 
   MessageCircle, Compass, Camera, BookOpen, Download, CalendarDays, 
   Instagram, Mail, Wallet, Music2, Palette, Clapperboard, Film, 
-  Footprints, HeartPulse, Flame, Lock, LayoutGrid, 
+  Footprints, HeartPulse, Flame, Lock, LayoutGrid, Sparkles,
   LineChart, Database, History, HelpCircle, User, CheckSquare, Target,
   Zap, Eye, MessageSquare, PenTool, Trophy, BarChart2
 } from "lucide-react";
@@ -231,6 +231,8 @@ export default function Landing() {
               { icon: Download, label: "Hinge export", status: "Import", color: "hsl(348 75% 60%)" },
               { icon: CalendarDays, label: "Calendar rhythm", status: "Paste", color: "hsl(248 62% 60%)" },
               { icon: Instagram, label: "Instagram tone", status: "Upload", color: "hsl(326 70% 60%)" },
+              { icon: Sparkles, label: "Taste paste", status: "Paste", color: "hsl(326 70% 60%)" },
+              { icon: Footprints, label: "Lifestyle paste", status: "Paste", color: "hsl(248 62% 60%)" },
               { icon: Mail, label: "Forwarding inbox", status: "Building", color: "hsl(326 100% 62%)" },
               { icon: Wallet, label: "Plaid spending", status: "Building", color: "hsl(142 55% 55%)" },
               { icon: Music2, label: "Spotify taste", status: "Building", color: "hsl(141 73% 42%)" },

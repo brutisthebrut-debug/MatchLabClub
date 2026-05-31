@@ -7,3 +7,4 @@
 - [Your Mirror spine](your-mirror-spine.md) — unifying self-portrait over real signals; hybrid contract, honest blind spots, demo fallback must not present sample as real, keep legacy /mirror pages reachable.
 - [Grand vision plan](grand-vision-plan.md) — matching-first roadmap (showcase page, nav IA overhaul to surface hidden tools, Connection Center data→match pipeline + connector expansion, full founder control, dev test-login). Build as waves.
 - [Founder brain control center](founder-brain-control-center.md) — founder knobs layer over the signal registry; empty config = day-one defaults, all reads fail-open.
+- [Signal lane fixture coupling](signal-lane-fixture-coupling.md) — adding a weighted SIGNAL_REGISTRY contributor re-normalizes weights; update signalRegistry/readiness test fixtures in lockstep; computeBreakdown defaults missing counts to 0.

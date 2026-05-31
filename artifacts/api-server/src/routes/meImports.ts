@@ -2,9 +2,13 @@ import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db, importedSourcesTable } from "@workspace/db";
-import { CreateInstagramPasteBody } from "@workspace/api-zod";
+import {
+  CreateInstagramPasteBody,
+  CreateSourcePasteBody,
+} from "@workspace/api-zod";
 import { extractAndValidateJson } from "@workspace/ai-schemas";
 import { buildEchoSystemPrompt } from "@workspace/echo";
+import { pasteCaptureSources } from "../lib/signalRegistry";
 import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
 import { generate } from "../lib/aiService";
 import { logger } from "../lib/logger";
@@ -334,6 +338,96 @@ router.post("/me/instagram-paste", async (req, res): Promise<void> => {
       });
     });
   }
+});
+
+/**
+ * POST /api/me/source-paste
+ *
+ * Generic consent-first capture surface for paste-based Connection Center
+ * connectors (taste, lifestyle, and any future paste source). The accepted
+ * `source` values come straight from the living signal registry's
+ * paste-capturable entries, so adding a connector is a registry edit plus a
+ * capture UI, with no allowlist to maintain here. We store the raw items
+ * against the row so the user can review or purge them, but only the derived
+ * item count (`parsedSummary.counts.items`) ever feeds scoring, the Mirror, or
+ * matching reasoning, and the raw items are never sent to any prompt. Status is
+ * stamped `complete` immediately: this is a deterministic count, there is no
+ * enrichment pass and no Claude tool involved. Anon-safe via the standard
+ * claim-token cookie.
+ */
+router.post("/me/source-paste", async (req, res): Promise<void> => {
+  const parsed = CreateSourcePasteBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const allowed = pasteCaptureSources();
+  const match = allowed.find((s) => s.source === parsed.data.source);
+  if (!match) {
+    res.status(400).json({
+      error: `Unknown source '${parsed.data.source}'. Expected one of: ${allowed
+        .map((s) => s.source)
+        .join(", ")}`,
+    });
+    return;
+  }
+
+  // Drop blank entries defensively, then count what remains. The count is the
+  // only thing that drives the signal; the trimmed items are kept verbatim for
+  // the user's own review and purge.
+  const items = parsed.data.items
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+  if (items.length === 0) {
+    res.status(400).json({ error: "At least one non-empty item is required." });
+    return;
+  }
+
+  const note = parsed.data.note?.trim() || undefined;
+  const userId = req.user?.id;
+  const anonToken = userId ? null : getOrCreateAnonClaimToken(req, res);
+
+  const [inserted] = await db
+    .insert(importedSourcesTable)
+    .values({
+      userId: userId ?? null,
+      anonymousClaimToken: anonToken,
+      source: match.source,
+      status: "complete",
+      parsedSummary: {
+        items,
+        note,
+        counts: { items: items.length },
+      },
+    })
+    .returning({
+      id: importedSourcesTable.id,
+      source: importedSourcesTable.source,
+      status: importedSourcesTable.status,
+      uploadedAt: importedSourcesTable.uploadedAt,
+    });
+
+  req.log.info(
+    {
+      userId: userId ?? null,
+      importId: inserted?.id,
+      source: match.source,
+      itemCount: items.length,
+    },
+    "Captured source paste",
+  );
+
+  res.status(201).json({
+    id: inserted!.id,
+    source: inserted!.source,
+    status: inserted!.status,
+    itemCount: items.length,
+    uploadedAt:
+      inserted!.uploadedAt instanceof Date
+        ? inserted!.uploadedAt.toISOString()
+        : String(inserted!.uploadedAt),
+  });
 });
 
 export default router;

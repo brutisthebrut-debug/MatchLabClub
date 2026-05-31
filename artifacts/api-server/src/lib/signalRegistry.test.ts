@@ -31,13 +31,13 @@ describe("signal registry", () => {
   });
 
   it("reflects the current registry weights, auto-normalized to sum to 1", () => {
-    // Raw registry weights now sum to 1.56: the original 1.0, plus the calendar
-    // signal (0.1), plus the four brain-unification lanes (audits 0.16,
-    // coaching 0.12, instagram 0.1, lifePulse 0.08). Each normalized weight is
-    // its raw weight divided by 1.56. The relative proportions between every
-    // signal are preserved exactly; adding contributors never forces a manual
-    // re-balance.
-    const total = 1.56;
+    // Raw registry weights now sum to 1.71: the original 1.0, plus the calendar
+    // signal (0.1), the four brain-unification lanes (audits 0.16, coaching
+    // 0.12, instagram 0.1, lifePulse 0.08), and the two paste-based connector
+    // lanes (taste 0.08, lifestyle 0.07). Each normalized weight is its raw
+    // weight divided by 1.71. The relative proportions between every signal are
+    // preserved exactly; adding contributors never forces a manual re-balance.
+    const total = 1.71;
     const w = normalizedWeights();
     expect(w.wellness).toBeCloseTo(0.22 / total, 6);
     expect(w.compass).toBeCloseTo(0.2 / total, 6);
@@ -49,7 +49,9 @@ describe("signal registry", () => {
     expect(w.coaching).toBeCloseTo(0.12 / total, 6);
     expect(w.calendar).toBeCloseTo(0.1 / total, 6);
     expect(w.instagram).toBeCloseTo(0.1 / total, 6);
+    expect(w.taste).toBeCloseTo(0.08 / total, 6);
     expect(w.lifePulse).toBeCloseTo(0.08 / total, 6);
+    expect(w.lifestyle).toBeCloseTo(0.07 / total, 6);
   });
 
   it("auto-normalizes when a new contributor is added, never breaking the sum", () => {

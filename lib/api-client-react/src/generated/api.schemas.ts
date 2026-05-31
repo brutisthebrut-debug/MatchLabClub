@@ -2010,6 +2010,42 @@ export interface CreateInstagramPasteResult {
   uploadedAt: string;
 }
 
+export interface CreateSourcePasteInput {
+  /**
+     * The connector's source key. Must be one of the registry's
+  paste-capturable sources (for example `taste-paste`,
+  `lifestyle-paste`). Unknown values are rejected with a 400.
+
+     * @minLength 1
+     * @maxLength 32
+     */
+  source: string;
+  /**
+     * The pasted items, one per array entry. Empty entries are dropped
+  server-side. Only the count drives scoring; the raw text is stored
+  against the row and never sent to any prompt.
+
+     * @minItems 1
+     * @maxItems 30
+     */
+  items: string[];
+  /**
+     * Optional free-text context the user adds about the source.
+     * @maxLength 1000
+     */
+  note?: string;
+}
+
+export interface CreateSourcePasteResult {
+  id: number;
+  /** The source key the row was tagged with. */
+  source: string;
+  status: 'complete';
+  /** Number of non-empty items stored for this paste. */
+  itemCount: number;
+  uploadedAt: string;
+}
+
 /**
  * The deterministic compass output shown to the user.
  */

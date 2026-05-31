@@ -43,7 +43,10 @@ const WEIGHTS = normalizedWeights();
 export function computeBreakdown(counts: SignalCounts): ReadinessBreakdown {
   const out = {} as ReadinessBreakdown;
   for (const contributor of SIGNAL_REGISTRY) {
-    out[contributor.id] = coverageFor(contributor, counts[contributor.countKey]);
+    out[contributor.id] = coverageFor(
+      contributor,
+      counts[contributor.countKey] ?? 0,
+    );
   }
   return out;
 }

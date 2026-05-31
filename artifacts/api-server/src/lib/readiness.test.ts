@@ -33,6 +33,8 @@ describe("computeBreakdown", () => {
       coaching: 0,
       instagram: 0,
       lifePulse: 0,
+      taste: 0,
+      lifestyle: 0,
     });
     expect(scoreFromBreakdown(b)).toBe(0);
   });
@@ -50,6 +52,8 @@ describe("computeBreakdown", () => {
       coaching: 50,
       instagram: 1,
       lifePulse: 50,
+      tasteItems: 50,
+      lifestyleItems: 50,
     });
     expect(b).toEqual({
       compass: 100,
@@ -63,6 +67,8 @@ describe("computeBreakdown", () => {
       coaching: 100,
       instagram: 100,
       lifePulse: 100,
+      taste: 100,
+      lifestyle: 100,
     });
     expect(scoreFromBreakdown(b)).toBe(100);
   });

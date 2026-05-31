@@ -29,6 +29,8 @@ export interface ReadinessBreakdown {
   coaching: number;
   instagram: number;
   lifePulse: number;
+  taste: number;
+  lifestyle: number;
 }
 
 /** Raw counts pulled from the database for each contributor. */
@@ -59,6 +61,18 @@ export interface SignalCounts {
   instagram: number;
   /** Life pulse check-ins logged (energy and headspace over time). */
   lifePulse: number;
+  /**
+   * Taste items shared in the most recent taste paste (music, film, shows,
+   * books, the things they love). Only the derived item count is used here,
+   * never the raw titles.
+   */
+  tasteItems: number;
+  /**
+   * Lifestyle items shared in the most recent lifestyle paste (how they spend
+   * a normal week, the activities and rituals that matter). Only the derived
+   * item count is used here, never the raw text.
+   */
+  lifestyleItems: number;
 }
 
 /**
@@ -69,11 +83,43 @@ export type SignalNormalizer =
   | { kind: "count"; denominator: number }
   | { kind: "binary" };
 
+/**
+ * Where a contributor's raw count comes from. This is the data-to-signal half
+ * of the pipeline contract: the route reads it to know how to count a source,
+ * so adding an import or paste connector is a registry entry plus a capture
+ * route, with no hand-edited counting logic.
+ *
+ * - `firstParty`: a bespoke query against a dedicated table (compass, journal,
+ *   wellness, etc.). The route owns the query, keyed by contributor id.
+ * - `importRows`: count of `imported_sources` rows with this `source`. Used by
+ *   binary "you imported it or you didn't" sources (Hinge, Instagram tone).
+ * - `importSummaryCount`: a numeric count read out of the latest
+ *   `imported_sources` row's `parsedSummary` JSON at `summaryPath`. Used by
+ *   sources whose strength is "how much did you share" (calendar events, taste
+ *   items, lifestyle items). Only the derived number is ever read, never the
+ *   raw content the summary was built from.
+ *
+ * `capture: "paste"` marks a source the generic paste capture endpoint is
+ * allowed to write. The endpoint derives its allowlist from these entries, so a
+ * new paste connector needs no route allowlist edit.
+ */
+export type SignalDataSource =
+  | { kind: "firstParty" }
+  | { kind: "importRows"; source: string; capture?: "paste" }
+  | {
+      kind: "importSummaryCount";
+      source: string;
+      summaryPath: readonly [string, string];
+      capture?: "paste";
+    };
+
 export interface SignalContributor {
   /** Stable key, also the key used in ReadinessBreakdown. */
   id: keyof ReadinessBreakdown;
   /** Which field of SignalCounts holds this contributor's raw count. */
   countKey: keyof SignalCounts;
+  /** How the route turns data into this contributor's raw count. */
+  dataSource: SignalDataSource;
   /** Human label. */
   label: string;
   /**
@@ -111,6 +157,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
   {
     id: "wellness",
     countKey: "wellnessDistinct",
+    dataSource: { kind: "firstParty" },
     label: "Wellness dimensions",
     dimensions: ["all 18 wellness dimensions"],
     weight: 0.22,
@@ -127,6 +174,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
   {
     id: "compass",
     countKey: "compass",
+    dataSource: { kind: "firstParty" },
     label: "Compass reads",
     dimensions: ["compatibility instincts", "what they are drawn to"],
     weight: 0.2,
@@ -144,6 +192,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
   {
     id: "hingeImport",
     countKey: "hingeImport",
+    dataSource: { kind: "importRows", source: "hinge" },
     label: "Hinge import",
     dimensions: ["real-world dating behavior", "texting style"],
     weight: 0.16,
@@ -160,6 +209,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
   {
     id: "postDate",
     countKey: "postDateReflected",
+    dataSource: { kind: "firstParty" },
     label: "Post-date notes",
     dimensions: ["what actually fits in person", "date outcomes"],
     weight: 0.16,
@@ -177,6 +227,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
   {
     id: "journal",
     countKey: "journal",
+    dataSource: { kind: "firstParty" },
     label: "Journal entries",
     dimensions: ["self-awareness", "how they process feelings"],
     weight: 0.14,
@@ -193,6 +244,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
   {
     id: "wins",
     countKey: "wins",
+    dataSource: { kind: "firstParty" },
     label: "Dating wins",
     dimensions: ["courage", "momentum"],
     weight: 0.12,
@@ -210,6 +262,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
   {
     id: "calendar",
     countKey: "calendarEvents",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "calendar-ics",
+      summaryPath: ["counts", "totalEvents"],
+    },
     label: "Calendar rhythm",
     dimensions: [
       "how full their life is outside dating",
@@ -229,6 +286,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
   {
     id: "audits",
     countKey: "audits",
+    dataSource: { kind: "firstParty" },
     label: "Profile audits",
     dimensions: ["self-presentation", "how their profile actually reads"],
     weight: 0.16,
@@ -246,6 +304,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
   {
     id: "coaching",
     countKey: "coaching",
+    dataSource: { kind: "firstParty" },
     label: "Message coaching",
     dimensions: ["how they communicate", "texting style"],
     weight: 0.12,
@@ -263,6 +322,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
   {
     id: "instagram",
     countKey: "instagram",
+    dataSource: { kind: "importRows", source: "instagram-paste" },
     label: "Instagram tone",
     dimensions: ["public-facing personality", "tone of voice"],
     weight: 0.1,
@@ -279,6 +339,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
   {
     id: "lifePulse",
     countKey: "lifePulse",
+    dataSource: { kind: "firstParty" },
     label: "Life pulse",
     dimensions: [
       "energy and headspace over time",
@@ -296,7 +357,93 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       href: "/mirror",
     },
   },
+  {
+    id: "taste",
+    countKey: "tasteItems",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "taste-paste",
+      summaryPath: ["counts", "items"],
+      capture: "paste",
+    },
+    label: "Taste signature",
+    dimensions: [
+      "cultural taste",
+      "what they actually love",
+      "shared-interest fit",
+    ],
+    weight: 0.08,
+    confidence: 0.55,
+    normalize: { kind: "count", denominator: 6 },
+    describe: (c) =>
+      `Has shared enough of their taste to cover ${c}% of that lane, so we can match on cultural overlap and the things they actually love, not just a prompt answer.`,
+    action: {
+      label: "Share your taste",
+      detail:
+        "List the music, film, shows, and books you love. We read the overlap, never judge the list.",
+      href: "/connections/add/taste",
+    },
+  },
+  {
+    id: "lifestyle",
+    countKey: "lifestyleItems",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "lifestyle-paste",
+      summaryPath: ["counts", "items"],
+      capture: "paste",
+    },
+    label: "Lifestyle rhythm",
+    dimensions: [
+      "how they spend a normal week",
+      "lifestyle and pace",
+      "shared-activity fit",
+    ],
+    weight: 0.07,
+    confidence: 0.55,
+    normalize: { kind: "count", denominator: 5 },
+    describe: (c) =>
+      `Has described enough of their week to cover ${c}% of that lane, so we can match on lifestyle and shared-activity fit, not just looks on paper.`,
+    action: {
+      label: "Describe your lifestyle",
+      detail:
+        "List the activities and rituals that make up a normal week. We read the rhythm, never the detail.",
+      href: "/connections/add/lifestyle",
+    },
+  },
 ] as const;
+
+/**
+ * A source the generic paste capture endpoint is allowed to write, derived from
+ * the registry. Each entry carries the `imported_sources.source` string the row
+ * should be tagged with and the contributor it feeds, so a new paste connector
+ * is a registry edit only, with no route allowlist to maintain by hand.
+ */
+export interface PasteCaptureSource {
+  /** Value to write into `imported_sources.source`. */
+  source: string;
+  /** Contributor this paste feeds. */
+  contributorId: keyof ReadinessBreakdown;
+  /** Human label, surfaced in capture UI and logs. */
+  label: string;
+}
+
+/** Paste-capturable sources, in registry order. */
+export function pasteCaptureSources(
+  registry: readonly SignalContributor[] = SIGNAL_REGISTRY,
+): PasteCaptureSource[] {
+  const out: PasteCaptureSource[] = [];
+  for (const c of registry) {
+    const ds = c.dataSource;
+    if (
+      (ds.kind === "importRows" || ds.kind === "importSummaryCount") &&
+      ds.capture === "paste"
+    ) {
+      out.push({ source: ds.source, contributorId: c.id, label: c.label });
+    }
+  }
+  return out;
+}
 
 /** Coverage 0-100 for one contributor given its raw count. */
 export function coverageFor(

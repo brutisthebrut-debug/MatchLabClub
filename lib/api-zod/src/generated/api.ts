@@ -480,6 +480,42 @@ export const CreateInstagramPasteBody = zod.object({
 
 
 /**
+ * Generic capture surface for paste-based Connection Center connectors
+(taste, lifestyle, and any future paste source). Persists the pasted
+items into `imported_sources` tagged with the connector's `source`
+string and a derived item count in `parsedSummary.counts.items`, so the
+signal feeds Match Readiness, the Mirror, and matching reasoning through
+the living signal registry. Only the derived count is ever used in
+scoring; the raw items are stored against the row but never sent to any
+prompt. The accepted `source` values are derived from the registry's
+paste-capturable entries, so adding a connector needs no edit here.
+Anon-safe: with no signed-in user, the row is stamped with the anonymous
+claim token cookie so it can be merged into the account later.
+
+ * @summary Capture a consent-first paste for a registry-backed connector
+ */
+export const CreateSourcePasteHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const createSourcePasteBodySourceMax = 32;
+
+export const createSourcePasteBodyItemsItemMax = 280;
+
+export const createSourcePasteBodyItemsMax = 30;
+
+export const createSourcePasteBodyNoteMax = 1000;
+
+
+
+export const CreateSourcePasteBody = zod.object({
+  "source": zod.string().min(1).max(createSourcePasteBodySourceMax).describe('The connector\'s source key. Must be one of the registry\'s\npaste-capturable sources (for example `taste-paste`,\n`lifestyle-paste`). Unknown values are rejected with a 400.\n'),
+  "items": zod.array(zod.string().min(1).max(createSourcePasteBodyItemsItemMax)).min(1).max(createSourcePasteBodyItemsMax).describe('The pasted items, one per array entry. Empty entries are dropped\nserver-side. Only the count drives scoring; the raw text is stored\nagainst the row and never sent to any prompt.\n'),
+  "note": zod.string().max(createSourcePasteBodyNoteMax).optional().describe('Optional free-text context the user adds about the source.')
+})
+
+
+/**
  * Returns whether the authenticated user has granted consent to send
 their own content (bios, messages, screenshots, journal entries) to
 the hosted LLM (Anthropic via Replit AI Integrations), plus the

@@ -64,6 +64,7 @@ import Sessions from "@/pages/Sessions";
 import Quiz from "@/pages/Quiz";
 import Gallery from "@/pages/Gallery";
 import ConnectionCenter from "@/pages/ConnectionCenter";
+import SourcePaste from "@/pages/SourcePaste";
 import DataVault from "@/pages/DataVault";
 import Imports from "@/pages/Imports";
 import DatingWinsLog from "@/pages/DatingWinsLog";
@@ -172,6 +173,7 @@ function Router() {
       <Route path="/rehearsal" component={RehearsalRoom} />
       <Route path="/insights" component={Insights} />
       <Route path="/integrations" component={Integrations} />
+      <Route path="/connections/add/:source" component={SourcePaste} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/waitlist" component={Waitlist} />
       {/* Diagnosis is consolidated into the single Signal Check front door.

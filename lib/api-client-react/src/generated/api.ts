@@ -68,6 +68,8 @@ import type {
   CorrectSourceAppResult,
   CreateInstagramPasteInput,
   CreateInstagramPasteResult,
+  CreateSourcePasteInput,
+  CreateSourcePasteResult,
   DatingProfile,
   DatingProfileInput,
   DatingProfileUpdate,
@@ -1285,6 +1287,89 @@ export const useCreateInstagramPaste = <TError = ErrorType<AuthErrorEnvelope>,
         TContext
       > => {
       return useMutation(getCreateInstagramPasteMutationOptions(options));
+    }
+
+export const getCreateSourcePasteUrl = () => {
+
+
+
+
+  return `/api/me/source-paste`
+}
+
+/**
+ * Generic capture surface for paste-based Connection Center connectors
+(taste, lifestyle, and any future paste source). Persists the pasted
+items into `imported_sources` tagged with the connector's `source`
+string and a derived item count in `parsedSummary.counts.items`, so the
+signal feeds Match Readiness, the Mirror, and matching reasoning through
+the living signal registry. Only the derived count is ever used in
+scoring; the raw items are stored against the row but never sent to any
+prompt. The accepted `source` values are derived from the registry's
+paste-capturable entries, so adding a connector needs no edit here.
+Anon-safe: with no signed-in user, the row is stamped with the anonymous
+claim token cookie so it can be merged into the account later.
+
+ * @summary Capture a consent-first paste for a registry-backed connector
+ */
+export const createSourcePaste = async (createSourcePasteInput: CreateSourcePasteInput, options?: RequestInit): Promise<CreateSourcePasteResult> => {
+
+  return customFetch<CreateSourcePasteResult>(getCreateSourcePasteUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createSourcePasteInput,)
+  }
+);}
+
+
+
+
+export const getCreateSourcePasteMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSourcePaste>>, TError,{data: BodyType<CreateSourcePasteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSourcePaste>>, TError,{data: BodyType<CreateSourcePasteInput>}, TContext> => {
+
+const mutationKey = ['createSourcePaste'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSourcePaste>>, {data: BodyType<CreateSourcePasteInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createSourcePaste(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSourcePasteMutationResult = NonNullable<Awaited<ReturnType<typeof createSourcePaste>>>
+    export type CreateSourcePasteMutationBody = BodyType<CreateSourcePasteInput>
+    export type CreateSourcePasteMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Capture a consent-first paste for a registry-backed connector
+ */
+export const useCreateSourcePaste = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSourcePaste>>, TError,{data: BodyType<CreateSourcePasteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createSourcePaste>>,
+        TError,
+        {data: BodyType<CreateSourcePasteInput>},
+        TContext
+      > => {
+      return useMutation(getCreateSourcePasteMutationOptions(options));
     }
 
 export const getGetAiContentConsentUrl = () => {
