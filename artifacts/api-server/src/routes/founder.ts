@@ -572,7 +572,7 @@ router.get("/founder/trash-purge-heartbeat", requireFounder, async (_req, res): 
 
 // Paid signal: purchase_interest.status = 'paid' (the only status the rest of
 // the founder dashboard treats as money-in). purchase_interest has no userId
-// column, so we join on email — the same key Stripe checkout sessions are
+// column, so we join on email, the same key Stripe checkout sessions are
 // created with. Users without an email on file can never be marked converted.
 router.get("/founder/referrals", requireFounder, async (_req, res): Promise<void> => {
   const inviter = alias(usersTable, "inviter");
@@ -1416,7 +1416,7 @@ router.post("/founder/ai-threshold-changes/:id/undo", requireFounder, async (req
       newThreshold: t,
     });
   } else {
-    // Original action was a "create" with no prior values — inverse is to remove the row.
+    // Original action was a "create" with no prior values, inverse is to remove the row.
     await db.delete(aiAlertThresholdsTable).where(eq(aiAlertThresholdsTable.toolName, toolName));
     undoAction = isGlobal ? "reset" : "remove";
     await db.insert(aiAlertThresholdChangesTable).values({

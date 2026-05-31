@@ -47,7 +47,7 @@ export async function saveAuditFilterPrefs(
   try {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
   } catch {
-    // ignore — filter prefs are a nice-to-have
+    // ignore, filter prefs are a nice-to-have
   }
 }
 

@@ -513,7 +513,7 @@ export default function JournalScreen() {
               testID="input-new-journal-body"
               value={draftBody}
               onChangeText={setDraftBody}
-              placeholder="Write it out — what's coming up for you?"
+              placeholder="Write it out, what's coming up for you?"
               placeholderTextColor={colors.mutedForeground}
               multiline
               textAlignVertical="top"
@@ -623,7 +623,7 @@ export default function JournalScreen() {
               testID="input-edit-journal-body"
               value={editBody}
               onChangeText={setEditBody}
-              placeholder="Write it out — what's coming up for you?"
+              placeholder="Write it out, what's coming up for you?"
               placeholderTextColor={colors.mutedForeground}
               multiline
               textAlignVertical="top"

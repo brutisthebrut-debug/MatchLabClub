@@ -73,7 +73,7 @@ async function upsertUser(
   };
 
   // Parse Echo referral cookie (`mlc_ref=user-<inviterId>` or just `<inviterId>`).
-  // First-touch attribution — only set on row INSERT, never overwritten.
+  // First-touch attribution, only set on row INSERT, never overwritten.
   let inviterId: string | null = null;
   if (refCookie) {
     const stripped = refCookie.startsWith("user-")
@@ -94,7 +94,7 @@ async function upsertUser(
     .onConflictDoUpdate({
       target: usersTable.id,
       // Intentionally do NOT touch invited_by_user_id / invited_at on conflict
-      // — first-touch attribution wins, returning users keep their original.
+      //, first-touch attribution wins, returning users keep their original.
       set: {
         ...userData,
         updatedAt: new Date(),
@@ -190,7 +190,7 @@ router.get("/callback", async (req: Request, res: Response) => {
     return;
   }
 
-  // Primary: extract returnTo from the echoed state URL param — resilient to
+  // Primary: extract returnTo from the echoed state URL param, resilient to
   // Secure-cookie drops in the Playwright test environment (see /login above).
   // Secondary fallback: return_to cookie (works in production browsers).
   // The state format is "<nonce>:<returnTo>" with the raw path (no extra

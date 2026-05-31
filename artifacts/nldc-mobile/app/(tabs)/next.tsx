@@ -44,7 +44,7 @@ function generateOptions(context: string, lastMsg: string, goal: Goal): Option[]
     {
       style: "Safe",
       text: isQuiet
-        ? "Hey — I keep thinking about what you said about [thing from the conversation]. Still rolling it around."
+        ? "Hey, I keep thinking about what you said about [thing from the conversation]. Still rolling it around."
         : isMeeting
         ? "I'd genuinely love to meet up. When does your week open up?"
         : "I keep coming back to something you said. What made you say it?",
@@ -53,9 +53,9 @@ function generateOptions(context: string, lastMsg: string, goal: Goal): Option[]
     {
       style: "Warm",
       text: isQuiet
-        ? "I didn't want things to go quiet without saying — I had a really good time talking with you."
+        ? "I didn't want things to go quiet without saying, I had a really good time talking with you."
         : isMeeting
-        ? "I've been thinking about you. Would love to actually meet — are you free this week?"
+        ? "I've been thinking about you. Would love to actually meet, are you free this week?"
         : "I really enjoy this. One of the better conversations I've had on here in a while.",
       when: "Signals genuine interest without pressure.",
     },
@@ -64,16 +64,16 @@ function generateOptions(context: string, lastMsg: string, goal: Goal): Option[]
       text: isQuiet
         ? "You went quiet on me. I'm choosing to interpret that as you thinking of something really good to say."
         : hasHumor
-        ? "Okay I have to know — what was the actual ending to that story? It's been bothering me."
+        ? "Okay I have to know, what was the actual ending to that story? It's been bothering me."
         : "I feel like we've been building up to a real conversation. When does that part start?",
       when: "Keeps the vibe light and banter-y.",
     },
     {
       style: "Bold",
       text: isMeeting
-        ? "I like you. Let's meet — Thursday or Friday?"
+        ? "I like you. Let's meet, Thursday or Friday?"
         : isWindDown
-        ? "I want to be honest — I've been a bit unsure about where this is heading. Worth a real chat about it?"
+        ? "I want to be honest, I've been a bit unsure about where this is heading. Worth a real chat about it?"
         : "I'm going to say the thing no one says: I'm actually interested in getting to know you properly. Let's do something about that.",
       when: "When you have rapport and want momentum.",
     },
@@ -81,7 +81,7 @@ function generateOptions(context: string, lastMsg: string, goal: Goal): Option[]
       style: "Curious",
       text: hasShared
         ? "I keep noticing we keep landing on the same things. What do you think that's about?"
-        : "There's one thing in what you said I want to dig into — when did you first realise that about yourself?",
+        : "There's one thing in what you said I want to dig into, when did you first realise that about yourself?",
       when: "Pulls them deeper into the thing they care about.",
     },
     {
@@ -94,7 +94,7 @@ function generateOptions(context: string, lastMsg: string, goal: Goal): Option[]
     {
       style: "Clean exit",
       text:
-        "I've enjoyed this — but I don't think we're heading toward what either of us is looking for. Wishing you the best out there.",
+        "I've enjoyed this, but I don't think we're heading toward what either of us is looking for. Wishing you the best out there.",
       when: "When the answer is 'no' but you want to leave kindly.",
     },
   ];
@@ -152,7 +152,7 @@ export default function NextMessageScreen() {
         <ScreenHeader
           eyebrow="Next Message"
           title="7 ways to send it"
-          subtitle="One context, seven angles — from safe to bold to a clean exit. Pick the one that fits."
+          subtitle="One context, seven angles, from safe to bold to a clean exit. Pick the one that fits."
         />
 
         <View

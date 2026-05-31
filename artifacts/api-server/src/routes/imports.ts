@@ -83,7 +83,7 @@ function isoOrNull(raw: unknown): string | null {
 /**
  * Walk the parsed Hinge `matches.json` shape (an array of per-match records,
  * each with optional `match`, `chats`, `like`, `block` sub-arrays) and roll
- * up the counts we care about. Defensive — Hinge has shipped at least two
+ * up the counts we care about. Defensive, Hinge has shipped at least two
  * shapes for this file over the years, and other categorised files (user,
  * prompts) might be objects rather than arrays.
  */

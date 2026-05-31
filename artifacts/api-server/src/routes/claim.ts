@@ -41,7 +41,7 @@ function sendExpiredHandoff(
   jsonError: string,
 ): void {
   sendExpiredLink(req, res, {
-    pageTitle: "Handoff link expired — MatchLab Club",
+    pageTitle: "Handoff link expired, MatchLab Club",
     heading: "This hand-off link can&rsquo;t be used anymore",
     bodyParagraphs: [
       "&ldquo;Continue on another device&rdquo; links are single-use and only live for about 15 minutes for your security. This one has either already been used, expired, or we don&rsquo;t recognize it.",
@@ -86,7 +86,7 @@ function dedup(xs: number[] | undefined): number[] {
  * Reassign rows whose `anonymous_claim_token` matches `anonToken` (and whose
  * `user_id` is still null) to `userId`. Returns per-table counts of rows
  * actually claimed. This is the shared core used by both the cookie-scoped
- * claim path and the signed cross-device handoff path — keeping them on one
+ * claim path and the signed cross-device handoff path, keeping them on one
  * implementation guarantees both paths enforce the same anonymous-token
  * scoping and the same IDOR-safe filters.
  */
@@ -339,7 +339,7 @@ router.post("/claim-anonymous", async (req, res): Promise<void> => {
   const anonToken = getAnonClaimToken(req);
 
   // Without a matching anonymous-browser token, there is nothing this caller
-  // can legitimately claim — refuse silently rather than risk IDOR.
+  // can legitimately claim, refuse silently rather than risk IDOR.
   if (!anonToken) {
     res.json(
       ClaimAnonymousDataResponse.parse({
@@ -446,7 +446,7 @@ router.post(
 
     // Record the jti so this handoff link can never be redeemed twice.
     // ON CONFLICT DO NOTHING means a replay attempt produces zero inserted
-    // rows — we treat that as "already redeemed" and bail out before
+    // rows, we treat that as "already redeemed" and bail out before
     // touching any anonymous rows. Doing this BEFORE the claim UPDATE
     // also makes the check atomic against concurrent redeem attempts.
     const inserted = await db

@@ -143,7 +143,7 @@ export function useClaimAnonymousOnLogin(): void {
     }
   }
 
-  // Cookie-scoped claim — happens when the same browser that created the
+  // Cookie-scoped claim, happens when the same browser that created the
   // anonymous rows is also the one signing in.
   useEffect(() => {
     if (isLoading) return;
@@ -174,7 +174,7 @@ export function useClaimAnonymousOnLogin(): void {
                 "1",
               );
             } catch {
-              // sessionStorage may be unavailable — swallow.
+              // sessionStorage may be unavailable, swallow.
             }
           }
           clearAnonymousIds();
@@ -199,7 +199,7 @@ export function useClaimAnonymousOnLogin(): void {
     );
   }, [isAuthenticated, isLoading, user?.id, claim, queryClient]);
 
-  // Cross-device handoff claim — happens when this browser arrived via a
+  // Cross-device handoff claim, happens when this browser arrived via a
   // `?nldc_handoff=...` link from another device and is now signed in.
   useEffect(() => {
     if (isLoading) return;
@@ -255,7 +255,7 @@ export function useClaimAnonymousOnLogin(): void {
             toast({
               title: "This link was already used",
               description:
-                "This hand-off link has already been redeemed. If your audits didn't arrive, ask the original device to generate a fresh link — or start a new audit here.",
+                "This hand-off link has already been redeemed. If your audits didn't arrive, ask the original device to generate a fresh link, or start a new audit here.",
               duration: 12000,
               action: (
                 <ToastAction

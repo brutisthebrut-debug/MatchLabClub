@@ -1,5 +1,5 @@
 /**
- * MatchLab Club mobile palette — branded indigo/pink.
+ * MatchLab Club mobile palette, branded indigo/pink.
  * Mobile ships as a dark-themed surface by default (the canonical
  * "men using the app at night" experience). The `light` key here is
  * the active palette; values are aligned with the web dark theme so

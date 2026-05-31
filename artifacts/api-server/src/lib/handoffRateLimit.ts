@@ -176,7 +176,7 @@ export function checkHandoffRateLimit(
 }
 
 /**
- * Exposed for tests — clears state in the active store.
+ * Exposed for tests, clears state in the active store.
  */
 export function _resetRateLimitState(): Promise<void> {
   return currentStore.reset();

@@ -259,7 +259,7 @@ export function HandoffQrCard() {
                 ) : null}
 
                 <Text style={[styles.expiry, { color: colors.mutedForeground }]}>
-                  This link expires at {formatExpiry(issued.expiresAt)} and works only on the next sign-in. Don&apos;t share it — it gives access to your anonymous audit.
+                  This link expires at {formatExpiry(issued.expiresAt)} and works only on the next sign-in. Don&apos;t share it, it gives access to your anonymous audit.
                 </Text>
               </>
             ) : null}

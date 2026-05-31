@@ -10,7 +10,7 @@ export interface ParsedProfile {
 
 /**
  * Rules learned from aggregated user OCR corrections. Optional input to
- * `parseProfileText` — when provided, the parser uses them to fix common
+ * `parseProfileText`, when provided, the parser uses them to fix common
  * OCR mistakes before returning (so future scans don't re-record the same
  * mismatch). See `ocrLearning.ts` for how these are derived and persisted.
  */
@@ -124,7 +124,7 @@ const ALL_PROMPTS = [...HINGE_PROMPTS, ...BUMBLE_PROMPTS, ...TINDER_PROMPTS, ...
 // We drop them and continue collecting subsequent text into the bio.
 const BIO_HEADERS: RegExp[] = [
   /^about me$/i,
-  /^about [A-Z][a-zA-Z'’\-]+$/, // "About Mia" — Tinder name header
+  /^about [A-Z][a-zA-Z'’\-]+$/, // "About Mia", Tinder name header
 ];
 
 function isBioHeader(line: string): boolean {

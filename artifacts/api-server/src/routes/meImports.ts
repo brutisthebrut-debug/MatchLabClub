@@ -252,7 +252,7 @@ async function runInstagramToneRead(args: {
       })
       .where(eq(importedSourcesTable.id, importId))
       .catch(() => {
-        // swallow — we already logged the original failure
+        // swallow, we already logged the original failure
       });
   }
 }
@@ -268,7 +268,7 @@ async function runInstagramToneRead(args: {
  * consent is granted and the call succeeds; otherwise the always-on
  * deterministic engine produces the read (`toneEngine='deterministic'`), so the
  * source never stalls in a fallback state.
- * Anonymous users never have their content shipped to Anthropic — they
+ * Anonymous users never have their content shipped to Anthropic, they
  * must claim/sign in first so the consent gate can apply.
  */
 router.post("/me/instagram-paste", async (req, res): Promise<void> => {

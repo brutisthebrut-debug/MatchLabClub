@@ -195,7 +195,7 @@ export default function AccountScreen() {
     setIsDeleting(true);
     try {
       await deleteMyAccount();
-      // Tear down every cached query — the user is signed out and any
+      // Tear down every cached query, the user is signed out and any
       // user-scoped data should not survive in memory.
       queryClient.clear();
       closeConfirm();
@@ -360,7 +360,7 @@ export default function AccountScreen() {
             </View>
             <Text style={[styles.cardBody, { color: colors.mutedForeground }]}>
               Sign in to sync your audits, matches, and message coaching across
-              devices — and to download or delete your data from here.
+              devices, and to download or delete your data from here.
             </Text>
             <Pressable
               testID="button-account-signin"
@@ -598,7 +598,7 @@ export default function AccountScreen() {
           <Text style={[styles.cardBody, { color: colors.mutedForeground }]}>
             {trashPrefs.enabled
               ? "We'll send you a heads-up a few days before any trashed audit is permanently deleted, so you can restore it if you change your mind."
-              : "Off — we won't warn you before trashed audits are auto-deleted after 30 days."}
+              : "Off, we won't warn you before trashed audits are auto-deleted after 30 days."}
           </Text>
         </View>
 
@@ -654,7 +654,7 @@ export default function AccountScreen() {
         >
           <Feather name="shield" size={18} color={colors.gold} />
           <Text style={[styles.footerText, { color: colors.mutedForeground }]}>
-            These controls do the same thing as the Account page on the web —
+            These controls do the same thing as the Account page on the web,
             so you can manage your data from whichever device you're holding.
           </Text>
         </View>

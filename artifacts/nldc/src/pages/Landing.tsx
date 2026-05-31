@@ -958,7 +958,7 @@ function PreviewSection() {
   </div>
   <PreviewFooterCta
   label="See the full read"
-  href={compassResult.savedId ? `/compass/${compassResult.savedId}` : "/compass"}
+  href="/compatibility-compass"
   />
   </motion.div>
   )}

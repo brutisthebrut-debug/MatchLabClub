@@ -8,7 +8,7 @@ import { Platform } from "react-native";
  * not need to alert itself).
  *
  * Returns null on web, when permission has not been granted, or when
- * any failure occurs — the signing-in flow must not block on this.
+ * any failure occurs, the signing-in flow must not block on this.
  */
 export async function getSigningInDevicePushToken(): Promise<string | null> {
   if (Platform.OS === "web") return null;

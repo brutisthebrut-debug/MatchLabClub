@@ -10,9 +10,9 @@ interface CopyButtonProps {
   text: string;
   onCopy?: () => void;
   /**
-   * "ghost"    — minimal icon+label, no border/background (default).
+   * "ghost"   , minimal icon+label, no border/background (default).
    *              Used in audit headers and action-plan rows.
-   * "outlined" — pill with border and tinted background on copy.
+   * "outlined", pill with border and tinted background on copy.
    *              Used in reply cards and other prominent copy actions.
    */
   variant?: "ghost" | "outlined";

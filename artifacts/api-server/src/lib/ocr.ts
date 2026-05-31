@@ -111,7 +111,7 @@ export type ChatSpeakerTurn = {
  * Heuristic: noise lines (timestamps, delivery indicators, UI chrome) act as
  * turn boundaries. Consecutive content lines without intervening noise belong
  * to the same speaker. Speakers alternate across turn blocks, starting with
- * "them" (the match) — the most common arrangement in a dating-app screenshot.
+ * "them" (the match), the most common arrangement in a dating-app screenshot.
  *
  * This is intentionally simple; the client should let users flip misattributed
  * turns rather than trying to be perfect here.
@@ -143,7 +143,7 @@ export function inferSpeakerTurns(lines: string[]): ChatSpeakerTurn[] {
 /**
  * Run OCR on a chat-screenshot and return the conversation text, the
  * detected source app, and an ordered list of inferred speaker turns.
- * Speaker attribution is heuristic — the client should let users correct
+ * Speaker attribution is heuristic, the client should let users correct
  * misattributed bubbles.
  */
 export async function extractChatFromScreenshot(imageBase64: string): Promise<{

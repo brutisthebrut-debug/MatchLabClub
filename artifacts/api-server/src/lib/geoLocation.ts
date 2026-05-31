@@ -81,7 +81,7 @@ function normalizeIp(ip: string): string {
  * Returns a coarse human-readable approximate location for an IP, e.g.
  * "Brooklyn, NY, US" or "London, GB". Returns null if the IP is private,
  * empty, or cannot be resolved. Lookups are local (bundled MaxMind GeoLite
- * data via geoip-lite) — no third-party calls are made.
+ * data via geoip-lite), no third-party calls are made.
  */
 export function describeIpLocation(ip: string | null | undefined): string | null {
   if (!ip) return null;

@@ -225,7 +225,7 @@ export async function sendMail(input: SendMailInput): Promise<SendMailResult> {
       subject: input.subject,
       text: input.text,
     },
-    "Email (log transport — no email provider configured)",
+    "Email (log transport, no email provider configured)",
   );
   return { delivered: true, transport: "log" };
 }

@@ -114,7 +114,7 @@ export async function rollupAiMetricsForDay(
  * This guarantees that no raw rows are pruned before being captured in the
  * daily rollup, even if the job has been offline for several days.
  *
- * Throws on failure — pruning must be skipped if rollup did not complete,
+ * Throws on failure, pruning must be skipped if rollup did not complete,
  * otherwise old raw rows would be deleted without their history captured.
  *
  * Pass `toolNames` to restrict the rollup to a specific set of tools (same
@@ -226,7 +226,7 @@ export async function rollupThenPruneAiMetrics(options?: {
   } catch (err) {
     logger.error(
       { err: err instanceof Error ? err.message : String(err) },
-      "ai_request_metrics rollup failed — skipping prune to preserve trend history",
+      "ai_request_metrics rollup failed, skipping prune to preserve trend history",
     );
     return { rolledUp: 0, pruned: 0, skippedPrune: true };
   }

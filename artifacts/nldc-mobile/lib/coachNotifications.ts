@@ -360,7 +360,7 @@ export async function applyCoachNotificationCategory(
       ],
     );
   } catch {
-    // ignore — categories aren't supported everywhere
+    // ignore, categories aren't supported everywhere
   }
 }
 
@@ -411,7 +411,7 @@ export async function scheduleCoachReminder(opts: {
     const id = await Notifications.scheduleNotificationAsync({
       content: {
         title: "Did you send that reply?",
-        body: `You drafted a reply to ${who} a couple of hours ago — tap to let us know.`,
+        body: `You drafted a reply to ${who} a couple of hours ago, tap to let us know.`,
         data: { type: COACH_NOTIFICATION_TYPE, matchName: who },
         categoryIdentifier: COACH_NOTIFICATION_CATEGORY,
       },
@@ -510,7 +510,7 @@ export async function recordCoachFollowUp(
       sessionId: opts?.sessionId ?? null,
     });
   } catch {
-    // Offline / unauthenticated — local AsyncStorage copy is enough for now.
+    // Offline / unauthenticated, local AsyncStorage copy is enough for now.
   }
 }
 
@@ -534,7 +534,7 @@ export async function recordCoachSnoozed(opts?: {
       sessionId: opts?.sessionId ?? null,
     });
   } catch {
-    // Offline / unauthenticated — local AsyncStorage copy is enough for now.
+    // Offline / unauthenticated, local AsyncStorage copy is enough for now.
   }
 }
 
@@ -558,7 +558,7 @@ export async function recordCoachDismissed(opts?: {
       sessionId: opts?.sessionId ?? null,
     });
   } catch {
-    // Offline / unauthenticated — local AsyncStorage copy is enough for now.
+    // Offline / unauthenticated, local AsyncStorage copy is enough for now.
   }
 }
 

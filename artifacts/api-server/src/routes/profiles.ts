@@ -153,7 +153,7 @@ router.post("/profiles/:id/rewrite", async (req, res): Promise<void> => {
 
   const rewrite = RewriteProfileBioResponse.parse({
     profileId: id,
-    rewrittenBio: `I make a genuinely great first date — I'll pick somewhere unexpected, actually listen, and probably make you laugh at something you didn't expect to. Currently: way too invested in my sourdough starter, rewatching things I've already seen, and looking for someone worth getting off the couch for. If any of that sounds familiar, let's find out.`,
+    rewrittenBio: `I make a genuinely great first date, I'll pick somewhere unexpected, actually listen, and probably make you laugh at something you didn't expect to. Currently: way too invested in my sourdough starter, rewatching things I've already seen, and looking for someone worth getting off the couch for. If any of that sounds familiar, let's find out.`,
     rewrittenPrompts: [
       {
         original: profile.prompts?.split("\n")[0] || "The way to win me over is...",
@@ -167,9 +167,9 @@ router.post("/profiles/:id/rewrite", async (req, res): Promise<void> => {
       },
     ],
     tips: [
-      "Lead with a scene, not a list of traits — put the reader in a moment with you",
+      "Lead with a scene, not a list of traits, put the reader in a moment with you",
       "Cut any phrase that could appear in 1,000 other bios ('love to travel', 'big on authenticity')",
-      "End your bio with a soft invitation — make it easy for someone to message you",
+      "End your bio with a soft invitation, make it easy for someone to message you",
     ],
   });
 

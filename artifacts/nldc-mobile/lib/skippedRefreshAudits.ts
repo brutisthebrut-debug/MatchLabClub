@@ -29,7 +29,7 @@ export async function saveSkippedAuditIds(ids: Set<number>): Promise<void> {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(entry));
     }
   } catch {
-    // ignore — preference is a nice-to-have
+    // ignore, preference is a nice-to-have
   }
 }
 

@@ -132,7 +132,7 @@ router.get("/insights/rollup", async (req, res): Promise<void> => {
       const summary =
         g.count === 1
           ? `One import from ${sourceApp}. ${g.summaries[0]?.split(".")[0] ?? ""}.`
-          : `${g.count} imports from ${sourceApp}. ${topPattern} shows up most, and your attachment read here trends ${topStyle.split("—")[0]?.trim().toLowerCase() ?? "secure"}.`;
+          : `${g.count} imports from ${sourceApp}. ${topPattern} shows up most, and your attachment read here trends ${topStyle.split(",")[0]?.trim().toLowerCase() ?? "secure"}.`;
       return {
         sourceApp,
         count: g.count,

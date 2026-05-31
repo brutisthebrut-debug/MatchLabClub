@@ -105,7 +105,7 @@ export function useSavedContext(): SavedContext {
       }
     }
     if (pickedSession === null) {
-      // All timestamps unparseable — fall back to the last entry in array.
+      // All timestamps unparseable, fall back to the last entry in array.
       const last = sessions[sessions.length - 1];
       pickedSession = { id: last.id, createdAt: last.createdAt };
     }

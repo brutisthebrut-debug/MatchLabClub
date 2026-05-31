@@ -261,7 +261,7 @@ export default function DatesScreen() {
         }
       >
         <Text style={[styles.intro, { color: colors.mutedForeground }]}>
-          The record of what you debriefed after each date — what went well,
+          The record of what you debriefed after each date, what went well,
           what didn't, and where it landed.
         </Text>
 

@@ -130,7 +130,7 @@ router.post(
     const { toolName, prompt, context, expectJson } = parsed.data;
     const ctx: AiContext = context ?? { toolName };
 
-    const fallback = `Coaching note for ${toolName}: Be specific and genuine — the most effective messages and profiles are honest, not strategic. Focus on what makes this moment or person unique, and respond to the actual situation rather than a template. Authenticity almost always outperforms a perfectly crafted line.`;
+    const fallback = `Coaching note for ${toolName}: Be specific and genuine, the most effective messages and profiles are honest, not strategic. Focus on what makes this moment or person unique, and respond to the actual situation rather than a template. Authenticity almost always outperforms a perfectly crafted line.`;
 
     // Content-sensitive tools ship the user's own raw text, so they go through
     // the consent-gated Anthropic lane (gate enforced server-side). Everything
@@ -142,7 +142,7 @@ router.post(
         system: coachingPrompt(
           toolPrompt(
             toolName,
-            "Provide a thoughtful, specific coaching response based on the user's input. Be warm, direct, practical — never generic.",
+            "Provide a thoughtful, specific coaching response based on the user's input. Be warm, direct, practical, never generic.",
           ),
         ),
         user: prompt,

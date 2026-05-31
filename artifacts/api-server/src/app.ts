@@ -10,9 +10,9 @@ import { WebhookHandlers } from "./lib/webhookHandlers";
 /**
  * Build the set of origins that are trusted for credentialed CORS requests.
  * Sources:
- *   REPLIT_DOMAINS   — comma-separated list of all domains for this Repl
+ *   REPLIT_DOMAINS  , comma-separated list of all domains for this Repl
  *                      (dev previews and published production domains)
- *   REPLIT_EXPO_DEV_DOMAIN — Expo tunnel domain used by the mobile app in dev
+ *   REPLIT_EXPO_DEV_DOMAIN, Expo tunnel domain used by the mobile app in dev
  */
 function buildAllowedOrigins(): Set<string> {
   const origins = new Set<string>();
@@ -70,12 +70,12 @@ app.use(
 );
 
 /**
- * CSRF Origin guard — active defence for write methods.
+ * CSRF Origin guard, active defence for write methods.
  *
  * If the browser sends an Origin header on a non-safe method and it is not in
  * the trusted allowlist, the request is rejected before any route handler runs.
  * Requests without an Origin header (native mobile app, curl, server-to-server)
- * are allowed through — they can't be forged via a browser-based CSRF attack.
+ * are allowed through, they can't be forged via a browser-based CSRF attack.
  */
 app.use((req: Request, res: Response, next: NextFunction): void => {
   if (SAFE_METHODS.has(req.method)) {
@@ -97,7 +97,7 @@ app.use((req: Request, res: Response, next: NextFunction): void => {
 app.use(cookieParser());
 
 /**
- * Stripe webhook — registered BEFORE express.json() so the handler receives the
+ * Stripe webhook, registered BEFORE express.json() so the handler receives the
  * raw request body Buffer required for signature verification. The CSRF origin
  * guard above lets this through: Stripe is server-to-server and sends no Origin
  * header. Signature verification inside processWebhook is the real auth here.

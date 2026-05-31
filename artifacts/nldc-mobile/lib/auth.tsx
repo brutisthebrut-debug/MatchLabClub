@@ -101,7 +101,7 @@ export function AuthProvider({
     try {
       await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
     } catch {
-      // best-effort — always clear local state
+      // best-effort, always clear local state
     }
     setUser(null);
     setError("Your session expired. Please sign in again.");
@@ -143,7 +143,7 @@ export function AuthProvider({
         // about expiring audits even when the app is closed.
         registerPushTokenWithServer().catch(() => {});
       } else {
-        // Server says "no user" with a 200 — treat the token as stale and
+        // Server says "no user" with a 200, treat the token as stale and
         // surface the same expired message so the user knows to sign in again.
         await handleSessionExpired();
       }
@@ -273,7 +273,7 @@ export function AuthProvider({
       if (token) {
         const apiBase = getApiBaseUrl();
         // Deregister push token before clearing the auth token so the API call
-        // can still authenticate. Best-effort — failure is non-fatal.
+        // can still authenticate. Best-effort, failure is non-fatal.
         deregisterPushTokenFromServer().catch(() => {});
         await fetch(`${apiBase}/api/mobile-auth/logout`, {
           method: "POST",
@@ -281,7 +281,7 @@ export function AuthProvider({
         });
       }
     } catch {
-      // best-effort — always clear local state
+      // best-effort, always clear local state
     } finally {
       await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
       sessionExpiredRef.current = false;

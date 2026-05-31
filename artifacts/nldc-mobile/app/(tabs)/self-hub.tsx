@@ -306,7 +306,7 @@ export default function SelfHubScreen() {
           <ShareButton
             testId="button-share-self-hub"
             surface="self-hub"
-            title="Read your dating signals — free in 2 minutes"
+            title="Read your dating signals, free in 2 minutes"
             text="I've been using MatchLab Club as a second brain for my dating life. Try a quiz, see what your patterns actually say about you."
             path="/quizzes"
             ref={user?.id ? `user-${user.id}` : "self-hub"}

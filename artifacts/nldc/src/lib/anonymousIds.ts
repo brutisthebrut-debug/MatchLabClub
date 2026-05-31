@@ -29,7 +29,7 @@ function safeWrite(key: string, ids: number[]): void {
   try {
     window.localStorage.setItem(key, JSON.stringify(ids));
   } catch {
-    // localStorage may be unavailable (private mode, etc.) — swallow.
+    // localStorage may be unavailable (private mode, etc.), swallow.
   }
 }
 

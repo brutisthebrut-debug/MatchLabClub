@@ -161,7 +161,7 @@ async function sendKeyMissingAlert(
   try {
     await sendMail({
       to: recipient,
-      subject: "[MatchLab Club] GeoIP license key missing — location data going stale",
+      subject: "[MatchLab Club] GeoIP license key missing, location data going stale",
       text: [
         "The MAXMIND_LICENSE_KEY secret is not set on the API server, and",
         `the GeoIP database has not been refreshed in ~${Math.floor(daysSinceUpdate)} days`,
@@ -199,7 +199,7 @@ async function sendKeyRestoredEmail(
   try {
     await sendMail({
       to: recipient,
-      subject: "[MatchLab Club] GeoIP license key restored — location data fresh again",
+      subject: "[MatchLab Club] GeoIP license key restored, location data fresh again",
       text: [
         "A GeoIP database refresh has succeeded, so the MAXMIND_LICENSE_KEY secret",
         "is working again and sign-in notification locations are now up to date.",
@@ -226,7 +226,7 @@ export async function checkGeoipKeyMissingAlert(): Promise<
 
   const lastSuccessAt = await getLastSuccessAt();
   if (!lastSuccessAt) {
-    // We have no baseline for "stale". Don't alert on a fresh install — the
+    // We have no baseline for "stale". Don't alert on a fresh install, the
     // setup docs cover the missing-key case explicitly.
     return "no_heartbeat";
   }
@@ -246,7 +246,7 @@ export async function checkGeoipKeyMissingAlert(): Promise<
     if (now.getTime() - state.lastClearedAt.getTime() < cooldownMs) {
       logger.info(
         { lastClearedAt: state.lastClearedAt, cooldownMs },
-        "Suppressing GeoIP key-missing alert — re-breach inside cooldown window",
+        "Suppressing GeoIP key-missing alert, re-breach inside cooldown window",
       );
       // Still record breached=true so we don't keep evaluating cooldown every
       // check, mirroring aiReliabilityAlerts behaviour.
@@ -273,7 +273,7 @@ export async function runGeoipUpdate(options?: {
   const licenseKey = process.env["MAXMIND_LICENSE_KEY"]?.trim();
   if (!licenseKey) {
     logger.warn(
-      "MAXMIND_LICENSE_KEY is not set — skipping GeoIP database update. " +
+      "MAXMIND_LICENSE_KEY is not set, skipping GeoIP database update. " +
         "Set this secret to enable automatic monthly location-data refreshes.",
     );
     return false;

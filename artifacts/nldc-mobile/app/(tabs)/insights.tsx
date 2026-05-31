@@ -56,35 +56,35 @@ const DEMO_ANALYSIS: Analysis = {
   communicationPatterns: [
     {
       pattern: "Humor as a connector",
-      frequency: "High — appears naturally throughout conversation",
+      frequency: "High, appears naturally throughout conversation",
       impact:
         "One of the strongest accelerants of attraction and trust. Keep it calibrated to their energy.",
     },
     {
       pattern: "Question-heavy style",
-      frequency: "High — 6 questions detected in this sample",
+      frequency: "High, 6 questions detected in this sample",
       impact:
         "Strong curiosity signal, but balance with personal disclosures so it doesn't feel like an interview.",
     },
     {
       pattern: "Concrete, specific messaging",
-      frequency: "Consistent — you reference specifics",
+      frequency: "Consistent, you reference specifics",
       impact:
         "Excellent. Specific messages are memorable and give the other person more to respond to.",
     },
   ],
-  attachmentStyle: "Secure — you communicate directly and recover well from tension",
+  attachmentStyle: "Secure, you communicate directly and recover well from tension",
   strengths: [
     "Natural use of humor to create warmth and ease",
-    "Genuine curiosity — you ask real questions",
-    "Specific and concrete — you make conversations memorable",
+    "Genuine curiosity, you ask real questions",
+    "Specific and concrete, you make conversations memorable",
   ],
   growthAreas: [
     "You wait a bit long before suggesting escalation",
-    "Occasionally over-explain or hedge — you can be more direct",
+    "Occasionally over-explain or hedge, you can be more direct",
   ],
   datingProfileTips: [
-    "Bring the humor into your profile — it's your strongest asset",
+    "Bring the humor into your profile, it's your strongest asset",
     "Add a prompt that ends with an implicit question",
     "Lead with a concrete scene, not personality descriptors",
   ],
@@ -279,7 +279,7 @@ export default function InsightsScreen() {
             })}
           </ScrollView>
           <Text style={[styles.hint, { color: colors.mutedForeground }]}>
-            Optional — helps us tune the analysis to that platform.
+            Optional, helps us tune the analysis to that platform.
           </Text>
         </View>
 
@@ -298,7 +298,7 @@ export default function InsightsScreen() {
               },
             ]}
             placeholder={
-              "Me: Hey! Love that you mentioned the Japan trip — I went last year too.\nSam: Oh amazing! I did Tokyo and Kyoto. You?\nMe: Same! Tokyo was wild. Favorite ramen spot?"
+              "Me: Hey! Love that you mentioned the Japan trip, I went last year too.\nSam: Oh amazing! I did Tokyo and Kyoto. You?\nMe: Same! Tokyo was wild. Favorite ramen spot?"
             }
             placeholderTextColor={colors.mutedForeground}
             value={content}
@@ -347,7 +347,7 @@ export default function InsightsScreen() {
           disabled={isLoading || !content.trim() || !consent}
         />
 
-        {/* Past analyses history — authenticated users only */}
+        {/* Past analyses history, authenticated users only */}
         {isAuthenticated && (
           <View style={styles.historySection}>
             <View style={styles.historySectionHeader}>
@@ -431,14 +431,14 @@ export default function InsightsScreen() {
             ) : (
               <View style={[styles.historyEmpty, { borderColor: colors.cardBorder }]}>
                 <Text style={[styles.historyEmptyText, { color: colors.mutedForeground }]}>
-                  No past analyses yet — run your first one above.
+                  No past analyses yet, run your first one above.
                 </Text>
               </View>
             )}
           </View>
         )}
 
-        {/* Cross-import rollup — shown when ≥2 platforms analyzed */}
+        {/* Cross-import rollup, shown when ≥2 platforms analyzed */}
         {rollup && rollup.totalAnalyzed >= 2 && rollup.sources.length >= 2 && (
           <View
             style={[
@@ -554,7 +554,7 @@ export default function InsightsScreen() {
               ]}
             >
               <Text style={[styles.demoBannerText, { color: colors.gold }]}>
-                Sample results — paste your conversation above to see your own patterns
+                Sample results, paste your conversation above to see your own patterns
               </Text>
             </View>
           ) : null}

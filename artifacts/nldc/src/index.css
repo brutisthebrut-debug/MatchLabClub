@@ -67,7 +67,7 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* ─── MATCHLAB CLUB — Pearl White + Brand Indigo/Pink ─── */
+/* ─── MATCHLAB CLUB, Pearl White + Brand Indigo/Pink ─── */
 :root {
   --button-outline: rgba(61, 53, 204, 0.14);
   --badge-outline: rgba(61, 53, 204, 0.08);
@@ -76,11 +76,11 @@
   --elevate-2: rgba(61, 53, 204, 0.06);
 
   /* Pearl white base with micro-indigo tint */
-  --background: 248 60% 98.5%;       /* #F8F7FE — pearl white */
-  --foreground: 248 55% 14%;         /* #131234 — dark indigo */
-  --border: 248 40% 90%;             /* #D6D3F5 — soft lavender */
+  --background: 248 60% 98.5%;       /* #F8F7FE, pearl white */
+  --foreground: 248 55% 14%;         /* #131234, dark indigo */
+  --border: 248 40% 90%;             /* #D6D3F5, soft lavender */
 
-  --card: 0 0% 100%;                 /* #FFFFFF — pure white */
+  --card: 0 0% 100%;                 /* #FFFFFF, pure white */
   --card-foreground: 248 55% 14%;
   --card-border: 248 40% 91%;
 
@@ -97,7 +97,7 @@
   --popover-foreground: 248 55% 14%;
   --popover-border: 248 40% 90%;
 
-  /* Deep indigo — brand primary (logo "Match" color) */
+  /* Deep indigo, brand primary (logo "Match" color) */
   --primary: 248 62% 52%;            /* #3D35CC */
   --primary-foreground: 0 0% 100%;
 
@@ -107,7 +107,7 @@
   --muted: 248 45% 96%;              /* #EEEDFB */
   --muted-foreground: 248 20% 50%;   /* #6E6B9A */
 
-  --accent: 326 100% 59%;            /* #FF2D9B — logo hot pink */
+  --accent: 326 100% 59%;            /* #FF2D9B, logo hot pink */
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 72% 52%;
@@ -117,11 +117,11 @@
   --ring: 248 62% 52%;
 
   /* Feature-specific chart palette */
-  --chart-1: 248 62% 52%;   /* indigo — signal/score */
-  --chart-2: 326 100% 59%;  /* hot pink — lab/energy */
-  --chart-3: 190 75% 40%;   /* teal — messages */
-  --chart-4: 152 58% 40%;   /* emerald — growth */
-  --chart-5: 38 90% 50%;    /* amber — action/warmth */
+  --chart-1: 248 62% 52%;   /* indigo, signal/score */
+  --chart-2: 326 100% 59%;  /* hot pink, lab/energy */
+  --chart-3: 190 75% 40%;   /* teal, messages */
+  --chart-4: 152 58% 40%;   /* emerald, growth */
+  --chart-5: 38 90% 50%;    /* amber, action/warmth */
 
   --app-font-sans: 'Plus Jakarta Sans', sans-serif;
   --app-font-serif: 'Playfair Display', serif;
@@ -135,7 +135,7 @@
   --plum: 285 55% 56%;               /* purple mid */
   --violet: 248 62% 52%;             /* indigo primary */
 
-  /* Shadows — light theme, soft indigo-tinted */
+  /* Shadows, light theme, soft indigo-tinted */
   --shadow-sm: 0 1px 4px 0 rgba(61,53,204,0.07);
   --shadow: 0 2px 10px 0 rgba(61,53,204,0.09);
   --shadow-md: 0 4px 20px 0 rgba(61,53,204,0.11);
@@ -144,7 +144,7 @@
   --glow-gold: 0 0 28px hsl(326 100% 59% / 0.20), 0 0 56px hsl(326 100% 59% / 0.07);
   --glow-rose: 0 0 22px hsl(326 100% 59% / 0.20);
 
-  /* ── Brand color tokens (LIGHT) — used by inline styles + chart data arrays.
+  /* ── Brand color tokens (LIGHT), used by inline styles + chart data arrays.
         Reference as `hsl(var(--brand-indigo))` or `hsl(var(--brand-indigo) / 0.25)`. */
   --brand-indigo: 248 62% 52%;
   --brand-pink:   326 100% 59%;
@@ -154,7 +154,7 @@
   --brand-teal:   190 70% 50%;
 }
 
-/* ─── DARK THEME — Dramatic Indigo/Pink (men-at-night) ─── */
+/* ─── DARK THEME, Dramatic Indigo/Pink (men-at-night) ─── */
 .dark {
   --button-outline: rgba(255, 45, 155, 0.22);
   --badge-outline: rgba(124, 92, 245, 0.18);
@@ -162,9 +162,9 @@
   --elevate-1: rgba(255, 255, 255, 0.04);
   --elevate-2: rgba(255, 255, 255, 0.07);
 
-  /* Deep indigo midnight base — not pure black, brand-tinted */
-  --background: 248 55% 5%;          /* #07061A — deep indigo midnight */
-  --foreground: 248 25% 96%;         /* #F1F0FA — soft white */
+  /* Deep indigo midnight base, not pure black, brand-tinted */
+  --background: 248 55% 5%;          /* #07061A, deep indigo midnight */
+  --foreground: 248 25% 96%;         /* #F1F0FA, soft white */
   --border: 248 35% 18%;             /* #1F1B40 */
 
   --card: 248 48% 9%;                /* #0F0D26 */
@@ -184,8 +184,8 @@
   --popover-foreground: 248 25% 96%;
   --popover-border: 248 38% 20%;
 
-  /* Brighter indigo for dark bg — keeps contrast on glow buttons */
-  --primary: 248 75% 65%;            /* #7B5CF5 — luminous indigo */
+  /* Brighter indigo for dark bg, keeps contrast on glow buttons */
+  --primary: 248 75% 65%;            /* #7B5CF5, luminous indigo */
   --primary-foreground: 248 55% 8%;
 
   --secondary: 248 40% 14%;
@@ -194,7 +194,7 @@
   --muted: 248 38% 12%;
   --muted-foreground: 248 15% 65%;
 
-  --accent: 326 100% 65%;            /* #FF4FA8 — hot pink boosted */
+  --accent: 326 100% 65%;            /* #FF4FA8, hot pink boosted */
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 80% 62%;
@@ -209,7 +209,7 @@
   --chart-4: 152 65% 55%;
   --chart-5: 38 95% 60%;
 
-  /* Dark-theme shadows — deep + brand-glow */
+  /* Dark-theme shadows, deep + brand-glow */
   --shadow-sm: 0 1px 4px 0 rgba(0,0,0,0.45);
   --shadow:    0 2px 14px 0 rgba(0,0,0,0.55);
   --shadow-md: 0 4px 24px 0 rgba(0,0,0,0.6);
@@ -218,7 +218,7 @@
   --glow-gold:   0 0 32px hsl(326 100% 65% / 0.5), 0 0 80px hsl(326 100% 65% / 0.18);
   --glow-rose:   0 0 28px hsl(326 100% 65% / 0.55);
 
-  /* ── Brand color tokens (DARK) — luminous variants so charts/dots stay vivid on indigo midnight */
+  /* ── Brand color tokens (DARK), luminous variants so charts/dots stay vivid on indigo midnight */
   --brand-indigo: 248 80% 76%;
   --brand-pink:   326 100% 72%;
   --brand-gold:   43 90% 68%;
@@ -317,7 +317,7 @@
 .dark .via-\[\#FF2D9B\]  { --tw-gradient-via: hsl(326 100% 70%) var(--tw-gradient-via-position) !important; }
 
 /* Bright-pearl panel backgrounds that were written with light-pastel lightness or invalid >100%
-   values — give them a usable dark surface so they don't read as bright white islands on dark. */
+   values, give them a usable dark surface so they don't read as bright white islands on dark. */
 .dark .bg-\[hsl\(248_40\%_92\%\)\],
 .dark .bg-\[hsl\(248_40\%_94\%\)\],
 .dark .bg-\[hsl\(248_40\%_95\%\)\],
@@ -386,7 +386,7 @@
   .bg-white\/8  { background-color: hsl(248 40% 96%) !important; }
   .bg-white\/10 { background-color: hsl(248 40% 95%) !important; }
 
-  /* ── Glass morphism — white frosted glass ── */
+  /* ── Glass morphism, white frosted glass ── */
   .glass {
     background: rgba(255, 255, 255, 0.72);
     backdrop-filter: blur(16px);
@@ -403,7 +403,7 @@
     border: 1px solid rgba(61, 53, 204, 0.12);
   }
 
-  /* Elevated glass — for nested cards */
+  /* Elevated glass, for nested cards */
   .glass-elevated {
     background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(12px);
@@ -412,7 +412,7 @@
     border: 1px solid rgba(61, 53, 204, 0.09);
   }
 
-  /* ── Gradient text — MatchLab brand indigo → pink ── */
+  /* ── Gradient text, MatchLab brand indigo → pink ── */
   .gradient-text {
     background: linear-gradient(135deg, #3D35CC 0%, #FF2D9B 100%);
     -webkit-background-clip: text;
@@ -439,7 +439,7 @@
   .glow-gold   { box-shadow: var(--glow-gold); }
   .glow-rose   { box-shadow: var(--glow-rose); }
 
-  /* ── Mesh background — pearl white with sparkle dots ── */
+  /* ── Mesh background, pearl white with sparkle dots ── */
   .mesh-bg {
     position: relative;
     background:
@@ -478,7 +478,7 @@
     box-shadow: 0 0 0 1px hsl(326 100% 59% / 0.14);
   }
 
-  /* ── Shimmer — iridescent sheen for light backgrounds ── */
+  /* ── Shimmer, iridescent sheen for light backgrounds ── */
   .shimmer {
     position: relative;
     overflow: hidden;
@@ -516,7 +516,7 @@
     animation: gradient-shift 8s ease infinite;
   }
 
-  /* ── Card hover — light theme ── */
+  /* ── Card hover, light theme ── */
   .card-hover {
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   }
@@ -532,7 +532,7 @@
     background: linear-gradient(90deg, transparent 0%, hsl(248 62% 52% / 0.28) 50%, transparent 100%);
   }
 
-  /* ── Decorative orbs — light, soft ── */
+  /* ── Decorative orbs, light, soft ── */
   .orb { border-radius: 50%; filter: blur(80px); pointer-events: none; max-width: 80vw; max-height: 80vw; }
   @media (max-width: 480px) {
     .orb { filter: blur(60px); opacity: 0.7; }
@@ -545,12 +545,12 @@
   /* ── Score ring ── */
   .score-ring-glow { filter: drop-shadow(0 0 12px hsl(248 62% 52% / 0.35)); }
 
-  /* ── Tags — readable on light bg ── */
+  /* ── Tags, readable on light bg ── */
   .tag-strength { background: hsl(152 58% 42% / 0.08); color: hsl(152 58% 32%); border-color: hsl(152 58% 42% / 0.22); }
   .tag-risk     { background: hsl(38 90% 50% / 0.08);  color: hsl(38 90% 38%);  border-color: hsl(38 90% 50% / 0.22); }
   .tag-violet   { background: hsl(248 62% 52% / 0.08); color: hsl(248 62% 42%); border-color: hsl(248 62% 52% / 0.22); }
 
-  /* ── Input fields — light scheme ── */
+  /* ── Input fields, light scheme ── */
   input, textarea, select {
     color-scheme: light;
   }
@@ -614,7 +614,7 @@
   50%       { transform: scale(1.25) rotate(15deg); opacity: 1; }
 }
 
-/* ── Mirror / premium card — light pearl version ── */
+/* ── Mirror / premium card, light pearl version ── */
 .mirror-card {
   background: linear-gradient(135deg,
     rgba(255,255,255,0.96) 0%,

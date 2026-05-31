@@ -91,11 +91,11 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
     `Device:    ${device}`,
     `Location:  ${displayIpLine}`,
     "",
-    "If this was you — you're all set, no action needed.",
+    "If this was you, you're all set, no action needed.",
     "If you don't recognize this sign-in, please change your password immediately.",
     "",
     "Stay safe,",
-    "— The MatchLab Club team",
+    "The MatchLab Club team",
   ].join("\n");
 
   // HTML: show location as the label with raw IP as tooltip; fall back to just the IP
@@ -116,11 +116,11 @@ export async function notifySignInIfNew(input: NotifyLoginInput): Promise<void> 
       <div style="margin-bottom: 6px;"><strong>Device:</strong> ${device}</div>
       <div><strong>Location:</strong> ${htmlIpField}</div>
     </div>
-    <p style="margin: 0 0 12px;">If this was you — you're all set, no action needed.</p>
+    <p style="margin: 0 0 12px;">If this was you, you're all set, no action needed.</p>
     <p style="font-size: 13px; color: #666; margin: 0 0 24px;">
-      If you <em>don't</em> recognize this sign-in, please change your password immediately — someone else may have access to your account.
+      If you <em>don't</em> recognize this sign-in, please change your password immediately, someone else may have access to your account.
     </p>
-    <p style="margin: 0; color: #888; font-size: 13px;">Stay safe,<br/>— The MatchLab Club team</p>
+    <p style="margin: 0; color: #888; font-size: 13px;">Stay safe,<br/>The MatchLab Club team</p>
   </body>
 </html>`;
 

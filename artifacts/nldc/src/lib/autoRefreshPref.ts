@@ -17,7 +17,7 @@ export function saveAutoRefreshPref(enabled: boolean): void {
     if (enabled) window.localStorage.setItem(STORAGE_KEY, "1");
     else window.localStorage.removeItem(STORAGE_KEY);
   } catch {
-    // ignore — preference is a nice-to-have
+    // ignore, preference is a nice-to-have
   }
   try {
     window.dispatchEvent(new CustomEvent("nldc:autoRefreshPrefChanged"));

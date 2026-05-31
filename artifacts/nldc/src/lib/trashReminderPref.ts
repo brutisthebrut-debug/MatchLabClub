@@ -8,7 +8,7 @@ export function loadTrashReminderPref(): boolean {
   if (typeof window === "undefined") return true;
   try {
     const v = window.localStorage.getItem(STORAGE_KEY);
-    // default ON — only off if explicitly set to "0"
+    // default ON, only off if explicitly set to "0"
     return v !== "0";
   } catch {
     return true;
@@ -21,7 +21,7 @@ export function saveTrashReminderPref(enabled: boolean): void {
     if (enabled) window.localStorage.removeItem(STORAGE_KEY);
     else window.localStorage.setItem(STORAGE_KEY, "0");
   } catch {
-    // ignore — preference is a nice-to-have
+    // ignore, preference is a nice-to-have
   }
   try {
     window.dispatchEvent(new CustomEvent("nldc:trashReminderPrefChanged"));

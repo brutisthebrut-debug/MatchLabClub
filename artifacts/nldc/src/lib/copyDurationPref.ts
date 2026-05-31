@@ -33,7 +33,7 @@ export function saveCopyDurationPref(value: CopyDuration): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, value);
   } catch {
-    // ignore — preference is a nice-to-have
+    // ignore, preference is a nice-to-have
   }
   try {
     window.dispatchEvent(new CustomEvent("nldc:copyDurationPrefChanged"));

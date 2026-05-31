@@ -479,7 +479,7 @@ export default function AuditDetailScreen() {
                 style={[styles.staleBannerTitle, { color: colors.foreground }]}
                 testID="text-stale-report-headline"
               >
-                This report was generated {formatStaleAge(reportGeneratedAt)} — regenerate?
+                This report was generated {formatStaleAge(reportGeneratedAt)}, regenerate?
               </Text>
               <Text
                 style={[
@@ -862,7 +862,7 @@ export default function AuditDetailScreen() {
                   { color: colors.mutedForeground },
                 ]}
               >
-                Historical snapshot — your latest report hasn't changed.
+                Historical snapshot, your latest report hasn't changed.
               </Text>
             </View>
             <Pressable
@@ -917,7 +917,7 @@ export default function AuditDetailScreen() {
                     ]}
                   >
                     {versions.length} versions on file
-                    {compareMode ? " — pick 2 to compare" : " — tap any to view"}
+                    {compareMode ? ", pick 2 to compare" : ", tap any to view"}
                   </Text>
                 </View>
                 <Feather

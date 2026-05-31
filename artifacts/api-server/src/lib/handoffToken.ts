@@ -10,7 +10,7 @@ import crypto from "crypto";
  * A handoff token is a short-lived, HMAC-signed envelope around the
  * anonymous-browser token. The original browser can mint one while still
  * anonymous, hand the link to themselves on another device, and the receiving
- * browser can redeem it after signing in — without ever needing the original
+ * browser can redeem it after signing in, without ever needing the original
  * `anon_claim` cookie.
  *
  * Security properties:
@@ -22,7 +22,7 @@ import crypto from "crypto";
  *    only touch rows tagged with the same anonymous token.
  *  - Single-use server-side: every issued token carries a random `jti` and
  *    the redeem route records seen `jti`s in `handoff_token_redemptions`, so
- *    a leaked token literally cannot be redeemed twice — even if the original
+ *    a leaked token literally cannot be redeemed twice, even if the original
  *    browser kept creating new anonymous rows under the same anon token.
  */
 

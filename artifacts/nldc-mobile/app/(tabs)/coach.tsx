@@ -130,19 +130,19 @@ function flipSpeakers(turns: SpeakerTurn[]): SpeakerTurn[] {
 const DEMO_REPLIES: Reply[] = [
   {
     style: "Playful",
-    text: "Okay but you can't drop 'I just got back from Lisbon' and then not tell me your favorite spot — I'm taking notes.",
+    text: "Okay but you can't drop 'I just got back from Lisbon' and then not tell me your favorite spot, I'm taking notes.",
     rationale:
       "Picks up the specific detail they shared, signals interest, gives them an easy thing to respond to.",
   },
   {
     style: "Direct",
-    text: "I'd actually love to hear more about that over a drink this week — Thursday or Friday work?",
+    text: "I'd actually love to hear more about that over a drink this week, Thursday or Friday work?",
     rationale:
       "You've had 4 exchanges of real rapport. The cost of asking is lower than the cost of letting it fade.",
   },
   {
     style: "Warm",
-    text: "I really liked what you said about wanting work to feel meaningful — that landed. What kind of work would feel like that for you?",
+    text: "I really liked what you said about wanting work to feel meaningful, that landed. What kind of work would feel like that for you?",
     rationale:
       "Mirrors their vulnerability with curiosity, not a one-up. Keeps the conversation going somewhere real.",
   },
@@ -476,7 +476,7 @@ export default function CoachScreen() {
         <ScreenHeader
           eyebrow="Message Coach"
           title="Reply that lands"
-          subtitle="Paste what you've got. Get three replies in different tones — copy the one that sounds like you."
+          subtitle="Paste what you've got. Get three replies in different tones, copy the one that sounds like you."
         />
 
         {followUpPrompt ? (
@@ -487,7 +487,7 @@ export default function CoachScreen() {
             ]}
           >
             <Text style={[styles.followUpTitle, { color: colors.foreground }]}>
-              Quick check — did you send that reply?
+              Quick check, did you send that reply?
             </Text>
             <Text
               style={[styles.followUpBody, { color: colors.mutedForeground }]}
@@ -1060,7 +1060,7 @@ export default function CoachScreen() {
               style={[styles.followUpAckText, { color: colors.foreground }]}
             >
               {followUpAck === "sent"
-                ? "Logged — nice work. We'll factor this into your send-through rate."
+                ? "Logged, nice work. We'll factor this into your send-through rate."
                 : "No pressure. We'll remember this and won't nag again on this draft."}
             </Text>
           </View>
@@ -1290,7 +1290,7 @@ export default function CoachScreen() {
                 setContext(t);
                 if (showLineTagger) setShowLineTagger(false);
               }}
-              placeholder="Paste the last few messages — what was said, who said what."
+              placeholder="Paste the last few messages, what was said, who said what."
               placeholderTextColor={colors.mutedForeground}
               multiline
               testID="input-coach-context"
@@ -1371,7 +1371,7 @@ export default function CoachScreen() {
             ) : null}
             {screenshotTurns && screenshotTurns.length > 0 && (
               <Text style={[styles.flipHint, { color: colors.mutedForeground }]}>
-                Speaker order auto-detected — tap "Flip" if the first message is yours.
+                Speaker order auto-detected, tap "Flip" if the first message is yours.
               </Text>
             )}
           </View>
@@ -1434,7 +1434,7 @@ export default function CoachScreen() {
               >
                 {reminderPrefs.enabled
                   ? "We'll check back in if you haven't sent a reply yet."
-                  : "Off — we won't remind you about drafted replies."}
+                  : "Off, we won't remind you about drafted replies."}
               </Text>
             </View>
             <Switch

@@ -67,7 +67,7 @@ function getOrigin(req: Request): string {
 
 function sendExpiredExport(req: Request, res: import("express").Response): void {
   sendExpiredLink(req, res, {
-    pageTitle: "Export link expired — MatchLab Club",
+    pageTitle: "Export link expired, MatchLab Club",
     heading: "This export link can&rsquo;t be used anymore",
     bodyParagraphs: [
       "Data export links are single-use and expire after 30 minutes for your security. This one has either already been opened, expired, or we don&rsquo;t recognize it.",
@@ -339,10 +339,10 @@ async function sendExportReceiptEmail(
     `When: ${when}`,
     "",
     "If you made this request, no action is needed.",
-    "If you didn't, please sign in and change your password — someone else may",
+    "If you didn't, please sign in and change your password, someone else may",
     "have access to your account.",
     "",
-    "— MatchLab Club",
+    "MatchLab Club",
   ].join("\n");
   const html = `<!doctype html>
 <html>
@@ -352,7 +352,7 @@ async function sendExportReceiptEmail(
     <p style="font-size: 13px; color: #666;"><strong>When:</strong> ${when}</p>
     <p>If you made this request, no action is needed.</p>
     <p style="font-size: 13px; color: #666;">
-      If you didn't, please sign in and change your password — someone else may have access to your account.
+      If you didn't, please sign in and change your password, someone else may have access to your account.
     </p>
   </body>
 </html>`;
@@ -382,7 +382,7 @@ router.get("/account/export", async (req, res): Promise<void> => {
   res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
   res.send(JSON.stringify(payload, null, 2));
 
-  // Best-effort export receipt email — don't fail the download if it errors.
+  // Best-effort export receipt email, don't fail the download if it errors.
   if (payload.user.email) {
     try {
       await sendExportReceiptEmail(
@@ -454,10 +454,10 @@ router.post("/account/export/email", async (req, res): Promise<void> => {
     downloadUrl,
     "",
     `This link is single-use and expires in about ${expiresMinutes} minutes.`,
-    "If you didn't request this, you can safely ignore this email — the link",
+    "If you didn't request this, you can safely ignore this email, the link",
     "won't reveal anything until someone visits it, and it will expire on its own.",
     "",
-    "— MatchLab Club",
+    "MatchLab Club",
   ].join("\n");
 
   const html = `<!doctype html>
@@ -630,7 +630,7 @@ router.delete("/account", async (req, res): Promise<void> => {
   // Pivot-era surfaces: wellness self-rating answers + system-derived tags,
   // compatibility compass reads, GDPR imported sources (Hinge etc.), coach
   // follow-up reminders, waitlist signup, and per-device login-notification
-  // throttle rows. All are user-scoped first-party data — must go when the
+  // throttle rows. All are user-scoped first-party data, must go when the
   // account goes. Each is best-effort independent; one failure shouldn't
   // strand the rest.
   await Promise.all([
@@ -687,11 +687,11 @@ router.delete("/account", async (req, res): Promise<void> => {
       `  • ${insights.length} email insight report${insights.length === 1 ? "" : "s"}`,
       "  • Your sign-in sessions and account record",
       "",
-      "If you didn't request this, please reply to this email right away —",
+      "If you didn't request this, please reply to this email right away,",
       "someone else may have had access to your account.",
       "",
       "Thanks for giving us a try.",
-      "— MatchLab Club",
+      "MatchLab Club",
     ].join("\n");
     const html = `<!doctype html>
 <html>
@@ -708,9 +708,9 @@ router.delete("/account", async (req, res): Promise<void> => {
       <li>Your sign-in sessions and account record</li>
     </ul>
     <p style="font-size: 13px; color: #666;">
-      If you didn't request this, please reply to this email right away — someone else may have had access to your account.
+      If you didn't request this, please reply to this email right away, someone else may have had access to your account.
     </p>
-    <p>Thanks for giving us a try.<br/>— MatchLab Club</p>
+    <p>Thanks for giving us a try.<br/>MatchLab Club</p>
   </body>
 </html>`;
     try {
@@ -921,7 +921,7 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .returning({ id: referralsTable.id });
       tables["referrals"] = referralDel.length;
 
-      // purchase_interest has no user_id column — it's keyed by email
+      // purchase_interest has no user_id column, it's keyed by email
       // (lowercased). The founder referrals view uses the same join key to
       // attribute paid status back to a user. We mirror that here so a
       // GDPR delete also wipes any checkout interest rows tied to this
@@ -1052,7 +1052,7 @@ router.get("/me/consent/ai-content", async (req, res): Promise<void> => {
  * POST /api/me/consent/ai-content
  *
  * Grant or revoke account-level AI content consent. Stamps grantedAt on
- * grant and revokedAt on revoke (independently — both timestamps may be set,
+ * grant and revokedAt on revoke (independently, both timestamps may be set,
  * the booleans tells us the current state). Revoke takes effect on the very
  * next consent-gated AI request via the `requireContentConsent` flag in
  * `aiService.generate`.

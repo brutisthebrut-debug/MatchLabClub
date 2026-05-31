@@ -1,7 +1,7 @@
 // Sentry MUST initialize before any application module is imported so its
 // auto-instrumentation can wrap them. In ESM, static imports are evaluated
 // before the importing module's body runs, so we cannot rely on placing
-// `Sentry.init()` at the top of this file — by the time it executes, `app`
+// `Sentry.init()` at the top of this file, by the time it executes, `app`
 // has already been loaded. Isolating init in a separate module that we
 // import first guarantees correct ordering.
 import "./sentry";

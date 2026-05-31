@@ -1,8 +1,8 @@
 /**
  * Shared context builder for AI-powered tools.
  *
- * Combines whatever the user has done in the app — form values, saved results,
- * selected goals, progress entries, and the current tool's name — into a
+ * Combines whatever the user has done in the app, form values, saved results,
+ * selected goals, progress entries, and the current tool's name, into a
  * single, clean object that the server-side AI helper can consume.
  *
  * Pure function. No side effects. Safe to call from any page.
@@ -70,7 +70,7 @@ export function buildAiContext(input: BuildContextInput): BuiltAiContext {
 
 /**
  * Read progress entries that may be cached in localStorage from the
- * ProgressTimeline page. Safe to call from any tool — returns [] if missing
+ * ProgressTimeline page. Safe to call from any tool, returns [] if missing
  * or malformed.
  */
 export function readSavedProgressEntries(): ProgressEntryLike[] {

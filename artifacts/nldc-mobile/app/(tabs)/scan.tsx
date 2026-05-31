@@ -81,14 +81,14 @@ const DEMO_RESULT: ScanResult = {
       "Tone reads warm and self-aware",
     ],
     risks: [
-      "'Recovering perfectionist' is a common phrase — risks reading generic",
+      "'Recovering perfectionist' is a common phrase, risks reading generic",
       "No prompt about future plans or values",
     ],
     bioAudit:
-      "Strong opening with concrete details (Brooklyn, sourdough, film). The closing line is the weakest part — 'curious and kind' is what everyone says. Replace it with one specific behavior you actually want.",
+      "Strong opening with concrete details (Brooklyn, sourdough, film). The closing line is the weakest part, 'curious and kind' is what everyone says. Replace it with one specific behavior you actually want.",
     rewrittenBio:
       "29 · designer in Brooklyn. I bake sourdough on Sundays, shoot film I never develop fast enough, and laugh too loud at my own jokes. Looking for someone who'd rather wander than plan.",
-    messagingStyle: "Open with the film photography — ask what camera they shoot on.",
+    messagingStyle: "Open with the film photography, ask what camera they shoot on.",
     coachingCta: "Tap Coach to draft a first message that actually lands.",
   },
 };
@@ -437,7 +437,7 @@ export default function ScanScreen() {
           {!picked ? (
             <Text style={[styles.hint, { color: colors.mutedForeground }]}>
               Works best on Hinge, Bumble or Tinder screenshots where the bio and
-              prompts are visible. Text is processed on our server — the image is
+              prompts are visible. Text is processed on our server, the image is
               not stored.
             </Text>
           ) : null}
@@ -476,7 +476,7 @@ export default function ScanScreen() {
                 label="Age"
                 value={draft.age}
                 onChangeText={(t) => updateDraft({ age: t.replace(/[^0-9]/g, "") })}
-                placeholder="—"
+                placeholder="-"
                 keyboardType="number-pad"
                 style={styles.ageField}
               />
@@ -545,7 +545,7 @@ export default function ScanScreen() {
             </View>
 
             <PrimaryButton
-              label={scan.isPending ? "Running audit…" : "Looks right — audit it"}
+              label={scan.isPending ? "Running audit…" : "Looks right, audit it"}
               onPress={runAudit}
               loading={scan.isPending}
               icon="zap"

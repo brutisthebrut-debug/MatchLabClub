@@ -66,7 +66,7 @@ export async function cancelTrashReminder() {
  * server so the daily push job can notify the user about expiring audits
  * even when the app is closed.
  *
- * Safe to call repeatedly — idempotent on both the client and server sides.
+ * Safe to call repeatedly, idempotent on both the client and server sides.
  * Does nothing if the user hasn't granted notification permission, if the
  * preference is disabled, or if we're running on a simulator/web.
  */
@@ -92,7 +92,7 @@ export async function registerPushTokenWithServer(): Promise<void> {
     await AsyncStorage.setItem(STORED_PUSH_TOKEN_KEY, token);
     await registerPushToken({ token });
   } catch {
-    // Best-effort — local notifications still work even if server registration fails.
+    // Best-effort, local notifications still work even if server registration fails.
   }
 }
 
@@ -111,7 +111,7 @@ export async function deregisterPushTokenFromServer(): Promise<void> {
     await unregisterPushToken({ token });
     await AsyncStorage.removeItem(STORED_PUSH_TOKEN_KEY);
   } catch {
-    // Best-effort — the server-side job simply won't have this token anymore
+    // Best-effort, the server-side job simply won't have this token anymore
     // once it's been deleted.
   }
 }
@@ -192,7 +192,7 @@ export async function maybeScheduleTrashReminder(
     const lastSig = await AsyncStorage.getItem(LAST_NOTIFIED_KEY);
     if (lastSig === signature) return null;
   } catch {
-    // continue — if storage is broken, falling through to schedule is safer
+    // continue, if storage is broken, falling through to schedule is safer
     // than going silent.
   }
 
@@ -220,7 +220,7 @@ export async function maybeScheduleTrashReminder(
     try {
       await AsyncStorage.setItem(LAST_NOTIFIED_KEY, signature);
     } catch {
-      // ignore — duplicate-fire is the worst case
+      // ignore, duplicate-fire is the worst case
     }
     return id;
   } catch {

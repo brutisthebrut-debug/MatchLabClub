@@ -593,7 +593,7 @@ export default function MatchesScreen() {
         try {
           await generateAuditReport(audit.id);
         } catch {
-          // swallow — background refresh must never block the UI
+          // swallow, background refresh must never block the UI
         }
       }
       if (cancelled) return;
@@ -1435,7 +1435,7 @@ function MatchRow({
       ) : null}
       <View style={[styles.scoreBubble, { borderColor: ring }]}>
         <Text style={[styles.scoreText, { color: ring }]}>
-          {readinessScore ?? "—"}
+          {readinessScore ?? "-"}
         </Text>
       </View>
       <View style={styles.rowBody}>

@@ -188,7 +188,7 @@ export default function ScoreScreen() {
           title="Your Signal Score"
           subtitle={
             summary.demo
-              ? "Demo score — complete a profile audit on the web to see your real number."
+              ? "Demo score, complete a profile audit on the web to see your real number."
               : `Average across ${summary.total} audit${summary.total === 1 ? "" : "s"}: ${summary.average.toFixed(1)}`
           }
         />
@@ -208,7 +208,7 @@ export default function ScoreScreen() {
           >
             <Feather name="alert-circle" size={16} color={colors.destructive} />
             <Text style={[styles.errorText, { color: colors.destructive }]}>
-              Couldn't reach the API — showing demo data.
+              Couldn't reach the API, showing demo data.
             </Text>
           </View>
         ) : null}
@@ -556,7 +556,7 @@ export default function ScoreScreen() {
                   style={[styles.itemText, { color: colors.foreground }]}
                   numberOfLines={2}
                 >
-                  {e.prompt ? `${e.prompt} — ` : ""}
+                  {e.prompt ? `${e.prompt}, ` : ""}
                   {e.body}
                 </Text>
               </View>
@@ -612,7 +612,7 @@ export default function ScoreScreen() {
                   style={[styles.itemText, { color: colors.foreground }]}
                   numberOfLines={2}
                 >
-                  {n.personLabel ? `${n.personLabel} — ` : ""}
+                  {n.personLabel ? `${n.personLabel}, ` : ""}
                   {n.summary}
                 </Text>
               </View>
@@ -797,6 +797,6 @@ function openWeb(path: string): void {
   if (!domain) return;
   const base = domain.startsWith("http") ? domain : `https://${domain}`;
   Linking.openURL(`${base}${path}`).catch(() => {
-    /* user dismissed or no handler — no-op */
+    /* user dismissed or no handler, no-op */
   });
 }

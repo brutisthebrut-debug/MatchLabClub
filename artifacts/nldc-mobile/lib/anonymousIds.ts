@@ -27,7 +27,7 @@ async function safeWrite(key: string, ids: number[]): Promise<void> {
   try {
     await AsyncStorage.setItem(key, JSON.stringify(ids));
   } catch {
-    // storage may be unavailable — swallow
+    // storage may be unavailable, swallow
   }
 }
 

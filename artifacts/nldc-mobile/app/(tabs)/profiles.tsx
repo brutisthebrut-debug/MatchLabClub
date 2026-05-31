@@ -440,7 +440,7 @@ export default function ProfilesScreen() {
         <ScreenHeader
           eyebrow="Saved Profiles"
           title="Profiles to revisit"
-          subtitle="Save any dating profile — yours or a match's — to keep notes and come back later."
+          subtitle="Save any dating profile, yours or a match's, to keep notes and come back later."
         />
 
         <Pressable

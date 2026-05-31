@@ -7,7 +7,7 @@ const HANDOFF_REDEMPTION_CLEANUP_JOB = "handoff_redemption_cleanup";
 
 /**
  * Once a handoff `jti` is past its embedded `exp`, the signed token can no
- * longer verify, so keeping the row around adds no security value — it would
+ * longer verify, so keeping the row around adds no security value, it would
  * just grow unbounded. A small grace window guards against clock skew across
  * processes.
  */

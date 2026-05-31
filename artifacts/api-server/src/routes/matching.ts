@@ -523,7 +523,7 @@ router.put("/me/matching/pool-membership", async (req, res): Promise<void> => {
     nextStatus = "concierge_only";
     req.log.info(
       { userId },
-      "Wingman tier opted into pool — routed to concierge_only for founder review",
+      "Wingman tier opted into pool, routed to concierge_only for founder review",
     );
   }
   const pausedReason =

@@ -1135,7 +1135,7 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
     req.log,
   );
 
-  // Real photo critique via Claude vision — opt-in only, signed-in users only.
+  // Real photo critique via Claude vision, opt-in only, signed-in users only.
   // The image is analyzed in memory and never persisted. When the user has not
   // opted into the deep AI lane (or the call fails / hits the daily cap),
   // photoAnalysis stays absent and the deterministic photoGuidance checklist

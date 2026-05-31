@@ -17,7 +17,7 @@ export async function saveAutoRefreshPref(enabled: boolean): Promise<void> {
     if (enabled) await AsyncStorage.setItem(STORAGE_KEY, "1");
     else await AsyncStorage.removeItem(STORAGE_KEY);
   } catch {
-    // ignore — preference is a nice-to-have
+    // ignore, preference is a nice-to-have
   }
 }
 

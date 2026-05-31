@@ -99,7 +99,7 @@ export async function authMiddleware(
       await touchSession(sid);
     }
   } catch {
-    // Activity tracking is non-critical — never block the request.
+    // Activity tracking is non-critical, never block the request.
   }
 
   next();

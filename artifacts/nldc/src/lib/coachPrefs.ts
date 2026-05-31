@@ -69,7 +69,7 @@ export function saveCoachNudgePrefs(prefs: CoachNudgePrefs): void {
   try {
     window.localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
   } catch {
-    // ignore — preference is a nice-to-have
+    // ignore, preference is a nice-to-have
   }
   try {
     window.dispatchEvent(new CustomEvent(PREFS_CHANGED_EVENT));

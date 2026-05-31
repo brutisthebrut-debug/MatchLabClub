@@ -1,4 +1,4 @@
-// AI Engine — deterministic mock for MVP (no external API keys required)
+// AI Engine, deterministic mock for MVP (no external API keys required)
 // Returns realistic, coaching-quality output for every audit/report/coaching session.
 
 // Bump this string whenever the deterministic engine's output changes in a
@@ -30,7 +30,7 @@ export interface AuditReportOutput {
   /**
    * Real AI vision read of the actual uploaded photo(s). Present only when a
    * signed-in user opted into the deep AI lane and the vision call succeeded.
-   * Absent/null otherwise — the deterministic photoGuidance checklist is the
+   * Absent/null otherwise, the deterministic photoGuidance checklist is the
    * always-on fallback. The raw image is never persisted.
    */
   photoAnalysis?: PhotoAnalysis | null;
@@ -94,11 +94,11 @@ function normalizeApp(raw?: string | null): KnownApp | null {
 function appBioFlavor(app: KnownApp | null, name: string): string {
   switch (app) {
     case "Hinge":
-      return `On Hinge specifically, the prompts do most of the heavy lifting — so ${name}'s bio doesn't need to carry the whole personality on its own, but it does need to set a clear tone the prompts can build on.`;
+      return `On Hinge specifically, the prompts do most of the heavy lifting, so ${name}'s bio doesn't need to carry the whole personality on its own, but it does need to set a clear tone the prompts can build on.`;
     case "Bumble":
-      return `Bumble readers skim bios fast — and the people seeing yours have hundreds of options a week. ${name}'s opening line has to earn the second sentence; without a sharp hook the rest of the profile never gets read.`;
+      return `Bumble readers skim bios fast, and the people seeing yours have hundreds of options a week. ${name}'s opening line has to earn the second sentence; without a sharp hook the rest of the profile never gets read.`;
     case "Tinder":
-      return `Tinder bios are read in the half-second between photo swipes, so ${name} needs one punchy, specific line up top — not a paragraph. Density beats depth here.`;
+      return `Tinder bios are read in the half-second between photo swipes, so ${name} needs one punchy, specific line up top, not a paragraph. Density beats depth here.`;
     default:
       return "";
   }
@@ -108,17 +108,17 @@ function appPromptTips(app: KnownApp | null): { tip: string; rewriteHint: string
   switch (app) {
     case "Hinge":
       return {
-        tip: "Hinge weights prompts heavily in recommendations — make each one a distinct, responsive hook, not three variations of the same vibe.",
-        rewriteHint: "Hinge favors specificity. Pick one weird, true detail per prompt — that's what gets likes attached.",
+        tip: "Hinge weights prompts heavily in recommendations, make each one a distinct, responsive hook, not three variations of the same vibe.",
+        rewriteHint: "Hinge favors specificity. Pick one weird, true detail per prompt, that's what gets likes attached.",
       };
     case "Bumble":
       return {
-        tip: "On Bumble, prompts (and the question prompt at the top) are conversation seeds — leave an obvious opening for them to send the first message.",
-        rewriteHint: "On Bumble the first move is restricted — give the other person something obvious and easy to react to, not abstract values statements.",
+        tip: "On Bumble, prompts (and the question prompt at the top) are conversation seeds, leave an obvious opening for them to send the first message.",
+        rewriteHint: "On Bumble the first move is restricted, give the other person something obvious and easy to react to, not abstract values statements.",
       };
     case "Tinder":
       return {
-        tip: "Tinder doesn't have prompts the way Hinge does — fold these answers into a tight 2-line bio with a clear hook and an implicit question.",
+        tip: "Tinder doesn't have prompts the way Hinge does, fold these answers into a tight 2-line bio with a clear hook and an implicit question.",
         rewriteHint: "Tinder reads in seconds. Use prompt rewrites as raw material for a short, specific bio rather than a full prompt section.",
       };
     default:
@@ -132,11 +132,11 @@ function appPromptTips(app: KnownApp | null): { tip: string; rewriteHint: string
 function appPhotoFlavor(app: KnownApp | null): string | null {
   switch (app) {
     case "Hinge":
-      return "Hinge surfaces individual photos with likes — every single photo needs to stand on its own, since matches may comment on just one.";
+      return "Hinge surfaces individual photos with likes, every single photo needs to stand on its own, since matches may comment on just one.";
     case "Bumble":
-      return "Bumble shows the lead photo at a larger crop than other apps — a slightly tighter framing on your face usually outperforms a wide shot here.";
+      return "Bumble shows the lead photo at a larger crop than other apps, a slightly tighter framing on your face usually outperforms a wide shot here.";
     case "Tinder":
-      return "Tinder is photo-first and swipe-fast. The lead photo isn't 'a' factor — it's almost the entire decision. Treat it accordingly.";
+      return "Tinder is photo-first and swipe-fast. The lead photo isn't 'a' factor, it's almost the entire decision. Treat it accordingly.";
     default:
       return null;
   }
@@ -163,15 +163,15 @@ export function generateAuditReport(params: {
 
   const appFlavor = appBioFlavor(app, name);
   const bioAudits = [
-    `${name}'s bio has genuine personality but is underselling the depth beneath the surface. The opening line doesn't create immediate intrigue — it reads like a summary rather than a hook. Several phrases are common on ${appLabel} to the point of being invisible: "love to travel," "big on authenticity," and "looking for my person" appear in roughly 1 in 3 profiles. The bio doesn't answer the only question that matters: why would someone who has options choose ${name} specifically? There's potential here — it just needs a sharper lens.${appFlavor ? " " + appFlavor : ""}`,
-    `${name}'s current bio tries to cover too much ground and ends up owning none of it. Rather than creating a vivid, specific picture of who ${name} is on their best Tuesday, it lists attributes that could apply to thousands of people. The tone is earnest — which is a strength — but earnest without specific detail reads as generic. The real ${name} is more interesting than this bio suggests. We need to surface that.${appFlavor ? " " + appFlavor : ""}`,
-    `There's a buried lede in ${name}'s profile. The most compelling detail appears in sentence four — that's where the reader's attention should land first. The profile structure is inverted: it starts with abstractions (values, personality descriptors) and saves the specifics for the end, when many readers have already moved on. ${appLabel} profiles reward novelty and specificity in the first eight words.${appFlavor ? " " + appFlavor : ""}`,
+    `${name}'s bio has genuine personality but is underselling the depth beneath the surface. The opening line doesn't create immediate intrigue, it reads like a summary rather than a hook. Several phrases are common on ${appLabel} to the point of being invisible: "love to travel," "big on authenticity," and "looking for my person" appear in roughly 1 in 3 profiles. The bio doesn't answer the only question that matters: why would someone who has options choose ${name} specifically? There's potential here, it just needs a sharper lens.${appFlavor ? " " + appFlavor : ""}`,
+    `${name}'s current bio tries to cover too much ground and ends up owning none of it. Rather than creating a vivid, specific picture of who ${name} is on their best Tuesday, it lists attributes that could apply to thousands of people. The tone is earnest, which is a strength, but earnest without specific detail reads as generic. The real ${name} is more interesting than this bio suggests. We need to surface that.${appFlavor ? " " + appFlavor : ""}`,
+    `There's a buried lede in ${name}'s profile. The most compelling detail appears in sentence four, that's where the reader's attention should land first. The profile structure is inverted: it starts with abstractions (values, personality descriptors) and saves the specifics for the end, when many readers have already moved on. ${appLabel} profiles reward novelty and specificity in the first eight words.${appFlavor ? " " + appFlavor : ""}`,
   ];
 
   const rewrittenBios = [
-    `I make a genuinely great first date — I'll pick somewhere unexpected, I'll actually be listening, and I'll probably make you laugh at something you didn't expect to laugh at. I'm the kind of person who takes ${params.datingGoal === "find a relationship" ? "connection seriously" : "good moments seriously"} — which means I'm not here to waste either of our time. Currently: too invested in my sourdough starter, rewatching things I've already seen, and trying to find someone worth getting off the couch for. If any of that sounds appealing, let's find out.`,
-    `Professionally: I make things happen. Personally: I make breakfast for people I like and take forever to leave a bookshop. I'm ${params.datingGoal === "casual dating" ? "not looking for anything heavy — just someone worth actually spending time with" : "looking for something real — not the Instagram version of a relationship, the actual thing"}. I'm easy to talk to, terrible at small talk, and very good at the second date. Let's skip the awkward stuff and get to the good part.`,
-    `The facts: I'm someone who shows up, follows through, and genuinely enjoys other people — which, it turns out, is rarer than it should be. I'll plan the date, bring the energy, and remember what you told me three conversations ago. I'm ${params.currentApps.includes("Hinge") ? "on Hinge" : "on here"} because I'm actually trying, not just bored. If you're the same, we should probably talk.`,
+    `I make a genuinely great first date, I'll pick somewhere unexpected, I'll actually be listening, and I'll probably make you laugh at something you didn't expect to laugh at. I'm the kind of person who takes ${params.datingGoal === "find a relationship" ? "connection seriously" : "good moments seriously"}, which means I'm not here to waste either of our time. Currently: too invested in my sourdough starter, rewatching things I've already seen, and trying to find someone worth getting off the couch for. If any of that sounds appealing, let's find out.`,
+    `Professionally: I make things happen. Personally: I make breakfast for people I like and take forever to leave a bookshop. I'm ${params.datingGoal === "casual dating" ? "not looking for anything heavy, just someone worth actually spending time with" : "looking for something real, not the Instagram version of a relationship, the actual thing"}. I'm easy to talk to, terrible at small talk, and very good at the second date. Let's skip the awkward stuff and get to the good part.`,
+    `The facts: I'm someone who shows up, follows through, and genuinely enjoys other people, which, it turns out, is rarer than it should be. I'll plan the date, bring the energy, and remember what you told me three conversations ago. I'm ${params.currentApps.includes("Hinge") ? "on Hinge" : "on here"} because I'm actually trying, not just bored. If you're the same, we should probably talk.`,
   ];
 
   const promptTips = appPromptTips(app);
@@ -187,7 +187,7 @@ export function generateAuditReport(params: {
           original: params.prompts.split("\n")[1] || "I'm looking for...",
           rewritten:
             "Someone who laughs before the punchline lands. We'll get along immediately.",
-          tip: promptTips.rewriteHint || "Prompts are conversation starters — end with something they can respond to.",
+          tip: promptTips.rewriteHint || "Prompts are conversation starters, end with something they can respond to.",
         },
         {
           original: params.prompts.split("\n")[2] || "A green flag I look for...",
@@ -200,10 +200,10 @@ export function generateAuditReport(params: {
         {
           original: "(No prompts provided)",
           rewritten: app === "Tinder"
-            ? "I'll show you rather than tell you — first message gets a real response. (Tinder: keep this as the bio, no prompts needed.)"
-            : "I'll show you rather than tell you — first message gets a real response.",
+            ? "I'll show you rather than tell you, first message gets a real response. (Tinder: keep this as the bio, no prompts needed.)"
+            : "I'll show you rather than tell you, first message gets a real response.",
           tip: app === "Tinder"
-            ? "Tinder doesn't surface prompts the way Hinge does — a single sharp bio line does more work."
+            ? "Tinder doesn't surface prompts the way Hinge does, a single sharp bio line does more work."
             : `Add 2-3 prompts to dramatically increase ${name}'s match-to-conversation conversion rate on ${appLabel}.`,
         },
       ];
@@ -213,21 +213,21 @@ export function generateAuditReport(params: {
       category: "Lead photo",
       status: "needs_work" as const,
       advice:
-        "Your first photo should be a clear, well-lit face shot where you're visibly enjoying yourself — not posing. Squinting at the sun or a blurry group shot loses matches before they read a word.",
+        "Your first photo should be a clear, well-lit face shot where you're visibly enjoying yourself, not posing. Squinting at the sun or a blurry group shot loses matches before they read a word.",
     },
     {
       category: "Social proof shot",
       status: score > 65 ? ("good" as const) : ("missing" as const),
       advice:
         score > 65
-          ? "Good — you have a photo showing you with other people. This signals that others enjoy your company."
-          : "Add one photo of you with friends or family. It signals social value and warmth — two of the top three traits people screen for.",
+          ? "Good, you have a photo showing you with other people. This signals that others enjoy your company."
+          : "Add one photo of you with friends or family. It signals social value and warmth, two of the top three traits people screen for.",
     },
     {
       category: "Action/lifestyle shot",
       status: score > 70 ? ("good" as const) : ("needs_work" as const),
       advice:
-        "Show yourself doing something you actually love — not a gym mirror selfie. Cooking, hiking, playing music, traveling. Activity photos generate 3x more openers than static poses.",
+        "Show yourself doing something you actually love, not a gym mirror selfie. Cooking, hiking, playing music, traveling. Activity photos generate 3x more openers than static poses.",
     },
     {
       category: "Full-body photo",
@@ -239,7 +239,7 @@ export function generateAuditReport(params: {
       category: "Quality and lighting",
       status: "needs_work" as const,
       advice:
-        "At least 3 of your photos should be taken in natural daylight. Avoid heavy filters — they read as insecure. Phone cameras in good light beat DSLR cameras in bad light.",
+        "At least 3 of your photos should be taken in natural daylight. Avoid heavy filters, they read as insecure. Phone cameras in good light beat DSLR cameras in bad light.",
     },
     ...(appPhotoFlavor(app)
       ? [
@@ -271,7 +271,7 @@ export function generateAuditReport(params: {
       priority: 3,
       title: "Add two specific prompts",
       description:
-        "Choose prompts that end with an implicit invitation to respond — avoid lists and abstract values statements.",
+        "Choose prompts that end with an implicit invitation to respond, avoid lists and abstract values statements.",
       timeframe: "This week",
     },
     {
@@ -294,19 +294,19 @@ export function generateAuditReport(params: {
     readinessScore: score,
     overallGrade: grade,
     strengths: [
-      "Genuine warmth comes through — you don't read as transactional or performative",
-      "Clear sense of what you're looking for — intention is attractive",
-      `Active on ${params.currentApps.length} ${params.currentApps.length === 1 ? "platform" : "platforms"} — giving yourself real chances`,
+      "Genuine warmth comes through, you don't read as transactional or performative",
+      "Clear sense of what you're looking for, intention is attractive",
+      `Active on ${params.currentApps.length} ${params.currentApps.length === 1 ? "platform" : "platforms"}, giving yourself real chances`,
       "Openness and self-awareness present in your writing voice",
     ],
     risks: [
-      "Generic phrases dilute the profile — several lines appear in thousands of other bios",
+      "Generic phrases dilute the profile, several lines appear in thousands of other bios",
       "Not enough specificity to stand out in a high-volume pool",
       "Opening line doesn't create immediate intrigue or curiosity",
       ...(params.biggestChallenge === "not getting matches"
         ? ["Profile optimization likely needed before increasing swipe volume"]
         : params.biggestChallenge === "ghosted"
-        ? ["Messaging strategy needs attention — matches converting poorly to conversations"]
+        ? ["Messaging strategy needs attention, matches converting poorly to conversations"]
         : []),
     ],
     bioAudit: bioAudits[Math.floor(score % 3)],
@@ -316,10 +316,10 @@ export function generateAuditReport(params: {
     actionPlan: actionPlanItems,
     messagingStyle:
       params.recentMessageSample && params.recentMessageSample.length > 50
-        ? `Based on your message sample, your communication style leans ${score > 65 ? "warm and genuine" : "cautious and surface-level"}. ${score > 65 ? "You ask good questions but sometimes wait too long to suggest escalating to a date — the window closes faster than most people think." : "You're holding back — your messages are safe but not memorable. The goal isn't to be impressive, it's to be interesting. Specificity and light playfulness dramatically improve response rates."}`
-        : "No message sample provided. Add a conversation snippet in your next audit to unlock personalized messaging analysis. In the meantime: the single highest-ROI change most people can make is in the first message — it should reference something specific from their profile, ask one question, and land in 2 sentences or less.",
+        ? `Based on your message sample, your communication style leans ${score > 65 ? "warm and genuine" : "cautious and surface-level"}. ${score > 65 ? "You ask good questions but sometimes wait too long to suggest escalating to a date, the window closes faster than most people think." : "You're holding back, your messages are safe but not memorable. The goal isn't to be impressive, it's to be interesting. Specificity and light playfulness dramatically improve response rates."}`
+        : "No message sample provided. Add a conversation snippet in your next audit to unlock personalized messaging analysis. In the meantime: the single highest-ROI change most people can make is in the first message, it should reference something specific from their profile, ask one question, and land in 2 sentences or less.",
     coachingCta:
-      "Ready to go deeper? Book a 1:1 coaching session and we'll rebuild your entire dating strategy — from photos to first messages to closing for dates. Most clients see a 2-3x improvement in meaningful matches within 30 days.",
+      "Ready to go deeper? Book a 1:1 coaching session and we'll rebuild your entire dating strategy, from photos to first messages to closing for dates. Most clients see a 2-3x improvement in meaningful matches within 30 days.",
     engineVersion: ENGINE_VERSION,
   };
 }
@@ -335,11 +335,11 @@ function detectAppFromText(text: string): KnownApp | null {
 function appCoachTone(app: KnownApp | null, base: string): string {
   switch (app) {
     case "Hinge":
-      return `${base} Hinge conversations reward referencing something specific from their prompts — it signals you actually read the profile.`;
+      return `${base} Hinge conversations reward referencing something specific from their prompts, it signals you actually read the profile.`;
     case "Bumble":
-      return `${base} On Bumble the 24-hour clock matters — don't let momentum die between sessions, but don't overreact to a slow reply either.`;
+      return `${base} On Bumble the 24-hour clock matters, don't let momentum die between sessions, but don't overreact to a slow reply either.`;
     case "Tinder":
-      return `${base} Tinder conversations get stale fast — move toward concrete plans within the first dozen messages or the thread dies.`;
+      return `${base} Tinder conversations get stale fast, move toward concrete plans within the first dozen messages or the thread dies.`;
     default:
       return base;
   }
@@ -348,7 +348,7 @@ function appCoachTone(app: KnownApp | null, base: string): string {
 function appCoachRedFlags(app: KnownApp | null): string[] {
   switch (app) {
     case "Hinge":
-      return ["On Hinge, ignoring the prompt they liked is a missed hook — anchor your next reply to it"];
+      return ["On Hinge, ignoring the prompt they liked is a missed hook, anchor your next reply to it"];
     case "Bumble":
       return ["On Bumble, letting an opening thread go cold past 24 hours often resets the dynamic entirely"];
     case "Tinder":
@@ -360,17 +360,17 @@ function appCoachRedFlags(app: KnownApp | null): string[] {
 
 function appCoachTip(app: KnownApp | null, goal: string, name: string): string {
   const baseDate =
-    "a warm-up, not an interview — but they also end with plans, not just good vibes. After 5-7 messages of solid rapport, it's time to ask. The cost of asking is almost always lower than people think.";
+    "a warm-up, not an interview, but they also end with plans, not just good vibes. After 5-7 messages of solid rapport, it's time to ask. The cost of asking is almost always lower than people think.";
   const baseKeep =
-    "tennis — both people bringing something to every exchange. Make sure you're returning with energy, not just keeping it alive.";
+    "tennis, both people bringing something to every exchange. Make sure you're returning with energy, not just keeping it alive.";
   const base = `The best conversations feel like ${goal === "get a date" ? baseDate : baseKeep}`;
   switch (app) {
     case "Hinge":
-      return `${base} With ${name} on Hinge, tie your date suggestion back to whatever prompt or photo you originally liked — it makes the ask feel earned, not random.`;
+      return `${base} With ${name} on Hinge, tie your date suggestion back to whatever prompt or photo you originally liked, it makes the ask feel earned, not random.`;
     case "Bumble":
-      return `${base} On Bumble, ${name} expects you to bring some energy back quickly — concise, specific replies outperform long thoughtful essays here.`;
+      return `${base} On Bumble, ${name} expects you to bring some energy back quickly, concise, specific replies outperform long thoughtful essays here.`;
     case "Tinder":
-      return `${base} On Tinder, ${name} is talking to a lot of people — a confident, low-friction plan ("drinks Thursday, I'll pick the spot") usually beats an open-ended "what do you like to do?"`;
+      return `${base} On Tinder, ${name} is talking to a lot of people, a confident, low-friction plan ("drinks Thursday, I'll pick the spot") usually beats an open-ended "what do you like to do?"`;
     default:
       return base;
   }
@@ -395,8 +395,8 @@ export function generateMessageCoaching(params: {
   const baseTone =
     params.conversationContext.toLowerCase().includes("haha") ||
     params.conversationContext.toLowerCase().includes("lol")
-      ? "Light and playful — this is working. Don't overthink it, just keep the energy up and steer toward a date."
-      : "Measured and thoughtful. There's mutual interest here but neither person has broken the surface yet. Someone needs to go first — let it be you.";
+      ? "Light and playful, this is working. Don't overthink it, just keep the energy up and steer toward a date."
+      : "Measured and thoughtful. There's mutual interest here but neither person has broken the surface yet. Someone needs to go first, let it be you.";
 
   const baseRedFlags =
     isShortMessage && !isQuestion
@@ -406,24 +406,24 @@ export function generateMessageCoaching(params: {
         ]
       : params.yourLastMessage.toLowerCase().includes("haha") && params.yourLastMessage.length < 20
       ? [
-          "'Haha' as a standalone response signals you read it but had nothing to add — it deflates energy",
+          "'Haha' as a standalone response signals you read it but had nothing to add, it deflates energy",
           "Reactive messages (laughing at what they said without building on it) stall conversations",
         ]
       : [];
 
   return {
-    analysis: `This conversation with ${name}${appPhrase} has ${params.conversationContext.length > 200 ? "solid momentum — there's genuine back-and-forth happening" : "potential, but it needs a boost"}. Your last message ${isShortMessage ? "is a bit brief — it doesn't give them much to work with and puts the conversational weight entirely on them" : "shows effort, which is good"}. ${isQuestion ? "Asking a question is smart, but make sure it's specific enough that there's no 'safe' one-word answer" : "Consider adding a question or prompt to make it easy for them to respond"}. The goal of ${goal} is achievable — here's how to get there.`,
+    analysis: `This conversation with ${name}${appPhrase} has ${params.conversationContext.length > 200 ? "solid momentum, there's genuine back-and-forth happening" : "potential, but it needs a boost"}. Your last message ${isShortMessage ? "is a bit brief, it doesn't give them much to work with and puts the conversational weight entirely on them" : "shows effort, which is good"}. ${isQuestion ? "Asking a question is smart, but make sure it's specific enough that there's no 'safe' one-word answer" : "Consider adding a question or prompt to make it easy for them to respond"}. The goal of ${goal} is achievable, here's how to get there.`,
     suggestedReplies: [
       {
         style: "Playful",
-        text: `Okay but real question — ${name}, what's your actual unpopular opinion? I'm collecting them.`,
+        text: `Okay but real question, ${name}, what's your actual unpopular opinion? I'm collecting them.`,
         rationale:
           "Creates an easy, low-stakes reply opportunity. Playful challenge generates more response than a sincere question.",
       },
       {
         style: "Direct",
         text: `I'd rather show you than keep describing it. Are you free this week, ${name}?`,
-        rationale: `If the goal is to get a date, asking directly after establishing rapport converts at 3x the rate of waiting. ${name} will respect the directness${app ? ` — and${appPhrase} that kind of clarity is rare` : ""}.`,
+        rationale: `If the goal is to get a date, asking directly after establishing rapport converts at 3x the rate of waiting. ${name} will respect the directness${app ? `, and${appPhrase} that kind of clarity is rare` : ""}.`,
       },
       {
         style: "Warm",
@@ -434,12 +434,12 @@ export function generateMessageCoaching(params: {
       {
         style: "Date Ask",
         text: `${name}, I'd genuinely love to meet you. Want to grab coffee or a drink this week? I'll pick somewhere good.`,
-        rationale: `After solid rapport, asking directly converts far better than hinting${appPhrase ? ` — and${appPhrase}, plans-first messages beat more chat almost every time` : ""}. Moving to real life is the whole point — the cost of asking is almost always lower than people think.`,
+        rationale: `After solid rapport, asking directly converts far better than hinting${appPhrase ? `, and${appPhrase}, plans-first messages beat more chat almost every time` : ""}. Moving to real life is the whole point, the cost of asking is almost always lower than people think.`,
       },
       {
         style: "Graceful Exit",
         text: `${name}, it's been genuinely nice chatting. I think we might be in different places right now, but I'm really glad we connected.`,
-        rationale: `Sometimes the kindest move is a clear, warm close. This ends things with dignity for both people — no ambiguity, no hard feelings, no bridge burned.`,
+        rationale: `Sometimes the kindest move is a clear, warm close. This ends things with dignity for both people, no ambiguity, no hard feelings, no bridge burned.`,
       },
     ],
     tone: appCoachTone(app, baseTone),
@@ -475,20 +475,20 @@ function insightSourcePatternImpact(source: InsightSource | null, isLongMessages
   switch (source) {
     case "Hinge":
       return isLongMessages
-        ? "On Hinge, long messages early can outpace the conversational rhythm — readers expect punchy, prompt-anchored replies in the first few exchanges."
-        : "On Hinge, concise replies work — but make sure each one anchors back to a prompt or photo so the conversation stays specific.";
+        ? "On Hinge, long messages early can outpace the conversational rhythm, readers expect punchy, prompt-anchored replies in the first few exchanges."
+        : "On Hinge, concise replies work, but make sure each one anchors back to a prompt or photo so the conversation stays specific.";
     case "Bumble":
       return isLongMessages
-        ? "On Bumble the opener is restricted to one side — long replies can feel like pressure, so keep early messages snappy and let them pick the thread."
-        : "On Bumble the 24-hour clock rewards your concise style — just make sure replies still bring fresh energy, not just acknowledgement.";
+        ? "On Bumble the opener is restricted to one side, long replies can feel like pressure, so keep early messages snappy and let them pick the thread."
+        : "On Bumble the 24-hour clock rewards your concise style, just make sure replies still bring fresh energy, not just acknowledgement.";
     case "Tinder":
       return isLongMessages
-        ? "On Tinder, multi-paragraph messages get skimmed — the platform rewards quick, sharp exchanges that move toward a plan fast."
-        : "On Tinder, your concise style fits the platform — just don't let so many short turns pass that the thread dies before you suggest plans.";
+        ? "On Tinder, multi-paragraph messages get skimmed, the platform rewards quick, sharp exchanges that move toward a plan fast."
+        : "On Tinder, your concise style fits the platform, just don't let so many short turns pass that the thread dies before you suggest plans.";
     case "iMessage":
-      return "Once you're in iMessage, you've already cleared the hardest bar — protect that by keeping pacing relaxed and not over-texting between days.";
+      return "Once you're in iMessage, you've already cleared the hardest bar, protect that by keeping pacing relaxed and not over-texting between days.";
     case "Email":
-      return "Email is a slower, more deliberate medium — your tone here will read more carefully than on apps, so word choice matters more than usual.";
+      return "Email is a slower, more deliberate medium, your tone here will read more carefully than on apps, so word choice matters more than usual.";
     default:
       return null;
   }
@@ -497,15 +497,15 @@ function insightSourcePatternImpact(source: InsightSource | null, isLongMessages
 function insightSourceGrowthArea(source: InsightSource | null): string | null {
   switch (source) {
     case "Hinge":
-      return "On Hinge, tie at least one reply back to whatever prompt or photo originally got the like — it consistently lifts response quality.";
+      return "On Hinge, tie at least one reply back to whatever prompt or photo originally got the like, it consistently lifts response quality.";
     case "Bumble":
-      return "On Bumble, when they open, your reply within the first few hours sets the tone — concise specifics beat long appreciative essays.";
+      return "On Bumble, when they open, your reply within the first few hours sets the tone, concise specifics beat long appreciative essays.";
     case "Tinder":
-      return "On Tinder, set a soft deadline in your head — if you're past a dozen messages without suggesting plans, the thread is dying.";
+      return "On Tinder, set a soft deadline in your head, if you're past a dozen messages without suggesting plans, the thread is dying.";
     case "iMessage":
-      return "Once you're texting, stop performing — the conversation should feel lighter and more spontaneous, not more polished, than the app phase.";
+      return "Once you're texting, stop performing, the conversation should feel lighter and more spontaneous, not more polished, than the app phase.";
     case "Email":
-      return "Email rewards brevity even more than apps — most threads die from length, not from being too direct.";
+      return "Email rewards brevity even more than apps, most threads die from length, not from being too direct.";
     default:
       return null;
   }
@@ -514,15 +514,15 @@ function insightSourceGrowthArea(source: InsightSource | null): string | null {
 function insightSourceProfileTip(source: InsightSource | null): string | null {
   switch (source) {
     case "Hinge":
-      return "Your Hinge prompts are doing most of the matchmaking — rotate one every two weeks and watch which versions actually pull likes.";
+      return "Your Hinge prompts are doing most of the matchmaking, rotate one every two weeks and watch which versions actually pull likes.";
     case "Bumble":
-      return "On Bumble, the lead photo and first bio line do nearly all the work — make sure both can stand on their own in under two seconds.";
+      return "On Bumble, the lead photo and first bio line do nearly all the work, make sure both can stand on their own in under two seconds.";
     case "Tinder":
-      return "On Tinder, a two-line bio with one specific hook will outperform a thoughtful paragraph almost every time — density beats depth.";
+      return "On Tinder, a two-line bio with one specific hook will outperform a thoughtful paragraph almost every time, density beats depth.";
     case "iMessage":
-      return "Since you're getting numbers, your profile is converting — the next leverage point is upgrading the app-to-text transition, not the bio.";
+      return "Since you're getting numbers, your profile is converting, the next leverage point is upgrading the app-to-text transition, not the bio.";
     case "Email":
-      return "If conversations are moving to email, your profile is doing fine — focus coaching on tightening replies, not rewriting the bio.";
+      return "If conversations are moving to email, your profile is doing fine, focus coaching on tightening replies, not rewriting the bio.";
     default:
       return null;
   }
@@ -531,15 +531,15 @@ function insightSourceProfileTip(source: InsightSource | null): string | null {
 function insightSourceSummaryAddendum(source: InsightSource | null): string {
   switch (source) {
     case "Hinge":
-      return " Tuned to Hinge conventions — prompt-anchored replies and individual-photo specificity weighted heavily.";
+      return " Tuned to Hinge conventions, prompt-anchored replies and individual-photo specificity weighted heavily.";
     case "Bumble":
-      return " Tuned to Bumble dynamics — opener-restricted timing and lead-photo weight factored in.";
+      return " Tuned to Bumble dynamics, opener-restricted timing and lead-photo weight factored in.";
     case "Tinder":
-      return " Tuned to Tinder pacing — fast-decay thread expectations and plans-first asks weighted in.";
+      return " Tuned to Tinder pacing, fast-decay thread expectations and plans-first asks weighted in.";
     case "iMessage":
-      return " Calibrated for iMessage — you've already cleared the app, so the leverage is now in pacing and tone, not pitch.";
+      return " Calibrated for iMessage, you've already cleared the app, so the leverage is now in pacing and tone, not pitch.";
     case "Email":
-      return " Calibrated for email — slower cadence, more deliberate phrasing, and brevity over polish.";
+      return " Calibrated for email, slower cadence, more deliberate phrasing, and brevity over polish.";
     default:
       return "";
   }
@@ -572,10 +572,10 @@ export function generateEmailInsightAnalysis(params: {
     content.includes("kidding");
 
   const attachmentStyles = [
-    "Secure — you communicate directly and recover well from tension",
-    "Anxiously attached — you seek reassurance and sometimes over-explain",
-    "Avoidant — you pull back when conversations get emotionally heavy",
-    "Fearful-avoidant — you want closeness but protect yourself from it",
+    "Secure, you communicate directly and recover well from tension",
+    "Anxiously attached, you seek reassurance and sometimes over-explain",
+    "Avoidant, you pull back when conversations get emotionally heavy",
+    "Fearful-avoidant, you want closeness but protect yourself from it",
   ];
 
   const styleIndex = hasEmotional
@@ -590,10 +590,10 @@ export function generateEmailInsightAnalysis(params: {
     communicationPatterns: [
       {
         pattern: isLongMessages ? "Extended message length" : "Concise messaging style",
-        frequency: isLongMessages ? "High — most messages are multi-paragraph" : "Consistent — you tend to keep messages short",
+        frequency: isLongMessages ? "High, most messages are multi-paragraph" : "Consistent, you tend to keep messages short",
         impact: (() => {
           const base = isLongMessages
-            ? "Long messages signal investment but can create pressure — the other person may feel they owe an equivalent response, which is exhausting over time."
+            ? "Long messages signal investment but can create pressure, the other person may feel they owe an equivalent response, which is exhausting over time."
             : "Concise messages are easy to respond to, but may read as low investment. Try occasionally matching their energy by going a little longer.";
           const flavor = insightSourcePatternImpact(source, isLongMessages);
           return flavor ? `${base} ${flavor}` : base;
@@ -603,38 +603,38 @@ export function generateEmailInsightAnalysis(params: {
         pattern: hasQuestions > 5 ? "Question-heavy style" : "Statement-forward style",
         frequency:
           hasQuestions > 5
-            ? `High — ${hasQuestions} questions detected in this sample`
-            : "Low — fewer than expected questions in your messages",
+            ? `High, ${hasQuestions} questions detected in this sample`
+            : "Low, fewer than expected questions in your messages",
         impact:
           hasQuestions > 5
-            ? "Asking questions is a strong instinct — it shows curiosity. But too many in a row can feel like an interview. Balance questions with statements that reveal something about you."
+            ? "Asking questions is a strong instinct, it shows curiosity. But too many in a row can feel like an interview. Balance questions with statements that reveal something about you."
             : "More questions would give the other person more ways to engage. Try ending more messages with a genuine question about them.",
       },
       {
         pattern: hasHumor ? "Humor as a connector" : "Earnest/direct communication",
-        frequency: hasHumor ? "Present — humor appears naturally throughout" : "Low — limited use of levity",
+        frequency: hasHumor ? "Present, humor appears naturally throughout" : "Low, limited use of levity",
         impact: hasHumor
-          ? "Great. Humor is one of the strongest accelerants of attraction and trust. Keep it calibrated to their response — mirror their energy."
-          : "Adding occasional lightness can lower defenses and make conversations feel more alive. You don't have to be funny — just human.",
+          ? "Great. Humor is one of the strongest accelerants of attraction and trust. Keep it calibrated to their response, mirror their energy."
+          : "Adding occasional lightness can lower defenses and make conversations feel more alive. You don't have to be funny, just human.",
       },
       {
         pattern: hasEmotional ? "Emotionally expressive" : "Emotionally restrained",
         frequency: hasEmotional
-          ? "High — emotional language appears frequently"
-          : "Low — emotional language is largely absent",
+          ? "High, emotional language appears frequently"
+          : "Low, emotional language is largely absent",
         impact: hasEmotional
-          ? "Emotional openness builds deep connection quickly — but it needs to be paced. If it appears very early, it can feel intense. Let it emerge naturally."
-          : "Some emotional expression helps others feel safe to open up with you. Try naming how you feel occasionally — it's a signal that you're paying attention.",
+          ? "Emotional openness builds deep connection quickly, but it needs to be paced. If it appears very early, it can feel intense. Let it emerge naturally."
+          : "Some emotional expression helps others feel safe to open up with you. Try naming how you feel occasionally, it's a signal that you're paying attention.",
       },
     ],
     attachmentStyle: attachmentStyles[styleIndex],
     strengths: [
       hasHumor
         ? "Natural use of humor to create warmth and ease"
-        : "Clear and direct — people know where they stand with you",
+        : "Clear and direct, people know where they stand with you",
       isLongMessages
-        ? "Demonstrable investment — you take conversations seriously"
-        : "Efficient communicator — easy to keep up with",
+        ? "Demonstrable investment, you take conversations seriously"
+        : "Efficient communicator, easy to keep up with",
       hasQuestions > 3
         ? "Genuine curiosity about the other person"
         : "Calm, assured presence in written communication",
@@ -642,37 +642,37 @@ export function generateEmailInsightAnalysis(params: {
     ],
     growthAreas: [
       isLongMessages
-        ? "Practice the 'one breath' edit — if a message takes more than one breath to read aloud, shorten it"
+        ? "Practice the 'one breath' edit, if a message takes more than one breath to read aloud, shorten it"
         : "Try occasionally matching someone's energy by elaborating when they go deep",
       hasEmotional && styleIndex === 1
-        ? "Notice patterns of seeking reassurance — the goal is to self-soothe first, then communicate"
+        ? "Notice patterns of seeking reassurance, the goal is to self-soothe first, then communicate"
         : "Practice naming one specific emotion per conversation thread",
       hasQuestions < 3
-        ? "Ask more questions — curiosity is irresistible when it feels genuine"
-        : "Balance questions with personal disclosures — reciprocity matters",
+        ? "Ask more questions, curiosity is irresistible when it feels genuine"
+        : "Balance questions with personal disclosures, reciprocity matters",
       ...(insightSourceGrowthArea(source) ? [insightSourceGrowthArea(source) as string] : []),
     ],
     datingProfileTips: [
       hasHumor
-        ? "Bring the humor into your profile — it's one of your strongest assets. One specific, funny detail beats three generic lines."
-        : "Your profile likely reads as earnest. Add one line with lightness — it will disarm readers who are on defense.",
+        ? "Bring the humor into your profile, it's one of your strongest assets. One specific, funny detail beats three generic lines."
+        : "Your profile likely reads as earnest. Add one line with lightness, it will disarm readers who are on defense.",
       isLongMessages
-        ? "Your bio may be too long. Cut it by 30% and see if it gets more matches — less is almost always more."
+        ? "Your bio may be too long. Cut it by 30% and see if it gets more matches, less is almost always more."
         : "You might be under-writing your bio. Give readers something specific to respond to.",
       styleIndex === 1
         ? "Lead with who you are, not what you're looking for. Profiles that open with needs signal low confidence."
-        : "Your restraint can read as confidence — lean into that. Be direct about what you want.",
+        : "Your restraint can read as confidence, lean into that. Be direct about what you want.",
       ...(insightSourceProfileTip(source)
         ? [insightSourceProfileTip(source) as string]
-        : ["Add at least one prompt that ends with an implicit question — it converts profile views to messages far better than static statements."]),
+        : ["Add at least one prompt that ends with an implicit question, it converts profile views to messages far better than static statements."]),
     ],
-    summary: `Based on ${wordCount} words of conversation from ${params.sourceLabel}, your communication fingerprint is: ${attachmentStyles[styleIndex].split("—")[0].trim()}. ${hasHumor ? "Your natural humor is a real asset — it's the kind of thing people remember and seek out." : "You communicate with clarity and intention."} ${hasEmotional ? "You're emotionally present, which creates depth quickly — the growth edge is pacing that openness." : "Your restraint creates calm, but sometimes people need a little more warmth to feel safe opening up."} The patterns in this sample suggest your dating profile and conversation style could be better aligned — the coaching recommendations above will help bridge that gap.${insightSourceSummaryAddendum(source)}`,
+    summary: `Based on ${wordCount} words of conversation from ${params.sourceLabel}, your communication fingerprint is: ${attachmentStyles[styleIndex].split(",")[0].trim()}. ${hasHumor ? "Your natural humor is a real asset, it's the kind of thing people remember and seek out." : "You communicate with clarity and intention."} ${hasEmotional ? "You're emotionally present, which creates depth quickly, the growth edge is pacing that openness." : "Your restraint creates calm, but sometimes people need a little more warmth to feel safe opening up."} The patterns in this sample suggest your dating profile and conversation style could be better aligned, the coaching recommendations above will help bridge that gap.${insightSourceSummaryAddendum(source)}`,
     sourceApp: source,
   };
 }
 
 // ============================================================================
-// Cross-audit trend analysis ("Build the Mirror") — task #547
+// Cross-audit trend analysis ("Build the Mirror"), task #547
 //
 // Deterministic aggregate of the user's audit history, send-through stats, and
 // life-pulses into a single TrendReport. No external AI. Output shape is part
@@ -1019,12 +1019,12 @@ export function analyzeAuditTrends(params: {
       });
     } else if (direction === "down") {
       signals.push({
-        label: `${delta} point dip since your first audit — worth a closer look`,
+        label: `${delta} point dip since your first audit, worth a closer look`,
         tone: "watch",
       });
     } else {
       signals.push({
-        label: `Score is steady within ${Math.abs(delta)} pt — small wins still count`,
+        label: `Score is steady within ${Math.abs(delta)} pt, small wins still count`,
         tone: "neutral",
       });
     }
@@ -1034,12 +1034,12 @@ export function analyzeAuditTrends(params: {
     const pct = Math.round(rate * 100);
     if (rate >= 0.6) {
       signals.push({
-        label: `${pct}% send-through on coached replies — momentum is real`,
+        label: `${pct}% send-through on coached replies, momentum is real`,
         tone: "positive",
       });
     } else if (rate <= 0.25) {
       signals.push({
-        label: `${pct}% send-through — drafts piling up faster than they go out`,
+        label: `${pct}% send-through, drafts piling up faster than they go out`,
         tone: "watch",
       });
     } else {
@@ -1052,25 +1052,25 @@ export function analyzeAuditTrends(params: {
   if (avgGapDays !== null) {
     if (avgGapDays <= 14) {
       signals.push({
-        label: `Showing up every ~${Math.round(avgGapDays)} days — consistent rhythm`,
+        label: `Showing up every ~${Math.round(avgGapDays)} days, consistent rhythm`,
         tone: "positive",
       });
     } else if (avgGapDays > 30) {
       signals.push({
-        label: `~${Math.round(avgGapDays)}-day gaps between audits — easy to lose the thread`,
+        label: `~${Math.round(avgGapDays)}-day gaps between audits, easy to lose the thread`,
         tone: "watch",
       });
     }
   }
   if (daysSinceLatest !== null && daysSinceLatest > 45 && total >= 2) {
     signals.push({
-      label: `Last audit was ${daysSinceLatest} days ago — time for a fresh read`,
+      label: `Last audit was ${daysSinceLatest} days ago, time for a fresh read`,
       tone: "watch",
     });
   }
   if (recurringRisks.length > 0 && recurringRisks[0].count >= 2) {
     signals.push({
-      label: `"${recurringRisks[0].label}" keeps coming up — that's the one to fix first`,
+      label: `"${recurringRisks[0].label}" keeps coming up, that's the one to fix first`,
       tone: "watch",
     });
   }
@@ -1082,13 +1082,13 @@ export function analyzeAuditTrends(params: {
       recent.reduce((s, p) => s + (p.headspace ?? 0), 0) / recent.length;
     if (avgEnergy >= 4) {
       signals.push({
-        label: "Energy is trending steady — good fuel for the work",
+        label: "Energy is trending steady, good fuel for the work",
         tone: "positive",
       });
     }
     if (avgHeadspace <= 2.5) {
       signals.push({
-        label: "Headspace is running low — keep moves small this week",
+        label: "Headspace is running low, keep moves small this week",
         tone: "watch",
       });
     }
@@ -1103,10 +1103,10 @@ export function analyzeAuditTrends(params: {
   let headlineInsight: string;
   if (total === 0) {
     headlineInsight =
-      "Your Mirror will start filling in once you complete your first audit — patterns need at least one data point to begin.";
+      "Your Mirror will start filling in once you complete your first audit, patterns need at least one data point to begin.";
   } else if (!hasEnoughData) {
     headlineInsight =
-      "One audit in. Run a second pass after you've made a change or two — that's when patterns start to show.";
+      "One audit in. Run a second pass after you've made a change or two, that's when patterns start to show.";
   } else {
     const pieces: string[] = [];
     pieces.push(
@@ -1114,20 +1114,20 @@ export function analyzeAuditTrends(params: {
     );
     if (direction === "up") {
       pieces.push(
-        `Your score is up ${delta} points since you started — that's real movement.`,
+        `Your score is up ${delta} points since you started, that's real movement.`,
       );
     } else if (direction === "down") {
       pieces.push(
-        `Your score has slipped ${Math.abs(delta)} points — worth understanding why before pushing harder.`,
+        `Your score has slipped ${Math.abs(delta)} points, worth understanding why before pushing harder.`,
       );
     } else if (firstScore !== null && latestScore !== null && scored.length >= 2) {
       pieces.push(
-        "Your score is holding steady — the next move is sharpening one specific thing.",
+        "Your score is holding steady, the next move is sharpening one specific thing.",
       );
     }
     if (repeatedStrengths.length > 0) {
       pieces.push(
-        `${repeatedStrengths[0].label} keeps showing up as a real strength — lean into it.`,
+        `${repeatedStrengths[0].label} keeps showing up as a real strength, lean into it.`,
       );
     }
     if (recurringRisks.length > 0) {
@@ -1138,7 +1138,7 @@ export function analyzeAuditTrends(params: {
       const emerged = themeShifts.find((s) => s.direction === "emerged");
       if (emerged) {
         pieces.push(
-          `${emerged.label} has started to emerge — keep building on it.`,
+          `${emerged.label} has started to emerge, keep building on it.`,
         );
       }
     }
@@ -1239,7 +1239,7 @@ export function analyzeAuditTrends(params: {
 
   if (journalingStreak.currentStreakDays >= 3) {
     signals.push({
-      label: `Journaling ${journalingStreak.currentStreakDays} days in a row — reflection is compounding`,
+      label: `Journaling ${journalingStreak.currentStreakDays} days in a row, reflection is compounding`,
       tone: "positive",
     });
   } else if (
@@ -1247,26 +1247,26 @@ export function analyzeAuditTrends(params: {
     journalingStreak.daysInLast14 === 0
   ) {
     signals.push({
-      label: "Journaling has gone quiet — a short entry resets the rhythm",
+      label: "Journaling has gone quiet, a short entry resets the rhythm",
       tone: "watch",
     });
   }
   if (moodTrend.recentCount >= 2 && moodTrend.averageMood !== null) {
     if (moodTrend.direction === "rising") {
       signals.push({
-        label: `Mood is trending up (avg ${moodTrend.averageMood.toFixed(1)}/5) — ride it`,
+        label: `Mood is trending up (avg ${moodTrend.averageMood.toFixed(1)}/5), ride it`,
         tone: "positive",
       });
     } else if (moodTrend.direction === "falling") {
       signals.push({
-        label: `Mood is sliding (avg ${moodTrend.averageMood.toFixed(1)}/5) — protect headspace this week`,
+        label: `Mood is sliding (avg ${moodTrend.averageMood.toFixed(1)}/5), protect headspace this week`,
         tone: "watch",
       });
     }
   }
   if (outcomeStreak.positiveStreak >= 2) {
     signals.push({
-      label: `${outcomeStreak.positiveStreak} dates in a row led to another — something is clicking`,
+      label: `${outcomeStreak.positiveStreak} dates in a row led to another, something is clicking`,
       tone: "positive",
     });
   } else if (
@@ -1274,7 +1274,7 @@ export function analyzeAuditTrends(params: {
     outcomeStreak.totalWithOutcome >= 2
   ) {
     signals.push({
-      label: "Last date ended in a ghost — pattern worth revisiting in Coach",
+      label: "Last date ended in a ghost, pattern worth revisiting in Coach",
       tone: "watch",
     });
   }

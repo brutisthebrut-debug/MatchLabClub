@@ -69,7 +69,7 @@ let cachedKeyHash: string | null = null;
 //   1. Tests that don't exercise the Anthropic path don't need the SDK installed
 //      in their resolution context.
 //   2. The module never throws at import time when env vars are missing
-//      (the integration package's client.ts does throw — we bypass it).
+//      (the integration package's client.ts does throw, we bypass it).
 interface AnthropicMessageBlock {
   type: string;
   text?: string;
@@ -272,11 +272,11 @@ function contextToPromptBlock(ctx?: AiContext): string {
 
 export function coachingPrompt(toolPurpose: string): string {
   return [
-    "You are the MatchLab Club coach — warm, direct, never preachy.",
+    "You are the MatchLab Club coach, warm, direct, never preachy.",
     "Tone: practical, kind, specific. Avoid generic advice and clichés.",
     "Never claim to be human. Never recommend deception, manipulation, or unsafe behavior.",
     `Purpose of this response: ${toolPurpose}`,
-    "If the user provides little context, give a thoughtful general response — never refuse.",
+    "If the user provides little context, give a thoughtful general response, never refuse.",
   ].join("\n");
 }
 
@@ -460,7 +460,7 @@ export async function generate(
 /**
  * Returns true when the caller is allowed to ship the user's own content to
  * a hosted LLM. Anonymous users (no `userId`) are blocked from
- * consent-gated tools — they must claim/sign-in first. Errors short-circuit
+ * consent-gated tools, they must claim/sign-in first. Errors short-circuit
  * to "no consent" (fail-closed).
  */
 async function defaultConsentCheck(userId: string | undefined): Promise<boolean> {
@@ -486,7 +486,7 @@ let consentCheck: ConsentChecker = defaultConsentCheck;
 
 /**
  * Test-only override for the consent lookup. Production code never calls
- * this — keeping the indirection here avoids needing to mock the drizzle
+ * this, keeping the indirection here avoids needing to mock the drizzle
  * query chain in unit tests (which is fragile and order-dependent).
  * Throws outside `NODE_ENV === "test"` so an accidental import from
  * application code can never silently bypass the consent gate.
@@ -505,7 +505,7 @@ async function generateInner(
   const start = Date.now();
   const provider: AiProvider = opts.provider ?? "openai";
 
-  // Consent gate — must happen BEFORE any model resolution or content
+  // Consent gate, must happen BEFORE any model resolution or content
   // assembly so we never even build a prompt with user content for an
   // unconsented user.
   if (opts.requireContentConsent && !(await consentCheck(opts.userId))) {
@@ -640,7 +640,7 @@ async function generateInner(
     userContent,
     "",
     "Your previous response did not match the required JSON schema for this tool.",
-    "Respond again with VALID JSON only — no prose, no code fences — that strictly matches the expected shape.",
+    "Respond again with VALID JSON only, no prose, no code fences, that strictly matches the expected shape.",
     "Previous attempt (for reference):",
     first.text.slice(0, 1500),
   ].join("\n");
@@ -811,7 +811,7 @@ const PHOTO_VISION_SYSTEM = [
   "Critique only what you can actually see: lighting, framing, expression, outfit, background, photo variety, solo vs group, and image quality.",
   "Be specific and kind. Never guess at things you cannot see. Never comment on race, body weight, attractiveness rankings, or anything demeaning. Never claim to be human.",
   "If the screenshot shows no usable photo of a person (for example it is only text), say so plainly in the summary and keep observations short.",
-  "Respond with VALID JSON only — no prose, no code fences — matching this shape:",
+  "Respond with VALID JSON only, no prose, no code fences, matching this shape:",
   '{"summary": string, "observations": [{"aspect": string, "assessment": "strong"|"okay"|"needs_work", "detail": string}], "topFix": string}',
 ].join("\n");
 
@@ -828,7 +828,7 @@ export async function analyzeProfilePhotos(
     return { analysis: null, mode, isFallback: true, durationMs, fallbackReason };
   };
 
-  // Consent gate FIRST — never ship the raw image to a hosted model without it.
+  // Consent gate FIRST, never ship the raw image to a hosted model without it.
   if (!(await consentCheck(opts.userId))) {
     return miss("consent_required");
   }

@@ -319,7 +319,7 @@ export async function checkAiReliabilityAlerts(
             lastClearedAt,
             cooldownMs,
           },
-          "Suppressing AI reliability breach email — tool re-breached inside cooldown window",
+          "Suppressing AI reliability breach email, tool re-breached inside cooldown window",
         );
         await db
           .update(aiToolAlertStateTable)
@@ -335,7 +335,7 @@ export async function checkAiReliabilityAlerts(
       }
 
       // Send notification FIRST. Only mark the tool as breached if delivery
-      // succeeds (or there is no recipient configured — in which case the
+      // succeeds (or there is no recipient configured, in which case the
       // logged warning counts as the one-time notification). If the email
       // throws, we leave state unchanged so the next scheduled run retries.
       let notified = false;
