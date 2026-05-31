@@ -185,6 +185,25 @@ async function computeReadiness(userId: string): Promise<Readiness> {
     );
   const winsCount = Number(winsRows[0]?.count ?? 0);
 
+  // Latest pasted calendar import. We read only the derived event count from
+  // the stored summary, never the raw .ics or any event titles. A fuller
+  // calendar reads as a fuller life outside dating.
+  const calendarRows = await db
+    .select({
+      events: sql<number>`coalesce((${importedSourcesTable.parsedSummary}->'counts'->>'totalEvents')::int, 0)`,
+    })
+    .from(importedSourcesTable)
+    .where(
+      and(
+        eq(importedSourcesTable.userId, userId),
+        eq(importedSourcesTable.source, "calendar-ics"),
+        isNull(importedSourcesTable.deletedAt),
+      ),
+    )
+    .orderBy(desc(importedSourcesTable.uploadedAt))
+    .limit(1);
+  const calendarEvents = Number(calendarRows[0]?.events ?? 0);
+
   const breakdown = computeBreakdown({
     compass: compassCount,
     journal: journalCount,
@@ -192,6 +211,7 @@ async function computeReadiness(userId: string): Promise<Readiness> {
     hingeImport: hingeCount,
     postDateReflected,
     wins: winsCount,
+    calendarEvents,
   });
 
   return { score: scoreFromBreakdown(breakdown), breakdown };

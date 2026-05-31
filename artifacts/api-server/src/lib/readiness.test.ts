@@ -15,6 +15,7 @@ describe("computeBreakdown", () => {
       hingeImport: 0,
       postDateReflected: 0,
       wins: 0,
+      calendarEvents: 0,
     });
     expect(b).toEqual({
       compass: 0,
@@ -23,6 +24,7 @@ describe("computeBreakdown", () => {
       hingeImport: 0,
       postDate: 0,
       wins: 0,
+      calendar: 0,
     });
     expect(scoreFromBreakdown(b)).toBe(0);
   });
@@ -35,6 +37,7 @@ describe("computeBreakdown", () => {
       hingeImport: 1,
       postDateReflected: 50,
       wins: 50,
+      calendarEvents: 50,
     });
     expect(b).toEqual({
       compass: 100,
@@ -43,6 +46,7 @@ describe("computeBreakdown", () => {
       hingeImport: 100,
       postDate: 100,
       wins: 100,
+      calendar: 100,
     });
     expect(scoreFromBreakdown(b)).toBe(100);
   });
@@ -56,6 +60,7 @@ describe("computeBreakdown", () => {
         hingeImport: 0,
         postDateReflected: 0,
         wins: 0,
+        calendarEvents: 0,
       }),
     );
     const withWins = scoreFromBreakdown(
@@ -66,9 +71,36 @@ describe("computeBreakdown", () => {
         hingeImport: 0,
         postDateReflected: 0,
         wins: 5,
+        calendarEvents: 0,
       }),
     );
     expect(withWins).toBeGreaterThan(withoutWins);
+  });
+
+  it("includes calendar rhythm as a weighted signal", () => {
+    const withoutCalendar = scoreFromBreakdown(
+      computeBreakdown({
+        compass: 0,
+        journal: 0,
+        wellnessDistinct: 0,
+        hingeImport: 0,
+        postDateReflected: 0,
+        wins: 0,
+        calendarEvents: 0,
+      }),
+    );
+    const withCalendar = scoreFromBreakdown(
+      computeBreakdown({
+        compass: 0,
+        journal: 0,
+        wellnessDistinct: 0,
+        hingeImport: 0,
+        postDateReflected: 0,
+        wins: 0,
+        calendarEvents: 12,
+      }),
+    );
+    expect(withCalendar).toBeGreaterThan(withoutCalendar);
   });
 });
 
@@ -81,6 +113,7 @@ describe("computeNextActions", () => {
       hingeImport: 0,
       postDateReflected: 0,
       wins: 0,
+      calendarEvents: 0,
     });
     expect(computeNextActions(b, true)).toEqual([]);
   });
@@ -93,6 +126,7 @@ describe("computeNextActions", () => {
       hingeImport: 0,
       postDateReflected: 0,
       wins: 0,
+      calendarEvents: 0,
     });
     const actions = computeNextActions(b, false);
     expect(actions.length).toBeGreaterThan(0);
@@ -112,6 +146,7 @@ describe("computeNextActions", () => {
       hingeImport: 1,
       postDateReflected: 0,
       wins: 0,
+      calendarEvents: 0,
     });
     const actions = computeNextActions(b, false);
     const keys = actions.map((a) => a.key);

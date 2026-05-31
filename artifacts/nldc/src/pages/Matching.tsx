@@ -7,6 +7,7 @@ import {
   BookOpen,
   Brain,
   Calendar,
+  CalendarDays,
   Compass,
   Download,
   Heart,
@@ -116,7 +117,14 @@ function normalizeGenderPreference(value: string | null | undefined): string {
 }
 
 interface BreakdownRow {
-  key: "compass" | "journal" | "wellness" | "hingeImport" | "postDate" | "wins";
+  key:
+    | "compass"
+    | "journal"
+    | "wellness"
+    | "hingeImport"
+    | "postDate"
+    | "wins"
+    | "calendar";
   label: string;
   blurb: string;
   href: string;
@@ -172,6 +180,14 @@ const BREAKDOWN_ROWS: BreakdownRow[] = [
     href: "/progress/wins",
     cta: "Log a win",
     icon: Trophy,
+  },
+  {
+    key: "calendar",
+    label: "Calendar rhythm",
+    blurb: "Paste your calendar so we see how full your week is and when you have room to date.",
+    href: "/imports",
+    cta: "Paste your calendar",
+    icon: CalendarDays,
   },
 ];
 
@@ -274,6 +290,7 @@ export default function Matching() {
     hingeImport: 0,
     postDate: 0,
     wins: 0,
+    calendar: 0,
   };
   const nextActions = state.data?.nextActions ?? [];
   const history = state.data?.history ?? [];

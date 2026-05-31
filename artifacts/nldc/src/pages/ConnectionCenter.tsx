@@ -127,6 +127,8 @@ const LIVE: Connector[] = [
       "Any ability to create, edit, or delete events on your calendar",
     ],
     cta: { href: "/imports", label: "Open Calendar paste" },
+    readiness:
+      "Fills the calendar rhythm lane of your Match Readiness. A fuller week reads as a fuller life outside dating.",
   },
   {
     id: "matching-cohort",

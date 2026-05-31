@@ -24,6 +24,7 @@ export interface ReadinessBreakdown {
   hingeImport: number;
   postDate: number;
   wins: number;
+  calendar: number;
 }
 
 /** Raw counts pulled from the database for each contributor. */
@@ -40,6 +41,12 @@ export interface SignalCounts {
   postDateReflected: number;
   /** Logged dating wins. */
   wins: number;
+  /**
+   * Events in the most recent pasted calendar (.ics) import. A fuller calendar
+   * reads as a fuller life outside dating; only the derived count is used here,
+   * never the raw events or titles.
+   */
+  calendarEvents: number;
 }
 
 /**
@@ -186,6 +193,25 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       detail:
         "Small moments of courage count as signal now, not just a private note.",
       href: "/progress/wins",
+    },
+  },
+  {
+    id: "calendar",
+    countKey: "calendarEvents",
+    label: "Calendar rhythm",
+    dimensions: [
+      "how full their life is outside dating",
+      "when they actually have room to date",
+    ],
+    weight: 0.1,
+    confidence: 0.55,
+    normalize: { kind: "count", denominator: 12 },
+    describe: (c) =>
+      `Has shared enough of their calendar to cover ${c}% of that lane, so we can see how full their week is and when they actually have room to date.`,
+    action: {
+      label: "Paste your calendar",
+      detail: "Drop in your .ics export. We read your rhythm, never the raw file.",
+      href: "/imports",
     },
   },
 ] as const;

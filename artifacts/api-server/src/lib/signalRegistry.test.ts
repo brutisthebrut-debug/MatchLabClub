@@ -16,6 +16,7 @@ const zeroBreakdown: ReadinessBreakdown = {
   hingeImport: 0,
   postDate: 0,
   wins: 0,
+  calendar: 0,
 };
 
 describe("signal registry", () => {
@@ -25,14 +26,19 @@ describe("signal registry", () => {
     expect(sum).toBeCloseTo(1, 6);
   });
 
-  it("reproduces today's default weights (registry already sums to 1)", () => {
+  it("reflects the current registry weights, auto-normalized to sum to 1", () => {
+    // Raw registry weights now sum to 1.1 (the calendar signal added 0.1 on
+    // top of the original 1.0), so each normalized weight is its raw weight
+    // divided by 1.1. The relative proportions between the original signals are
+    // preserved exactly; adding a contributor never forces a hand re-balance.
     const w = normalizedWeights();
-    expect(w.compass).toBeCloseTo(0.2, 6);
-    expect(w.journal).toBeCloseTo(0.14, 6);
-    expect(w.wellness).toBeCloseTo(0.22, 6);
-    expect(w.hingeImport).toBeCloseTo(0.16, 6);
-    expect(w.postDate).toBeCloseTo(0.16, 6);
-    expect(w.wins).toBeCloseTo(0.12, 6);
+    expect(w.wellness).toBeCloseTo(0.22 / 1.1, 6);
+    expect(w.compass).toBeCloseTo(0.2 / 1.1, 6);
+    expect(w.hingeImport).toBeCloseTo(0.16 / 1.1, 6);
+    expect(w.postDate).toBeCloseTo(0.16 / 1.1, 6);
+    expect(w.journal).toBeCloseTo(0.14 / 1.1, 6);
+    expect(w.wins).toBeCloseTo(0.12 / 1.1, 6);
+    expect(w.calendar).toBeCloseTo(0.1 / 1.1, 6);
   });
 
   it("auto-normalizes when a new contributor is added, never breaking the sum", () => {

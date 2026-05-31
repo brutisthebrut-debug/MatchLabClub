@@ -1,2 +1,1 @@
-- [Living signal registry](signal-registry.md) — readiness/matching signals are registry-driven (signalRegistry.ts); add a signal by editing SIGNAL_REGISTRY, weights auto-normalize, ids must be unique.
-- [api-server test runner](api-server-test-runner.md) — api-server tests fail via direct bash (EAGAIN/thread cap); run them via the api-tests workflow instead.
+- [Signal registry weight assertions](signal-registry-weights.md) — adding a SIGNAL_REGISTRY contributor renormalizes every hardcoded weight test by the new raw total; also update both interfaces, all test inputs, and Matching.tsx's hardcoded lane keys + OpenAPI schema.

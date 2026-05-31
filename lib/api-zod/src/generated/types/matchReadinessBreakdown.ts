@@ -37,4 +37,9 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   wins: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  calendar: number;
 }

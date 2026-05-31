@@ -5923,7 +5923,7 @@ components:
 
     MatchReadinessBreakdown:
       type: object
-      required: [compass, journal, wellness, hingeImport, postDate, wins]
+      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar]
       properties:
         compass:
           type: integer
@@ -5946,6 +5946,10 @@ components:
           minimum: 0
           maximum: 100
         wins:
+          type: integer
+          minimum: 0
+          maximum: 100
+        calendar:
           type: integer
           minimum: 0
           maximum: 100

@@ -3541,6 +3541,9 @@ export const getMatchingStateResponseReadinessBreakdownPostDateMax = 100;
 export const getMatchingStateResponseReadinessBreakdownWinsMin = 0;
 export const getMatchingStateResponseReadinessBreakdownWinsMax = 100;
 
+export const getMatchingStateResponseReadinessBreakdownCalendarMin = 0;
+export const getMatchingStateResponseReadinessBreakdownCalendarMax = 100;
+
 export const getMatchingStateResponseReadinessThresholdMin = 0;
 export const getMatchingStateResponseReadinessThresholdMax = 100;
 
@@ -3588,7 +3591,8 @@ export const GetMatchingStateResponse = zod.object({
   "wellness": zod.number().min(getMatchingStateResponseReadinessBreakdownWellnessMin).max(getMatchingStateResponseReadinessBreakdownWellnessMax),
   "hingeImport": zod.number().min(getMatchingStateResponseReadinessBreakdownHingeImportMin).max(getMatchingStateResponseReadinessBreakdownHingeImportMax),
   "postDate": zod.number().min(getMatchingStateResponseReadinessBreakdownPostDateMin).max(getMatchingStateResponseReadinessBreakdownPostDateMax),
-  "wins": zod.number().min(getMatchingStateResponseReadinessBreakdownWinsMin).max(getMatchingStateResponseReadinessBreakdownWinsMax)
+  "wins": zod.number().min(getMatchingStateResponseReadinessBreakdownWinsMin).max(getMatchingStateResponseReadinessBreakdownWinsMax),
+  "calendar": zod.number().min(getMatchingStateResponseReadinessBreakdownCalendarMin).max(getMatchingStateResponseReadinessBreakdownCalendarMax)
 })
 }),
   "eligible": zod.boolean().describe('True when readiness.score is at or above readinessThreshold. The client uses this to gate the pool opt-in switch.'),
