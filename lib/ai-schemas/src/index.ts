@@ -80,6 +80,13 @@ export const rehearsalSchema = z.object({
 
 export type RehearsalAiOutput = z.infer<typeof rehearsalSchema>;
 
+export const mirrorAskSchema = z.object({
+  answer: z.string().trim().min(1),
+  followUp: z.string().trim().min(1),
+});
+
+export type MirrorAskAiOutput = z.infer<typeof mirrorAskSchema>;
+
 export function parseAiJson<T>(
   schema: z.ZodType<T>,
   raw: string,
@@ -104,6 +111,7 @@ export const aiToolSchemas = {
   "Bio Rewrite": bioRewriteSchema,
   "Email Insights": emailInsightSchema,
   "Rehearsal Room": rehearsalSchema,
+  "Your Mirror": mirrorAskSchema,
 } as const;
 
 export type AiToolName = keyof typeof aiToolSchemas;

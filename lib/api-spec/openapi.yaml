@@ -2191,6 +2191,78 @@ paths:
               schema:
                 $ref: "#/components/schemas/MirrorTrendReport"
 
+  /mirror/portrait:
+    get:
+      operationId: getMirrorPortrait
+      tags: [audits]
+      summary: The current user's evolving self-portrait from real accumulated signals
+      description: |
+        Synthesizes the signed-in user's real signal coverage (per readiness
+        lane, gathered from the database) into a plain-English self-portrait:
+        what the machine knows, confidence per dimension, blind spots it cannot
+        see yet, the single highest-leverage next signal to feed, and how it ties
+        into Match Readiness. Deterministic and always non-empty; no external AI.
+        Requires auth.
+      responses:
+        "200":
+          description: The user's Mirror portrait
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MirrorPortrait"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /mirror/ask:
+    post:
+      operationId: askMirror
+      tags: [audits]
+      summary: Ask the Mirror a question about yourself, grounded in real signals
+      description: |
+        Answers a free-text question about the user from their real signal
+        portrait. The deterministic baseline always answers; when the account has
+        granted content consent, Claude shapes a richer reply. Grounding (the
+        signals the answer leans on) is always computed server-side from real
+        data, never invented by the model. Requires auth.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MirrorAskInput"
+      responses:
+        "200":
+          description: The Mirror's answer plus the real signals it leaned on
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MirrorAskResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
   /insights:
     get:
       operationId: listInsights
@@ -5202,6 +5274,144 @@ components:
           type: string
           enum: [rising, falling, steady, unknown]
 
+    MirrorKnownDimension:
+      type: object
+      required: [key, label, coverage, confidence, insight, dimensions]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        coverage:
+          type: integer
+          minimum: 0
+          maximum: 100
+        confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+        insight:
+          type: string
+        dimensions:
+          type: array
+          items:
+            type: string
+
+    MirrorBlindSpot:
+      type: object
+      required: [key, label, why, actionLabel, href]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        why:
+          type: string
+        actionLabel:
+          type: string
+        href:
+          type: string
+
+    MirrorNextSignal:
+      type: object
+      required: [key, label, detail, href, points]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        detail:
+          type: string
+        href:
+          type: string
+        points:
+          type: integer
+
+    MirrorPortrait:
+      type: object
+      required:
+        - readinessScore
+        - stage
+        - stageLabel
+        - stageBlurb
+        - coveragePercent
+        - headline
+        - known
+        - blindSpots
+        - nextSignal
+        - outcomeHeadline
+        - totalDates
+        - eligible
+        - threshold
+        - engineVersion
+      properties:
+        readinessScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        stage:
+          type: string
+          enum: [outline, forming, sharp, vivid]
+        stageLabel:
+          type: string
+        stageBlurb:
+          type: string
+        coveragePercent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        headline:
+          type: string
+        known:
+          type: array
+          items:
+            $ref: "#/components/schemas/MirrorKnownDimension"
+        blindSpots:
+          type: array
+          items:
+            $ref: "#/components/schemas/MirrorBlindSpot"
+        nextSignal:
+          oneOf:
+            - $ref: "#/components/schemas/MirrorNextSignal"
+            - type: "null"
+        outcomeHeadline:
+          type: string
+        totalDates:
+          type: integer
+          minimum: 0
+        eligible:
+          type: boolean
+        threshold:
+          type: integer
+          minimum: 0
+          maximum: 100
+        engineVersion:
+          type: string
+
+    MirrorAskInput:
+      type: object
+      required: [question]
+      properties:
+        question:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+    MirrorAskResult:
+      type: object
+      required: [answer, grounding, followUp, isFallback]
+      properties:
+        answer:
+          type: string
+        grounding:
+          type: array
+          items:
+            type: string
+        followUp:
+          type: string
+        isFallback:
+          type: boolean
+
     PostDateOutcome:
       type: string
       enum: [another_date, no_more, unsure, ghosted]
@@ -6021,7 +6231,7 @@ components:
           maxLength: 20000
         source:
           type: string
-          enum: [hinge, tinder, bumble, grindr, feeld, her, other]
+          enum: [hinge, tinder, bumble, grindr, feeld, her, facebookDating, other]
 
     MatchExternalReadResult:
       type: object

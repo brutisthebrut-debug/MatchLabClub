@@ -3124,6 +3124,97 @@ export const GetMirrorTrendsResponse = zod.object({
 
 
 /**
+ * Synthesizes the signed-in user's real signal coverage (per readiness
+lane, gathered from the database) into a plain-English self-portrait:
+what the machine knows, confidence per dimension, blind spots it cannot
+see yet, the single highest-leverage next signal to feed, and how it ties
+into Match Readiness. Deterministic and always non-empty; no external AI.
+Requires auth.
+
+ * @summary The current user's evolving self-portrait from real accumulated signals
+ */
+export const getMirrorPortraitResponseReadinessScoreMin = 0;
+export const getMirrorPortraitResponseReadinessScoreMax = 100;
+
+export const getMirrorPortraitResponseCoveragePercentMin = 0;
+export const getMirrorPortraitResponseCoveragePercentMax = 100;
+
+export const getMirrorPortraitResponseKnownItemCoverageMin = 0;
+export const getMirrorPortraitResponseKnownItemCoverageMax = 100;
+
+export const getMirrorPortraitResponseKnownItemConfidenceMin = 0;
+export const getMirrorPortraitResponseKnownItemConfidenceMax = 100;
+
+export const getMirrorPortraitResponseTotalDatesMin = 0;
+
+export const getMirrorPortraitResponseThresholdMin = 0;
+export const getMirrorPortraitResponseThresholdMax = 100;
+
+
+
+export const GetMirrorPortraitResponse = zod.object({
+  "readinessScore": zod.number().min(getMirrorPortraitResponseReadinessScoreMin).max(getMirrorPortraitResponseReadinessScoreMax),
+  "stage": zod.enum(['outline', 'forming', 'sharp', 'vivid']),
+  "stageLabel": zod.string(),
+  "stageBlurb": zod.string(),
+  "coveragePercent": zod.number().min(getMirrorPortraitResponseCoveragePercentMin).max(getMirrorPortraitResponseCoveragePercentMax),
+  "headline": zod.string(),
+  "known": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "coverage": zod.number().min(getMirrorPortraitResponseKnownItemCoverageMin).max(getMirrorPortraitResponseKnownItemCoverageMax),
+  "confidence": zod.number().min(getMirrorPortraitResponseKnownItemConfidenceMin).max(getMirrorPortraitResponseKnownItemConfidenceMax),
+  "insight": zod.string(),
+  "dimensions": zod.array(zod.string())
+})),
+  "blindSpots": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "why": zod.string(),
+  "actionLabel": zod.string(),
+  "href": zod.string()
+})),
+  "nextSignal": zod.union([zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "detail": zod.string(),
+  "href": zod.string(),
+  "points": zod.number()
+}),zod.null()]),
+  "outcomeHeadline": zod.string(),
+  "totalDates": zod.number().min(getMirrorPortraitResponseTotalDatesMin),
+  "eligible": zod.boolean(),
+  "threshold": zod.number().min(getMirrorPortraitResponseThresholdMin).max(getMirrorPortraitResponseThresholdMax),
+  "engineVersion": zod.string()
+})
+
+
+/**
+ * Answers a free-text question about the user from their real signal
+portrait. The deterministic baseline always answers; when the account has
+granted content consent, Claude shapes a richer reply. Grounding (the
+signals the answer leans on) is always computed server-side from real
+data, never invented by the model. Requires auth.
+
+ * @summary Ask the Mirror a question about yourself, grounded in real signals
+ */
+export const askMirrorBodyQuestionMax = 2000;
+
+
+
+export const AskMirrorBody = zod.object({
+  "question": zod.string().min(1).max(askMirrorBodyQuestionMax)
+})
+
+export const AskMirrorResponse = zod.object({
+  "answer": zod.string(),
+  "grounding": zod.array(zod.string()),
+  "followUp": zod.string(),
+  "isFallback": zod.boolean()
+})
+
+
+/**
  * @summary List email insight imports
  */
 export const ListInsightsResponseItem = zod.object({
@@ -3936,7 +4027,7 @@ export const createMatchingExternalReadBodyProfileTextMax = 20000;
 
 export const CreateMatchingExternalReadBody = zod.object({
   "profileText": zod.string().min(1).max(createMatchingExternalReadBodyProfileTextMax),
-  "source": zod.enum(['hinge', 'tinder', 'bumble', 'grindr', 'feeld', 'her', 'other'])
+  "source": zod.enum(['hinge', 'tinder', 'bumble', 'grindr', 'feeld', 'her', 'facebookDating', 'other'])
 })
 
 export const createMatchingExternalReadResponseScoreMin = 0;

@@ -4,6 +4,9 @@
 // Bump this string whenever the deterministic engine's output changes in a
 // user-visible way. Stored reports tagged with an older version will be
 // flagged as stale on the client so the user can re-run with the latest.
+import { SIGNAL_REGISTRY, type ReadinessBreakdown } from "./signalRegistry";
+import type { ReadinessNextAction, OutcomeInsight } from "./readiness";
+
 export const ENGINE_VERSION = "2026-05-22";
 
 export interface PhotoObservation {
@@ -1567,4 +1570,341 @@ export function generateRehearsalTurn(input: RehearsalTurnInput): RehearsalTurnO
   }
 
   return { reply, note, tone };
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Your Mirror: the brain you can talk to.
+//
+// Every tool, quiz, import, and reflection feeds one evolving model of the
+// user. This is the deterministic synthesis layer over that model. It turns the
+// readiness breakdown (real per-lane coverage gathered from the database) into
+// a plain-English self-portrait, names what the machine cannot see yet, and
+// points at the single highest-leverage thing to feed it next. This is the
+// always-on baseline. The route layers Claude on top for richer phrasing when
+// the account has opted into the deep AI lane. It never calls out and never
+// throws on empty input, so the Mirror is never blank.
+// ───────────────────────────────────────────────────────────────────────────
+
+export interface MirrorKnownDimension {
+  key: string;
+  label: string;
+  coverage: number;
+  confidence: number;
+  insight: string;
+  dimensions: string[];
+}
+
+export interface MirrorBlindSpot {
+  key: string;
+  label: string;
+  why: string;
+  actionLabel: string;
+  href: string;
+}
+
+export interface MirrorNextSignal {
+  key: string;
+  label: string;
+  detail: string;
+  href: string;
+  points: number;
+}
+
+export type MirrorStage = "outline" | "forming" | "sharp" | "vivid";
+
+export interface MirrorPortrait {
+  readinessScore: number;
+  stage: MirrorStage;
+  stageLabel: string;
+  stageBlurb: string;
+  coveragePercent: number;
+  headline: string;
+  known: MirrorKnownDimension[];
+  blindSpots: MirrorBlindSpot[];
+  nextSignal: MirrorNextSignal | null;
+  outcomeHeadline: string;
+  totalDates: number;
+  eligible: boolean;
+  threshold: number;
+  engineVersion: string;
+}
+
+export interface MirrorPortraitInput {
+  breakdown: ReadinessBreakdown;
+  score: number;
+  eligible: boolean;
+  threshold: number;
+  nextActions: ReadinessNextAction[];
+  outcome: OutcomeInsight;
+}
+
+const MIRROR_THIN_COVERAGE = 34;
+
+function mirrorStage(
+  score: number,
+  threshold: number,
+): { stage: MirrorStage; stageLabel: string; stageBlurb: string } {
+  if (score >= 80) {
+    return {
+      stage: "vivid",
+      stageLabel: "Vivid model",
+      stageBlurb:
+        "The machine has a detailed read on who you are and what fits you. Keep feeding it and the matches get sharper.",
+    };
+  }
+  if (score >= threshold) {
+    return {
+      stage: "sharp",
+      stageLabel: "Sharp picture",
+      stageBlurb:
+        "The picture is clear enough to start matching you with people you would not find on your own.",
+    };
+  }
+  if (score >= 20) {
+    return {
+      stage: "forming",
+      stageLabel: "Coming into focus",
+      stageBlurb:
+        "You are taking shape. A couple more signals and the machine can start matching you.",
+    };
+  }
+  return {
+    stage: "outline",
+    stageLabel: "Faint outline",
+    stageBlurb:
+      "Right now the machine only has a faint outline of you. Every tool you use fills it in.",
+  };
+}
+
+/**
+ * Build the deterministic self-portrait from a user's real signal coverage.
+ * Pure and total: every field is populated even when the user has fed nothing
+ * yet, so the Mirror page is never empty.
+ */
+export function buildMirrorPortrait(input: MirrorPortraitInput): MirrorPortrait {
+  const { breakdown, score, eligible, threshold, nextActions, outcome } = input;
+
+  const known: MirrorKnownDimension[] = SIGNAL_REGISTRY.filter(
+    (c) => (breakdown[c.id] ?? 0) > 0,
+  )
+    .map((c) => {
+      const coverage = Math.round(breakdown[c.id] ?? 0);
+      return {
+        key: c.id,
+        label: c.label,
+        coverage,
+        confidence: Math.round(c.confidence * 100),
+        insight: c.describe(coverage),
+        dimensions: [...c.dimensions],
+      };
+    })
+    .sort((a, b) => b.coverage * b.confidence - a.coverage * a.confidence);
+
+  const blindSpots: MirrorBlindSpot[] = SIGNAL_REGISTRY.filter(
+    (c) => (breakdown[c.id] ?? 0) < MIRROR_THIN_COVERAGE,
+  )
+    .slice()
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, 4)
+    .map((c) => {
+      const coverage = Math.round(breakdown[c.id] ?? 0);
+      return {
+        key: c.id,
+        label: c.label,
+        why:
+          coverage === 0
+            ? `The machine has nothing here yet. ${c.action.detail}`
+            : `The machine only has a thin read here. ${c.action.detail}`,
+        actionLabel: c.action.label,
+        href: c.action.href,
+      };
+    });
+
+  const totalLanes = SIGNAL_REGISTRY.length;
+  const lanesWithSignal = SIGNAL_REGISTRY.filter(
+    (c) => (breakdown[c.id] ?? 0) > 0,
+  ).length;
+  const coveragePercent =
+    totalLanes === 0 ? 0 : Math.round((100 * lanesWithSignal) / totalLanes);
+
+  const top = nextActions[0] ?? null;
+  const nextSignal: MirrorNextSignal | null = top
+    ? {
+        key: top.key,
+        label: top.label,
+        detail: top.detail,
+        href: top.href,
+        points: top.points,
+      }
+    : null;
+
+  let headline: string;
+  if (known.length === 0) {
+    headline =
+      "The machine does not know you yet. Run a tool, answer a quiz, or import a profile and this fills in fast.";
+  } else {
+    const lead = known[0]!.label.toLowerCase();
+    const second = known[1]?.label.toLowerCase();
+    const through = second ? `${lead} and ${second}` : lead;
+    const gap = blindSpots[0]?.label.toLowerCase();
+    headline = gap
+      ? `So far the machine reads you most through your ${through}. The biggest gap is ${gap}.`
+      : `The machine reads you across your ${through}, with a fairly complete picture.`;
+  }
+
+  const stageInfo = mirrorStage(score, threshold);
+
+  return {
+    readinessScore: score,
+    stage: stageInfo.stage,
+    stageLabel: stageInfo.stageLabel,
+    stageBlurb: stageInfo.stageBlurb,
+    coveragePercent,
+    headline,
+    known,
+    blindSpots,
+    nextSignal,
+    outcomeHeadline: outcome.headline,
+    totalDates: outcome.totalDates,
+    eligible,
+    threshold,
+    engineVersion: ENGINE_VERSION,
+  };
+}
+
+export interface MirrorAnswer {
+  answer: string;
+  grounding: string[];
+  followUp: string;
+}
+
+function dedupe(labels: string[]): string[] {
+  return labels.filter((l, i) => l.length > 0 && labels.indexOf(l) === i);
+}
+
+/**
+ * Deterministic answer from the Mirror, grounded in the portrait. Routes the
+ * question to the most relevant facet of the model and always returns something
+ * specific and non-empty. The grounding list names the real signals the answer
+ * leans on, so citations are never invented.
+ */
+export function answerMirrorQuestion(
+  portrait: MirrorPortrait,
+  question: string,
+): MirrorAnswer {
+  const q = question.toLowerCase();
+  const topKnown = portrait.known.slice(0, 3);
+  const knownLabels = topKnown.map((k) => k.label);
+  const next = portrait.nextSignal;
+
+  // Are you / am I ready?
+  if (/\bready\b|eligible|matchable|match me|start matching|join the pool/.test(q)) {
+    const lead = portrait.eligible
+      ? `You are at a readiness of ${portrait.readinessScore}, past the ${portrait.threshold} the matching pool needs. You can opt in whenever you want.`
+      : `You are at a readiness of ${portrait.readinessScore}. The matching pool opens at ${portrait.threshold}.`;
+    const push = next
+      ? ` The fastest way to raise it: ${next.label.toLowerCase()}, worth about ${next.points} points.`
+      : "";
+    return {
+      answer: `${lead}${push}`,
+      grounding: dedupe(["Match Readiness", ...(next ? [next.label] : [])]),
+      followUp: next
+        ? `What does ${next.label.toLowerCase()} tell you about me?`
+        : "Who should I be looking for?",
+    };
+  }
+
+  // What do you know about me / who am I?
+  if (
+    /know about me|learned|who am i|what do you see|see in me|read on me|sum me up|describe me/.test(
+      q,
+    )
+  ) {
+    if (topKnown.length === 0) {
+      return {
+        answer:
+          "Honestly, not much yet. You have not fed me anything I can read. Start with a profile audit or a wellness pass and I will have something real to tell you.",
+        grounding: [],
+        followUp: "What should I do first?",
+      };
+    }
+    const lines = topKnown.map((k) => `- ${k.insight}`).join("\n");
+    return {
+      answer: `${portrait.headline}\n\nHere is what I can actually see:\n${lines}`,
+      grounding: dedupe(knownLabels),
+      followUp: "Where am I still a blind spot to you?",
+    };
+  }
+
+  // Blind spots / what to work on / what is missing / next
+  if (
+    /blind spot|missing|don.?t know|gap|work on|improve|next|what should i do|do first/.test(
+      q,
+    )
+  ) {
+    if (portrait.blindSpots.length === 0) {
+      return {
+        answer:
+          "You have fed me across the board. There is no obvious blind spot left. Keep logging real outcomes and I keep getting sharper.",
+        grounding: dedupe(["Match Readiness"]),
+        followUp: "Who should I be looking for?",
+      };
+    }
+    const spots = portrait.blindSpots
+      .slice(0, 3)
+      .map((b) => `- ${b.label}: ${b.why}`)
+      .join("\n");
+    const push = next ? `\n\nIf you do one thing: ${next.label.toLowerCase()}.` : "";
+    return {
+      answer: `The places I cannot see you yet:\n${spots}${push}`,
+      grounding: dedupe(portrait.blindSpots.slice(0, 3).map((b) => b.label)),
+      followUp: next
+        ? `Take me to ${next.label.toLowerCase()}.`
+        : "What do you already know about me?",
+    };
+  }
+
+  // Who should I look for / matching / partner
+  if (/look for|should i date|\bmatch\b|partner|right person|my type|compatible|who fits/.test(q)) {
+    const datesLine =
+      portrait.totalDates > 0
+        ? portrait.outcomeHeadline
+        : "You have not logged any real date outcomes yet, so I am reasoning from your profile, not your track record.";
+    const strengthLine =
+      topKnown.length > 0
+        ? `Your clearest signal right now is your ${topKnown[0]!.label.toLowerCase()}. The more date outcomes you log, the more I can tell you about who actually fits you, not just who looks good on paper.`
+        : "Feed me a few signals first and I can start telling you who actually fits you.";
+    return {
+      answer: `${datesLine}\n\n${strengthLine}`,
+      grounding: dedupe([
+        ...(portrait.totalDates > 0 ? ["Date outcomes"] : []),
+        ...(topKnown[0] ? [topKnown[0].label] : []),
+      ]),
+      followUp: "What am I still not showing you?",
+    };
+  }
+
+  // Self-sabotage / patterns
+  if (/sabotage|pattern|keep doing|what.?s wrong|fizzle|ghost/.test(q)) {
+    const line =
+      portrait.totalDates > 0
+        ? `${portrait.outcomeHeadline} That pattern is real signal, not a verdict on you.`
+        : "I cannot call a pattern yet because you have not logged real date outcomes. Add a post-date note or two and I will show you what keeps repeating.";
+    return {
+      answer: line,
+      grounding: dedupe(portrait.totalDates > 0 ? ["Date outcomes"] : []),
+      followUp: "How do I log a date outcome?",
+    };
+  }
+
+  // Default: orient them.
+  const orient =
+    topKnown.length > 0
+      ? `${portrait.headline}${next ? ` The next thing that would teach me the most about you is to ${next.label.toLowerCase()}.` : ""}`
+      : "I am the model the app is building of you. Right now I am mostly blank. Use a tool or two and ask me again.";
+  return {
+    answer: orient.trim(),
+    grounding: dedupe(knownLabels),
+    followUp: "What do you know about me so far?",
+  };
 }

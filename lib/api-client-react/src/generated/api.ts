@@ -35,6 +35,8 @@ import type {
   AskFounderCopilotInput,
   AskFounderCopilotParams,
   AskFounderCopilotResult,
+  AskMirror400,
+  AskMirror401,
   Audit,
   AuditFromScreenshot400,
   AuditInput,
@@ -96,6 +98,7 @@ import type {
   GetAiFallbackRateParams,
   GetAuditReportVersion404,
   GetFounderReferralsParams,
+  GetMirrorPortrait401,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
   ImportSource,
@@ -128,6 +131,9 @@ import type {
   MessageCoachingInput,
   MessageCoachingResponse,
   MessageCoachingSession,
+  MirrorAskInput,
+  MirrorAskResult,
+  MirrorPortrait,
   MirrorTrendReport,
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
@@ -6404,6 +6410,167 @@ export function useGetMirrorTrends<TData = Awaited<ReturnType<typeof getMirrorTr
 
 
 
+
+export const getGetMirrorPortraitUrl = () => {
+
+
+
+
+  return `/api/mirror/portrait`
+}
+
+/**
+ * Synthesizes the signed-in user's real signal coverage (per readiness
+lane, gathered from the database) into a plain-English self-portrait:
+what the machine knows, confidence per dimension, blind spots it cannot
+see yet, the single highest-leverage next signal to feed, and how it ties
+into Match Readiness. Deterministic and always non-empty; no external AI.
+Requires auth.
+
+ * @summary The current user's evolving self-portrait from real accumulated signals
+ */
+export const getMirrorPortrait = async ( options?: RequestInit): Promise<MirrorPortrait> => {
+
+  return customFetch<MirrorPortrait>(getGetMirrorPortraitUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMirrorPortraitQueryKey = () => {
+    return [
+    `/api/mirror/portrait`
+    ] as const;
+    }
+
+
+export const getGetMirrorPortraitQueryOptions = <TData = Awaited<ReturnType<typeof getMirrorPortrait>>, TError = ErrorType<GetMirrorPortrait401>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMirrorPortrait>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMirrorPortraitQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMirrorPortrait>>> = ({ signal }) => getMirrorPortrait({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMirrorPortrait>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMirrorPortraitQueryResult = NonNullable<Awaited<ReturnType<typeof getMirrorPortrait>>>
+export type GetMirrorPortraitQueryError = ErrorType<GetMirrorPortrait401>
+
+
+/**
+ * @summary The current user's evolving self-portrait from real accumulated signals
+ */
+
+export function useGetMirrorPortrait<TData = Awaited<ReturnType<typeof getMirrorPortrait>>, TError = ErrorType<GetMirrorPortrait401>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMirrorPortrait>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMirrorPortraitQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAskMirrorUrl = () => {
+
+
+
+
+  return `/api/mirror/ask`
+}
+
+/**
+ * Answers a free-text question about the user from their real signal
+portrait. The deterministic baseline always answers; when the account has
+granted content consent, Claude shapes a richer reply. Grounding (the
+signals the answer leans on) is always computed server-side from real
+data, never invented by the model. Requires auth.
+
+ * @summary Ask the Mirror a question about yourself, grounded in real signals
+ */
+export const askMirror = async (mirrorAskInput: MirrorAskInput, options?: RequestInit): Promise<MirrorAskResult> => {
+
+  return customFetch<MirrorAskResult>(getAskMirrorUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      mirrorAskInput,)
+  }
+);}
+
+
+
+
+export const getAskMirrorMutationOptions = <TError = ErrorType<AskMirror400 | AskMirror401>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof askMirror>>, TError,{data: BodyType<MirrorAskInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof askMirror>>, TError,{data: BodyType<MirrorAskInput>}, TContext> => {
+
+const mutationKey = ['askMirror'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof askMirror>>, {data: BodyType<MirrorAskInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  askMirror(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AskMirrorMutationResult = NonNullable<Awaited<ReturnType<typeof askMirror>>>
+    export type AskMirrorMutationBody = BodyType<MirrorAskInput>
+    export type AskMirrorMutationError = ErrorType<AskMirror400 | AskMirror401>
+
+    /**
+ * @summary Ask the Mirror a question about yourself, grounded in real signals
+ */
+export const useAskMirror = <TError = ErrorType<AskMirror400 | AskMirror401>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof askMirror>>, TError,{data: BodyType<MirrorAskInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof askMirror>>,
+        TError,
+        {data: BodyType<MirrorAskInput>},
+        TContext
+      > => {
+      return useMutation(getAskMirrorMutationOptions(options));
+    }
 
 export const getListInsightsUrl = () => {
 

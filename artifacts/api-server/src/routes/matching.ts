@@ -119,7 +119,7 @@ interface Readiness {
   breakdown: ReadinessBreakdown;
 }
 
-async function computeReadiness(userId: string): Promise<Readiness> {
+export async function computeReadiness(userId: string): Promise<Readiness> {
   const compassRows = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(compatibilityReadsTable)
@@ -269,7 +269,7 @@ async function computeReadiness(userId: string): Promise<Readiness> {
   return { score: scoreFromBreakdown(breakdown), breakdown };
 }
 
-async function computeOutcomeInsightForUser(
+export async function computeOutcomeInsightForUser(
   userId: string,
 ): Promise<OutcomeInsight> {
   const rows = await db
@@ -348,7 +348,7 @@ async function writeReadinessSnapshot(
 
 // Minimum readiness score required to activate pool membership. Tunable via
 // MATCHING_READINESS_THRESHOLD; clamped to 0-100, defaults to 50.
-function readinessThreshold(): number {
+export function readinessThreshold(): number {
   const raw = Number(process.env.MATCHING_READINESS_THRESHOLD);
   if (!Number.isFinite(raw)) return 50;
   return Math.max(0, Math.min(100, Math.round(raw)));

@@ -93,7 +93,7 @@ const LIVE: Connector[] = [
     icon: MessageSquare,
     color: "hsl(190 55% 60%)",
     blurb:
-      "Paste any thread (Hinge, Bumble, Tinder, iMessage screenshot transcribed). Chemistry Lab returns five reply options scored on warmth, directness, and pace.",
+      "Paste any thread (Hinge, Bumble, Tinder, Grindr, Feeld, HER, Facebook Dating, iMessage screenshot transcribed). Chemistry Lab returns five reply options scored on warmth, directness, and pace.",
     returns: "Five coached replies plus a read of how the thread is actually going.",
     cta: { href: "/coach", label: "Open Message Coach" },
   },

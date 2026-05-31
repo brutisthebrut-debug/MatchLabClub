@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMeta } from "@/hooks/useMeta";
 import {
   ArrowLeft,
@@ -13,6 +15,12 @@ import {
   ArrowUpRight,
   FileText,
   Heart,
+  Eye,
+  EyeOff,
+  Compass,
+  MessageCircle,
+  Lightbulb,
+  Send,
 } from "lucide-react";
 import {
   Area,
@@ -22,14 +30,21 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useAuth } from "@workspace/replit-auth-web";
 import {
   useGetMirrorTrends,
+  useGetMirrorPortrait,
+  getGetMirrorPortraitQueryKey,
+  useAskMirror,
+  getGetMatchingStateQueryKey,
   useListJournalEntries,
   useListPostDateNotes,
+  type MirrorPortrait,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen } from "lucide-react";
 
@@ -99,6 +114,393 @@ function fmtShort(iso: string): string {
   }
 }
 
+// Shown when the visitor is signed out (portrait endpoint 401s). Real accounts
+// always get their own computed portrait; this only keeps the page from looking
+// empty for a curious visitor, clearly labelled as a sample.
+const DEMO_PORTRAIT: MirrorPortrait = {
+  readinessScore: 48,
+  stage: "forming",
+  stageLabel: "Forming",
+  stageBlurb:
+    "The picture is taking shape. A few strong signals are in, and several lanes are still blank.",
+  coveragePercent: 42,
+  headline:
+    "I can see how you show up in writing and how steady your week feels. I cannot see your spending rhythm or your real date outcomes yet.",
+  known: [
+    {
+      key: "wellness",
+      label: "Emotional readiness",
+      coverage: 80,
+      confidence: 72,
+      insight:
+        "Your check-ins read steady and self-aware. You name what you want without spiraling.",
+      dimensions: ["self-awareness"],
+    },
+    {
+      key: "compass",
+      label: "Values compass",
+      coverage: 55,
+      confidence: 60,
+      insight:
+        "You lean toward depth over novelty, and you say so plainly.",
+      dimensions: ["values"],
+    },
+  ],
+  blindSpots: [
+    {
+      key: "spending",
+      label: "Spending rhythm",
+      why: "No financial signal is connected yet, so I cannot see how your day-to-day choices line up with what you say you want.",
+      actionLabel: "Connect spending",
+      href: "/connections",
+    },
+    {
+      key: "postDate",
+      label: "Real date outcomes",
+      why: "You have not logged a date debrief yet, so I am still guessing at what actually happens when you meet someone.",
+      actionLabel: "Log a debrief",
+      href: "/copilot/debrief",
+    },
+  ],
+  nextSignal: {
+    key: "postDate",
+    label: "Log your next date",
+    detail:
+      "One honest debrief teaches me more than ten audits. It is the single fastest way to sharpen this picture.",
+    href: "/copilot/debrief",
+    points: 12,
+  },
+  outcomeHeadline: "No real date outcomes logged yet.",
+  totalDates: 0,
+  eligible: false,
+  threshold: 60,
+  engineVersion: "sample",
+};
+
+function MirrorPortraitSection({
+  portrait,
+  isDemo,
+}: {
+  portrait: MirrorPortrait;
+  isDemo: boolean;
+}) {
+  return (
+  <div className="space-y-6">
+  <Card
+  data-testid="card-mirror-portrait"
+  className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent"
+  >
+  <CardContent className="py-6">
+  <div className="flex flex-wrap items-center gap-2">
+  <Badge variant="secondary" className="gap-1">
+  <Eye className="h-3 w-3" />
+  {portrait.stageLabel}
+  </Badge>
+  <Badge variant="outline" className="text-xs">
+  {portrait.coveragePercent}% of you mapped
+  </Badge>
+  {isDemo && (
+  <Badge variant="outline" className="text-xs">
+  Sample view, sign in for your own
+  </Badge>
+  )}
+  </div>
+  <p
+  data-testid="text-mirror-headline"
+  className="mt-4 font-serif text-xl leading-relaxed md:text-2xl"
+  >
+  {portrait.headline}
+  </p>
+  <p className="mt-2 text-sm text-muted-foreground">{portrait.stageBlurb}</p>
+  </CardContent>
+  </Card>
+
+  <div className="grid gap-6 md:grid-cols-2">
+  <Card data-testid="card-mirror-known">
+  <CardHeader>
+  <CardTitle className="flex items-center gap-2 text-base">
+  <Eye className="h-5 w-5 text-violet-500" />
+  What I can see so far
+  </CardTitle>
+  </CardHeader>
+  <CardContent>
+  {portrait.known.length === 0 ? (
+  <p className="text-sm text-muted-foreground">
+  Nothing yet. Feed me one signal and I will start to know you.
+  </p>
+  ) : (
+  <ul className="space-y-4">
+  {portrait.known.map((k) => (
+  <li key={k.key} data-testid={`row-known-${k.key}`}>
+  <div className="flex items-center justify-between gap-2">
+  <span className="text-sm font-medium">{k.label}</span>
+  <span className="text-xs text-muted-foreground">
+  {k.coverage}% covered · {k.confidence}% sure
+  </span>
+  </div>
+  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+  <div
+  className="h-full rounded-full bg-violet-500"
+  style={{ width: `${k.coverage}%` }}
+  />
+  </div>
+  <p className="mt-1.5 text-xs text-muted-foreground">{k.insight}</p>
+  </li>
+  ))}
+  </ul>
+  )}
+  </CardContent>
+  </Card>
+
+  <Card data-testid="card-mirror-blindspots">
+  <CardHeader>
+  <CardTitle className="flex items-center gap-2 text-base">
+  <EyeOff className="h-5 w-5 text-amber-500" />
+  What I cannot see yet
+  </CardTitle>
+  </CardHeader>
+  <CardContent>
+  {portrait.blindSpots.length === 0 ? (
+  <p className="text-sm text-muted-foreground">
+  I have a fairly full picture of you. Keep feeding outcomes and it
+  stays sharp.
+  </p>
+  ) : (
+  <ul className="space-y-3">
+  {portrait.blindSpots.map((b) => (
+  <li
+  key={b.key}
+  data-testid={`row-blindspot-${b.key}`}
+  className="rounded-lg border bg-card/40 p-3"
+  >
+  <p className="text-sm font-medium">{b.label}</p>
+  <p className="mt-1 text-xs text-muted-foreground">{b.why}</p>
+  <Link
+  href={b.href}
+  className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-violet-500 hover:text-violet-400"
+  data-testid={`link-blindspot-${b.key}`}
+  >
+  {b.actionLabel}
+  <ArrowUpRight className="h-3 w-3" />
+  </Link>
+  </li>
+  ))}
+  </ul>
+  )}
+  </CardContent>
+  </Card>
+  </div>
+
+  {portrait.nextSignal && (
+  <Card
+  data-testid="card-mirror-next"
+  className="border-violet-500/30 bg-violet-500/5"
+  >
+  <CardContent className="flex flex-col items-start gap-4 py-6 md:flex-row md:items-center md:justify-between">
+  <div className="flex items-start gap-3">
+  <Compass className="mt-0.5 h-6 w-6 shrink-0 text-violet-500" />
+  <div>
+  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+  The one thing that sharpens me most
+  </p>
+  <p className="mt-1 font-serif text-lg font-semibold">
+  {portrait.nextSignal.label}
+  </p>
+  <p className="mt-1 text-sm text-muted-foreground">
+  {portrait.nextSignal.detail}
+  </p>
+  </div>
+  </div>
+  <Link href={portrait.nextSignal.href}>
+  <Button data-testid="button-next-signal" className="gap-1.5">
+  Feed this signal
+  <span className="text-xs opacity-80">
+  +{portrait.nextSignal.points}
+  </span>
+  </Button>
+  </Link>
+  </CardContent>
+  </Card>
+  )}
+  </div>
+  );
+}
+
+interface MirrorTurn {
+  role: "you" | "mirror";
+  text: string;
+  grounding?: string[];
+  followUp?: string;
+  isFallback?: boolean;
+}
+
+const STARTER_QUESTIONS = [
+  "What do you actually know about me?",
+  "Am I ready to match?",
+  "What should I work on next?",
+  "Who should I be looking for?",
+];
+
+function MirrorChat({ disabled }: { disabled: boolean }) {
+  const qc = useQueryClient();
+  const ask = useAskMirror();
+  const [turns, setTurns] = useState<MirrorTurn[]>([]);
+  const [draft, setDraft] = useState("");
+
+  async function send(question: string): Promise<void> {
+  const q = question.trim();
+  if (!q || ask.isPending) return;
+  setTurns((t) => [...t, { role: "you", text: q }]);
+  setDraft("");
+  try {
+  const res = await ask.mutateAsync({ data: { question: q } });
+  setTurns((t) => [
+  ...t,
+  {
+  role: "mirror",
+  text: res.answer,
+  grounding: res.grounding,
+  followUp: res.followUp,
+  isFallback: res.isFallback,
+  },
+  ]);
+  // Talking to the Mirror reflects the live readiness picture; refresh the
+  // matching meter so it stays in sync across the app.
+  qc.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() });
+  } catch {
+  setTurns((t) => [
+  ...t,
+  {
+  role: "mirror",
+  text: "I could not reach my deeper read just now. Try again in a moment, and your signals are safe either way.",
+  },
+  ]);
+  }
+  }
+
+  return (
+  <Card data-testid="card-mirror-chat">
+  <CardHeader>
+  <CardTitle className="flex items-center gap-2 text-base">
+  <MessageCircle className="h-5 w-5 text-violet-500" />
+  Ask your Mirror anything
+  </CardTitle>
+  </CardHeader>
+  <CardContent>
+  {disabled ? (
+  <p className="text-sm text-muted-foreground">
+  Sign in to talk to your Mirror. It only ever speaks from the real
+  signals on your own account.
+  </p>
+  ) : (
+  <>
+  {turns.length === 0 ? (
+  <p className="mb-4 text-sm text-muted-foreground">
+  I answer only from what your real signals tell me. If I cannot see
+  something, I will say so and point you to the signal that would fill
+  the gap.
+  </p>
+  ) : (
+  <ul className="mb-4 space-y-3" data-testid="list-mirror-turns">
+  {turns.map((t, i) => (
+  <li
+  key={i}
+  data-testid={`turn-${t.role}-${i}`}
+  className={
+  t.role === "you"
+  ? "ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-primary/10 px-3 py-2"
+  : "mr-auto max-w-[90%] rounded-2xl rounded-bl-sm border bg-card/50 px-3 py-2"
+  }
+  >
+  <p className="whitespace-pre-wrap text-sm">{t.text}</p>
+  {t.grounding && t.grounding.length > 0 && (
+  <div className="mt-2 flex flex-wrap gap-1">
+  {t.grounding.map((g, gi) => (
+  <Badge key={gi} variant="secondary" className="text-[10px]">
+  {g}
+  </Badge>
+  ))}
+  </div>
+  )}
+  {t.followUp && (
+  <button
+  type="button"
+  onClick={() => void send(t.followUp!)}
+  data-testid={`followup-${i}`}
+  className="mt-2 inline-flex items-center gap-1 text-left text-xs font-medium text-violet-500 hover:text-violet-400"
+  >
+  <Lightbulb className="h-3 w-3 shrink-0" />
+  {t.followUp}
+  </button>
+  )}
+  {t.role === "mirror" && t.isFallback === false && (
+  <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+  Deep AI lane
+  </p>
+  )}
+  </li>
+  ))}
+  </ul>
+  )}
+
+  {turns.length === 0 && (
+  <div className="mb-4 flex flex-wrap gap-2">
+  {STARTER_QUESTIONS.map((q) => (
+  <button
+  key={q}
+  type="button"
+  onClick={() => void send(q)}
+  data-testid={`starter-${q.slice(0, 10)}`}
+  className="rounded-full border px-3 py-1 text-xs text-muted-foreground transition hover:border-violet-500/50 hover:text-foreground"
+  >
+  {q}
+  </button>
+  ))}
+  </div>
+  )}
+
+  <form
+  onSubmit={(e) => {
+  e.preventDefault();
+  void send(draft);
+  }}
+  className="flex items-end gap-2"
+  >
+  <Textarea
+  value={draft}
+  onChange={(e) => setDraft(e.target.value)}
+  onKeyDown={(e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+  e.preventDefault();
+  void send(draft);
+  }
+  }}
+  placeholder="Ask me what I see in you..."
+  rows={2}
+  className="resize-none"
+  data-testid="input-mirror-question"
+  />
+  <Button
+  type="submit"
+  size="icon"
+  disabled={ask.isPending || !draft.trim()}
+  data-testid="button-send-mirror"
+  >
+  <Send className="h-4 w-4" />
+  </Button>
+  </form>
+  {ask.isPending && (
+  <p className="mt-2 text-xs text-muted-foreground">
+  Reading your signals...
+  </p>
+  )}
+  </>
+  )}
+  </CardContent>
+  </Card>
+  );
+}
+
 export default function YourMirror() {
   useMeta(
     "Your Mirror",
@@ -109,6 +511,22 @@ export default function YourMirror() {
   const { data: notesData } = useListPostDateNotes({ view: "active", limit: 3 });
   const recentReflections = journalData?.entries ?? [];
   const recentDates = notesData?.notes ?? [];
+
+  // The portrait endpoint 401s for signed-out visitors; we do not retry that and
+  // fall back to a clearly-labelled sample so the page never looks empty. A
+  // signed-in user who hits a real server error should see an error state, not
+  // a silent sample, so we only treat the unauthenticated case as demo.
+  const { isAuthenticated } = useAuth();
+  const {
+    data: portrait,
+    isLoading: portraitLoading,
+    isError: portraitError,
+  } = useGetMirrorPortrait({
+    query: { queryKey: getGetMirrorPortraitQueryKey(), retry: false },
+  });
+  const portraitFailedForUser = isAuthenticated && portraitError && !portrait;
+  const isDemo = !portrait && !portraitFailedForUser;
+  const shownPortrait = portrait ?? DEMO_PORTRAIT;
 
   return (
   <div className="min-h-screen bg-background">
@@ -131,15 +549,51 @@ export default function YourMirror() {
   Your Mirror
   </Badge>
   <h1 className="font-serif text-4xl font-bold tracking-tight md:text-5xl">
-  Patterns across every audit you've run
+  The machine's read on you, so far
   </h1>
   <p className="mt-3 max-w-2xl text-base text-muted-foreground md:text-lg">
-  The deterministic view: what keeps coming up as a strength, what
-  keeps coming up as a risk, and how your score has moved since you
-  started. Every signal here is computed from your own audit history
-  by the deterministic engine. No Claude pass on this page.
+  Your Mirror is the model MatchLab keeps of you, built only from the
+  real signals you feed it. It tells you what it can see, where it is
+  still guessing, and the one move that sharpens the picture most. Ask
+  it anything below.
   </p>
   </motion.div>
+
+  {/* Conversational spine: the portrait the machine has built, plus the
+      ask-it-anything chat. Both read real per-account signals. */}
+  <div className="mb-12 space-y-6">
+  {portraitLoading ? (
+  <div className="space-y-4">
+  <Skeleton className="h-28 w-full" />
+  <Skeleton className="h-48 w-full" />
+  </div>
+  ) : portraitFailedForUser ? (
+  <Card className="border-destructive/40 bg-destructive/5">
+  <CardContent className="py-6">
+  <p className="text-sm text-destructive" data-testid="text-portrait-error">
+  Couldn't load your Mirror right now. Try refreshing the page in a
+  moment.
+  </p>
+  </CardContent>
+  </Card>
+  ) : (
+  <>
+  <MirrorPortraitSection portrait={shownPortrait} isDemo={isDemo} />
+  <MirrorChat disabled={isDemo} />
+  </>
+  )}
+  </div>
+
+  <div className="mb-6 mt-12 border-t pt-8">
+  <h2 className="font-serif text-2xl font-bold tracking-tight">
+  Your patterns over time
+  </h2>
+  <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+  The deterministic trend view across every audit you have run: what
+  keeps coming up as a strength, what keeps coming up as a risk, and how
+  your score has moved. No Claude pass on this section.
+  </p>
+  </div>
 
   {isLoading && (
   <div className="space-y-4">

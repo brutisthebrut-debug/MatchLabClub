@@ -16,5 +16,6 @@ export const MatchExternalReadInputSource = {
   grindr: 'grindr',
   feeld: 'feeld',
   her: 'her',
+  facebookDating: 'facebookDating',
   other: 'other',
 } as const;

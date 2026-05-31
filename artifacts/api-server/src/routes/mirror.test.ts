@@ -12,7 +12,11 @@ import {
   lifePulsesTable,
 } from "@workspace/db";
 import type { AuthUser } from "@workspace/api-zod";
-import { GetMirrorTrendsResponse } from "@workspace/api-zod";
+import {
+  GetMirrorTrendsResponse,
+  GetMirrorPortraitResponse,
+  AskMirrorResponse,
+} from "@workspace/api-zod";
 import mirrorRouter from "./mirror";
 
 interface TestApp {
@@ -155,6 +159,65 @@ describe("GET /api/mirror/trends", () => {
       const res = await request(testApp.app).get("/api/mirror/trends");
       expect(res.status).toBe(200);
       expect(res.body.totalAudits).toBe(0);
+    } finally {
+      await cleanup();
+    }
+  });
+});
+
+describe("GET /api/mirror/portrait", () => {
+  it("401s an anonymous caller", async () => {
+    testApp.setUser(null);
+    const res = await request(testApp.app).get("/api/mirror/portrait");
+    expect(res.status).toBe(401);
+  });
+
+  it("returns a valid, non-empty portrait for a signed-in user with no signals", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    try {
+      const res = await request(testApp.app).get("/api/mirror/portrait");
+      expect(res.status).toBe(200);
+      expect(() => GetMirrorPortraitResponse.parse(res.body)).not.toThrow();
+      expect(res.body.stage).toBe("outline");
+      expect(res.body.known).toHaveLength(0);
+      expect(res.body.blindSpots.length).toBeGreaterThan(0);
+      expect(res.body.nextSignal).not.toBeNull();
+      expect(res.body.engineVersion).toMatch(/\d{4}-\d{2}-\d{2}/);
+    } finally {
+      await cleanup();
+    }
+  });
+});
+
+describe("POST /api/mirror/ask", () => {
+  it("401s an anonymous caller", async () => {
+    testApp.setUser(null);
+    const res = await request(testApp.app)
+      .post("/api/mirror/ask")
+      .send({ question: "what do you know about me?" });
+    expect(res.status).toBe(401);
+  });
+
+  it("400s on an empty question", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    const res = await request(testApp.app)
+      .post("/api/mirror/ask")
+      .send({ question: "" });
+    expect(res.status).toBe(400);
+  });
+
+  it("answers with the deterministic baseline and real grounding when consent is off", async () => {
+    testApp.setUser({ id: TEST_USER_ID });
+    try {
+      const res = await request(testApp.app)
+        .post("/api/mirror/ask")
+        .send({ question: "am I ready to match?" });
+      expect(res.status).toBe(200);
+      expect(() => AskMirrorResponse.parse(res.body)).not.toThrow();
+      expect(res.body.isFallback).toBe(true);
+      expect(res.body.answer.length).toBeGreaterThan(0);
+      expect(res.body.grounding).toContain("Match Readiness");
+      expect(res.body.answer).not.toContain("\u2014");
     } finally {
       await cleanup();
     }

@@ -1583,6 +1583,94 @@ export interface MirrorTrendReport {
   engineVersion: string;
 }
 
+export interface MirrorKnownDimension {
+  key: string;
+  label: string;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  coverage: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  confidence: number;
+  insight: string;
+  dimensions: string[];
+}
+
+export interface MirrorBlindSpot {
+  key: string;
+  label: string;
+  why: string;
+  actionLabel: string;
+  href: string;
+}
+
+export interface MirrorNextSignal {
+  key: string;
+  label: string;
+  detail: string;
+  href: string;
+  points: number;
+}
+
+export type MirrorPortraitStage = typeof MirrorPortraitStage[keyof typeof MirrorPortraitStage];
+
+
+export const MirrorPortraitStage = {
+  outline: 'outline',
+  forming: 'forming',
+  sharp: 'sharp',
+  vivid: 'vivid',
+} as const;
+
+export interface MirrorPortrait {
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  readinessScore: number;
+  stage: MirrorPortraitStage;
+  stageLabel: string;
+  stageBlurb: string;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  coveragePercent: number;
+  headline: string;
+  known: MirrorKnownDimension[];
+  blindSpots: MirrorBlindSpot[];
+  nextSignal: MirrorNextSignal | null;
+  outcomeHeadline: string;
+  /** @minimum 0 */
+  totalDates: number;
+  eligible: boolean;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  threshold: number;
+  engineVersion: string;
+}
+
+export interface MirrorAskInput {
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  question: string;
+}
+
+export interface MirrorAskResult {
+  answer: string;
+  grounding: string[];
+  followUp: string;
+  isFallback: boolean;
+}
+
 export interface JournalEntryInput {
   /**
      * Optional curated prompt the entry answers. Null = freeform.
@@ -2232,6 +2320,7 @@ export const MatchExternalReadInputSource = {
   grindr: 'grindr',
   feeld: 'feeld',
   her: 'her',
+  facebookDating: 'facebookDating',
   other: 'other',
 } as const;
 
@@ -2670,6 +2759,18 @@ export type ExtractMessageScreenshot400 = {
 };
 
 export type RehearsalTurn400 = {
+  error?: string;
+};
+
+export type GetMirrorPortrait401 = {
+  error?: string;
+};
+
+export type AskMirror400 = {
+  error?: string;
+};
+
+export type AskMirror401 = {
   error?: string;
 };
 

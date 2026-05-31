@@ -838,8 +838,9 @@ export default function Matching() {
                 Already talking to someone? Score the match.
               </CardTitle>
               <CardDescription>
-                Paste their Hinge, Tinder, Bumble, Grindr, or Feeld profile. We score it
-                against what we know about you and save the read.
+                Paste their Hinge, Tinder, Bumble, Grindr, Feeld, HER, or Facebook
+                Dating profile. We score it against what we know about you and save
+                the read.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -872,6 +873,7 @@ export default function Matching() {
                         <SelectItem value="grindr">Grindr</SelectItem>
                         <SelectItem value="feeld">Feeld</SelectItem>
                         <SelectItem value="her">HER</SelectItem>
+                        <SelectItem value="facebookDating">Facebook Dating</SelectItem>
                         <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
