@@ -26,6 +26,8 @@ import importsRouter from "./imports";
 import matchingRouter from "./matching";
 import datingWinsRouter from "./datingWins";
 import rehearsalRouter from "./rehearsal";
+import devAuthRouter from "./devAuth";
+import { isDevEnvironment } from "../lib/devSeed";
 
 const router: IRouter = Router();
 
@@ -56,5 +58,12 @@ router.use(importsRouter);
 router.use(matchingRouter);
 router.use(datingWinsRouter);
 router.use(rehearsalRouter);
+
+// Development-only test-user preview + safe test-login. Mounted only outside
+// production; the router additionally 404s every request in production as a
+// second guard. Never reachable in a deployed build.
+if (isDevEnvironment()) {
+  router.use(devAuthRouter);
+}
 
 export default router;

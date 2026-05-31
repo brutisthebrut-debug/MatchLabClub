@@ -208,6 +208,18 @@ export const dataExportTokensTable = makeTable("data_export_tokens");
 export const usersTable = makeTable("users");
 export const sessionsTable = makeTable("sessions");
 export const lifePulsesTable = makeTable("life_pulses");
+ensureStore("compatibility_reads");
+export const compatibilityReadsTable = makeTable("compatibility_reads");
+ensureStore("journal_entries");
+export const journalEntriesTable = makeTable("journal_entries");
+ensureStore("wellness_answers");
+export const wellnessAnswersTable = makeTable("wellness_answers");
+ensureStore("imported_sources");
+export const importedSourcesTable = makeTable("imported_sources");
+ensureStore("post_date_notes");
+export const postDateNotesTable = makeTable("post_date_notes");
+ensureStore("dating_wins");
+export const datingWinsTable = makeTable("dating_wins");
 
 // ---- Operators -----------------------------------------------------------
 
@@ -497,7 +509,7 @@ class SelectChain extends AsyncChain<Row[]> {
 
 class InsertChain extends AsyncChain<Row[]> {
   private tableName: string;
-  private valuesObj: Row | null = null;
+  private valuesObj: Row | Row[] | null = null;
   private returningSpec: Record<string, ColumnRef> | true | null = null;
   private conflictTarget: ColumnRef | ColumnRef[] | null = null;
   private conflictSet: Row | null = null;
@@ -505,7 +517,7 @@ class InsertChain extends AsyncChain<Row[]> {
     super();
     this.tableName = tableName;
   }
-  values(obj: Row): this {
+  values(obj: Row | Row[]): this {
     this.valuesObj = obj;
     return this;
   }
@@ -525,6 +537,36 @@ class InsertChain extends AsyncChain<Row[]> {
   }
   protected execute(): Row[] {
     const store = ensureStore(this.tableName);
+    // Bulk insert: `db.insert(t).values([...])`. Real drizzle accepts an
+    // array; insert each row in turn (conflict handling is single-row only,
+    // which matches how the route layer uses bulk inserts).
+    if (Array.isArray(this.valuesObj)) {
+      const inserted: Row[] = [];
+      for (const item of this.valuesObj) {
+        const hasId = typeof item.id === "string" && item.id.length > 0;
+        const row: Row = {
+          ...store.defaults,
+          ...item,
+          ...(hasId ? {} : { id: store.nextId++ }),
+          createdAt: nextClock(),
+        };
+        store.rows.push(row);
+        inserted.push(row);
+      }
+      if (this.returningSpec === null || this.returningSpec === true) {
+        return inserted;
+      }
+      return inserted.map((row) => {
+        const projected: Row = {};
+        for (const [outKey, ref] of Object.entries(
+          this.returningSpec as Record<string, ColumnRef>,
+        )) {
+          projected[outKey] = row[ref.__col];
+        }
+        return projected;
+      });
+    }
+
     const v = this.valuesObj ?? {};
     const hasExplicitId = typeof v.id === "string" && v.id.length > 0;
 
