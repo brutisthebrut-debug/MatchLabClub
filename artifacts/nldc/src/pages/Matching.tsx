@@ -15,6 +15,7 @@ import {
   Instagram,
   MapPin,
   MessageCircle,
+  Share2,
   Sparkles,
   TrendingUp,
   Trophy,
@@ -533,11 +534,25 @@ export default function Matching() {
                     The deeper your signals, the better the match.
                   </CardDescription>
                 </div>
-                <div className="text-right">
-                  <div className="text-4xl md:text-5xl font-bold text-foreground">
-                    {readinessScore}
-                    <span className="text-2xl text-muted-foreground">%</span>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <div className="text-4xl md:text-5xl font-bold text-foreground">
+                      {readinessScore}
+                      <span className="text-2xl text-muted-foreground">%</span>
+                    </div>
                   </div>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full"
+                    data-testid="button-open-share-card"
+                  >
+                    <Link href="/share-card">
+                      <Share2 className="mr-1 w-4 h-4" aria-hidden="true" />
+                      Share card
+                    </Link>
+                  </Button>
                 </div>
               </div>
               <div className="mt-4">

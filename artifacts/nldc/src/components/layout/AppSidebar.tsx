@@ -44,6 +44,7 @@ import {
   Network,
   Users,
   ShieldCheck,
+  Share2,
   Database,
   Aperture,
   BookOpen,
@@ -100,6 +101,7 @@ const SECTIONS: NavSection[] = [
       { name: "Scorecard", href: "/progress/scorecard", icon: Gauge },
       { name: "Timeline", href: "/progress/timeline", icon: History },
       { name: "Wins Log", href: "/progress/wins", icon: Trophy },
+      { name: "Share Card", href: "/share-card", icon: Share2 },
     ],
     more: [
       { name: "Patterns", href: "/progress/patterns", icon: Layers },
