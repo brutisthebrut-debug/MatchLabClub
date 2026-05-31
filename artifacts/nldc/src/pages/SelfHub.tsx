@@ -28,6 +28,7 @@ import {
   Mail,
   MessageSquare,
   Plug,
+  Share2,
   Sparkles,
   Trophy,
   Upload,
@@ -711,6 +712,20 @@ export default function SelfHub() {
   threshold={matchingState.data?.readinessThreshold ?? 50}
   streak={matchingState.data?.activityStreak}
   />
+  <div className="mt-3 flex justify-center">
+  <Button
+  asChild
+  variant="outline"
+  size="sm"
+  className="rounded-full"
+  data-testid="link-share-card-home"
+  >
+  <Link href="/share-card">
+  <Share2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
+  Share your readiness card
+  </Link>
+  </Button>
+  </div>
   </motion.div>
 
   {/* Engine spine: the single highest-value move toward a match */}

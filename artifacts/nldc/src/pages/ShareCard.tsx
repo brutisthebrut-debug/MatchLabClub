@@ -7,11 +7,15 @@ import { Download, Share2, Copy, ArrowLeft, Check, Sparkles } from "lucide-react
 import {
   useGetMatchingState,
   getGetMatchingStateQueryKey,
+  useGetMirrorPortrait,
+  getGetMirrorPortraitQueryKey,
 } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
 const fadeUp = (delay = 0) => ({
@@ -41,6 +45,8 @@ function stageFor(score: number): { name: string; line: string } {
   return { name: "Laying the groundwork", line: "Just started teaching the machine who I am." };
 }
 
+type SnippetOption = { key: string; label: string; text: string };
+
 export default function ShareCard() {
   useMeta(
     "Your readiness card",
@@ -54,11 +60,27 @@ export default function ShareCard() {
       enabled: isAuthenticated,
     },
   });
+  // The portrait is the source of the optional Mirror snippet. It 401s for anon
+  // and may still be loading; either way the card falls back to score + lanes.
+  const portraitQuery = useGetMirrorPortrait({
+    query: {
+      queryKey: getGetMirrorPortraitQueryKey(),
+      enabled: isAuthenticated,
+      retry: false,
+    },
+  });
+  const portrait = portraitQuery.data ?? null;
   const { toast } = useToast();
   const cardRef = useRef<HTMLDivElement>(null);
   const [qr, setQr] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // What the user has chosen to show. Score and stage are the always-on anchor;
+  // lanes and the Mirror snippet are opt-in so the user controls exactly what
+  // leaves their account. The live card below is the confirmation.
+  const [showLanes, setShowLanes] = useState(true);
+  const [snippetKey, setSnippetKey] = useState<string>("headline");
 
   const score = state.data?.readiness.score ?? 0;
   const breakdown = useMemo(
@@ -67,8 +89,19 @@ export default function ShareCard() {
   );
 
   const inviteUrl = useMemo(() => {
-    if (typeof window === "undefined") return "https://matchlab.club";
-    return window.location.origin + (import.meta.env.BASE_URL || "/");
+    const base =
+      typeof window === "undefined"
+        ? "https://matchlab.club"
+        : window.location.origin + (import.meta.env.BASE_URL || "/");
+    try {
+      const u = new URL(base);
+      u.searchParams.set("utm_source", "share");
+      u.searchParams.set("utm_medium", "card");
+      u.searchParams.set("utm_campaign", "readiness");
+      return u.toString();
+    } catch {
+      return base;
+    }
   }, []);
 
   const topLanes = useMemo(() => {
@@ -82,6 +115,29 @@ export default function ShareCard() {
       .sort((a, b) => b.value - a.value)
       .slice(0, 3);
   }, [breakdown]);
+
+  // Every snippet option is a derived, aggregate read (a headline or a coverage
+  // insight). None of them echo anything the user wrote, pasted, or uploaded.
+  const snippetOptions = useMemo<SnippetOption[]>(() => {
+    if (!portrait) return [];
+    const opts: SnippetOption[] = [
+      { key: "headline", label: "Overview", text: portrait.headline },
+    ];
+    for (const k of portrait.known) {
+      if (k.insight) {
+        opts.push({ key: `known:${k.key}`, label: k.label, text: k.insight });
+      }
+    }
+    return opts;
+  }, [portrait]);
+
+  const selectedSnippet = useMemo<SnippetOption | null>(() => {
+    if (snippetKey === "none") return null;
+    if (snippetOptions.length === 0) return null;
+    return (
+      snippetOptions.find((o) => o.key === snippetKey) ?? snippetOptions[0]
+    );
+  }, [snippetKey, snippetOptions]);
 
   const stage = stageFor(score);
 
@@ -235,9 +291,10 @@ export default function ShareCard() {
             Show the work
           </h1>
           <p className="mt-2 text-muted-foreground max-w-xl">
-            This card shows your readiness stage and the lanes you have fed the
-            machine. It never shows what you wrote, who you talked to, or any raw
-            data. Post it, send it, and bring people onto the path with you.
+            This card shows your readiness stage and, if you want, one derived
+            line from your Mirror. It never shows what you wrote, who you talked
+            to, or any raw data. You choose what appears, then post it, send it,
+            and bring people onto the path with you.
           </p>
         </motion.div>
 
@@ -245,7 +302,7 @@ export default function ShareCard() {
           <motion.div {...fadeUp(0.05)} className="mx-auto">
             <div
               ref={cardRef}
-              className="relative w-[340px] h-[460px] overflow-hidden rounded-[28px] text-white"
+              className="relative w-[340px] min-h-[460px] overflow-hidden rounded-[28px] text-white"
               style={{
                 background:
                   "radial-gradient(120% 120% at 0% 0%, hsl(252 70% 22%) 0%, hsl(258 65% 12%) 45%, #0b0a17 100%)",
@@ -259,7 +316,7 @@ export default function ShareCard() {
                 className="pointer-events-none absolute -bottom-24 -left-16 w-72 h-72 rounded-full blur-3xl"
                 style={{ background: "hsl(252 90% 65% / 0.4)" }}
               />
-              <div className="relative h-full flex flex-col p-7">
+              <div className="relative min-h-[460px] flex flex-col p-7">
                 <div className="flex items-center gap-2">
                   <span
                     className="grid place-items-center w-7 h-7 rounded-lg"
@@ -312,34 +369,47 @@ export default function ShareCard() {
                   </div>
                 </div>
 
-                <p className="mt-5 text-sm text-white/75 leading-snug">
-                  {stage.line}
-                </p>
-
-                <div className="mt-5 space-y-2">
-                  {topLanes.length > 0 ? (
-                    topLanes.map((lane) => (
-                      <div key={lane.key} className="flex items-center gap-3">
-                        <span className="text-xs text-white/65 w-28 shrink-0">
-                          {lane.label}
-                        </span>
-                        <span className="relative h-1.5 flex-1 rounded-full bg-white/12 overflow-hidden">
-                          <span
-                            className="absolute inset-y-0 left-0 rounded-full"
-                            style={{
-                              width: `${lane.value}%`,
-                              background: "hsl(326 100% 68%)",
-                            }}
-                          />
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-xs text-white/55">
-                      Lanes fill in as I feed the machine.
+                {selectedSnippet ? (
+                  <div className="mt-5">
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-white/45">
+                      What my Mirror sees
                     </p>
-                  )}
-                </div>
+                    <p className="mt-1 text-sm text-white/85 leading-snug">
+                      {selectedSnippet.text}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="mt-5 text-sm text-white/75 leading-snug">
+                    {stage.line}
+                  </p>
+                )}
+
+                {showLanes && (
+                  <div className="mt-5 space-y-2">
+                    {topLanes.length > 0 ? (
+                      topLanes.map((lane) => (
+                        <div key={lane.key} className="flex items-center gap-3">
+                          <span className="text-xs text-white/65 w-28 shrink-0">
+                            {lane.label}
+                          </span>
+                          <span className="relative h-1.5 flex-1 rounded-full bg-white/12 overflow-hidden">
+                            <span
+                              className="absolute inset-y-0 left-0 rounded-full"
+                              style={{
+                                width: `${lane.value}%`,
+                                background: "hsl(326 100% 68%)",
+                              }}
+                            />
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-white/55">
+                        Lanes fill in as I feed the machine.
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="mt-auto flex items-end justify-between pt-5">
                   <div>
@@ -363,6 +433,75 @@ export default function ShareCard() {
           </motion.div>
 
           <motion.div {...fadeUp(0.1)} className="space-y-4 max-w-md">
+            <div className="rounded-2xl border border-foreground/8 p-5">
+              <h2 className="font-semibold">What to show</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Build the card you want to share. The live card on the left is
+                exactly what goes out.
+              </p>
+
+              <div className="mt-4 flex items-center justify-between gap-4">
+                <Label htmlFor="toggle-lanes" className="text-sm font-medium">
+                  Top lanes you have fed
+                </Label>
+                <Switch
+                  id="toggle-lanes"
+                  checked={showLanes}
+                  onCheckedChange={setShowLanes}
+                  data-testid="switch-show-lanes"
+                />
+              </div>
+
+              {snippetOptions.length > 0 ? (
+                <div className="mt-5">
+                  <p className="text-sm font-medium">A line from your Mirror</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    A derived read of where you are. Never anything you wrote or
+                    uploaded.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSnippetKey("none")}
+                      data-testid="snippet-option-none"
+                      aria-pressed={selectedSnippet === null}
+                      className={
+                        selectedSnippet === null
+                          ? "rounded-full border border-primary bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary"
+                          : "rounded-full border border-foreground/15 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-foreground/30"
+                      }
+                    >
+                      None
+                    </button>
+                    {snippetOptions.map((opt) => {
+                      const active = selectedSnippet?.key === opt.key;
+                      return (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => setSnippetKey(opt.key)}
+                          data-testid={`snippet-option-${opt.key}`}
+                          aria-pressed={active}
+                          className={
+                            active
+                              ? "rounded-full border border-primary bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary"
+                              : "rounded-full border border-foreground/15 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-foreground/30"
+                          }
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-5 text-xs text-muted-foreground">
+                  Feed your Mirror a signal or two and you can add a line from it
+                  here.
+                </p>
+              )}
+            </div>
+
             <div className="rounded-2xl border border-foreground/8 p-5">
               <h2 className="font-semibold">Send it out</h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -413,7 +552,8 @@ export default function ShareCard() {
                 <li>Your name, location, or any raw signal data.</li>
               </ul>
               <p className="mt-3 text-sm text-muted-foreground">
-                Just your stage, your score, and the lanes you have invested in.
+                Just your stage, your score, the lanes you choose, and a derived
+                line from your Mirror if you add one.
               </p>
             </div>
           </motion.div>

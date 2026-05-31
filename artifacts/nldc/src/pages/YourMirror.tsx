@@ -20,6 +20,7 @@ import {
   MessageCircle,
   Lightbulb,
   Send,
+  Share2,
 } from "lucide-react";
 import {
   Area,
@@ -507,11 +508,27 @@ export default function YourMirror() {
   <>
   <MirrorPortraitSection portrait={shownPortrait} isDemo={isDemo} />
   {!isDemo && (
+  <>
   <ClimbCard
   score={matchingState?.readiness?.score ?? 0}
   threshold={matchingState?.readinessThreshold ?? 50}
   streak={matchingState?.activityStreak}
   />
+  <div className="flex justify-center">
+  <Button
+  asChild
+  variant="outline"
+  size="sm"
+  className="rounded-full"
+  data-testid="link-share-card-mirror"
+  >
+  <Link href="/share-card">
+  <Share2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
+  Share your readiness card
+  </Link>
+  </Button>
+  </div>
+  </>
   )}
   <MirrorChat disabled={isDemo} />
   </>
