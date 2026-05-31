@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ActionPlanItem } from './actionPlanItem';
+import type { PhotoAnalysis } from './photoAnalysis';
 import type { PhotoGuidanceItem } from './photoGuidanceItem';
 import type { ReportChangeSummary } from './reportChangeSummary';
 import type { RewrittenPrompt } from './rewrittenPrompt';
@@ -37,4 +38,11 @@ export interface AuditReport {
   exists to compare against.
    */
   changeSummary?: ReportChangeSummary | null;
+  /** Real AI vision read of the actual profile photo(s) in the uploaded
+  screenshot. Present only when the signed-in user opted into the deep
+  AI lane (ai_content_consent) and the vision call succeeded; otherwise
+  null, and the deterministic photoGuidance checklist is the fallback.
+  The raw image is never stored; it is analyzed in memory and discarded.
+   */
+  photoAnalysis?: PhotoAnalysis | null;
 }

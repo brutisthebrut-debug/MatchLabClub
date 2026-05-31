@@ -220,6 +220,13 @@ const DEMO_REPORT = {
   coachingCta: "Ready to go deeper? Get your full Dating Reset, complete profile rewrite, conversation strategy, and a 7-day action plan built around your specific situation.",
 };
 
+type PhotoAnalysisShape = {
+  summary: string;
+  observations: { aspect: string; assessment: "strong" | "okay" | "needs_work"; detail: string }[];
+  topFix: string;
+};
+type ReportShape = typeof DEMO_REPORT & { photoAnalysis?: PhotoAnalysisShape | null };
+
 function receptionRead(report: { readinessScore: number; risks: string[] }): string {
   const s = report.readinessScore;
   const topRisk = report.risks?.[0];
@@ -411,7 +418,7 @@ export default function Report() {
   if (storedReport) setReport(storedReport as unknown as typeof DEMO_REPORT);
   }
 
-  const r = report ?? (auditId ? null : DEMO_REPORT) ?? DEMO_REPORT;
+  const r: ReportShape = (report ?? (auditId ? null : DEMO_REPORT) ?? DEMO_REPORT) as ReportShape;
   const changeSummary: ChangeSummary | null =
   (report as unknown as { changeSummary?: ChangeSummary | null } | null)
   ?.changeSummary ??
@@ -1192,6 +1199,46 @@ export default function Report() {
   </div>
   )}
   </motion.div>
+
+  {/* ── Photo critique (real AI vision, opt-in only) ── */}
+  {r.photoAnalysis ? (
+  <motion.div {...fadeUp(0.21)} className="glass border border-[hsl(248_62%_52%/0.25)] rounded-3xl p-8" data-testid="section-photo-analysis">
+  <div className="flex items-center gap-2.5 mb-2">
+  <Eye className="w-5 h-5 text-[hsl(248_62%_62%)]" />
+  <h2 className="text-xl font-bold text-foreground">Photo Critique</h2>
+  <span className="text-xs font-medium px-2.5 py-0.5 rounded-full tag-strength border">AI vision read</span>
+  </div>
+  <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+  This looks at your actual photos, not just a checklist. It runs only because you turned on the deep AI lane. Your image is read in the moment and never stored.
+  </p>
+  <p className="text-sm text-foreground leading-relaxed mb-4">{r.photoAnalysis.summary}</p>
+  <div className="space-y-3">
+  {r.photoAnalysis.observations.map((ob, i) => {
+  const tone = ob.assessment === "strong"
+  ? { icon: <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />, label: "Strong", cls: "tag-strength border" }
+  : ob.assessment === "okay"
+  ? { icon: <AlertCircle className="w-5 h-5 text-[hsl(43_65%_65%)] flex-shrink-0" />, label: "Okay", cls: "tag-risk border" }
+  : { icon: <XCircle className="w-5 h-5 text-rose-400 flex-shrink-0" />, label: "Needs work", cls: "tag-risk border" };
+  return (
+  <div key={i} className="flex items-start gap-4 p-4 rounded-2xl border border-white/8 bg-[hsl(248_40%_95%/0.5)]" data-testid={`card-photo-analysis-${i}`}>
+  <div className="mt-0.5">{tone.icon}</div>
+  <div>
+  <div className="flex items-center gap-2 mb-1 flex-wrap">
+  <p className="font-semibold text-sm text-foreground">{ob.aspect}</p>
+  <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${tone.cls}`}>{tone.label}</span>
+  </div>
+  <p className="text-sm text-muted-foreground leading-relaxed">{ob.detail}</p>
+  </div>
+  </div>
+  );
+  })}
+  </div>
+  <div className="mt-4 rounded-2xl p-4 bg-[hsl(248_62%_52%/0.06)] border border-[hsl(248_62%_52%/0.2)]">
+  <p className="text-xs font-semibold text-[hsl(248_62%_62%)] mb-1">Highest-impact fix</p>
+  <p className="text-sm text-foreground leading-relaxed">{r.photoAnalysis.topFix}</p>
+  </div>
+  </motion.div>
+  ) : null}
 
   {/* ── Photo Guidance ── */}
   <motion.div {...fadeUp(0.22)} className="glass border border-white/8 rounded-3xl p-8">

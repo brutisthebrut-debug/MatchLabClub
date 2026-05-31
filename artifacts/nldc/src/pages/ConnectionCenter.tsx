@@ -95,8 +95,8 @@ const LIVE: Connector[] = [
     icon: Camera,
     color: "hsl(212 70% 55%)",
     blurb:
-      "Upload one profile photo. We read composition, expression, group density, and what it says about the kind of person you read as.",
-    returns: "A photo critique and a single specific change that lifts the read.",
+      "Upload a profile screenshot. With the deep AI lane on, AI vision reads your actual photo for lighting, framing, expression, and variety. With it off, you still get a structured photo checklist. Your image is read in the moment and never stored.",
+    returns: "A real photo critique with a single highest-impact fix when the AI lane is on, or a guidance checklist otherwise.",
     cta: { href: "/scan", label: "Open Photo Scan" },
   },
   {

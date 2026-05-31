@@ -109,12 +109,13 @@ Connector cards genuinely built: Hinge GDPR zip, Instagram tone, message paste, 
 wellness, calendar paste, matching cohort. Placeholders: forwarding inbox, Plaid, Spotify.
 
 ## Known claim-vs-build gaps (fix copy or build before promising)
-- "Photo Scan" card implies visual photo critique; reality = OCR of bio/prompts + a STATIC photo
-  checklist in aiEngine, no real image analysis.
-- Hinge/Tinder/Bumble OAuth marketed ("coming") — NO OAuth infra exists.
-- replit.md privacy paragraph implies Claude always does Instagram tone; reality = deterministic by
-  default, Claude only with consent.
-- Stripe: replit.md says "no webhook"; `purchase_interest` + Checkout.tsx are pre-wired for
-  stripe_session_id/paid status but no webhook endpoint exists yet.
+- Photo Scan: REAL Claude-vision critique is BUILT (consent-gated + capped, deterministic checklist
+  fallback). RULE: the frontend uploads prefix-stripped base64, so any image sent to a vision model
+  must carry its MIME type as a separate field; inferring format from the base64 alone silently
+  mislabels PNG/WEBP/GIF as JPEG and the vision call can fail.
+- Hinge/Tinder/Bumble OAuth is roadmap-only copy ("coming") — NO OAuth infra exists, do not imply it does.
+- Instagram tone is deterministic by default, Claude only with consent — never write "Claude always".
+- Stripe: `purchase_interest` + Checkout.tsx are pre-wired for stripe_session_id/paid status, but the
+  webhook that flips status to paid is NOT built yet (replit.md still says "no webhook").
 - Built but under-marketed: dating wins log (is a readiness signal), the large /progress + /copilot
   surfaces.

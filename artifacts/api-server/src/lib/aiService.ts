@@ -4,6 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { extractAndValidateJson, getAiToolSchema } from "@workspace/ai-schemas";
 import { db, aiRequestMetricsTable, usersTable, aiUsageCountersTable } from "@workspace/db";
 import { logger } from "./logger";
+import type { PhotoAnalysis } from "./aiEngine";
 
 export type AiMode = "live" | "fallback" | "setup-needed";
 export type AiProvider = "openai" | "anthropic";
@@ -78,6 +79,9 @@ interface AnthropicMessageResponse {
   model?: string;
   stop_reason?: string | null;
 }
+type AnthropicContentBlock =
+  | { type: "text"; text: string }
+  | { type: "image"; source: { type: "base64"; media_type: string; data: string } };
 interface AnthropicClient {
   messages: {
     create: (
@@ -85,7 +89,10 @@ interface AnthropicClient {
         model: string;
         max_tokens: number;
         system?: string;
-        messages: Array<{ role: "user" | "assistant"; content: string }>;
+        messages: Array<{
+          role: "user" | "assistant";
+          content: string | AnthropicContentBlock[];
+        }>;
       },
       options?: { timeout?: number },
     ) => Promise<AnthropicMessageResponse>;
@@ -693,6 +700,206 @@ function recordMetric(opts: GenerateOptions, result: GenerateResult<string>): vo
         "Failed to record AI request metric",
       );
     });
+}
+
+// ---------------------------------------------------------------------------
+// Vision: real profile-photo critique
+//
+// This is the ONLY path that ships the user's raw image to a hosted model.
+// OCR runs locally (tesseract), so until this feature the image never left the
+// server. Because of that, the consent gate here is non-negotiable: an
+// unconsented or anonymous caller never reaches the model. The image is sent
+// in-memory and never persisted. On any miss (no consent, cap hit, no client,
+// bad JSON, model error) we return analysis:null so the caller keeps the
+// deterministic photoGuidance checklist as the fallback.
+// ---------------------------------------------------------------------------
+
+export interface AnalyzeProfilePhotosOptions {
+  imageBase64: string;
+  imageMediaType?: string | null;
+  userId?: string;
+  sourceApp?: string | null;
+  datingGoal?: string | null;
+}
+
+export interface AnalyzeProfilePhotosResult {
+  analysis: PhotoAnalysis | null;
+  mode: AiMode;
+  isFallback: boolean;
+  durationMs: number;
+  fallbackReason?: GenerateResult["fallbackReason"];
+}
+
+const ANTHROPIC_IMAGE_MEDIA_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+]);
+
+function stripImageDataUrlPrefix(input: string): string {
+  const comma = input.indexOf(",");
+  if (input.startsWith("data:") && comma !== -1) return input.slice(comma + 1);
+  return input;
+}
+
+function normalizeImageMediaType(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const lower = raw.toLowerCase().trim();
+  const normalized = lower === "image/jpg" ? "image/jpeg" : lower;
+  return ANTHROPIC_IMAGE_MEDIA_TYPES.has(normalized) ? normalized : null;
+}
+
+// Prefer an explicit media type from the client (the browser knows the real
+// File.type). Fall back to sniffing a data-URL prefix, then to JPEG. This
+// matters because the frontend sends prefix-stripped base64, so without the
+// explicit hint PNG/WEBP/GIF uploads would be mislabeled as JPEG and the vision
+// call could fail.
+function detectImageMediaType(input: string, explicit?: string | null): string {
+  const fromExplicit = normalizeImageMediaType(explicit);
+  if (fromExplicit) return fromExplicit;
+  const match = /^data:(image\/[a-z0-9.+-]+);base64,/i.exec(input.trim());
+  if (match) {
+    const fromPrefix = normalizeImageMediaType(match[1]);
+    if (fromPrefix) return fromPrefix;
+  }
+  return "image/jpeg";
+}
+
+const photoAnalysisSchema = z.object({
+  summary: z.string().trim().min(1).max(600),
+  observations: z
+    .array(
+      z.object({
+        aspect: z.string().trim().min(1).max(60),
+        assessment: z.enum(["strong", "okay", "needs_work"]),
+        detail: z.string().trim().min(1).max(600),
+      }),
+    )
+    .min(1)
+    .max(8),
+  topFix: z.string().trim().min(1).max(600),
+});
+
+function recordVisionMetric(
+  mode: AiMode,
+  isFallback: boolean,
+  durationMs: number,
+  error: string | null,
+): void {
+  db.insert(aiRequestMetricsTable)
+    .values({
+      toolName: "photo_vision",
+      mode,
+      model: DEFAULT_ANTHROPIC_MODEL,
+      attempts: 1,
+      validated: null,
+      isFallback,
+      durationMs,
+      error,
+    })
+    .catch((err) => {
+      logger.warn(
+        { err: err instanceof Error ? err.message : String(err) },
+        "Failed to record photo_vision metric",
+      );
+    });
+}
+
+const PHOTO_VISION_SYSTEM = [
+  "You are the MatchLab Club photo coach looking at a screenshot from a dating app profile.",
+  "Critique only what you can actually see: lighting, framing, expression, outfit, background, photo variety, solo vs group, and image quality.",
+  "Be specific and kind. Never guess at things you cannot see. Never comment on race, body weight, attractiveness rankings, or anything demeaning. Never claim to be human.",
+  "If the screenshot shows no usable photo of a person (for example it is only text), say so plainly in the summary and keep observations short.",
+  "Respond with VALID JSON only — no prose, no code fences — matching this shape:",
+  '{"summary": string, "observations": [{"aspect": string, "assessment": "strong"|"okay"|"needs_work", "detail": string}], "topFix": string}',
+].join("\n");
+
+export async function analyzeProfilePhotos(
+  opts: AnalyzeProfilePhotosOptions,
+): Promise<AnalyzeProfilePhotosResult> {
+  const start = Date.now();
+  const miss = (
+    fallbackReason: GenerateResult["fallbackReason"],
+    mode: AiMode = "fallback",
+  ): AnalyzeProfilePhotosResult => {
+    const durationMs = Date.now() - start;
+    recordVisionMetric(mode, true, durationMs, fallbackReason ?? null);
+    return { analysis: null, mode, isFallback: true, durationMs, fallbackReason };
+  };
+
+  // Consent gate FIRST — never ship the raw image to a hosted model without it.
+  if (!(await consentCheck(opts.userId))) {
+    return miss("consent_required");
+  }
+
+  // Per-user daily cap (shared Anthropic bucket).
+  const cap = await checkAndIncrementDailyCap(opts.userId ?? null, "anthropic");
+  if (!cap.allowed) {
+    return miss("daily_cap_exceeded");
+  }
+
+  const client = await getAnthropicClient();
+  if (!client) {
+    return miss("no_client");
+  }
+
+  const cleaned = stripImageDataUrlPrefix(opts.imageBase64.trim());
+  if (!cleaned) {
+    return miss("model_error");
+  }
+  const mediaType = detectImageMediaType(opts.imageBase64, opts.imageMediaType);
+
+  const instruction = [
+    "Critique the photo(s) in this dating profile screenshot.",
+    opts.sourceApp ? `Dating app: ${opts.sourceApp}.` : null,
+    opts.datingGoal ? `Their goal: ${opts.datingGoal}.` : null,
+    "Return JSON only.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  try {
+    const response = await client.messages.create(
+      {
+        model: DEFAULT_ANTHROPIC_MODEL,
+        max_tokens: 1024,
+        system: PHOTO_VISION_SYSTEM,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "image",
+                source: { type: "base64", media_type: mediaType, data: cleaned },
+              },
+              { type: "text", text: instruction },
+            ],
+          },
+        ],
+      },
+      { timeout: PROVIDER_CALL_TIMEOUT_MS },
+    );
+    const block = response.content.find((b) => b.type === "text");
+    const text = (block?.text ?? "").trim();
+    const parsed = parseStructured<unknown>(text, null);
+    if (!parsed.ok) {
+      logger.warn({ rawPreview: text.slice(0, 200) }, "photo_vision: non-JSON response");
+      return miss("schema_validation_failed", "setup-needed");
+    }
+    const validated = photoAnalysisSchema.safeParse(parsed.value);
+    if (!validated.success) {
+      logger.warn({ err: validated.error.message }, "photo_vision: schema validation failed");
+      return miss("schema_validation_failed", "setup-needed");
+    }
+    const durationMs = Date.now() - start;
+    recordVisionMetric("live", false, durationMs, null);
+    return { analysis: validated.data, mode: "live", isFallback: false, durationMs };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown Anthropic vision error";
+    logger.warn({ err: message }, "photo_vision call failed; falling back to checklist");
+    return miss("model_error", "setup-needed");
+  }
 }
 
 /** Re-export so callers can construct ad-hoc schemas if needed. */

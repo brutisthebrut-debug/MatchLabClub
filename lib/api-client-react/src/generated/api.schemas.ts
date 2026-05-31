@@ -195,6 +195,33 @@ export interface ReportChangeSummary {
   removedRisks: string[];
 }
 
+export type PhotoObservationAssessment = typeof PhotoObservationAssessment[keyof typeof PhotoObservationAssessment];
+
+
+export const PhotoObservationAssessment = {
+  strong: 'strong',
+  okay: 'okay',
+  needs_work: 'needs_work',
+} as const;
+
+export interface PhotoObservation {
+  /** What this observation is about (e.g. Lighting, Framing, Expression,
+  Variety, Background).
+   */
+  aspect: string;
+  assessment: PhotoObservationAssessment;
+  /** Specific, grounded note referencing what is visible in the photo. */
+  detail: string;
+}
+
+export interface PhotoAnalysis {
+  /** One or two sentence overall read of the photos actually seen. */
+  summary: string;
+  observations: PhotoObservation[];
+  /** The single highest-impact change to make to the photos. */
+  topFix: string;
+}
+
 export interface AuditReport {
   auditId: number;
   readinessScore: number;
@@ -222,6 +249,13 @@ export interface AuditReport {
   exists to compare against.
    */
   changeSummary?: ReportChangeSummary | null;
+  /** Real AI vision read of the actual profile photo(s) in the uploaded
+  screenshot. Present only when the signed-in user opted into the deep
+  AI lane (ai_content_consent) and the vision call succeeded; otherwise
+  null, and the deterministic photoGuidance checklist is the fallback.
+  The raw image is never stored; it is analyzed in memory and discarded.
+   */
+  photoAnalysis?: PhotoAnalysis | null;
 }
 
 /**
@@ -490,6 +524,14 @@ export interface ScreenshotAuditInput {
      * @nullable
      */
   imageBase64?: string | null;
+  /**
+     * MIME type of the uploaded image (e.g. "image/png"). Sent so the opt-in
+  photo vision call labels the image correctly even when imageBase64 has
+  no data URL prefix. Falls back to prefix sniffing then JPEG.
+
+     * @nullable
+     */
+  imageMediaType?: string | null;
   /**
      * Optional name (e.g. the match's first name pulled from the profile).
      * @nullable

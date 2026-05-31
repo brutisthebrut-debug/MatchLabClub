@@ -23,7 +23,7 @@ import {
 import { z } from "zod/v4";
 import type { BioRewriteOutput } from "@workspace/ai-schemas";
 import { generateAuditReport, type AuditReportOutput } from "../lib/aiEngine";
-import { generate } from "../lib/aiService";
+import { generate, analyzeProfilePhotos } from "../lib/aiService";
 import { getRetentionDays } from "../lib/auditTrashPurge";
 import { pruneVersionsForAudit } from "../lib/auditVersionPurge";
 import {
@@ -1134,6 +1134,28 @@ router.post("/audits/from-screenshot", async (req, res): Promise<void> => {
     req.user?.id ?? null,
     req.log,
   );
+
+  // Real photo critique via Claude vision — opt-in only, signed-in users only.
+  // The image is analyzed in memory and never persisted. When the user has not
+  // opted into the deep AI lane (or the call fails / hits the daily cap),
+  // photoAnalysis stays absent and the deterministic photoGuidance checklist
+  // remains the always-on fallback. Anonymous callers never reach the model.
+  if (parsed.data.imageBase64 && req.user?.id) {
+    try {
+      const vision = await analyzeProfilePhotos({
+        imageBase64: parsed.data.imageBase64,
+        imageMediaType: parsed.data.imageMediaType,
+        userId: req.user.id,
+        sourceApp,
+        datingGoal,
+      });
+      if (vision.analysis) {
+        report.photoAnalysis = vision.analysis;
+      }
+    } catch (err) {
+      req.log.warn({ err }, "photo vision analysis failed; keeping checklist fallback");
+    }
+  }
 
   const fullReport = { auditId: audit.id, ...report };
   const firstGeneratedAt = new Date();

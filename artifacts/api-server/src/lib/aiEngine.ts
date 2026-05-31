@@ -6,6 +6,18 @@
 // flagged as stale on the client so the user can re-run with the latest.
 export const ENGINE_VERSION = "2026-05-22";
 
+export interface PhotoObservation {
+  aspect: string;
+  assessment: "strong" | "okay" | "needs_work";
+  detail: string;
+}
+
+export interface PhotoAnalysis {
+  summary: string;
+  observations: PhotoObservation[];
+  topFix: string;
+}
+
 export interface AuditReportOutput {
   readinessScore: number;
   overallGrade: string;
@@ -15,6 +27,13 @@ export interface AuditReportOutput {
   rewrittenBio: string;
   rewrittenPrompts: { original: string; rewritten: string; tip: string }[];
   photoGuidance: { category: string; status: "good" | "needs_work" | "missing"; advice: string }[];
+  /**
+   * Real AI vision read of the actual uploaded photo(s). Present only when a
+   * signed-in user opted into the deep AI lane and the vision call succeeded.
+   * Absent/null otherwise — the deterministic photoGuidance checklist is the
+   * always-on fallback. The raw image is never persisted.
+   */
+  photoAnalysis?: PhotoAnalysis | null;
   actionPlan: { priority: number; title: string; description: string; timeframe: string }[];
   messagingStyle: string;
   coachingCta: string;

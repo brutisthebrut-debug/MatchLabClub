@@ -23,6 +23,14 @@ export interface ScreenshotAuditInput {
      */
   imageBase64?: string | null;
   /**
+     * MIME type of the uploaded image (e.g. "image/png"). Sent so the opt-in
+  photo vision call labels the image correctly even when imageBase64 has
+  no data URL prefix. Falls back to prefix sniffing then JPEG.
+
+     * @nullable
+     */
+  imageMediaType?: string | null;
+  /**
      * Optional name (e.g. the match's first name pulled from the profile).
      * @nullable
      */

@@ -285,7 +285,16 @@ export const ExportMyDataResponse = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "previousReport": zod.union([zod.object({
@@ -323,7 +332,16 @@ export const ExportMyDataResponse = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
   "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
   "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
@@ -604,7 +622,16 @@ export const DownloadEmailedExportResponse = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "previousReport": zod.union([zod.object({
@@ -642,7 +669,16 @@ export const DownloadEmailedExportResponse = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
   "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
   "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
@@ -1648,7 +1684,16 @@ export const ListAuditsResponseItem = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "previousReport": zod.union([zod.object({
@@ -1686,7 +1731,16 @@ export const ListAuditsResponseItem = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
   "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
   "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
@@ -1779,7 +1833,16 @@ export const GetAuditResponse = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "previousReport": zod.union([zod.object({
@@ -1817,7 +1880,16 @@ export const GetAuditResponse = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
   "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
   "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
@@ -1912,7 +1984,16 @@ export const ListTrashedAuditsResponseItem = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "previousReport": zod.union([zod.object({
@@ -1950,7 +2031,16 @@ export const ListTrashedAuditsResponseItem = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
   "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
   "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
@@ -2038,7 +2128,16 @@ export const ListExpiringTrashedAuditsResponse = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "previousReport": zod.union([zod.object({
@@ -2076,7 +2175,16 @@ export const ListExpiringTrashedAuditsResponse = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
   "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
   "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
@@ -2157,7 +2265,16 @@ export const RestoreAuditResponse = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),zod.null()]).optional().describe('The persisted mini-report generated at scan time. Present for newer\naudits; older audits without a stored report return null and the\nclient should fall back to calling `generateAuditReport`.\n'),
   "reportGeneratedAt": zod.string().nullish().describe('ISO timestamp the stored report was generated. Null if no report has been generated yet.'),
   "previousReport": zod.union([zod.object({
@@ -2195,7 +2312,16 @@ export const RestoreAuditResponse = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),zod.null()]).optional().describe('The mini-report from the immediately prior regeneration, kept so\nusers can see what changed. Null when the audit has never been\nregenerated (or the report has never been generated).\n'),
   "previousReadinessScore": zod.number().nullish().describe('Readiness score from the prior regeneration (null if never regenerated).'),
   "previousReportGeneratedAt": zod.string().nullish().describe('ISO timestamp of the prior regeneration\'s report (null if never regenerated).'),
@@ -2345,7 +2471,16 @@ export const GenerateAuditReportResponse = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 })
 
 
@@ -2403,7 +2538,16 @@ export const ListAuditReportVersionsResponse = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),
   "changeSummary": zod.union([zod.object({
   "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
@@ -2467,7 +2611,16 @@ export const GetAuditReportVersionResponse = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 }),
   "changeSummary": zod.union([zod.object({
   "scoreDelta": zod.number().describe('newScore minus previousScore (negative when the score dropped).'),
@@ -2517,6 +2670,7 @@ to the audit record.
  */
 export const AuditFromScreenshotBody = zod.object({
   "imageBase64": zod.string().nullish().describe('Base64-encoded screenshot of a dating profile. May include a data URL\nprefix (e.g. \"data:image\/jpeg;base64,...\"); the server strips it.\nOmit when supplying corrected text directly.\n'),
+  "imageMediaType": zod.string().nullish().describe('MIME type of the uploaded image (e.g. \"image\/png\"). Sent so the opt-in\nphoto vision call labels the image correctly even when imageBase64 has\nno data URL prefix. Falls back to prefix sniffing then JPEG.\n'),
   "firstName": zod.string().nullish().describe('Optional name (e.g. the match\'s first name pulled from the profile).'),
   "age": zod.number().nullish().describe('Optional age, used when supplying corrected fields.'),
   "datingGoal": zod.string().nullish(),
@@ -2573,7 +2727,16 @@ export const AuditFromScreenshotResponse = zod.object({
   "removedStrengths": zod.array(zod.string()).describe('Strengths from the prior report that no longer appear.'),
   "addedRisks": zod.array(zod.string()),
   "removedRisks": zod.array(zod.string())
-}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n')
+}),zod.null()]).optional().describe('A short \"what changed since last time\" diff vs the immediately prior\nrun. Only populated on regeneration responses (and the freshly-saved\nreport). Null on the very first generation or when no prior report\nexists to compare against.\n'),
+  "photoAnalysis": zod.union([zod.object({
+  "summary": zod.string().describe('One or two sentence overall read of the photos actually seen.'),
+  "observations": zod.array(zod.object({
+  "aspect": zod.string().describe('What this observation is about (e.g. Lighting, Framing, Expression,\nVariety, Background).\n'),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "detail": zod.string().describe('Specific, grounded note referencing what is visible in the photo.')
+})),
+  "topFix": zod.string().describe('The single highest-impact change to make to the photos.')
+}),zod.null()]).optional().describe('Real AI vision read of the actual profile photo(s) in the uploaded\nscreenshot. Present only when the signed-in user opted into the deep\nAI lane (ai_content_consent) and the vision call succeeded; otherwise\nnull, and the deterministic photoGuidance checklist is the fallback.\nThe raw image is never stored; it is analyzed in memory and discarded.\n')
 })
 })
 

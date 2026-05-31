@@ -354,3 +354,114 @@ describe("aiService.generate", () => {
     expect(JSON.parse(result.output)).toEqual(VALID_BLUEPRINT);
   });
 });
+
+const VALID_PHOTO_ANALYSIS = {
+  summary: "Clear solo headshot with warm natural light.",
+  observations: [
+    { aspect: "Lighting", assessment: "strong", detail: "Soft daylight, no harsh shadows." },
+    { aspect: "Variety", assessment: "needs_work", detail: "Add one full-body and one activity shot." },
+  ],
+  topFix: "Swap the dim indoor shot for an outdoor photo with eye contact.",
+};
+
+function photoResponse(text: string) {
+  return { content: [{ type: "text", text }], model: "claude-sonnet-4-6" };
+}
+
+function lastImageMediaType(): string {
+  const call = anthropicCreateMock.mock.calls.at(-1);
+  const body = call?.[0] as {
+    messages: { content: { type: string; source?: { media_type?: string } }[] }[];
+  };
+  const image = body.messages[0].content.find((c) => c.type === "image");
+  return image?.source?.media_type ?? "";
+}
+
+describe("aiService.analyzeProfilePhotos", () => {
+  beforeEach(() => {
+    anthropicCreateMock.mockReset();
+    process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY = "test-anthro-key";
+    process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL = "https://example.test/anthropic";
+  });
+
+  afterEach(() => {
+    delete process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY;
+    delete process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL;
+  });
+
+  it("labels the image with an explicit media type when base64 has no data-URL prefix", async () => {
+    const { analyzeProfilePhotos, __setConsentCheckerForTests } = await import("./aiService");
+    __setConsentCheckerForTests(async () => true);
+    anthropicCreateMock.mockResolvedValueOnce(
+      photoResponse(JSON.stringify(VALID_PHOTO_ANALYSIS)),
+    );
+    const result = await analyzeProfilePhotos({
+      imageBase64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB",
+      imageMediaType: "image/png",
+      userId: "user-with-consent",
+    });
+    expect(result.isFallback).toBe(false);
+    expect(result.analysis).not.toBeNull();
+    expect(lastImageMediaType()).toBe("image/png");
+    __setConsentCheckerForTests(null);
+  });
+
+  it("normalizes image/jpg to image/jpeg from the explicit hint", async () => {
+    const { analyzeProfilePhotos, __setConsentCheckerForTests } = await import("./aiService");
+    __setConsentCheckerForTests(async () => true);
+    anthropicCreateMock.mockResolvedValueOnce(
+      photoResponse(JSON.stringify(VALID_PHOTO_ANALYSIS)),
+    );
+    await analyzeProfilePhotos({
+      imageBase64: "abc123",
+      imageMediaType: "image/jpg",
+      userId: "user-with-consent",
+    });
+    expect(lastImageMediaType()).toBe("image/jpeg");
+    __setConsentCheckerForTests(null);
+  });
+
+  it("sniffs the media type from a data-URL prefix when no explicit hint is given", async () => {
+    const { analyzeProfilePhotos, __setConsentCheckerForTests } = await import("./aiService");
+    __setConsentCheckerForTests(async () => true);
+    anthropicCreateMock.mockResolvedValueOnce(
+      photoResponse(JSON.stringify(VALID_PHOTO_ANALYSIS)),
+    );
+    await analyzeProfilePhotos({
+      imageBase64: "data:image/webp;base64,UklGRhoAAABXRUJQ",
+      userId: "user-with-consent",
+    });
+    expect(lastImageMediaType()).toBe("image/webp");
+    __setConsentCheckerForTests(null);
+  });
+
+  it("defaults to image/jpeg when the explicit type is unsupported and no prefix exists", async () => {
+    const { analyzeProfilePhotos, __setConsentCheckerForTests } = await import("./aiService");
+    __setConsentCheckerForTests(async () => true);
+    anthropicCreateMock.mockResolvedValueOnce(
+      photoResponse(JSON.stringify(VALID_PHOTO_ANALYSIS)),
+    );
+    await analyzeProfilePhotos({
+      imageBase64: "abc123",
+      imageMediaType: "image/tiff",
+      userId: "user-with-consent",
+    });
+    expect(lastImageMediaType()).toBe("image/jpeg");
+    __setConsentCheckerForTests(null);
+  });
+
+  it("returns the deterministic fallback (null analysis) without calling the model when consent is off", async () => {
+    const { analyzeProfilePhotos, __setConsentCheckerForTests } = await import("./aiService");
+    __setConsentCheckerForTests(async () => false);
+    const result = await analyzeProfilePhotos({
+      imageBase64: "abc123",
+      imageMediaType: "image/png",
+      userId: "user-no-consent",
+    });
+    expect(result.analysis).toBeNull();
+    expect(result.isFallback).toBe(true);
+    expect(result.fallbackReason).toBe("consent_required");
+    expect(anthropicCreateMock).not.toHaveBeenCalled();
+    __setConsentCheckerForTests(null);
+  });
+});

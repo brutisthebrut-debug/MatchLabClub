@@ -34,6 +34,7 @@ import { useMeta } from "@/hooks/useMeta";
 interface PickedImage {
   dataUrl: string;
   base64: string;
+  mediaType: string;
 }
 
 interface ExtractedDraft {
@@ -57,6 +58,11 @@ interface ScanResult {
   rewrittenBio: string;
   messagingStyle: string;
   coachingCta: string;
+  photoAnalysis?: {
+  summary: string;
+  observations: { aspect: string; assessment: "strong" | "okay" | "needs_work"; detail: string }[];
+  topFix: string;
+  } | null;
   };
 }
 
@@ -112,7 +118,7 @@ function fileToBase64(file: File): Promise<PickedImage> {
   }
   const comma = result.indexOf(",");
   const base64 = comma >= 0 ? result.slice(comma + 1) : result;
-  resolve({ dataUrl: result, base64 });
+  resolve({ dataUrl: result, base64, mediaType: file.type || "image/jpeg" });
   };
   reader.readAsDataURL(file);
   });
@@ -249,6 +255,11 @@ export default function Scan() {
   firstName: draft.firstName.trim() || null,
   age: Number.isFinite(parsedAge) ? parsedAge : null,
   sourceApp: draft.sourceApp.trim() || null,
+  // Pass the original image so the opt-in AI vision photo critique can run.
+  // The server only sends it to the model when the user enabled the deep AI
+  // lane; otherwise it is ignored and never leaves our server.
+  imageBase64: picked?.base64 ?? null,
+  imageMediaType: picked?.mediaType ?? null,
   },
   });
   setResult({
@@ -264,6 +275,7 @@ export default function Scan() {
   rewrittenBio: res.report.rewrittenBio,
   messagingStyle: res.report.messagingStyle,
   coachingCta: res.report.coachingCta,
+  photoAnalysis: res.report.photoAnalysis ?? null,
   },
   });
   } catch (err) {
@@ -675,6 +687,40 @@ export default function Scan() {
   </p>
   </div>
   </Section>
+
+  {display.report.photoAnalysis ? (
+  <Section
+  title="Photo critique"
+  icon={<Eye className="h-4 w-4 text-[hsl(248_62%_70%)]" />}
+  >
+  <p className="text-[11px] text-muted-foreground mb-2 leading-relaxed">
+  A real read of your actual photos, not a checklist. Runs only because the deep AI lane is on. Your image is read in the moment and never stored.
+  </p>
+  <p className="text-sm leading-relaxed mb-3">{display.report.photoAnalysis.summary}</p>
+  <ul className="space-y-1.5">
+  {display.report.photoAnalysis.observations.map((ob, i) => {
+  const cls = ob.assessment === "strong"
+  ? "text-emerald-400"
+  : ob.assessment === "okay"
+  ? "text-[hsl(43_65%_65%)]"
+  : "text-rose-400";
+  const Icon = ob.assessment === "strong" ? CheckCircle2 : AlertCircle;
+  return (
+  <li key={`pa-${i}`} className="flex gap-2 text-sm">
+  <Icon className={`h-4 w-4 mt-0.5 shrink-0 ${cls}`} />
+  <span><span className="font-medium">{ob.aspect}:</span> {ob.detail}</span>
+  </li>
+  );
+  })}
+  </ul>
+  <div className="mt-3 rounded-xl border border-white/8 bg-black/20 p-3">
+  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+  Highest-impact fix
+  </div>
+  <p className="text-sm leading-relaxed">{display.report.photoAnalysis.topFix}</p>
+  </div>
+  </Section>
+  ) : null}
 
   <Section
   title="How to open"
