@@ -80,6 +80,7 @@ import QuizPlay from "@/pages/QuizPlay";
 import SelfHub from "@/pages/SelfHub";
 import Matching from "@/pages/Matching";
 import ShareCard from "@/pages/ShareCard";
+import Milestones from "@/pages/Milestones";
 import Onboarding from "@/pages/Onboarding";
 
 import { useClaimAnonymousOnLogin } from "@/hooks/useClaimAnonymousOnLogin";
@@ -232,6 +233,7 @@ function Router() {
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/matching" component={Matching} />
       <Route path="/share-card" component={ShareCard} />
+      <Route path="/milestones" component={Milestones} />
       <Route path="/account" component={Account} />
       <Route path="/account/sessions" component={Sessions} />
       <Route path="/quiz" component={Quiz} />

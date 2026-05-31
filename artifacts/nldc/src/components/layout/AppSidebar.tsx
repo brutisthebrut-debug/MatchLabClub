@@ -101,6 +101,7 @@ const SECTIONS: NavSection[] = [
       { name: "Scorecard", href: "/progress/scorecard", icon: Gauge },
       { name: "Timeline", href: "/progress/timeline", icon: History },
       { name: "Wins Log", href: "/progress/wins", icon: Trophy },
+      { name: "Milestones", href: "/milestones", icon: Trophy },
       { name: "Share Card", href: "/share-card", icon: Share2 },
     ],
     more: [

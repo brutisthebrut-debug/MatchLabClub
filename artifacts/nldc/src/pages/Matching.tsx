@@ -541,18 +541,32 @@ export default function Matching() {
                       <span className="text-2xl text-muted-foreground">%</span>
                     </div>
                   </div>
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full"
-                    data-testid="button-open-share-card"
-                  >
-                    <Link href="/share-card">
-                      <Share2 className="mr-1 w-4 h-4" aria-hidden="true" />
-                      Share card
-                    </Link>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full"
+                      data-testid="button-open-milestones"
+                    >
+                      <Link href="/milestones">
+                        <Trophy className="mr-1 w-4 h-4" aria-hidden="true" />
+                        Milestones
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full"
+                      data-testid="button-open-share-card"
+                    >
+                      <Link href="/share-card">
+                        <Share2 className="mr-1 w-4 h-4" aria-hidden="true" />
+                        Share card
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </div>
               <div className="mt-4">

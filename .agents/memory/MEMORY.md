@@ -1,3 +1,4 @@
 - [Em dashes double as functional delimiters](emdash-delimiters.md) — voice rule bans em dashes, but some are `.split("—")` delimiters/placeholders; sweep the spaced form only and repoint splits.
 - [Connector status labels must mirror Connection Center grouping](connector-status-sync.md) — the landing connector teaser duplicates statuses; keep them in sync with ConnectionCenter's LIVE/BUILDING/RESEARCHING arrays.
 - [Shareable readiness card privacy contract](share-card-privacy.md) — the /share-card viral loop may expose only derived score + stage + lane labels, never raw content; carry this into any public share backend.
+- [Growth waves roadmap](growth-waves-roadmap.md) — durable principle: ship growth as cohesive waves one at a time (never blast many/agents at once), protect runway; holds the sequenced wave plan + experimental ideas bank.
