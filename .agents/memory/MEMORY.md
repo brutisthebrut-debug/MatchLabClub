@@ -1,1 +1,2 @@
 - [Em dashes double as functional delimiters](emdash-delimiters.md) — voice rule bans em dashes, but some are `.split("—")` delimiters/placeholders; sweep the spaced form only and repoint splits.
+- [Connector status labels must mirror Connection Center grouping](connector-status-sync.md) — the landing connector teaser duplicates statuses; keep them in sync with ConnectionCenter's LIVE/BUILDING/RESEARCHING arrays.
