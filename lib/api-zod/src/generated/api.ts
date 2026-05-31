@@ -3950,6 +3950,53 @@ export const GetCompassReadResponse = zod.object({
 
 
 /**
+ * Returns the derived signal context that lets the Compass evolve with the
+user's growing readiness: a plain-language signal layer, the movement
+between the two most recent stored reads, the next best signal to feed,
+and the tie back to Your Mirror. Anonymous callers receive
+`{ available: false }`. Only aggregate, derived coverage is returned,
+never raw content or PII.
+
+ * @summary Aggregate signal context for a recurring compass read
+ */
+export const GetCompassSignalContextHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetCompassSignalContextResponse = zod.object({
+  "available": zod.boolean(),
+  "readinessScore": zod.number().optional(),
+  "stage": zod.string().optional(),
+  "stageLabel": zod.string().optional(),
+  "activeLaneCount": zod.number().optional(),
+  "totalLaneCount": zod.number().optional(),
+  "signalLayer": zod.object({
+  "headline": zod.string(),
+  "lines": zod.array(zod.string())
+}).optional(),
+  "activeSignals": zod.array(zod.string()).optional(),
+  "nextSignal": zod.union([zod.object({
+  "label": zod.string(),
+  "detail": zod.string(),
+  "href": zod.string(),
+  "points": zod.number()
+}),zod.null()]).optional(),
+  "mirror": zod.object({
+  "href": zod.string(),
+  "line": zod.string()
+}).optional(),
+  "movement": zod.union([zod.object({
+  "previousScore": zod.number(),
+  "currentScore": zod.number(),
+  "delta": zod.number(),
+  "lastReadAt": zod.coerce.date().nullish(),
+  "newSignals": zod.array(zod.string()),
+  "note": zod.string()
+}),zod.null()]).optional()
+}).describe('Aggregate, derived signal context for the Compass so each read can evolve\nwith the user\'s growing readiness and surface movement over time. Anonymous\ncallers receive `{ available: false }`. Only derived coverage is ever\nincluded, never raw content or PII.\n')
+
+
+/**
  * Accepts a Hinge GDPR data-export ZIP (max 50MB), parses it in
 memory, and persists a structured summary to `imported_sources`.
 The raw ZIP is never persisted. For signed-in users a

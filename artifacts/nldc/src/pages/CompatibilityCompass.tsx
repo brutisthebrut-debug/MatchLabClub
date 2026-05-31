@@ -19,6 +19,8 @@ import {
   ClipboardPaste,
   ImagePlus,
   Sparkles,
+  TrendingUp,
+  ArrowRight,
 } from "lucide-react";
 import { Link } from "wouter";
 import { ShareButton } from "@/components/echo/ShareButton";
@@ -29,6 +31,8 @@ import {
   getListCompassReadsQueryKey,
   useGetAiContentConsent,
   getGetAiContentConsentQueryKey,
+  useGetCompassSignalContext,
+  getGetCompassSignalContextQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -348,6 +352,11 @@ export default function CompatibilityCompass() {
   const consentGranted = Boolean(consent.data?.granted);
   const userId = user?.id ?? null;
 
+  const signalContext = useGetCompassSignalContext({
+  query: { queryKey: getGetCompassSignalContextQueryKey(), enabled: isAuthenticated },
+  });
+  const ctx = signalContext.data?.available ? signalContext.data : null;
+
   const loading = enhance.isPending || ocrLoading;
   const isBrandNewUser = isAuthenticated && !result;
 
@@ -379,6 +388,9 @@ export default function CompatibilityCompass() {
   });
   setSavedId(saved.id);
   await queryClient.invalidateQueries({ queryKey: getListCompassReadsQueryKey() });
+  if (isAuthenticated) {
+  await queryClient.invalidateQueries({ queryKey: getGetCompassSignalContextQueryKey() });
+  }
   } catch {
   setSavedId(null);
   }
@@ -423,6 +435,19 @@ export default function CompatibilityCompass() {
   }
 
   function buildPrompt(style: string, pats: string[], note: string, rawText: string | null) {
+  // Aggregate, derived signal the machine already holds on this user (coverage
+  // and readiness only, never raw content or PII). Threading it in lets the read
+  // evolve with who they are becoming, not just this single input.
+  const signalLines = ctx ? (ctx.activeSignals ?? []) : [];
+  const signalBlock = ctx
+  ? [
+  "",
+  "Context the app already holds on this user (aggregate signal only, do not quote it back):",
+  typeof ctx.readinessScore === "number" ? `Match readiness: ${ctx.readinessScore} out of 100.` : "",
+  ...signalLines.map(l => `- ${l}`),
+  "Let this quietly inform the read so it reflects this person over time, not just this moment.",
+  ].filter(Boolean)
+  : [];
   return [
   "Given this person's connection style and recurring dating patterns, return ONLY a single JSON object:",
   '{ "supportiveTraits": string[], "commonPull": string, "cautionDynamics": string[], "bestDynamic": string, "nonNegotiables": string[], "falseSpark": string }',
@@ -437,6 +462,7 @@ export default function CompatibilityCompass() {
   pats.length ? `Recurring patterns: ${pats.join("; ")}` : "Recurring patterns: none specified",
   note.trim() ? `Notes: ${note}` : "",
   rawText ? `Source text the user shared about a person they're considering:\n"""\n${rawText.slice(0, 3500)}\n"""` : "",
+  ...signalBlock,
   "",
   "Return ONLY the JSON object. No prose, no markdown.",
   ].filter(Boolean).join("\n");
@@ -882,6 +908,23 @@ export default function CompatibilityCompass() {
   ) : null}
   </div>
   )}
+  {!isDemo && ctx?.movement && (
+  <div
+  className="mb-4 rounded-2xl p-4 border border-[hsl(142_55%_60%/0.25)] bg-[hsl(142_55%_60%/0.07)]"
+  data-testid="compass-movement"
+  >
+  <div className="flex items-center gap-2 mb-1">
+  <TrendingUp className="w-4 h-4 text-[hsl(142_55%_72%)]" />
+  <p className="text-sm font-semibold text-foreground">Since your last read</p>
+  <span
+  className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${ctx.movement.delta >= 0 ? "text-[hsl(142_55%_72%)] bg-[hsl(142_55%_60%/0.12)]" : "text-[hsl(43_65%_75%)] bg-[hsl(43_65%_65%/0.12)]"}`}
+  >
+  {ctx.movement.delta > 0 ? `+${ctx.movement.delta}` : ctx.movement.delta} readiness
+  </span>
+  </div>
+  <p className="text-sm text-muted-foreground leading-relaxed">{ctx.movement.note}</p>
+  </div>
+  )}
   <div className="space-y-4">
   <div className="glass border border-white/8 rounded-2xl p-6">
   <p className="font-semibold text-foreground text-sm mb-3 flex items-center gap-2">
@@ -924,6 +967,28 @@ export default function CompatibilityCompass() {
   <p className="font-semibold text-foreground text-sm mb-2">False-spark pattern to watch for</p>
   <p className="text-sm text-muted-foreground leading-relaxed">{show.falseSpark}</p>
   </div>
+
+  {!isDemo && ctx?.signalLayer && (
+  <div className="glass border border-white/8 rounded-2xl p-6" data-testid="compass-signal-layer">
+  <div className="flex items-center justify-between gap-2 mb-3">
+  <p className="font-semibold text-foreground text-sm flex items-center gap-2">
+  <span className="w-2 h-2 rounded-full bg-[hsl(248_62%_62%)]" />{ctx.signalLayer.headline}
+  </p>
+  {typeof ctx.readinessScore === "number" && (
+  <span className="text-[11px] font-medium px-2 py-0.5 rounded-full text-[hsl(248_62%_72%)] bg-[hsl(248_62%_52%/0.12)] border border-[hsl(248_62%_52%/0.25)] whitespace-nowrap">
+  {ctx.stageLabel ? `${ctx.stageLabel}, ` : ""}{ctx.readinessScore}/100
+  </span>
+  )}
+  </div>
+  <ul className="space-y-2.5">
+  {ctx.signalLayer.lines.map((l, i) => (
+  <li key={i} className="text-sm text-muted-foreground leading-relaxed flex items-start gap-2">
+  <span className="w-1.5 h-1.5 rounded-full bg-[hsl(248_62%_62%)] mt-2 flex-shrink-0" />{l}
+  </li>
+  ))}
+  </ul>
+  </div>
+  )}
   </div>
   {result && (
   <div className="mt-5 flex justify-center">
@@ -935,13 +1000,47 @@ export default function CompatibilityCompass() {
   </button>
   </div>
   )}
+  {!isDemo && ctx && (
+  <div
+  className="mt-6 rounded-2xl p-6 border border-[hsl(248_62%_52%/0.25)] bg-[hsl(248_62%_52%/0.07)] space-y-4"
+  data-testid="compass-mirror-tiein"
+  >
+  <div>
+  <p className="font-semibold text-foreground text-sm mb-1 flex items-center gap-2">
+  <Compass className="w-3.5 h-3.5 text-[hsl(248_62%_72%)]" />This read feeds Your Mirror
+  </p>
+  <p className="text-sm text-muted-foreground leading-relaxed">{ctx.mirror?.line}</p>
+  </div>
+  {ctx.nextSignal && (
+  <div className="rounded-xl p-4 bg-white/5 border border-white/10">
+  <p className="text-[11px] uppercase tracking-wider text-[hsl(248_62%_72%)] font-semibold mb-1">Your next best signal</p>
+  <p className="text-sm font-medium text-foreground">{ctx.nextSignal.label}</p>
+  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{ctx.nextSignal.detail}</p>
+  <Link
+  href={ctx.nextSignal.href}
+  className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-[hsl(248_62%_72%)] hover:text-foreground"
+  data-testid="link-compass-next-signal"
+  >
+  {ctx.nextSignal.label}<ArrowRight className="w-3 h-3" />
+  </Link>
+  </div>
+  )}
+  <Link
+  href={ctx.mirror?.href ?? "/your-mirror"}
+  className="inline-flex items-center gap-1.5 text-sm font-semibold text-[hsl(248_62%_72%)] hover:text-foreground"
+  data-testid="link-compass-mirror"
+  >
+  Open Your Mirror<ArrowRight className="w-3.5 h-3.5" />
+  </Link>
+  </div>
+  )}
   {result && (
   <div className="mt-6">
   <ToolHandoff
   testId="compass-handoff"
   fedLine="This read sharpens what the machine knows about your compatibility, which powers better matches near you."
   steps={[
-  { label: "Map your wellness", href: "/wellness", desc: "Cover more dimensions to raise your readiness." },
+  { label: "Open Your Mirror", href: "/your-mirror", desc: "See the full picture the machine keeps of you." },
   { label: "See matching", href: "/matching", desc: "How readiness unlocks introductions." },
   { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
   ]}

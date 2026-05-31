@@ -1772,6 +1772,78 @@ export function buildMirrorPortrait(input: MirrorPortraitInput): MirrorPortrait 
   };
 }
 
+export interface CompassSignalLayer {
+  headline: string;
+  stage: MirrorStage;
+  stageLabel: string;
+  readinessScore: number;
+  activeLaneCount: number;
+  totalLaneCount: number;
+  lines: string[];
+}
+
+/**
+ * The compass "evolves with you" layer. Given a user's real readiness coverage,
+ * it explains, in plain language, how much signal this particular read is built
+ * on and how it will keep shifting as the user feeds the machine more. Pure and
+ * deterministic: the lines genuinely change as coverage and readiness grow, so a
+ * read run today reads differently from the same read run after a few more tools.
+ */
+export function buildCompassSignalLayer(input: {
+  breakdown: ReadinessBreakdown;
+  score: number;
+  threshold: number;
+  nextSignalLabel?: string | null;
+}): CompassSignalLayer {
+  const { breakdown, score, threshold, nextSignalLabel } = input;
+  const totalLaneCount = SIGNAL_REGISTRY.length;
+  const activeLaneCount = SIGNAL_REGISTRY.filter(
+    (c) => (breakdown[c.id] ?? 0) > 0,
+  ).length;
+  const stageInfo = mirrorStage(score, threshold);
+
+  const lines: string[] = [];
+  if (activeLaneCount === 0) {
+    lines.push(
+      "This read is built only from what you just shared. The machine has no other signal on you yet, so it is reading a single moment, not a pattern.",
+    );
+    lines.push(
+      "Feed it more and this stops being a snapshot. It starts tracking the real you, and each return shows how the picture is moving.",
+    );
+  } else {
+    lines.push(
+      `Right now ${activeLaneCount} of ${totalLaneCount} signal lanes are feeding this read, putting your readiness at ${score} out of 100.`,
+    );
+    if (score < threshold) {
+      lines.push(
+        "As you add signal, this read keeps shifting. Come back after your next few tools and watch which dynamics sharpen and which fade.",
+      );
+    } else {
+      lines.push(
+        "Your signal is rich enough that this read reflects a pattern, not a mood. Each time you return, you can see how the picture has moved.",
+      );
+    }
+    if (nextSignalLabel && nextSignalLabel.trim()) {
+      lines.push(
+        `The fastest way to sharpen your next read: ${nextSignalLabel.trim().toLowerCase()}.`,
+      );
+    }
+  }
+
+  return {
+    headline:
+      activeLaneCount === 0
+        ? "What your signal adds to this read: nothing yet"
+        : "What your signal adds to this read",
+    stage: stageInfo.stage,
+    stageLabel: stageInfo.stageLabel,
+    readinessScore: score,
+    activeLaneCount,
+    totalLaneCount,
+    lines,
+  };
+}
+
 export type MirrorDigestMode = "progress" | "stall" | "cold";
 
 export interface MirrorDigestInput {

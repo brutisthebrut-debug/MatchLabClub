@@ -3,3 +3,4 @@
 - [Blog SEO is client-side only](blog-seo-client-side.md) — per-post meta/OG/JSON-LD applied at runtime via useMeta+JsonLd; no SSR, so non-JS unfurl bots see index.html defaults.
 - [testDb fake SQL harness gotchas](testdb-fake-sql-harness.md) — in-memory db mock: raw `sql` WHERE preds are no-ops unless pattern-matched, transactions/execute are inert, and the secure anon_claim cookie is dropped by supertest agents.
 - [drizzle push ignores index predicate changes](drizzle-push-partial-index.md) — push diffs by index name, so partial->non-partial unique-index edits don't apply; drop manually. Also: populating a long-empty table can surface latent NOT NULL + onDelete:set-null FK traps.
+- [nldc api-client-react vi.mock allowlist](nldc-api-mock-allowlist.md) — frontend integration tests mock the api client as a strict allowlist; a new hook on a tested page must be added to each mock or the suite throws.

@@ -48,6 +48,8 @@ vi.mock("@workspace/api-client-react", () => ({
   }),
   useListCompassReads: () => ({ data: { reads: [] }, isLoading: false }),
   getListCompassReadsQueryKey: () => ["list-compass-reads"],
+  useGetCompassSignalContext: () => ({ data: { available: false }, isLoading: false }),
+  getGetCompassSignalContextQueryKey: () => ["compass-signal-context"],
   useGetAiContentConsent: () => ({ data: { consent: false }, isLoading: false }),
   getGetAiContentConsentQueryKey: () => ["ai-content-consent"],
 }));

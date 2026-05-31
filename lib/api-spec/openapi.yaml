@@ -3096,6 +3096,29 @@ paths:
         "404":
           description: Not found or not owned
 
+  /compass/signal-context:
+    get:
+      tags: [mirror]
+      operationId: getCompassSignalContext
+      summary: Aggregate signal context for a recurring compass read
+      description: |
+        Returns the derived signal context that lets the Compass evolve with the
+        user's growing readiness: a plain-language signal layer, the movement
+        between the two most recent stored reads, the next best signal to feed,
+        and the tie back to Your Mirror. Anonymous callers receive
+        `{ available: false }`. Only aggregate, derived coverage is returned,
+        never raw content or PII.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        "200":
+          description: Compass signal context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompassSignalContext"
+
   /imports/hinge:
     post:
       tags: [insights]
@@ -6687,6 +6710,97 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CompassRead"
+
+    CompassNextSignal:
+      type: object
+      required: [label, detail, href, points]
+      properties:
+        label:
+          type: string
+        detail:
+          type: string
+        href:
+          type: string
+        points:
+          type: integer
+
+    CompassSignalLayerBlock:
+      type: object
+      required: [headline, lines]
+      properties:
+        headline:
+          type: string
+        lines:
+          type: array
+          items:
+            type: string
+
+    CompassMovement:
+      type: object
+      required: [previousScore, currentScore, delta, newSignals, note]
+      properties:
+        previousScore:
+          type: integer
+        currentScore:
+          type: integer
+        delta:
+          type: integer
+        lastReadAt:
+          type: ["string", "null"]
+          format: date-time
+        newSignals:
+          type: array
+          items:
+            type: string
+        note:
+          type: string
+
+    CompassMirrorTieIn:
+      type: object
+      required: [href, line]
+      properties:
+        href:
+          type: string
+        line:
+          type: string
+
+    CompassSignalContext:
+      type: object
+      required: [available]
+      description: |
+        Aggregate, derived signal context for the Compass so each read can evolve
+        with the user's growing readiness and surface movement over time. Anonymous
+        callers receive `{ available: false }`. Only derived coverage is ever
+        included, never raw content or PII.
+      properties:
+        available:
+          type: boolean
+        readinessScore:
+          type: integer
+        stage:
+          type: string
+        stageLabel:
+          type: string
+        activeLaneCount:
+          type: integer
+        totalLaneCount:
+          type: integer
+        signalLayer:
+          $ref: "#/components/schemas/CompassSignalLayerBlock"
+        activeSignals:
+          type: array
+          items:
+            type: string
+        nextSignal:
+          oneOf:
+            - $ref: "#/components/schemas/CompassNextSignal"
+            - type: "null"
+        mirror:
+          $ref: "#/components/schemas/CompassMirrorTieIn"
+        movement:
+          oneOf:
+            - $ref: "#/components/schemas/CompassMovement"
+            - type: "null"
 
     CompassScreenshotExtractResult:
       type: object

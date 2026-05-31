@@ -62,6 +62,7 @@ import type {
   CompassReadInput,
   CompassReadList,
   CompassScreenshotExtractResult,
+  CompassSignalContext,
   CorrectAuditSourceApp400,
   CorrectAuditSourceApp404,
   CorrectSourceAppInput,
@@ -8809,6 +8810,90 @@ export function useGetCompassRead<TData = Awaited<ReturnType<typeof getCompassRe
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetCompassReadQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetCompassSignalContextUrl = () => {
+
+
+
+
+  return `/api/compass/signal-context`
+}
+
+/**
+ * Returns the derived signal context that lets the Compass evolve with the
+user's growing readiness: a plain-language signal layer, the movement
+between the two most recent stored reads, the next best signal to feed,
+and the tie back to Your Mirror. Anonymous callers receive
+`{ available: false }`. Only aggregate, derived coverage is returned,
+never raw content or PII.
+
+ * @summary Aggregate signal context for a recurring compass read
+ */
+export const getCompassSignalContext = async ( options?: RequestInit): Promise<CompassSignalContext> => {
+
+  return customFetch<CompassSignalContext>(getGetCompassSignalContextUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCompassSignalContextQueryKey = () => {
+    return [
+    `/api/compass/signal-context`
+    ] as const;
+    }
+
+
+export const getGetCompassSignalContextQueryOptions = <TData = Awaited<ReturnType<typeof getCompassSignalContext>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCompassSignalContext>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCompassSignalContextQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCompassSignalContext>>> = ({ signal }) => getCompassSignalContext({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCompassSignalContext>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCompassSignalContextQueryResult = NonNullable<Awaited<ReturnType<typeof getCompassSignalContext>>>
+export type GetCompassSignalContextQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Aggregate signal context for a recurring compass read
+ */
+
+export function useGetCompassSignalContext<TData = Awaited<ReturnType<typeof getCompassSignalContext>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCompassSignalContext>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCompassSignalContextQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

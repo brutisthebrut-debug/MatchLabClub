@@ -2317,6 +2317,54 @@ export interface CompassReadList {
   reads: CompassRead[];
 }
 
+export interface CompassNextSignal {
+  label: string;
+  detail: string;
+  href: string;
+  points: number;
+}
+
+export interface CompassSignalLayerBlock {
+  headline: string;
+  lines: string[];
+}
+
+export interface CompassMovement {
+  previousScore: number;
+  currentScore: number;
+  delta: number;
+  /** @nullable */
+  lastReadAt?: string | null;
+  newSignals: string[];
+  note: string;
+}
+
+export interface CompassMirrorTieIn {
+  href: string;
+  line: string;
+}
+
+/**
+ * Aggregate, derived signal context for the Compass so each read can evolve
+with the user's growing readiness and surface movement over time. Anonymous
+callers receive `{ available: false }`. Only derived coverage is ever
+included, never raw content or PII.
+
+ */
+export interface CompassSignalContext {
+  available: boolean;
+  readinessScore?: number;
+  stage?: string;
+  stageLabel?: string;
+  activeLaneCount?: number;
+  totalLaneCount?: number;
+  signalLayer?: CompassSignalLayerBlock;
+  activeSignals?: string[];
+  nextSignal?: CompassNextSignal | null;
+  mirror?: CompassMirrorTieIn;
+  movement?: CompassMovement | null;
+}
+
 export interface CompassScreenshotExtractResult {
   /** The raw OCR-extracted text from the uploaded screenshot. */
   text: string;
