@@ -21,7 +21,7 @@ interface Reward {
 // observed value only sets the baseline, so loading the app never celebrates.
 // This reads the score, it never changes how the score is computed.
 export function ReadinessRewardWatcher() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { data } = useGetMatchingState({
     query: {
       queryKey: getGetMatchingStateQueryKey(),
@@ -31,10 +31,21 @@ export function ReadinessRewardWatcher() {
   const { toast } = useToast();
   const prevScore = useRef<number | null>(null);
   const prevThreshold = useRef<number>(50);
+  const prevUserId = useRef<string | null>(null);
   const [reward, setReward] = useState<Reward | null>(null);
 
   const score = data?.readiness?.score;
   const threshold = data?.readinessThreshold ?? 50;
+  const userId = user?.id ?? null;
+
+  // Reset the baseline when the signed-in account changes (or sign-out) so a
+  // new user's first observed score never reads as a gain carried over from the
+  // previous account in the same SPA session.
+  if (prevUserId.current !== userId) {
+    prevUserId.current = userId;
+    prevScore.current = null;
+    prevThreshold.current = 50;
+  }
 
   useEffect(() => {
     if (typeof score !== "number") return;
