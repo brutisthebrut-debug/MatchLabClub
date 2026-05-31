@@ -1381,6 +1381,52 @@ export interface TrashPurgeHeartbeat {
   stale: boolean;
 }
 
+/**
+ * Where the invitee sits in the matching pool. "joined" means signed up but no pool membership row yet.
+ */
+export type MeReferralInviteeStatus = typeof MeReferralInviteeStatus[keyof typeof MeReferralInviteeStatus];
+
+
+export const MeReferralInviteeStatus = {
+  joined: 'joined',
+  building: 'building',
+  ready: 'ready',
+  paused: 'paused',
+  concierge_only: 'concierge_only',
+  off: 'off',
+} as const;
+
+export interface MeReferralInvitee {
+  /** The invitee's first name, or "A new member" when no name is on file. Never an email or any other private field. */
+  displayName: string;
+  /**
+     * When the invitee was attributed to this inviter, or null if unknown.
+     * @nullable
+     */
+  joinedAt: string | null;
+  /** Where the invitee sits in the matching pool. "joined" means signed up but no pool membership row yet. */
+  status: MeReferralInviteeStatus;
+}
+
+export interface MeReferralsSummary {
+  /** Total people who joined from this user's invites. */
+  joined: number;
+  /** How many of those invitees are active in the matching pool (building, ready, or concierge). */
+  inPool: number;
+  /** How many invitees are fully ready to match. */
+  ready: number;
+}
+
+export interface MeReferralsResponse {
+  /** The user's personal invite code (shape "user-<id>") to append as the ?ref param on a shared link. */
+  refCode: string;
+  /** The suggested in-app destination to invite people to (for example "/quizzes"). */
+  sharePath: string;
+  summary: MeReferralsSummary;
+  /** Privacy-safe list of people who joined from this user's invites, newest first. */
+  invitees: MeReferralInvitee[];
+}
+
 export type FounderReferralsSummaryTopInvitersItem = {
   inviterUserId: string;
   inviterEmail: string;

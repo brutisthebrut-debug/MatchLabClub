@@ -2,3 +2,4 @@
 - [Trust ledger held vs signal](trust-ledger-held-vs-signal.md) — a "what we hold" / export-delete surface must base held/purgeable on stored rows a purge removes, not the narrower readiness signal count.
 - [Blog SEO is client-side only](blog-seo-client-side.md) — per-post meta/OG/JSON-LD applied at runtime via useMeta+JsonLd; no SSR, so non-JS unfurl bots see index.html defaults.
 - [testDb fake SQL harness gotchas](testdb-fake-sql-harness.md) — in-memory db mock: raw `sql` WHERE preds are no-ops unless pattern-matched, transactions/execute are inert, and the secure anon_claim cookie is dropped by supertest agents.
+- [drizzle push ignores index predicate changes](drizzle-push-partial-index.md) — push diffs by index name, so partial->non-partial unique-index edits don't apply; drop manually. Also: populating a long-empty table can surface latent NOT NULL + onDelete:set-null FK traps.

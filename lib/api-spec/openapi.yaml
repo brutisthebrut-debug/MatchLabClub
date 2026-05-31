@@ -472,6 +472,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/referrals:
+    get:
+      tags: [Auth]
+      operationId: getMyReferrals
+      summary: Get the signed-in user's invite link and an honest reflection of who joined
+      description: |
+        Returns the authenticated user's personal invite code plus a
+        privacy-respecting reflection of the people who joined from their
+        invites and where each one is in the matching pool. Attribution comes
+        from `users.invited_by_user_id` (first-touch, set at signup from the
+        `mlc_ref` cookie). Only a display name (first name, never email) and a
+        pool status are returned for each invitee, so the inviter sees who is
+        in and their status without seeing any private data. The summary counts
+        feed the "you grow the local pool" framing: more people you bring in
+        near you raises everyone's match odds.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The user's invite code and referral reflection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeReferralsResponse'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/consent/ai-content:
     get:
       tags: [Auth]
@@ -5372,6 +5404,51 @@ components:
           type: boolean
           description: True when the job has never run or last ran longer ago than staleThresholdMs.
 
+    MeReferralInvitee:
+      type: object
+      required: [displayName, joinedAt, status]
+      properties:
+        displayName:
+          type: string
+          description: The invitee's first name, or "A new member" when no name is on file. Never an email or any other private field.
+        joinedAt:
+          type: [string, 'null']
+          format: date-time
+          description: When the invitee was attributed to this inviter, or null if unknown.
+        status:
+          type: string
+          enum: [joined, building, ready, paused, concierge_only, off]
+          description: Where the invitee sits in the matching pool. "joined" means signed up but no pool membership row yet.
+    MeReferralsSummary:
+      type: object
+      required: [joined, inPool, ready]
+      properties:
+        joined:
+          type: integer
+          description: Total people who joined from this user's invites.
+        inPool:
+          type: integer
+          description: How many of those invitees are active in the matching pool (building, ready, or concierge).
+        ready:
+          type: integer
+          description: How many invitees are fully ready to match.
+    MeReferralsResponse:
+      type: object
+      required: [refCode, sharePath, summary, invitees]
+      properties:
+        refCode:
+          type: string
+          description: The user's personal invite code (shape "user-<id>") to append as the ?ref param on a shared link.
+        sharePath:
+          type: string
+          description: The suggested in-app destination to invite people to (for example "/quizzes").
+        summary:
+          $ref: '#/components/schemas/MeReferralsSummary'
+        invitees:
+          type: array
+          description: Privacy-safe list of people who joined from this user's invites, newest first.
+          items:
+            $ref: '#/components/schemas/MeReferralInvitee'
     FounderReferralsSummary:
       type: object
       required: [totalReferrals, uniqueInviters, overallConversionRate, topInviters, surfaceBreakdown, recentReferrals]

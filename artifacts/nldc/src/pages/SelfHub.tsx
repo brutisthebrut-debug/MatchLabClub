@@ -32,6 +32,8 @@ import {
   Sparkles,
   Trophy,
   Upload,
+  UserPlus,
+  Users,
   Wallet,
 } from "lucide-react";
 import {
@@ -59,6 +61,8 @@ import {
   getGetDatingWinsQueryKey,
   useGetMirrorPortrait,
   getGetMirrorPortraitQueryKey,
+  useGetMyReferrals,
+  getGetMyReferralsQueryKey,
 } from "@workspace/api-client-react";
 import { ClimbCard } from "@/components/climb/ClimbCard";
 import { ShareButton } from "@/components/echo/ShareButton";
@@ -66,6 +70,40 @@ import { NextBestActionCoach } from "@/components/coach/NextBestActionCoach";
 import { DEMO_PORTRAIT } from "@/lib/mirrorDemo";
 
 const WELLNESS_DIMENSION_COUNT = 18;
+
+// Plain-language labels for an invitee's pool status, plus a matching badge
+// style. Mirrors the status enum on matchPoolMembershipTable, with "joined" as
+// the honest default for someone who signed up but is not in the pool yet.
+function referralStatusLabel(status: string): string {
+  switch (status) {
+    case "ready":
+      return "Ready to match";
+    case "building":
+      return "Building readiness";
+    case "concierge_only":
+      return "Concierge";
+    case "paused":
+      return "Paused";
+    case "off":
+      return "Not in pool";
+    default:
+      return "Joined";
+  }
+}
+
+function referralStatusClass(status: string): string {
+  const base = "text-xs font-semibold rounded-full px-2.5 py-1 flex-shrink-0";
+  switch (status) {
+    case "ready":
+      return `${base} bg-[hsl(142_70%_45%/0.12)] text-[hsl(142_70%_32%)]`;
+    case "building":
+      return `${base} bg-[hsl(248_62%_52%/0.12)] text-[hsl(248_62%_52%)]`;
+    case "concierge_only":
+      return `${base} bg-[hsl(326_100%_60%/0.12)] text-[hsl(326_100%_45%)]`;
+    default:
+      return `${base} bg-muted text-muted-foreground`;
+  }
+}
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -414,6 +452,13 @@ export default function SelfHub() {
   const mirrorPortrait = useGetMirrorPortrait({
   query: { queryKey: getGetMirrorPortraitQueryKey(), enabled: isAuthenticated, retry: false },
   });
+  // The inviter half of the referral loop: an honest reflection of who joined
+  // from this user's invites and where each person sits in the local pool.
+  const myReferrals = useGetMyReferrals({
+  query: { queryKey: getGetMyReferralsQueryKey(), enabled: isAuthenticated, retry: false },
+  });
+  const referrals = myReferrals.data;
+  const referralInvitees = referrals?.invitees ?? [];
 
   // Derive completeness: count distinct dimensions answered, out of 18.
   const wellnessRows = (wellness.data?.answers ?? []) as Array<{ dimension?: string }>;
@@ -988,6 +1033,57 @@ export default function SelfHub() {
   testId="button-share-self-hub"
   />
   </div>
+
+  {isAuthenticated && (
+  <div className="mt-6 pt-6 border-t border-[hsl(326_100%_60%/0.15)]" data-testid="card-referral-reflection">
+  <div className="flex items-center gap-2 mb-3">
+  <Users className="h-4 w-4 text-[hsl(326_100%_60%)]" />
+  <h4 className="font-serif text-base font-bold text-foreground">Who you've pulled in</h4>
+  </div>
+  {referralInvitees.length === 0 ? (
+  <p className="text-sm text-muted-foreground leading-relaxed" data-testid="text-referral-empty">
+  No one has joined from your invites yet. Everyone you bring in near you grows the local pool, which is what makes a real match possible. Share your link above to get started.
+  </p>
+  ) : (
+  <>
+  <div className="grid grid-cols-3 gap-3 mb-4">
+  <div className="rounded-xl bg-[hsl(326_100%_60%/0.06)] p-3 text-center" data-testid="stat-referral-joined">
+  <div className="font-serif text-2xl font-bold text-foreground">{referrals?.summary.joined ?? 0}</div>
+  <div className="text-xs text-muted-foreground mt-0.5">Joined</div>
+  </div>
+  <div className="rounded-xl bg-[hsl(248_62%_52%/0.06)] p-3 text-center" data-testid="stat-referral-in-pool">
+  <div className="font-serif text-2xl font-bold text-foreground">{referrals?.summary.inPool ?? 0}</div>
+  <div className="text-xs text-muted-foreground mt-0.5">In the pool</div>
+  </div>
+  <div className="rounded-xl bg-[hsl(142_70%_45%/0.08)] p-3 text-center" data-testid="stat-referral-ready">
+  <div className="font-serif text-2xl font-bold text-foreground">{referrals?.summary.ready ?? 0}</div>
+  <div className="text-xs text-muted-foreground mt-0.5">Ready to match</div>
+  </div>
+  </div>
+  <ul className="space-y-2" data-testid="list-referral-invitees">
+  {referralInvitees.map((invitee, i) => (
+  <li
+  key={i}
+  className="flex items-center justify-between gap-3 rounded-xl bg-background/40 px-3 py-2"
+  data-testid={`row-referral-invitee-${i}`}
+  >
+  <div className="flex items-center gap-2 min-w-0">
+  <UserPlus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+  <span className="text-sm font-medium text-foreground truncate">{invitee.displayName}</span>
+  </div>
+  <span className={referralStatusClass(invitee.status)} data-testid={`badge-referral-status-${i}`}>
+  {referralStatusLabel(invitee.status)}
+  </span>
+  </li>
+  ))}
+  </ul>
+  </>
+  )}
+  <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
+  We only show you a first name and where each person is in the pool. We never share their contact details, and they control their own data the same way you control yours.
+  </p>
+  </div>
+  )}
   </motion.div>
 
   {/* Quick actions footer */}

@@ -88,6 +88,8 @@ vi.mock("@workspace/api-client-react", () => ({
   getGetDatingWinsQueryKey: () => ["dating-wins"],
   useGetMirrorPortrait: () => mirrorPortraitState,
   getGetMirrorPortraitQueryKey: () => ["mirror-portrait"],
+  useGetMyReferrals: () => ({ data: undefined, isLoading: false }),
+  getGetMyReferralsQueryKey: () => ["my-referrals"],
 }));
 
 vi.mock("@/components/layout/AppLayout", () => ({

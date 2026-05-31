@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "referrals_invitee_unique_idx" ON "referrals" USING btree ("invitee_user_id");

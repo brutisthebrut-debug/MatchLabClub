@@ -554,6 +554,39 @@ export const CreateQuizResultBody = zod.object({
 
 
 /**
+ * Returns the authenticated user's personal invite code plus a
+privacy-respecting reflection of the people who joined from their
+invites and where each one is in the matching pool. Attribution comes
+from `users.invited_by_user_id` (first-touch, set at signup from the
+`mlc_ref` cookie). Only a display name (first name, never email) and a
+pool status are returned for each invitee, so the inviter sees who is
+in and their status without seeing any private data. The summary counts
+feed the "you grow the local pool" framing: more people you bring in
+near you raises everyone's match odds.
+
+ * @summary Get the signed-in user's invite link and an honest reflection of who joined
+ */
+export const GetMyReferralsHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetMyReferralsResponse = zod.object({
+  "refCode": zod.string().describe('The user\'s personal invite code (shape \"user-<id>\") to append as the ?ref param on a shared link.'),
+  "sharePath": zod.string().describe('The suggested in-app destination to invite people to (for example \"\/quizzes\").'),
+  "summary": zod.object({
+  "joined": zod.number().describe('Total people who joined from this user\'s invites.'),
+  "inPool": zod.number().describe('How many of those invitees are active in the matching pool (building, ready, or concierge).'),
+  "ready": zod.number().describe('How many invitees are fully ready to match.')
+}),
+  "invitees": zod.array(zod.object({
+  "displayName": zod.string().describe('The invitee\'s first name, or \"A new member\" when no name is on file. Never an email or any other private field.'),
+  "joinedAt": zod.coerce.date().nullable().describe('When the invitee was attributed to this inviter, or null if unknown.'),
+  "status": zod.enum(['joined', 'building', 'ready', 'paused', 'concierge_only', 'off']).describe('Where the invitee sits in the matching pool. \"joined\" means signed up but no pool membership row yet.')
+})).describe('Privacy-safe list of people who joined from this user\'s invites, newest first.')
+})
+
+
+/**
  * Returns whether the authenticated user has granted consent to send
 their own content (bios, messages, screenshots, journal entries) to
 the hosted LLM (Anthropic via Replit AI Integrations), plus the

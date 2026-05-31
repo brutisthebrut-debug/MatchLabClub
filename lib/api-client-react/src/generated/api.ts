@@ -137,6 +137,7 @@ import type {
   MatchProposalResponseInput,
   MatchingState,
   MeConsent,
+  MeReferralsResponse,
   MessageCoachingInput,
   MessageCoachingResponse,
   MessageCoachingSession,
@@ -1463,6 +1464,93 @@ export const useCreateQuizResult = <TError = ErrorType<AuthErrorEnvelope>,
       > => {
       return useMutation(getCreateQuizResultMutationOptions(options));
     }
+
+export const getGetMyReferralsUrl = () => {
+
+
+
+
+  return `/api/me/referrals`
+}
+
+/**
+ * Returns the authenticated user's personal invite code plus a
+privacy-respecting reflection of the people who joined from their
+invites and where each one is in the matching pool. Attribution comes
+from `users.invited_by_user_id` (first-touch, set at signup from the
+`mlc_ref` cookie). Only a display name (first name, never email) and a
+pool status are returned for each invitee, so the inviter sees who is
+in and their status without seeing any private data. The summary counts
+feed the "you grow the local pool" framing: more people you bring in
+near you raises everyone's match odds.
+
+ * @summary Get the signed-in user's invite link and an honest reflection of who joined
+ */
+export const getMyReferrals = async ( options?: RequestInit): Promise<MeReferralsResponse> => {
+
+  return customFetch<MeReferralsResponse>(getGetMyReferralsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyReferralsQueryKey = () => {
+    return [
+    `/api/me/referrals`
+    ] as const;
+    }
+
+
+export const getGetMyReferralsQueryOptions = <TData = Awaited<ReturnType<typeof getMyReferrals>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyReferrals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyReferralsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyReferrals>>> = ({ signal }) => getMyReferrals({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyReferrals>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyReferralsQueryResult = NonNullable<Awaited<ReturnType<typeof getMyReferrals>>>
+export type GetMyReferralsQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the signed-in user's invite link and an honest reflection of who joined
+ */
+
+export function useGetMyReferrals<TData = Awaited<ReturnType<typeof getMyReferrals>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyReferrals>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyReferralsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetAiContentConsentUrl = () => {
 

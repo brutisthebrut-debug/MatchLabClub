@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { useJoinWaitlist, useGetWaitlistStats, getGetWaitlistStatsQueryKey } from "@workspace/api-client-react";
+import { useAuth } from "@workspace/replit-auth-web";
+import { ShareButton } from "@/components/echo/ShareButton";
 import { trackEvent } from "@/lib/analytics";
 import { useQueryClient } from "@tanstack/react-query";
 import { Headphones, Users, CheckCircle, ArrowRight, Share2, Loader2, Clock, Quote, Sparkles } from "lucide-react";
@@ -27,6 +29,7 @@ export default function Waitlist() {
   const [interest, setInterest] = useState("");
   const [submitted, setSubmitted] = useState<WaitlistEntry | null>(null);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: stats, isLoading: statsLoading } = useGetWaitlistStats({
   query: { queryKey: getGetWaitlistStatsQueryKey() }
@@ -141,14 +144,17 @@ export default function Waitlist() {
   <Button asChild className="rounded-full bg-gradient-to-r from-[hsl(248_62%_55%)] to-[hsl(326_100%_59%)] border-0 font-semibold glow-pulse" data-testid="button-try-free-audit">
   <Link href="/start">Try the Free Audit Now <ArrowRight className="ml-2 h-4 w-4" /></Link>
   </Button>
-  <Button
+  <ShareButton
+  surface="waitlist"
+  title="MatchLab Club"
+  text="I joined the MatchLab Club waitlist. It's a second brain for your dating life, try a quiz and read your own signals:"
+  path="/quizzes"
+  ref={user?.id ? `user-${user.id}` : "waitlist"}
   variant="ghost"
-  className="rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5 flex items-center gap-2"
-  onClick={() => navigator.share?.({ title: "MatchLab Club", text: "I joined the MatchLab Club waitlist, check it out:", url: window.location.origin })}
-  data-testid="button-share"
-  >
-  <Share2 className="w-4 h-4" /> Share with a friend
-  </Button>
+  label="Invite a friend"
+  className="rounded-full border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/5"
+  testId="button-share"
+  />
   </div>
   </motion.div>
   ) : (

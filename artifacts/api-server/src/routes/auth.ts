@@ -6,7 +6,8 @@ import {
   ExchangeMobileAuthorizationCodeResponse,
   LogoutMobileSessionResponse,
 } from "@workspace/api-zod";
-import { db, usersTable } from "@workspace/db";
+import { db, usersTable, referralsTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 import {
   clearSession,
   getOidcConfig,
@@ -101,6 +102,31 @@ async function upsertUser(
       },
     })
     .returning();
+
+  // Record the attributed signup in the referrals table so both the founder
+  // analytics views and the inviter's own "who you pulled in" reflection have
+  // real data. We key off the persisted `invitedByUserId` (first-touch, never
+  // overwritten) rather than the raw cookie. The unique index on
+  // `invitee_user_id` plus `onConflictDoNothing` guarantees exactly one row per
+  // invitee even if two sign-in upserts race, so a returning user logging in
+  // again (or a concurrent double sign-in) never duplicates attribution.
+  if (user?.invitedByUserId && user.invitedByUserId !== user.id) {
+    try {
+      await db
+        .insert(referralsTable)
+        .values({
+          inviterUserId: user.invitedByUserId,
+          inviteeUserId: user.id,
+          refCode: `user-${user.invitedByUserId}`,
+          signedUpAt: user.invitedAt ?? new Date(),
+        })
+        .onConflictDoNothing({ target: referralsTable.inviteeUserId });
+    } catch {
+      // Attribution is best-effort. A failure here must never block sign-in;
+      // `users.invitedByUserId` remains the authoritative attribution record.
+    }
+  }
+
   return user;
 }
 

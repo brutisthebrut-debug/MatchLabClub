@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { usersTable } from "./auth";
 
 export const referralsTable = pgTable(
@@ -18,6 +18,14 @@ export const referralsTable = pgTable(
   (t) => [
     index("referrals_inviter_idx").on(t.inviterUserId),
     index("referrals_invitee_idx").on(t.inviteeUserId),
+    // Each invitee has exactly one inviter (first-touch, set once on
+    // users.invited_by_user_id), so a referral row is unique per invitee. This
+    // unique index is what makes the upsert dedupe authoritative: concurrent
+    // sign-in upserts both try to insert, and onConflictDoNothing collapses to
+    // a single row instead of duplicating founder-side attribution counts.
+    // Postgres treats NULLs as distinct in a unique index, so future
+    // anonymous-landing rows with a null invitee are unaffected.
+    uniqueIndex("referrals_invitee_unique_idx").on(t.inviteeUserId),
   ],
 );
 
