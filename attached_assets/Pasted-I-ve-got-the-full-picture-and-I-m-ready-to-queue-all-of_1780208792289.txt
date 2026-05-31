@@ -1,0 +1,27 @@
+I've got the full picture and I'm ready to queue all of it. One real constraint first: I can only add tasks to the queue from Plan mode. Right now I'm in Build mode (I just shipped and merged #564). Flip me to Plan mode and say go, and I'll turn 1 through 20 into properly scoped tasks with dependencies and a build order.
+
+So you can adjust before I formalize, here's 6 through 20. They all ladder up to the same three moats (a Mirror that knows you, signal nobody else can reach, matching on that depth).
+
+Stickiness and growth:
+6. Shareable Mirror moments. A card or link of your readiness climb plus a snippet of your portrait, built to share. Sharing is one of your three named stickiness levers.
+
+Content and blog SEO engine. Top of funnel acquisition you've asked for, with quizzes as the lead in.
+Quizzes that feed the Mirror. Every quiz becomes real signal in the registry, with a fun result that points back to the Mirror.
+Next best action coach. The Mirror picks the single highest value thing to do this week and walks you through it, so readiness feels guided, not a chore.
+Signal breadth (some of these may fold into #565 Connection Center engine, I'll dedupe when I scope):
+10. Forwarding inbox connector (Beat 2). Per user receipts address, subject and sender and timestamp only, never the body.
+
+Plaid spending signals (Beat 3). Category level only.
+Insight stream on your profile (Beat 4). A live feed of what each new signal just taught the machine about you.
+Signal density map (Beat 6). The visual of how much the machine can see across lanes. The literal picture of the moat.
+Matching and network effects:
+14. Matching cohort opt in (Beat 7), plus the waitlist to cohort pipeline.
+
+Referral and invite loop. Invites grow the local pool, which directly raises match quality.
+Depth and infrastructure:
+16. Lifecycle email and notification system. The plumbing behind the weekly digest and nudges.
+
+Compatibility Compass as a recurring read, not a one off.
+Photo lab. Rank and compare multiple photos, A/B the lead shot. Deterministic checklist plus opt in vision.
+Inclusive onboarding paths. Goal and orientation aware first run, so everyone sees themselves from minute one.
+Event instrumentation plus the breathing weights. Wire analytics so you can see what works and the registry's bounded re-weighting can finally act on real outcomes
