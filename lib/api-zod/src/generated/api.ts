@@ -3707,6 +3707,18 @@ export const getMatchingStateResponseReadinessBreakdownWinsMax = 100;
 export const getMatchingStateResponseReadinessBreakdownCalendarMin = 0;
 export const getMatchingStateResponseReadinessBreakdownCalendarMax = 100;
 
+export const getMatchingStateResponseReadinessBreakdownAuditsMin = 0;
+export const getMatchingStateResponseReadinessBreakdownAuditsMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownCoachingMin = 0;
+export const getMatchingStateResponseReadinessBreakdownCoachingMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownInstagramMin = 0;
+export const getMatchingStateResponseReadinessBreakdownInstagramMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownLifePulseMin = 0;
+export const getMatchingStateResponseReadinessBreakdownLifePulseMax = 100;
+
 export const getMatchingStateResponseReadinessThresholdMin = 0;
 export const getMatchingStateResponseReadinessThresholdMax = 100;
 
@@ -3755,7 +3767,11 @@ export const GetMatchingStateResponse = zod.object({
   "hingeImport": zod.number().min(getMatchingStateResponseReadinessBreakdownHingeImportMin).max(getMatchingStateResponseReadinessBreakdownHingeImportMax),
   "postDate": zod.number().min(getMatchingStateResponseReadinessBreakdownPostDateMin).max(getMatchingStateResponseReadinessBreakdownPostDateMax),
   "wins": zod.number().min(getMatchingStateResponseReadinessBreakdownWinsMin).max(getMatchingStateResponseReadinessBreakdownWinsMax),
-  "calendar": zod.number().min(getMatchingStateResponseReadinessBreakdownCalendarMin).max(getMatchingStateResponseReadinessBreakdownCalendarMax)
+  "calendar": zod.number().min(getMatchingStateResponseReadinessBreakdownCalendarMin).max(getMatchingStateResponseReadinessBreakdownCalendarMax),
+  "audits": zod.number().min(getMatchingStateResponseReadinessBreakdownAuditsMin).max(getMatchingStateResponseReadinessBreakdownAuditsMax),
+  "coaching": zod.number().min(getMatchingStateResponseReadinessBreakdownCoachingMin).max(getMatchingStateResponseReadinessBreakdownCoachingMax),
+  "instagram": zod.number().min(getMatchingStateResponseReadinessBreakdownInstagramMin).max(getMatchingStateResponseReadinessBreakdownInstagramMax),
+  "lifePulse": zod.number().min(getMatchingStateResponseReadinessBreakdownLifePulseMin).max(getMatchingStateResponseReadinessBreakdownLifePulseMax)
 })
 }),
   "eligible": zod.boolean().describe('True when readiness.score is at or above readinessThreshold. The client uses this to gate the pool opt-in switch.'),

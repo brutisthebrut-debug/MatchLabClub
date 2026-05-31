@@ -13,6 +13,9 @@ import {
   importedSourcesTable,
   datingWinsTable,
   matchingReadinessSnapshotsTable,
+  auditsTable,
+  messageCoachingSessionsTable,
+  lifePulsesTable,
 } from "@workspace/db";
 import {
   UpdateMatchingPreferencesBody,
@@ -204,6 +207,51 @@ async function computeReadiness(userId: string): Promise<Readiness> {
     .limit(1);
   const calendarEvents = Number(calendarRows[0]?.events ?? 0);
 
+  // Profile audits that reached a generated report. Running an audit (profile or
+  // photo screenshot) teaches the engine how the user presents themselves, so
+  // it feeds the same readiness meter as every other source.
+  const auditsRows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(auditsTable)
+    .where(
+      and(
+        eq(auditsTable.userId, userId),
+        isNull(auditsTable.deletedAt),
+        sql`${auditsTable.reportGeneratedAt} is not null`,
+      ),
+    );
+  const auditsCount = Number(auditsRows[0]?.count ?? 0);
+
+  // Message coaching sessions. How a person actually talks is signal the matching
+  // brain uses, not just how they describe their texting style.
+  const coachingRows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(messageCoachingSessionsTable)
+    .where(eq(messageCoachingSessionsTable.userId, userId));
+  const coachingCount = Number(coachingRows[0]?.count ?? 0);
+
+  // Instagram tone paste. A read on the user's public-facing voice beyond the
+  // dating apps. We store only the derived tone summary, never the account.
+  const instagramRows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(importedSourcesTable)
+    .where(
+      and(
+        eq(importedSourcesTable.userId, userId),
+        eq(importedSourcesTable.source, "instagram-paste"),
+        isNull(importedSourcesTable.deletedAt),
+      ),
+    );
+  const instagramCount = Number(instagramRows[0]?.count ?? 0);
+
+  // Life pulse check-ins. Energy and headspace over time shape when someone is
+  // genuinely ready to date, so the rhythm feeds the brain too.
+  const lifePulseRows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(lifePulsesTable)
+    .where(eq(lifePulsesTable.userId, userId));
+  const lifePulseCount = Number(lifePulseRows[0]?.count ?? 0);
+
   const breakdown = computeBreakdown({
     compass: compassCount,
     journal: journalCount,
@@ -212,6 +260,10 @@ async function computeReadiness(userId: string): Promise<Readiness> {
     postDateReflected,
     wins: winsCount,
     calendarEvents,
+    audits: auditsCount,
+    coaching: coachingCount,
+    instagram: instagramCount,
+    lifePulse: lifePulseCount,
   });
 
   return { score: scoreFromBreakdown(breakdown), breakdown };

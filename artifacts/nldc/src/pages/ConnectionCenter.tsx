@@ -23,6 +23,11 @@ import {
   FlaskConical,
   Sparkles,
   Users,
+  Film,
+  Footprints,
+  BookOpen,
+  Images,
+  UtensilsCrossed,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -243,6 +248,92 @@ const RESEARCHING: Connector[] = [
     blurb:
       "End-to-end encrypted by design. We are researching on-device processing so message tone analysis happens without anything leaving your phone. Open question: can we deliver useful coaching while honouring the E2EE contract.",
     returns: "If it lands, the most accurate tone read in the product.",
+  },
+  {
+    id: "letterboxd",
+    title: "Letterboxd taste",
+    icon: Film,
+    color: "hsl(28 80% 55%)",
+    blurb:
+      "Letterboxd lets you export your full diary and ratings as a CSV. Film taste says a lot about mood, humour, and what a good night in looks like for you. Research question: how much of compatibility actually lives in what people watch versus what they say they watch.",
+    returns: "If it lands, a taste read that sharpens date-idea suggestions and conversation openers.",
+    access: [
+      "The films, ratings, and dates in the diary CSV you export and drop in",
+    ],
+    excludes: [
+      "Your Letterboxd password or account login",
+      "Reviews or lists you choose not to export",
+      "Anything you have not put in the file yourself",
+    ],
+  },
+  {
+    id: "strava",
+    title: "Strava rhythm",
+    icon: Footprints,
+    color: "hsl(18 90% 55%)",
+    blurb:
+      "Strava exposes activity types, times, and frequency through its API. Movement rhythm is a strong honest signal of energy and weekly cadence. Research question: how to read the rhythm of when and how you move without ever touching exact routes or locations.",
+    returns: "If it lands, an energy and cadence read that informs date pacing and timing.",
+    access: [
+      "Activity types, durations, and the days and times you tend to move",
+      "Weekly frequency and rough volume of activity",
+    ],
+    excludes: [
+      "GPS routes, start points, or any precise location",
+      "Heart rate, pace, or performance metrics",
+      "Any ability to post, kudos, or change your activities",
+    ],
+  },
+  {
+    id: "goodreads",
+    title: "Goodreads shelf",
+    icon: BookOpen,
+    color: "hsl(38 45% 50%)",
+    blurb:
+      "Goodreads lets you export your shelves and ratings as a CSV. What you read, and how you rate it, is a quiet window into curiosity and values. Research question: which reading signals are durable preferences and which are aspirational shelf decoration.",
+    returns: "If it lands, a curiosity and values read that deepens compatibility reasoning.",
+    access: [
+      "Titles, shelves, ratings, and dates from the CSV you export and drop in",
+    ],
+    excludes: [
+      "Your Goodreads or Amazon login",
+      "Private notes or highlights you do not export",
+      "Anything outside the file you choose to share",
+    ],
+  },
+  {
+    id: "photo-library-vibe",
+    title: "Photo library vibe",
+    icon: Images,
+    color: "hsl(280 55% 60%)",
+    blurb:
+      "Your camera roll is the most honest record of how you actually spend your time. We are researching fully on-device vibe reads (outdoors versus indoors, social versus solo, the settings you gravitate to) so nothing but a small derived summary ever leaves your phone. Open question: can we surface a useful read while keeping every photo on-device.",
+    returns: "If it lands, a lifestyle read that grounds your profile in how you really live.",
+    access: [
+      "A small on-device summary of scene types and social patterns, computed locally",
+    ],
+    excludes: [
+      "Any actual photo leaving your device",
+      "Faces, names, or who is in your pictures",
+      "Exact locations or timestamps",
+    ],
+  },
+  {
+    id: "resy-opentable",
+    title: "Resy and OpenTable history",
+    icon: UtensilsCrossed,
+    color: "hsl(348 60% 58%)",
+    blurb:
+      "Reservation apps hold a clean record of where you go out, how often, and the kind of places you pick. Research question: how to read going-out rhythm and taste from confirmations without storing anything tied to a specific person or party.",
+    returns: "If it lands, a going-out cadence and taste read that powers date-spot suggestions.",
+    access: [
+      "Venue type, neighbourhood, and the dates and times of bookings you forward or export",
+    ],
+    excludes: [
+      "Names of anyone you dined with",
+      "Payment details or bill amounts",
+      "Your reservation app login",
+    ],
   },
 ];
 

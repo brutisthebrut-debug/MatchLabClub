@@ -4,14 +4,13 @@ import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { CheckCircle, ArrowRight, Headphones, Sparkles, Zap, Heart, Star } from "lucide-react";
+import { CheckCircle, ArrowRight, Headphones, Sparkles, Zap, Heart, Lock, FlaskConical } from "lucide-react";
 import { useState } from "react";
 import { TrustBadge } from "@/components/TrustBadge";
 import { ShareButton } from "@/components/echo/ShareButton";
 
 const TIER_SHARE_TEXT: Record<string, string> = {
   "Free Signal Check": "MatchLab Club Free Signal Check: a 3-minute audit that shows what your profile is actually projecting.",
-  "Signal Audit": "MatchLab Club Signal Audit: $29 one-time for a full bio rewrite and 7-day action plan.",
   "Dating Reset": "MatchLab Club Dating Reset: $97 for a full rebuild of how you show up, profile, prompts, photos, and messaging.",
   "Wingman": "MatchLab Club Wingman: $197 a month for the deep AI lane plus a human coach review.",
 };
@@ -44,42 +43,6 @@ const TIERS = [
       "Score history tracking",
     ],
     walkaway: ["Your Signal Score teaser", "Your top 3 risks", "One example rewrite line"],
-  },
-  {
-    name: "Signal Audit",
-    outcome: "Get the honest blueprint",
-    price: "$29",
-    promoPrice: null,
-    period: "one-time",
-    popular: false,
-    badge: null,
-    desc: "Complete audit with full bio rewrite, all prompt rewrites, photo checklist, and your 7-day action plan. One payment, done.",
-    cta: "Get My Audit, $29",
-    href: "/checkout/signal-audit",
-    nextStep: "→ Secure Stripe checkout · report delivered instantly after intake",
-    accentColor: "hsl(190 75% 40%)",
-    icon: Star,
-    features: [
-      "1 complete Profile Signal Audit",
-      "Your Signal Score (0–100)",
-      "Signal Spectrum across 8 dimensions",
-      "Full bio rewrite that sounds like you",
-      "All prompts rewritten with coach notes",
-      "Photo checklist (5 categories)",
-      "7-day personalised action plan",
-      "Dating Diagnosis summary",
-    ],
-    excluded: [
-      "Unlimited future audits",
-      "Score history tracking",
-      "Message coaching sessions",
-      "Direct coach access",
-    ],
-    walkaway: [
-      "A bio rewritten to sound like you",
-      "Your 7-day action plan",
-      "Honest, specific photo guidance",
-    ],
   },
   {
     name: "Dating Reset",
@@ -165,7 +128,7 @@ const fadeUp = (delay = 0) => ({
 });
 
 export default function Pricing() {
-  useMeta("Pricing: Free, $29, $97 & $197 Coaching", "Four ways to feed the engine that turns your real signals into real matches. Start free with the Signal Check, go deeper with a one-time audit or the Dating Reset, or get founder-curated intros with Wingman.");
+  useMeta("Pricing: Free, $97 & $197 Coaching", "Three ways to feed the engine that turns your real signals into real matches. Start free with the Signal Check, go deeper with the Dating Reset, or get founder-curated intros with Wingman.");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
@@ -225,7 +188,7 @@ export default function Pricing() {
           </motion.div>
 
           {/* Pricing Cards */}
-          <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-14 xl:items-start">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-14 lg:items-start">
             {TIERS.map((tier, i) => {
               const pctOff = tier.promoPrice
                 ? Math.round(
@@ -237,7 +200,7 @@ export default function Pricing() {
                 : null;
               return (
               <motion.div key={tier.name} {...fadeUp(0.12 + i * 0.07)}
-                className={`relative flex flex-col ${tier.popular ? "xl:-translate-y-4 xl:scale-[1.03]" : ""}`}
+                className={`relative flex flex-col ${tier.popular ? "lg:-translate-y-4 lg:scale-[1.03]" : ""}`}
                 data-testid={`card-pricing-${tier.name.toLowerCase().replace(/ /g, "-")}`}
               >
                 {tier.badge && (
@@ -343,7 +306,7 @@ export default function Pricing() {
                   {"betaNote" in tier && tier.betaNote && (
                     <div className="mt-3 p-3 rounded-xl text-[11px] text-muted-foreground leading-relaxed"
                       style={{ background: "hsl(var(--brand-gold) / 0.08)", border: "1px solid hsl(var(--brand-gold) / 0.2)" }}>
-                      🧪 <span className="font-semibold text-foreground/70">Private beta:</span> {tier.betaNote}
+                      <span className="font-semibold text-foreground/70">Private beta:</span> {tier.betaNote}
                     </div>
                   )}
                   <div className="mt-3 flex justify-center text-muted-foreground">
@@ -365,6 +328,21 @@ export default function Pricing() {
             })}
           </div>
           <TrustBadge className="mt-2 mb-2" />
+
+          {/* One-time audit option, kept reachable without crowding the tiers */}
+          <motion.div {...fadeUp(0.24)} className="max-w-2xl mx-auto -mt-1 mb-12 text-center">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Just want a single read instead of the full reset? The{" "}
+              <Link
+                href="/checkout/signal-audit"
+                className="font-semibold text-foreground underline decoration-[hsl(248_62%_52%/0.5)] underline-offset-4 hover:decoration-[hsl(248_62%_52%)] transition-colors"
+                data-testid="link-signal-audit-onetime"
+              >
+                one-time Signal Audit ($29)
+              </Link>{" "}
+              is a complete profile audit with a bio rewrite, photo checklist, and 7-day plan. No subscription.
+            </p>
+          </motion.div>
 
           {/* What Happens After You Pay */}
           <motion.div {...fadeUp(0.26)} className="max-w-3xl mx-auto mb-12">
@@ -412,7 +390,7 @@ export default function Pricing() {
               ))}
             </div>
             <div className="mt-4 glass border border-white/5 rounded-xl p-4 flex items-start gap-3">
-              <span className="text-base flex-shrink-0">🔒</span>
+              <Lock className="w-4 h-4 flex-shrink-0 mt-0.5 text-muted-foreground/55" />
               <p className="text-xs text-muted-foreground/55 leading-relaxed">
                 <strong className="text-muted-foreground/70">Privacy promise:</strong>{" "}
                 You control what is saved. Private content is not sold. You choose what becomes part of your profile, and you can export or delete everything at any time from your account page.
@@ -429,9 +407,9 @@ export default function Pricing() {
               style={{ background: "radial-gradient(circle, hsl(var(--brand-gold)), transparent)", transform: "translate(30%, -30%)" }} />
             <div className="relative z-10">
               <div className="flex items-start gap-4 flex-col sm:flex-row">
-                <div className="w-12 h-12 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl"
+                <div className="w-12 h-12 rounded-2xl flex-shrink-0 flex items-center justify-center"
                   style={{ background: "hsl(var(--brand-gold) / 0.15)", border: "1px solid hsl(var(--brand-gold) / 0.25)" }}>
-                  🔬
+                  <FlaskConical className="w-6 h-6 text-[hsl(43_65%_72%)]" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-3 flex-wrap mb-2">

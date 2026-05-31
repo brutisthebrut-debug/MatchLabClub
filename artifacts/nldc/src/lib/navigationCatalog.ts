@@ -30,7 +30,6 @@ export const PACKAGES: Package[] = [
       { name: "Dating Signal Quiz",    href: "/quiz",          desc: "8 questions → your dating archetype" },
     ],
     more: [
-      { name: "Dating Diagnosis", href: "/diagnosis" },
       { name: "Profile Reader",   href: "/profile-reader" },
     ],
     hubHref: "/start",

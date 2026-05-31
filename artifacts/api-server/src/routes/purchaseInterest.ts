@@ -3,6 +3,7 @@ import { db, purchaseInterestTable } from "@workspace/db";
 import { z } from "zod/v4";
 import { desc } from "drizzle-orm";
 import { requireFounder } from "../middlewares/founderAuth";
+import { reconcilePurchaseInterestFromStripe } from "../lib/stripeReconcile";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,14 @@ router.get("/purchase-interest", requireFounder, async (req, res): Promise<void>
     }))
   );
 });
+
+router.post(
+  "/purchase-interest/reconcile",
+  requireFounder,
+  async (_req, res): Promise<void> => {
+    const result = await reconcilePurchaseInterestFromStripe();
+    res.json(result);
+  },
+);
 
 export default router;

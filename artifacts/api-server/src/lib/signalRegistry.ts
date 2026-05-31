@@ -25,6 +25,10 @@ export interface ReadinessBreakdown {
   postDate: number;
   wins: number;
   calendar: number;
+  audits: number;
+  coaching: number;
+  instagram: number;
+  lifePulse: number;
 }
 
 /** Raw counts pulled from the database for each contributor. */
@@ -47,6 +51,14 @@ export interface SignalCounts {
    * never the raw events or titles.
    */
   calendarEvents: number;
+  /** Profile audits the user has generated a report for (self-presentation). */
+  audits: number;
+  /** Message coaching sessions worked through (communication style). */
+  coaching: number;
+  /** Instagram tone pastes imported (public-facing voice). Binary in practice. */
+  instagram: number;
+  /** Life pulse check-ins logged (energy and headspace over time). */
+  lifePulse: number;
 }
 
 /**
@@ -212,6 +224,76 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       label: "Paste your calendar",
       detail: "Drop in your .ics export. We read your rhythm, never the raw file.",
       href: "/imports",
+    },
+  },
+  {
+    id: "audits",
+    countKey: "audits",
+    label: "Profile audits",
+    dimensions: ["self-presentation", "how their profile actually reads"],
+    weight: 0.16,
+    confidence: 0.75,
+    normalize: { kind: "count", denominator: 3 },
+    describe: (c) =>
+      `Has run enough profile audits to cover ${c}% of that lane, so we know how they present themselves and where their profile is sharp or soft.`,
+    action: {
+      label: "Run a profile audit",
+      detail:
+        "Scan your profile or a screenshot. Each audit teaches the engine how you show up.",
+      href: "/scan",
+    },
+  },
+  {
+    id: "coaching",
+    countKey: "coaching",
+    label: "Message coaching",
+    dimensions: ["how they communicate", "texting style"],
+    weight: 0.12,
+    confidence: 0.65,
+    normalize: { kind: "count", denominator: 5 },
+    describe: (c) =>
+      `Has worked through enough message coaching to cover ${c}% of that lane, so we can see how they actually communicate, not just how they describe it.`,
+    action: {
+      label: "Coach a conversation",
+      detail:
+        "Paste a chat and get real reply options. Each session is signal on your style.",
+      href: "/coach",
+    },
+  },
+  {
+    id: "instagram",
+    countKey: "instagram",
+    label: "Instagram tone",
+    dimensions: ["public-facing personality", "tone of voice"],
+    weight: 0.1,
+    confidence: 0.6,
+    normalize: { kind: "binary" },
+    describe: () =>
+      `Has shared their Instagram tone, so we have a read on their public-facing personality and voice beyond the dating apps.`,
+    action: {
+      label: "Share your Instagram tone",
+      detail: "Paste a few captions. We read the tone, never your account.",
+      href: "/me",
+    },
+  },
+  {
+    id: "lifePulse",
+    countKey: "lifePulse",
+    label: "Life pulse",
+    dimensions: [
+      "energy and headspace over time",
+      "when they have room to date",
+    ],
+    weight: 0.08,
+    confidence: 0.55,
+    normalize: { kind: "count", denominator: 7 },
+    describe: (c) =>
+      `Has logged enough life pulses to cover ${c}% of that lane, a read on their energy and headspace over time, which shapes when they are ready to date.`,
+    action: {
+      label: "Log a life pulse",
+      detail:
+        "A quick check-in on sleep, energy, and headspace. Patterns become signal.",
+      href: "/mirror",
     },
   },
 ] as const;

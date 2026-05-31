@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
-import { ArrowRight, CheckCircle, Shield, Sparkles, Headphones, Eye, Clock, FileText, Compass, MessageCircle, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle, Shield, Sparkles, Headphones, Eye, Clock, FileText, Compass, MessageCircle, Loader2, Camera, BookOpen, Brain, Download, TrendingUp, Users, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMeta } from "@/hooks/useMeta";
 import {
@@ -189,6 +189,102 @@ export default function Landing() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── One brain, the live loop ── */}
+      <section className="py-24 md:py-32 border-t border-foreground/5 bg-background relative overflow-hidden">
+        <div className="orb orb-violet absolute w-[500px] h-[500px] -top-40 -left-40 opacity-30 pointer-events-none" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16 max-w-3xl mx-auto">
+            <p className="text-sm font-bold uppercase tracking-widest text-[hsl(326_100%_58%)] mb-4">One brain, not ten tabs</p>
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-6 leading-tight">
+              Every real tool feeds <span className="gradient-text italic pr-1">one rising readiness meter.</span>
+            </h2>
+            <p className="text-lg text-muted-foreground leading-relaxed font-medium">
+              These are not separate gimmicks. Each one is a real working tool, and each one teaches the same engine a little more about you. The more it knows, the higher your readiness climbs, and the better the people it can introduce.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-[1fr_auto_1fr] gap-8 lg:gap-6 items-center max-w-6xl mx-auto">
+            {/* Left: the real tools feeding the brain */}
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[
+                { icon: FileText, label: "Signal Check", desc: "A quick read of your profile", href: "/signal-check", color: "hsl(var(--brand-indigo))" },
+                { icon: Camera, label: "Photo Scan", desc: "How your photos actually land", href: "/scan", color: "hsl(326 100% 59%)" },
+                { icon: MessageCircle, label: "Message Coach", desc: "How you talk to people", href: "/coach", color: "hsl(190 55% 55%)" },
+                { icon: Compass, label: "Compatibility Compass", desc: "What you respond to", href: "/compatibility-compass", color: "hsl(var(--brand-gold))" },
+                { icon: BookOpen, label: "Journal & post-date notes", desc: "Patterns over time", href: "/mirror", color: "hsl(248 62% 52%)" },
+                { icon: Download, label: "Hinge import", desc: "How you swipe and who replies", href: "/imports", color: "hsl(142 55% 50%)" },
+              ].map((tool, i) => (
+                <motion.div
+                  key={tool.label}
+                  initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}
+                >
+                  <Link
+                    href={tool.href}
+                    className="group flex items-start gap-3 p-4 rounded-2xl glass border border-foreground/10 hover:-translate-y-0.5 hover:shadow-lg transition-all h-full"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: withAlpha(tool.color, 0.12), border: `1px solid ${withAlpha(tool.color, 0.25)}` }}
+                    >
+                      <tool.icon className="w-5 h-5" style={{ color: tool.color }} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-foreground leading-tight">{tool.label}</p>
+                      <p className="text-xs text-muted-foreground leading-snug mt-0.5">{tool.desc}</p>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Middle: the meter */}
+            <motion.div
+              className="flex lg:flex-col items-center justify-center gap-4 px-2"
+              initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
+            >
+              <ArrowRight className="w-8 h-8 text-muted-foreground/40 lg:rotate-0 rotate-90 hidden sm:block" />
+              <div className="rounded-[2rem] p-8 text-center glass-strong border border-[hsl(248_62%_52%/0.3)] shadow-xl w-44">
+                <Brain className="w-8 h-8 mx-auto text-[hsl(326_100%_58%)] mb-3" />
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Match readiness</p>
+                <p className="text-5xl font-serif font-bold gradient-text leading-none mb-1">68</p>
+                <div className="h-2 rounded-full bg-foreground/10 overflow-hidden mt-3">
+                  <div className="h-full rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B]" style={{ width: "68%" }} />
+                </div>
+                <p className="inline-flex items-center gap-1 text-xs font-bold text-[hsl(142_55%_50%)] mt-3">
+                  <TrendingUp className="w-3.5 h-3.5" /> rising
+                </p>
+              </div>
+              <ArrowRight className="w-8 h-8 text-muted-foreground/40 lg:rotate-0 rotate-90 hidden sm:block" />
+            </motion.div>
+
+            {/* Right: the payoff */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }}
+              className="rounded-[2rem] p-8 h-full flex flex-col justify-center"
+              style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo) / 0.1), hsl(326 100% 59% / 0.08))", border: "1px solid hsl(var(--brand-indigo) / 0.25)" }}
+            >
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] shadow-lg mb-5">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-foreground mb-3">AI introductions, when you are ready</h3>
+              <p className="text-base text-muted-foreground leading-relaxed font-medium mb-6">
+                Once your readiness clears the bar, the engine introduces you to a small number of well considered people near you. No swipe carousel, no infinite scroll. The readiness meter is the gate, and the work you put in is the key.
+              </p>
+              <Link
+                href="/matching"
+                className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[hsl(248_62%_52%)] hover:opacity-80 transition-opacity"
+              >
+                See how matching works <ArrowRight className="w-4 h-4" />
+              </Link>
+            </motion.div>
+          </div>
+
+          <p className="text-center text-sm text-muted-foreground/80 mt-10 inline-flex items-center gap-2 mx-auto w-full justify-center">
+            <Heart className="w-4 h-4 text-[hsl(326_100%_58%)]" /> Built for every gender and orientation, inclusive by default.
+          </p>
         </div>
       </section>
 

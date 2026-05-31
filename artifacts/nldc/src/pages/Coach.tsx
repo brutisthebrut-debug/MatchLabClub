@@ -21,6 +21,7 @@ import {
   useGetCoachFollowUpTimeline, getGetCoachFollowUpTimelineQueryKey,
   useRecordCoachFollowUp,
   useExtractMessageScreenshot,
+  getGetMatchingStateQueryKey,
 } from "@workspace/api-client-react";
 import type { CoachFollowUpInputAnswer } from "@workspace/api-client-react";
 import { BarChart, Bar, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -272,6 +273,7 @@ export default function Coach() {
   setFollowUpAnswer(null);
   setSnoozeExpanded(false);
   queryClient.invalidateQueries({ queryKey: getListMessageCoachingSessionsQueryKey() });
+  queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() });
   } catch {
   setResult(DEMO_RESULT);
   setResultApp(appForRequest);

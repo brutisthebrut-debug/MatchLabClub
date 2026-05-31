@@ -8,10 +8,13 @@ import {
   Brain,
   Calendar,
   CalendarDays,
+  Camera,
   Compass,
   Download,
   Heart,
+  Instagram,
   MapPin,
+  MessageCircle,
   Sparkles,
   TrendingUp,
   Trophy,
@@ -124,7 +127,11 @@ interface BreakdownRow {
     | "hingeImport"
     | "postDate"
     | "wins"
-    | "calendar";
+    | "calendar"
+    | "audits"
+    | "coaching"
+    | "instagram"
+    | "lifePulse";
   label: string;
   blurb: string;
   href: string;
@@ -188,6 +195,38 @@ const BREAKDOWN_ROWS: BreakdownRow[] = [
     href: "/imports",
     cta: "Paste your calendar",
     icon: CalendarDays,
+  },
+  {
+    key: "audits",
+    label: "Profile audits",
+    blurb: "Each profile audit teaches the engine how you actually show up.",
+    href: "/scan",
+    cta: "Run a profile audit",
+    icon: Camera,
+  },
+  {
+    key: "coaching",
+    label: "Message coaching",
+    blurb: "Coaching a real conversation shows us how you communicate, not just how you describe it.",
+    href: "/coach",
+    cta: "Coach a conversation",
+    icon: MessageCircle,
+  },
+  {
+    key: "instagram",
+    label: "Instagram tone",
+    blurb: "A few captions give us your public-facing voice beyond the dating apps.",
+    href: "/me",
+    cta: "Share your Instagram tone",
+    icon: Instagram,
+  },
+  {
+    key: "lifePulse",
+    label: "Life pulse",
+    blurb: "Quick check-ins on energy and headspace show when you have room to date.",
+    href: "/mirror",
+    cta: "Log a life pulse",
+    icon: Heart,
   },
 ];
 
@@ -291,6 +330,10 @@ export default function Matching() {
     postDate: 0,
     wins: 0,
     calendar: 0,
+    audits: 0,
+    coaching: 0,
+    instagram: 0,
+    lifePulse: 0,
   };
   const nextActions = state.data?.nextActions ?? [];
   const history = state.data?.history ?? [];

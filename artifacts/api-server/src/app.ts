@@ -5,6 +5,7 @@ import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { authMiddleware } from "./middlewares/authMiddleware";
+import { WebhookHandlers } from "./lib/webhookHandlers";
 
 /**
  * Build the set of origins that are trusted for credentialed CORS requests.
@@ -94,6 +95,33 @@ app.use((req: Request, res: Response, next: NextFunction): void => {
 });
 
 app.use(cookieParser());
+
+/**
+ * Stripe webhook — registered BEFORE express.json() so the handler receives the
+ * raw request body Buffer required for signature verification. The CSRF origin
+ * guard above lets this through: Stripe is server-to-server and sends no Origin
+ * header. Signature verification inside processWebhook is the real auth here.
+ */
+app.post(
+  "/api/stripe/webhook",
+  express.raw({ type: "application/json" }),
+  async (req: Request, res: Response): Promise<void> => {
+    const signature = req.headers["stripe-signature"];
+    if (!signature) {
+      res.status(400).json({ error: "Missing stripe-signature" });
+      return;
+    }
+    try {
+      const sig = Array.isArray(signature) ? signature[0]! : signature;
+      await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+      res.status(200).json({ received: true });
+    } catch (err) {
+      req.log.error({ err }, "Stripe webhook processing failed");
+      res.status(400).json({ error: "Webhook processing error" });
+    }
+  },
+);
+
 app.use(express.json({ limit: "12mb" }));
 app.use(express.urlencoded({ extended: true, limit: "12mb" }));
 app.use(authMiddleware);

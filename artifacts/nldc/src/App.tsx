@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -13,7 +13,6 @@ import Insights from "@/pages/Insights";
 import Integrations from "@/pages/Integrations";
 import Pricing from "@/pages/Pricing";
 import Waitlist from "@/pages/Waitlist";
-import Diagnosis from "@/pages/Diagnosis";
 import Lab from "@/pages/Lab";
 import SignalCheck from "@/pages/SignalCheck";
 import Roadmap from "@/pages/Roadmap";
@@ -170,7 +169,12 @@ function Router() {
       <Route path="/integrations" component={Integrations} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/waitlist" component={Waitlist} />
-      <Route path="/diagnosis" component={Diagnosis} />
+      {/* Diagnosis is consolidated into the single Signal Check front door.
+          The /diagnosis route stays reachable and redirects so every existing
+          link keeps working. */}
+      <Route path="/diagnosis">
+        <Redirect to="/signal-check" />
+      </Route>
       <Route path="/lab" component={Lab} />
       <Route path="/signal-check" component={SignalCheck} />
       <Route path="/roadmap" component={Roadmap} />

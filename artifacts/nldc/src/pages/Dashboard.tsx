@@ -205,7 +205,7 @@ const ACTION_GROUPS = [
   {
   label: "Profile Tools", color: "hsl(var(--brand-gold))",
   items: [
-  { icon: Stethoscope, label: "Dating Diagnosis", desc: "Find your pattern", href: "/diagnosis" },
+  { icon: Stethoscope, label: "Dating Diagnosis", desc: "Find your pattern", href: "/signal-check" },
   { icon: Wand2, label: "Profile Glow-Up", desc: "10 rewrites for any platform", href: "/glow-up" },
   { icon: ScanFace, label: "Mirror Profile", desc: "See yourself as others do", href: "/mirror" },
   { icon: User, label: "Profile Reader", desc: "Decode someone's profile", href: "/profile-reader" },
@@ -285,7 +285,7 @@ const PACKAGE_CARDS = [
   hintHref: "/signal-check",
   color: "hsl(var(--brand-indigo))",
   icon: BookOpen,
-  hubHref: "/diagnosis",
+  hubHref: "/signal-check",
   tools: [
   { label: "Signal Check", href: "/signal-check" },
   { label: "Dating Blueprint", href: "/blueprint" },
@@ -358,10 +358,10 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
   return {
   label: "Recommended",
   title: "Your score has clear room to grow",
-  desc: "Dating Diagnosis will show you exactly what category of issue to fix first. Fast.",
-  href: "/diagnosis",
+  desc: "A free Signal Check will show you exactly what category of issue to fix first. Fast.",
+  href: "/signal-check",
   color: "hsl(var(--brand-rose))",
-  cta: "Run My Diagnosis",
+  cta: "Run My Signal Check",
   };
   }
   if (latestScore < 75) {

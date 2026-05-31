@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import {
   ArrowRight, Shield, Eye, Trash2, Lock, CheckCircle, Sparkles,
   Headphones, BarChart3, Brain, Layers, Zap, Database, Globe,
-  Users, FileText, Camera, Mail, Calendar, TrendingUp
+  Users, FileText, Camera, Mail, Calendar, TrendingUp, MessageCircle
 } from "lucide-react";
 
 const fadeUp = (delay = 0) => ({
@@ -47,8 +47,8 @@ const LEVELS = [
   "Tone analysis and messaging coaching",
   "Personalised 5-step action plan",
   ],
-  modules: ["Dating Diagnosis", "Profile Audit", "Message Lab", "Signal Check"],
-  module_links: ["/diagnosis", "/start", "/lab", "/signal-check"],
+  modules: ["Profile Audit", "Message Lab", "Signal Check"],
+  module_links: ["/start", "/lab", "/signal-check"],
   insight: "The foundation of everything. All coaching is derived from what you explicitly share, nothing is assumed, nothing is scraped.",
   technical: "Deterministic coaching engine, always on. No keys, no external calls, never rate-limited. Anthropic Claude is layered on top for select tools when Deep AI lane is on in Settings.",
   accentColor: "hsl(142 55% 62%)",
@@ -153,6 +153,15 @@ const LEVELS = [
   },
 ];
 
+const LIVE_NOW = [
+  { icon: Sparkles, label: "Free Signal Check", desc: "A 3-minute read of your profile, no account needed.", href: "/signal-check" },
+  { icon: FileText, label: "Full Dating Audit", desc: "Readiness Score, bio rewrite, prompt rewrites, and a 5-step plan.", href: "/start" },
+  { icon: Camera, label: "Photo & presence read", desc: "Upload a screenshot and see what it is actually saying.", href: "/scan" },
+  { icon: MessageCircle, label: "Message coaching", desc: "Paste a conversation and get coached, specific replies.", href: "/coach" },
+  { icon: BarChart3, label: "Score history & Signal Spectrum", desc: "Watch your 8 dimensions move over time on your dashboard.", href: "/dashboard" },
+  { icon: TrendingUp, label: "Match Readiness meter", desc: "One rising number that gates AI introductions when you are ready.", href: "/matching" },
+];
+
 const PRIVACY_PRINCIPLES = [
   { icon: Eye, title: "Preview before analysis", desc: "At Levels 3+, you see exactly what data will be processed before we touch it. Line by line if you want.", color: "hsl(var(--brand-indigo))" },
   { icon: CheckCircle, title: "Consent at every level", desc: "Each data source requires its own explicit opt-in. Approving Gmail doesn't mean approving Calendar. Each switch is separate.", color: "hsl(var(--brand-green))" },
@@ -223,6 +232,45 @@ export default function Roadmap() {
   <Link href="/start">Full Dating Audit <ArrowRight className="ml-2 h-4 w-4" /></Link>
   </Button>
   </motion.div>
+  </div>
+  </section>
+
+  {/* ── WHAT YOU GET RIGHT NOW ── */}
+  <section className="py-16 md:py-20 px-4 border-t border-white/5 relative overflow-hidden">
+  <div className="max-w-4xl mx-auto relative z-10">
+  <motion.div {...fadeUp(0)} className="text-center mb-10">
+  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4"
+  style={{ background: "hsl(142 55% 45% / 0.12)", color: "hsl(142 55% 62%)", border: "1px solid hsl(142 55% 45% / 0.3)" }}>
+  <span className="w-2 h-2 rounded-full bg-[hsl(142_55%_60%)] animate-pulse" /> Live today
+  </span>
+  <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">What you get right now</h2>
+  <p className="text-muted-foreground max-w-xl mx-auto leading-relaxed">
+  No waitlist, no beta gate. Everything below is working today and feeds the same readiness meter. The five levels further down are where it goes next.
+  </p>
+  </motion.div>
+
+  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+  {LIVE_NOW.map((item, i) => (
+  <motion.div key={item.label} {...fadeUp(i * 0.06)}>
+  <Link
+  href={item.href}
+  className="group flex flex-col h-full glass border rounded-2xl p-5 card-hover"
+  style={{ borderColor: "hsl(142 55% 45% / 0.25)" }}
+  data-testid={`live-now-${i}`}
+  >
+  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+  style={{ background: "hsl(142 55% 45% / 0.12)", border: "1px solid hsl(142 55% 45% / 0.25)" }}>
+  <item.icon className="w-5 h-5 text-[hsl(142_55%_55%)]" />
+  </div>
+  <p className="font-bold text-foreground text-sm mb-1.5 flex items-center gap-1.5">
+  {item.label}
+  <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-[hsl(142_55%_55%)]" />
+  </p>
+  <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+  </Link>
+  </motion.div>
+  ))}
+  </div>
   </div>
   </section>
 

@@ -2265,6 +2265,26 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   calendar: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  audits: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  coaching: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  instagram: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  lifePulse: number;
 }
 
 export interface MatchReadiness {

@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { WelcomePanel } from "@/components/WelcomePanel";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCreateAudit, useGenerateAuditReport, getListAuditsQueryKey } from "@workspace/api-client-react";
+import { useCreateAudit, useGenerateAuditReport, getListAuditsQueryKey, getGetMatchingStateQueryKey } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { useQueryClient } from "@tanstack/react-query";
@@ -155,6 +155,7 @@ export default function Diagnosis() {
   const report = await generateReport.mutateAsync({ id: audit.id });
   setResult({ report: report as ReportData, auditId: audit.id });
   queryClient.invalidateQueries({ queryKey: getListAuditsQueryKey() });
+  queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() });
   } catch {
   setResult({ report: DEMO_REPORT, auditId: 0 });
   } finally {

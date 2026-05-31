@@ -120,16 +120,16 @@ When all three are present, customers go straight to Stripe-hosted checkout. Whe
 4. Copy the resulting `https://buy.stripe.com/...` URL into the matching env var on Replit (Secrets → Environment variables, "shared").
 5. Restart the `artifacts/nldc: web` workflow so Vite re-reads the env.
 
-### Reconciliation today (manual, intentional)
+### Stripe webhook + reconciliation (live)
 
-There is **no Stripe webhook**. The `purchase_interest` table tracks early-list signups only. Real Stripe orders show up in the Stripe Dashboard. To match a paid customer to an NLDC account during beta:
+The Stripe webhook is wired through the **Replit Stripe integration** (no key needed from the user) plus the `stripe-replit-sync` package. There is nothing to paste manually:
 
-1. In the Stripe Dashboard, copy the customer's email from the successful payment.
-2. In `/founder` → Purchase interest, search that email (rows here will be `interest`-status leads who clicked "save my spot" without paying — usually empty for paid customers).
-3. If the email matches a real user, mark the account as paid manually (founder-side note for now); if not, send them the onboarding email with a link to `/start` and the founder review note.
-4. Refunds and disputes are handled entirely in the Stripe Dashboard — nothing in this app needs to change.
+- **Connection + credentials** — `artifacts/api-server/src/lib/stripeClient.ts` reads the integration's secret key and webhook secret at runtime from the Replit connectors endpoint (never stored). `isStripeConnected()` is the guard; when no connection exists, every Stripe path is a no-op and the server boots normally.
+- **Startup init** — `artifacts/api-server/src/lib/initStripe.ts` runs `stripe-replit-sync` migrations (creates the `stripe` schema), registers a managed webhook at `/api/stripe/webhook`, then backfills and reconciles in the background. Guarded: it logs and returns if there is no connection or `DATABASE_URL`, so it never blocks or crashes startup. Called fire-and-forget from `index.ts`.
+- **Webhook route** — registered in `app.ts` **before** `express.json()` with `express.raw()` so the raw body Buffer reaches signature verification. The CSRF origin guard lets it through (Stripe is server-to-server, no Origin header); the Stripe signature is the real auth. Handler lives in `artifacts/api-server/src/lib/webhookHandlers.ts`, which delegates to `stripe-replit-sync`'s `processWebhook` to verify and sync the event into the `stripe` schema.
+- **Reconciliation** — `artifacts/api-server/src/lib/stripeReconcile.ts` runs read-only against `stripe.checkout_sessions` (managed by the sync package; we never write to the `stripe.*` schema), matches paid sessions to our `purchase_interest` rows by case-insensitive email, and stamps `status = "paid"` + `stripe_session_id` on our own table. Runs automatically on startup after backfill, and on demand via `POST /api/purchase-interest/reconcile` (founder-only).
 
-If/when we move beyond beta, add a Stripe webhook → set `purchase_interest.status = "paid"` and stamp `stripe_session_id` (columns already exist in `lib/db/src/schema/purchase_interest.ts`). The schema is intentionally pre-wired for this.
+Refunds and disputes are still handled entirely in the Stripe Dashboard. To reconcile on demand after a payment, a founder can hit the reconcile endpoint (or just restart the API server, which reconciles on boot).
 
 ## User preferences
 

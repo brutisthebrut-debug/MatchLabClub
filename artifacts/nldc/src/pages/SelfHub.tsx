@@ -475,9 +475,10 @@ export default function SelfHub() {
   onSuccess: () => {
   setIgBio("");
   setIgCaptions("");
+  queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() });
   toast({
   title: "We got it",
-  description: "Your tone read will be ready in a minute.",
+  description: "Your tone read will be ready in a minute. It also moves your Match Readiness.",
   });
   },
   onError: () => {

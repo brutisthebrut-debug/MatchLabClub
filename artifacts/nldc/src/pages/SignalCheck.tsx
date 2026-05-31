@@ -7,21 +7,21 @@ import { Label } from "@/components/ui/label";
 import { WelcomePanel } from "@/components/WelcomePanel";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCreateAudit, useGenerateAuditReport, getListAuditsQueryKey } from "@workspace/api-client-react";
+import { useCreateAudit, useGenerateAuditReport, getListAuditsQueryKey, getGetMatchingStateQueryKey } from "@workspace/api-client-react";
 import { trackEvent } from "@/lib/analytics";
 import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Loader2, Headphones, ArrowRight, Lock, CheckCircle, Sparkles, TrendingUp, Mail } from "lucide-react";
+import { Loader2, Headphones, ArrowRight, Lock, CheckCircle, Sparkles, TrendingUp, Mail, Heart, Sun, Sprout, Telescope } from "lucide-react";
 import { useMeta } from "@/hooks/useMeta";
 import { captureLead } from "@/lib/apiClient";
 
 const GOALS = [
-  { value: "find a relationship", label: "Find a relationship", emoji: "💍" },
-  { value: "casual dating", label: "Casual dating", emoji: "☀️" },
-  { value: "heal from a breakup", label: "Heal & rediscover", emoji: "🌱" },
-  { value: "just curious", label: "Just exploring", emoji: "🔭" },
+  { value: "find a relationship", label: "Find a relationship", icon: Heart },
+  { value: "casual dating", label: "Casual dating", icon: Sun },
+  { value: "heal from a breakup", label: "Heal & rediscover", icon: Sprout },
+  { value: "just curious", label: "Just exploring", icon: Telescope },
 ];
 
 type TeaseReport = {
@@ -177,6 +177,7 @@ export default function SignalCheck() {
   }
   }
   queryClient.invalidateQueries({ queryKey: getListAuditsQueryKey() });
+  queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() });
   } catch {
   setResult({...DEMO_TEASE, category: getCategory(DEMO_TEASE.score, goal) });
   } finally {
@@ -264,14 +265,14 @@ export default function SignalCheck() {
 
   {/* Before / After Line */}
   <div className="glass border border-white/8 rounded-3xl p-7" data-testid="card-signal-rewrite">
-  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">One Line, Rewritten ✦</p>
+  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">One Line, Rewritten</p>
   <div className="space-y-3">
   <div className="rounded-2xl p-4 bg-[hsl(248_40%_95%)] border border-white/8">
   <p className="text-xs text-muted-foreground font-medium mb-1.5">Your original</p>
   <p className="text-sm text-muted-foreground/80 italic">"{result.originalLine || "Your bio text..."}"</p>
   </div>
   <div className="rounded-2xl p-4 border border-[hsl(248_62%_52%/0.3)] bg-[hsl(248_62%_52%/0.07)]">
-  <p className="text-xs text-[hsl(248_62%_62%)] font-semibold mb-1.5">Rewritten ✦</p>
+  <p className="text-xs text-[hsl(248_62%_62%)] font-semibold mb-1.5">Rewritten</p>
   <p className="text-sm text-foreground">{result.rewrittenLine}</p>
   </div>
   </div>
@@ -481,7 +482,7 @@ export default function SignalCheck() {
   onClick={() => setGoal(g.value)}
   className={`p-3 rounded-xl border text-left transition-all ${goal === g.value ? "border-[hsl(248_62%_52%/0.5)] bg-[hsl(248_62%_52%/0.1)]" : "border-white/8 bg-[hsl(248_40%_95%/0.5)] hover:border-white/15"}`}
   >
-  <span className="text-base block mb-1">{g.emoji}</span>
+  <g.icon className="w-5 h-5 mb-1.5 text-[hsl(248_62%_62%)]" aria-hidden="true" />
   <span className="text-xs font-medium text-foreground">{g.label}</span>
   </button>
   ))}

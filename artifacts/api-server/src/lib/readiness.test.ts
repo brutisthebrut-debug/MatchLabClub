@@ -16,6 +16,10 @@ describe("computeBreakdown", () => {
       postDateReflected: 0,
       wins: 0,
       calendarEvents: 0,
+      audits: 0,
+      coaching: 0,
+      instagram: 0,
+      lifePulse: 0,
     });
     expect(b).toEqual({
       compass: 0,
@@ -25,6 +29,10 @@ describe("computeBreakdown", () => {
       postDate: 0,
       wins: 0,
       calendar: 0,
+      audits: 0,
+      coaching: 0,
+      instagram: 0,
+      lifePulse: 0,
     });
     expect(scoreFromBreakdown(b)).toBe(0);
   });
@@ -38,6 +46,10 @@ describe("computeBreakdown", () => {
       postDateReflected: 50,
       wins: 50,
       calendarEvents: 50,
+      audits: 50,
+      coaching: 50,
+      instagram: 1,
+      lifePulse: 50,
     });
     expect(b).toEqual({
       compass: 100,
@@ -47,6 +59,10 @@ describe("computeBreakdown", () => {
       postDate: 100,
       wins: 100,
       calendar: 100,
+      audits: 100,
+      coaching: 100,
+      instagram: 100,
+      lifePulse: 100,
     });
     expect(scoreFromBreakdown(b)).toBe(100);
   });
@@ -61,6 +77,10 @@ describe("computeBreakdown", () => {
         postDateReflected: 0,
         wins: 0,
         calendarEvents: 0,
+        audits: 0,
+        coaching: 0,
+        instagram: 0,
+        lifePulse: 0,
       }),
     );
     const withWins = scoreFromBreakdown(
@@ -72,6 +92,10 @@ describe("computeBreakdown", () => {
         postDateReflected: 0,
         wins: 5,
         calendarEvents: 0,
+        audits: 0,
+        coaching: 0,
+        instagram: 0,
+        lifePulse: 0,
       }),
     );
     expect(withWins).toBeGreaterThan(withoutWins);
@@ -87,6 +111,10 @@ describe("computeBreakdown", () => {
         postDateReflected: 0,
         wins: 0,
         calendarEvents: 0,
+        audits: 0,
+        coaching: 0,
+        instagram: 0,
+        lifePulse: 0,
       }),
     );
     const withCalendar = scoreFromBreakdown(
@@ -98,6 +126,10 @@ describe("computeBreakdown", () => {
         postDateReflected: 0,
         wins: 0,
         calendarEvents: 12,
+        audits: 0,
+        coaching: 0,
+        instagram: 0,
+        lifePulse: 0,
       }),
     );
     expect(withCalendar).toBeGreaterThan(withoutCalendar);
@@ -114,6 +146,10 @@ describe("computeNextActions", () => {
       postDateReflected: 0,
       wins: 0,
       calendarEvents: 0,
+      audits: 0,
+      coaching: 0,
+      instagram: 0,
+      lifePulse: 0,
     });
     expect(computeNextActions(b, true)).toEqual([]);
   });
@@ -127,6 +163,10 @@ describe("computeNextActions", () => {
       postDateReflected: 0,
       wins: 0,
       calendarEvents: 0,
+      audits: 0,
+      coaching: 0,
+      instagram: 0,
+      lifePulse: 0,
     });
     const actions = computeNextActions(b, false);
     expect(actions.length).toBeGreaterThan(0);
@@ -147,6 +187,10 @@ describe("computeNextActions", () => {
       postDateReflected: 0,
       wins: 0,
       calendarEvents: 0,
+      audits: 0,
+      coaching: 0,
+      instagram: 0,
+      lifePulse: 0,
     });
     const actions = computeNextActions(b, false);
     const keys = actions.map((a) => a.key);

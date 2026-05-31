@@ -5970,7 +5970,7 @@ components:
 
     MatchReadinessBreakdown:
       type: object
-      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar]
+      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse]
       properties:
         compass:
           type: integer
@@ -5997,6 +5997,22 @@ components:
           minimum: 0
           maximum: 100
         calendar:
+          type: integer
+          minimum: 0
+          maximum: 100
+        audits:
+          type: integer
+          minimum: 0
+          maximum: 100
+        coaching:
+          type: integer
+          minimum: 0
+          maximum: 100
+        instagram:
+          type: integer
+          minimum: 0
+          maximum: 100
+        lifePulse:
           type: integer
           minimum: 0
           maximum: 100

@@ -4,9 +4,11 @@ import { Moon, Zap, Users, DollarSign, Brain, Sparkles, Check } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetRecentLifePulses,
   useRecordLifePulse,
+  getGetMatchingStateQueryKey,
 } from "@workspace/api-client-react";
 import type { LifePulse } from "@workspace/api-client-react";
 
@@ -65,6 +67,7 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
 
 export function LifePulseCard() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { data, isLoading, refetch } = useGetRecentLifePulses();
   const recordMutation = useRecordLifePulse();
 
@@ -104,9 +107,10 @@ export function LifePulseCard() {
   { data: values },
   {
   onSuccess: () => {
-  toast({ title: "Pulse logged", description: "Your wellness dimensions just got fresher." });
+  toast({ title: "Pulse logged", description: "Your wellness dimensions just got fresher, and your Match Readiness moved with them." });
   setDirty(false);
   void refetch();
+  queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() });
   },
   onError: () => {
   toast({ title: "Could not save pulse", description: "Try again in a moment.", variant: "destructive" });
