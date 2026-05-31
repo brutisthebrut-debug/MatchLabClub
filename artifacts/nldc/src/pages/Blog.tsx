@@ -5,6 +5,8 @@ import { useMeta } from "@/hooks/useMeta";
 import { motion } from "framer-motion";
 import { Clock, ArrowRight, BookOpen, Sparkles } from "lucide-react";
 import { ARTICLES } from "@/lib/blogArticles";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { absoluteUrl, DEFAULT_OG_IMAGE, publisherSchema, toIsoDate } from "@/lib/seo";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -13,13 +15,37 @@ const fadeUp = (delay = 0) => ({
 });
 
 export default function Blog() {
-  useMeta(
-  "Dating Coaching Blog",
-  "Evidence-based articles on dating profile science, message coaching, photo psychology, and communication patterns. From MatchLab Club.",
-  );
+  const canonicalUrl = absoluteUrl("/blog");
+  const description =
+  "Evidence-based articles on dating profile science, message coaching, photo psychology, and communication patterns. From MatchLab Club.";
+
+  useMeta("Dating Coaching Blog", description, absoluteUrl(DEFAULT_OG_IMAGE), {
+  canonicalUrl,
+  });
 
   return (
   <AppLayout>
+  <JsonLd
+  id="blog-index"
+  data={{
+  "@type": "Blog",
+  name: "The MatchLab Journal",
+  description,
+  url: canonicalUrl,
+  publisher: publisherSchema(),
+  blogPost: ARTICLES.map((a) => {
+  const iso = toIsoDate(a.date);
+  return {
+  "@type": "BlogPosting",
+  headline: a.title,
+  description: a.excerpt,
+  url: absoluteUrl(`/blog/${a.slug}`),
+  ...(iso ? { datePublished: iso } : {}),
+  articleSection: a.category,
+  };
+  }),
+  }}
+  />
   <div className="min-h-screen mesh-bg">
   <div className="orb orb-violet fixed w-[500px] h-[500px] -top-40 -right-40 opacity-30 pointer-events-none" />
   <div className="orb orb-gold fixed w-[300px] h-[300px] bottom-0 -left-20 opacity-20 pointer-events-none" />

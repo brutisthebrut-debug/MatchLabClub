@@ -1,2 +1,3 @@
 - [Per-route layout remounts](applayout-remount.md) — AppLayout is rendered by every page, so it remounts on navigation; cross-navigation state (delta watchers, refs) must mount at App.tsx root.
 - [Trust ledger held vs signal](trust-ledger-held-vs-signal.md) — a "what we hold" / export-delete surface must base held/purgeable on stored rows a purge removes, not the narrower readiness signal count.
+- [Blog SEO is client-side only](blog-seo-client-side.md) — per-post meta/OG/JSON-LD applied at runtime via useMeta+JsonLd; no SSR, so non-JS unfurl bots see index.html defaults.

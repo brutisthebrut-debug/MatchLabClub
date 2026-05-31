@@ -798,14 +798,68 @@ export const QUIZZES: Quiz[] = [
   MESSAGE_STAMINA,
 ];
 
+/**
+ * Explicit per-article quiz overrides. Use this only when an article needs a
+ * different quiz than its category would pick. Most articles should rely on the
+ * category fallback below, so the funnel stays repeatable.
+ */
 export const QUIZ_BY_BLOG_SLUG: Record<string, string> = {
   "attachment-styles-on-dating-apps": "attachment-style",
   "post-date-reflection-questions": "post-date-instinct",
   "three-message-test": "message-stamina",
 };
 
+/**
+ * Category-level fallback so every article leads into a relevant quiz without a
+ * per-slug entry. Keys are blog `category` values; values are quiz slugs.
+ */
+export const QUIZ_BY_BLOG_CATEGORY: Record<string, string> = {
+  "Message Coaching": "message-stamina",
+  "Communication": "conflict-instinct",
+  "Communication Patterns": "message-stamina",
+  "Conversation": "message-stamina",
+  "Attachment Theory": "attachment-style",
+  "Pattern Recognition": "attachment-style",
+  "Self-Awareness": "attachment-style",
+  "Boundaries": "boundary-blueprint",
+  "Date Strategy": "post-date-instinct",
+  "Compatibility": "love-pace",
+  "Mindset": "what-lights-you-up",
+  "Profile Science": "what-lights-you-up",
+  "Profile Audit": "what-lights-you-up",
+  "Profile Strategy": "what-lights-you-up",
+  "Prompt Strategy": "what-lights-you-up",
+  "Photo Psychology": "what-lights-you-up",
+  "Product": "what-lights-you-up",
+};
+
+/** Quiz used when neither an explicit nor a category match is found. */
+const DEFAULT_QUIZ_SLUG = "what-lights-you-up";
+
 export function getQuizBySlug(slug: string): Quiz | undefined {
   return QUIZZES.find(q => q.slug === slug);
+}
+
+/**
+ * Resolve the related quiz for an article. Preference order:
+ *   1. an explicit `relatedQuizSlug` on the article
+ *   2. the per-slug override map (`QUIZ_BY_BLOG_SLUG`)
+ *   3. the category fallback (`QUIZ_BY_BLOG_CATEGORY`)
+ *   4. a sensible default quiz
+ * This guarantees every post has a quiz to lead into, so the post -> quiz ->
+ * first-run funnel never dead-ends.
+ */
+export function resolveQuizForArticle(article: {
+  slug: string;
+  category: string;
+  relatedQuizSlug?: string;
+}): Quiz | undefined {
+  const candidate =
+    article.relatedQuizSlug ??
+    QUIZ_BY_BLOG_SLUG[article.slug] ??
+    QUIZ_BY_BLOG_CATEGORY[article.category] ??
+    DEFAULT_QUIZ_SLUG;
+  return getQuizBySlug(candidate);
 }
 
 export function scoreQuiz(quiz: Quiz, answers: number[]): string {

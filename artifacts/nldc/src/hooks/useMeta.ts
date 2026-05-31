@@ -9,7 +9,22 @@ function normalize(title: string): string {
     .trim();
 }
 
-export function useMeta(title: string, description: string, ogImage?: string) {
+export interface MetaOptions {
+  /** Absolute URL for <link rel="canonical"> and og:url. */
+  canonicalUrl?: string;
+  /** Open Graph object type. Defaults to "website". */
+  type?: "website" | "article";
+}
+
+export function useMeta(
+  title: string,
+  description: string,
+  ogImage?: string,
+  options?: MetaOptions,
+) {
+  const canonicalUrl = options?.canonicalUrl;
+  const type = options?.type ?? "website";
+
   useEffect(() => {
     const clean = normalize(title);
     const fullTitle = clean ? `${clean} | ${BRAND}` : BRAND;
@@ -29,6 +44,7 @@ export function useMeta(title: string, description: string, ogImage?: string) {
     setMeta('meta[name="description"]', 'name=description', description);
     setMeta('meta[property="og:title"]', 'property=og:title', fullTitle);
     setMeta('meta[property="og:description"]', 'property=og:description', description);
+    setMeta('meta[property="og:type"]', 'property=og:type', type);
     setMeta('meta[name="twitter:title"]', 'name=twitter:title', fullTitle);
     setMeta('meta[name="twitter:description"]', 'name=twitter:description', description);
 
@@ -38,8 +54,23 @@ export function useMeta(title: string, description: string, ogImage?: string) {
       setMeta('meta[name="twitter:card"]', 'name=twitter:card', 'summary_large_image');
     }
 
+    if (canonicalUrl) {
+      setMeta('meta[property="og:url"]', 'property=og:url', canonicalUrl);
+      let link = document.querySelector('link[rel="canonical"]');
+      if (!link) {
+        link = document.createElement("link");
+        link.setAttribute("rel", "canonical");
+        document.head.appendChild(link);
+      }
+      link.setAttribute("href", canonicalUrl);
+    } else {
+      // No canonical for this page: drop any stale tag left by a prior route.
+      document.querySelector('link[rel="canonical"]')?.remove();
+      document.querySelector('meta[property="og:url"]')?.remove();
+    }
+
     return () => {
       document.title = BRAND;
     };
-  }, [title, description, ogImage]);
+  }, [title, description, ogImage, canonicalUrl, type]);
 }

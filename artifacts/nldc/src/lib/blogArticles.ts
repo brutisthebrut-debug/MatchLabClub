@@ -1,3 +1,5 @@
+import { DEFAULT_OG_IMAGE } from "@/lib/seo";
+
 export interface ArticleCta {
   title: string;
   body: string;
@@ -5,6 +7,21 @@ export interface ArticleCta {
   label: string;
 }
 
+/**
+ * Adding a new article is a two-step, repeatable flow:
+ *   1. Add an `Article` entry to `ARTICLES` (below). Only `slug`, `title`,
+ *      `excerpt`, `category`, `readMin`, `date`, and `color` are required.
+ *      Everything else is optional and has a sensible fallback:
+ *        - SEO: `metaTitle`/`metaDescription`/`ogImage` fall back to the
+ *          title, excerpt, and the default share image (see `getArticleMeta`).
+ *        - Funnel: `relatedQuizSlug` overrides the category-based quiz match;
+ *          when omitted, `resolveQuizForArticle` picks a relevant quiz from the
+ *          category, so every post still leads into a quiz then first run.
+ *        - `cta` overrides the generic "free audit" call to action.
+ *   2. Add the article body to `ARTICLE_CONTENT[slug]` in `pages/BlogPost.tsx`.
+ * No other files need editing: meta, social previews, structured data, and the
+ * quiz hook all derive from this entry.
+ */
 export interface Article {
   slug: string;
   title: string;
@@ -14,6 +31,33 @@ export interface Article {
   date: string;
   color: string;
   cta?: ArticleCta;
+  /** SEO <title> override. Falls back to `title`. */
+  metaTitle?: string;
+  /** Meta description / OG description override. Falls back to `excerpt`. */
+  metaDescription?: string;
+  /** Social share image (root-relative or absolute). Falls back to the default. */
+  ogImage?: string;
+  /** Comma-free keyword list for the article (optional, used in structured data). */
+  keywords?: string[];
+  /** ISO date the article was last updated. Falls back to `date`. */
+  updated?: string;
+  /** Explicit related-quiz slug. Overrides the category-based match. */
+  relatedQuizSlug?: string;
+}
+
+export interface ArticleMeta {
+  title: string;
+  description: string;
+  ogImage: string;
+}
+
+/** Resolve the SEO-ready meta for an article, applying all fallbacks. */
+export function getArticleMeta(article: Article): ArticleMeta {
+  return {
+    title: article.metaTitle ?? article.title,
+    description: article.metaDescription ?? article.excerpt,
+    ogImage: article.ogImage ?? DEFAULT_OG_IMAGE,
+  };
 }
 
 const AUDIT_CTA: ArticleCta = {

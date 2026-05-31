@@ -5,10 +5,12 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { motion } from "framer-motion";
 import { Clock, ArrowLeft, ArrowRight, Sparkles, BookOpen } from "lucide-react";
-import { ARTICLES } from "@/lib/blogArticles";
-import { QUIZ_BY_BLOG_SLUG, getQuizBySlug } from "@/lib/quizzes";
+import { ARTICLES, getArticleMeta } from "@/lib/blogArticles";
+import { resolveQuizForArticle } from "@/lib/quizzes";
 import { trackEvent } from "@/lib/analytics";
 import { ShareButton } from "@/components/echo/ShareButton";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { absoluteUrl, publisherSchema, toIsoDate } from "@/lib/seo";
 import { useAuth } from "@workspace/replit-auth-web";
 
 const fadeUp = (delay = 0) => ({
@@ -4757,7 +4759,16 @@ export default function BlogPost({ slug }: { slug: string }) {
   const prev = currentIndex > 0 ? ARTICLES[currentIndex - 1] : null;
   const next = currentIndex < ARTICLES.length - 1 ? ARTICLES[currentIndex + 1] : null;
 
-  useMeta(article.title, article.excerpt);
+  const meta = getArticleMeta(article);
+  const canonicalUrl = absoluteUrl(`/blog/${article.slug}`);
+  const ogImageUrl = absoluteUrl(meta.ogImage);
+  const publishedIso = toIsoDate(article.date);
+  const modifiedIso = article.updated ? toIsoDate(article.updated) : undefined;
+
+  useMeta(meta.title, meta.description, ogImageUrl, {
+  canonicalUrl,
+  type: "article",
+  });
 
   useEffect(() => {
   trackEvent("blog_post_view", { slug: article.slug, category: article.category });
@@ -4765,6 +4776,33 @@ export default function BlogPost({ slug }: { slug: string }) {
 
   return (
   <AppLayout>
+  <JsonLd
+  id="blog-post"
+  data={{
+  "@type": "BlogPosting",
+  headline: article.title,
+  description: meta.description,
+  image: ogImageUrl,
+  url: canonicalUrl,
+  mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
+  ...(publishedIso ? { datePublished: publishedIso } : {}),
+  ...((modifiedIso ?? publishedIso) ? { dateModified: modifiedIso ?? publishedIso } : {}),
+  articleSection: article.category,
+  ...(article.keywords?.length ? { keywords: article.keywords.join(", ") } : {}),
+  author: publisherSchema(),
+  publisher: publisherSchema(),
+  }}
+  />
+  <JsonLd
+  id="blog-breadcrumbs"
+  data={{
+  "@type": "BreadcrumbList",
+  itemListElement: [
+  { "@type": "ListItem", position: 1, name: "Blog", item: absoluteUrl("/blog") },
+  { "@type": "ListItem", position: 2, name: article.title, item: canonicalUrl },
+  ],
+  }}
+  />
   <div className="min-h-screen mesh-bg">
   <div className="orb orb-violet fixed w-[400px] h-[400px] -top-40 -right-40 opacity-25 pointer-events-none" />
 
@@ -4829,10 +4867,9 @@ export default function BlogPost({ slug }: { slug: string }) {
   );
   })()}
 
-  {/* Related quiz (if blog post has a matching quiz) */}
+  {/* Related quiz, every post leads into one, then into the first run */}
   {(() => {
-  const quizSlug = QUIZ_BY_BLOG_SLUG[article.slug];
-  const quiz = quizSlug ? getQuizBySlug(quizSlug) : undefined;
+  const quiz = resolveQuizForArticle(article);
   if (!quiz) return null;
   return (
   <motion.div
@@ -4840,11 +4877,12 @@ export default function BlogPost({ slug }: { slug: string }) {
   className="mt-8 glass rounded-2xl p-6"
   style={{ borderColor: withAlpha(article.color, 0.25), borderWidth: "1px", borderStyle: "solid" }}
   >
-  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 mb-2">Related quiz</p>
+  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 mb-2">Take this further</p>
   <h3 className="font-serif text-lg font-bold text-foreground mb-2">{quiz.emoji} {quiz.title}</h3>
-  <p className="text-sm text-muted-foreground mb-4">{quiz.pitch}</p>
+  <p className="text-sm text-muted-foreground mb-2">{quiz.pitch}</p>
+  <p className="text-xs text-muted-foreground/70 mb-4">A two-minute read of where you stand, then it folds straight into your readiness score.</p>
   <Link
-  href={`/quiz/${quiz.slug}`}
+  href={`/quizzes/${quiz.slug}`}
   onClick={() => trackEvent("blog_related_quiz_click", { blog_slug: article.slug, quiz_slug: quiz.slug })}
   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition-colors text-sm font-semibold text-foreground"
   >
