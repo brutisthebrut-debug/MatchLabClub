@@ -4,3 +4,4 @@
 - [Growth waves roadmap](growth-waves-roadmap.md) — durable principle: ship growth as cohesive waves one at a time (never blast many/agents at once), protect runway; holds the sequenced wave plan + experimental ideas bank.
 - [AI tool schema registration](ai-tool-schema-registration.md) — a new hybrid tool stays deterministic-only until its toolName is registered in aiToolSchemas; generate() never sets validated:true otherwise.
 - [Your Mirror spine](your-mirror-spine.md) — unifying self-portrait over real signals; hybrid contract, honest blind spots, demo fallback must not present sample as real, keep legacy /mirror pages reachable.
+- [Grand vision plan](grand-vision-plan.md) — matching-first roadmap (showcase page, nav IA overhaul to surface hidden tools, Connection Center data→match pipeline + connector expansion, full founder control, dev test-login). Build as waves.
