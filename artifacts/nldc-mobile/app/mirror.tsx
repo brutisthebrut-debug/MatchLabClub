@@ -196,7 +196,11 @@ export default function MirrorScreen() {
 
   const portrait: MirrorPortrait = portraitQuery.data ?? DEMO_PORTRAIT;
   const matching: MatchingState | undefined = matchingQuery.data;
-  const isDemo = !isAuthenticated || !portraitQuery.data;
+  const isSignedOut = !isAuthenticated;
+  const showLoading =
+    isAuthenticated && portraitQuery.isLoading && !portraitQuery.data;
+  const showError =
+    isAuthenticated && portraitQuery.isError && !portraitQuery.data;
 
   const climb = useMemo(
     () =>
@@ -219,8 +223,8 @@ export default function MirrorScreen() {
         href: portrait.nextSignal.href,
       };
     }
-    return isDemo ? DEMO_NEXT_ACTION : null;
-  }, [matching, portrait.nextSignal, isDemo]);
+    return isSignedOut ? DEMO_NEXT_ACTION : null;
+  }, [matching, portrait.nextSignal, isSignedOut]);
 
   const topInset = Platform.OS === "web" ? Math.max(insets.top, 24) : insets.top;
   const bottomInset =
@@ -265,7 +269,7 @@ export default function MirrorScreen() {
           subtitle={portrait.stageBlurb}
         />
 
-        {isDemo ? (
+        {isSignedOut ? (
           <View
             testID="mirror-demo-banner"
             style={[
@@ -280,9 +284,29 @@ export default function MirrorScreen() {
           </View>
         ) : null}
 
-        {portraitQuery.isLoading && isAuthenticated ? (
+        {showLoading ? (
           <View style={styles.loading}>
             <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : null}
+
+        {showError ? (
+          <View
+            testID="mirror-error-banner"
+            style={[
+              styles.demoBanner,
+              {
+                backgroundColor: `${colors.destructive}22`,
+                borderColor: colors.destructive,
+              },
+            ]}
+          >
+            <Feather name="alert-circle" size={15} color={colors.destructive} />
+            <Text
+              style={[styles.demoBannerText, { color: colors.destructive }]}
+            >
+              We could not load your Mirror just now. Pull down to try again.
+            </Text>
           </View>
         ) : null}
 
@@ -296,6 +320,29 @@ export default function MirrorScreen() {
           <Text style={[styles.headlineText, { color: colors.foreground }]}>
             {portrait.headline}
           </Text>
+          <View style={styles.coverageRow}>
+            <View
+              style={[
+                styles.coverageTrack,
+                { backgroundColor: colors.border },
+              ]}
+            >
+              <View
+                style={[
+                  styles.coverageFill,
+                  {
+                    backgroundColor: colors.primary,
+                    width: `${Math.max(0, Math.min(100, portrait.coveragePercent))}%`,
+                  },
+                ]}
+              />
+            </View>
+            <Text
+              style={[styles.coverageLabel, { color: colors.mutedForeground }]}
+            >
+              {Math.round(portrait.coveragePercent)}% of you mapped so far
+            </Text>
+          </View>
         </View>
 
         {/* Readiness gauge + climb */}
@@ -529,7 +576,7 @@ export default function MirrorScreen() {
           </Text>
         </View>
 
-        {isDemo && !authLoading ? (
+        {isSignedOut && !authLoading ? (
           <Pressable
             testID="mirror-signin"
             onPress={() => {
@@ -580,6 +627,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 26,
     fontFamily: "PlusJakartaSans_600SemiBold",
+  },
+  coverageRow: { marginTop: 14, gap: 8 },
+  coverageTrack: {
+    height: 8,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  coverageFill: { height: 8, borderRadius: 999 },
+  coverageLabel: {
+    fontSize: 12,
+    fontFamily: "PlusJakartaSans_500Medium",
   },
   ringCard: {
     alignItems: "center",
