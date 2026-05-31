@@ -1249,6 +1249,55 @@ export interface DeleteAccountResult {
   tables: DeleteAccountResultTables;
 }
 
+export interface TrustLedgerEntry {
+  /** The signal registry id of this source. */
+  id: string;
+  /** Human-readable name of the source. */
+  label: string;
+  /** Where this source's data comes from, in plain language. */
+  origin: string;
+  /** Singular noun for one stored unit, e.g. "read", "note", "import". */
+  noun: string;
+  /** Whether the machine currently holds anything from this source. */
+  held: boolean;
+  /** How many units of this source the user has stored. */
+  count: number;
+  /**
+     * Normalized coverage of this lane, 0 to 100, the same value that feeds the Match Readiness breakdown.
+     * @minimum 0
+     * @maximum 100
+     */
+  coverage: number;
+  /** Plain-English line describing what this source tells the machine at its current coverage, derived from the registry. */
+  summary: string;
+  /** Wellness dimensions this source contributes to. */
+  dimensions: string[];
+  /** What the machine sees from this source. */
+  seen: string[];
+  /** What the machine never touches from this source. */
+  neverTouched: string[];
+  /** CTA copy for feeding this source. */
+  actionLabel: string;
+  /** Where the CTA points to feed this source. */
+  actionHref: string;
+  /** Whether this source can be purged on its own. Sources with nothing stored are not purgeable. */
+  purgeable: boolean;
+}
+
+export interface TrustLedger {
+  /** ISO timestamp of when this ledger was generated. */
+  generatedAt: string;
+  entries: TrustLedgerEntry[];
+}
+
+export interface PurgeTrustSourceResult {
+  success: true;
+  /** The signal registry id that was purged. */
+  id: string;
+  /** Total number of rows removed across the source's tables. */
+  removed: number;
+}
+
 export interface RegisterPushTokenInput {
   /**
      * Expo push token obtained via expo-notifications on the device.

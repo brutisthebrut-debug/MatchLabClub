@@ -941,6 +941,77 @@ export const DeleteMyAccountConfirmedResponse = zod.object({
 
 
 /**
+ * Returns one entry per signal source the product can hold about the
+signed-in user, derived live from the signal registry and the same
+per-user counts that drive Match Readiness. Each entry carries where
+the data came from, what we see and what we never touch, how much we
+currently hold (count plus coverage), and whether it can be purged.
+Sources with nothing stored are still listed with `held: false` so the
+user sees the full picture of what the machine could know. Because the
+ledger is registry-derived, any newly registered signal source appears
+here automatically with no extra wiring. Anonymous callers are rejected
+with 401; the frontend shows a sample view instead.
+
+ * @summary Get the visible trust ledger of every signal the machine holds
+ */
+export const GetTrustLedgerHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const getTrustLedgerResponseEntriesItemCoverageMin = 0;
+export const getTrustLedgerResponseEntriesItemCoverageMax = 100;
+
+
+
+export const GetTrustLedgerResponse = zod.object({
+  "generatedAt": zod.string().describe('ISO timestamp of when this ledger was generated.'),
+  "entries": zod.array(zod.object({
+  "id": zod.string().describe('The signal registry id of this source.'),
+  "label": zod.string().describe('Human-readable name of the source.'),
+  "origin": zod.string().describe('Where this source\'s data comes from, in plain language.'),
+  "noun": zod.string().describe('Singular noun for one stored unit, e.g. \"read\", \"note\", \"import\".'),
+  "held": zod.boolean().describe('Whether the machine currently holds anything from this source.'),
+  "count": zod.number().describe('How many units of this source the user has stored.'),
+  "coverage": zod.number().min(getTrustLedgerResponseEntriesItemCoverageMin).max(getTrustLedgerResponseEntriesItemCoverageMax).describe('Normalized coverage of this lane, 0 to 100, the same value that feeds the Match Readiness breakdown.'),
+  "summary": zod.string().describe('Plain-English line describing what this source tells the machine at its current coverage, derived from the registry.'),
+  "dimensions": zod.array(zod.string()).describe('Wellness dimensions this source contributes to.'),
+  "seen": zod.array(zod.string()).describe('What the machine sees from this source.'),
+  "neverTouched": zod.array(zod.string()).describe('What the machine never touches from this source.'),
+  "actionLabel": zod.string().describe('CTA copy for feeding this source.'),
+  "actionHref": zod.string().describe('Where the CTA points to feed this source.'),
+  "purgeable": zod.boolean().describe('Whether this source can be purged on its own. Sources with nothing stored are not purgeable.')
+}))
+})
+
+
+/**
+ * Permanently removes everything the machine holds for a single signal
+source, identified by its registry id. The delete runs inside one
+transaction so the source goes fully or not at all, and it drops that
+source's contribution to Match Readiness on the next read. Import-backed
+sources delete their stored import rows; first-party sources delete the
+rows in their dedicated table (audits also clear their report versions).
+Reuses the same hard-delete safeguards as account deletion. Unknown ids
+are rejected with 404; anonymous callers with 401.
+
+ * @summary Purge every row behind one signal source
+ */
+export const PurgeTrustSourceParams = zod.object({
+  "id": zod.coerce.string().describe('The signal registry id of the source to purge.')
+})
+
+export const PurgeTrustSourceHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const PurgeTrustSourceResponse = zod.object({
+  "success": zod.boolean(),
+  "id": zod.string().describe('The signal registry id that was purged.'),
+  "removed": zod.number().describe('Total number of rows removed across the source\'s tables.')
+})
+
+
+/**
  * Stores an Expo push token server-side so the server can send
 proactive push notifications (e.g. expiring-audit reminders) even
 when the app is closed. Idempotent — re-registering the same token

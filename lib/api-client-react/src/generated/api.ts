@@ -150,6 +150,7 @@ import type {
   PostDateNoteList,
   PostDateNotePatch,
   ProfileRewrite,
+  PurgeTrustSourceResult,
   RedeemAnonymousClaimHandoffInput,
   RefreshGeoipParams,
   RegisterPushTokenInput,
@@ -168,6 +169,7 @@ import type {
   TestAiParams,
   TrashPurgeHeartbeat,
   TrashPurgeResult,
+  TrustLedger,
   UnregisterPushTokenParams,
   UnregisterPushTokenResult,
   WaitlistEntry,
@@ -2236,6 +2238,173 @@ export const useDeleteMyAccountConfirmed = <TError = ErrorType<AuthErrorEnvelope
         TContext
       > => {
       return useMutation(getDeleteMyAccountConfirmedMutationOptions(options));
+    }
+
+export const getGetTrustLedgerUrl = () => {
+
+
+
+
+  return `/api/me/trust-ledger`
+}
+
+/**
+ * Returns one entry per signal source the product can hold about the
+signed-in user, derived live from the signal registry and the same
+per-user counts that drive Match Readiness. Each entry carries where
+the data came from, what we see and what we never touch, how much we
+currently hold (count plus coverage), and whether it can be purged.
+Sources with nothing stored are still listed with `held: false` so the
+user sees the full picture of what the machine could know. Because the
+ledger is registry-derived, any newly registered signal source appears
+here automatically with no extra wiring. Anonymous callers are rejected
+with 401; the frontend shows a sample view instead.
+
+ * @summary Get the visible trust ledger of every signal the machine holds
+ */
+export const getTrustLedger = async ( options?: RequestInit): Promise<TrustLedger> => {
+
+  return customFetch<TrustLedger>(getGetTrustLedgerUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTrustLedgerQueryKey = () => {
+    return [
+    `/api/me/trust-ledger`
+    ] as const;
+    }
+
+
+export const getGetTrustLedgerQueryOptions = <TData = Awaited<ReturnType<typeof getTrustLedger>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTrustLedger>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTrustLedgerQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTrustLedger>>> = ({ signal }) => getTrustLedger({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTrustLedger>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTrustLedgerQueryResult = NonNullable<Awaited<ReturnType<typeof getTrustLedger>>>
+export type GetTrustLedgerQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the visible trust ledger of every signal the machine holds
+ */
+
+export function useGetTrustLedger<TData = Awaited<ReturnType<typeof getTrustLedger>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTrustLedger>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTrustLedgerQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getPurgeTrustSourceUrl = (id: string,) => {
+
+
+
+
+  return `/api/me/trust-ledger/${id}`
+}
+
+/**
+ * Permanently removes everything the machine holds for a single signal
+source, identified by its registry id. The delete runs inside one
+transaction so the source goes fully or not at all, and it drops that
+source's contribution to Match Readiness on the next read. Import-backed
+sources delete their stored import rows; first-party sources delete the
+rows in their dedicated table (audits also clear their report versions).
+Reuses the same hard-delete safeguards as account deletion. Unknown ids
+are rejected with 404; anonymous callers with 401.
+
+ * @summary Purge every row behind one signal source
+ */
+export const purgeTrustSource = async (id: string, options?: RequestInit): Promise<PurgeTrustSourceResult> => {
+
+  return customFetch<PurgeTrustSourceResult>(getPurgeTrustSourceUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getPurgeTrustSourceMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purgeTrustSource>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof purgeTrustSource>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['purgeTrustSource'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof purgeTrustSource>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  purgeTrustSource(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PurgeTrustSourceMutationResult = NonNullable<Awaited<ReturnType<typeof purgeTrustSource>>>
+
+    export type PurgeTrustSourceMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Purge every row behind one signal source
+ */
+export const usePurgeTrustSource = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purgeTrustSource>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof purgeTrustSource>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getPurgeTrustSourceMutationOptions(options));
     }
 
 export const getRegisterPushTokenUrl = () => {

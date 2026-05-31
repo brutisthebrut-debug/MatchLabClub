@@ -146,6 +146,23 @@ export interface SignalContributor {
   describe: (coverage: number) => string;
   /** UI "do this next" copy. */
   action: { label: string; detail: string; href: string };
+  /**
+   * The consent contract surfaced in the visible trust ledger. This is the
+   * promise made felt: where this source's data comes from, what the machine
+   * sees from it, and what it never touches. Living here means a newly
+   * registered signal carries its own contract into the ledger automatically,
+   * with no separate copy to maintain.
+   */
+  trust: {
+    /** Where this signal's data comes from, in plain language. */
+    origin: string;
+    /** Singular noun for one stored unit, e.g. "read", "note", "import". */
+    noun: string;
+    /** What the machine sees from this source. */
+    seen: string[];
+    /** What the machine never touches from this source. */
+    neverTouched: string[];
+  };
 }
 
 /**
@@ -170,6 +187,18 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       detail: "Cover more of the 18 dimensions so your profile reads fuller.",
       href: "/wellness",
     },
+    trust: {
+      origin: "The wellness prompts you answer in the Profile Builder.",
+      noun: "dimension",
+      seen: [
+        "The answers you write across the 18 wellness dimensions",
+        "How many distinct dimensions you have covered",
+      ],
+      neverTouched: [
+        "Anything you have not answered",
+        "Any source beyond what you type into the prompts",
+      ],
+    },
   },
   {
     id: "compass",
@@ -188,6 +217,18 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "Score someone you are already talking to. Each read adds real signal.",
       href: "/compatibility-compass",
     },
+    trust: {
+      origin: "The compatibility reads you run in the Compass.",
+      noun: "read",
+      seen: [
+        "The details you enter for each compatibility read",
+        "The fit scores those reads produce",
+      ],
+      neverTouched: [
+        "The other person's account, photos, or contact details",
+        "Anyone you have not chosen to read",
+      ],
+    },
   },
   {
     id: "hingeImport",
@@ -204,6 +245,18 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       label: "Import your Hinge data",
       detail: "One export fills a whole signal lane at once.",
       href: "/imports",
+    },
+    trust: {
+      origin: "The Hinge data export you upload yourself.",
+      noun: "import",
+      seen: [
+        "Patterns in how you talk and behave on the app",
+        "That you imported an export, used to fill the lane",
+      ],
+      neverTouched: [
+        "Your Hinge login or any live account access",
+        "Anything from the export you did not upload",
+      ],
     },
   },
   {
@@ -223,6 +276,18 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "Reflect on a recent date. Outcomes teach the engine what fits you.",
       href: "/mirror/dates",
     },
+    trust: {
+      origin: "The post-date notes you write after a date.",
+      noun: "note",
+      seen: [
+        "Your reflections on how a date went",
+        "The outcome you logged for each one",
+      ],
+      neverTouched: [
+        "Your date's identity or contact details",
+        "Any date you have not written about",
+      ],
+    },
   },
   {
     id: "journal",
@@ -239,6 +304,18 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       label: "Write a journal entry",
       detail: "A real reflection counts. One-liners do not.",
       href: "/mirror/journal",
+    },
+    trust: {
+      origin: "The journal entries you write yourself.",
+      noun: "entry",
+      seen: [
+        "The reflections you choose to write",
+        "How many substantive entries you have kept",
+      ],
+      neverTouched: [
+        "Anything outside the entries you write here",
+        "Entries you have deleted",
+      ],
     },
   },
   {
@@ -257,6 +334,18 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       detail:
         "Small moments of courage count as signal now, not just a private note.",
       href: "/progress/wins",
+    },
+    trust: {
+      origin: "The dating wins you log as they happen.",
+      noun: "win",
+      seen: [
+        "The wins you choose to record",
+        "How many you have logged, a read on momentum",
+      ],
+      neverTouched: [
+        "Anything you have not logged",
+        "Wins you have deleted",
+      ],
     },
   },
   {
@@ -282,6 +371,18 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       detail: "Drop in your .ics export. We read your rhythm, never the raw file.",
       href: "/imports",
     },
+    trust: {
+      origin: "The calendar .ics text you paste in yourself.",
+      noun: "event",
+      seen: [
+        "A simple count of events, used to read your weekly rhythm",
+      ],
+      neverTouched: [
+        "Anything you do not paste in",
+        "OAuth access to Google or Apple Calendar",
+        "Any ability to create, edit, or delete events on your calendar",
+      ],
+    },
   },
   {
     id: "audits",
@@ -299,6 +400,18 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       detail:
         "Scan your profile or a screenshot. Each audit teaches the engine how you show up.",
       href: "/scan",
+    },
+    trust: {
+      origin: "The profile text or screenshots you scan yourself.",
+      noun: "audit",
+      seen: [
+        "The profile text you submit and the audit results it produced",
+        "Extracted text from any screenshot you scanned",
+      ],
+      neverTouched: [
+        "Your screenshot images, which are read in the moment and never stored",
+        "Any profile you did not scan",
+      ],
     },
   },
   {
@@ -318,6 +431,18 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "Paste a chat and get real reply options. Each session is signal on your style.",
       href: "/coach",
     },
+    trust: {
+      origin: "The conversations you paste into Message Coach.",
+      noun: "session",
+      seen: [
+        "The thread you paste and the reply options it generated",
+        "How many sessions you have run, a read on your style",
+      ],
+      neverTouched: [
+        "Any party's name or contact details",
+        "Conversations you have not pasted in",
+      ],
+    },
   },
   {
     id: "instagram",
@@ -334,6 +459,18 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       label: "Share your Instagram tone",
       detail: "Paste a few captions. We read the tone, never your account.",
       href: "/me",
+    },
+    trust: {
+      origin: "The captions you paste in yourself.",
+      noun: "import",
+      seen: [
+        "The tone and voice read from the captions you paste",
+        "That you shared a tone sample, used to fill the lane",
+      ],
+      neverTouched: [
+        "Your Instagram login or any live account access",
+        "Anything you did not paste in",
+      ],
     },
   },
   {
@@ -355,6 +492,18 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       detail:
         "A quick check-in on sleep, energy, and headspace. Patterns become signal.",
       href: "/mirror",
+    },
+    trust: {
+      origin: "The quick check-ins you log over time.",
+      noun: "check-in",
+      seen: [
+        "Your sleep, energy, and headspace check-ins",
+        "The rhythm across them, a read on when you have room to date",
+      ],
+      neverTouched: [
+        "Any health app, wearable, or account",
+        "Anything beyond the check-ins you log here",
+      ],
     },
   },
   {
@@ -383,6 +532,19 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "List the music, film, shows, and books you love. We read the overlap, never judge the list.",
       href: "/connections/add/taste",
     },
+    trust: {
+      origin: "The taste list you paste in, one item per line.",
+      noun: "item",
+      seen: [
+        "The list of taste items you paste in, one per line",
+        "A simple count of how many you gave us, used to fill the lane",
+      ],
+      neverTouched: [
+        "Anything you do not paste in",
+        "OAuth access to Spotify, Netflix, Letterboxd, or any account",
+        "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+      ],
+    },
   },
   {
     id: "lifestyle",
@@ -409,6 +571,19 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       detail:
         "List the activities and rituals that make up a normal week. We read the rhythm, never the detail.",
       href: "/connections/add/lifestyle",
+    },
+    trust: {
+      origin: "The lifestyle list you paste in, one item per line.",
+      noun: "item",
+      seen: [
+        "The list of lifestyle items you paste in, one per line",
+        "A simple count of how many you gave us, used to fill the lane",
+      ],
+      neverTouched: [
+        "Anything you do not paste in",
+        "OAuth access to your calendar, fitness apps, or any account",
+        "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+      ],
     },
   },
 ] as const;

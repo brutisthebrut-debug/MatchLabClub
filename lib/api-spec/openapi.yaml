@@ -790,6 +790,82 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/trust-ledger:
+    get:
+      tags: [Auth]
+      operationId: getTrustLedger
+      summary: Get the visible trust ledger of every signal the machine holds
+      description: |
+        Returns one entry per signal source the product can hold about the
+        signed-in user, derived live from the signal registry and the same
+        per-user counts that drive Match Readiness. Each entry carries where
+        the data came from, what we see and what we never touch, how much we
+        currently hold (count plus coverage), and whether it can be purged.
+        Sources with nothing stored are still listed with `held: false` so the
+        user sees the full picture of what the machine could know. Because the
+        ledger is registry-derived, any newly registered signal source appears
+        here automatically with no extra wiring. Anonymous callers are rejected
+        with 401; the frontend shows a sample view instead.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The user's trust ledger.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustLedger'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/trust-ledger/{id}:
+    delete:
+      tags: [Auth]
+      operationId: purgeTrustSource
+      summary: Purge every row behind one signal source
+      description: |
+        Permanently removes everything the machine holds for a single signal
+        source, identified by its registry id. The delete runs inside one
+        transaction so the source goes fully or not at all, and it drops that
+        source's contribution to Match Readiness on the next read. Import-backed
+        sources delete their stored import rows; first-party sources delete the
+        rows in their dedicated table (audits also clear their report versions).
+        Reuses the same hard-delete safeguards as account deletion. Unknown ids
+        are rejected with 404; anonymous callers with 401.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          description: The signal registry id of the source to purge.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The source was purged.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurgeTrustSourceResult'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: No signal source matches the given id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /push-tokens:
     post:
       tags: [Auth]
@@ -5042,6 +5118,107 @@ components:
             Row counts deleted per table, keyed by database table name.
             Always includes every user-scoped table considered, even when
             the count is zero, so the client can show a faithful summary.
+
+    TrustLedgerEntry:
+      type: object
+      required:
+        - id
+        - label
+        - origin
+        - noun
+        - held
+        - count
+        - coverage
+        - summary
+        - dimensions
+        - seen
+        - neverTouched
+        - actionLabel
+        - actionHref
+        - purgeable
+      properties:
+        id:
+          type: string
+          description: The signal registry id of this source.
+        label:
+          type: string
+          description: Human-readable name of the source.
+        origin:
+          type: string
+          description: Where this source's data comes from, in plain language.
+        noun:
+          type: string
+          description: Singular noun for one stored unit, e.g. "read", "note", "import".
+        held:
+          type: boolean
+          description: Whether the machine currently holds anything from this source.
+        count:
+          type: integer
+          description: How many units of this source the user has stored.
+        coverage:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: >-
+            Normalized coverage of this lane, 0 to 100, the same value that
+            feeds the Match Readiness breakdown.
+        summary:
+          type: string
+          description: >-
+            Plain-English line describing what this source tells the machine at
+            its current coverage, derived from the registry.
+        dimensions:
+          type: array
+          items:
+            type: string
+          description: Wellness dimensions this source contributes to.
+        seen:
+          type: array
+          items:
+            type: string
+          description: What the machine sees from this source.
+        neverTouched:
+          type: array
+          items:
+            type: string
+          description: What the machine never touches from this source.
+        actionLabel:
+          type: string
+          description: CTA copy for feeding this source.
+        actionHref:
+          type: string
+          description: Where the CTA points to feed this source.
+        purgeable:
+          type: boolean
+          description: >-
+            Whether this source can be purged on its own. Sources with nothing
+            stored are not purgeable.
+
+    TrustLedger:
+      type: object
+      required: [generatedAt, entries]
+      properties:
+        generatedAt:
+          type: string
+          description: ISO timestamp of when this ledger was generated.
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrustLedgerEntry'
+
+    PurgeTrustSourceResult:
+      type: object
+      required: [success, id, removed]
+      properties:
+        success:
+          type: boolean
+          const: true
+        id:
+          type: string
+          description: The signal registry id that was purged.
+        removed:
+          type: integer
+          description: Total number of rows removed across the source's tables.
 
     RegisterPushTokenInput:
       type: object

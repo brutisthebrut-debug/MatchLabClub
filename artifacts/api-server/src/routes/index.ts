@@ -24,6 +24,7 @@ import meImportsRouter from "./meImports";
 import compassRouter from "./compass";
 import importsRouter from "./imports";
 import matchingRouter from "./matching";
+import trustLedgerRouter from "./trustLedger";
 import datingWinsRouter from "./datingWins";
 import rehearsalRouter from "./rehearsal";
 import devAuthRouter from "./devAuth";
@@ -56,6 +57,7 @@ router.use(meImportsRouter);
 router.use(compassRouter);
 router.use(importsRouter);
 router.use(matchingRouter);
+router.use(trustLedgerRouter);
 router.use(datingWinsRouter);
 router.use(rehearsalRouter);
 
