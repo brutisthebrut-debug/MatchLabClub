@@ -11,6 +11,10 @@ import {
   getAlertSettings, updateAlertSettings, resetAlertSettings,
   getMatchingQueue, getMatchingPool, setMatchingProposalStatus, addMatchingProposalNote,
   getReferralAttribution, getEchoUserSignals,
+  getBrainControls, updateBrainControls, resetBrainControls, getBrainMap,
+  getReweighting, getCuration, saveCuration,
+  type BrainControls, type BrainControlsResponse, type BrainMapResponse,
+  type ReweightingResponse, type CurationEntry,
   type MatchingQueueItem, type MatchingPoolItem,
   type ReferralAttributionResponse, type EchoUserSignalsResponse,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
@@ -26,7 +30,7 @@ import {
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
 import { useListAudits, useGetWaitlistStats, useGetCoachFollowUpTimeline, useGetFounderReferrals } from "@workspace/api-client-react";
-import { Lock, LogOut, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock, Share2, Heart, MapPin } from "lucide-react";
+import { Lock, LogOut, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock, Share2, Heart, MapPin, Brain, SlidersHorizontal, RotateCcw, ThumbsUp, ThumbsDown, Activity, Save, Gauge } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
 import { EchoPlaybookPanel } from "@/components/founder/EchoPlaybookPanel";
 import {
@@ -3720,7 +3724,7 @@ function LockedView({ onSubmit }: { onSubmit: (key: string) => void }) {
   );
 }
 
-type Tab = "overview" | "leads" | "audits" | "purchases" | "waitlist" | "emails" | "testing" | "ocr-mismatches" | "referrals" | "matching";
+type Tab = "overview" | "leads" | "audits" | "purchases" | "waitlist" | "emails" | "testing" | "ocr-mismatches" | "referrals" | "matching" | "brain";
 
 
 function Dashboard({ onSignOut }: { onSignOut: () => void }) {
@@ -3754,6 +3758,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   { id: "ocr-mismatches", label: "OCR Mismatches", icon: ScanLine },
   { id: "referrals", label: "Referrals", icon: Share2 },
   { id: "matching", label: "Matching", icon: Heart },
+  { id: "brain", label: "Brain", icon: Brain },
   ];
 
   return (
@@ -3963,10 +3968,629 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   </div>
   )}
 
+  {tab === "brain" && <BrainTab founderKey={FOUNDER_KEY} refreshKey={refreshKey} />}
+
   <p className="text-xs text-muted-foreground/30 mt-12 text-center">
   Founder demo mode · Full auth + multi-user coming in V3
   </p>
   </div>
+  );
+}
+
+/* ─── Brain: control center + brain map + re-weighting ──────────────── */
+
+function NumberField({
+  label,
+  hint,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  value: number;
+  min?: number;
+  max?: number;
+  onChange: (n: number) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="text-sm font-medium text-foreground">{label}</span>
+      {hint && <span className="block text-xs text-muted-foreground mt-0.5">{hint}</span>}
+      <input
+        type="number"
+        value={value}
+        min={min}
+        max={max}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="mt-2 w-full glass rounded-xl px-3 py-2 text-sm text-foreground bg-transparent border border-white/10 focus:border-[hsl(248_62%_52%/0.5)] focus:outline-none"
+      />
+    </label>
+  );
+}
+
+function BrainTab({ founderKey, refreshKey }: { founderKey: string; refreshKey: number }) {
+  const [resp, setResp] = useState<BrainControlsResponse | null>(null);
+  const [draft, setDraft] = useState<BrainControls | null>(null);
+  const [map, setMap] = useState<BrainMapResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setErr(null);
+    Promise.all([getBrainControls(founderKey), getBrainMap(founderKey)])
+      .then(([controls, brainMap]) => {
+        if (cancelled) return;
+        setResp(controls);
+        setDraft(controls.controls);
+        setMap(brainMap);
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setErr(e instanceof Error ? e.message : "Failed to load brain.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [founderKey, refreshKey, reloadKey]);
+
+  function patch(p: Partial<BrainControls>) {
+    setDraft((d) => (d ? { ...d, ...p } : d));
+  }
+
+  async function save() {
+    if (!draft) return;
+    setSaving(true);
+    setErr(null);
+    setNotice(null);
+    try {
+      const next = await updateBrainControls(founderKey, draft);
+      setResp(next);
+      setDraft(next.controls);
+      setNotice("Controls saved.");
+      setReloadKey((k) => k + 1);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Save failed.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function resetAll() {
+    setSaving(true);
+    setErr(null);
+    setNotice(null);
+    try {
+      const next = await resetBrainControls(founderKey);
+      setResp(next);
+      setDraft(next.controls);
+      setNotice("Controls reset to defaults.");
+      setReloadKey((k) => k + 1);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Reset failed.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 text-muted-foreground py-12 justify-center">
+        <Loader2 className="w-4 h-4 animate-spin" />
+        Loading brain.
+      </div>
+    );
+  }
+
+  if (err && !resp) {
+    return (
+      <div className="glass rounded-2xl p-6 text-sm text-[hsl(0_70%_70%)] flex items-center gap-2">
+        <AlertTriangle className="w-4 h-4" />
+        {err}
+      </div>
+    );
+  }
+
+  if (!resp || !draft) return null;
+
+  const overrides = draft.signalWeightOverrides ?? {};
+
+  return (
+    <div className="space-y-8" data-testid="brain-tab">
+      {(err || notice) && (
+        <div
+          className={`glass rounded-xl px-4 py-3 text-sm flex items-center gap-2 ${
+            err ? "text-[hsl(0_70%_70%)]" : "text-[hsl(150_60%_65%)]"
+          }`}
+        >
+          {err ? <AlertTriangle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+          {err || notice}
+        </div>
+      )}
+
+      {/* Control Center */}
+      <section className="glass rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="font-serif text-xl font-bold text-foreground flex items-center gap-2">
+            <SlidersHorizontal className="w-5 h-5 text-[hsl(248_62%_62%)]" />
+            Control Center
+          </h2>
+          <span
+            className={`text-xs px-2.5 py-1 rounded-full ${
+              resp.overridden
+                ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_62%)]"
+                : "bg-white/5 text-muted-foreground"
+            }`}
+          >
+            {resp.overridden ? "Custom" : "Defaults"}
+          </span>
+        </div>
+        <p className="text-sm text-muted-foreground mb-6">
+          The live knobs behind readiness and matching. Day one defaults match the signal registry exactly.
+        </p>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <NumberField
+            label="Readiness threshold"
+            hint="Score a user needs to enter the matching pool."
+            value={draft.readinessThreshold}
+            min={0}
+            max={100}
+            onChange={(n) => patch({ readinessThreshold: n })}
+          />
+          <NumberField
+            label="Matching radius (miles)"
+            hint="How far we look for candidate matches."
+            value={draft.matchingRadiusMiles}
+            min={1}
+            max={500}
+            onChange={(n) => patch({ matchingRadiusMiles: n })}
+          />
+          <NumberField
+            label="Cohort minimum size"
+            hint="Smallest viable matching cohort."
+            value={draft.cohortMinSize}
+            min={1}
+            max={1000}
+            onChange={(n) => patch({ cohortMinSize: n })}
+          />
+          <NumberField
+            label="Anon daily AI cap"
+            hint="Claude calls per day for anonymous visitors."
+            value={draft.anonDailyCap}
+            min={0}
+            max={10000}
+            onChange={(n) => patch({ anonDailyCap: n })}
+          />
+          <NumberField
+            label="Free daily AI cap"
+            hint="Claude calls per day for free accounts."
+            value={draft.freeDailyCap}
+            min={0}
+            max={100000}
+            onChange={(n) => patch({ freeDailyCap: n })}
+          />
+        </div>
+
+        {/* Re-weighting mode */}
+        <div className="mt-6 pt-6 border-t border-white/10">
+          <span className="text-sm font-medium text-foreground">Re-weighting mode</span>
+          <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+            Hold keeps base weights for everyone. Applied lets outcome-driven proposals tilt a user's weights.
+          </p>
+          <div className="flex gap-2">
+            {(["hold", "applied"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => patch({ reweightingMode: m })}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  draft.reweightingMode === m
+                    ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/5 border border-white/10"
+                }`}
+              >
+                {m === "hold" ? "Hold" : "Applied"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Connector toggles */}
+        <div className="mt-6 pt-6 border-t border-white/10">
+          <span className="text-sm font-medium text-foreground">Connectors</span>
+          <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+            Enable or disable each data source the machine can draw on.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {resp.connectorCatalog.map((c) => {
+              const enabled = draft.connectorToggles[c.id] !== false;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() =>
+                    patch({
+                      connectorToggles: { ...draft.connectorToggles, [c.id]: !enabled },
+                    })
+                  }
+                  className="flex items-center justify-between glass rounded-xl px-4 py-3 border border-white/10 hover:border-white/20 transition-colors text-left"
+                >
+                  <span>
+                    <span className="text-sm text-foreground block">{c.title}</span>
+                    <span className="text-xs text-muted-foreground">{c.status}</span>
+                  </span>
+                  <span
+                    className={`text-xs px-2.5 py-1 rounded-full ${
+                      enabled
+                        ? "bg-[hsl(150_60%_45%/0.2)] text-[hsl(150_60%_65%)]"
+                        : "bg-white/5 text-muted-foreground"
+                    }`}
+                  >
+                    {enabled ? "On" : "Off"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Signal weight overrides */}
+        <div className="mt-6 pt-6 border-t border-white/10">
+          <span className="text-sm font-medium text-foreground">Signal weights</span>
+          <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+            Override a raw weight to change how much a signal counts. Blank uses the registry default. Weights are normalized to sum to one.
+          </p>
+          <div className="space-y-2">
+            {resp.signalCatalog.map((s) => {
+              const effective = resp.effectiveBaseWeights[s.id] ?? 0;
+              const raw = overrides[s.id];
+              return (
+                <div
+                  key={s.id}
+                  className="grid grid-cols-[1fr_auto_auto] items-center gap-3 glass rounded-xl px-4 py-2.5 border border-white/10"
+                >
+                  <span>
+                    <span className="text-sm text-foreground block">{s.label}</span>
+                    <span className="text-xs text-muted-foreground">
+                      default {(s.defaultWeight * 100).toFixed(1)}% · effective {(effective * 100).toFixed(1)}%
+                    </span>
+                  </span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min={0}
+                    placeholder={s.defaultWeight.toFixed(2)}
+                    value={raw ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      const nextOverrides = { ...overrides };
+                      if (v === "") delete nextOverrides[s.id];
+                      else nextOverrides[s.id] = Number(v);
+                      patch({
+                        signalWeightOverrides: Object.keys(nextOverrides).length
+                          ? nextOverrides
+                          : null,
+                      });
+                    }}
+                    className="w-24 glass rounded-lg px-2 py-1.5 text-sm text-foreground bg-transparent border border-white/10 focus:border-[hsl(248_62%_52%/0.5)] focus:outline-none"
+                  />
+                  <button
+                    onClick={() => {
+                      const nextOverrides = { ...overrides };
+                      delete nextOverrides[s.id];
+                      patch({
+                        signalWeightOverrides: Object.keys(nextOverrides).length
+                          ? nextOverrides
+                          : null,
+                      });
+                    }}
+                    disabled={raw === undefined}
+                    className="text-xs px-2 py-1.5 rounded-lg text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    Default
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex gap-2 mt-6 pt-6 border-t border-white/10">
+          <button
+            onClick={save}
+            disabled={saving}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[hsl(248_62%_52%)] text-white hover:bg-[hsl(248_62%_46%)] disabled:opacity-50 transition-colors"
+            data-testid="brain-save"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Save controls
+          </button>
+          <button
+            onClick={resetAll}
+            disabled={saving}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium glass border border-white/10 text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Reset to defaults
+          </button>
+        </div>
+      </section>
+
+      {/* Re-weighting decision */}
+      <ReweightingPanel founderKey={founderKey} mode={draft.reweightingMode} />
+
+      {/* Brain Map */}
+      {map && <BrainMapPanel founderKey={founderKey} map={map} onCurated={() => setReloadKey((k) => k + 1)} />}
+    </div>
+  );
+}
+
+function ReweightingPanel({ founderKey, mode }: { founderKey: string; mode: "hold" | "applied" }) {
+  const [email, setEmail] = useState("");
+  const [data, setData] = useState<ReweightingResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function run() {
+    const e = email.trim();
+    if (!e) return;
+    setLoading(true);
+    setErr(null);
+    setData(null);
+    try {
+      setData(await getReweighting(founderKey, e));
+    } catch (ex) {
+      setErr(ex instanceof Error ? ex.message : "Lookup failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="glass rounded-2xl p-6">
+      <h2 className="font-serif text-xl font-bold text-foreground flex items-center gap-2 mb-1">
+        <Gauge className="w-5 h-5 text-[hsl(248_62%_62%)]" />
+        Re-weighting decision
+      </h2>
+      <p className="text-sm text-muted-foreground mb-4">
+        Bounded, outcome-driven weight proposals for one user. These are a preview. They only tilt live scoring when the mode above is set to Applied.
+      </p>
+
+      <div className="flex gap-2 mb-4">
+        <input
+          type="email"
+          value={email}
+          onChange={(ev) => setEmail(ev.target.value)}
+          onKeyDown={(ev) => ev.key === "Enter" && run()}
+          placeholder="user@email.com"
+          className="flex-1 glass rounded-xl px-3 py-2 text-sm text-foreground bg-transparent border border-white/10 focus:border-[hsl(248_62%_52%/0.5)] focus:outline-none"
+          data-testid="reweighting-email"
+        />
+        <button
+          onClick={run}
+          disabled={loading || !email.trim()}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)] disabled:opacity-50"
+        >
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
+          Preview
+        </button>
+      </div>
+
+      {err && (
+        <div className="text-sm text-[hsl(0_70%_70%)] flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4" />
+          {err}
+        </div>
+      )}
+
+      {data && (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <span className="text-foreground font-medium">{data.user.email}</span>
+            <span className="text-muted-foreground">Readiness {data.readinessScore}</span>
+            <span
+              className={`text-xs px-2.5 py-1 rounded-full ${
+                mode === "applied"
+                  ? "bg-[hsl(150_60%_45%/0.2)] text-[hsl(150_60%_65%)]"
+                  : "bg-white/5 text-muted-foreground"
+              }`}
+            >
+              {mode === "applied" ? "Applied: tilts live scoring" : "Hold: preview only"}
+            </span>
+          </div>
+          <p className="text-sm text-muted-foreground">{data.outcome.headline}</p>
+          {data.adjustments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No adjustments proposed for this user yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {data.adjustments.map((a) => {
+                const delta = a.adjustedWeight - a.defaultWeight;
+                return (
+                  <div key={a.id} className="glass rounded-xl px-4 py-3 border border-white/10">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-foreground">{a.label}</span>
+                      <span
+                        className={`text-sm font-medium ${
+                          delta > 0
+                            ? "text-[hsl(150_60%_65%)]"
+                            : delta < 0
+                              ? "text-[hsl(0_70%_70%)]"
+                              : "text-muted-foreground"
+                        }`}
+                      >
+                        {(a.defaultWeight * 100).toFixed(1)}% → {(a.adjustedWeight * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{a.reason}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function BrainMapPanel({
+  founderKey,
+  map,
+  onCurated,
+}: {
+  founderKey: string;
+  map: BrainMapResponse;
+  onCurated: () => void;
+}) {
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  async function curate(id: string, verdict: "good" | "bad") {
+    setBusyId(id);
+    try {
+      await saveCuration(founderKey, { entityType: "signal", entityId: id, verdict });
+      onCurated();
+    } catch {
+      // surfaced via reload; keep panel quiet
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <section className="glass rounded-2xl p-6">
+      <h2 className="font-serif text-xl font-bold text-foreground flex items-center gap-2 mb-1">
+        <Brain className="w-5 h-5 text-[hsl(248_62%_62%)]" />
+        Brain map
+      </h2>
+      <p className="text-sm text-muted-foreground mb-6">
+        What the machine is doing right now: the jobs that keep it fresh, the signals it weighs, and where readiness stands.
+      </p>
+
+      {/* Readiness aggregate */}
+      <div className="grid sm:grid-cols-4 gap-3 mb-6">
+        {[
+          { label: "Scored users", value: map.readiness.scoredUsers },
+          { label: "Average score", value: map.readiness.averageScore },
+          { label: "Eligible", value: map.readiness.eligibleUsers },
+          { label: "Threshold", value: map.readiness.threshold },
+        ].map((s) => (
+          <div key={s.label} className="glass rounded-xl px-4 py-3 border border-white/10">
+            <div className="text-2xl font-bold text-foreground">{s.value}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Background jobs */}
+      <div className="mb-6">
+        <h3 className="text-sm font-medium text-foreground mb-3">Background jobs</h3>
+        <div className="space-y-1.5">
+          {map.jobs.map((j) => (
+            <div
+              key={j.jobName}
+              className="flex items-center justify-between glass rounded-lg px-3 py-2 border border-white/10"
+            >
+              <span className="text-sm text-foreground">{j.jobName}</span>
+              <span
+                className={`flex items-center gap-1.5 text-xs ${
+                  j.stale ? "text-[hsl(40_90%_65%)]" : "text-[hsl(150_60%_65%)]"
+                }`}
+              >
+                {j.stale ? <AlertTriangle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                {j.lastSuccessAt ? new Date(j.lastSuccessAt).toLocaleString() : "never"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Signal registry */}
+      <div className="mb-6">
+        <h3 className="text-sm font-medium text-foreground mb-3">Signal registry</h3>
+        <div className="space-y-2">
+          {map.signals.map((s) => (
+            <div key={s.id} className="glass rounded-xl px-4 py-3 border border-white/10">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="text-sm text-foreground">{s.label}</span>
+                  <p className="text-xs text-muted-foreground mt-0.5">{s.describe}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    default {(s.defaultWeight * 100).toFixed(1)}% · effective {(s.effectiveWeight * 100).toFixed(1)}% · confidence {s.confidence}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => curate(s.id, "good")}
+                    disabled={busyId === s.id}
+                    className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${
+                      s.curation?.verdict === "good"
+                        ? "bg-[hsl(150_60%_45%/0.2)] text-[hsl(150_60%_65%)]"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                    }`}
+                    aria-label="Mark good"
+                  >
+                    <ThumbsUp className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => curate(s.id, "bad")}
+                    disabled={busyId === s.id}
+                    className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${
+                      s.curation?.verdict === "bad"
+                        ? "bg-[hsl(0_70%_50%/0.2)] text-[hsl(0_70%_70%)]"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                    }`}
+                    aria-label="Mark bad"
+                  >
+                    <ThumbsDown className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Pool + proposals */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <h3 className="text-sm font-medium text-foreground mb-3">Matching pool</h3>
+          {map.pool.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No pool members yet.</p>
+          ) : (
+            <div className="space-y-1.5">
+              {map.pool.map((p) => (
+                <div key={p.status} className="flex justify-between glass rounded-lg px-3 py-2 border border-white/10 text-sm">
+                  <span className="text-muted-foreground">{p.status}</span>
+                  <span className="text-foreground font-medium">{p.count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div>
+          <h3 className="text-sm font-medium text-foreground mb-3">Proposals</h3>
+          {map.proposals.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No proposals yet.</p>
+          ) : (
+            <div className="space-y-1.5">
+              {map.proposals.map((p) => (
+                <div key={p.status} className="flex justify-between glass rounded-lg px-3 py-2 border border-white/10 text-sm">
+                  <span className="text-muted-foreground">{p.status}</span>
+                  <span className="text-foreground font-medium">{p.count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
 

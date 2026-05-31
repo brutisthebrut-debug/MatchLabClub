@@ -26,7 +26,28 @@ import {
   matchPreferencesTable,
   compatibilityReadsTable,
   lifePulsesTable,
+  founderCurationTable,
+  matchingReadinessSnapshotsTable,
 } from "@workspace/db";
+import {
+  loadBrainControls,
+  saveBrainControls,
+  resetBrainControls,
+  brainControlsOverridden,
+  defaultControls,
+  effectiveBaseWeights,
+  CONNECTOR_CATALOG,
+  type BrainControls,
+} from "../lib/brainConfig";
+import {
+  SIGNAL_REGISTRY,
+  normalizedWeights,
+  proposeWeightAdjustments,
+} from "../lib/signalRegistry";
+import {
+  computeReadiness,
+  computeOutcomeInsightForUser,
+} from "./matching";
 import { and, count, sql, desc, gte, asc, eq, isNotNull, lt, inArray, lte } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { z } from "zod/v4";
@@ -2034,6 +2055,302 @@ router.get(
         invitedAt: user.invitedAt instanceof Date ? user.invitedAt.toISOString() : null,
       },
     });
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Founder brain: control center + brain map + curation
+// ---------------------------------------------------------------------------
+
+function signalCatalog() {
+  const defaults = normalizedWeights();
+  return SIGNAL_REGISTRY.map((c) => ({
+    id: c.id as string,
+    label: c.label,
+    defaultWeight: Number((defaults[c.id] ?? 0).toFixed(4)),
+    confidence: c.confidence,
+    dimensions: c.dimensions,
+    describe: c.describe(100),
+  }));
+}
+
+function serializeControls(controls: BrainControls, overridden: boolean) {
+  return {
+    controls,
+    overridden,
+    defaults: defaultControls(),
+    effectiveBaseWeights: Object.fromEntries(
+      Object.entries(effectiveBaseWeights(controls)).map(([k, v]) => [
+        k,
+        Number(v.toFixed(4)),
+      ]),
+    ),
+    signalCatalog: signalCatalog(),
+    connectorCatalog: CONNECTOR_CATALOG,
+  };
+}
+
+router.get(
+  "/founder/brain/controls",
+  requireFounder,
+  async (_req, res): Promise<void> => {
+    const [controls, overridden] = await Promise.all([
+      loadBrainControls(),
+      brainControlsOverridden(),
+    ]);
+    res.json(serializeControls(controls, overridden));
+  },
+);
+
+const BrainControlsPatch = z.object({
+  readinessThreshold: z.number().int().min(0).max(100).optional(),
+  matchingRadiusMiles: z.number().int().min(1).max(500).optional(),
+  cohortMinSize: z.number().int().min(1).max(1000).optional(),
+  anonDailyCap: z.number().int().min(0).max(10000).optional(),
+  freeDailyCap: z.number().int().min(0).max(100000).optional(),
+  reweightingMode: z.enum(["hold", "applied"]).optional(),
+  signalWeightOverrides: z.record(z.string(), z.number().min(0)).nullable().optional(),
+  connectorToggles: z.record(z.string(), z.boolean()).optional(),
+});
+
+router.put(
+  "/founder/brain/controls",
+  requireFounder,
+  async (req, res): Promise<void> => {
+    const parsed = BrainControlsPatch.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    const controls = await saveBrainControls(parsed.data as Partial<BrainControls>);
+    res.json(serializeControls(controls, true));
+  },
+);
+
+router.post(
+  "/founder/brain/controls/reset",
+  requireFounder,
+  async (_req, res): Promise<void> => {
+    const controls = await resetBrainControls();
+    res.json(serializeControls(controls, false));
+  },
+);
+
+router.get(
+  "/founder/brain/map",
+  requireFounder,
+  async (_req, res): Promise<void> => {
+    const controls = await loadBrainControls();
+
+    // Background jobs: same status computation as /founder/background-jobs.
+    const jobRows = await db
+      .select()
+      .from(jobHeartbeatsTable)
+      .orderBy(asc(jobHeartbeatsTable.jobName));
+    const byName = new Map(
+      jobRows.map((r) => [
+        r.jobName,
+        r.lastSuccessAt instanceof Date
+          ? r.lastSuccessAt
+          : new Date(r.lastSuccessAt as unknown as string),
+      ]),
+    );
+    const allNames = new Set([
+      ...KNOWN_JOB_NAMES,
+      ...jobRows.map((r) => r.jobName),
+    ]);
+    const now = Date.now();
+    const jobs = Array.from(allNames)
+      .sort()
+      .map((jobName) => {
+        const lastSuccessAt = byName.get(jobName) ?? null;
+        const staleThresholdMs = getStaleThresholdMs(jobName);
+        if (!lastSuccessAt) {
+          return { jobName, lastSuccessAt: null, ageMs: null, staleThresholdMs, stale: true };
+        }
+        const ageMs = now - lastSuccessAt.getTime();
+        return {
+          jobName,
+          lastSuccessAt: lastSuccessAt.toISOString(),
+          ageMs,
+          staleThresholdMs,
+          stale: ageMs > staleThresholdMs,
+        };
+      });
+
+    // Signal registry with effective weights and the founder's curation verdict.
+    const base = effectiveBaseWeights(controls);
+    const defaults = normalizedWeights();
+    const curationRows = await db
+      .select()
+      .from(founderCurationTable)
+      .where(eq(founderCurationTable.entityType, "signal"));
+    const verdictById = new Map(
+      curationRows.map((r) => [r.entityId, { verdict: r.verdict, note: r.note }]),
+    );
+    const signals = SIGNAL_REGISTRY.map((c) => {
+      const id = c.id as string;
+      const curated = verdictById.get(id) ?? null;
+      return {
+        id,
+        label: c.label,
+        defaultWeight: Number((defaults[id] ?? 0).toFixed(4)),
+        effectiveWeight: Number((base[id] ?? 0).toFixed(4)),
+        confidence: c.confidence,
+        dimensions: c.dimensions,
+        describe: c.describe(100),
+        curation: curated,
+      };
+    });
+
+    // Readiness aggregate across the most recent snapshot per user.
+    const latestPerUser = db
+      .select({
+        userId: matchingReadinessSnapshotsTable.userId,
+        latest: sql<string>`max(${matchingReadinessSnapshotsTable.day})`.as("latest"),
+      })
+      .from(matchingReadinessSnapshotsTable)
+      .groupBy(matchingReadinessSnapshotsTable.userId)
+      .as("latest_per_user");
+    const readinessAgg = await db
+      .select({
+        users: sql<number>`count(*)::int`,
+        avgScore: sql<number>`coalesce(avg(${matchingReadinessSnapshotsTable.score}), 0)`,
+        eligible: sql<number>`count(*) filter (where ${matchingReadinessSnapshotsTable.score} >= ${controls.readinessThreshold})::int`,
+      })
+      .from(matchingReadinessSnapshotsTable)
+      .innerJoin(
+        latestPerUser,
+        and(
+          eq(matchingReadinessSnapshotsTable.userId, latestPerUser.userId),
+          eq(matchingReadinessSnapshotsTable.day, latestPerUser.latest),
+        ),
+      );
+
+    const poolAgg = await db
+      .select({
+        status: matchPoolMembershipTable.status,
+        n: sql<number>`count(*)::int`,
+      })
+      .from(matchPoolMembershipTable)
+      .groupBy(matchPoolMembershipTable.status);
+
+    const proposalAgg = await db
+      .select({
+        status: matchProposalsTable.status,
+        n: sql<number>`count(*)::int`,
+      })
+      .from(matchProposalsTable)
+      .groupBy(matchProposalsTable.status);
+
+    res.json({
+      controls,
+      jobs,
+      signals,
+      readiness: {
+        scoredUsers: Number(readinessAgg[0]?.users ?? 0),
+        averageScore: Math.round(Number(readinessAgg[0]?.avgScore ?? 0)),
+        eligibleUsers: Number(readinessAgg[0]?.eligible ?? 0),
+        threshold: controls.readinessThreshold,
+      },
+      pool: poolAgg.map((r) => ({ status: r.status, count: Number(r.n) })),
+      proposals: proposalAgg.map((r) => ({ status: r.status, count: Number(r.n) })),
+    });
+  },
+);
+
+router.get(
+  "/founder/brain/reweighting/:email",
+  requireFounder,
+  async (req, res): Promise<void> => {
+    const email = String(req.params.email ?? "").trim().toLowerCase();
+    if (!email) {
+      res.status(400).json({ error: "Email required." });
+      return;
+    }
+    const userRows = await db
+      .select({ id: usersTable.id, email: usersTable.email })
+      .from(usersTable)
+      .where(sql`lower(${usersTable.email}) = ${email}`)
+      .limit(1);
+    const user = userRows[0];
+    if (!user) {
+      res.status(404).json({ error: "No user with that email." });
+      return;
+    }
+
+    const controls = await loadBrainControls();
+    const base = effectiveBaseWeights(controls);
+    const [readiness, outcome] = await Promise.all([
+      computeReadiness(user.id),
+      computeOutcomeInsightForUser(user.id),
+    ]);
+    const adjustments = proposeWeightAdjustments(outcome, SIGNAL_REGISTRY, base);
+
+    res.json({
+      user: { id: user.id, email: user.email },
+      mode: controls.reweightingMode,
+      readinessScore: readiness.score,
+      outcome: {
+        totalDates: outcome.totalDates,
+        anotherDate: outcome.anotherDate,
+        noMore: outcome.noMore,
+        ghosted: outcome.ghosted,
+        unsure: outcome.unsure,
+        headline: outcome.headline,
+      },
+      adjustments,
+    });
+  },
+);
+
+const CurationBody = z.object({
+  entityType: z.enum(["match_proposal", "signal"]),
+  entityId: z.string().min(1).max(200),
+  verdict: z.enum(["good", "bad"]),
+  note: z.string().max(2000).nullable().optional(),
+});
+
+router.post(
+  "/founder/curation",
+  requireFounder,
+  async (req, res): Promise<void> => {
+    const parsed = CurationBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    const { entityType, entityId, verdict, note } = parsed.data;
+    const now = new Date();
+    const [row] = await db
+      .insert(founderCurationTable)
+      .values({ entityType, entityId, verdict, note: note ?? null, updatedAt: now })
+      .onConflictDoUpdate({
+        target: [founderCurationTable.entityType, founderCurationTable.entityId],
+        set: { verdict, note: note ?? null, updatedAt: now },
+      })
+      .returning();
+    res.json({ curation: row });
+  },
+);
+
+router.get(
+  "/founder/curation",
+  requireFounder,
+  async (req, res): Promise<void> => {
+    const entityType =
+      typeof req.query.entityType === "string" ? req.query.entityType : null;
+    const rows = entityType
+      ? await db
+          .select()
+          .from(founderCurationTable)
+          .where(eq(founderCurationTable.entityType, entityType))
+          .orderBy(desc(founderCurationTable.updatedAt))
+      : await db
+          .select()
+          .from(founderCurationTable)
+          .orderBy(desc(founderCurationTable.updatedAt));
+    res.json({ curation: rows });
   },
 );
 

@@ -29,9 +29,19 @@ const PROTECTED_GET_ROUTES = [
   "/api/founder/ai-metrics/trends",
   "/api/founder/rollup-heartbeat",
   "/api/founder/background-jobs",
+  "/api/founder/brain/controls",
+  "/api/founder/brain/map",
+  "/api/founder/brain/reweighting/nobody@example.com",
+  "/api/founder/curation",
 ];
 
-const PROTECTED_POST_ROUTES = ["/api/founder/geoip/refresh"];
+const PROTECTED_POST_ROUTES = [
+  "/api/founder/geoip/refresh",
+  "/api/founder/brain/controls/reset",
+  "/api/founder/curation",
+];
+
+const PROTECTED_PUT_ROUTES = ["/api/founder/brain/controls"];
 
 describe("founder route auth", () => {
   describe.each(PROTECTED_GET_ROUTES)("%s", (route) => {
@@ -79,6 +89,30 @@ describe("founder route auth", () => {
       const res = await request(app)
         .post(route)
         .set("x-founder-key", VALID_KEY);
+      expect(res.status).not.toBe(401);
+    });
+  });
+
+  describe.each(PROTECTED_PUT_ROUTES)("%s", (route) => {
+    it("returns 401 with no key", async () => {
+      const res = await request(app).put(route).send({});
+      expect(res.status).toBe(401);
+      expect(res.body).toMatchObject({ error: expect.any(String) });
+    });
+
+    it("returns 401 with a wrong key", async () => {
+      const res = await request(app)
+        .put(route)
+        .set("x-founder-key", "not-the-right-key")
+        .send({});
+      expect(res.status).toBe(401);
+    });
+
+    it("passes auth with a valid header key", async () => {
+      const res = await request(app)
+        .put(route)
+        .set("x-founder-key", VALID_KEY)
+        .send({});
       expect(res.status).not.toBe(401);
     });
   });

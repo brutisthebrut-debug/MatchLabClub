@@ -33,6 +33,12 @@ import {
   type ReadinessNextAction,
 } from "../lib/readiness";
 import { describeActiveSignals } from "../lib/signalRegistry";
+import {
+  loadBrainControls,
+  effectiveBaseWeights,
+  effectiveWeightsForUser,
+  effectiveReadinessThreshold,
+} from "../lib/brainConfig";
 
 // Minimum substantive journal length (chars) to count toward readiness. A
 // lazy one-liner should not move the needle; a real reflection should.
@@ -117,6 +123,8 @@ async function loadMembership(userId: string): Promise<PoolRow | null> {
 interface Readiness {
   score: number;
   breakdown: ReadinessBreakdown;
+  /** Effective per-signal weights used to produce this score (founder-tunable). */
+  weights: Record<string, number>;
 }
 
 export async function computeReadiness(userId: string): Promise<Readiness> {
@@ -266,7 +274,18 @@ export async function computeReadiness(userId: string): Promise<Readiness> {
     lifePulse: lifePulseCount,
   });
 
-  return { score: scoreFromBreakdown(breakdown), breakdown };
+  // Effective weights come from the founder control center. With no overrides
+  // and the re-weighting mode on "hold" this is the exact registry default, so
+  // the day-one score is reproduced. In "applied" mode the bounded outcome tilt
+  // is layered on per user. The extra outcome query only runs in applied mode.
+  const controls = await loadBrainControls();
+  let weights = effectiveBaseWeights(controls);
+  if (controls.reweightingMode === "applied") {
+    const outcome = await computeOutcomeInsightForUser(userId);
+    weights = effectiveWeightsForUser(controls, outcome);
+  }
+
+  return { score: scoreFromBreakdown(breakdown, weights), breakdown, weights };
 }
 
 export async function computeOutcomeInsightForUser(
@@ -346,12 +365,11 @@ async function writeReadinessSnapshot(
     });
 }
 
-// Minimum readiness score required to activate pool membership. Tunable via
-// MATCHING_READINESS_THRESHOLD; clamped to 0-100, defaults to 50.
-export function readinessThreshold(): number {
-  const raw = Number(process.env.MATCHING_READINESS_THRESHOLD);
-  if (!Number.isFinite(raw)) return 50;
-  return Math.max(0, Math.min(100, Math.round(raw)));
+// Minimum readiness score required to activate pool membership. Sourced from
+// the founder control center (override -> MATCHING_READINESS_THRESHOLD -> 50),
+// clamped to 0-100. Async because it reads the founder brain config.
+export async function readinessThreshold(): Promise<number> {
+  return effectiveReadinessThreshold();
 }
 
 const POOL_VISIBLE_STATUSES = ["building", "ready", "concierge_only"] as const;
@@ -400,7 +418,7 @@ router.get("/me/matching/state", async (req, res): Promise<void> => {
     density = Number(cityRows[0]?.count ?? 0);
   }
 
-  const threshold = readinessThreshold();
+  const threshold = await readinessThreshold();
   const eligible = readiness.score >= threshold;
 
   // Persist today's score so the trend line has fresh data, then read the
@@ -412,7 +430,9 @@ router.get("/me/matching/state", async (req, res): Promise<void> => {
   }
   const [history, nextActions] = await Promise.all([
     loadReadinessHistory(userId),
-    Promise.resolve(computeNextActions(readiness.breakdown, eligible)),
+    Promise.resolve(
+      computeNextActions(readiness.breakdown, eligible, 3, readiness.weights),
+    ),
   ]);
 
   res.json({
@@ -500,10 +520,10 @@ router.put("/me/matching/pool-membership", async (req, res): Promise<void> => {
   // density. Leaving (off) and pausing (paused) are always allowed so a user
   // can never get stuck in the pool.
   if (requested === "building" || requested === "ready") {
-    const [readiness, threshold] = [
-      await computeReadiness(userId),
+    const [readiness, threshold] = await Promise.all([
+      computeReadiness(userId),
       readinessThreshold(),
-    ];
+    ]);
     if (readiness.score < threshold) {
       res.status(422).json({
         error: `You need a readiness of ${threshold} to join the matching pool. You are at ${readiness.score} right now. Add a compass read, a wellness pass, or a Hinge import to close the gap.`,

@@ -48,10 +48,13 @@ export function computeBreakdown(counts: SignalCounts): ReadinessBreakdown {
   return out;
 }
 
-export function scoreFromBreakdown(breakdown: ReadinessBreakdown): number {
+export function scoreFromBreakdown(
+  breakdown: ReadinessBreakdown,
+  weights: Record<string, number> = WEIGHTS,
+): number {
   let sum = 0;
   for (const contributor of SIGNAL_REGISTRY) {
-    sum += breakdown[contributor.id] * (WEIGHTS[contributor.id] ?? 0);
+    sum += breakdown[contributor.id] * (weights[contributor.id] ?? 0);
   }
   return Math.round(sum);
 }
@@ -89,10 +92,11 @@ export function computeNextActions(
   breakdown: ReadinessBreakdown,
   eligible: boolean,
   limit = 3,
+  weights: Record<string, number> = WEIGHTS,
 ): ReadinessNextAction[] {
   if (eligible) return [];
   return SIGNAL_REGISTRY.filter((c) => breakdown[c.id] < 100)
-    .map((c) => ({ contributor: c, step: contributorStep(c, WEIGHTS) }))
+    .map((c) => ({ contributor: c, step: contributorStep(c, weights) }))
     .sort((a, b) => b.step - a.step)
     .slice(0, limit)
     .map(({ contributor, step }) => ({

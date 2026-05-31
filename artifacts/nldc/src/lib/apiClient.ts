@@ -826,3 +826,173 @@ export const resetAlertSettings = (founderKey: string) =>
     }
     return res.json() as Promise<AlertSettingsResponse>;
   });
+
+// --- Founder brain: control center, brain map, curation ---
+
+export type ReweightingMode = "hold" | "applied";
+
+export interface BrainControls {
+  readinessThreshold: number;
+  matchingRadiusMiles: number;
+  cohortMinSize: number;
+  anonDailyCap: number;
+  freeDailyCap: number;
+  reweightingMode: ReweightingMode;
+  signalWeightOverrides: Record<string, number> | null;
+  connectorToggles: Record<string, boolean>;
+}
+
+export interface SignalCatalogEntry {
+  id: string;
+  label: string;
+  defaultWeight: number;
+  confidence: number;
+  dimensions: string[];
+  describe: string;
+}
+
+export interface ConnectorCatalogEntry {
+  id: string;
+  title: string;
+  status: "live" | "building" | "researching";
+}
+
+export interface BrainControlsResponse {
+  controls: BrainControls;
+  overridden: boolean;
+  defaults: BrainControls;
+  effectiveBaseWeights: Record<string, number>;
+  signalCatalog: SignalCatalogEntry[];
+  connectorCatalog: ConnectorCatalogEntry[];
+}
+
+export interface CurationEntry {
+  id: string;
+  entityType: string;
+  entityId: string;
+  verdict: "good" | "bad";
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BrainMapSignal {
+  id: string;
+  label: string;
+  defaultWeight: number;
+  effectiveWeight: number;
+  confidence: number;
+  dimensions: string[];
+  describe: string;
+  curation: { verdict: string; note: string | null } | null;
+}
+
+export interface BrainMapResponse {
+  controls: BrainControls;
+  jobs: BackgroundJobStatus[];
+  signals: BrainMapSignal[];
+  readiness: {
+    scoredUsers: number;
+    averageScore: number;
+    eligibleUsers: number;
+    threshold: number;
+  };
+  pool: { status: string; count: number }[];
+  proposals: { status: string; count: number }[];
+}
+
+export interface WeightAdjustment {
+  id: string;
+  label: string;
+  defaultWeight: number;
+  adjustedWeight: number;
+  reason: string;
+}
+
+export interface ReweightingResponse {
+  user: { id: string; email: string | null };
+  mode: ReweightingMode;
+  readinessScore: number;
+  outcome: {
+    totalDates: number;
+    anotherDate: number;
+    noMore: number;
+    ghosted: number;
+    unsure: number;
+    headline: string;
+  };
+  adjustments: WeightAdjustment[];
+}
+
+export const getBrainControls = (founderKey: string) =>
+  get<BrainControlsResponse>("/founder/brain/controls", {
+    headers: { "x-founder-key": founderKey },
+  });
+
+export const updateBrainControls = async (
+  founderKey: string,
+  patch: Partial<BrainControls>,
+): Promise<BrainControlsResponse> => {
+  const res = await fetch(`${BASE}/founder/brain/controls`, {
+    method: "PUT",
+    headers: { "x-founder-key": founderKey, "content-type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `PUT /founder/brain/controls failed (${res.status})`);
+  }
+  return (await res.json()) as BrainControlsResponse;
+};
+
+export const resetBrainControls = async (
+  founderKey: string,
+): Promise<BrainControlsResponse> => {
+  const res = await fetch(`${BASE}/founder/brain/controls/reset`, {
+    method: "POST",
+    headers: { "x-founder-key": founderKey },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `reset failed (${res.status})`);
+  }
+  return (await res.json()) as BrainControlsResponse;
+};
+
+export const getBrainMap = (founderKey: string) =>
+  get<BrainMapResponse>("/founder/brain/map", {
+    headers: { "x-founder-key": founderKey },
+  });
+
+export const getReweighting = (founderKey: string, email: string) =>
+  get<ReweightingResponse>(
+    `/founder/brain/reweighting/${encodeURIComponent(email)}`,
+    { headers: { "x-founder-key": founderKey } },
+  );
+
+export const getCuration = (founderKey: string, entityType?: string) =>
+  get<{ curation: CurationEntry[] }>(
+    `/founder/curation${entityType ? `?entityType=${encodeURIComponent(entityType)}` : ""}`,
+    { headers: { "x-founder-key": founderKey } },
+  );
+
+export const saveCuration = async (
+  founderKey: string,
+  body: {
+    entityType: "match_proposal" | "signal";
+    entityId: string;
+    verdict: "good" | "bad";
+    note?: string | null;
+  },
+): Promise<{ curation: CurationEntry }> => {
+  const res = await fetch(`${BASE}/founder/curation`, {
+    method: "POST",
+    headers: { "x-founder-key": founderKey, "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `POST /founder/curation failed (${res.status})`);
+  }
+  return (await res.json()) as { curation: CurationEntry };
+};

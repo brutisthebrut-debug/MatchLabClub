@@ -393,8 +393,12 @@ const ADJUST_CAP = 0.25;
 export function proposeWeightAdjustments(
   outcome: OutcomeSignal,
   registry: readonly SignalContributor[] = SIGNAL_REGISTRY,
+  baseWeights?: Record<string, number>,
 ): WeightAdjustment[] {
-  const defaults = normalizedWeights(registry);
+  // The base the tilt operates on. Defaults to the registry normalization, but
+  // the founder control center can pass weight overrides so re-weighting tilts
+  // around the founder's base instead of day-one defaults.
+  const defaults = baseWeights ?? normalizedWeights(registry);
   const totalDates =
     outcome.anotherDate + outcome.noMore + outcome.ghosted + outcome.unsure;
 

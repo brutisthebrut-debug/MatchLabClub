@@ -210,11 +210,16 @@ router.get("/mirror/trends", async (req, res): Promise<void> => {
 async function loadMirrorPortrait(userId: string) {
   const readiness = await computeReadiness(userId);
   const outcome = await computeOutcomeInsightForUser(userId);
-  const threshold = readinessThreshold();
+  const threshold = await readinessThreshold();
   const eligible = readiness.score >= threshold;
   // Force eligible=false so we always surface the single highest-leverage lane
   // to deepen next, even for users already past the matching threshold.
-  const nextActions = computeNextActions(readiness.breakdown, false, 1);
+  const nextActions = computeNextActions(
+    readiness.breakdown,
+    false,
+    1,
+    readiness.weights,
+  );
   return buildMirrorPortrait({
     breakdown: readiness.breakdown,
     score: readiness.score,

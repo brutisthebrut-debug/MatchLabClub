@@ -8,6 +8,7 @@ import {
 import { logger } from "./logger";
 import { recordJobHeartbeat } from "./jobHeartbeat";
 import { sendExpoPushNotifications, isValidExpoPushToken } from "./expoPush";
+import { effectiveReadinessThreshold } from "./brainConfig";
 
 const MATCHING_NUDGE_JOB = "matching_nudge";
 const DEFAULT_INTERVAL_HOURS = 24;
@@ -28,10 +29,12 @@ function nudgeEnabled(): boolean {
   return ["1", "true", "yes", "on"].includes(raw.trim().toLowerCase());
 }
 
-function readinessThreshold(): number {
-  const raw = Number(process.env["MATCHING_READINESS_THRESHOLD"]);
-  if (!Number.isFinite(raw)) return DEFAULT_THRESHOLD;
-  return Math.max(0, Math.min(100, Math.round(raw)));
+async function readinessThreshold(): Promise<number> {
+  try {
+    return await effectiveReadinessThreshold();
+  } catch {
+    return DEFAULT_THRESHOLD;
+  }
 }
 
 function describeNudge(score: number, threshold: number): {
@@ -54,7 +57,7 @@ export async function sendMatchingNudges(options?: {
   jobName?: string;
 }): Promise<number> {
   const heartbeatJobName = options?.jobName ?? MATCHING_NUDGE_JOB;
-  const threshold = readinessThreshold();
+  const threshold = await readinessThreshold();
   const cooldownMs =
     readPositiveNumberEnv("MATCHING_NUDGE_COOLDOWN_HOURS", DEFAULT_COOLDOWN_HOURS) *
     60 *

@@ -5,6 +5,7 @@ import { extractAndValidateJson, getAiToolSchema } from "@workspace/ai-schemas";
 import { db, aiRequestMetricsTable, usersTable, aiUsageCountersTable } from "@workspace/db";
 import { logger } from "./logger";
 import type { PhotoAnalysis } from "./aiEngine";
+import { effectiveAiCaps } from "./brainConfig";
 
 export type AiMode = "live" | "fallback" | "setup-needed";
 export type AiProvider = "openai" | "anthropic";
@@ -398,11 +399,19 @@ function todayDateString(): string {
 }
 
 async function resolveCapForUser(userId: string | null): Promise<number> {
-  if (!userId) return ANON_DAILY_CAP;
+  // Caps are founder-tunable from the brain control center. Fail open to the
+  // built-in constants so a missing config row or a read error never blocks AI.
+  let caps = { anon: ANON_DAILY_CAP, free: FREE_TIER_DAILY_CAP };
+  try {
+    caps = await effectiveAiCaps();
+  } catch {
+    // keep the constant defaults
+  }
+  if (!userId) return caps.anon;
   // TODO: when a paid-tier flag is added to usersTable, return
   // PAID_TIER_DAILY_CAP for paid users. Until then, every authed user gets
   // the free-tier cap.
-  return FREE_TIER_DAILY_CAP;
+  return caps.free;
 }
 
 export async function checkAndIncrementDailyCap(
