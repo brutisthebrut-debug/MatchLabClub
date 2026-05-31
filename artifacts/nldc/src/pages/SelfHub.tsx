@@ -59,6 +59,7 @@ import {
   useGetMirrorPortrait,
   getGetMirrorPortraitQueryKey,
 } from "@workspace/api-client-react";
+import { ClimbCard } from "@/components/climb/ClimbCard";
 import { ShareButton } from "@/components/echo/ShareButton";
 import { NextStepCard } from "@/components/NextStepCard";
 import { DEMO_PORTRAIT } from "@/lib/mirrorDemo";
@@ -701,6 +702,15 @@ export default function SelfHub() {
   </Link>
   </div>
   </div>
+  </motion.div>
+
+  {/* The climb: the gamified face of the same readiness meter */}
+  <motion.div {...fadeUp(0.035)} className="mb-6 md:mb-8">
+  <ClimbCard
+  score={readinessScore}
+  threshold={matchingState.data?.readinessThreshold ?? 50}
+  streak={matchingState.data?.activityStreak}
+  />
   </motion.div>
 
   {/* Engine spine: your next best step toward a match */}

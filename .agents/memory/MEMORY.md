@@ -1,10 +1,1 @@
-- [nldc test suite flakiness](nldc-test-flakiness.md) — full `@workspace/nldc` vitest run can time out a test that passes in isolation; rerun the single file before assuming a real break.
-- [Em dashes double as functional delimiters](emdash-delimiters.md) — voice rule bans em dashes, but some are `.split("—")` delimiters/placeholders; sweep the spaced form only and repoint splits.
-- [Connector status labels must mirror Connection Center grouping](connector-status-sync.md) — the landing connector teaser duplicates statuses; keep them in sync with ConnectionCenter's LIVE/BUILDING/RESEARCHING arrays.
-- [Shareable readiness card privacy contract](share-card-privacy.md) — the /share-card viral loop may expose only derived score + stage + lane labels, never raw content; carry this into any public share backend.
-- [Growth waves roadmap](growth-waves-roadmap.md) — durable principle: ship growth as cohesive waves one at a time (never blast many/agents at once), protect runway; holds the sequenced wave plan + experimental ideas bank.
-- [AI tool schema registration](ai-tool-schema-registration.md) — a new hybrid tool stays deterministic-only until its toolName is registered in aiToolSchemas; generate() never sets validated:true otherwise.
-- [Your Mirror spine](your-mirror-spine.md) — unifying self-portrait over real signals; hybrid contract, honest blind spots, demo fallback must not present sample as real, keep legacy /mirror pages reachable.
-- [Grand vision plan](grand-vision-plan.md) — matching-first roadmap (showcase page, nav IA overhaul to surface hidden tools, Connection Center data→match pipeline + connector expansion, full founder control, dev test-login). Build as waves.
-- [Founder brain control center](founder-brain-control-center.md) — founder knobs layer over the signal registry; empty config = day-one defaults, all reads fail-open.
-- [Signal lane fixture coupling](signal-lane-fixture-coupling.md) — adding a weighted SIGNAL_REGISTRY contributor re-normalizes weights; update signalRegistry/readiness test fixtures in lockstep; computeBreakdown defaults missing counts to 0.
+- [Per-route layout remounts](applayout-remount.md) — AppLayout is rendered by every page, so it remounts on navigation; cross-navigation state (delta watchers, refs) must mount at App.tsx root.

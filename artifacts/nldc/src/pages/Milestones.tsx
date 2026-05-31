@@ -33,6 +33,8 @@ import {
   nextMilestone,
   type MilestoneIconKey,
 } from "@/lib/milestones";
+import { computeClimb } from "@/lib/climb";
+import { StreakBadge } from "@/components/climb/StreakBadge";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -63,12 +65,14 @@ export default function Milestones() {
 
   const score = state.data?.readiness.score ?? 0;
   const threshold = state.data?.readinessThreshold ?? 50;
+  const streak = state.data?.activityStreak;
 
   const milestones = useMemo(() => buildMilestones(threshold), [threshold]);
   const upcoming = useMemo(
     () => nextMilestone(score, milestones),
     [score, milestones],
   );
+  const climb = useMemo(() => computeClimb(score, threshold), [score, threshold]);
 
   if (!isAuthenticated) {
     return (
@@ -97,9 +101,18 @@ export default function Milestones() {
               Back to matching
             </Link>
           </Button>
-          <h1 className="mt-3 font-serif text-3xl md:text-4xl font-bold">
-            The climb
-          </h1>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <h1 className="font-serif text-3xl md:text-4xl font-bold">
+              The climb
+            </h1>
+            <span
+              className="rounded-full bg-[hsl(248_62%_52%/0.1)] px-3 py-1 text-sm font-bold text-[hsl(248_62%_52%)]"
+              data-testid="climb-level"
+            >
+              Level {climb.level} of {climb.totalLevels}
+            </span>
+            <StreakBadge streak={streak} />
+          </div>
           <p className="mt-2 text-muted-foreground max-w-xl">
             Every tool you use and every source you connect feeds one rising
             meter. Here is what each step unlocks, and where the real payoff

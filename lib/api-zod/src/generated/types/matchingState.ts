@@ -5,6 +5,7 @@
  * MatchLab Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { ActivityStreak } from './activityStreak';
 import type { MatchingStatePoolStatus } from './matchingStatePoolStatus';
 import type { MatchingStateTier } from './matchingStateTier';
 import type { MatchPreferences } from './matchPreferences';
@@ -36,4 +37,5 @@ export interface MatchingState {
   /** Daily readiness snapshots, oldest first, for the trend line. Up to ~30 points. */
   history: ReadinessHistoryPoint[];
   outcomeInsight: OutcomeInsight;
+  activityStreak?: ActivityStreak;
 }

@@ -6635,6 +6635,34 @@ components:
             $ref: '#/components/schemas/ReadinessHistoryPoint'
         outcomeInsight:
           $ref: '#/components/schemas/OutcomeInsight'
+        activityStreak:
+          $ref: '#/components/schemas/ActivityStreak'
+
+    ActivityStreak:
+      type: object
+      description: >-
+        A gamification lens on how consistently the user feeds any signal. Purely
+        derived from activity history; it never affects the readiness score.
+      required: [current, longest, activeToday, daysActiveLast14]
+      properties:
+        current:
+          type: integer
+          minimum: 0
+          description: >-
+            Consecutive active days ending today, or yesterday if today is not
+            yet active. 0 once the run has lapsed.
+        longest:
+          type: integer
+          minimum: 0
+          description: Longest consecutive run of active days ever.
+        activeToday:
+          type: boolean
+          description: True when the user has already fed a signal today (UTC).
+        daysActiveLast14:
+          type: integer
+          minimum: 0
+          maximum: 14
+          description: How many of the last 14 days (inclusive of today) had activity.
 
     DatingWin:
       type: object

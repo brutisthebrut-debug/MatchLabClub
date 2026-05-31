@@ -36,11 +36,13 @@ import {
   useGetMirrorPortrait,
   getGetMirrorPortraitQueryKey,
   useAskMirror,
+  useGetMatchingState,
   getGetMatchingStateQueryKey,
   useListJournalEntries,
   useListPostDateNotes,
   type MirrorPortrait,
 } from "@workspace/api-client-react";
+import { ClimbCard } from "@/components/climb/ClimbCard";
 import { DEMO_PORTRAIT } from "@/lib/mirrorDemo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -455,6 +457,9 @@ export default function YourMirror() {
   // signed-in user who hits a real server error should see an error state, not
   // a silent sample, so we only treat the unauthenticated case as demo.
   const { isAuthenticated } = useAuth();
+  const { data: matchingState } = useGetMatchingState({
+    query: { queryKey: getGetMatchingStateQueryKey(), enabled: isAuthenticated },
+  });
   const {
     data: portrait,
     isLoading: portraitLoading,
@@ -517,6 +522,13 @@ export default function YourMirror() {
   ) : (
   <>
   <MirrorPortraitSection portrait={shownPortrait} isDemo={isDemo} />
+  {!isDemo && (
+  <ClimbCard
+  score={matchingState?.readiness?.score ?? 0}
+  threshold={matchingState?.readinessThreshold ?? 50}
+  streak={matchingState?.activityStreak}
+  />
+  )}
   <MirrorChat disabled={isDemo} />
   </>
   )}

@@ -10,6 +10,7 @@ export * from './accountExport';
 export * from './accountExportUser';
 export * from './accountSummary';
 export * from './actionPlanItem';
+export * from './activityStreak';
 export * from './aiContentConsentState';
 export * from './aiContextInput';
 export * from './aiContextInputExtras';

@@ -2548,6 +2548,30 @@ export const MatchingStateTier = {
   wingman: 'wingman',
 } as const;
 
+/**
+ * A gamification lens on how consistently the user feeds any signal. Purely derived from activity history; it never affects the readiness score.
+ */
+export interface ActivityStreak {
+  /**
+     * Consecutive active days ending today, or yesterday if today is not yet active. 0 once the run has lapsed.
+     * @minimum 0
+     */
+  current: number;
+  /**
+     * Longest consecutive run of active days ever.
+     * @minimum 0
+     */
+  longest: number;
+  /** True when the user has already fed a signal today (UTC). */
+  activeToday: boolean;
+  /**
+     * How many of the last 14 days (inclusive of today) had activity.
+     * @minimum 0
+     * @maximum 14
+     */
+  daysActiveLast14: number;
+}
+
 export interface MatchingState {
   preferences: MatchPreferences | null;
   poolStatus: MatchingStatePoolStatus;
@@ -2571,6 +2595,7 @@ export interface MatchingState {
   /** Daily readiness snapshots, oldest first, for the trend line. Up to ~30 points. */
   history: ReadinessHistoryPoint[];
   outcomeInsight: OutcomeInsight;
+  activityStreak?: ActivityStreak;
 }
 
 export type DatingWinCategory = typeof DatingWinCategory[keyof typeof DatingWinCategory];

@@ -3897,6 +3897,13 @@ export const getMatchingStateResponseOutcomeInsightGhostedMin = 0;
 
 export const getMatchingStateResponseOutcomeInsightUnsureMin = 0;
 
+export const getMatchingStateResponseActivityStreakCurrentMin = 0;
+
+export const getMatchingStateResponseActivityStreakLongestMin = 0;
+
+export const getMatchingStateResponseActivityStreakDaysActiveLast14Min = 0;
+export const getMatchingStateResponseActivityStreakDaysActiveLast14Max = 14;
+
 
 
 export const GetMatchingStateResponse = zod.object({
@@ -3951,7 +3958,13 @@ export const GetMatchingStateResponse = zod.object({
   "ghosted": zod.number().min(getMatchingStateResponseOutcomeInsightGhostedMin),
   "unsure": zod.number().min(getMatchingStateResponseOutcomeInsightUnsureMin),
   "headline": zod.string().describe('One spoken-English read of the user\'s recent date outcomes.')
-})
+}),
+  "activityStreak": zod.object({
+  "current": zod.number().min(getMatchingStateResponseActivityStreakCurrentMin).describe('Consecutive active days ending today, or yesterday if today is not yet active. 0 once the run has lapsed.'),
+  "longest": zod.number().min(getMatchingStateResponseActivityStreakLongestMin).describe('Longest consecutive run of active days ever.'),
+  "activeToday": zod.boolean().describe('True when the user has already fed a signal today (UTC).'),
+  "daysActiveLast14": zod.number().min(getMatchingStateResponseActivityStreakDaysActiveLast14Min).max(getMatchingStateResponseActivityStreakDaysActiveLast14Max).describe('How many of the last 14 days (inclusive of today) had activity.')
+}).optional().describe('A gamification lens on how consistently the user feeds any signal. Purely derived from activity history; it never affects the readiness score.')
 })
 
 

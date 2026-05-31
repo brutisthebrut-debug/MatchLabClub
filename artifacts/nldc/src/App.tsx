@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ReadinessRewardWatcher } from "@/components/climb/ReadinessRewardWatcher";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import Wizard from "@/pages/Wizard";
@@ -277,6 +278,7 @@ function App() {
           <OnboardingGate />
           <Router />
         </WouterRouter>
+        <ReadinessRewardWatcher />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
