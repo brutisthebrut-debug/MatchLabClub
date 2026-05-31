@@ -1,6 +1,6 @@
 import { withAlpha } from "@/lib/brandColor";
 import { useParams, Link } from "wouter";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCopyDurationPref, COPY_DURATION_MS } from "@/lib/copyDurationPref";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -125,9 +125,18 @@ function ScoreRing({ score }: { score: number }) {
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   const [copyDuration] = useCopyDurationPref();
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+  }, []);
   return (
   <button
-  onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), COPY_DURATION_MS[copyDuration]); }}
+  onClick={() => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    resetTimer.current = setTimeout(() => setCopied(false), COPY_DURATION_MS[copyDuration]);
+  }}
   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[hsl(248_62%_52%)] transition-colors flex-shrink-0 min-h-[36px] px-2"
   data-testid="button-copy-text"
   >
