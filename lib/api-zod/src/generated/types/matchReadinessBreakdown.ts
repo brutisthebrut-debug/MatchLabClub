@@ -62,4 +62,19 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   lifePulse: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  taste: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  lifestyle: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  quizzes: number;
 }

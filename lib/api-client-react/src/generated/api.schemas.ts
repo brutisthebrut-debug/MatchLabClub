@@ -2163,6 +2163,47 @@ export interface CreateSourcePasteResult {
   uploadedAt: string;
 }
 
+export interface CreateQuizResultInput {
+  /**
+     * The quiz's stable slug, e.g. `attachment-style`.
+     * @minLength 1
+     * @maxLength 64
+     */
+  slug: string;
+  /**
+     * The scored archetype key for this completion.
+     * @minLength 1
+     * @maxLength 64
+     */
+  archetypeKey: string;
+  /**
+     * Human-readable archetype name, stored for the user's own review.
+     * @minLength 1
+     * @maxLength 120
+     */
+  archetypeName: string;
+  /**
+     * The wellness or matching dimensions this quiz informs, taught to the
+  Mirror. Derived signal only; the user's raw answer choices are never
+  stored or sent here.
+
+     * @maxItems 12
+     */
+  dimensions?: string[];
+}
+
+export interface CreateQuizResultResult {
+  id: number;
+  /** The quiz slug this result was stored for. */
+  slug: string;
+  /** The archetype name recorded for this completion. */
+  archetypeName: string;
+  /** How many distinct quizzes the owner has now completed, after deduping retakes of the same quiz. This is the count that fills the quiz lane. */
+  distinctQuizzes: number;
+  status: 'complete';
+  uploadedAt: string;
+}
+
 /**
  * The deterministic compass output shown to the user.
  */
@@ -2589,6 +2630,21 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   lifePulse: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  taste: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  lifestyle: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  quizzes: number;
 }
 
 export interface MatchReadiness {

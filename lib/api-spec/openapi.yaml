@@ -433,6 +433,45 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/quiz-result:
+    post:
+      tags: [Auth]
+      operationId: createQuizResult
+      summary: Record a completed quiz as a derived Mirror signal
+      description: |
+        Captures a completed quiz as derived signal feeding Match Readiness, the
+        Mirror, and matching reasoning through the living signal registry's
+        `quizzes` lane. Persists only the derived result (which quiz, which
+        archetype, the dimensions it informs) into `imported_sources` tagged
+        `source = "quiz"`; the user's raw answer choices are never stored or sent
+        to any prompt. Retakes of the same quiz are deduped, so the lane counts
+        distinct quizzes completed, not raw submissions. Anon-safe: with no
+        signed-in user, the row is stamped with the anonymous claim token cookie
+        so it can be merged into the account later. Always succeeds with a
+        deterministic write; there is no AI call here.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuizResultInput'
+      responses:
+        '201':
+          description: Quiz result captured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateQuizResultResult'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/consent/ai-content:
     get:
       tags: [Auth]
@@ -6452,6 +6491,61 @@ components:
           type: string
           format: date-time
 
+    CreateQuizResultInput:
+      type: object
+      required: [slug, archetypeKey, archetypeName]
+      properties:
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: The quiz's stable slug, e.g. `attachment-style`.
+        archetypeKey:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: The scored archetype key for this completion.
+        archetypeName:
+          type: string
+          minLength: 1
+          maxLength: 120
+          description: Human-readable archetype name, stored for the user's own review.
+        dimensions:
+          type: array
+          maxItems: 12
+          items:
+            type: string
+            minLength: 1
+            maxLength: 80
+          description: |
+            The wellness or matching dimensions this quiz informs, taught to the
+            Mirror. Derived signal only; the user's raw answer choices are never
+            stored or sent here.
+
+    CreateQuizResultResult:
+      type: object
+      required: [id, slug, archetypeName, distinctQuizzes, status, uploadedAt]
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+          description: The quiz slug this result was stored for.
+        archetypeName:
+          type: string
+          description: The archetype name recorded for this completion.
+        distinctQuizzes:
+          type: integer
+          description: >-
+            How many distinct quizzes the owner has now completed, after deduping
+            retakes of the same quiz. This is the count that fills the quiz lane.
+        status:
+          type: string
+          const: complete
+        uploadedAt:
+          type: string
+          format: date-time
+
     CompassReadInput:
       type: object
       required: [connectionStyle, patterns, deterministicResult]
@@ -6825,7 +6919,7 @@ components:
 
     MatchReadinessBreakdown:
       type: object
-      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse]
+      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse, taste, lifestyle, quizzes]
       properties:
         compass:
           type: integer
@@ -6868,6 +6962,18 @@ components:
           minimum: 0
           maximum: 100
         lifePulse:
+          type: integer
+          minimum: 0
+          maximum: 100
+        taste:
+          type: integer
+          minimum: 0
+          maximum: 100
+        lifestyle:
+          type: integer
+          minimum: 0
+          maximum: 100
+        quizzes:
           type: integer
           minimum: 0
           maximum: 100

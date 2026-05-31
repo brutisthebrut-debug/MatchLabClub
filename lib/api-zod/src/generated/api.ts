@@ -516,6 +516,44 @@ export const CreateSourcePasteBody = zod.object({
 
 
 /**
+ * Captures a completed quiz as derived signal feeding Match Readiness, the
+Mirror, and matching reasoning through the living signal registry's
+`quizzes` lane. Persists only the derived result (which quiz, which
+archetype, the dimensions it informs) into `imported_sources` tagged
+`source = "quiz"`; the user's raw answer choices are never stored or sent
+to any prompt. Retakes of the same quiz are deduped, so the lane counts
+distinct quizzes completed, not raw submissions. Anon-safe: with no
+signed-in user, the row is stamped with the anonymous claim token cookie
+so it can be merged into the account later. Always succeeds with a
+deterministic write; there is no AI call here.
+
+ * @summary Record a completed quiz as a derived Mirror signal
+ */
+export const CreateQuizResultHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const createQuizResultBodySlugMax = 64;
+
+export const createQuizResultBodyArchetypeKeyMax = 64;
+
+export const createQuizResultBodyArchetypeNameMax = 120;
+
+export const createQuizResultBodyDimensionsItemMax = 80;
+
+export const createQuizResultBodyDimensionsMax = 12;
+
+
+
+export const CreateQuizResultBody = zod.object({
+  "slug": zod.string().min(1).max(createQuizResultBodySlugMax).describe('The quiz\'s stable slug, e.g. `attachment-style`.'),
+  "archetypeKey": zod.string().min(1).max(createQuizResultBodyArchetypeKeyMax).describe('The scored archetype key for this completion.'),
+  "archetypeName": zod.string().min(1).max(createQuizResultBodyArchetypeNameMax).describe('Human-readable archetype name, stored for the user\'s own review.'),
+  "dimensions": zod.array(zod.string().min(1).max(createQuizResultBodyDimensionsItemMax)).max(createQuizResultBodyDimensionsMax).optional().describe('The wellness or matching dimensions this quiz informs, taught to the\nMirror. Derived signal only; the user\'s raw answer choices are never\nstored or sent here.\n')
+})
+
+
+/**
  * Returns whether the authenticated user has granted consent to send
 their own content (bios, messages, screenshots, journal entries) to
 the hosted LLM (Anthropic via Replit AI Integrations), plus the
@@ -4025,6 +4063,15 @@ export const getMatchingStateResponseReadinessBreakdownInstagramMax = 100;
 export const getMatchingStateResponseReadinessBreakdownLifePulseMin = 0;
 export const getMatchingStateResponseReadinessBreakdownLifePulseMax = 100;
 
+export const getMatchingStateResponseReadinessBreakdownTasteMin = 0;
+export const getMatchingStateResponseReadinessBreakdownTasteMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownLifestyleMin = 0;
+export const getMatchingStateResponseReadinessBreakdownLifestyleMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownQuizzesMin = 0;
+export const getMatchingStateResponseReadinessBreakdownQuizzesMax = 100;
+
 export const getMatchingStateResponseReadinessThresholdMin = 0;
 export const getMatchingStateResponseReadinessThresholdMax = 100;
 
@@ -4084,7 +4131,10 @@ export const GetMatchingStateResponse = zod.object({
   "audits": zod.number().min(getMatchingStateResponseReadinessBreakdownAuditsMin).max(getMatchingStateResponseReadinessBreakdownAuditsMax),
   "coaching": zod.number().min(getMatchingStateResponseReadinessBreakdownCoachingMin).max(getMatchingStateResponseReadinessBreakdownCoachingMax),
   "instagram": zod.number().min(getMatchingStateResponseReadinessBreakdownInstagramMin).max(getMatchingStateResponseReadinessBreakdownInstagramMax),
-  "lifePulse": zod.number().min(getMatchingStateResponseReadinessBreakdownLifePulseMin).max(getMatchingStateResponseReadinessBreakdownLifePulseMax)
+  "lifePulse": zod.number().min(getMatchingStateResponseReadinessBreakdownLifePulseMin).max(getMatchingStateResponseReadinessBreakdownLifePulseMax),
+  "taste": zod.number().min(getMatchingStateResponseReadinessBreakdownTasteMin).max(getMatchingStateResponseReadinessBreakdownTasteMax),
+  "lifestyle": zod.number().min(getMatchingStateResponseReadinessBreakdownLifestyleMin).max(getMatchingStateResponseReadinessBreakdownLifestyleMax),
+  "quizzes": zod.number().min(getMatchingStateResponseReadinessBreakdownQuizzesMin).max(getMatchingStateResponseReadinessBreakdownQuizzesMax)
 })
 }),
   "eligible": zod.boolean().describe('True when readiness.score is at or above readinessThreshold. The client uses this to gate the pool opt-in switch.'),

@@ -31,6 +31,7 @@ export interface ReadinessBreakdown {
   lifePulse: number;
   taste: number;
   lifestyle: number;
+  quizzes: number;
 }
 
 /** Raw counts pulled from the database for each contributor. */
@@ -73,6 +74,12 @@ export interface SignalCounts {
    * item count is used here, never the raw text.
    */
   lifestyleItems: number;
+  /**
+   * Distinct quizzes the user has completed. Each completion stores only its
+   * derived result (which quiz, which archetype), never the raw answer choices,
+   * and retakes of the same quiz are deduped so the count is distinct quizzes.
+   */
+  quizzesCompleted: number;
 }
 
 /**
@@ -583,6 +590,41 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "Anything you do not paste in",
         "OAuth access to your calendar, fitness apps, or any account",
         "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+      ],
+    },
+  },
+  {
+    id: "quizzes",
+    countKey: "quizzesCompleted",
+    dataSource: { kind: "importRows", source: "quiz" },
+    label: "Quiz instincts",
+    dimensions: [
+      "self-knowledge",
+      "values and instincts",
+      "how they show up in connection",
+    ],
+    weight: 0.1,
+    confidence: 0.6,
+    normalize: { kind: "count", denominator: 4 },
+    describe: (c) =>
+      `Has played enough quizzes to cover ${c}% of that lane, so we have a read on their instincts and self-knowledge in their own words, not just a profile bio.`,
+    action: {
+      label: "Play a quiz",
+      detail:
+        "Each quick quiz adds a new angle on how you connect, and feeds your Mirror.",
+      href: "/quizzes",
+    },
+    trust: {
+      origin: "The quizzes you complete, each scored into an archetype.",
+      noun: "quiz",
+      seen: [
+        "Which quizzes you finished and the archetype each one landed on",
+        "A simple count of how many you completed, used to fill the lane",
+      ],
+      neverTouched: [
+        "Your individual answer choices, which are never sold or shared",
+        "Anything beyond the quizzes you choose to play",
+        "Your raw answers are never sent to any AI prompt, only the derived result moves your readiness",
       ],
     },
   },

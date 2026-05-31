@@ -388,6 +388,9 @@ export default function Matching() {
     coaching: 0,
     instagram: 0,
     lifePulse: 0,
+    taste: 0,
+    lifestyle: 0,
+    quizzes: 0,
   };
   const nextActions = state.data?.nextActions ?? [];
   const history = state.data?.history ?? [];

@@ -1,15 +1,22 @@
 import { useState, useMemo, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
-import { ArrowRight, ArrowLeft, Sparkles, RefreshCw, Loader2, Award, Info, Activity } from "lucide-react";
+import { ArrowRight, ArrowLeft, Sparkles, RefreshCw, Loader2, Award, Info, Activity, Eye, TrendingUp } from "lucide-react";
 import { ShareButton } from "@/components/echo/ShareButton";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@workspace/replit-auth-web";
-import { useEnhanceAi, useCreateWellnessAnswer } from "@workspace/api-client-react";
+import {
+  useEnhanceAi,
+  useCreateWellnessAnswer,
+  useCreateQuizResult,
+  useGetMatchingState,
+  getGetMatchingStateQueryKey,
+} from "@workspace/api-client-react";
 import { FallbackNotice } from "@/components/FallbackNotice";
 import { FallbackRateBadge } from "@/components/FallbackRateBadge";
 import { trackEvent } from "@/lib/analytics";
@@ -53,6 +60,18 @@ function tryParseOverride(raw: string): ArchetypeOverride | null {
   }
 }
 
+/** Turn a feed key like "intimacy.pace" into a readable chip, e.g. "Intimacy · Pace". */
+function humanizeDimension(d: string): string {
+  return d
+    .split(".")
+    .map((part) =>
+      part
+        .replace(/[-_]/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase()),
+    )
+    .join(" · ");
+}
+
 interface QuizPlayProps {
   slug: string;
 }
@@ -66,8 +85,16 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
 
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const enhance = useEnhanceAi();
   const createWellnessAnswer = useCreateWellnessAnswer();
+  const createQuizResult = useCreateQuizResult();
+  const matchingState = useGetMatchingState({
+    query: { queryKey: getGetMatchingStateQueryKey(), enabled: isAuthenticated },
+  });
+  // The single highest-leverage signal to feed next, surfaced on the result so
+  // every quiz ends by pointing at the next thing that moves readiness.
+  const nextSignal = matchingState.data?.nextActions?.[0] ?? null;
 
   const [answers, setAnswers] = useState<number[]>(() =>
     quiz ? Array(quiz.questions.length).fill(-1) : [],
@@ -152,6 +179,29 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
       archetype: archetypeKey,
       questions_answered: answers.filter(a => a >= 0).length,
     });
+
+    // Feed the Mirror: record the derived result (which quiz, which archetype,
+    // the dimensions it informs) as a signal so finishing a quiz nudges Match
+    // Readiness. Works for anon and signed-in alike (server stamps the anon
+    // claim cookie). Only the derived result moves, never the raw answers.
+    // Fire-and-forget: a failed write must never block the result reveal.
+    createQuizResult.mutate(
+      {
+        data: {
+          slug: quiz!.slug,
+          archetypeKey,
+          archetypeName: base.name,
+          dimensions: quiz!.feeds,
+        },
+      },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: getGetMatchingStateQueryKey(),
+          });
+        },
+      },
+    );
 
     const summary = quiz!.questions
       .map((q, qi) => {
@@ -404,6 +454,55 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                   </div>
                 </div>
 
+                {/* What your Mirror just learned */}
+                <div
+                  className="glass-elevated border rounded-[2rem] p-8"
+                  style={{ borderColor: "hsl(248 62% 52% / 0.25)" }}
+                  data-testid="quizplay-mirror-learned"
+                >
+                  <div className="flex items-center gap-2 mb-4">
+                    <Eye className="w-5 h-5 text-[hsl(248_62%_52%)]" />
+                    <h3 className="font-bold text-foreground text-lg">What your Mirror just learned</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-5">
+                    This result is now part of how the machine reads you. It sharpened these parts of your picture:
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {quiz.feeds.map((d) => (
+                      <span
+                        key={d}
+                        className="inline-flex items-center px-3 py-1.5 rounded-full bg-[hsl(248_62%_52%/0.08)] border border-[hsl(248_62%_52%/0.2)] text-xs font-semibold text-foreground"
+                      >
+                        {humanizeDimension(d)}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="rounded-2xl border border-foreground/10 bg-background/40 p-5">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <TrendingUp className="w-4 h-4 text-[hsl(326_100%_59%)]" />
+                      <p className="text-xs uppercase tracking-widest font-bold text-muted-foreground">Your next best signal</p>
+                    </div>
+                    {nextSignal ? (
+                      <>
+                        <p className="text-base font-bold text-foreground mb-1">{nextSignal.label}</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed mb-4">{nextSignal.detail}</p>
+                        <Button asChild variant="outline" className="rounded-full font-bold border-foreground/20 hover:bg-foreground/5">
+                          <Link href={nextSignal.href}>{nextSignal.label} <ArrowRight className="ml-2 w-4 h-4" /></Link>
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                          Open your Mirror to see the full picture the machine has of you, and the single next thing that moves your readiness.
+                        </p>
+                        <Button asChild variant="outline" className="rounded-full font-bold border-foreground/20 hover:bg-foreground/5">
+                          <Link href="/your-mirror">See your Mirror <ArrowRight className="ml-2 w-4 h-4" /></Link>
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
                 {/* CTAs */}
                 <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <Button asChild size="lg" className="flex-1 rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] text-white font-bold h-14 text-base shadow-lg">
@@ -475,11 +574,11 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                 <div className="mt-8">
                   <ToolHandoff
                     testId="quizplay-handoff"
-                    fedLine="Saved quiz answers map to your wellness dimensions and sharpen how the machine reads you. Keep filling in the picture."
+                    fedLine="This quiz just fed your Mirror. The more you feed it, the better it reads you, and the closer you get to matching."
                     steps={[
+                      { label: "See your Mirror", href: "/your-mirror", desc: "See the full picture the machine has of you." },
                       { label: "Map your wellness", href: "/wellness", desc: "Answer a few more questions to raise your readiness." },
                       { label: "Take another quiz", href: "/quizzes", desc: "Each one adds a new angle on you." },
-                      { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
                     ]}
                   />
                 </div>

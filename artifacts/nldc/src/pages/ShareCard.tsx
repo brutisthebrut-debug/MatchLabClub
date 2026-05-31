@@ -36,6 +36,7 @@ const LANE_LABELS: Record<string, string> = {
   journal: "Journal",
   postDate: "Post-date notes",
   wins: "Dating wins",
+  quizzes: "Quiz instincts",
 };
 
 function stageFor(score: number): { name: string; line: string } {

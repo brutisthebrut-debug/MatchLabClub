@@ -1,9 +1,10 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, importedSourcesTable } from "@workspace/db";
 import {
   CreateInstagramPasteBody,
+  CreateQuizResultBody,
   CreateSourcePasteBody,
 } from "@workspace/api-zod";
 import { extractAndValidateJson } from "@workspace/ai-schemas";
@@ -423,6 +424,130 @@ router.post("/me/source-paste", async (req, res): Promise<void> => {
     source: inserted!.source,
     status: inserted!.status,
     itemCount: items.length,
+    uploadedAt:
+      inserted!.uploadedAt instanceof Date
+        ? inserted!.uploadedAt.toISOString()
+        : String(inserted!.uploadedAt),
+  });
+});
+
+/**
+ * POST /api/me/quiz-result
+ *
+ * Records a completed quiz as derived signal feeding the `quizzes` lane of the
+ * living signal registry, so finishing a quiz nudges Match Readiness, the
+ * Mirror, and matching reasoning. We store only the derived result (which quiz,
+ * which archetype, the dimensions it informs) into `imported_sources` tagged
+ * `source = "quiz"`; the user's raw answer choices are never stored here and
+ * never sent to any prompt. The lane counts distinct rows per source, so we
+ * dedupe retakes: any prior non-deleted `quiz` row for the same slug is
+ * soft-deleted before the new one lands, which keeps the count at distinct
+ * quizzes completed rather than raw submissions. Status is stamped `complete`
+ * immediately: this is a deterministic write with no enrichment pass and no
+ * Claude tool involved. Anon-safe via the standard claim-token cookie.
+ */
+router.post("/me/quiz-result", async (req, res): Promise<void> => {
+  const parsed = CreateQuizResultBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const slug = parsed.data.slug.trim();
+  const archetypeKey = parsed.data.archetypeKey.trim();
+  const archetypeName = parsed.data.archetypeName.trim();
+  const dimensions = (parsed.data.dimensions ?? [])
+    .map((d) => d.trim())
+    .filter((d) => d.length > 0);
+  if (!slug || !archetypeKey || !archetypeName) {
+    res.status(400).json({ error: "slug, archetypeKey, and archetypeName are required." });
+    return;
+  }
+
+  const userId = req.user?.id;
+  const anonToken = userId ? null : getOrCreateAnonClaimToken(req, res);
+
+  // Owner predicate: signed-in rows key off the user id, anon rows off the
+  // claim-token cookie so they can be merged into the account on login.
+  const owner = userId
+    ? eq(importedSourcesTable.userId, userId)
+    : eq(importedSourcesTable.anonymousClaimToken, anonToken!);
+
+  // Dedupe retakes atomically. The lane counts live rows per source, so a retake
+  // must soft-delete the prior `quiz` row for this same slug before the new one
+  // lands, keeping the count at distinct quizzes rather than raw submissions. We
+  // run the soft-delete, insert, and recount inside one transaction guarded by a
+  // per-owner-per-slug advisory lock so two near-simultaneous completions of the
+  // same quiz (a fast double-submit) can't both slip past the dedupe and leave
+  // two live rows for one slug.
+  const lockKey = `quiz:${userId ?? anonToken}:${slug}`;
+  const { inserted, distinctQuizzes } = await db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${lockKey})::bigint)`);
+
+    await tx
+      .update(importedSourcesTable)
+      .set({ deletedAt: new Date() })
+      .where(
+        and(
+          owner,
+          eq(importedSourcesTable.source, "quiz"),
+          isNull(importedSourcesTable.deletedAt),
+          sql`${importedSourcesTable.parsedSummary}->>'slug' = ${slug}`,
+        ),
+      );
+
+    const [insertedRow] = await tx
+      .insert(importedSourcesTable)
+      .values({
+        userId: userId ?? null,
+        anonymousClaimToken: anonToken,
+        source: "quiz",
+        status: "complete",
+        parsedSummary: {
+          slug,
+          archetypeKey,
+          archetype: archetypeName,
+          dimensions,
+          counts: { quizzes: 1 },
+        },
+      })
+      .returning({
+        id: importedSourcesTable.id,
+        uploadedAt: importedSourcesTable.uploadedAt,
+      });
+
+    // Distinct quizzes now on file for this owner, after the dedupe above. This
+    // is the same count the registry uses to fill the lane.
+    const [{ value } = { value: 0 }] = await tx
+      .select({ value: sql<number>`count(*)::int` })
+      .from(importedSourcesTable)
+      .where(
+        and(
+          owner,
+          eq(importedSourcesTable.source, "quiz"),
+          isNull(importedSourcesTable.deletedAt),
+        ),
+      );
+
+    return { inserted: insertedRow, distinctQuizzes: value };
+  });
+
+  req.log.info(
+    {
+      userId: userId ?? null,
+      importId: inserted?.id,
+      slug,
+      distinctQuizzes: Number(distinctQuizzes ?? 0),
+    },
+    "Captured quiz result",
+  );
+
+  res.status(201).json({
+    id: inserted!.id,
+    slug,
+    archetypeName,
+    distinctQuizzes: Number(distinctQuizzes ?? 0),
+    status: "complete",
     uploadedAt:
       inserted!.uploadedAt instanceof Date
         ? inserted!.uploadedAt.toISOString()

@@ -35,6 +35,7 @@ describe("computeBreakdown", () => {
       lifePulse: 0,
       taste: 0,
       lifestyle: 0,
+      quizzes: 0,
     });
     expect(scoreFromBreakdown(b)).toBe(0);
   });
@@ -54,6 +55,7 @@ describe("computeBreakdown", () => {
       lifePulse: 50,
       tasteItems: 50,
       lifestyleItems: 50,
+      quizzesCompleted: 50,
     });
     expect(b).toEqual({
       compass: 100,
@@ -69,6 +71,7 @@ describe("computeBreakdown", () => {
       lifePulse: 100,
       taste: 100,
       lifestyle: 100,
+      quizzes: 100,
     });
     expect(scoreFromBreakdown(b)).toBe(100);
   });

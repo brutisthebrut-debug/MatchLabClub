@@ -68,6 +68,8 @@ import type {
   CorrectSourceAppResult,
   CreateInstagramPasteInput,
   CreateInstagramPasteResult,
+  CreateQuizResultInput,
+  CreateQuizResultResult,
   CreateSourcePasteInput,
   CreateSourcePasteResult,
   DatingProfile,
@@ -1378,6 +1380,88 @@ export const useCreateSourcePaste = <TError = ErrorType<AuthErrorEnvelope>,
         TContext
       > => {
       return useMutation(getCreateSourcePasteMutationOptions(options));
+    }
+
+export const getCreateQuizResultUrl = () => {
+
+
+
+
+  return `/api/me/quiz-result`
+}
+
+/**
+ * Captures a completed quiz as derived signal feeding Match Readiness, the
+Mirror, and matching reasoning through the living signal registry's
+`quizzes` lane. Persists only the derived result (which quiz, which
+archetype, the dimensions it informs) into `imported_sources` tagged
+`source = "quiz"`; the user's raw answer choices are never stored or sent
+to any prompt. Retakes of the same quiz are deduped, so the lane counts
+distinct quizzes completed, not raw submissions. Anon-safe: with no
+signed-in user, the row is stamped with the anonymous claim token cookie
+so it can be merged into the account later. Always succeeds with a
+deterministic write; there is no AI call here.
+
+ * @summary Record a completed quiz as a derived Mirror signal
+ */
+export const createQuizResult = async (createQuizResultInput: CreateQuizResultInput, options?: RequestInit): Promise<CreateQuizResultResult> => {
+
+  return customFetch<CreateQuizResultResult>(getCreateQuizResultUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createQuizResultInput,)
+  }
+);}
+
+
+
+
+export const getCreateQuizResultMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createQuizResult>>, TError,{data: BodyType<CreateQuizResultInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createQuizResult>>, TError,{data: BodyType<CreateQuizResultInput>}, TContext> => {
+
+const mutationKey = ['createQuizResult'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createQuizResult>>, {data: BodyType<CreateQuizResultInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createQuizResult(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateQuizResultMutationResult = NonNullable<Awaited<ReturnType<typeof createQuizResult>>>
+    export type CreateQuizResultMutationBody = BodyType<CreateQuizResultInput>
+    export type CreateQuizResultMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Record a completed quiz as a derived Mirror signal
+ */
+export const useCreateQuizResult = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createQuizResult>>, TError,{data: BodyType<CreateQuizResultInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createQuizResult>>,
+        TError,
+        {data: BodyType<CreateQuizResultInput>},
+        TContext
+      > => {
+      return useMutation(getCreateQuizResultMutationOptions(options));
     }
 
 export const getGetAiContentConsentUrl = () => {

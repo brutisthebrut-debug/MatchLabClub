@@ -84,6 +84,8 @@ export * from './correctSourceAppInput';
 export * from './correctSourceAppResult';
 export * from './createInstagramPasteInput';
 export * from './createInstagramPasteResult';
+export * from './createQuizResultInput';
+export * from './createQuizResultResult';
 export * from './createSourcePasteInput';
 export * from './createSourcePasteResult';
 export * from './datingProfile';

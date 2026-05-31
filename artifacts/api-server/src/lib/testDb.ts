@@ -319,9 +319,28 @@ export const sql: SqlTag = ((
   strings: TemplateStringsArray,
   ...values: unknown[]
 ): SqlPred => {
-  const fn = (() => false) as Pred as SqlPred;
+  const reconstructed = reconstructSql(strings, values).trim();
+  // When an `sql` fragment is used as a WHERE predicate (not an aggregate
+  // projection), give it real row semantics for the patterns our routes use.
+  // Today that is JSONB path equality, e.g. `parsedSummary->>'slug' = 'x'`,
+  // which the quiz-result dedupe relies on. Anything else stays a no-op false.
+  const jsonEq = reconstructed.match(
+    /^\{\{COL:(\w+)\}\}->>'(\w+)'\s*=\s*'([^']*)'$/,
+  );
+  const pred: Pred = jsonEq
+    ? (row) => {
+        const [, col, key, lit] = jsonEq;
+        const obj = row[col];
+        return (
+          obj != null &&
+          typeof obj === "object" &&
+          (obj as Record<string, unknown>)[key] === lit
+        );
+      }
+    : () => false;
+  const fn = pred as SqlPred;
   fn.__sql = true;
-  fn.reconstructed = reconstructSql(strings, values).trim();
+  fn.reconstructed = reconstructed;
   return fn;
 }) as SqlTag;
 
@@ -670,7 +689,16 @@ class DeleteChain extends AsyncChain<void> {
   }
 }
 
-export const db = {
+interface FakeDb {
+  select(projection?: Record<string, unknown>): SelectChain;
+  insert(table: FakeTable): InsertChain;
+  update(table: FakeTable): UpdateChain;
+  delete(table: FakeTable): DeleteChain;
+  transaction<T>(cb: (tx: FakeDb) => Promise<T>): Promise<T>;
+  execute(): Promise<{ rows: never[] }>;
+}
+
+export const db: FakeDb = {
   select(projection?: Record<string, unknown>) {
     return new SelectChain(projection);
   },
@@ -682,6 +710,17 @@ export const db = {
   },
   delete(table: FakeTable) {
     return new DeleteChain(table.__name);
+  },
+  // Tests run single-threaded against the in-memory store, so a transaction is
+  // just the callback run against the same fake db. This keeps route code that
+  // wraps writes in `db.transaction(...)` working without real isolation.
+  async transaction<T>(cb: (tx: typeof db) => Promise<T>): Promise<T> {
+    return await cb(db);
+  },
+  // Raw `db.execute(sql\`...\`)` calls (e.g. advisory locks) are inert here; the
+  // store has no real SQL engine, so we return an empty result set.
+  async execute(): Promise<{ rows: never[] }> {
+    return { rows: [] };
   },
 };
 

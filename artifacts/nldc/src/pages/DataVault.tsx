@@ -10,7 +10,7 @@ import {
   Shield, Lock, Download, Trash2, Eye, EyeOff, ChevronDown, ChevronUp,
   Image, MessageSquare, FileText, BookOpen, Activity, Check, Heart, ArrowRight,
   AlertTriangle, Mail, Calendar, Sparkles, Trophy, Instagram, HeartPulse,
-  Coffee, Compass, Database, ShieldCheck, X,
+  Coffee, Compass, Database, ShieldCheck, X, Award,
 } from "lucide-react";
 import {
   useListWellnessAnswers,
@@ -61,6 +61,7 @@ const SOURCE_STYLE: Record<string, { icon: React.ElementType; color: string }> =
   lifePulse: { icon: HeartPulse, color: "hsl(348 65% 65%)" },
   taste: { icon: Coffee, color: "hsl(28 70% 60%)" },
   lifestyle: { icon: Sparkles, color: "hsl(270 60% 65%)" },
+  quizzes: { icon: Award, color: "hsl(248 62% 60%)" },
 };
 
 const FALLBACK_STYLE = { icon: Database, color: "hsl(var(--brand-indigo))" };

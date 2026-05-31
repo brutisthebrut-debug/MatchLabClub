@@ -21,6 +21,9 @@ const zeroBreakdown: ReadinessBreakdown = {
   coaching: 0,
   instagram: 0,
   lifePulse: 0,
+  taste: 0,
+  lifestyle: 0,
+  quizzes: 0,
 };
 
 describe("signal registry", () => {
@@ -31,13 +34,14 @@ describe("signal registry", () => {
   });
 
   it("reflects the current registry weights, auto-normalized to sum to 1", () => {
-    // Raw registry weights now sum to 1.71: the original 1.0, plus the calendar
+    // Raw registry weights now sum to 1.81: the original 1.0, plus the calendar
     // signal (0.1), the four brain-unification lanes (audits 0.16, coaching
-    // 0.12, instagram 0.1, lifePulse 0.08), and the two paste-based connector
-    // lanes (taste 0.08, lifestyle 0.07). Each normalized weight is its raw
-    // weight divided by 1.71. The relative proportions between every signal are
-    // preserved exactly; adding contributors never forces a manual re-balance.
-    const total = 1.71;
+    // 0.12, instagram 0.1, lifePulse 0.08), the two paste-based connector lanes
+    // (taste 0.08, lifestyle 0.07), and the quizzes lane (0.1). Each normalized
+    // weight is its raw weight divided by 1.81. The relative proportions between
+    // every signal are preserved exactly; adding contributors never forces a
+    // manual re-balance.
+    const total = 1.81;
     const w = normalizedWeights();
     expect(w.wellness).toBeCloseTo(0.22 / total, 6);
     expect(w.compass).toBeCloseTo(0.2 / total, 6);
@@ -52,6 +56,7 @@ describe("signal registry", () => {
     expect(w.taste).toBeCloseTo(0.08 / total, 6);
     expect(w.lifePulse).toBeCloseTo(0.08 / total, 6);
     expect(w.lifestyle).toBeCloseTo(0.07 / total, 6);
+    expect(w.quizzes).toBeCloseTo(0.1 / total, 6);
   });
 
   it("auto-normalizes when a new contributor is added, never breaking the sum", () => {
