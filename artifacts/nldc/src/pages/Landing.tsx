@@ -87,6 +87,18 @@ export default function Landing() {
                 <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
                 <span className="inline-flex items-center gap-2"><Lock className="w-4 h-4 text-[hsl(326_100%_59%)]" /> Private by design</span>
               </div>
+
+              <motion.div {...fadeUp(0.5)} className="mt-7">
+                <Link
+                  href="/how-it-works"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass border border-[hsl(248_62%_52%/0.25)] hover:border-[hsl(248_62%_52%/0.5)] hover:bg-[hsl(248_62%_52%/0.06)] transition-all group text-sm font-semibold text-muted-foreground hover:text-foreground"
+                  data-testid="link-landing-how-it-works"
+                >
+                  <Brain className="w-4 h-4 text-[hsl(248_62%_52%)]" />
+                  See how the machine works, end to end
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              </motion.div>
             </motion.div>
           </div>
         </div>

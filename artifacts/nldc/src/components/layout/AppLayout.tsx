@@ -10,6 +10,7 @@ import { Menu } from "lucide-react";
 // Routes that keep the marketing top-nav even when signed in.
 // Everything else is treated as an "app" route and gets the sidebar shell.
 const MARKETING_PREFIXES = [
+  "/how-it-works",
   "/pricing",
   "/waitlist",
   "/roadmap",

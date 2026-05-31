@@ -117,7 +117,7 @@ function fmtShort(iso: string): string {
 // Shown when the visitor is signed out (portrait endpoint 401s). Real accounts
 // always get their own computed portrait; this only keeps the page from looking
 // empty for a curious visitor, clearly labelled as a sample.
-const DEMO_PORTRAIT: MirrorPortrait = {
+export const DEMO_PORTRAIT: MirrorPortrait = {
   readinessScore: 48,
   stage: "forming",
   stageLabel: "Forming",

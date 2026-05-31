@@ -6,6 +6,7 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const PRIMARY_LINKS = [
+  { name: "How It Works", href: "/how-it-works" },
   { name: "Free Signal Check", href: "/signal-check" },
   { name: "Quiz Lab", href: "/quizzes" },
   { name: "Sample Read",href: "/sample-report" },
