@@ -500,6 +500,68 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/digest-preferences:
+    get:
+      tags: [Auth]
+      operationId: getDigestPreferences
+      summary: Get the signed-in user's Mirror digest preferences
+      description: |
+        Returns the cadence the user has chosen for the proactive Mirror digest
+        ("weekly", "biweekly", or "off") plus the timestamp of the most recent
+        digest send. New users default to "weekly" until they change it.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Current digest preferences.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigestPreferencesState'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+    post:
+      tags: [Auth]
+      operationId: setDigestPreferences
+      summary: Set the signed-in user's Mirror digest cadence
+      description: |
+        Sets how often the user receives the proactive Mirror digest. Choosing
+        "off" stops all digest emails and nudges for the account. The change
+        takes effect on the next scheduled run.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetDigestPreferencesInput'
+      responses:
+        '200':
+          description: Digest preferences after the update.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigestPreferencesState'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /account/export/email:
     post:
       tags: [Auth]
@@ -6094,6 +6156,28 @@ components:
           type: [string, "null"]
           format: date-time
           description: Last time the user flipped the AI content consent boolean.
+
+    DigestPreferencesState:
+      type: object
+      required: [frequency, lastSentAt]
+      properties:
+        frequency:
+          type: string
+          enum: [weekly, biweekly, off]
+          description: How often the proactive Mirror digest is sent.
+        lastSentAt:
+          type: [string, "null"]
+          format: date-time
+          description: When the most recent digest was sent, or null if never.
+
+    SetDigestPreferencesInput:
+      type: object
+      required: [frequency]
+      properties:
+        frequency:
+          type: string
+          enum: [weekly, biweekly, off]
+          description: The cadence to set for the Mirror digest.
 
     CreateInstagramPasteInput:
       type: object

@@ -31,6 +31,7 @@ import {
   datingWinsTable,
   matchingReadinessSnapshotsTable,
   matchingNudgeStateTable,
+  mirrorDigestPrefsTable,
 } from "@workspace/db";
 import {
   ExportMyDataResponse,
@@ -46,6 +47,9 @@ import {
   SetAiContentConsentBody,
   SetAiContentConsentResponse,
   GetMeConsentResponse,
+  GetDigestPreferencesResponse,
+  SetDigestPreferencesBody,
+  SetDigestPreferencesResponse,
 } from "@workspace/api-zod";
 import { clearSession, getSessionId, SESSION_COOKIE } from "../lib/auth";
 import { describeUserAgent } from "../lib/userAgent";
@@ -1127,6 +1131,78 @@ router.get("/me/consent", async (req, res): Promise<void> => {
     GetMeConsentResponse.parse({
       aiContent: row?.granted ?? false,
       aiContentUpdatedAt: row?.updatedAt ? toIso(row.updatedAt) : null,
+    }),
+  );
+});
+
+/**
+ * GET /api/me/digest-preferences
+ *
+ * Returns the user's chosen cadence for the proactive Mirror digest and the
+ * last time one was sent. New users have no row yet and default to "weekly".
+ */
+router.get("/me/digest-preferences", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const rows = await db
+    .select({
+      frequency: mirrorDigestPrefsTable.frequency,
+      lastSentAt: mirrorDigestPrefsTable.lastSentAt,
+    })
+    .from(mirrorDigestPrefsTable)
+    .where(eq(mirrorDigestPrefsTable.userId, req.user.id))
+    .limit(1);
+  const row = rows[0];
+  res.json(
+    GetDigestPreferencesResponse.parse({
+      frequency: row?.frequency ?? "weekly",
+      lastSentAt: row?.lastSentAt ? toIso(row.lastSentAt) : null,
+    }),
+  );
+});
+
+/**
+ * POST /api/me/digest-preferences
+ *
+ * Sets the cadence for the proactive Mirror digest. "off" disables digests and
+ * nudges for the account. Takes effect on the next scheduled run.
+ */
+router.post("/me/digest-preferences", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const parsed = SetDigestPreferencesBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const now = new Date();
+  const [updated] = await db
+    .insert(mirrorDigestPrefsTable)
+    .values({
+      userId: req.user.id,
+      frequency: parsed.data.frequency,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: mirrorDigestPrefsTable.userId,
+      set: { frequency: parsed.data.frequency, updatedAt: now },
+    })
+    .returning({
+      frequency: mirrorDigestPrefsTable.frequency,
+      lastSentAt: mirrorDigestPrefsTable.lastSentAt,
+    });
+  req.log.info(
+    { userId: req.user.id, frequency: parsed.data.frequency },
+    "Updated Mirror digest preference",
+  );
+  res.json(
+    SetDigestPreferencesResponse.parse({
+      frequency: updated?.frequency ?? parsed.data.frequency,
+      lastSentAt: updated?.lastSentAt ? toIso(updated.lastSentAt) : null,
     }),
   );
 });

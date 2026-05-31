@@ -1772,6 +1772,130 @@ export function buildMirrorPortrait(input: MirrorPortraitInput): MirrorPortrait 
   };
 }
 
+export type MirrorDigestMode = "progress" | "stall" | "cold";
+
+export interface MirrorDigestInput {
+  portrait: MirrorPortrait;
+  /** Readiness score captured at the last digest send, or null for the first. */
+  previousScore: number | null;
+  /** Lane breakdown captured at the last digest send, keyed by lane id. */
+  previousBreakdown: Record<string, number> | null;
+  /** Human cadence phrase, e.g. "this week" or "in the last two weeks". */
+  cadenceLabel: string;
+}
+
+export interface MirrorDigest {
+  subject: string;
+  intro: string;
+  scoreLine: string;
+  changed: string[];
+  nextSignal: { label: string; detail: string; href: string } | null;
+  nudge: string | null;
+  mode: MirrorDigestMode;
+  engineVersion: string;
+}
+
+/**
+ * Deterministic "what changed about you" digest, built from the user's real
+ * portrait plus the score and lane coverage captured at the last send. Pure and
+ * total: it always returns a complete, voice-clean digest, including a cold
+ * first-send and a stall variant that doubles as the nudge. This is the
+ * always-on baseline; Claude may rewrite only `intro` when the deep AI lane is
+ * on, grounded in this same aggregate (never raw content or PII).
+ */
+export function buildMirrorDigest(input: MirrorDigestInput): MirrorDigest {
+  const { portrait, previousScore, previousBreakdown, cadenceLabel } = input;
+  const score = portrait.readinessScore;
+  const delta = previousScore === null ? null : score - previousScore;
+
+  let mode: MirrorDigestMode;
+  if (previousScore === null) mode = "cold";
+  else if ((delta ?? 0) > 0) mode = "progress";
+  else mode = "stall";
+
+  const poolLine = portrait.eligible
+    ? "You are in the match pool."
+    : `You are ${Math.max(1, portrait.threshold - score)} from the match pool.`;
+
+  let scoreLine: string;
+  if (mode === "progress") {
+    scoreLine = `Your Match Readiness climbed ${delta} to ${score} out of 100. ${poolLine}`;
+  } else if (mode === "stall") {
+    scoreLine = `Your Match Readiness is holding at ${score} out of 100. ${poolLine}`;
+  } else {
+    scoreLine = `Your Match Readiness sits at ${score} out of 100. ${poolLine}`;
+  }
+
+  const changed: string[] = [];
+  if (mode === "cold") {
+    for (const lane of portrait.known.slice(0, 4)) {
+      changed.push(`The machine can already read your ${lane.label.toLowerCase()}.`);
+    }
+  } else {
+    const gains = portrait.known
+      .map((lane) => ({
+        lane,
+        prior: previousBreakdown?.[lane.key] ?? 0,
+      }))
+      .filter((g) => g.lane.coverage > g.prior)
+      .sort((a, b) => b.lane.coverage - b.prior - (a.lane.coverage - a.prior));
+    for (const { lane, prior } of gains.slice(0, 4)) {
+      changed.push(
+        prior <= 0
+          ? `The machine started reading your ${lane.label.toLowerCase()}.`
+          : `Your ${lane.label.toLowerCase()} read got stronger.`,
+      );
+    }
+  }
+
+  const nextSignal = portrait.nextSignal
+    ? {
+        label: portrait.nextSignal.label,
+        detail: portrait.nextSignal.detail,
+        href: portrait.nextSignal.href,
+      }
+    : null;
+
+  const topGap = portrait.blindSpots[0] ?? null;
+  let nudge: string | null = null;
+  if (mode === "stall") {
+    nudge = nextSignal
+      ? `You did not feed the machine new signal ${cadenceLabel}. One move changes that: ${nextSignal.label.toLowerCase()}.`
+      : `You did not feed the machine new signal ${cadenceLabel}. Open your Mirror and pick one thing to add.`;
+  } else if (topGap) {
+    nudge = `The biggest gap is your ${topGap.label.toLowerCase()}. ${topGap.actionLabel}.`;
+  }
+
+  let subject: string;
+  if (mode === "progress") {
+    subject = `Your Mirror grew ${cadenceLabel} (+${delta} readiness)`;
+  } else if (mode === "stall") {
+    subject = `One signal moves your Mirror ${cadenceLabel}`;
+  } else {
+    subject = "Your MatchLab Mirror is taking shape";
+  }
+
+  let intro: string;
+  if (mode === "progress") {
+    intro = `Here is what changed about you ${cadenceLabel}. The machine sees you a little more clearly than it did before.`;
+  } else if (mode === "stall") {
+    intro = `Your Mirror is waiting on you. Nothing new reached it ${cadenceLabel}, and one signal is all it takes to move.`;
+  } else {
+    intro = `This is your Mirror, the evolving model of who you are. Here is what the machine can see so far, and the fastest way to sharpen it.`;
+  }
+
+  return {
+    subject,
+    intro,
+    scoreLine,
+    changed,
+    nextSignal,
+    nudge,
+    mode,
+    engineVersion: ENGINE_VERSION,
+  };
+}
+
 export interface MirrorAnswer {
   answer: string;
   grounding: string[];

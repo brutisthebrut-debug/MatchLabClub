@@ -2013,6 +2013,45 @@ export interface MeConsent {
   aiContentUpdatedAt: string | null;
 }
 
+/**
+ * How often the proactive Mirror digest is sent.
+ */
+export type DigestPreferencesStateFrequency = typeof DigestPreferencesStateFrequency[keyof typeof DigestPreferencesStateFrequency];
+
+
+export const DigestPreferencesStateFrequency = {
+  weekly: 'weekly',
+  biweekly: 'biweekly',
+  off: 'off',
+} as const;
+
+export interface DigestPreferencesState {
+  /** How often the proactive Mirror digest is sent. */
+  frequency: DigestPreferencesStateFrequency;
+  /**
+     * When the most recent digest was sent, or null if never.
+     * @nullable
+     */
+  lastSentAt: string | null;
+}
+
+/**
+ * The cadence to set for the Mirror digest.
+ */
+export type SetDigestPreferencesInputFrequency = typeof SetDigestPreferencesInputFrequency[keyof typeof SetDigestPreferencesInputFrequency];
+
+
+export const SetDigestPreferencesInputFrequency = {
+  weekly: 'weekly',
+  biweekly: 'biweekly',
+  off: 'off',
+} as const;
+
+export interface SetDigestPreferencesInput {
+  /** The cadence to set for the Mirror digest. */
+  frequency: SetDigestPreferencesInputFrequency;
+}
+
 export interface CreateInstagramPasteInput {
   /**
      * The user's current Instagram bio text.

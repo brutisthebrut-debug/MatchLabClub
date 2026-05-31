@@ -86,6 +86,7 @@ import type {
   DeleteProfileResult,
   DeleteWellnessAnswerResult,
   DeleteWellnessTag200,
+  DigestPreferencesState,
   EchoMatchRead,
   EmailInsight,
   EmailInsightAnalysis,
@@ -163,6 +164,7 @@ import type {
   ScreenshotExtractInput,
   ScreenshotExtractResult,
   SetAiContentConsentInput,
+  SetDigestPreferencesInput,
   TestAiParams,
   TrashPurgeHeartbeat,
   TrashPurgeResult,
@@ -1535,6 +1537,162 @@ export const useSetAiContentConsent = <TError = ErrorType<AuthErrorEnvelope>,
         TContext
       > => {
       return useMutation(getSetAiContentConsentMutationOptions(options));
+    }
+
+export const getGetDigestPreferencesUrl = () => {
+
+
+
+
+  return `/api/me/digest-preferences`
+}
+
+/**
+ * Returns the cadence the user has chosen for the proactive Mirror digest
+("weekly", "biweekly", or "off") plus the timestamp of the most recent
+digest send. New users default to "weekly" until they change it.
+
+ * @summary Get the signed-in user's Mirror digest preferences
+ */
+export const getDigestPreferences = async ( options?: RequestInit): Promise<DigestPreferencesState> => {
+
+  return customFetch<DigestPreferencesState>(getGetDigestPreferencesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDigestPreferencesQueryKey = () => {
+    return [
+    `/api/me/digest-preferences`
+    ] as const;
+    }
+
+
+export const getGetDigestPreferencesQueryOptions = <TData = Awaited<ReturnType<typeof getDigestPreferences>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDigestPreferences>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDigestPreferencesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDigestPreferences>>> = ({ signal }) => getDigestPreferences({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDigestPreferences>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDigestPreferencesQueryResult = NonNullable<Awaited<ReturnType<typeof getDigestPreferences>>>
+export type GetDigestPreferencesQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the signed-in user's Mirror digest preferences
+ */
+
+export function useGetDigestPreferences<TData = Awaited<ReturnType<typeof getDigestPreferences>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDigestPreferences>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDigestPreferencesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSetDigestPreferencesUrl = () => {
+
+
+
+
+  return `/api/me/digest-preferences`
+}
+
+/**
+ * Sets how often the user receives the proactive Mirror digest. Choosing
+"off" stops all digest emails and nudges for the account. The change
+takes effect on the next scheduled run.
+
+ * @summary Set the signed-in user's Mirror digest cadence
+ */
+export const setDigestPreferences = async (setDigestPreferencesInput: SetDigestPreferencesInput, options?: RequestInit): Promise<DigestPreferencesState> => {
+
+  return customFetch<DigestPreferencesState>(getSetDigestPreferencesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      setDigestPreferencesInput,)
+  }
+);}
+
+
+
+
+export const getSetDigestPreferencesMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDigestPreferences>>, TError,{data: BodyType<SetDigestPreferencesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setDigestPreferences>>, TError,{data: BodyType<SetDigestPreferencesInput>}, TContext> => {
+
+const mutationKey = ['setDigestPreferences'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setDigestPreferences>>, {data: BodyType<SetDigestPreferencesInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setDigestPreferences(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetDigestPreferencesMutationResult = NonNullable<Awaited<ReturnType<typeof setDigestPreferences>>>
+    export type SetDigestPreferencesMutationBody = BodyType<SetDigestPreferencesInput>
+    export type SetDigestPreferencesMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Set the signed-in user's Mirror digest cadence
+ */
+export const useSetDigestPreferences = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDigestPreferences>>, TError,{data: BodyType<SetDigestPreferencesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setDigestPreferences>>,
+        TError,
+        {data: BodyType<SetDigestPreferencesInput>},
+        TContext
+      > => {
+      return useMutation(getSetDigestPreferencesMutationOptions(options));
     }
 
 export const getEmailMyDataExportUrl = () => {

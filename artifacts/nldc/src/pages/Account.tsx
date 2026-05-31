@@ -33,6 +33,10 @@ import {
   useGetAiContentConsent,
   useSetAiContentConsent,
   getGetAiContentConsentQueryKey,
+  useGetDigestPreferences,
+  useSetDigestPreferences,
+  getGetDigestPreferencesQueryKey,
+  type SetDigestPreferencesInputFrequency,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -49,7 +53,17 @@ import {
   Loader2,
   Smartphone,
   Brain,
+  Sparkles,
 } from "lucide-react";
+
+const DIGEST_FREQUENCY_OPTIONS: {
+  value: SetDigestPreferencesInputFrequency;
+  label: string;
+}[] = [
+  { value: "weekly", label: "Weekly" },
+  { value: "biweekly", label: "Every two weeks" },
+  { value: "off", label: "Off" },
+];
 
 function Initials({ name }: { name: string }) {
   const parts = name.trim().split(/\s+/).slice(0, 2);
@@ -111,6 +125,40 @@ export default function Account() {
   } catch (err) {
   toast({
   title: "Couldn't update your AI consent",
+  description: err instanceof Error ? err.message : "Please try again.",
+  variant: "destructive",
+  });
+  }
+  };
+  const digestPrefs = useGetDigestPreferences({
+  query: { queryKey: getGetDigestPreferencesQueryKey(), enabled: isAuthenticated },
+  });
+  const setDigestPrefs = useSetDigestPreferences({
+  mutation: {
+  onSuccess: () => {
+  void queryClient.invalidateQueries({ queryKey: getGetDigestPreferencesQueryKey() });
+  },
+  },
+  });
+  const digestFrequency = digestPrefs.data?.frequency ?? "weekly";
+  const handleSetDigestFrequency = async (
+  next: SetDigestPreferencesInputFrequency,
+  ) => {
+  if (next === digestFrequency) return;
+  try {
+  await setDigestPrefs.mutateAsync({ data: { frequency: next } });
+  const label =
+  DIGEST_FREQUENCY_OPTIONS.find((o) => o.value === next)?.label ?? "Weekly";
+  toast({
+  title: next === "off" ? "Mirror digest off" : `Mirror digest: ${label}`,
+  description:
+  next === "off"
+  ? "We'll stop the digest and nudges. Your Mirror still updates whenever you open the app."
+  : "We'll email you what changed about you, plus the one signal that moves you next.",
+  });
+  } catch (err) {
+  toast({
+  title: "Couldn't update your digest preference",
   description: err instanceof Error ? err.message : "Please try again.",
   variant: "destructive",
   });
@@ -358,6 +406,51 @@ export default function Account() {
   data-testid="switch-ai-consent"
   aria-label="Toggle Deep AI lane"
   />
+  </div>
+  </div>
+
+  {/* Mirror digest (proactive "what changed about you" email) */}
+  <div className="glass rounded-2xl p-6 md:p-8 space-y-4" data-testid="card-mirror-digest">
+  <div className="flex items-start gap-3">
+  <div className="h-10 w-10 rounded-xl bg-[hsl(248_62%_58%/0.12)] flex items-center justify-center flex-shrink-0">
+  <Sparkles className="h-5 w-5 text-[hsl(248_62%_68%)]" />
+  </div>
+  <div className="flex-1 min-w-0">
+  <h3 className="font-serif text-lg font-bold text-foreground">Mirror digest</h3>
+  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+  A short email on what changed about you: how your Match Readiness moved, the signals
+  the machine started reading, and the single thing that moves you next. If nothing
+  changed, we send one gentle nudge instead. With the Deep AI lane on, the opening is
+  written by Claude from aggregate signal only, never your raw content.
+  </p>
+  </div>
+  </div>
+  <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-[hsl(248_45%_157%)] border border-white/5 ml-13">
+  <div className="flex-1 min-w-0">
+  <p className="text-sm font-medium text-foreground">How often</p>
+  <p className="text-xs text-muted-foreground mt-0.5">
+  Change any time. Off stops the digest and its nudges.
+  </p>
+  </div>
+  <div className="flex items-center gap-1 flex-shrink-0" data-testid="digest-frequency-selector">
+  {DIGEST_FREQUENCY_OPTIONS.map((opt) => (
+  <button
+  key={opt.value}
+  onClick={() => void handleSetDigestFrequency(opt.value)}
+  disabled={digestPrefs.isLoading || setDigestPrefs.isPending}
+  data-testid={`digest-frequency-${opt.value}`}
+  aria-pressed={digestFrequency === opt.value}
+  className={[
+  "px-2.5 py-1 rounded-lg text-xs font-medium transition-colors",
+  digestFrequency === opt.value
+  ? "bg-[hsl(248_62%_58%)] text-white"
+  : "text-muted-foreground hover:text-foreground hover:bg-white/[0.06]",
+  ].join(" ")}
+  >
+  {opt.label}
+  </button>
+  ))}
+  </div>
   </div>
   </div>
 

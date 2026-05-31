@@ -87,6 +87,12 @@ export const mirrorAskSchema = z.object({
 
 export type MirrorAskAiOutput = z.infer<typeof mirrorAskSchema>;
 
+export const mirrorDigestSchema = z.object({
+  intro: z.string().trim().min(1),
+});
+
+export type MirrorDigestAiOutput = z.infer<typeof mirrorDigestSchema>;
+
 export const echoMatchReadSchema = z.object({
   headline: z.string().trim().min(1),
   reading: z.array(z.string().trim().min(1)).min(1),
@@ -120,6 +126,7 @@ export const aiToolSchemas = {
   "Email Insights": emailInsightSchema,
   "Rehearsal Room": rehearsalSchema,
   "Your Mirror": mirrorAskSchema,
+  "Mirror Digest": mirrorDigestSchema,
   "Echo Match Read": echoMatchReadSchema,
 } as const;
 

@@ -561,6 +561,44 @@ export const SetAiContentConsentResponse = zod.object({
 
 
 /**
+ * Returns the cadence the user has chosen for the proactive Mirror digest
+("weekly", "biweekly", or "off") plus the timestamp of the most recent
+digest send. New users default to "weekly" until they change it.
+
+ * @summary Get the signed-in user's Mirror digest preferences
+ */
+export const GetDigestPreferencesHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetDigestPreferencesResponse = zod.object({
+  "frequency": zod.enum(['weekly', 'biweekly', 'off']).describe('How often the proactive Mirror digest is sent.'),
+  "lastSentAt": zod.coerce.date().nullable().describe('When the most recent digest was sent, or null if never.')
+})
+
+
+/**
+ * Sets how often the user receives the proactive Mirror digest. Choosing
+"off" stops all digest emails and nudges for the account. The change
+takes effect on the next scheduled run.
+
+ * @summary Set the signed-in user's Mirror digest cadence
+ */
+export const SetDigestPreferencesHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const SetDigestPreferencesBody = zod.object({
+  "frequency": zod.enum(['weekly', 'biweekly', 'off']).describe('The cadence to set for the Mirror digest.')
+})
+
+export const SetDigestPreferencesResponse = zod.object({
+  "frequency": zod.enum(['weekly', 'biweekly', 'off']).describe('How often the proactive Mirror digest is sent.'),
+  "lastSentAt": zod.coerce.date().nullable().describe('When the most recent digest was sent, or null if never.')
+})
+
+
+/**
  * Creates a short-lived, single-use token that the user can use to
 download the same JSON returned by `/account/export`, and emails a
 link containing that token to the user's account email address. The
