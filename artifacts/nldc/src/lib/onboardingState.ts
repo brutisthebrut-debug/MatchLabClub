@@ -10,6 +10,8 @@
 
 const DONE_KEY = "matchlab.onboarded";
 const GOAL_KEY = "matchlab.goal";
+const ORIENTATION_KEY = "matchlab.orientation";
+const SEEKING_KEY = "matchlab.seeking";
 
 function safeGet(key: string): string | null {
   if (typeof window === "undefined") return null;
@@ -44,4 +46,27 @@ export function rememberOnboardingGoal(goal: string): void {
 
 export function readOnboardingGoal(): string | null {
   return safeGet(GOAL_KEY);
+}
+
+export function rememberOnboardingOrientation(orientation: string): void {
+  safeSet(ORIENTATION_KEY, orientation);
+}
+
+export function readOnboardingOrientation(): string | null {
+  return safeGet(ORIENTATION_KEY);
+}
+
+export function rememberOnboardingSeeking(seeking: string[]): void {
+  safeSet(SEEKING_KEY, JSON.stringify(seeking));
+}
+
+export function readOnboardingSeeking(): string[] {
+  const raw = safeGet(SEEKING_KEY);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
 }
