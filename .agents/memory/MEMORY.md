@@ -1,1 +1,2 @@
+- [Feature inventory — what is already built](feature-inventory.md) — CHECK FIRST before building: full map of backend routes, DB tables, jobs, readiness signals, web pages, mobile screens, and Beat roadmap status (built vs placeholder vs claim-only). Avoids redundant rebuilds.
 - [Signal registry weight assertions](signal-registry-weights.md) — adding a SIGNAL_REGISTRY contributor renormalizes every hardcoded weight test by the new raw total; also update both interfaces, all test inputs, and Matching.tsx's hardcoded lane keys + OpenAPI schema.
