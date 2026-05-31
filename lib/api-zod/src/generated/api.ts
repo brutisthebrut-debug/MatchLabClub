@@ -4157,3 +4157,78 @@ export const GetMatchingProposalsResponseItem = zod.object({
 export const GetMatchingProposalsResponse = zod.array(GetMatchingProposalsResponseItem)
 
 
+/**
+ * Returns Echo's read of the user grounded in their own aggregate signal
+coverage: what the machine can see, the kind of person it would put in
+front of them, the confidence of the read, and the gap to the pool.
+Deterministic baseline is always-on; the Claude layer is opt-in via the
+per-account content consent toggle and daily-capped. Only aggregate or
+derived signal coverage is ever sent to Claude, never raw content.
+
+ * @summary Echo's read on the signed-in user for matching
+ */
+export const CreateMatchingEchoReadHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const createMatchingEchoReadResponseConfidenceMin = 0;
+export const createMatchingEchoReadResponseConfidenceMax = 100;
+
+export const createMatchingEchoReadResponseGapToPoolMin = 0;
+export const createMatchingEchoReadResponseGapToPoolMax = 100;
+
+
+
+export const CreateMatchingEchoReadResponse = zod.object({
+  "headline": zod.string(),
+  "confidence": zod.number().min(createMatchingEchoReadResponseConfidenceMin).max(createMatchingEchoReadResponseConfidenceMax).describe('How confident Echo\'s read is, derived from signal coverage and readiness.'),
+  "reading": zod.array(zod.string()).describe('What Echo can see in the user\'s accumulated signals (aggregate only).'),
+  "idealMatch": zod.array(zod.string()).describe('The kind of person Echo would put in front of them.'),
+  "radiusLabel": zod.string().describe('Human label for the search radius, e.g. \"inside your 35-mile radius\".'),
+  "gapToPool": zod.number().min(createMatchingEchoReadResponseGapToPoolMin).max(createMatchingEchoReadResponseGapToPoolMax).describe('Readiness points still needed to join the pool, 0 when eligible.'),
+  "nextStep": zod.union([zod.object({
+  "label": zod.string(),
+  "href": zod.string()
+}),zod.null()]),
+  "usedAi": zod.boolean().describe('True when the Claude layer produced this read, false on the deterministic baseline.')
+})
+
+
+/**
+ * Lets the user act on a proposal instead of hitting a dead-end preview.
+Recording interest moves it to user_yes (routing it into the founder
+intro queue); passing moves it to user_no. Only the proposal owner may
+respond, and only while it is still in the proposed state.
+
+ * @summary Record the user's interest in a match proposal
+ */
+export const RespondToMatchProposalParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const RespondToMatchProposalHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const RespondToMatchProposalBody = zod.object({
+  "interested": zod.boolean().describe('True records the user\'s interest (user_yes), false passes (user_no).')
+})
+
+export const respondToMatchProposalResponseCompatibilityScoreMin = 0;
+export const respondToMatchProposalResponseCompatibilityScoreMax = 100;
+
+
+
+export const RespondToMatchProposalResponse = zod.object({
+  "id": zod.string().uuid(),
+  "userId": zod.string(),
+  "proposedToUserId": zod.string().nullable(),
+  "source": zod.enum(['internal', 'external_paste', 'concierge']),
+  "compatibilityScore": zod.number().min(respondToMatchProposalResponseCompatibilityScoreMin).max(respondToMatchProposalResponseCompatibilityScoreMax),
+  "summary": zod.string().nullable(),
+  "status": zod.enum(['proposed', 'user_yes', 'user_no', 'mutual_yes', 'expired', 'completed']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+

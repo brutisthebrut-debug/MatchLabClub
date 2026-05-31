@@ -21,8 +21,11 @@ import {
   UpdateMatchingPreferencesBody,
   UpdateMatchingPoolMembershipBody,
   CreateMatchingExternalReadBody,
+  RespondToMatchProposalBody,
 } from "@workspace/api-zod";
 import { generate, parseStructured } from "../lib/aiService";
+import { buildEchoMatchRead, type EchoMatchRead } from "../lib/echoMatchRead";
+import { echoMatchReadSchema } from "@workspace/ai-schemas";
 import {
   computeBreakdown,
   computeNextActions,
@@ -795,5 +798,226 @@ router.get("/me/matching/proposals", async (req, res): Promise<void> => {
     .limit(50);
   res.json(rows.map(serializeProposal));
 });
+
+function coerceEchoMatchReadAi(value: unknown): {
+  headline: string;
+  reading: string[];
+  idealMatch: string[];
+} | null {
+  const parsed = echoMatchReadSchema.safeParse(value);
+  if (!parsed.success) return null;
+  return {
+    headline: parsed.data.headline.trim(),
+    reading: parsed.data.reading.map((s) => s.trim()).slice(0, 5),
+    idealMatch: parsed.data.idealMatch.map((s) => s.trim()).slice(0, 4),
+  };
+}
+
+router.post("/me/matching/echo", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const userId = req.user.id;
+  const [prefs, readiness, threshold, outcome] = await Promise.all([
+    loadPreferences(userId),
+    computeReadiness(userId),
+    readinessThreshold(),
+    computeOutcomeInsightForUser(userId),
+  ]);
+  const eligible = readiness.score >= threshold;
+  const activeSignalLines = describeActiveSignals(readiness.breakdown);
+  const coveredLanes = SIGNAL_REGISTRY.filter(
+    (c) => (readiness.breakdown[c.id] ?? 0) > 0,
+  ).map((c) => c.id);
+  const nextActions = computeNextActions(
+    readiness.breakdown,
+    eligible,
+    1,
+    readiness.weights,
+  );
+  const topAction = nextActions[0]
+    ? { label: nextActions[0].label, href: nextActions[0].href }
+    : null;
+
+  // Always-on deterministic baseline. Everything below works from aggregate
+  // coverage only, never raw content.
+  const baseline = buildEchoMatchRead({
+    score: readiness.score,
+    threshold,
+    eligible,
+    activeSignalLines,
+    coveredLanes,
+    totalLanes: SIGNAL_REGISTRY.length,
+    outcome: {
+      totalDates: outcome.totalDates,
+      anotherDate: outcome.anotherDate,
+      noMore: outcome.noMore,
+      ghosted: outcome.ghosted,
+    },
+    radiusKm: prefs?.distanceKm ?? null,
+    nextAction: topAction,
+  });
+
+  // Claude layer: opt-in via content consent, daily-capped, aggregate-only. It
+  // only enriches the prose (headline + reading + idealMatch). The computed
+  // confidence, gap, radius, and next step always come from the baseline.
+  const systemLines = [
+    "You are Echo, a candid dating coach giving the user your read on THEM for",
+    "matching: what you can see in the signals they have fed you so far, and the",
+    "kind of person you would put in front of them. Speak directly to the user.",
+    "You are working only from aggregate signal coverage, never their raw content.",
+  ];
+  if (activeSignalLines.length > 0) {
+    systemLines.push(
+      "What the machine can see about this user (aggregate only, do not invent specifics):",
+      ...activeSignalLines.map((line) => `- ${line}`),
+    );
+  } else {
+    systemLines.push(
+      "The machine can barely see this user yet: they have fed almost no signal.",
+    );
+  }
+  if (outcome.totalDates > 0) {
+    systemLines.push(
+      `Aggregate recent date outcomes: ${outcome.anotherDate} led to another date, ${outcome.noMore} were a no, ${outcome.ghosted} ghosted, ${outcome.unsure} unsure.`,
+    );
+  }
+  systemLines.push(
+    `Their search radius reads as "${baseline.radiusLabel}". They are ${eligible ? "already eligible for the matching pool" : `${baseline.gapToPool} readiness points away from the pool`}.`,
+    "Voice rules: no em dashes. No filler like 'unlock', 'elevate', 'dive in',",
+    "'game-changer', 'in today's world', 'seamless', 'buckle up'. Be specific",
+    "about fit, never describe a real individual, never repeat raw content.",
+    "Return JSON only, no prose, no code fences:",
+    '{ "headline": "one line, who you would put in front of them",',
+    '  "reading": ["2-4 short lines on what you can see in them"],',
+    '  "idealMatch": ["2-4 short lines on the kind of person that fits them"] }',
+  );
+
+  const aiResult = await generate(
+    {
+      provider: "anthropic",
+      model: "claude-sonnet-4-6",
+      system: systemLines.join("\n"),
+      user: "Give me your read for matching.",
+      expectJson: true,
+      requireContentConsent: true,
+      userId,
+      maxTokens: 1024,
+      context: { toolName: "Echo Match Read" },
+    },
+    "",
+  );
+
+  let final: EchoMatchRead = baseline;
+  let usedAi = false;
+  if (!aiResult.isFallback && aiResult.output) {
+    const raw = aiResult.raw ?? aiResult.output;
+    const { value } = parseStructured<unknown>(raw, null);
+    const coerced = coerceEchoMatchReadAi(value);
+    if (coerced) {
+      final = {
+        ...baseline,
+        headline: coerced.headline,
+        reading: coerced.reading,
+        idealMatch: coerced.idealMatch,
+      };
+      usedAi = true;
+    } else {
+      req.log.warn(
+        { userId, fallbackReason: "schema_validation_failed" },
+        "matching.echo AI output failed to validate; using deterministic baseline",
+      );
+    }
+  } else if (aiResult.fallbackReason) {
+    req.log.info(
+      { userId, fallbackReason: aiResult.fallbackReason },
+      "matching.echo fell back to deterministic baseline",
+    );
+  }
+
+  res.json({ ...final, usedAi });
+});
+
+router.put(
+  "/me/matching/proposals/:id/response",
+  async (req, res): Promise<void> => {
+    if (!req.user?.id) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    const id = String(req.params.id ?? "");
+    if (!id) {
+      res.status(404).json({ error: "Proposal not found" });
+      return;
+    }
+    const parsed = RespondToMatchProposalBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    const userId = req.user.id;
+    const existing = await db
+      .select()
+      .from(matchProposalsTable)
+      .where(
+        and(
+          eq(matchProposalsTable.id, id),
+          eq(matchProposalsTable.userId, userId),
+        ),
+      )
+      .limit(1);
+    const row = existing[0];
+    if (!row) {
+      res.status(404).json({ error: "Proposal not found" });
+      return;
+    }
+    // Only a still-open proposal can be responded to. Anything the founder has
+    // already advanced (or the user has already answered) is left untouched.
+    if (row.status !== "proposed") {
+      res.json(serializeProposal(row));
+      return;
+    }
+    const nextStatus = parsed.data.interested ? "user_yes" : "user_no";
+    // Carry the ownership + "still proposed" guard into the UPDATE predicate so
+    // the transition is atomic. If a founder or another request advanced the
+    // proposal between the read above and here, no row matches and we return the
+    // current state instead of clobbering it.
+    const [updated] = await db
+      .update(matchProposalsTable)
+      .set({ status: nextStatus, updatedAt: new Date() })
+      .where(
+        and(
+          eq(matchProposalsTable.id, id),
+          eq(matchProposalsTable.userId, userId),
+          eq(matchProposalsTable.status, "proposed"),
+        ),
+      )
+      .returning();
+    if (!updated) {
+      const [current] = await db
+        .select()
+        .from(matchProposalsTable)
+        .where(
+          and(
+            eq(matchProposalsTable.id, id),
+            eq(matchProposalsTable.userId, userId),
+          ),
+        )
+        .limit(1);
+      if (!current) {
+        res.status(404).json({ error: "Proposal not found" });
+        return;
+      }
+      res.json(serializeProposal(current));
+      return;
+    }
+    req.log.info(
+      { proposalId: id, status: nextStatus },
+      "matching.proposal user response recorded",
+    );
+    res.json(serializeProposal(updated));
+  },
+);
 
 export default router;

@@ -2346,6 +2346,41 @@ export interface MatchProposal {
   updatedAt: string;
 }
 
+export interface EchoMatchReadNextStep {
+  label: string;
+  href: string;
+}
+
+export interface EchoMatchRead {
+  headline: string;
+  /**
+     * How confident Echo's read is, derived from signal coverage and readiness.
+     * @minimum 0
+     * @maximum 100
+     */
+  confidence: number;
+  /** What Echo can see in the user's accumulated signals (aggregate only). */
+  reading: string[];
+  /** The kind of person Echo would put in front of them. */
+  idealMatch: string[];
+  /** Human label for the search radius, e.g. "inside your 35-mile radius". */
+  radiusLabel: string;
+  /**
+     * Readiness points still needed to join the pool, 0 when eligible.
+     * @minimum 0
+     * @maximum 100
+     */
+  gapToPool: number;
+  nextStep: EchoMatchReadNextStep | null;
+  /** True when the Claude layer produced this read, false on the deterministic baseline. */
+  usedAi: boolean;
+}
+
+export interface MatchProposalResponseInput {
+  /** True records the user's interest (user_yes), false passes (user_no). */
+  interested: boolean;
+}
+
 export type MatchExternalReadInputSource = typeof MatchExternalReadInputSource[keyof typeof MatchExternalReadInputSource];
 
 

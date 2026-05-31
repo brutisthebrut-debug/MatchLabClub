@@ -86,6 +86,7 @@ import type {
   DeleteProfileResult,
   DeleteWellnessAnswerResult,
   DeleteWellnessTag200,
+  EchoMatchRead,
   EmailInsight,
   EmailInsightAnalysis,
   EmailInsightInput,
@@ -128,6 +129,7 @@ import type {
   MatchPreferences,
   MatchPreferencesInput,
   MatchProposal,
+  MatchProposalResponseInput,
   MatchingState,
   MeConsent,
   MessageCoachingInput,
@@ -9213,4 +9215,158 @@ export function useGetMatchingProposals<TData = Awaited<ReturnType<typeof getMat
 
 
 
+
+export const getCreateMatchingEchoReadUrl = () => {
+
+
+
+
+  return `/api/me/matching/echo`
+}
+
+/**
+ * Returns Echo's read of the user grounded in their own aggregate signal
+coverage: what the machine can see, the kind of person it would put in
+front of them, the confidence of the read, and the gap to the pool.
+Deterministic baseline is always-on; the Claude layer is opt-in via the
+per-account content consent toggle and daily-capped. Only aggregate or
+derived signal coverage is ever sent to Claude, never raw content.
+
+ * @summary Echo's read on the signed-in user for matching
+ */
+export const createMatchingEchoRead = async ( options?: RequestInit): Promise<EchoMatchRead> => {
+
+  return customFetch<EchoMatchRead>(getCreateMatchingEchoReadUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCreateMatchingEchoReadMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMatchingEchoRead>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMatchingEchoRead>>, TError,void, TContext> => {
+
+const mutationKey = ['createMatchingEchoRead'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMatchingEchoRead>>, void> = () => {
+
+
+          return  createMatchingEchoRead(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMatchingEchoReadMutationResult = NonNullable<Awaited<ReturnType<typeof createMatchingEchoRead>>>
+
+    export type CreateMatchingEchoReadMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Echo's read on the signed-in user for matching
+ */
+export const useCreateMatchingEchoRead = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMatchingEchoRead>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createMatchingEchoRead>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCreateMatchingEchoReadMutationOptions(options));
+    }
+
+export const getRespondToMatchProposalUrl = (id: string,) => {
+
+
+
+
+  return `/api/me/matching/proposals/${id}/response`
+}
+
+/**
+ * Lets the user act on a proposal instead of hitting a dead-end preview.
+Recording interest moves it to user_yes (routing it into the founder
+intro queue); passing moves it to user_no. Only the proposal owner may
+respond, and only while it is still in the proposed state.
+
+ * @summary Record the user's interest in a match proposal
+ */
+export const respondToMatchProposal = async (id: string,
+    matchProposalResponseInput: MatchProposalResponseInput, options?: RequestInit): Promise<MatchProposal> => {
+
+  return customFetch<MatchProposal>(getRespondToMatchProposalUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      matchProposalResponseInput,)
+  }
+);}
+
+
+
+
+export const getRespondToMatchProposalMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof respondToMatchProposal>>, TError,{id: string;data: BodyType<MatchProposalResponseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof respondToMatchProposal>>, TError,{id: string;data: BodyType<MatchProposalResponseInput>}, TContext> => {
+
+const mutationKey = ['respondToMatchProposal'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof respondToMatchProposal>>, {id: string;data: BodyType<MatchProposalResponseInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  respondToMatchProposal(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RespondToMatchProposalMutationResult = NonNullable<Awaited<ReturnType<typeof respondToMatchProposal>>>
+    export type RespondToMatchProposalMutationBody = BodyType<MatchProposalResponseInput>
+    export type RespondToMatchProposalMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Record the user's interest in a match proposal
+ */
+export const useRespondToMatchProposal = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof respondToMatchProposal>>, TError,{id: string;data: BodyType<MatchProposalResponseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof respondToMatchProposal>>,
+        TError,
+        {id: string;data: BodyType<MatchProposalResponseInput>},
+        TContext
+      > => {
+      return useMutation(getRespondToMatchProposalMutationOptions(options));
+    }
 

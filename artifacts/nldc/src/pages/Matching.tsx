@@ -63,6 +63,12 @@ import {
   useUpdateMatchingPreferences,
   useUpdateMatchingPoolMembership,
   useCreateMatchingExternalRead,
+  useCreateMatchingEchoRead,
+  useGetMatchingProposals,
+  getGetMatchingProposalsQueryKey,
+  useRespondToMatchProposal,
+  type EchoMatchRead,
+  type MatchProposal,
 } from "@workspace/api-client-react";
 
 const fadeUp = (delay = 0) => ({
@@ -83,6 +89,40 @@ const RADIUS_PRESETS: { value: string; label: string }[] = [
   { value: "56", label: "Within 35 miles" },
   { value: "72", label: "Within 45 miles" },
 ];
+
+// Human labels for each proposal status, plus a note for resolved states so a
+// non-open proposal is never a dead end on the page.
+const PROPOSAL_STATUS_META: Record<
+  string,
+  { label: string; tone: "good" | "muted"; note: string }
+> = {
+  proposed: { label: "Awaiting you", tone: "good", note: "" },
+  user_yes: {
+    label: "You said yes",
+    tone: "good",
+    note: "The founder routes interested intros to the front of the queue. We will be in touch.",
+  },
+  user_no: {
+    label: "You passed",
+    tone: "muted",
+    note: "We won't bring this one back.",
+  },
+  mutual_yes: {
+    label: "Mutual yes",
+    tone: "good",
+    note: "Both of you are in. The founder sets up the intro from here.",
+  },
+  completed: {
+    label: "Intro made",
+    tone: "good",
+    note: "This intro has been made. How it goes is up to the two of you.",
+  },
+  expired: {
+    label: "Expired",
+    tone: "muted",
+    note: "This one timed out before it moved forward.",
+  },
+};
 
 // Snap any stored distance to the nearest preset so the selector always has a
 // matching option, even for historical values saved before presets existed.
@@ -285,6 +325,15 @@ export default function Matching() {
   const updatePrefs = useUpdateMatchingPreferences();
   const updatePool = useUpdateMatchingPoolMembership();
   const runExternal = useCreateMatchingExternalRead();
+  const runEcho = useCreateMatchingEchoRead();
+  const respondProposal = useRespondToMatchProposal();
+
+  const proposals = useGetMatchingProposals({
+    query: {
+      queryKey: getGetMatchingProposalsQueryKey(),
+      enabled: isAuthenticated,
+    },
+  });
 
   // Local form state, hydrated from server when prefs land.
   const [ageMin, setAgeMin] = useState<number>(25);
@@ -308,6 +357,9 @@ export default function Matching() {
     frictions: string[];
     summary: string | null;
   } | null>(null);
+
+  // Echo's read on YOU for matching, grounded in your own aggregate signals.
+  const [echoResult, setEchoResult] = useState<EchoMatchRead | null>(null);
 
   const prefs = state.data?.preferences ?? null;
 
@@ -351,6 +403,18 @@ export default function Matching() {
   // we have confirmed server state, so a load or error never flashes a false
   // ineligible message.
   const poolLocked = Boolean(state.data) && !poolToggleOn && !eligible;
+
+  // Readiness -> match loop. Points still owed to the pool, and the most recent
+  // change in readiness so tool completion visibly moves the payoff.
+  const pointsToPool = Math.max(0, readinessThreshold - readinessScore);
+  const readinessDelta = useMemo(() => {
+    if (history.length < 2) return 0;
+    const last = history[history.length - 1]?.score ?? 0;
+    const prev = history[history.length - 2]?.score ?? 0;
+    return last - prev;
+  }, [history]);
+
+  const proposalList = proposals.data ?? [];
 
   const cityLabel = useMemo(() => prefs?.cityHint ?? cityHint, [prefs, cityHint]);
 
@@ -431,6 +495,39 @@ export default function Matching() {
       });
     } catch {
       toast({ title: "Couldn't score that profile. Try again." });
+    }
+  }
+
+  async function handleEchoRead() {
+    try {
+      const result = await runEcho.mutateAsync();
+      setEchoResult(result);
+      await queryClient.invalidateQueries({
+        queryKey: getGetMatchingStateQueryKey(),
+      });
+    } catch {
+      toast({ title: "Couldn't read your signals right now. Try again." });
+    }
+  }
+
+  async function handleProposalResponse(id: string, interested: boolean) {
+    try {
+      await respondProposal.mutateAsync({ id, data: { interested } });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: getGetMatchingProposalsQueryKey(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: getGetMatchingStateQueryKey(),
+        }),
+      ]);
+      toast({
+        title: interested
+          ? "Noted. The founder routes interested intros to the front of the queue."
+          : "Passed. We won't bring this one back.",
+      });
+    } catch {
+      toast({ title: "Couldn't record that. Try again." });
     }
   }
 
@@ -617,6 +714,214 @@ export default function Matching() {
           </Card>
         </motion.div>
 
+        {/* Readiness -> match loop */}
+        <motion.div {...fadeUp(0.06)}>
+          <Card
+            className="mb-6 border-[hsl(248_62%_52%/0.25)] bg-[hsl(248_62%_52%/0.04)]"
+            data-testid="card-readiness-loop"
+          >
+            <CardContent className="p-6 flex items-start gap-4 flex-wrap">
+              <div className="rounded-full p-3 bg-[hsl(248_62%_52%/0.1)]">
+                <TrendingUp
+                  className="w-5 h-5 text-[hsl(248_62%_52%)]"
+                  aria-hidden="true"
+                />
+              </div>
+              <div className="flex-1 min-w-[240px]">
+                {eligible ? (
+                  <div className="font-semibold text-lg">
+                    You have cleared the bar. Matching is open to you.
+                  </div>
+                ) : (
+                  <div className="font-semibold text-lg">
+                    {pointsToPool} readiness{" "}
+                    {pointsToPool === 1 ? "point" : "points"} to the pool.
+                  </div>
+                )}
+                <p className="text-sm text-muted-foreground mt-1">
+                  Every tool you finish feeds the machine and moves this number.
+                  {readinessDelta > 0 && (
+                    <>
+                      {" "}
+                      You gained{" "}
+                      <span
+                        className="font-semibold text-[hsl(248_62%_52%)]"
+                        data-testid="text-readiness-delta"
+                      >
+                        +{readinessDelta}
+                      </span>{" "}
+                      since your last signal.
+                    </>
+                  )}
+                  {readinessDelta < 0 && (
+                    <>
+                      {" "}
+                      You slipped{" "}
+                      <span
+                        className="font-semibold"
+                        data-testid="text-readiness-delta"
+                      >
+                        {readinessDelta}
+                      </span>{" "}
+                      since your last snapshot. Feed a fresh signal to climb
+                      back.
+                    </>
+                  )}
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-bold" data-testid="text-points-to-pool">
+                  {readinessScore}
+                  <span className="text-lg text-muted-foreground">
+                    /{readinessThreshold}
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  readiness / pool bar
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Echo's read on you */}
+        <motion.div {...fadeUp(0.065)}>
+          <Card className="mb-6" data-testid="card-echo-read">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Brain
+                  className="w-5 h-5 text-[hsl(326_100%_50%)]"
+                  aria-hidden="true"
+                />
+                Echo's read on you
+              </CardTitle>
+              <CardDescription>
+                What the machine can see in the signals you have fed it so far,
+                and the kind of person it would put in front of you. Built from
+                your aggregate signals, never your raw content.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!echoResult && (
+                <Button
+                  onClick={handleEchoRead}
+                  disabled={runEcho.isPending}
+                  className="rounded-full"
+                  data-testid="button-run-echo-read"
+                >
+                  {runEcho.isPending ? "Reading your signals." : "Get Echo's read"}
+                </Button>
+              )}
+              {echoResult && (
+                <div
+                  className="rounded-2xl border border-foreground/10 p-5 bg-background/40 space-y-4"
+                  data-testid="echo-result"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-3 mb-1">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                        Confidence
+                      </span>
+                      <span
+                        className="text-sm font-mono text-muted-foreground"
+                        data-testid="text-echo-confidence"
+                      >
+                        {echoResult.confidence}%
+                      </span>
+                    </div>
+                    <Progress value={echoResult.confidence} className="h-2" />
+                  </div>
+                  <p className="font-semibold text-lg" data-testid="text-echo-headline">
+                    {echoResult.headline}
+                  </p>
+                  {echoResult.reading.length > 0 && (
+                    <div>
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                        What Echo can see
+                      </span>
+                      <ul className="mt-2 space-y-1.5">
+                        {echoResult.reading.map((line, i) => (
+                          <li
+                            key={`reading-${i}`}
+                            className="text-sm text-muted-foreground flex gap-2"
+                          >
+                            <Sparkles
+                              className="w-3.5 h-3.5 mt-0.5 shrink-0 text-[hsl(326_100%_50%)]"
+                              aria-hidden="true"
+                            />
+                            {line}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {echoResult.idealMatch.length > 0 && (
+                    <div>
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                        Who it would put in front of you
+                      </span>
+                      <ul className="mt-2 space-y-1.5">
+                        {echoResult.idealMatch.map((line, i) => (
+                          <li
+                            key={`ideal-${i}`}
+                            className="text-sm text-muted-foreground flex gap-2"
+                          >
+                            <Heart
+                              className="w-3.5 h-3.5 mt-0.5 shrink-0 text-[hsl(248_62%_52%)]"
+                              aria-hidden="true"
+                            />
+                            {line}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="w-4 h-4 shrink-0" aria-hidden="true" />
+                    {echoResult.radiusLabel}
+                    {echoResult.gapToPool > 0 && (
+                      <>
+                        {" "}
+                        <span className="text-foreground">
+                          {echoResult.gapToPool} points from the pool.
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap pt-1">
+                    {echoResult.nextStep && (
+                      <Button
+                        asChild
+                        size="sm"
+                        className="rounded-full"
+                        data-testid="button-echo-next-step"
+                      >
+                        <Link href={echoResult.nextStep.href}>
+                          {echoResult.nextStep.label}
+                          <ArrowRight
+                            className="ml-1 w-4 h-4"
+                            aria-hidden="true"
+                          />
+                        </Link>
+                      </Button>
+                    )}
+                    <Button
+                      onClick={handleEchoRead}
+                      disabled={runEcho.isPending}
+                      size="sm"
+                      variant="outline"
+                      className="rounded-full"
+                      data-testid="button-refresh-echo-read"
+                    >
+                      {runEcho.isPending ? "Reading." : "Read again"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Next best step */}
         {(nextActions.length > 0 || eligible) && (
           <motion.div {...fadeUp(0.07)}>
@@ -778,6 +1083,110 @@ export default function Matching() {
                 disabled={updatePool.isPending || poolLocked}
                 data-testid="switch-pool-membership"
               />
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Your match track */}
+        <motion.div {...fadeUp(0.17)}>
+          <Card className="mb-6" data-testid="card-match-track">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Sparkles
+                  className="w-5 h-5 text-[hsl(326_100%_50%)]"
+                  aria-hidden="true"
+                />
+                Your match track
+              </CardTitle>
+              <CardDescription>
+                Intros the founder has hand picked or the machine has surfaced
+                for you. Say you are interested and it routes to the front of the
+                intro queue. This is a real track, not a preview.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {proposalList.length === 0 && (
+                <p
+                  className="text-sm text-muted-foreground"
+                  data-testid="text-no-proposals"
+                >
+                  No intros yet. Keep feeding signals and turn on the pool above.
+                  When the founder curates a match for you, it shows up right
+                  here.
+                </p>
+              )}
+              {proposalList.map((p: MatchProposal) => {
+                const meta = PROPOSAL_STATUS_META[p.status] ?? {
+                  label: p.status,
+                  tone: "muted" as const,
+                };
+                const open = p.status === "proposed";
+                return (
+                  <div
+                    key={p.id}
+                    className="rounded-2xl border border-foreground/10 p-4"
+                    data-testid={`proposal-${p.id}`}
+                  >
+                    <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold capitalize">
+                          {p.source} intro
+                        </span>
+                        <Badge
+                          variant={
+                            meta.tone === "good" ? "default" : "secondary"
+                          }
+                          className="text-[10px] uppercase"
+                          data-testid={`proposal-status-${p.id}`}
+                        >
+                          {meta.label}
+                        </Badge>
+                      </div>
+                      <span className="text-lg font-bold">
+                        {p.compatibilityScore}%
+                      </span>
+                    </div>
+                    <Progress
+                      value={p.compatibilityScore}
+                      className="h-2 mb-3"
+                    />
+                    {p.summary && (
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {p.summary}
+                      </p>
+                    )}
+                    {open ? (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Button
+                          size="sm"
+                          className="rounded-full"
+                          disabled={respondProposal.isPending}
+                          onClick={() => handleProposalResponse(p.id, true)}
+                          data-testid={`button-proposal-interested-${p.id}`}
+                        >
+                          <Heart className="mr-1 w-4 h-4" aria-hidden="true" />
+                          I'm interested
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="rounded-full"
+                          disabled={respondProposal.isPending}
+                          onClick={() => handleProposalResponse(p.id, false)}
+                          data-testid={`button-proposal-pass-${p.id}`}
+                        >
+                          <X className="mr-1 w-4 h-4" aria-hidden="true" />
+                          Pass
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        {meta.note}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
         </motion.div>

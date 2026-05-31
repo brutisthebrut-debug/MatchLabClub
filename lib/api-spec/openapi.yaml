@@ -3246,6 +3246,80 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/matching/echo:
+    post:
+      tags: [Matching]
+      operationId: createMatchingEchoRead
+      summary: Echo's read on the signed-in user for matching
+      description: |
+        Returns Echo's read of the user grounded in their own aggregate signal
+        coverage: what the machine can see, the kind of person it would put in
+        front of them, the confidence of the read, and the gap to the pool.
+        Deterministic baseline is always-on; the Claude layer is opt-in via the
+        per-account content consent toggle and daily-capped. Only aggregate or
+        derived signal coverage is ever sent to Claude, never raw content.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Echo's read.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EchoMatchRead'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/matching/proposals/{id}/response:
+    put:
+      tags: [Matching]
+      operationId: respondToMatchProposal
+      summary: Record the user's interest in a match proposal
+      description: |
+        Lets the user act on a proposal instead of hitting a dead-end preview.
+        Recording interest moves it to user_yes (routing it into the founder
+        intro queue); passing moves it to user_no. Only the proposal owner may
+        respond, and only while it is still in the proposed state.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchProposalResponseInput'
+      responses:
+        '200':
+          description: The updated proposal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchProposal'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Proposal not found or not owned by the caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
 components:
   parameters:
     AuthorizationSessionHeader:
@@ -6308,6 +6382,60 @@ components:
         updatedAt:
           type: string
           format: date-time
+
+    EchoMatchReadNextStep:
+      type: object
+      required: [label, href]
+      properties:
+        label:
+          type: string
+        href:
+          type: string
+
+    EchoMatchRead:
+      type: object
+      required: [headline, confidence, reading, idealMatch, radiusLabel, gapToPool, nextStep, usedAi]
+      properties:
+        headline:
+          type: string
+        confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: How confident Echo's read is, derived from signal coverage and readiness.
+        reading:
+          type: array
+          description: What Echo can see in the user's accumulated signals (aggregate only).
+          items:
+            type: string
+        idealMatch:
+          type: array
+          description: The kind of person Echo would put in front of them.
+          items:
+            type: string
+        radiusLabel:
+          type: string
+          description: Human label for the search radius, e.g. "inside your 35-mile radius".
+        gapToPool:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Readiness points still needed to join the pool, 0 when eligible.
+        nextStep:
+          oneOf:
+            - $ref: '#/components/schemas/EchoMatchReadNextStep'
+            - type: 'null'
+        usedAi:
+          type: boolean
+          description: True when the Claude layer produced this read, false on the deterministic baseline.
+
+    MatchProposalResponseInput:
+      type: object
+      required: [interested]
+      properties:
+        interested:
+          type: boolean
+          description: True records the user's interest (user_yes), false passes (user_no).
 
     MatchExternalReadInput:
       type: object
