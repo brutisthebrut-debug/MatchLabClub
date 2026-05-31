@@ -28,6 +28,9 @@ import {
   BookOpen,
   Images,
   UtensilsCrossed,
+  Palette,
+  Clapperboard,
+  Video,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -316,6 +319,57 @@ const RESEARCHING: Connector[] = [
       "Any actual photo leaving your device",
       "Faces, names, or who is in your pictures",
       "Exact locations or timestamps",
+    ],
+  },
+  {
+    id: "pinterest",
+    title: "Pinterest aesthetic",
+    icon: Palette,
+    color: "hsl(348 80% 55%)",
+    blurb:
+      "Pinterest lets you export your boards and pins as an archive. What you save is the clearest picture of the life you are reaching for: the home, the trips, the style, the table you want to sit at. Research question: how much of who someone is living toward shows up in what they pin.",
+    returns: "If it lands, an aesthetic and aspiration read that grounds your profile in the life you actually want.",
+    access: [
+      "Board names and the pins inside the archive you export and drop in",
+    ],
+    excludes: [
+      "Your Pinterest login",
+      "Secret boards you do not export",
+      "Anything outside the file you choose to share",
+    ],
+  },
+  {
+    id: "netflix-history",
+    title: "Netflix viewing history",
+    icon: Clapperboard,
+    color: "hsl(0 72% 50%)",
+    blurb:
+      "Netflix lets you download your viewing activity as a CSV. What you watch, and when, is a quiet read of your humour, your comfort genres, and what a real night in looks like. Research question: which viewing signals are taste and which are just background noise.",
+    returns: "If it lands, a story-taste and mood read that sharpens conversation openers and date-night ideas.",
+    access: [
+      "Titles and dates from the viewing-activity CSV you export and drop in",
+    ],
+    excludes: [
+      "Your Netflix login",
+      "Other profiles on your account",
+      "Anything outside the file you choose to share",
+    ],
+  },
+  {
+    id: "tiktok-taste",
+    title: "TikTok taste",
+    icon: Video,
+    color: "hsl(190 90% 50%)",
+    blurb:
+      "TikTok lets you request your data, including the videos you have liked and saved. Your For You taste is one of the most honest mirrors of what actually holds your attention. Research question: how to read interests and humour from a feed without storing anything tied to a creator or a person.",
+    returns: "If it lands, an interests-and-humour read that makes your profile and openers feel like you.",
+    access: [
+      "The liked and saved video topics in the data archive you request and drop in",
+    ],
+    excludes: [
+      "Your TikTok login",
+      "Your private messages or drafts",
+      "Anything you have not put in the file yourself",
     ],
   },
   {

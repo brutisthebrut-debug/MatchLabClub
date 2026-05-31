@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
-import { ArrowRight, CheckCircle, Shield, Sparkles, Headphones, Eye, Clock, FileText, Compass, MessageCircle, Loader2, Camera, BookOpen, Brain, Download, TrendingUp, Users, Heart } from "lucide-react";
+import { ArrowRight, CheckCircle, Shield, Sparkles, Headphones, Eye, Clock, FileText, Compass, MessageCircle, Loader2, Camera, BookOpen, Brain, Download, TrendingUp, Users, Heart, Flame, HeartPulse, CalendarDays, Instagram, Mail, Wallet, Music2, Palette, Clapperboard, Film, Footprints } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMeta } from "@/hooks/useMeta";
 import {
@@ -285,6 +285,83 @@ export default function Landing() {
           <p className="text-center text-sm text-muted-foreground/80 mt-10 inline-flex items-center gap-2 mx-auto w-full justify-center">
             <Heart className="w-4 h-4 text-[hsl(326_100%_58%)]" /> Built for every gender and orientation, inclusive by default.
           </p>
+        </div>
+      </section>
+
+      {/* ── Connect your real world ── */}
+      <section className="py-24 md:py-32 border-t border-foreground/5 bg-[hsl(248_40%_98%/0.5)] dark:bg-[hsl(248_50%_8%/0.5)] relative overflow-hidden">
+        <div className="orb orb-gold absolute w-[400px] h-[400px] -bottom-32 -right-24 opacity-25 pointer-events-none" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16 max-w-3xl mx-auto">
+            <p className="text-sm font-bold uppercase tracking-widest text-[hsl(var(--brand-gold))] mb-4">Connect your real world</p>
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-6 leading-tight">
+              Every source you plug in <span className="gradient-text italic pr-1">paints more of the picture.</span>
+            </h2>
+            <p className="text-lg text-muted-foreground leading-relaxed font-medium">
+              Your taste in music, the films you rewatch, the places you book, the rhythm of your week. Each one is opt-in, read only, and removable in one click. The fuller the picture, the better the people the engine can introduce.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-w-5xl mx-auto">
+            {[
+              { icon: Flame, label: "Hinge export", color: "hsl(348 75% 60%)", status: "Live" },
+              { icon: HeartPulse, label: "Wellness", color: "hsl(var(--brand-green))", status: "Live" },
+              { icon: CalendarDays, label: "Calendar", color: "hsl(248 62% 60%)", status: "Live" },
+              { icon: Instagram, label: "Instagram", color: "hsl(326 70% 60%)", status: "Live" },
+              { icon: Camera, label: "Photos", color: "hsl(212 70% 55%)", status: "Live" },
+              { icon: Mail, label: "Forwarding inbox", color: "hsl(326 100% 62%)", status: "Building" },
+              { icon: Wallet, label: "Spending", color: "hsl(142 55% 55%)", status: "Building" },
+              { icon: Music2, label: "Spotify", color: "hsl(141 73% 42%)", status: "Building" },
+              { icon: Palette, label: "Pinterest", color: "hsl(348 80% 55%)", status: "Exploring" },
+              { icon: Clapperboard, label: "Netflix", color: "hsl(0 72% 50%)", status: "Exploring" },
+              { icon: Film, label: "Letterboxd", color: "hsl(28 80% 55%)", status: "Exploring" },
+              { icon: Footprints, label: "Strava", color: "hsl(18 90% 55%)", status: "Exploring" },
+            ].map((s, i) => {
+              const statusColor =
+                s.status === "Live"
+                  ? "hsl(142 55% 60%)"
+                  : s.status === "Building"
+                    ? "hsl(var(--brand-indigo))"
+                    : "hsl(43 65% 65%)";
+              return (
+                <motion.div
+                  key={s.label}
+                  initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.04 }}
+                >
+                  <Link
+                    href="/connections"
+                    className="glass border border-foreground/10 rounded-2xl p-4 flex items-center gap-3 h-full hover:-translate-y-0.5 hover:shadow-lg hover:border-foreground/20 transition-all"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: withAlpha(s.color, 0.12), border: `1px solid ${withAlpha(s.color, 0.25)}` }}
+                    >
+                      <s.icon className="w-5 h-5" style={{ color: s.color }} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-foreground leading-tight truncate">{s.label}</p>
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: statusColor }}>
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor }} />
+                        {s.status}
+                      </span>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link
+              href="/connections"
+              className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[hsl(248_62%_52%)] hover:opacity-80 transition-opacity"
+            >
+              See everything you can connect <ArrowRight className="w-4 h-4" />
+            </Link>
+            <p className="text-xs text-muted-foreground/70 mt-3 max-w-md mx-auto leading-relaxed">
+              Read only on every source. We show you exactly what we will see and what we will never touch before you plug anything in.
+            </p>
+          </div>
         </div>
       </section>
 
