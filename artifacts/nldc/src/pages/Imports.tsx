@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Upload, FileArchive, CheckCircle2, AlertCircle, Loader2, Clock, CalendarDays } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -665,6 +666,18 @@ export default function Imports() {
             </div>
           )}
         </section>
+
+        {imports.length > 0 && (
+          <ToolHandoff
+            testId="imports-handoff"
+            fedLine="Your imported history and rhythm feed the machine's read of you, which sharpens who it matches you with. Keep layering in signal."
+            steps={[
+              { label: "Read your patterns", href: "/insights", desc: "See the communication style behind your history." },
+              { label: "Map your wellness", href: "/wellness", desc: "Cover more dimensions to raise your readiness." },
+              { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+            ]}
+          />
+        )}
       </div>
     </AppLayout>
   );

@@ -2,6 +2,7 @@ import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -279,6 +280,18 @@ export default function HelpMeReply() {
   </div>
   <p className="text-sm text-muted-foreground leading-relaxed">{show.coachNote}</p>
   </motion.div>
+
+  <div className="mt-5">
+  <ToolHandoff
+  testId="help-reply-handoff"
+  fedLine="Picking a reply here gets you unstuck fast. To turn it into a saved coaching session that teaches the machine your tone, take it to Coach."
+  steps={[
+  { label: "Coach this thread", href: "/coach", desc: "Save the conversation and feed your tone into the machine." },
+  { label: "Read your patterns", href: "/insights", desc: "See the communication style behind your replies." },
+  { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+  ]}
+  />
+  </div>
 
   <motion.div {...fadeUp(0.35)} className="mt-5 flex justify-center">
   <button onClick={reset} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">

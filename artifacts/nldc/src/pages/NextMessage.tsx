@@ -1,6 +1,7 @@
 import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -421,6 +422,19 @@ export default function NextMessage() {
   </motion.div>
   {result && (
   <ToneBar onApply={(hint) => { void handleGenerate(hint); }} loading={loading} />
+  )}
+  {result && (
+  <div className="mt-5">
+  <ToolHandoff
+  testId="next-message-handoff"
+  fedLine="A message that lands keeps the thread alive. To save the conversation and teach the machine your tone, take it into Coach."
+  steps={[
+  { label: "Coach this thread", href: "/coach", desc: "Save the conversation and feed your tone into the machine." },
+  { label: "Read your patterns", href: "/insights", desc: "See the communication style behind your replies." },
+  { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+  ]}
+  />
+  </div>
   )}
   {result && (
   <div className="mt-5 flex justify-center">

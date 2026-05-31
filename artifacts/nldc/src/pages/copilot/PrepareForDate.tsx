@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -262,6 +263,16 @@ export default function PrepareForDate() {
   </div>
   <p className="text-sm text-muted-foreground leading-relaxed">{show.followUp}</p>
   </div>
+
+  <ToolHandoff
+  testId="prepare-date-handoff"
+  fedLine="Prepping the conversation steadies your nerves before a date. Afterwards, a quick debrief turns what happened into signal the machine can learn from."
+  steps={[
+  { label: "Debrief the date", href: "/copilot/debrief", desc: "Save what happened as a post-date note." },
+  { label: "Rehearse the talk", href: "/rehearsal", desc: "Practice the moment before you live it." },
+  { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+  ]}
+  />
 
   <div className="flex justify-center">
   <button onClick={reset} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">

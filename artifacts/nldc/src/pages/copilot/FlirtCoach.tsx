@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -297,6 +298,16 @@ export default function FlirtCoach() {
   )}
   </>
   )}
+
+  <ToolHandoff
+  testId="flirtcoach-handoff"
+  fedLine="Drafting the hard message builds the confidence a real match needs. When you want a reply that sounds like you, take it to Coach."
+  steps={[
+  { label: "Coach a real reply", href: "/coach", desc: "Turn the draft into a message that teaches the machine your tone." },
+  { label: "Rehearse the talk", href: "/rehearsal", desc: "Practice the conversation before you send it." },
+  { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+  ]}
+  />
 
   <div className="flex justify-center">
   <button onClick={reset} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">

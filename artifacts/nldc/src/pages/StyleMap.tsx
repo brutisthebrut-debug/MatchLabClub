@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -349,6 +350,19 @@ export default function StyleMap() {
   </div>
   </div>
   </div>
+  {result && (
+  <div className="mt-6">
+  <ToolHandoff
+  testId="stylemap-handoff"
+  fedLine="Mapping how you communicate shows your strengths and growth edge. To put it to work and feed the machine your tone, take a real thread to Coach."
+  steps={[
+  { label: "Coach a real reply", href: "/coach", desc: "Apply your style to a live conversation." },
+  { label: "Read your patterns", href: "/insights", desc: "See the wider communication picture." },
+  { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+  ]}
+  />
+  </div>
+  )}
   {result && (
   <div className="mt-5 flex justify-center">
   <button onClick={() => { setResult(null); setText(""); }}

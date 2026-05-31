@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -273,6 +274,16 @@ export default function WeeklyGrowthPlan() {
   <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(142_55%_60%)] mb-1.5">Wingman Note</p>
   <p className="text-sm text-muted-foreground leading-relaxed">{plan.wingmanNote}</p>
   </div>
+
+  <ToolHandoff
+  testId="weekly-plan-handoff"
+  fedLine="Your plan is saved as a journal entry, so the machine sees the moves you commit to over time. Momentum is its own signal."
+  steps={[
+  { label: "Open your journal", href: "/mirror/journal", desc: "See your plans and reflections build up." },
+  { label: "Log a win", href: "/progress/wins", desc: "Mark the moves you actually pulled off." },
+  { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+  ]}
+  />
 
   <div className="flex justify-center">
   <button onClick={reset} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">

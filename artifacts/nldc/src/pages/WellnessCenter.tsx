@@ -1,6 +1,7 @@
 import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
@@ -955,6 +956,18 @@ export default function WellnessCenter() {
   </Button>
   </div>
   </motion.div>
+
+  <div className="mt-6">
+  <ToolHandoff
+  testId="wellness-handoff"
+  fedLine="Every dimension you answer becomes part of how the machine understands you, which powers better matches. Keep building the picture."
+  steps={[
+  { label: "Take a quiz", href: "/quizzes", desc: "A fast way to fill in more dimensions." },
+  { label: "Get a compatibility read", href: "/compatibility-compass", desc: "See how your profile reads for fit." },
+  { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+  ]}
+  />
+  </div>
 
   </div>
   </div>

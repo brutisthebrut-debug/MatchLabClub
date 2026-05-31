@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -428,6 +429,19 @@ export default function Reflection() {
   <p className="text-xs text-muted-foreground/50 mt-2">Customize before sending, make it specific to your actual conversation.</p>
   </div>
   </div>
+  {result && (
+  <div className="mt-6">
+  <ToolHandoff
+  testId="reflection-handoff"
+  fedLine="Naming the pattern here helps you see it clearly. To make it part of how the machine reads you, save it as a post-date note in your debrief."
+  steps={[
+  { label: "Save a debrief", href: "/copilot/debrief", desc: "Log the date so it feeds the Mirror." },
+  { label: "Read your patterns", href: "/insights", desc: "See the communication style underneath." },
+  { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+  ]}
+  />
+  </div>
+  )}
   {result && (
   <div className="mt-5 flex justify-center">
   <button onClick={() => { setResult(null); setBefore(""); setDuring(""); setMutual(""); setAfterward(""); setWantNext(""); setNotes(""); }}

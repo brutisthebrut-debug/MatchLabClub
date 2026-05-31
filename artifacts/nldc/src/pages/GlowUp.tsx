@@ -1,6 +1,7 @@
 import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -376,6 +377,19 @@ export default function GlowUp() {
   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
   <RefreshCw className="w-3.5 h-3.5" />Glow up a different bio
   </button>
+  </div>
+  )}
+  {result && (
+  <div className="mt-6">
+  <ToolHandoff
+  testId="glowup-handoff"
+  fedLine="A bio you actually like is the clearest signal you send. Run your new one through a full audit so it becomes part of how the machine reads and matches you."
+  steps={[
+  { label: "Audit your profile", href: "/scan", desc: "Score your new bio and feed the read into your readiness." },
+  { label: "Coach your openers", href: "/coach", desc: "Turn a sharper profile into replies that land." },
+  { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+  ]}
+  />
   </div>
   )}
   </motion.div>

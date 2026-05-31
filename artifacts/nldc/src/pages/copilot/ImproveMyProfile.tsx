@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -259,6 +260,16 @@ export default function ImproveMyProfile() {
   <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(43_65%_65%)] mb-1.5">Wingman Note</p>
   <p className="text-sm text-muted-foreground leading-relaxed">{show.overallNote}</p>
   </div>
+
+  <ToolHandoff
+  testId="improve-profile-handoff"
+  fedLine="A profile you actually like is the highest-leverage signal you send. Run your rewrite through a full audit so it feeds how the machine reads you."
+  steps={[
+  { label: "Audit your profile", href: "/scan", desc: "Score your rewrite and feed the read into your readiness." },
+  { label: "Coach your openers", href: "/coach", desc: "Turn a sharper profile into replies that land." },
+  { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+  ]}
+  />
 
   <div className="flex justify-center">
   <button onClick={reset} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">

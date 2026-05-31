@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -469,6 +470,18 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                       </Button>
                     </>
                   )}
+                </div>
+
+                <div className="mt-8">
+                  <ToolHandoff
+                    testId="quizplay-handoff"
+                    fedLine="Saved quiz answers map to your wellness dimensions and sharpen how the machine reads you. Keep filling in the picture."
+                    steps={[
+                      { label: "Map your wellness", href: "/wellness", desc: "Answer a few more questions to raise your readiness." },
+                      { label: "Take another quiz", href: "/quizzes", desc: "Each one adds a new angle on you." },
+                      { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+                    ]}
+                  />
                 </div>
 
               </motion.div>

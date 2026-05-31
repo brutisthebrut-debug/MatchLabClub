@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -499,6 +500,16 @@ export default function ConnectionStyle() {
   <Info className="w-4 h-4 text-[hsl(43_65%_65%)] flex-shrink-0 mt-0.5" />
   <p className="text-xs text-muted-foreground">This is a pattern lens, not a fixed identity. You may recognize yourself in more than one style. Use it as a starting point for self-reflection, not a label to carry.</p>
   </div>
+
+  <ToolHandoff
+  testId="connection-style-handoff"
+  fedLine="Knowing your connection style names how you show up. To make it part of how the machine reads you, answer a few wellness questions or get a compatibility read."
+  steps={[
+  { label: "Map your wellness", href: "/wellness", desc: "Turn this lens into saved signal that raises your readiness." },
+  { label: "Get a compatibility read", href: "/compatibility-compass", desc: "See how your style reads for fit." },
+  { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+  ]}
+  />
 
   <div className="flex justify-center">
   <button onClick={() => { setResult(null); setAnswers(Array(QUESTIONS.length).fill(-1)); }}

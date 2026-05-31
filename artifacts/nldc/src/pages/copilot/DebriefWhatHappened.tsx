@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -255,6 +256,16 @@ export default function DebriefWhatHappened() {
   {show.nextStep.label} <ArrowRight className="w-3.5 h-3.5" />
   </Link>
   </div>
+
+  <ToolHandoff
+  testId="debrief-handoff"
+  fedLine="Your debrief is saved as a post-date note, so the machine learns what you seek versus what you actually find. Keep the picture honest."
+  steps={[
+  { label: "See your dates", href: "/mirror/dates", desc: "Track the pattern across your debriefs." },
+  { label: "Read your patterns", href: "/insights", desc: "See the communication style underneath." },
+  { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+  ]}
+  />
 
   <div className="flex justify-center">
   <button onClick={reset} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
