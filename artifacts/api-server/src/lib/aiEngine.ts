@@ -1337,3 +1337,234 @@ export function analyzeAuditTrends(params: {
     engineVersion: ENGINE_VERSION,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Rehearsal Room: deterministic baseline for practicing the conversations that
+// actually decide a relationship (the define-the-relationship talk, the first
+// vulnerable thing, a boundary, a repair, asking for a need, a kind ending).
+// The other person is played back to the user so they can rehearse before they
+// live it. This is the always-on baseline; the Claude layer in
+// routes/rehearsal.ts deepens it when the account has granted content consent.
+// ---------------------------------------------------------------------------
+
+export type RehearsalRole = "you" | "them";
+
+export interface RehearsalTurn {
+  role: RehearsalRole;
+  text: string;
+}
+
+export interface RehearsalTurnInput {
+  scenario: string;
+  theirStyle?: string;
+  transcript: RehearsalTurn[];
+}
+
+export interface RehearsalTurnOutput {
+  reply: string;
+  note: string;
+  tone: string;
+}
+
+interface RehearsalScenarioDef {
+  label: string;
+  opening: string[];
+  engaged: string[];
+  guarded: string[];
+  warm: string[];
+  note: string;
+}
+
+export const REHEARSAL_SCENARIOS: Record<string, RehearsalScenarioDef> = {
+  define_the_relationship: {
+    label: "Define the relationship",
+    opening: [
+      "I've had a really good time with you. Can I ask where your head is at with this, with us?",
+      "Before this goes any further, I want to be honest about what I'm looking for. Where are you at?",
+    ],
+    engaged: [
+      "Okay. I appreciate you saying that. I think I want something real too, I just get scared to say it out loud.",
+      "That's good to hear. I've been wanting to talk about this for a while and didn't know how to start.",
+    ],
+    guarded: [
+      "That's a lot to put on the table right now. I don't know if I'm ready to call it anything yet.",
+      "I like you, I just don't want to rush into deciding what this is.",
+    ],
+    warm: [
+      "Thank you for being straight with me. It actually makes me trust this more.",
+      "I'm glad you said it first. I feel the same way, I was just nervous to be the one to bring it up.",
+    ],
+    note: "Name what you actually want before you ask what they want. Clarity is a gift here, not pressure.",
+  },
+  first_vulnerable: {
+    label: "Say something real",
+    opening: [
+      "You seem like you've got something on your mind. You can tell me, I mean it.",
+      "I feel like we've been keeping things light. I'd like to know the real you.",
+    ],
+    engaged: [
+      "Thank you for trusting me with that. It means more than you know.",
+      "I'm really glad you told me. I want to know this side of you, not just the easy parts.",
+    ],
+    guarded: [
+      "Oh. That's heavier than I expected. I'm not totally sure what to do with it yet.",
+      "I wasn't ready for that. Give me a second to take it in.",
+    ],
+    warm: [
+      "That took guts to say. I'm here, I'm not going anywhere.",
+      "I feel closer to you right now than I have this whole time.",
+    ],
+    note: "Vulnerability lands when it's specific. Share the actual thing, not a tidy summary of it.",
+  },
+  set_a_boundary: {
+    label: "Set a boundary",
+    opening: [
+      "Hey, you said you wanted to talk. What's going on?",
+      "You wanted to bring something up? I'm listening.",
+    ],
+    engaged: [
+      "Okay, I hear you. I honestly didn't realize that was bothering you.",
+      "That's fair. I can work with that.",
+    ],
+    guarded: [
+      "Wow, okay. I didn't think it was that big of a deal.",
+      "That kind of feels like you're making me the bad guy here.",
+    ],
+    warm: [
+      "Thank you for telling me instead of just pulling away. I respect that.",
+      "I want you to feel comfortable with me. Let's figure this out together.",
+    ],
+    note: "State the boundary as a request, not an accusation. 'I need' opens the conversation; 'you always' starts a fight.",
+  },
+  repair_after_misstep: {
+    label: "Repair after a misstep",
+    opening: [
+      "I'm honestly still a little hurt about earlier.",
+      "I wasn't going to say anything, but what happened earlier didn't sit right with me.",
+    ],
+    engaged: [
+      "I appreciate you owning it. That actually helps more than you'd think.",
+      "Okay. Thank you for saying that. I was waiting to see if you would.",
+    ],
+    guarded: [
+      "I mean, okay, but it felt like more than a small thing to me.",
+      "I want to believe you, I just need to see it, not only hear it.",
+    ],
+    warm: [
+      "That means a lot. We're okay. Really.",
+      "Thank you. That's honestly all I needed.",
+    ],
+    note: "A real apology has no 'but' in it. Own your part first, explain second, if at all.",
+  },
+  express_a_need: {
+    label: "Ask for what you need",
+    opening: [
+      "What's going on? You've seemed a little off lately.",
+      "You can tell me what you need from me. I'd rather know than guess.",
+    ],
+    engaged: [
+      "I want to give you that. Thank you for telling me instead of expecting me to read your mind.",
+      "Okay, that's doable. I'm glad you actually asked.",
+    ],
+    guarded: [
+      "That feels like a lot to ask of me right now.",
+      "I'm trying, it just feels like nothing I do is ever enough.",
+    ],
+    warm: [
+      "I love that you can ask for what you need. Not everyone can do that.",
+      "Done. I want you to feel taken care of in this.",
+    ],
+    note: "Ask for the need directly. People cannot meet a need they have to decode first.",
+  },
+  end_it_kindly: {
+    label: "End it kindly",
+    opening: [
+      "You've been quiet. Is everything okay with us?",
+      "I get the feeling you've got something hard to say.",
+    ],
+    engaged: [
+      "I figured this might be coming. Thank you for telling me to my face.",
+      "That hurts, but I appreciate you being honest instead of just disappearing.",
+    ],
+    guarded: [
+      "So that's it? Just like that?",
+      "Did I do something wrong, or is this just where you are?",
+    ],
+    warm: [
+      "I'm sad, but I'm grateful for the time we had. Take care of yourself.",
+      "Thank you for being kind about it. That's rarer than it should be.",
+    ],
+    note: "Be clear and be kind at the same time. Don't leave the door cracked to soften it; that is harder on both of you than a clean goodbye.",
+  },
+};
+
+function rehearsalSeed(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function rehearsalPick<T>(bank: T[], seed: number): T {
+  return bank[seed % bank.length] as T;
+}
+
+export function generateRehearsalTurn(input: RehearsalTurnInput): RehearsalTurnOutput {
+  const scenario =
+    REHEARSAL_SCENARIOS[input.scenario] ?? REHEARSAL_SCENARIOS.define_the_relationship!;
+  const turns = Array.isArray(input.transcript) ? input.transcript : [];
+  const youTurns = turns.filter((t) => t.role === "you");
+  const seed = rehearsalSeed(
+    (youTurns[youTurns.length - 1]?.text ?? "") + ":" + String(turns.length),
+  );
+
+  // No user turns yet: the other person opens the scene.
+  if (youTurns.length === 0) {
+    return {
+      reply: rehearsalPick(scenario.opening, seed),
+      note: scenario.note,
+      tone: "opening the door",
+    };
+  }
+
+  const last = (youTurns[youTurns.length - 1]?.text ?? "").toLowerCase();
+  const hasApology = /\b(sorry|my fault|i was wrong|apolog)/.test(last);
+  const hasAbsolute = /\b(always|never|every time|constantly|nothing|everything)\b/.test(last);
+  const hasQuestion = last.includes("?");
+  const hedging = /\b(maybe|i guess|kind of|kinda|sort of|i don'?t know|idk)\b/.test(last);
+  const harsh = /\b(whatever|you don'?t|you never|your fault|grow up|over it)\b/.test(last);
+
+  let reply: string;
+  let tone: string;
+  if (harsh || hasAbsolute) {
+    reply = rehearsalPick(scenario.guarded, seed);
+    tone = "guarded, a little defensive";
+  } else if (hasApology) {
+    reply = rehearsalPick(scenario.warm, seed);
+    tone = "softening";
+  } else {
+    reply = rehearsalPick(scenario.engaged, seed);
+    tone = "engaged and listening";
+  }
+
+  let note: string;
+  if (harsh) {
+    note =
+      "That landed sharp. You can be honest without the edge. Lead with how you feel, not with what they did wrong.";
+  } else if (hasAbsolute) {
+    note =
+      "Watch the absolutes. 'Always' and 'never' make people defend instead of listen. Name the one specific moment instead.";
+  } else if (hedging) {
+    note =
+      "You hedged. 'Maybe' and 'I guess' hide what you actually want. Say the real thing, plainly.";
+  } else if (hasApology) {
+    note =
+      "Good repair. A clean apology with no 'but' after it is one of the hardest and most powerful moves there is.";
+  } else if (hasQuestion) {
+    note =
+      "Nice, you opened a real door with that question. Now hold the silence and let them actually answer.";
+  } else {
+    note = scenario.note;
+  }
+
+  return { reply, note, tone };
+}

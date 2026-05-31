@@ -2996,6 +2996,34 @@ export const GetCoachFollowUpTimelineResponse = zod.object({
 
 
 /**
+ * Stateless. The client sends the chosen scenario, an optional description
+of how the other person communicates, and the transcript so far. The
+server returns the other person's next line (played in character) plus a
+short coaching note on how the user's last message landed. The
+deterministic baseline always answers; when the account has granted
+content consent, Claude shapes a richer, in-character read. Nothing is
+persisted.
+
+ * @summary Run one turn of a relationship-conversation rehearsal
+ */
+export const RehearsalTurnBody = zod.object({
+  "scenario": zod.string(),
+  "theirStyle": zod.string().nullish(),
+  "transcript": zod.array(zod.object({
+  "role": zod.enum(['you', 'them']),
+  "text": zod.string()
+}))
+})
+
+export const RehearsalTurnResponse = zod.object({
+  "reply": zod.string(),
+  "note": zod.string(),
+  "tone": zod.string(),
+  "isFallback": zod.boolean()
+})
+
+
+/**
  * Aggregates the current user's (or anonymous-claim-scoped) audits, coach
 follow-up send-through stats, and recent life-pulses into a deterministic
 trend report — repeated strengths/risks, score delta, theme shifts,

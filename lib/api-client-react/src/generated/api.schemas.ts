@@ -676,6 +676,33 @@ export interface MessageCoachingResponse {
   coachTip: string;
 }
 
+export type RehearsalTurnRole = typeof RehearsalTurnRole[keyof typeof RehearsalTurnRole];
+
+
+export const RehearsalTurnRole = {
+  you: 'you',
+  them: 'them',
+} as const;
+
+export interface RehearsalTurn {
+  role: RehearsalTurnRole;
+  text: string;
+}
+
+export interface RehearsalTurnInput {
+  scenario: string;
+  /** @nullable */
+  theirStyle?: string | null;
+  transcript: RehearsalTurn[];
+}
+
+export interface RehearsalTurnResult {
+  reply: string;
+  note: string;
+  tone: string;
+  isFallback: boolean;
+}
+
 export type CoachFollowUpInputAnswer = typeof CoachFollowUpInputAnswer[keyof typeof CoachFollowUpInputAnswer];
 
 
@@ -2639,6 +2666,10 @@ export type AuditFromScreenshot400 = {
 };
 
 export type ExtractMessageScreenshot400 = {
+  error?: string;
+};
+
+export type RehearsalTurn400 = {
   error?: string;
 };
 

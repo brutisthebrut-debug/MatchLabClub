@@ -9,6 +9,7 @@ import Wizard from "@/pages/Wizard";
 import Dashboard from "@/pages/Dashboard";
 import Report from "@/pages/Report";
 import Coach from "@/pages/Coach";
+import RehearsalRoom from "@/pages/RehearsalRoom";
 import Insights from "@/pages/Insights";
 import Integrations from "@/pages/Integrations";
 import Pricing from "@/pages/Pricing";
@@ -167,6 +168,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/report/:id" component={Report} />
       <Route path="/coach" component={Coach} />
+      <Route path="/rehearsal" component={RehearsalRoom} />
       <Route path="/insights" component={Insights} />
       <Route path="/integrations" component={Integrations} />
       <Route path="/pricing" component={Pricing} />

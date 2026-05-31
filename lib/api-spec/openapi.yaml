@@ -21,6 +21,8 @@ tags:
     description: Waitlist operations
   - name: ai
     description: AI integration status and diagnostics
+  - name: rehearsal
+    description: Relationship-conversation rehearsal operations
   - name: Auth
     description: Browser and mobile authentication endpoints.
 paths:
@@ -2134,6 +2136,42 @@ paths:
               schema:
                 $ref: "#/components/schemas/CoachFollowUpTimeline"
 
+  /rehearsal/turn:
+    post:
+      operationId: rehearsalTurn
+      tags: [rehearsal]
+      summary: Run one turn of a relationship-conversation rehearsal
+      description: |
+        Stateless. The client sends the chosen scenario, an optional description
+        of how the other person communicates, and the transcript so far. The
+        server returns the other person's next line (played in character) plus a
+        short coaching note on how the user's last message landed. The
+        deterministic baseline always answers; when the account has granted
+        content consent, Claude shapes a richer, in-character read. Nothing is
+        persisted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RehearsalTurnInput"
+      responses:
+        "200":
+          description: The other person's next line plus a coaching note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RehearsalTurnResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
   /mirror/trends:
     get:
       operationId: getMirrorTrends
@@ -3984,6 +4022,42 @@ components:
             type: string
         coachTip:
           type: string
+
+    RehearsalTurn:
+      type: object
+      required: [role, text]
+      properties:
+        role:
+          type: string
+          enum: [you, them]
+        text:
+          type: string
+
+    RehearsalTurnInput:
+      type: object
+      required: [scenario, transcript]
+      properties:
+        scenario:
+          type: string
+        theirStyle:
+          type: ["string", "null"]
+        transcript:
+          type: array
+          items:
+            $ref: "#/components/schemas/RehearsalTurn"
+
+    RehearsalTurnResult:
+      type: object
+      required: [reply, note, tone, isFallback]
+      properties:
+        reply:
+          type: string
+        note:
+          type: string
+        tone:
+          type: string
+        isFallback:
+          type: boolean
 
     CoachFollowUpInput:
       type: object

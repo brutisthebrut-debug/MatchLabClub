@@ -25,6 +25,7 @@ import compassRouter from "./compass";
 import importsRouter from "./imports";
 import matchingRouter from "./matching";
 import datingWinsRouter from "./datingWins";
+import rehearsalRouter from "./rehearsal";
 
 const router: IRouter = Router();
 
@@ -54,5 +55,6 @@ router.use(compassRouter);
 router.use(importsRouter);
 router.use(matchingRouter);
 router.use(datingWinsRouter);
+router.use(rehearsalRouter);
 
 export default router;

@@ -72,6 +72,14 @@ export const emailInsightSchema = z.object({
 
 export type EmailInsightAiOutput = z.infer<typeof emailInsightSchema>;
 
+export const rehearsalSchema = z.object({
+  reply: z.string().trim().min(1),
+  note: z.string().trim().min(1),
+  tone: z.string().trim().min(1),
+});
+
+export type RehearsalAiOutput = z.infer<typeof rehearsalSchema>;
+
 export function parseAiJson<T>(
   schema: z.ZodType<T>,
   raw: string,
@@ -95,6 +103,7 @@ export const aiToolSchemas = {
   "Message Coach": messageCoachSchema,
   "Bio Rewrite": bioRewriteSchema,
   "Email Insights": emailInsightSchema,
+  "Rehearsal Room": rehearsalSchema,
 } as const;
 
 export type AiToolName = keyof typeof aiToolSchemas;

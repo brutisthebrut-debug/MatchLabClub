@@ -141,6 +141,9 @@ import type {
   RefreshGeoipParams,
   RegisterPushTokenInput,
   RegisterPushTokenResult,
+  RehearsalTurn400,
+  RehearsalTurnInput,
+  RehearsalTurnResult,
   RestoreAllTrashResult,
   RevokeSessionsResult,
   ScreenshotAuditInput,
@@ -6239,6 +6242,85 @@ export function useGetCoachFollowUpTimeline<TData = Awaited<ReturnType<typeof ge
 
 
 
+
+export const getRehearsalTurnUrl = () => {
+
+
+
+
+  return `/api/rehearsal/turn`
+}
+
+/**
+ * Stateless. The client sends the chosen scenario, an optional description
+of how the other person communicates, and the transcript so far. The
+server returns the other person's next line (played in character) plus a
+short coaching note on how the user's last message landed. The
+deterministic baseline always answers; when the account has granted
+content consent, Claude shapes a richer, in-character read. Nothing is
+persisted.
+
+ * @summary Run one turn of a relationship-conversation rehearsal
+ */
+export const rehearsalTurn = async (rehearsalTurnInput: RehearsalTurnInput, options?: RequestInit): Promise<RehearsalTurnResult> => {
+
+  return customFetch<RehearsalTurnResult>(getRehearsalTurnUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      rehearsalTurnInput,)
+  }
+);}
+
+
+
+
+export const getRehearsalTurnMutationOptions = <TError = ErrorType<RehearsalTurn400>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rehearsalTurn>>, TError,{data: BodyType<RehearsalTurnInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rehearsalTurn>>, TError,{data: BodyType<RehearsalTurnInput>}, TContext> => {
+
+const mutationKey = ['rehearsalTurn'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rehearsalTurn>>, {data: BodyType<RehearsalTurnInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  rehearsalTurn(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RehearsalTurnMutationResult = NonNullable<Awaited<ReturnType<typeof rehearsalTurn>>>
+    export type RehearsalTurnMutationBody = BodyType<RehearsalTurnInput>
+    export type RehearsalTurnMutationError = ErrorType<RehearsalTurn400>
+
+    /**
+ * @summary Run one turn of a relationship-conversation rehearsal
+ */
+export const useRehearsalTurn = <TError = ErrorType<RehearsalTurn400>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rehearsalTurn>>, TError,{data: BodyType<RehearsalTurnInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rehearsalTurn>>,
+        TError,
+        {data: BodyType<RehearsalTurnInput>},
+        TContext
+      > => {
+      return useMutation(getRehearsalTurnMutationOptions(options));
+    }
 
 export const getGetMirrorTrendsUrl = () => {
 

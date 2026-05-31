@@ -1072,7 +1072,7 @@ export default function Coach() {
   testId="coach-handoff"
   fedLine="Every message you coach teaches the machine your tone and helps it match you with people you click with. Keep the trail going."
   steps={[
-  { label: "Log how it landed", href: "/mirror/dates", desc: "Note the reply so we learn what works for you." },
+  { label: "Rehearse the hard talk", href: "/rehearsal", desc: "Practice the real conversation with the person played back to you." },
   { label: "Read your patterns", href: "/insights", desc: "See the communication style behind your replies." },
   { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
   ]}

@@ -9,6 +9,7 @@ import {
   Wand2,
   Sparkles,
   MessageCircle,
+  Theater,
   FlaskConical,
   ScanSearch,
   PenLine,
@@ -127,6 +128,7 @@ const SECTIONS: NavSection[] = [
     primary: [
       { name: "Signal Check", href: "/signal-check", icon: Activity },
       { name: "Message Coach", href: "/coach", icon: MessageCircle },
+      { name: "Rehearsal Room", href: "/rehearsal", icon: Theater },
       { name: "Photo Scan", href: "/scan", icon: ImageUp },
       { name: "Glow-Up Bio", href: "/glow-up", icon: Sparkles },
       { name: "Compatibility Compass", href: "/compatibility-compass", icon: Compass },

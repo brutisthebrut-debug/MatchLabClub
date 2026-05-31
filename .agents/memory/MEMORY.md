@@ -2,3 +2,4 @@
 - [Connector status labels must mirror Connection Center grouping](connector-status-sync.md) — the landing connector teaser duplicates statuses; keep them in sync with ConnectionCenter's LIVE/BUILDING/RESEARCHING arrays.
 - [Shareable readiness card privacy contract](share-card-privacy.md) — the /share-card viral loop may expose only derived score + stage + lane labels, never raw content; carry this into any public share backend.
 - [Growth waves roadmap](growth-waves-roadmap.md) — durable principle: ship growth as cohesive waves one at a time (never blast many/agents at once), protect runway; holds the sequenced wave plan + experimental ideas bank.
+- [AI tool schema registration](ai-tool-schema-registration.md) — a new hybrid tool stays deterministic-only until its toolName is registered in aiToolSchemas; generate() never sets validated:true otherwise.
