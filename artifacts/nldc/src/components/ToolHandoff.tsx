@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { ArrowRight, TrendingUp, Eye } from "lucide-react";
+import { NextBestActionCoach } from "@/components/coach/NextBestActionCoach";
 
 export type HandoffStep = {
   label: string;
@@ -39,6 +40,11 @@ export function ToolHandoff({
         <span className="text-xs uppercase tracking-widest font-bold text-[hsl(326_100%_45%)]">Next best step</span>
       </div>
       <p className="text-sm text-muted-foreground leading-relaxed mb-4">{fedLine}</p>
+      <NextBestActionCoach
+        variant="panel"
+        className="mb-3"
+        testId={`${testId}-coach`}
+      />
       <Link
         href={mirrorHref}
         className="group mb-3 flex items-center gap-3 rounded-2xl border border-[hsl(248_62%_52%/0.3)] bg-background/50 p-4 transition-colors hover:border-[hsl(248_62%_52%/0.5)]"

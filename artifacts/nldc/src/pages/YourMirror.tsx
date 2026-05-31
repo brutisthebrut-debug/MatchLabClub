@@ -17,7 +17,6 @@ import {
   Heart,
   Eye,
   EyeOff,
-  Compass,
   MessageCircle,
   Lightbulb,
   Send,
@@ -43,6 +42,7 @@ import {
   type MirrorPortrait,
 } from "@workspace/api-client-react";
 import { ClimbCard } from "@/components/climb/ClimbCard";
+import { NextBestActionCoach } from "@/components/coach/NextBestActionCoach";
 import { DEMO_PORTRAIT } from "@/lib/mirrorDemo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -231,37 +231,21 @@ function MirrorPortraitSection({
   </Card>
   </div>
 
-  {portrait.nextSignal && (
-  <Card
-  data-testid="card-mirror-next"
-  className="border-violet-500/30 bg-violet-500/5"
-  >
-  <CardContent className="flex flex-col items-start gap-4 py-6 md:flex-row md:items-center md:justify-between">
-  <div className="flex items-start gap-3">
-  <Compass className="mt-0.5 h-6 w-6 shrink-0 text-violet-500" />
-  <div>
-  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-  The one thing that sharpens me most
-  </p>
-  <p className="mt-1 font-serif text-lg font-semibold">
-  {portrait.nextSignal.label}
-  </p>
-  <p className="mt-1 text-sm text-muted-foreground">
-  {portrait.nextSignal.detail}
-  </p>
-  </div>
-  </div>
-  <Link href={portrait.nextSignal.href}>
-  <Button data-testid="button-next-signal" className="gap-1.5">
-  Feed this signal
-  <span className="text-xs opacity-80">
-  +{portrait.nextSignal.points}
-  </span>
-  </Button>
-  </Link>
-  </CardContent>
-  </Card>
-  )}
+  <NextBestActionCoach
+  action={
+  portrait.nextSignal
+  ? {
+  key: portrait.nextSignal.key,
+  label: portrait.nextSignal.label,
+  detail: portrait.nextSignal.detail,
+  points: portrait.nextSignal.points,
+  href: portrait.nextSignal.href,
+  }
+  : null
+  }
+  eligible={portrait.eligible}
+  testId="card-mirror-next"
+  />
   </div>
   );
 }

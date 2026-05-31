@@ -61,7 +61,7 @@ import {
 } from "@workspace/api-client-react";
 import { ClimbCard } from "@/components/climb/ClimbCard";
 import { ShareButton } from "@/components/echo/ShareButton";
-import { NextStepCard } from "@/components/NextStepCard";
+import { NextBestActionCoach } from "@/components/coach/NextBestActionCoach";
 import { DEMO_PORTRAIT } from "@/lib/mirrorDemo";
 
 const WELLNESS_DIMENSION_COUNT = 18;
@@ -713,10 +713,14 @@ export default function SelfHub() {
   />
   </motion.div>
 
-  {/* Engine spine: your next best step toward a match */}
+  {/* Engine spine: the single highest-value move toward a match */}
   {(nextActions.length > 0 || matchEligible) && (
   <motion.div {...fadeUp(0.04)} className="mb-6 md:mb-8">
-  <NextStepCard actions={nextActions} eligible={matchEligible} testId="self-hub-next-step" />
+  <NextBestActionCoach
+  action={nextActions[0] ?? null}
+  eligible={matchEligible}
+  testId="self-hub-next-step"
+  />
   </motion.div>
   )}
 
