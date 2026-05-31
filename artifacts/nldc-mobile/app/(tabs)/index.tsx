@@ -402,7 +402,7 @@ export default function ScoreScreen() {
 
         {mirror && mirror.hasEnoughData ? (
           <Pressable
-            onPress={() => openWeb("/your-mirror")}
+            onPress={() => router.push("/mirror" as Href)}
             style={[
               styles.section,
               { backgroundColor: colors.card, borderColor: colors.cardBorder },
@@ -427,8 +427,8 @@ export default function ScoreScreen() {
                   Open
                 </Text>
                 <Feather
-                  name="external-link"
-                  size={12}
+                  name="chevron-right"
+                  size={14}
                   color={colors.mutedForeground}
                 />
               </View>

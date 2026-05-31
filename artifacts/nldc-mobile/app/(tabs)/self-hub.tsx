@@ -316,6 +316,44 @@ export default function SelfHubScreen() {
           />
         </View>
 
+        {/* Your Mirror */}
+        <Pressable
+          testID="self-hub-mirror-card"
+          onPress={() => router.push("/mirror" as never)}
+          style={({ pressed }) => [
+            styles.card,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.cardBorder,
+              opacity: pressed ? 0.8 : 1,
+            },
+          ]}
+        >
+          <View style={styles.cardHeader}>
+            <View
+              style={[
+                styles.iconBubble,
+                { backgroundColor: `${colors.gold}22` },
+              ]}
+            >
+              <Feather name="eye" size={16} color={colors.gold} />
+            </View>
+            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+              Your Mirror
+            </Text>
+            <View style={{ flex: 1 }} />
+            <Feather
+              name="chevron-right"
+              size={16}
+              color={colors.mutedForeground}
+            />
+          </View>
+          <Text style={[styles.cardBody, { color: colors.mutedForeground }]}>
+            The evolving read of what we can see about you, your blind spots, and
+            the one move that teaches the machine the most next.
+          </Text>
+        </Pressable>
+
         {banner ? (
           <View
             testID="self-hub-banner"

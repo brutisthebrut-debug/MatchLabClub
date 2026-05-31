@@ -174,6 +174,7 @@ function RootLayoutNav() {
         />
         <Stack.Screen name="compass" options={{ title: "Compatibility Compass" }} />
         <Stack.Screen name="imports" options={{ title: "Imports" }} />
+        <Stack.Screen name="mirror" options={{ title: "Your Mirror" }} />
       </Stack>
     </AuthProvider>
   );
