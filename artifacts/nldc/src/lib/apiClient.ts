@@ -318,6 +318,23 @@ export interface ReferralAttributionResponse {
 export const getReferralAttribution = (founderKey: string) =>
   founderJson<ReferralAttributionResponse>("/founder/referrals/attribution", founderKey);
 
+export interface FunnelStage {
+  key: string;
+  label: string;
+  count: number;
+  conversionFromPrev: number | null;
+}
+
+export interface FounderFunnelResponse {
+  stages: FunnelStage[];
+  readinessThreshold: number;
+  paidViaPurchaseInterest: number;
+  overallConversionRate: number;
+}
+
+export const getFounderFunnel = (founderKey: string) =>
+  founderJson<FounderFunnelResponse>("/founder/funnel", founderKey);
+
 export interface EchoUserSignalsResponse {
   signals: {
     email: string;

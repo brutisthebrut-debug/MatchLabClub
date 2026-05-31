@@ -3595,6 +3595,45 @@ export const GetFounderReferralsResponse = zod.object({
 
 
 /**
+ * Counts distinct users at each stage of the readiness-to-matching-to-revenue
+journey so the founder can see where people drop off:
+
+accounts -> fed a signal -> gained readiness -> entered the matching pool
+-> got a match intro -> purchased.
+
+Each stage is a distinct-user count derived from the underlying tables.
+Stages are computed independently (a paid user need not have toggled the
+pool), so the step conversion is count[i] / count[i-1] and is meant as a
+directional drop-off read, not a strict nested cohort. Anonymous visits
+are tracked client-side via analytics, so the first server-visible stage
+is accounts.
+
+Requires founder key.
+
+ * @summary Readiness-to-revenue funnel for the founder dashboard
+ */
+export const GetFounderFunnelQueryParams = zod.object({
+  "key": zod.coerce.string().optional()
+})
+
+export const GetFounderFunnelHeader = zod.object({
+  "x-founder-key": zod.string().optional()
+})
+
+export const GetFounderFunnelResponse = zod.object({
+  "readinessThreshold": zod.number().describe('Effective matching pool readiness threshold at request time.'),
+  "paidViaPurchaseInterest": zod.number().describe('Distinct paid purchase_interest emails. Supplemental to the tier-based purchased stage, since it also captures anonymous one-off buys.'),
+  "overallConversionRate": zod.number().describe('Purchased distinct users divided by accounts. Zero when there are no accounts.'),
+  "stages": zod.array(zod.object({
+  "key": zod.string().describe('Stable stage identifier (accounts, signal_fed, readiness_gained, entered_matching, matched, purchased).'),
+  "label": zod.string(),
+  "count": zod.number().describe('Distinct users who reached this stage.'),
+  "conversionFromPrev": zod.number().nullable().describe('count divided by the previous stage count. Null for the first stage. Zero when the previous stage is zero.')
+})).describe('Ordered funnel stages from accounts to purchased.')
+})
+
+
+/**
  * Routes a free-form founder question to the Echo persona via Anthropic.
 The full strategic playbook is embedded in the system prompt so the
 reply can reference prior decisions. On model failure or unavailable

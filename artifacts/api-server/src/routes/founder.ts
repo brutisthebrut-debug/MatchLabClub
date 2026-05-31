@@ -36,6 +36,7 @@ import {
   brainControlsOverridden,
   defaultControls,
   effectiveBaseWeights,
+  effectiveReadinessThreshold,
   CONNECTOR_CATALOG,
   type BrainControls,
 } from "../lib/brainConfig";
@@ -798,6 +799,121 @@ router.get("/founder/referrals/attribution", requireFounder, async (req, res): P
       totalPaidConverts,
       overallConversionRate: totalReferrals > 0 ? totalPaidConverts / totalReferrals : 0,
     },
+  });
+});
+
+// Readiness-to-revenue funnel. Counts distinct users at each stage of the
+// journey (accounts -> fed a signal -> gained readiness -> entered the pool ->
+// got a match intro -> purchased) so the founder can see where people drop off.
+// Anonymous visits are tracked client-side via analytics, so the first
+// server-visible stage is accounts.
+router.get("/founder/funnel", requireFounder, async (req, res): Promise<void> => {
+  const [
+    accountsRow,
+    auditUsers,
+    wellnessUsers,
+    compatibilityUsers,
+    lifePulseUsers,
+    readinessRows,
+    poolRows,
+    proposalUserRows,
+    proposalToRows,
+    paidUserRows,
+    paidInterestRow,
+    readinessThreshold,
+  ] = await Promise.all([
+    db.select({ n: sql<number>`count(*)::int` }).from(usersTable),
+    db
+      .selectDistinct({ userId: auditsTable.userId })
+      .from(auditsTable)
+      .where(isNotNull(auditsTable.userId)),
+    db
+      .selectDistinct({ userId: wellnessAnswersTable.userId })
+      .from(wellnessAnswersTable)
+      .where(isNotNull(wellnessAnswersTable.userId)),
+    db
+      .selectDistinct({ userId: compatibilityReadsTable.userId })
+      .from(compatibilityReadsTable)
+      .where(isNotNull(compatibilityReadsTable.userId)),
+    db
+      .selectDistinct({ userId: lifePulsesTable.userId })
+      .from(lifePulsesTable)
+      .where(isNotNull(lifePulsesTable.userId)),
+    db
+      .selectDistinct({ userId: matchingReadinessSnapshotsTable.userId })
+      .from(matchingReadinessSnapshotsTable)
+      .where(gte(matchingReadinessSnapshotsTable.score, 1)),
+    db
+      .selectDistinct({ userId: matchPoolMembershipTable.userId })
+      .from(matchPoolMembershipTable)
+      .where(sql`${matchPoolMembershipTable.status} <> 'off'`),
+    db
+      .selectDistinct({ userId: matchProposalsTable.userId })
+      .from(matchProposalsTable),
+    db
+      .selectDistinct({ userId: matchProposalsTable.proposedToUserId })
+      .from(matchProposalsTable)
+      .where(isNotNull(matchProposalsTable.proposedToUserId)),
+    db
+      .selectDistinct({ id: usersTable.id })
+      .from(usersTable)
+      .where(inArray(usersTable.tier, ["reset", "wingman"])),
+    db
+      .select({
+        n: sql<number>`count(distinct lower(${purchaseInterestTable.email}))::int`,
+      })
+      .from(purchaseInterestTable)
+      .where(eq(purchaseInterestTable.status, "paid")),
+    effectiveReadinessThreshold(),
+  ]);
+
+  const accounts = Number(accountsRow[0]?.n ?? 0);
+
+  const signalFed = new Set<string>(
+    [...auditUsers, ...wellnessUsers, ...compatibilityUsers, ...lifePulseUsers]
+      .map((r) => r.userId)
+      .filter((id): id is string => Boolean(id)),
+  ).size;
+
+  const readinessGained = readinessRows.length;
+  const enteredMatching = poolRows.length;
+
+  const matched = new Set<string>([
+    ...proposalUserRows.map((r) => r.userId).filter((id): id is string => Boolean(id)),
+    ...proposalToRows.map((r) => r.userId).filter((id): id is string => Boolean(id)),
+  ]).size;
+
+  const purchased = paidUserRows.length;
+  const paidViaPurchaseInterest = Number(paidInterestRow[0]?.n ?? 0);
+
+  const ordered = [
+    { key: "accounts", label: "Accounts", count: accounts },
+    { key: "signal_fed", label: "Fed a signal", count: signalFed },
+    { key: "readiness_gained", label: "Gained readiness", count: readinessGained },
+    { key: "entered_matching", label: "Entered matching pool", count: enteredMatching },
+    { key: "matched", label: "Got a match intro", count: matched },
+    { key: "purchased", label: "Purchased", count: purchased },
+  ];
+
+  const stages = ordered.map((stage, i) => {
+    if (i === 0) return { ...stage, conversionFromPrev: null };
+    const prev = ordered[i - 1].count;
+    return {
+      ...stage,
+      conversionFromPrev: prev > 0 ? stage.count / prev : 0,
+    };
+  });
+
+  req.log.info(
+    { accounts, signalFed, readinessGained, enteredMatching, matched, purchased },
+    "founder.funnel served",
+  );
+
+  res.json({
+    stages,
+    readinessThreshold,
+    paidViaPurchaseInterest,
+    overallConversionRate: accounts > 0 ? purchased / accounts : 0,
   });
 });
 

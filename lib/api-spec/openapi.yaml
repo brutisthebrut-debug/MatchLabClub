@@ -2689,6 +2689,51 @@ paths:
               schema:
                 $ref: "#/components/schemas/AiError"
 
+  /founder/funnel:
+    get:
+      operationId: getFounderFunnel
+      tags: [founder]
+      summary: Readiness-to-revenue funnel for the founder dashboard
+      description: |
+        Counts distinct users at each stage of the readiness-to-matching-to-revenue
+        journey so the founder can see where people drop off:
+
+        accounts -> fed a signal -> gained readiness -> entered the matching pool
+        -> got a match intro -> purchased.
+
+        Each stage is a distinct-user count derived from the underlying tables.
+        Stages are computed independently (a paid user need not have toggled the
+        pool), so the step conversion is count[i] / count[i-1] and is meant as a
+        directional drop-off read, not a strict nested cohort. Anonymous visits
+        are tracked client-side via analytics, so the first server-visible stage
+        is accounts.
+
+        Requires founder key.
+      parameters:
+        - name: x-founder-key
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: key
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Funnel summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FounderFunnelSummary"
+        "401":
+          description: Founder key required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiError"
+
   /founder/copilot/ask:
     post:
       operationId: askFounderCopilot
@@ -5107,6 +5152,40 @@ components:
               invitedConverted:
                 type: boolean
                 description: True when the invitee user has at least one paid purchase_interest row.
+
+    FounderFunnelSummary:
+      type: object
+      required: [stages, readinessThreshold, paidViaPurchaseInterest, overallConversionRate]
+      properties:
+        readinessThreshold:
+          type: integer
+          description: Effective matching pool readiness threshold at request time.
+        paidViaPurchaseInterest:
+          type: integer
+          description: Distinct paid purchase_interest emails. Supplemental to the tier-based purchased stage, since it also captures anonymous one-off buys.
+        overallConversionRate:
+          type: number
+          format: float
+          description: Purchased distinct users divided by accounts. Zero when there are no accounts.
+        stages:
+          type: array
+          description: Ordered funnel stages from accounts to purchased.
+          items:
+            type: object
+            required: [key, label, count, conversionFromPrev]
+            properties:
+              key:
+                type: string
+                description: Stable stage identifier (accounts, signal_fed, readiness_gained, entered_matching, matched, purchased).
+              label:
+                type: string
+              count:
+                type: integer
+                description: Distinct users who reached this stage.
+              conversionFromPrev:
+                type: [number, 'null']
+                format: float
+                description: count divided by the previous stage count. Null for the first stage. Zero when the previous stage is zero.
 
     LifePulseInput:
       type: object

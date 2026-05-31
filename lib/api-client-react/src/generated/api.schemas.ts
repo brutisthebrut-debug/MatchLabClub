@@ -1372,6 +1372,30 @@ export interface FounderReferralsSummary {
   recentReferrals: FounderReferralsSummaryRecentReferralsItem[];
 }
 
+export type FounderFunnelSummaryStagesItem = {
+  /** Stable stage identifier (accounts, signal_fed, readiness_gained, entered_matching, matched, purchased). */
+  key: string;
+  label: string;
+  /** Distinct users who reached this stage. */
+  count: number;
+  /**
+     * count divided by the previous stage count. Null for the first stage. Zero when the previous stage is zero.
+     * @nullable
+     */
+  conversionFromPrev: number | null;
+};
+
+export interface FounderFunnelSummary {
+  /** Effective matching pool readiness threshold at request time. */
+  readinessThreshold: number;
+  /** Distinct paid purchase_interest emails. Supplemental to the tier-based purchased stage, since it also captures anonymous one-off buys. */
+  paidViaPurchaseInterest: number;
+  /** Purchased distinct users divided by accounts. Zero when there are no accounts. */
+  overallConversionRate: number;
+  /** Ordered funnel stages from accounts to purchased. */
+  stages: FounderFunnelSummaryStagesItem[];
+}
+
 export interface LifePulseInput {
   /**
      * Subjective sleep quality last night (1 worst, 5 best).
@@ -2893,6 +2917,10 @@ key?: string;
 };
 
 export type GetFounderReferralsParams = {
+key?: string;
+};
+
+export type GetFounderFunnelParams = {
 key?: string;
 };
 

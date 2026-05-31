@@ -10,13 +10,13 @@ import {
   getOcrPendingRules, approveOcrRule, rejectOcrRule, getOcrRuleReviewLog,
   getAlertSettings, updateAlertSettings, resetAlertSettings,
   getMatchingQueue, getMatchingPool, setMatchingProposalStatus, addMatchingProposalNote,
-  getReferralAttribution, getEchoUserSignals,
+  getReferralAttribution, getEchoUserSignals, getFounderFunnel,
   getBrainControls, updateBrainControls, resetBrainControls, getBrainMap,
   getReweighting, getCuration, saveCuration,
   type BrainControls, type BrainControlsResponse, type BrainMapResponse,
   type ReweightingResponse, type CurationEntry,
   type MatchingQueueItem, type MatchingPoolItem,
-  type ReferralAttributionResponse, type EchoUserSignalsResponse,
+  type ReferralAttributionResponse, type EchoUserSignalsResponse, type FounderFunnelResponse,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
   type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
   type AiThresholdChange, type RollupHeartbeatResponse,
@@ -1608,6 +1608,134 @@ function ReferralAttributionPanel({ founderKey }: { founderKey: string }) {
   </ul>
   )}
   </div>
+  </div>
+  </div>
+  );
+}
+
+function FunnelPanel({ founderKey }: { founderKey: string }) {
+  const [data, setData] = useState<FounderFunnelResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+  let cancelled = false;
+  setLoading(true);
+  setErr(null);
+  getFounderFunnel(founderKey)
+.then((res) => {
+  if (!cancelled) setData(res);
+  })
+.catch((e) => {
+  if (!cancelled) setErr(e instanceof Error ? e.message : "Failed to load funnel");
+  })
+.finally(() => {
+  if (!cancelled) setLoading(false);
+  });
+  return () => {
+  cancelled = true;
+  };
+  }, [founderKey, reloadKey]);
+
+  const stages = data?.stages ?? [];
+  const topCount = stages.reduce((m, s) => Math.max(m, s.count), 0);
+  const overallPct = data ? Math.round(data.overallConversionRate * 1000) / 10 : 0;
+
+  return (
+  <div className="glass rounded-2xl p-6 space-y-4" data-testid="funnel-panel">
+  <div className="flex items-start justify-between gap-4 flex-wrap">
+  <div className="space-y-1">
+  <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
+  Readiness to revenue funnel
+  </p>
+  <p className="text-base font-semibold text-foreground">
+  Where people drop off on the way to a purchase
+  </p>
+  <p className="text-xs text-muted-foreground/80">
+  Distinct users at each stage: account, fed a signal, gained readiness, entered the pool, got a match intro, then purchased. Anonymous visits are tracked client side.
+  </p>
+  </div>
+  <button
+  type="button"
+  onClick={() => setReloadKey((k) => k + 1)}
+  disabled={loading}
+  data-testid="button-refresh-funnel"
+  className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-colors disabled:opacity-60"
+  >
+  {loading ? "Loading…" : "Refresh"}
+  </button>
+  </div>
+
+  {err && (
+  <div
+  className="rounded-xl p-3 border flex items-start gap-2 text-sm"
+  style={{
+  background: "hsl(348 55% 58% / 0.10)",
+  borderColor: "hsl(348 55% 58% / 0.40)",
+  color: "hsl(348 55% 78%)",
+  }}
+  data-testid="funnel-error"
+  >
+  <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+  <span>{err}</span>
+  </div>
+  )}
+
+  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+  <div className="glass rounded-xl p-3" data-testid="stat-funnel-overall">
+  <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Account to purchase</p>
+  <p className="text-xl font-bold text-foreground mt-1">{data ? `${overallPct}%` : "0%"}</p>
+  </div>
+  <div className="glass rounded-xl p-3" data-testid="stat-funnel-threshold">
+  <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Readiness gate</p>
+  <p className="text-xl font-bold text-foreground mt-1">{data?.readinessThreshold ?? "—"}</p>
+  </div>
+  <div className="glass rounded-xl p-3" data-testid="stat-funnel-purchase-interest">
+  <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Paid via Stripe</p>
+  <p className="text-xl font-bold text-foreground mt-1">{data?.paidViaPurchaseInterest ?? "0"}</p>
+  </div>
+  </div>
+
+  <div className="glass rounded-xl p-4 space-y-3" data-testid="funnel-stages">
+  {loading && !data ? (
+  <p className="text-xs text-muted-foreground/70">Loading…</p>
+  ) : stages.length === 0 ? (
+  <p className="text-xs text-muted-foreground/70">No funnel data yet.</p>
+  ) : (
+  <ul className="space-y-3">
+  {stages.map((s) => {
+  const pct = topCount > 0 ? (s.count / topCount) * 100 : 0;
+  const convPct =
+  s.conversionFromPrev === null
+  ? null
+  : Math.round(s.conversionFromPrev * 1000) / 10;
+  return (
+  <li
+  key={s.key}
+  className="space-y-1"
+  data-testid={`funnel-stage-${s.key}`}
+  >
+  <div className="flex items-center justify-between text-xs">
+  <span className="text-foreground truncate pr-3">{s.label}</span>
+  <span className="text-muted-foreground/80 tabular-nums shrink-0">
+  {s.count}
+  {convPct !== null && (
+  <span className="text-muted-foreground/50"> · {convPct}% from prev</span>
+  )}
+  </span>
+  </div>
+  <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+  <div
+  className="h-full rounded-full"
+  style={{ width: `${pct}%`, background: "linear-gradient(90deg, hsl(var(--brand-indigo)), hsl(var(--brand-gold)))" }}
+  />
+  </div>
+  </li>
+  );
+  })}
+  </ul>
+  )}
   </div>
   </div>
   );
@@ -3813,6 +3941,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   <BackgroundJobsPanel refreshKey={refreshKey} founderKey={FOUNDER_KEY} />
   <TrashPurgePanel founderKey={FOUNDER_KEY} onPurged={() => setRefreshKey((k) => k + 1)} />
   <TierFlipPanel founderKey={FOUNDER_KEY} />
+  <FunnelPanel founderKey={FOUNDER_KEY} />
   <ReferralAttributionPanel founderKey={FOUNDER_KEY} />
   <EchoCopilotPanel founderKey={FOUNDER_KEY} />
   <GeoipRefreshPanel founderKey={FOUNDER_KEY} />

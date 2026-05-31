@@ -96,10 +96,12 @@ import type {
   ExpiringTrashedAudits,
   ExtractMessageScreenshot400,
   ExtractScreenshot400,
+  FounderFunnelSummary,
   FounderReferralsSummary,
   GeoipRefreshResult,
   GetAiFallbackRateParams,
   GetAuditReportVersion404,
+  GetFounderFunnelParams,
   GetFounderReferralsParams,
   GetMirrorPortrait401,
   HandleBrowserLoginCallbackParams,
@@ -7810,6 +7812,105 @@ export function useGetFounderReferrals<TData = Awaited<ReturnType<typeof getFoun
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetFounderReferralsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetFounderFunnelUrl = (params?: GetFounderFunnelParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/founder/funnel?${stringifiedParams}` : `/api/founder/funnel`
+}
+
+/**
+ * Counts distinct users at each stage of the readiness-to-matching-to-revenue
+journey so the founder can see where people drop off:
+
+accounts -> fed a signal -> gained readiness -> entered the matching pool
+-> got a match intro -> purchased.
+
+Each stage is a distinct-user count derived from the underlying tables.
+Stages are computed independently (a paid user need not have toggled the
+pool), so the step conversion is count[i] / count[i-1] and is meant as a
+directional drop-off read, not a strict nested cohort. Anonymous visits
+are tracked client-side via analytics, so the first server-visible stage
+is accounts.
+
+Requires founder key.
+
+ * @summary Readiness-to-revenue funnel for the founder dashboard
+ */
+export const getFounderFunnel = async (params?: GetFounderFunnelParams, options?: RequestInit): Promise<FounderFunnelSummary> => {
+
+  return customFetch<FounderFunnelSummary>(getGetFounderFunnelUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFounderFunnelQueryKey = (params?: GetFounderFunnelParams,) => {
+    return [
+    `/api/founder/funnel`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetFounderFunnelQueryOptions = <TData = Awaited<ReturnType<typeof getFounderFunnel>>, TError = ErrorType<AiError>>(params?: GetFounderFunnelParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFounderFunnel>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFounderFunnelQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFounderFunnel>>> = ({ signal }) => getFounderFunnel(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFounderFunnel>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFounderFunnelQueryResult = NonNullable<Awaited<ReturnType<typeof getFounderFunnel>>>
+export type GetFounderFunnelQueryError = ErrorType<AiError>
+
+
+/**
+ * @summary Readiness-to-revenue funnel for the founder dashboard
+ */
+
+export function useGetFounderFunnel<TData = Awaited<ReturnType<typeof getFounderFunnel>>, TError = ErrorType<AiError>>(
+ params?: GetFounderFunnelParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFounderFunnel>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFounderFunnelQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

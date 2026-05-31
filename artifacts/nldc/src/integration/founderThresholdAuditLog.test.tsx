@@ -229,6 +229,12 @@ vi.mock("@/lib/apiClient", () => ({
     surfaces: [],
   })),
   getEchoUserSignals: vi.fn(async () => ({ signals: null })),
+  getFounderFunnel: vi.fn(async () => ({
+    stages: [],
+    readinessThreshold: 50,
+    paidViaPurchaseInterest: 0,
+    overallConversionRate: 0,
+  })),
 }));
 
 vi.mock("@workspace/api-client-react", () => ({

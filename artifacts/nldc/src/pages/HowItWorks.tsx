@@ -1,4 +1,5 @@
 import { withAlpha } from "@/lib/brandColor";
+import { trackEvent } from "@/lib/analytics";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -372,7 +373,7 @@ export default function HowItWorks() {
                 className="rounded-full px-8 h-14 text-base font-semibold"
                 data-testid="button-hiw-pricing"
               >
-                <Link href="/pricing">See pricing</Link>
+                <Link href="/pricing" onClick={() => trackEvent("showcase_to_pricing", { source: "how_it_works_hero" })}>See pricing</Link>
               </Button>
             </motion.div>
           </div>
@@ -716,9 +717,14 @@ export default function HowItWorks() {
             <h2 className="text-3xl md:text-5xl font-serif font-bold leading-tight mb-6">
               Start the engine. <span className="gradient-text italic pr-1">It is free.</span>
             </h2>
-            <p className="text-lg text-muted-foreground leading-relaxed mb-9">
+            <p className="text-lg text-muted-foreground leading-relaxed mb-4">
               Run your first Signal Check in about three minutes. No account
               needed, and your results are saved for when you come back.
+            </p>
+            <p className="text-base text-muted-foreground/80 leading-relaxed mb-9">
+              Free gets the readiness climb started. The paid tiers feed the
+              machine the deepest signals, so you clear the bar and unlock
+              matching sooner.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button
@@ -737,7 +743,7 @@ export default function HowItWorks() {
                 className="rounded-full px-8 h-14 text-base font-semibold"
                 data-testid="button-hiw-cta-pricing"
               >
-                <Link href="/pricing">Compare plans</Link>
+                <Link href="/pricing" onClick={() => trackEvent("showcase_to_pricing", { source: "how_it_works_final_cta" })}>Compare plans</Link>
               </Button>
             </div>
             {!isAuthenticated && (

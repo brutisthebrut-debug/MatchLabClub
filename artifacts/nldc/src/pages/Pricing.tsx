@@ -4,10 +4,11 @@ import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { CheckCircle, ArrowRight, Headphones, Sparkles, Zap, Heart, Lock, FlaskConical } from "lucide-react";
-import { useState } from "react";
+import { CheckCircle, ArrowRight, Headphones, Sparkles, Zap, Heart, Lock, FlaskConical, Target, Gauge } from "lucide-react";
+import { useEffect, useState } from "react";
 import { TrustBadge } from "@/components/TrustBadge";
 import { ShareButton } from "@/components/echo/ShareButton";
+import { trackEvent } from "@/lib/analytics";
 
 const TIER_SHARE_TEXT: Record<string, string> = {
   "Free Signal Check": "MatchLab Club Free Signal Check: a 3-minute audit that shows what your profile is actually projecting.",
@@ -18,7 +19,8 @@ const TIER_SHARE_TEXT: Record<string, string> = {
 const TIERS = [
   {
     name: "Free Signal Check",
-    outcome: "See what's holding you back",
+    outcome: "Start the readiness climb, free",
+    readinessPayoff: "Puts your first Match Readiness signals on the board so the climb toward matching begins.",
     price: "$0",
     promoPrice: null,
     period: "",
@@ -46,7 +48,8 @@ const TIERS = [
   },
   {
     name: "Dating Reset",
-    outcome: "Get fully rewritten. Start matching in days, not months",
+    outcome: "Climb to match-ready, faster",
+    readinessPayoff: "A full profile rebuild feeds the machine the deepest signals, so your readiness jumps and matching opens sooner.",
     price: "$97",
     promoPrice: null,
     period: "one-time",
@@ -81,7 +84,8 @@ const TIERS = [
   },
   {
     name: "Wingman",
-    outcome: "Get a real coach in your corner, weekly",
+    outcome: "Skip the line to curated matches",
+    readinessPayoff: "Top readiness lane plus founder-curated intros, hand picked inside your radius once you clear the bar.",
     price: "$197",
     promoPrice: "$118",
     period: "per month",
@@ -130,6 +134,10 @@ const fadeUp = (delay = 0) => ({
 export default function Pricing() {
   useMeta("Pricing: Free, $97 & $197 Coaching", "Three ways to feed the engine that turns your real signals into real matches. Start free with the Signal Check, go deeper with the Dating Reset, or get founder-curated intros with Wingman.");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  useEffect(() => {
+    trackEvent("pricing_viewed", { source: "pricing_page" });
+  }, []);
 
   return (
     <AppLayout>
@@ -256,6 +264,16 @@ export default function Pricing() {
                       {tier.period && <span className="text-sm text-muted-foreground mb-1">/{tier.period}</span>}
                     </div>
                     <p className="text-sm text-muted-foreground leading-relaxed">{tier.desc}</p>
+                    {"readinessPayoff" in tier && tier.readinessPayoff && (
+                      <div
+                        className="mt-3 flex items-start gap-2 rounded-xl p-2.5"
+                        style={{ background: `${withAlpha(tier.accentColor, 0.08)}`, border: `1px solid ${withAlpha(tier.accentColor, 0.18)}` }}
+                        data-testid={`readiness-payoff-${i}`}
+                      >
+                        <Target className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: tier.accentColor }} />
+                        <p className="text-xs leading-relaxed text-foreground/75">{tier.readinessPayoff}</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* What you walk away with */}
@@ -441,6 +459,42 @@ export default function Pricing() {
                     <p className="text-xs text-muted-foreground/50">Same price as the Dating Reset, $97 one-time</p>
                   </div>
                 </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Why this is worth paying for: the matching payoff */}
+          <motion.div {...fadeUp(0.32)} className="max-w-3xl mx-auto mb-14">
+            <div
+              className="rounded-3xl p-8 sm:p-10 text-center relative overflow-hidden"
+              style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo) / 0.12), hsl(var(--brand-gold) / 0.08))", border: "1px solid hsl(var(--brand-indigo) / 0.2)" }}
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4" style={{ background: "hsl(var(--brand-indigo) / 0.15)" }}>
+                <Gauge className="w-3.5 h-3.5" style={{ color: "hsl(var(--brand-indigo))" }} />
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--brand-indigo))" }}>Every tier feeds one meter</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">You are not buying a tool. You are buying readiness, and matching is the payoff.</h2>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-6">
+                The more the machine knows you, the better it matches you. Every audit, rewrite, and quiz feeds one rising Match Readiness meter. Paid tiers feed it the deepest signals, so you clear the bar and unlock founder-curated intros near you sooner.
+              </p>
+              <div className="flex items-center justify-center gap-4 flex-wrap">
+                <Link
+                  href="/matching"
+                  onClick={() => trackEvent("pricing_to_matching", { source: "pricing_payoff" })}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white"
+                  style={{ background: "linear-gradient(135deg, hsl(var(--brand-indigo)), hsl(var(--brand-gold)))", boxShadow: "0 4px 20px hsl(var(--brand-indigo) / 0.3)" }}
+                  data-testid="link-pricing-to-matching"
+                >
+                  See how matching unlocks
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  href="/how-it-works"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                  data-testid="link-pricing-to-how-it-works"
+                >
+                  How the climb works
+                </Link>
               </div>
             </div>
           </motion.div>

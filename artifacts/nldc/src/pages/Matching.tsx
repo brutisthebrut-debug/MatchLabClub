@@ -56,6 +56,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { trackEvent } from "@/lib/analytics";
 import { NextStepCard } from "@/components/NextStepCard";
 import {
   useGetMatchingState,
@@ -456,6 +457,9 @@ export default function Matching() {
       await queryClient.invalidateQueries({
         queryKey: getGetMatchingStateQueryKey(),
       });
+      if (next) {
+        trackEvent("matching_pool_joined", { readiness: readinessScore });
+      }
       toast({
         title: next
           ? "You're on the matching list."
@@ -513,6 +517,7 @@ export default function Matching() {
   async function handleProposalResponse(id: string, interested: boolean) {
     try {
       await respondProposal.mutateAsync({ id, data: { interested } });
+      trackEvent("match_proposal_response", { interested });
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: getGetMatchingProposalsQueryKey(),
@@ -1066,15 +1071,31 @@ export default function Matching() {
                   )}
                 </p>
                 {poolLocked && (
-                  <p
-                    className="text-sm mt-2 text-[hsl(326_100%_50%)] font-medium"
-                    data-testid="text-pool-locked"
-                  >
-                    The pool opens at a readiness of {readinessThreshold}. You
-                    are at {readinessScore} right now. Run a compass read, answer
-                    a wellness prompt, or import your Hinge data to close the
-                    gap.
-                  </p>
+                  <>
+                    <p
+                      className="text-sm mt-2 text-[hsl(326_100%_50%)] font-medium"
+                      data-testid="text-pool-locked"
+                    >
+                      The pool opens at a readiness of {readinessThreshold}. You
+                      are at {readinessScore} right now. Run a compass read,
+                      answer a wellness prompt, or import your Hinge data to
+                      close the gap.
+                    </p>
+                    <Link
+                      href="/pricing"
+                      onClick={() =>
+                        trackEvent("matching_locked_to_pricing", {
+                          readiness: readinessScore,
+                        })
+                      }
+                      className="inline-flex items-center gap-1.5 text-sm mt-2 font-semibold text-[hsl(var(--brand-indigo))] hover:underline"
+                      data-testid="link-locked-to-pricing"
+                    >
+                      The Dating Reset feeds the deepest signals to close it
+                      faster
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </>
                 )}
               </div>
               <Switch

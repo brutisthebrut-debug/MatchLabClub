@@ -149,6 +149,12 @@ vi.mock("@/lib/apiClient", async () => {
       surfaces: [],
     }),
     getEchoUserSignals: async () => ({ signals: null }),
+    getFounderFunnel: async () => ({
+      stages: [],
+      readinessThreshold: 50,
+      paidViaPurchaseInterest: 0,
+      overallConversionRate: 0,
+    }),
   };
 });
 
