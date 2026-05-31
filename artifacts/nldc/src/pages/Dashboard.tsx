@@ -58,6 +58,7 @@ import {
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { HandoffShareDialog } from "@/components/HandoffShareDialog";
 import { WelcomePanel } from "@/components/WelcomePanel";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { FeatureHub } from "@/components/FeatureHub";
 import { hasAnyAnonymousIds } from "@/lib/anonymousIds";
 import { readSavedProgressEntries, type ProgressEntryLike } from "@/lib/contextBuilder";
@@ -1944,6 +1945,16 @@ export default function Dashboard() {
 
   {/* Full feature catalog, moved here from the navbar to keep the top nav focused */}
   <FeatureHub />
+
+  <ToolHandoff
+  testId="dashboard-handoff"
+  fedLine="Every profile you audit teaches the machine your taste and sharpens who it matches you with. Keep the trail going."
+  steps={[
+  { label: "Coach a conversation", href: "/coach", desc: "Turn a profile read into a reply that lands." },
+  { label: "Read your patterns", href: "/insights", desc: "See the communication style across your audits." },
+  { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+  ]}
+  />
 
   </div>
   </div>

@@ -20,6 +20,7 @@ import {
   Compass,
   Database,
   Download,
+  Eye,
   FileText,
   Heart,
   ListChecks,
@@ -55,9 +56,12 @@ import {
   getListImportsQueryKey,
   useGetDatingWins,
   getGetDatingWinsQueryKey,
+  useGetMirrorPortrait,
+  getGetMirrorPortraitQueryKey,
 } from "@workspace/api-client-react";
 import { ShareButton } from "@/components/echo/ShareButton";
 import { NextStepCard } from "@/components/NextStepCard";
+import { DEMO_PORTRAIT } from "@/lib/mirrorDemo";
 
 const WELLNESS_DIMENSION_COUNT = 18;
 
@@ -402,6 +406,12 @@ export default function SelfHub() {
   const datingWins = useGetDatingWins({
   query: { queryKey: getGetDatingWinsQueryKey(), enabled: isAuthenticated },
   });
+  // The Mirror is the spine: surface the live portrait as the lead card. The
+  // deterministic endpoint is always non-empty for a signed-in user; the demo
+  // portrait only stands in while the first read loads or if it fails.
+  const mirrorPortrait = useGetMirrorPortrait({
+  query: { queryKey: getGetMirrorPortraitQueryKey(), enabled: isAuthenticated, retry: false },
+  });
 
   // Derive completeness: count distinct dimensions answered, out of 18.
   const wellnessRows = (wellness.data?.answers ?? []) as Array<{ dimension?: string }>;
@@ -551,6 +561,7 @@ export default function SelfHub() {
   const readinessScore = matchingState.data?.readiness?.score ?? 0;
   const activeSources = signalSources.filter(s => s.active).length;
   const liveSources = signalSources.filter(s => s.state === "live").length;
+  const portrait = mirrorPortrait.data ?? DEMO_PORTRAIT;
 
   return (
   <AppLayout>
@@ -569,6 +580,52 @@ export default function SelfHub() {
   Everything below feeds one Match Readiness score that grows toward real matches near you.
   It is all yours, exportable, and deletable at any time.
   </p>
+  </motion.div>
+
+  {/* Your Mirror: the spine. The evolving model of you that every signal feeds. */}
+  <motion.div
+  {...fadeUp(0.015)}
+  className="mb-6 md:mb-8 rounded-3xl p-6 md:p-8 border border-violet-500/30 bg-gradient-to-br from-violet-500/10 to-transparent"
+  data-testid="card-mirror-hero"
+  >
+  <div className="flex flex-wrap items-center gap-2 mb-3">
+  <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest font-bold text-violet-500">
+  <Eye className="h-4 w-4" aria-hidden="true" /> Your Mirror
+  </span>
+  <span className="text-xs text-muted-foreground">· {portrait.stageLabel} · {portrait.coveragePercent}% of you mapped</span>
+  </div>
+  <p className="font-serif text-xl md:text-2xl leading-relaxed text-foreground" data-testid="mirror-hero-headline">
+  {portrait.headline}
+  </p>
+  {portrait.nextSignal && (
+  <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-violet-500/20 bg-background/40 p-4 md:flex-row md:items-center md:justify-between">
+  <div className="flex items-start gap-3">
+  <Compass className="mt-0.5 h-5 w-5 shrink-0 text-violet-500" aria-hidden="true" />
+  <div>
+  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">The one move that sharpens me most</p>
+  <p className="mt-0.5 font-semibold text-foreground">{portrait.nextSignal.label}</p>
+  </div>
+  </div>
+  <Link
+  href={portrait.nextSignal.href}
+  className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold bg-violet-500 text-white hover:bg-violet-600 transition-colors"
+  data-testid="mirror-hero-next-signal"
+  >
+  Feed this signal
+  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+  </Link>
+  </div>
+  )}
+  <div className="mt-4">
+  <Link
+  href="/your-mirror"
+  className="inline-flex items-center gap-1.5 text-sm font-semibold text-violet-500 hover:text-violet-600"
+  data-testid="mirror-hero-open"
+  >
+  Open Your Mirror, ask it anything
+  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+  </Link>
+  </div>
   </motion.div>
 
   {/* Readiness hero: the single meter the whole product climbs toward */}

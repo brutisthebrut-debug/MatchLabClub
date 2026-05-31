@@ -102,7 +102,10 @@ export default function Onboarding() {
   function finish() {
     markOnboardingComplete();
     trackEvent("onboarding_complete", { goal });
-    setLocation("/me");
+    // Land a brand-new user straight on Your Mirror: the model of them is
+    // already forming from what they just answered, with the readiness climb
+    // and the single next signal to feed visible right away.
+    setLocation("/your-mirror");
   }
 
   function skipAll() {

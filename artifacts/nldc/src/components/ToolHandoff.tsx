@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowRight, TrendingUp } from "lucide-react";
+import { ArrowRight, TrendingUp, Eye } from "lucide-react";
 
 export type HandoffStep = {
   label: string;
@@ -11,15 +11,19 @@ export type HandoffStep = {
 /**
  * Shared "next best step" handoff shown at the end of every tool result so the
  * user always has a forward path and can see how the tool fed their readiness.
- * No dead ends: the trail keeps climbing toward matching.
+ * Every handoff leads back to Your Mirror, the model of you that this signal
+ * just sharpened, so the spine stays visible from every tool. No dead ends:
+ * the trail keeps climbing toward matching.
  */
 export function ToolHandoff({
   fedLine,
   steps,
+  mirrorHref = "/your-mirror",
   testId = "tool-handoff",
 }: {
   fedLine: string;
   steps: HandoffStep[];
+  mirrorHref?: string;
   testId?: string;
 }) {
   return (
@@ -35,6 +39,22 @@ export function ToolHandoff({
         <span className="text-xs uppercase tracking-widest font-bold text-[hsl(326_100%_45%)]">Next best step</span>
       </div>
       <p className="text-sm text-muted-foreground leading-relaxed mb-4">{fedLine}</p>
+      <Link
+        href={mirrorHref}
+        className="group mb-3 flex items-center gap-3 rounded-2xl border border-[hsl(248_62%_52%/0.3)] bg-background/50 p-4 transition-colors hover:border-[hsl(248_62%_52%/0.5)]"
+        data-testid={`${testId}-mirror`}
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[hsl(248_62%_52%/0.12)]">
+          <Eye className="h-4.5 w-4.5 text-[hsl(248_62%_52%)]" aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold text-foreground">See your next signal in Your Mirror</span>
+          <span className="block text-xs text-muted-foreground leading-relaxed">
+            The model of you, what it can see and the one move that sharpens it next.
+          </span>
+        </span>
+        <ArrowRight className="h-4 w-4 shrink-0 text-[hsl(248_62%_52%)] transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+      </Link>
       <div className="grid gap-3 sm:grid-cols-3">
         {steps.map((step) => (
           <Link

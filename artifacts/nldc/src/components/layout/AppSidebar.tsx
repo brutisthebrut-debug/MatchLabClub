@@ -85,18 +85,37 @@ type NavSection = {
   more: NavLink[];
 };
 
-// The spine: Home, then the readiness engine, the tools that feed it, the data
-// sources that feed it, the matching payoff it unlocks, and account. Every prior
-// route is preserved, only regrouped behind progressive disclosure.
+// The spine reads as a journey, top to bottom: see yourself (the Mirror),
+// build readiness (the climb, the tools, the data that feed it), then get
+// matched (the payoff), and account. Your Mirror sits at the very top as the
+// model of you that everything feeds. Every prior route is preserved, only
+// regrouped behind the journey and progressive disclosure. No page is orphaned.
 const OVERVIEW: NavLink[] = [
+  { name: "Your Mirror", href: "/your-mirror", icon: Eye },
   { name: "Home", href: "/me", icon: Brain },
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
 ];
 
 const SECTIONS: NavSection[] = [
   {
+    id: "see-yourself",
+    label: "See yourself",
+    primary: [
+      { name: "Mirror Profile", href: "/mirror", icon: Aperture },
+      { name: "Reflection", href: "/reflection", icon: Heart },
+      { name: "Blueprint", href: "/blueprint", icon: FileText },
+      { name: "Journal", href: "/mirror/journal", icon: BookOpen },
+      { name: "Post-Date Notes", href: "/mirror/dates", icon: CalendarHeart },
+    ],
+    more: [
+      { name: "Style Map", href: "/style-map", icon: Grid3x3 },
+      { name: "Archetype", href: "/archetype", icon: Drama },
+      { name: "Connection Style", href: "/connection-style", icon: HeartHandshake },
+    ],
+  },
+  {
     id: "readiness",
-    label: "Your readiness",
+    label: "Build readiness",
     primary: [
       { name: "Readiness", href: "/progress/readiness", icon: Gauge },
       { name: "Scorecard", href: "/progress/scorecard", icon: Gauge },
@@ -114,17 +133,11 @@ const SECTIONS: NavSection[] = [
       { name: "Companion", href: "/progress/companion", icon: MessagesSquare },
       { name: "Control Center", href: "/progress/control", icon: SlidersHorizontal },
       { name: "Insights Roadmap", href: "/progress/insights-roadmap", icon: MapIcon },
-      { name: "Reflection", href: "/reflection", icon: Heart },
-      { name: "Blueprint", href: "/blueprint", icon: FileText },
-      { name: "Mirror Profile", href: "/mirror", icon: Aperture },
-      { name: "Your Mirror", href: "/your-mirror", icon: Eye },
-      { name: "Journal", href: "/mirror/journal", icon: BookOpen },
-      { name: "Post-Date Notes", href: "/mirror/dates", icon: CalendarHeart },
     ],
   },
   {
     id: "tools",
-    label: "Signal tools",
+    label: "Sharpen your signal",
     primary: [
       { name: "Signal Check", href: "/signal-check", icon: Activity },
       { name: "Message Coach", href: "/coach", icon: MessageCircle },
@@ -132,15 +145,12 @@ const SECTIONS: NavSection[] = [
       { name: "Photo Scan", href: "/scan", icon: ImageUp },
       { name: "Glow-Up Bio", href: "/glow-up", icon: Sparkles },
       { name: "Compatibility Compass", href: "/compatibility-compass", icon: Compass },
+      { name: "Wingman Studio", href: "/copilot", icon: Bot },
     ],
     more: [
       { name: "Chemistry Lab", href: "/lab", icon: FlaskConical },
       { name: "Profile Reader", href: "/profile-reader", icon: ScanSearch },
       { name: "Next Message", href: "/next-message", icon: PenLine },
-      { name: "Style Map", href: "/style-map", icon: Grid3x3 },
-      { name: "Connection Style", href: "/connection-style", icon: HeartHandshake },
-      { name: "Archetype", href: "/archetype", icon: Drama },
-      { name: "Wingman Studio", href: "/copilot", icon: Bot },
       { name: "Start My Reset", href: "/copilot/reset", icon: RotateCcw },
       { name: "Help Me Reply", href: "/copilot/reply", icon: Reply },
       { name: "Improve My Profile", href: "/copilot/profile", icon: UserPen },
@@ -153,7 +163,7 @@ const SECTIONS: NavSection[] = [
   },
   {
     id: "connections",
-    label: "Connections & data",
+    label: "Feed your data",
     primary: [
       { name: "Connection Center", href: "/connections", icon: Plug },
       { name: "Wellness Center", href: "/wellness", icon: Heart },
@@ -169,7 +179,7 @@ const SECTIONS: NavSection[] = [
   },
   {
     id: "matching",
-    label: "Matching",
+    label: "Get matched",
     primary: [
       { name: "Matching", href: "/matching", icon: HeartHandshake, badge: "Beta" },
       { name: "Future Connections", href: "/future-connections", icon: Users },

@@ -10,7 +10,7 @@ import {
   getGetMirrorPortraitQueryKey,
   type MirrorPortrait,
 } from "@workspace/api-client-react";
-import { DEMO_PORTRAIT } from "@/pages/YourMirror";
+import { DEMO_PORTRAIT } from "@/lib/mirrorDemo";
 import {
   ArrowRight,
   ArrowUpRight,

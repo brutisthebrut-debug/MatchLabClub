@@ -8,6 +8,7 @@ import type { RehearsalTurn } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { ToolHandoff } from "@/components/ToolHandoff";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   HeartHandshake,
@@ -288,6 +289,16 @@ export default function RehearsalRoom() {
               This is a rehearsal. Nothing here is saved. The other person is a practice partner,
               not a real read on anyone in your life.
             </p>
+
+            <ToolHandoff
+              testId="rehearsal-handoff"
+              fedLine="Rehearsal stays private and is never saved. When you are ready for the real conversation, here is where to take it."
+              steps={[
+                { label: "Coach a real message", href: "/coach", desc: "Turn the practice into a reply that sounds like you." },
+                { label: "Read your patterns", href: "/insights", desc: "See the communication style underneath your replies." },
+                { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
+              ]}
+            />
           </div>
         )}
       </div>
