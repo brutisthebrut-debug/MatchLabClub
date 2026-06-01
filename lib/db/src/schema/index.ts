@@ -37,3 +37,5 @@ export * from "./matching_nudge_state";
 export * from "./mirror_digest_prefs";
 
 export * from "./founder_brain";
+
+export * from "./journey_events";

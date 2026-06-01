@@ -10,13 +10,14 @@ import {
   getOcrPendingRules, approveOcrRule, rejectOcrRule, getOcrRuleReviewLog,
   getAlertSettings, updateAlertSettings, resetAlertSettings,
   getMatchingQueue, getMatchingPool, setMatchingProposalStatus, addMatchingProposalNote,
-  getReferralAttribution, getEchoUserSignals, getFounderFunnel,
+  getReferralAttribution, getEchoUserSignals, getFounderFunnel, getJourneyEvents,
   getBrainControls, updateBrainControls, resetBrainControls, getBrainMap,
   getReweighting, getCuration, saveCuration,
   type BrainControls, type BrainControlsResponse, type BrainMapResponse,
   type ReweightingResponse, type CurationEntry,
   type MatchingQueueItem, type MatchingPoolItem,
   type ReferralAttributionResponse, type EchoUserSignalsResponse, type FounderFunnelResponse,
+  type JourneyEventsResponse,
   type FounderStats, type Lead, type PurchaseInterest, type AiMetricsResponse,
   type AiThresholdsResponse, type AiPerToolThreshold, type AiMetricsTrendsResponse,
   type AiThresholdChange, type RollupHeartbeatResponse,
@@ -1610,6 +1611,161 @@ function ReferralAttributionPanel({ founderKey }: { founderKey: string }) {
   </div>
   </div>
   </div>
+  );
+}
+
+const JOURNEY_EVENT_LABELS: Record<string, string> = {
+  visit: "Visits",
+  signal_fed: "Signals fed",
+  readiness_gained: "Readiness gained",
+  tool_completed: "Tools completed",
+  match_step: "Match steps",
+  purchase: "Purchases",
+};
+
+// Demo fallback so the Activity panel is never blank before any real event lands.
+const DEMO_JOURNEY_EVENTS: JourneyEventsResponse = {
+  counts: [
+    { eventType: "visit", today: 42, last7d: 318, last30d: 1294 },
+    { eventType: "signal_fed", today: 9, last7d: 71, last30d: 286 },
+    { eventType: "readiness_gained", today: 6, last7d: 48, last30d: 192 },
+    { eventType: "tool_completed", today: 7, last7d: 55, last30d: 221 },
+    { eventType: "match_step", today: 2, last7d: 14, last30d: 53 },
+    { eventType: "purchase", today: 1, last7d: 5, last30d: 18 },
+  ],
+  totals: { today: 67, last7d: 511, last30d: 2064 },
+  recent: [
+    { id: 3, eventType: "purchase", userId: "demo", anonId: null, props: { via: "stripe_reconcile" }, createdAt: new Date().toISOString() },
+    { id: 2, eventType: "readiness_gained", userId: "demo", anonId: null, props: { score: 64, delta: 8 }, createdAt: new Date().toISOString() },
+    { id: 1, eventType: "signal_fed", userId: null, anonId: "demo", props: { source: "quiz" }, createdAt: new Date().toISOString() },
+  ],
+};
+
+function describeJourneyProps(props: Record<string, unknown> | null): string {
+  if (!props) return "";
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(props)) {
+    if (v === null || v === undefined) continue;
+    parts.push(`${k}: ${String(v)}`);
+  }
+  return parts.join(", ");
+}
+
+function ActivityPanel({ founderKey }: { founderKey: string }) {
+  const [data, setData] = useState<JourneyEventsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setErr(null);
+    getJourneyEvents(founderKey)
+      .then((res) => {
+        if (!cancelled) setData(res);
+      })
+      .catch((e) => {
+        if (!cancelled) setErr(e instanceof Error ? e.message : "Failed to load activity");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [founderKey, reloadKey]);
+
+  // Show real data when any event exists; otherwise fall back to the demo set so
+  // the panel reads as intentional rather than broken before traffic arrives.
+  const hasReal = Boolean(data && data.totals.last30d > 0);
+  const view = hasReal ? data! : DEMO_JOURNEY_EVENTS;
+  const isDemo = !loading && !hasReal && !err;
+
+  return (
+    <div className="glass rounded-2xl p-6 space-y-4" data-testid="activity-panel">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="space-y-1">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
+            First-party activity
+          </p>
+          <p className="text-base font-semibold text-foreground">
+            What people are doing, as it happens
+          </p>
+          <p className="text-xs text-muted-foreground/80">
+            Journey events recorded directly by our own server and client: visits, signals fed, readiness gained, tools completed, match steps, and purchases.
+            {isDemo && " Showing sample data until the first real event lands."}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setReloadKey((k) => k + 1)}
+          disabled={loading}
+          data-testid="button-refresh-activity"
+          className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-colors disabled:opacity-60"
+        >
+          {loading ? "Loading…" : "Refresh"}
+        </button>
+      </div>
+
+      {err && (
+        <div
+          className="rounded-xl p-3 border flex items-start gap-2 text-sm"
+          style={{
+            background: "hsl(348 55% 58% / 0.10)",
+            borderColor: "hsl(348 55% 58% / 0.40)",
+            color: "hsl(348 55% 78%)",
+          }}
+          data-testid="activity-error"
+        >
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>{err}</span>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {view.counts.map((c) => (
+          <div key={c.eventType} className="glass rounded-xl p-3" data-testid={`activity-count-${c.eventType}`}>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">
+              {JOURNEY_EVENT_LABELS[c.eventType] ?? c.eventType}
+            </p>
+            <p className="text-xl font-bold text-foreground mt-1 tabular-nums">{c.today}</p>
+            <p className="text-[11px] text-muted-foreground/70 tabular-nums">
+              {c.last7d} / 7d · {c.last30d} / 30d
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="glass rounded-xl p-4 space-y-2" data-testid="activity-feed">
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">
+          Recent events
+        </p>
+        {view.recent.length === 0 ? (
+          <p className="text-xs text-muted-foreground/70">No events yet.</p>
+        ) : (
+          <ul className="space-y-2">
+            {view.recent.map((e) => {
+              const detail = describeJourneyProps(e.props);
+              return (
+                <li
+                  key={e.id}
+                  className="flex items-center justify-between gap-3 text-xs border-b border-white/5 pb-2 last:border-0 last:pb-0"
+                  data-testid={`activity-event-${e.id}`}
+                >
+                  <span className="text-foreground shrink-0">
+                    {JOURNEY_EVENT_LABELS[e.eventType] ?? e.eventType}
+                  </span>
+                  <span className="text-muted-foreground/70 truncate text-right">
+                    {detail}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -3942,6 +4098,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   <TrashPurgePanel founderKey={FOUNDER_KEY} onPurged={() => setRefreshKey((k) => k + 1)} />
   <TierFlipPanel founderKey={FOUNDER_KEY} />
   <FunnelPanel founderKey={FOUNDER_KEY} />
+  <ActivityPanel founderKey={FOUNDER_KEY} />
   <ReferralAttributionPanel founderKey={FOUNDER_KEY} />
   <EchoCopilotPanel founderKey={FOUNDER_KEY} />
   <GeoipRefreshPanel founderKey={FOUNDER_KEY} />

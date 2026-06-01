@@ -7,6 +7,7 @@ import {
   CreateWellnessTagBody,
   UpdateWellnessTagBody,
 } from "@workspace/api-zod";
+import { recordJourneyEvent } from "../lib/journeyEvents";
 
 const router: IRouter = Router();
 
@@ -133,6 +134,11 @@ router.post("/wellness/answers", async (req, res): Promise<void> => {
       })
       .returning();
     row = inserted!;
+    void recordJourneyEvent({
+      eventType: "signal_fed",
+      userId: req.user.id,
+      props: { source: "wellness" },
+    });
     res.status(201).json(serializeAnswer(row));
   }
 });

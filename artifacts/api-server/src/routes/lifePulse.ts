@@ -3,6 +3,7 @@ import { and, desc, eq, isNull, sql, type SQL } from "drizzle-orm";
 import { db, lifePulsesTable } from "@workspace/db";
 import { RecordLifePulseBody } from "@workspace/api-zod";
 import { getOrCreateAnonClaimToken, getAnonClaimToken } from "../lib/anonClaimToken";
+import { recordJourneyEvent } from "../lib/journeyEvents";
 
 const router: IRouter = Router();
 
@@ -50,6 +51,13 @@ router.post("/life-pulse", async (req, res): Promise<void> => {
       anonymousClaimToken,
     })
     .returning();
+
+  void recordJourneyEvent({
+    eventType: "signal_fed",
+    userId: userId ?? null,
+    anonId: anonymousClaimToken,
+    props: { source: "life_pulse" },
+  });
 
   res.status(201).json(serialize(row));
 });

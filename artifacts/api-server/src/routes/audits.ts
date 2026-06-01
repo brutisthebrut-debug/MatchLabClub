@@ -26,6 +26,7 @@ import { generateAuditReport, type AuditReportOutput } from "../lib/aiEngine";
 import { generate, analyzeProfilePhotos } from "../lib/aiService";
 import { getRetentionDays } from "../lib/auditTrashPurge";
 import { pruneVersionsForAudit } from "../lib/auditVersionPurge";
+import { recordJourneyEvent } from "../lib/journeyEvents";
 import {
   getAnonClaimToken,
   getOrCreateAnonClaimToken,
@@ -314,6 +315,13 @@ router.post("/audits", async (req, res): Promise<void> => {
       anonymousClaimToken,
     })
     .returning();
+
+  void recordJourneyEvent({
+    eventType: "signal_fed",
+    userId: req.user?.id ?? null,
+    anonId: anonymousClaimToken,
+    props: { source: "audit" },
+  });
 
   res.status(201).json(GetAuditResponse.parse(serializeAudit(audit)));
 });

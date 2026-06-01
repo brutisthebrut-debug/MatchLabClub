@@ -335,6 +335,31 @@ export interface FounderFunnelResponse {
 export const getFounderFunnel = (founderKey: string) =>
   founderJson<FounderFunnelResponse>("/founder/funnel", founderKey);
 
+export interface JourneyEventCount {
+  eventType: string;
+  today: number;
+  last7d: number;
+  last30d: number;
+}
+
+export interface JourneyEventFeedItem {
+  id: number;
+  eventType: string;
+  userId: string | null;
+  anonId: string | null;
+  props: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface JourneyEventsResponse {
+  counts: JourneyEventCount[];
+  totals: { today: number; last7d: number; last30d: number };
+  recent: JourneyEventFeedItem[];
+}
+
+export const getJourneyEvents = (founderKey: string) =>
+  founderJson<JourneyEventsResponse>("/founder/events", founderKey);
+
 export interface EchoUserSignalsResponse {
   signals: {
     email: string;

@@ -13,6 +13,7 @@ import { pasteCaptureSources } from "../lib/signalRegistry";
 import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
 import { generate } from "../lib/aiService";
 import { logger } from "../lib/logger";
+import { recordJourneyEvent } from "../lib/journeyEvents";
 
 const router: IRouter = Router();
 
@@ -315,6 +316,13 @@ router.post("/me/instagram-paste", async (req, res): Promise<void> => {
     "Captured Instagram paste",
   );
 
+  void recordJourneyEvent({
+    eventType: "signal_fed",
+    userId: userId ?? null,
+    anonId: anonToken,
+    props: { source: "instagram-paste" },
+  });
+
   res.status(201).json({
     id: inserted!.id,
     source: inserted!.source,
@@ -418,6 +426,13 @@ router.post("/me/source-paste", async (req, res): Promise<void> => {
     },
     "Captured source paste",
   );
+
+  void recordJourneyEvent({
+    eventType: "signal_fed",
+    userId: userId ?? null,
+    anonId: anonToken,
+    props: { source: match.source },
+  });
 
   res.status(201).json({
     id: inserted!.id,
@@ -541,6 +556,13 @@ router.post("/me/quiz-result", async (req, res): Promise<void> => {
     },
     "Captured quiz result",
   );
+
+  void recordJourneyEvent({
+    eventType: "signal_fed",
+    userId: userId ?? null,
+    anonId: anonToken,
+    props: { source: "quiz", slug },
+  });
 
   res.status(201).json({
     id: inserted!.id,

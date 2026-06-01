@@ -1,6 +1,7 @@
 import { db, purchaseInterestTable } from "@workspace/db";
 import { and, eq, isNull, ne, or, sql } from "drizzle-orm";
 import { logger } from "./logger";
+import { recordJourneyEvent } from "./journeyEvents";
 
 export interface ReconcileResult {
   paidSessionsSeen: number;
@@ -48,6 +49,12 @@ export async function reconcilePurchaseInterestFromStripe(): Promise<ReconcileRe
       .returning({ id: purchaseInterestTable.id });
 
     rowsUpdated += updated.length;
+    for (let i = 0; i < updated.length; i++) {
+      void recordJourneyEvent({
+        eventType: "purchase",
+        props: { via: "stripe_reconcile" },
+      });
+    }
   }
 
   const result: ReconcileResult = {

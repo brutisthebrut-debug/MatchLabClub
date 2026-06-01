@@ -49,6 +49,7 @@ import {
   computeReadiness,
   computeOutcomeInsightForUser,
 } from "./matching";
+import { recordJourneyEvent, summarizeJourneyEvents } from "../lib/journeyEvents";
 import { and, count, sql, desc, gte, asc, eq, isNotNull, lt, inArray, lte } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { z } from "zod/v4";
@@ -561,6 +562,13 @@ router.post("/founder/users/set-tier", requireFounder, async (req, res): Promise
     { userId: row.id, email: row.email, tier: row.tier },
     "Founder set user tier",
   );
+  if (tier === "reset" || tier === "wingman") {
+    void recordJourneyEvent({
+      eventType: "purchase",
+      userId: row.id,
+      props: { via: "founder_set_tier", tier },
+    });
+  }
   res.json({
     user: {
       id: row.id,
@@ -915,6 +923,16 @@ router.get("/founder/funnel", requireFounder, async (req, res): Promise<void> =>
     paidViaPurchaseInterest,
     overallConversionRate: accounts > 0 ? purchased / accounts : 0,
   });
+});
+
+// First-party journey instrumentation. Unlike /founder/funnel (a derived
+// snapshot of domain tables), this reads the append-only journey_events stream:
+// counts per event type over today / 7d / 30d, plus a recent feed, so the
+// founder can see what is actually happening as it happens.
+router.get("/founder/events", requireFounder, async (req, res): Promise<void> => {
+  const summary = await summarizeJourneyEvents(50);
+  req.log.info({ totals: summary.totals }, "founder.events served");
+  res.json(summary);
 });
 
 router.post("/founder/geoip/refresh", requireFounder, async (_req, res): Promise<void> => {

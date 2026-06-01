@@ -19,6 +19,7 @@ import {
   type ReadinessBreakdown,
 } from "../lib/signalRegistry";
 import { buildCompassSignalLayer } from "../lib/aiEngine";
+import { recordJourneyEvent } from "../lib/journeyEvents";
 
 /** A per-read snapshot of the user's readiness, stored on the saved read so we
  * can show movement between reads later. Derived coverage only, never PII. */
@@ -199,6 +200,13 @@ router.post("/compass/reads", async (req, res): Promise<void> => {
       mode: aiResult ? "live" : "fallback",
     })
     .returning();
+
+  void recordJourneyEvent({
+    eventType: "signal_fed",
+    userId: userId ?? null,
+    anonId: anonToken,
+    props: { source: "compass" },
+  });
 
   res.status(201).json(serialize(inserted!));
 });

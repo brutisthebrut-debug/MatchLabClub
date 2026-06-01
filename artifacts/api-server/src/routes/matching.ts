@@ -40,6 +40,7 @@ import {
   effectiveWeightsForUser,
   effectiveReadinessThreshold,
 } from "../lib/brainConfig";
+import { recordJourneyEvent } from "../lib/journeyEvents";
 
 async function loadUserTier(userId: string): Promise<string | null> {
   const rows = await db
@@ -229,6 +230,24 @@ async function writeReadinessSnapshot(
   userId: string,
   readiness: Readiness,
 ): Promise<void> {
+  // Read the most recent prior snapshot before upserting today's, so we can tell
+  // whether readiness actually climbed. The latest row may be today's own (a
+  // same-day recompute) or an earlier day; comparing against the latest known
+  // score means readiness_gained fires only on a real increase, never on a flat
+  // recompute or the first snapshot of a new day at an unchanged score.
+  let priorScore = 0;
+  try {
+    const prior = await db
+      .select({ score: matchingReadinessSnapshotsTable.score })
+      .from(matchingReadinessSnapshotsTable)
+      .where(eq(matchingReadinessSnapshotsTable.userId, userId))
+      .orderBy(desc(matchingReadinessSnapshotsTable.day))
+      .limit(1);
+    priorScore = prior[0]?.score ?? 0;
+  } catch {
+    priorScore = 0;
+  }
+
   await db
     .insert(matchingReadinessSnapshotsTable)
     .values({
@@ -247,6 +266,14 @@ async function writeReadinessSnapshot(
         breakdown: readiness.breakdown,
       },
     });
+
+  if (readiness.score > priorScore) {
+    void recordJourneyEvent({
+      eventType: "readiness_gained",
+      userId,
+      props: { score: readiness.score, delta: readiness.score - priorScore },
+    });
+  }
 }
 
 // Minimum readiness score required to activate pool membership. Sourced from
@@ -653,6 +680,12 @@ router.post("/me/matching/external-read", async (req, res): Promise<void> => {
     compatibilityScore: final.score,
     summary: final.summary,
     status: "proposed",
+  });
+
+  void recordJourneyEvent({
+    eventType: "match_step",
+    userId,
+    props: { step: "proposal_created", source: "external_paste", score: final.score },
   });
 
   res.json(final);

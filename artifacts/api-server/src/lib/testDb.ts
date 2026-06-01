@@ -220,6 +220,21 @@ ensureStore("post_date_notes");
 export const postDateNotesTable = makeTable("post_date_notes");
 ensureStore("dating_wins");
 export const datingWinsTable = makeTable("dating_wins");
+ensureStore("journey_events");
+export const journeyEventsTable = makeTable("journey_events");
+
+// First-party journey event type constants, mirrored from the real schema so
+// modules under test (events route, journeyEvents lib) can import them through
+// the mocked `@workspace/db` entrypoint.
+export const JOURNEY_EVENT_TYPES = [
+  "visit",
+  "signal_fed",
+  "readiness_gained",
+  "tool_completed",
+  "match_step",
+  "purchase",
+] as const;
+export const CLIENT_JOURNEY_EVENT_TYPES = ["visit", "tool_completed"] as const;
 
 // ---- Operators -----------------------------------------------------------
 
