@@ -3997,6 +3997,83 @@ export const GetCompassSignalContextResponse = zod.object({
 
 
 /**
+ * Ranks several photos for use as a dating profile lineup and recommends a
+single lead shot. The deterministic ranking is always on and is built
+only from the composition attributes the member declares per photo (shot
+type, lighting, expression), never from the pixels. When the deep AI lane
+is on and images are supplied, an opt-in Claude vision pass adds depth by
+reading the images in the moment, never storing them. Anon-safe: callers
+without a session still get the deterministic ranking, just without the
+Mirror tie-in and next best signal.
+
+ * @summary Rank multiple photos and recommend a lead shot
+ */
+export const RankPhotoLabHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const rankPhotoLabBodyPhotosItemIdMax = 120;
+
+export const rankPhotoLabBodyPhotosMax = 6;
+
+
+
+export const RankPhotoLabBody = zod.object({
+  "photos": zod.array(zod.object({
+  "id": zod.string().min(1).max(rankPhotoLabBodyPhotosItemIdMax).describe('Caller-assigned id so the ranking maps back to the photo.'),
+  "shotType": zod.enum(['solo_face', 'full_body', 'activity', 'group', 'candid', 'other']).describe('What kind of shot this is, declared by the member. Drives the\ndeterministic ranking. Composition only, never appearance.\n'),
+  "wellLit": zod.boolean().nullish(),
+  "genuineExpression": zod.boolean().nullish(),
+  "imageBase64": zod.string().nullish().describe('Optional base64 image, used only for the opt-in Claude vision pass.\nMay include a data URL prefix; the server strips it. Read in the\nmoment and never stored. Omit to keep the request deterministic-only.\n'),
+  "imageMediaType": zod.string().nullish().describe('MIME type of the image (e.g. \"image\/png\") for the vision call.')
+})).min(1).max(rankPhotoLabBodyPhotosMax),
+  "datingGoal": zod.string().nullish(),
+  "sourceApp": zod.string().nullish().describe('Which dating app the photos are for (e.g. \"Hinge\").')
+})
+
+export const RankPhotoLabResponse = zod.object({
+  "leadShotId": zod.string().describe('Id of the recommended lead shot. Empty only when no photos were sent.'),
+  "leadShotRationale": zod.string(),
+  "summary": zod.string(),
+  "ranked": zod.array(zod.object({
+  "id": zod.string(),
+  "rank": zod.number(),
+  "score": zod.number(),
+  "role": zod.string().describe('Recommended slot for this shot (e.g. \"Lead shot\").'),
+  "isLead": zod.boolean(),
+  "notes": zod.array(zod.string())
+})),
+  "checklist": zod.array(zod.object({
+  "category": zod.string(),
+  "status": zod.enum(['good', 'needs_work', 'missing']),
+  "advice": zod.string()
+})),
+  "visionMode": zod.enum(['live', 'fallback']).describe('Whether the opt-in Claude vision pass actually ran.'),
+  "visionFallbackReason": zod.string().nullish().describe('Why the vision pass did not run (e.g. consent_required,\ndaily_cap_exceeded, no_client). Null when it ran or was not requested.\n'),
+  "visionAnalysis": zod.union([zod.object({
+  "summary": zod.string(),
+  "leadShotId": zod.string().nullish().describe('The vision pass\'s lead-shot pick, mapped to an input id.'),
+  "leadShotReason": zod.string().nullish(),
+  "photos": zod.array(zod.object({
+  "id": zod.string(),
+  "assessment": zod.enum(['strong', 'okay', 'needs_work']),
+  "reason": zod.string()
+}))
+}).describe('Opt-in Claude vision pass. Present only when the deep AI lane is on, the\ncap allows it, and the call succeeded. The images are read in the moment\nand never stored.\n'),zod.null()]).optional(),
+  "nextSignal": zod.union([zod.object({
+  "label": zod.string(),
+  "detail": zod.string(),
+  "href": zod.string(),
+  "points": zod.number().optional()
+}),zod.null()]).optional(),
+  "mirror": zod.union([zod.object({
+  "href": zod.string(),
+  "line": zod.string()
+}),zod.null()]).optional()
+}).describe('Deterministic ranking plus an optional opt-in vision layer and, for\nsigned-in members, a tie back to Your Mirror and the next best signal.\n')
+
+
+/**
  * Accepts a Hinge GDPR data-export ZIP (max 50MB), parses it in
 memory, and persists a structured summary to `imported_sources`.
 The raw ZIP is never persisted. For signed-in users a

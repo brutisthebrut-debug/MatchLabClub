@@ -3119,6 +3119,39 @@ paths:
               schema:
                 $ref: "#/components/schemas/CompassSignalContext"
 
+  /photo-lab/rank:
+    post:
+      tags: [ai]
+      operationId: rankPhotoLab
+      summary: Rank multiple photos and recommend a lead shot
+      description: |
+        Ranks several photos for use as a dating profile lineup and recommends a
+        single lead shot. The deterministic ranking is always on and is built
+        only from the composition attributes the member declares per photo (shot
+        type, lighting, expression), never from the pixels. When the deep AI lane
+        is on and images are supplied, an opt-in Claude vision pass adds depth by
+        reading the images in the moment, never storing them. Anon-safe: callers
+        without a session still get the deterministic ranking, just without the
+        Mirror tie-in and next best signal.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhotoLabRankInput"
+      responses:
+        "200":
+          description: Photo ranking and lead-shot recommendation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhotoLabRankResult"
+        "400":
+          description: Invalid payload
+
   /imports/hinge:
     post:
       tags: [insights]
@@ -6800,6 +6833,181 @@ components:
         movement:
           oneOf:
             - $ref: "#/components/schemas/CompassMovement"
+            - type: "null"
+
+    PhotoLabPhotoInput:
+      type: object
+      required: [id, shotType]
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 120
+          description: Caller-assigned id so the ranking maps back to the photo.
+        shotType:
+          type: string
+          enum: [solo_face, full_body, activity, group, candid, other]
+          description: |
+            What kind of shot this is, declared by the member. Drives the
+            deterministic ranking. Composition only, never appearance.
+        wellLit:
+          type: [boolean, "null"]
+        genuineExpression:
+          type: [boolean, "null"]
+        imageBase64:
+          type: [string, "null"]
+          description: |
+            Optional base64 image, used only for the opt-in Claude vision pass.
+            May include a data URL prefix; the server strips it. Read in the
+            moment and never stored. Omit to keep the request deterministic-only.
+        imageMediaType:
+          type: [string, "null"]
+          description: MIME type of the image (e.g. "image/png") for the vision call.
+
+    PhotoLabRankInput:
+      type: object
+      required: [photos]
+      properties:
+        photos:
+          type: array
+          minItems: 1
+          maxItems: 6
+          items:
+            $ref: "#/components/schemas/PhotoLabPhotoInput"
+        datingGoal:
+          type: [string, "null"]
+        sourceApp:
+          type: [string, "null"]
+          description: Which dating app the photos are for (e.g. "Hinge").
+
+    PhotoLabRankedPhoto:
+      type: object
+      required: [id, rank, score, role, isLead, notes]
+      properties:
+        id:
+          type: string
+        rank:
+          type: integer
+        score:
+          type: integer
+        role:
+          type: string
+          description: Recommended slot for this shot (e.g. "Lead shot").
+        isLead:
+          type: boolean
+        notes:
+          type: array
+          items:
+            type: string
+
+    PhotoLabChecklistItem:
+      type: object
+      required: [category, status, advice]
+      properties:
+        category:
+          type: string
+        status:
+          type: string
+          enum: [good, needs_work, missing]
+        advice:
+          type: string
+
+    PhotoLabVisionItem:
+      type: object
+      required: [id, assessment, reason]
+      properties:
+        id:
+          type: string
+        assessment:
+          type: string
+          enum: [strong, okay, needs_work]
+        reason:
+          type: string
+
+    PhotoLabVisionAnalysis:
+      type: object
+      required: [summary, photos]
+      description: |
+        Opt-in Claude vision pass. Present only when the deep AI lane is on, the
+        cap allows it, and the call succeeded. The images are read in the moment
+        and never stored.
+      properties:
+        summary:
+          type: string
+        leadShotId:
+          type: [string, "null"]
+          description: The vision pass's lead-shot pick, mapped to an input id.
+        leadShotReason:
+          type: [string, "null"]
+        photos:
+          type: array
+          items:
+            $ref: "#/components/schemas/PhotoLabVisionItem"
+
+    PhotoLabNextSignal:
+      type: object
+      required: [label, detail, href]
+      properties:
+        label:
+          type: string
+        detail:
+          type: string
+        href:
+          type: string
+        points:
+          type: integer
+
+    PhotoLabMirrorTieIn:
+      type: object
+      required: [href, line]
+      properties:
+        href:
+          type: string
+        line:
+          type: string
+
+    PhotoLabRankResult:
+      type: object
+      required: [leadShotId, leadShotRationale, summary, ranked, checklist, visionMode]
+      description: |
+        Deterministic ranking plus an optional opt-in vision layer and, for
+        signed-in members, a tie back to Your Mirror and the next best signal.
+      properties:
+        leadShotId:
+          type: string
+          description: Id of the recommended lead shot. Empty only when no photos were sent.
+        leadShotRationale:
+          type: string
+        summary:
+          type: string
+        ranked:
+          type: array
+          items:
+            $ref: "#/components/schemas/PhotoLabRankedPhoto"
+        checklist:
+          type: array
+          items:
+            $ref: "#/components/schemas/PhotoLabChecklistItem"
+        visionMode:
+          type: string
+          enum: [live, fallback]
+          description: Whether the opt-in Claude vision pass actually ran.
+        visionFallbackReason:
+          type: [string, "null"]
+          description: |
+            Why the vision pass did not run (e.g. consent_required,
+            daily_cap_exceeded, no_client). Null when it ran or was not requested.
+        visionAnalysis:
+          oneOf:
+            - $ref: "#/components/schemas/PhotoLabVisionAnalysis"
+            - type: "null"
+        nextSignal:
+          oneOf:
+            - $ref: "#/components/schemas/PhotoLabNextSignal"
+            - type: "null"
+        mirror:
+          oneOf:
+            - $ref: "#/components/schemas/PhotoLabMirrorTieIn"
             - type: "null"
 
     CompassScreenshotExtractResult:

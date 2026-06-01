@@ -911,5 +911,220 @@ export async function analyzeProfilePhotos(
   }
 }
 
+// Photo Lab: opt-in multi-image vision compare. Layered on top of the always-on
+// deterministic ranking. Sends every image in ONE Anthropic call (one daily-cap
+// increment), reads them in the moment, and never stores them. Consent-gated and
+// capped exactly like analyzeProfilePhotos.
+export interface ComparePhotosVisionPhoto {
+  /** Caller-assigned id. The model is told to reuse these exact ids. */
+  id: string;
+  imageBase64: string;
+  imageMediaType?: string | null;
+}
+
+export interface ComparePhotosVisionOptions {
+  photos: ComparePhotosVisionPhoto[];
+  userId?: string;
+  sourceApp?: string | null;
+  datingGoal?: string | null;
+}
+
+export interface PhotoComparisonItem {
+  id: string;
+  assessment: "strong" | "okay" | "needs_work";
+  reason: string;
+}
+
+export interface PhotoComparison {
+  summary: string;
+  leadShotId: string | null;
+  leadShotReason: string | null;
+  photos: PhotoComparisonItem[];
+}
+
+export interface ComparePhotosVisionResult {
+  analysis: PhotoComparison | null;
+  mode: AiMode;
+  isFallback: boolean;
+  durationMs: number;
+  fallbackReason?: GenerateResult["fallbackReason"];
+}
+
+const MAX_VISION_COMPARE_PHOTOS = 6;
+
+const photoComparisonSchema = z.object({
+  summary: z.string().trim().min(1).max(800),
+  leadShotId: z.string().trim().min(1).max(120).nullable(),
+  leadShotReason: z.string().trim().min(1).max(600).nullable(),
+  photos: z
+    .array(
+      z.object({
+        id: z.string().trim().min(1).max(120),
+        assessment: z.enum(["strong", "okay", "needs_work"]),
+        reason: z.string().trim().min(1).max(600),
+      }),
+    )
+    .min(1)
+    .max(MAX_VISION_COMPARE_PHOTOS),
+});
+
+function recordComparisonMetric(
+  mode: AiMode,
+  isFallback: boolean,
+  durationMs: number,
+  error: string | null,
+): void {
+  db.insert(aiRequestMetricsTable)
+    .values({
+      toolName: "photo_lab_vision",
+      mode,
+      model: DEFAULT_ANTHROPIC_MODEL,
+      attempts: 1,
+      validated: null,
+      isFallback,
+      durationMs,
+      error,
+    })
+    .catch((err) => {
+      logger.warn(
+        { err: err instanceof Error ? err.message : String(err) },
+        "Failed to record photo_lab_vision metric",
+      );
+    });
+}
+
+const PHOTO_LAB_VISION_SYSTEM = [
+  "You are the MatchLab Club photo coach comparing several photos a member is considering for a dating profile.",
+  "Rank them as a dating profile lineup and pick the single best lead shot, the first image people would see.",
+  "Judge only what you can see: lighting, framing, expression, outfit, background, photo variety, solo versus group, image quality, and how well each works as a lead.",
+  "Be specific and kind. Never comment on race, body weight, attractiveness rankings, or anything demeaning. Never claim to be human.",
+  "Use the exact photo ids given to you. Respond with VALID JSON only, no prose, no code fences, matching this shape:",
+  '{"summary": string, "leadShotId": string|null, "leadShotReason": string|null, "photos": [{"id": string, "assessment": "strong"|"okay"|"needs_work", "reason": string}]}',
+].join("\n");
+
+export async function comparePhotosVision(
+  opts: ComparePhotosVisionOptions,
+): Promise<ComparePhotosVisionResult> {
+  const start = Date.now();
+  const miss = (
+    fallbackReason: GenerateResult["fallbackReason"],
+    mode: AiMode = "fallback",
+  ): ComparePhotosVisionResult => {
+    const durationMs = Date.now() - start;
+    recordComparisonMetric(mode, true, durationMs, fallbackReason ?? null);
+    return { analysis: null, mode, isFallback: true, durationMs, fallbackReason };
+  };
+
+  const photos = (opts.photos ?? [])
+    .map((p) => ({
+      id: p.id,
+      cleaned: stripImageDataUrlPrefix(p.imageBase64.trim()),
+      mediaType: detectImageMediaType(p.imageBase64, p.imageMediaType),
+    }))
+    .filter((p) => p.cleaned.length > 0)
+    .slice(0, MAX_VISION_COMPARE_PHOTOS);
+  if (photos.length === 0) {
+    return miss("model_error");
+  }
+
+  // Consent gate FIRST, never ship raw images to a hosted model without it.
+  if (!(await consentCheck(opts.userId))) {
+    return miss("consent_required");
+  }
+  // One daily-cap increment for the whole comparison.
+  const cap = await checkAndIncrementDailyCap(opts.userId ?? null, "anthropic");
+  if (!cap.allowed) {
+    return miss("daily_cap_exceeded");
+  }
+  const client = await getAnthropicClient();
+  if (!client) {
+    return miss("no_client");
+  }
+
+  const content: Array<
+    | { type: "text"; text: string }
+    | {
+        type: "image";
+        source: { type: "base64"; media_type: string; data: string };
+      }
+  > = [];
+  for (const p of photos) {
+    content.push({ type: "text", text: `Photo ${p.id}:` });
+    content.push({
+      type: "image",
+      source: { type: "base64", media_type: p.mediaType, data: p.cleaned },
+    });
+  }
+  const instruction = [
+    `Compare these ${photos.length} photos for a dating profile.`,
+    opts.sourceApp ? `Dating app: ${opts.sourceApp}.` : null,
+    opts.datingGoal ? `Their goal: ${opts.datingGoal}.` : null,
+    `Rank them, pick the best lead shot by id, and return JSON only. Valid photo ids: ${photos
+      .map((p) => p.id)
+      .join(", ")}.`,
+  ]
+    .filter((x): x is string => x !== null)
+    .join("\n");
+  content.push({ type: "text", text: instruction });
+
+  try {
+    const response = await client.messages.create(
+      {
+        model: DEFAULT_ANTHROPIC_MODEL,
+        max_tokens: 1536,
+        system: PHOTO_LAB_VISION_SYSTEM,
+        messages: [{ role: "user", content }],
+      },
+      { timeout: PROVIDER_CALL_TIMEOUT_MS },
+    );
+    const block = response.content.find((b) => b.type === "text");
+    const text = (block?.text ?? "").trim();
+    const parsed = parseStructured<unknown>(text, null);
+    if (!parsed.ok) {
+      logger.warn(
+        { rawPreview: text.slice(0, 200) },
+        "photo_lab_vision: non-JSON response",
+      );
+      return miss("schema_validation_failed", "setup-needed");
+    }
+    const validated = photoComparisonSchema.safeParse(parsed.value);
+    if (!validated.success) {
+      logger.warn(
+        { err: validated.error.message },
+        "photo_lab_vision: schema validation failed",
+      );
+      return miss("schema_validation_failed", "setup-needed");
+    }
+    // Constrain the model's ids to the set we actually sent, drop anything else.
+    const validIds = new Set(photos.map((p) => p.id));
+    const filtered = validated.data.photos.filter((p) => validIds.has(p.id));
+    const leadShotId =
+      validated.data.leadShotId && validIds.has(validated.data.leadShotId)
+        ? validated.data.leadShotId
+        : null;
+    const durationMs = Date.now() - start;
+    recordComparisonMetric("live", false, durationMs, null);
+    return {
+      analysis: {
+        summary: validated.data.summary,
+        leadShotId,
+        leadShotReason: validated.data.leadShotReason,
+        photos: filtered,
+      },
+      mode: "live",
+      isFallback: false,
+      durationMs,
+    };
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Unknown Anthropic vision error";
+    logger.warn(
+      { err: message },
+      "photo_lab_vision call failed; falling back to checklist",
+    );
+    return miss("model_error", "setup-needed");
+  }
+}
+
 /** Re-export so callers can construct ad-hoc schemas if needed. */
 export { z };

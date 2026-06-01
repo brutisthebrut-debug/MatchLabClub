@@ -148,6 +148,7 @@ const SECTIONS: NavSection[] = [
       { name: "Message Coach", href: "/coach", icon: MessageCircle },
       { name: "Rehearsal Room", href: "/rehearsal", icon: Theater },
       { name: "Photo Scan", href: "/scan", icon: ImageUp },
+      { name: "Photo Lab", href: "/photo-lab", icon: Images },
       { name: "Glow-Up Bio", href: "/glow-up", icon: Sparkles },
       { name: "Compatibility Compass", href: "/compatibility-compass", icon: Compass },
       { name: "Wingman Studio", href: "/copilot", icon: Bot },

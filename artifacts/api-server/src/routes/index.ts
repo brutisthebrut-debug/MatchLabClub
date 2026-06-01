@@ -28,6 +28,7 @@ import trustLedgerRouter from "./trustLedger";
 import datingWinsRouter from "./datingWins";
 import rehearsalRouter from "./rehearsal";
 import referralsRouter from "./referrals";
+import photoLabRouter from "./photoLab";
 import devAuthRouter from "./devAuth";
 import { isDevEnvironment } from "../lib/devSeed";
 
@@ -62,6 +63,7 @@ router.use(trustLedgerRouter);
 router.use(datingWinsRouter);
 router.use(rehearsalRouter);
 router.use(referralsRouter);
+router.use(photoLabRouter);
 
 // Development-only test-user preview + safe test-login. Mounted only outside
 // production; the router additionally 404s every request in production as a

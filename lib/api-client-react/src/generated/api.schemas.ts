@@ -2365,6 +2365,175 @@ export interface CompassSignalContext {
   movement?: CompassMovement | null;
 }
 
+/**
+ * What kind of shot this is, declared by the member. Drives the
+deterministic ranking. Composition only, never appearance.
+
+ */
+export type PhotoLabPhotoInputShotType = typeof PhotoLabPhotoInputShotType[keyof typeof PhotoLabPhotoInputShotType];
+
+
+export const PhotoLabPhotoInputShotType = {
+  solo_face: 'solo_face',
+  full_body: 'full_body',
+  activity: 'activity',
+  group: 'group',
+  candid: 'candid',
+  other: 'other',
+} as const;
+
+export interface PhotoLabPhotoInput {
+  /**
+     * Caller-assigned id so the ranking maps back to the photo.
+     * @minLength 1
+     * @maxLength 120
+     */
+  id: string;
+  /** What kind of shot this is, declared by the member. Drives the
+  deterministic ranking. Composition only, never appearance.
+   */
+  shotType: PhotoLabPhotoInputShotType;
+  /** @nullable */
+  wellLit?: boolean | null;
+  /** @nullable */
+  genuineExpression?: boolean | null;
+  /**
+     * Optional base64 image, used only for the opt-in Claude vision pass.
+  May include a data URL prefix; the server strips it. Read in the
+  moment and never stored. Omit to keep the request deterministic-only.
+
+     * @nullable
+     */
+  imageBase64?: string | null;
+  /**
+     * MIME type of the image (e.g. "image/png") for the vision call.
+     * @nullable
+     */
+  imageMediaType?: string | null;
+}
+
+export interface PhotoLabRankInput {
+  /**
+     * @minItems 1
+     * @maxItems 6
+     */
+  photos: PhotoLabPhotoInput[];
+  /** @nullable */
+  datingGoal?: string | null;
+  /**
+     * Which dating app the photos are for (e.g. "Hinge").
+     * @nullable
+     */
+  sourceApp?: string | null;
+}
+
+export interface PhotoLabRankedPhoto {
+  id: string;
+  rank: number;
+  score: number;
+  /** Recommended slot for this shot (e.g. "Lead shot"). */
+  role: string;
+  isLead: boolean;
+  notes: string[];
+}
+
+export type PhotoLabChecklistItemStatus = typeof PhotoLabChecklistItemStatus[keyof typeof PhotoLabChecklistItemStatus];
+
+
+export const PhotoLabChecklistItemStatus = {
+  good: 'good',
+  needs_work: 'needs_work',
+  missing: 'missing',
+} as const;
+
+export interface PhotoLabChecklistItem {
+  category: string;
+  status: PhotoLabChecklistItemStatus;
+  advice: string;
+}
+
+export type PhotoLabVisionItemAssessment = typeof PhotoLabVisionItemAssessment[keyof typeof PhotoLabVisionItemAssessment];
+
+
+export const PhotoLabVisionItemAssessment = {
+  strong: 'strong',
+  okay: 'okay',
+  needs_work: 'needs_work',
+} as const;
+
+export interface PhotoLabVisionItem {
+  id: string;
+  assessment: PhotoLabVisionItemAssessment;
+  reason: string;
+}
+
+/**
+ * Opt-in Claude vision pass. Present only when the deep AI lane is on, the
+cap allows it, and the call succeeded. The images are read in the moment
+and never stored.
+
+ */
+export interface PhotoLabVisionAnalysis {
+  summary: string;
+  /**
+     * The vision pass's lead-shot pick, mapped to an input id.
+     * @nullable
+     */
+  leadShotId?: string | null;
+  /** @nullable */
+  leadShotReason?: string | null;
+  photos: PhotoLabVisionItem[];
+}
+
+export interface PhotoLabNextSignal {
+  label: string;
+  detail: string;
+  href: string;
+  points?: number;
+}
+
+export interface PhotoLabMirrorTieIn {
+  href: string;
+  line: string;
+}
+
+/**
+ * Whether the opt-in Claude vision pass actually ran.
+ */
+export type PhotoLabRankResultVisionMode = typeof PhotoLabRankResultVisionMode[keyof typeof PhotoLabRankResultVisionMode];
+
+
+export const PhotoLabRankResultVisionMode = {
+  live: 'live',
+  fallback: 'fallback',
+} as const;
+
+/**
+ * Deterministic ranking plus an optional opt-in vision layer and, for
+signed-in members, a tie back to Your Mirror and the next best signal.
+
+ */
+export interface PhotoLabRankResult {
+  /** Id of the recommended lead shot. Empty only when no photos were sent. */
+  leadShotId: string;
+  leadShotRationale: string;
+  summary: string;
+  ranked: PhotoLabRankedPhoto[];
+  checklist: PhotoLabChecklistItem[];
+  /** Whether the opt-in Claude vision pass actually ran. */
+  visionMode: PhotoLabRankResultVisionMode;
+  /**
+     * Why the vision pass did not run (e.g. consent_required,
+  daily_cap_exceeded, no_client). Null when it ran or was not requested.
+
+     * @nullable
+     */
+  visionFallbackReason?: string | null;
+  visionAnalysis?: PhotoLabVisionAnalysis | null;
+  nextSignal?: PhotoLabNextSignal | null;
+  mirror?: PhotoLabMirrorTieIn | null;
+}
+
 export interface CompassScreenshotExtractResult {
   /** The raw OCR-extracted text from the uploaded screenshot. */
   text: string;

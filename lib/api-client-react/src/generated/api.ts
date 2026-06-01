@@ -149,6 +149,8 @@ import type {
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
   MySessionsResponse,
+  PhotoLabRankInput,
+  PhotoLabRankResult,
   PostDateNote,
   PostDateNoteInput,
   PostDateNoteList,
@@ -8905,6 +8907,86 @@ export function useGetCompassSignalContext<TData = Awaited<ReturnType<typeof get
 
 
 
+
+export const getRankPhotoLabUrl = () => {
+
+
+
+
+  return `/api/photo-lab/rank`
+}
+
+/**
+ * Ranks several photos for use as a dating profile lineup and recommends a
+single lead shot. The deterministic ranking is always on and is built
+only from the composition attributes the member declares per photo (shot
+type, lighting, expression), never from the pixels. When the deep AI lane
+is on and images are supplied, an opt-in Claude vision pass adds depth by
+reading the images in the moment, never storing them. Anon-safe: callers
+without a session still get the deterministic ranking, just without the
+Mirror tie-in and next best signal.
+
+ * @summary Rank multiple photos and recommend a lead shot
+ */
+export const rankPhotoLab = async (photoLabRankInput: PhotoLabRankInput, options?: RequestInit): Promise<PhotoLabRankResult> => {
+
+  return customFetch<PhotoLabRankResult>(getRankPhotoLabUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      photoLabRankInput,)
+  }
+);}
+
+
+
+
+export const getRankPhotoLabMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rankPhotoLab>>, TError,{data: BodyType<PhotoLabRankInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rankPhotoLab>>, TError,{data: BodyType<PhotoLabRankInput>}, TContext> => {
+
+const mutationKey = ['rankPhotoLab'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rankPhotoLab>>, {data: BodyType<PhotoLabRankInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  rankPhotoLab(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RankPhotoLabMutationResult = NonNullable<Awaited<ReturnType<typeof rankPhotoLab>>>
+    export type RankPhotoLabMutationBody = BodyType<PhotoLabRankInput>
+    export type RankPhotoLabMutationError = ErrorType<void>
+
+    /**
+ * @summary Rank multiple photos and recommend a lead shot
+ */
+export const useRankPhotoLab = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rankPhotoLab>>, TError,{data: BodyType<PhotoLabRankInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rankPhotoLab>>,
+        TError,
+        {data: BodyType<PhotoLabRankInput>},
+        TContext
+      > => {
+      return useMutation(getRankPhotoLabMutationOptions(options));
+    }
 
 export const getUploadHingeImportUrl = () => {
 

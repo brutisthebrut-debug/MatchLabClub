@@ -16,6 +16,7 @@ import Integrations from "@/pages/Integrations";
 import Pricing from "@/pages/Pricing";
 import Waitlist from "@/pages/Waitlist";
 import Lab from "@/pages/Lab";
+import PhotoLab from "@/pages/PhotoLab";
 import SignalCheck from "@/pages/SignalCheck";
 import Roadmap from "@/pages/Roadmap";
 import Privacy from "@/pages/Privacy";
@@ -184,6 +185,7 @@ function Router() {
         <Redirect to="/signal-check" />
       </Route>
       <Route path="/lab" component={Lab} />
+      <Route path="/photo-lab" component={PhotoLab} />
       <Route path="/signal-check" component={SignalCheck} />
       <Route path="/roadmap" component={Roadmap} />
       <Route path="/privacy" component={Privacy} />

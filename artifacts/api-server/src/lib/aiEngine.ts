@@ -21,6 +21,244 @@ export interface PhotoAnalysis {
   topFix: string;
 }
 
+// Photo Lab: deterministic multi-photo ranking. This is the always-on baseline,
+// it never looks at pixels. It ranks photos from the composition attributes the
+// member declares per photo (what kind of shot it is, lighting, expression) and
+// recommends a lead shot. Opt-in Claude vision layers depth on top in the route.
+// Everything here is about composition and lineup strategy, never appearance.
+export type PhotoShotType =
+  | "solo_face"
+  | "full_body"
+  | "activity"
+  | "group"
+  | "candid"
+  | "other";
+
+export interface PhotoLabPhotoInput {
+  /** Client-assigned id so the ranking maps back to the uploaded photo. */
+  id: string;
+  shotType: PhotoShotType;
+  wellLit?: boolean;
+  genuineExpression?: boolean;
+}
+
+export interface PhotoLabInput {
+  photos: PhotoLabPhotoInput[];
+  datingGoal?: string | null;
+  sourceApp?: string | null;
+}
+
+export interface PhotoLabRankedPhoto {
+  id: string;
+  rank: number;
+  score: number;
+  role: string;
+  isLead: boolean;
+  notes: string[];
+}
+
+export interface PhotoLabChecklistItem {
+  category: string;
+  status: "good" | "needs_work" | "missing";
+  advice: string;
+}
+
+export interface PhotoLabRanking {
+  leadShotId: string;
+  leadShotRationale: string;
+  summary: string;
+  ranked: PhotoLabRankedPhoto[];
+  checklist: PhotoLabChecklistItem[];
+}
+
+const PHOTO_SHOT_META: Record<
+  PhotoShotType,
+  { base: number; role: string; label: string }
+> = {
+  // A clear solo shot of the face is the safest, highest-impact lead, so it
+  // carries the strongest base. A great candid can still edge a flat solo shot.
+  solo_face: { base: 75, role: "Lead shot", label: "clear solo shot" },
+  candid: { base: 58, role: "Candid personality shot", label: "candid shot" },
+  activity: {
+    base: 54,
+    role: "Lifestyle and conversation starter",
+    label: "activity shot",
+  },
+  full_body: { base: 48, role: "Full-body trust shot", label: "full-body shot" },
+  other: { base: 42, role: "Supporting shot", label: "supporting shot" },
+  group: { base: 28, role: "Social proof, never the lead", label: "group shot" },
+};
+
+function joinHumanList(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? "";
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+}
+
+function photoLabNotes(p: PhotoLabPhotoInput): string[] {
+  const notes: string[] = [];
+  switch (p.shotType) {
+    case "solo_face":
+      notes.push(
+        "A clear solo shot is what people screen first. This is prime lead material.",
+      );
+      break;
+    case "candid":
+      notes.push(
+        "Candid shots read as warm and real. A good change of pace between posed shots.",
+      );
+      break;
+    case "activity":
+      notes.push(
+        "Activity shots give people something to ask about. Strong in slot two or three.",
+      );
+      break;
+    case "full_body":
+      notes.push(
+        "Keep one honest full-body shot for trust. It rarely wins as the lead.",
+      );
+      break;
+    case "group":
+      notes.push(
+        "Strong as social proof. Place it third or later, never as your first image.",
+      );
+      break;
+    default:
+      notes.push("A useful supporting shot to round out the lineup.");
+  }
+  if (!p.wellLit) {
+    notes.push("Natural daylight would lift this shot. Soft, even light reads best.");
+  }
+  if (
+    !p.genuineExpression &&
+    (p.shotType === "solo_face" || p.shotType === "candid")
+  ) {
+    notes.push(
+      "A relaxed, genuine expression reads warmer than a posed look.",
+    );
+  }
+  return notes;
+}
+
+/**
+ * Pure, deterministic photo ranking. Total over any input (empty included).
+ * Group shots are penalized as a lead so a clear solo shot wins the first slot.
+ */
+export function rankPhotosDeterministic(input: PhotoLabInput): PhotoLabRanking {
+  const photos = input.photos ?? [];
+  const scored = photos.map((photo, index) => {
+    const meta = PHOTO_SHOT_META[photo.shotType] ?? PHOTO_SHOT_META.other;
+    let score = meta.base;
+    if (photo.wellLit) score += 10;
+    if (photo.genuineExpression) score += 12;
+    if (photo.shotType === "group") score -= 12;
+    score = Math.max(1, Math.min(100, score));
+    return { photo, index, score, meta };
+  });
+
+  const order = [...scored].sort(
+    (a, b) => b.score - a.score || a.index - b.index,
+  );
+
+  const ranked: PhotoLabRankedPhoto[] = order.map((entry, i) => ({
+    id: entry.photo.id,
+    rank: i + 1,
+    score: entry.score,
+    role: entry.meta.role,
+    isLead: i === 0,
+    notes: photoLabNotes(entry.photo),
+  }));
+
+  const has = (t: PhotoShotType) => scored.some((s) => s.photo.shotType === t);
+  const litCount = scored.filter((s) => s.photo.wellLit).length;
+  const wellLitSet =
+    scored.length > 0 && litCount >= Math.ceil(scored.length / 2);
+
+  const checklist: PhotoLabChecklistItem[] = [
+    {
+      category: "Clear solo lead shot",
+      status: has("solo_face") ? "good" : "missing",
+      advice: has("solo_face")
+        ? "You have a clear solo shot to lead with. That is the single highest-impact slot."
+        : "Add one clear, well-lit solo shot of your face. It makes the strongest lead.",
+    },
+    {
+      category: "Full-body shot",
+      status: has("full_body") ? "good" : "missing",
+      advice: has("full_body")
+        ? "An honest full-body shot is in the mix. It builds trust and avoids surprises."
+        : "Add one honest full-body shot. It builds trust and prevents awkward first-meeting surprises.",
+    },
+    {
+      category: "Activity or lifestyle shot",
+      status: has("activity") ? "good" : "needs_work",
+      advice: has("activity")
+        ? "You have an activity shot. It gives people an easy opener."
+        : "Add a shot of you doing something you love. Activity photos spark more openers than posed ones.",
+    },
+    {
+      category: "Social proof shot",
+      status: has("group") ? "good" : "needs_work",
+      advice: has("group")
+        ? "A group shot is present. Keep it later in the lineup, never as the lead."
+        : "A photo with friends signals warmth and social value. Add one, but never lead with it.",
+    },
+    {
+      category: "Lighting",
+      status: wellLitSet ? "good" : "needs_work",
+      advice: wellLitSet
+        ? "Most of your shots read as well lit. Soft, even light keeps doing the work."
+        : "Several shots could use better light. Natural daylight near a window is the easy win.",
+    },
+  ];
+
+  if (scored.length === 0 || order.length === 0) {
+    return {
+      leadShotId: "",
+      leadShotRationale:
+        "Add at least one photo and tag what each one is, and the engine will pick your lead shot.",
+      summary: "Add at least one photo to get a ranking.",
+      ranked,
+      checklist,
+    };
+  }
+
+  const lead = order[0]!;
+  const leadP = lead.photo;
+  let leadShotRationale: string;
+  if (
+    leadP.shotType === "solo_face" ||
+    leadP.shotType === "candid" ||
+    leadP.shotType === "activity"
+  ) {
+    const extras = [
+      leadP.wellLit ? "well lit" : null,
+      leadP.genuineExpression ? "with a genuine expression" : null,
+    ].filter((x): x is string => x !== null);
+    const extraText = extras.length ? `, ${joinHumanList(extras)}` : "";
+    leadShotRationale = `Lead with photo ${leadP.id}: a ${lead.meta.label}${extraText}. It is the version of you people meet first, so it earns the opening slot.`;
+  } else {
+    leadShotRationale = `Photo ${leadP.id} is your best of the set, but a clear, well-lit solo shot of your face beats a ${lead.meta.label} as a lead. Add one and it will likely take the first slot.`;
+  }
+
+  const missing = checklist
+    .filter((c) => c.status === "missing")
+    .map((c) => c.category.toLowerCase());
+  const n = scored.length;
+  const gap = missing.length
+    ? ` Your set is thin on ${joinHumanList(missing)}. Filling those rounds out the lineup.`
+    : " You have good variety across the lineup.";
+  const summary = `Ranked ${n} ${n === 1 ? "photo" : "photos"}. Lead with photo ${leadP.id}.${gap}`;
+
+  return {
+    leadShotId: leadP.id,
+    leadShotRationale,
+    summary,
+    ranked,
+    checklist,
+  };
+}
+
 export interface AuditReportOutput {
   readinessScore: number;
   overallGrade: string;
