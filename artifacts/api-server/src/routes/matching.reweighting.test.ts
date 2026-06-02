@@ -119,6 +119,7 @@ describe("buildReadinessLearning privacy contract", () => {
     // Exact key allowlist: no extra fields can smuggle data out.
     expect(Object.keys(learning).sort()).toEqual(
       [
+        "applied",
         "baseScore",
         "delta",
         "headline",
@@ -131,6 +132,8 @@ describe("buildReadinessLearning privacy contract", () => {
 
     // Derived scalars mirror the observation, nothing more.
     expect(learning.observing).toBe(true);
+    // Shadow mode never claims the gate moved.
+    expect(learning.applied).toBe(false);
     expect(learning.baseScore).toBe(58);
     expect(learning.observedScore).toBe(63);
     expect(learning.delta).toBe(5);
@@ -151,8 +154,23 @@ describe("buildReadinessLearning privacy contract", () => {
       outcome,
     );
     expect(learning.observing).toBe(false);
+    expect(learning.applied).toBe(false);
     expect(learning.baseScore).toBe(58);
     expect(learning.observedScore).toBe(58);
     expect(learning.delta).toBe(0);
+  });
+
+  it("applied + in-cohort reports applied=true so the UI can say it is live", () => {
+    const learning = buildReadinessLearning(
+      { ...defaultControls(), reweightingMode: "applied" },
+      {
+        ...readiness,
+        reweighting: { ...readiness.reweighting, inCohort: true, applied: true },
+      },
+      outcome,
+    );
+    expect(learning.observing).toBe(true);
+    expect(learning.applied).toBe(true);
+    expect(learning.delta).toBe(5);
   });
 });

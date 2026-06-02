@@ -97,6 +97,9 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
   // The single highest-leverage signal to feed next, surfaced on the result so
   // every quiz ends by pointing at the next thing that moves readiness.
   const nextSignal = matchingState.data?.nextActions?.[0] ?? null;
+  // Current readiness, so the quiz result ties visibly into the climbing meter
+  // rather than just naming an abstract next step. Null for signed-out users.
+  const readinessScore = matchingState.data?.readiness.score ?? null;
   const climb = useReadinessClimb({ enabled: isAuthenticated });
 
   const [answers, setAnswers] = useState<number[]>(() =>
@@ -492,13 +495,33 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                     ))}
                   </div>
                   <div className="rounded-2xl border border-foreground/10 bg-background/40 p-5">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <TrendingUp className="w-4 h-4 text-[hsl(326_100%_59%)]" />
-                      <p className="text-xs uppercase tracking-widest font-bold text-muted-foreground">Your next best signal</p>
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-[hsl(326_100%_59%)]" />
+                        <p className="text-xs uppercase tracking-widest font-bold text-muted-foreground">Your next best signal</p>
+                      </div>
+                      {readinessScore !== null && (
+                        <span
+                          className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(248_62%_52%/0.1)] border border-[hsl(248_62%_52%/0.25)] px-3 py-1 text-xs font-bold text-[hsl(248_62%_62%)]"
+                          data-testid="quizplay-readiness-score"
+                        >
+                          Readiness {readinessScore}
+                        </span>
+                      )}
                     </div>
                     {nextSignal ? (
                       <>
-                        <p className="text-base font-bold text-foreground mb-1">{nextSignal.label}</p>
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <p className="text-base font-bold text-foreground">{nextSignal.label}</p>
+                          {nextSignal.points > 0 && (
+                            <span
+                              className="inline-flex items-center rounded-full bg-[hsl(326_100%_59%/0.1)] border border-[hsl(326_100%_59%/0.25)] px-2.5 py-0.5 text-xs font-bold text-[hsl(326_100%_59%)]"
+                              data-testid="quizplay-next-points"
+                            >
+                              +{nextSignal.points} pts
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground leading-relaxed mb-4">{nextSignal.detail}</p>
                         <Button asChild variant="outline" className="rounded-full font-bold border-foreground/20 hover:bg-foreground/5">
                           <Link href={nextSignal.href}>{nextSignal.label} <ArrowRight className="ml-2 w-4 h-4" /></Link>

@@ -7851,13 +7851,19 @@ components:
         observing is true the engine is watching the would-be tilt without
         changing the score the user is served (shadow), so this is informational
         and does not claim the matching gate moved.
-      required: [observing, headline, totalDates, baseScore, observedScore, delta, leaningInto]
+      required: [observing, applied, headline, totalDates, baseScore, observedScore, delta, leaningInto]
       properties:
         observing:
           type: boolean
           description: >-
             True when outcome-driven re-weighting is being computed (shadow or
             applied). False when held at day-one weights.
+        applied:
+          type: boolean
+          description: >-
+            True only when the tilt is actually serving this user's score
+            (applied mode and in the rollout cohort). False in shadow or hold, so
+            the UI must not claim the matching gate moved unless this is true.
         headline:
           type: string
           description: Spoken-English read of what the recent outcomes suggest.

@@ -4492,6 +4492,7 @@ export const GetMatchingStateResponse = zod.object({
 }).optional().describe('A gamification lens on how consistently the user feeds any signal. Purely derived from activity history; it never affects the readiness score.'),
   "readinessLearning": zod.object({
   "observing": zod.boolean().describe('True when outcome-driven re-weighting is being computed (shadow or applied). False when held at day-one weights.'),
+  "applied": zod.boolean().describe('True only when the tilt is actually serving this user\'s score (applied mode and in the rollout cohort). False in shadow or hold, so the UI must not claim the matching gate moved unless this is true.'),
   "headline": zod.string().describe('Spoken-English read of what the recent outcomes suggest.'),
   "totalDates": zod.number().min(getMatchingStateResponseReadinessLearningTotalDatesMin).describe('How many date outcomes the user has logged.'),
   "baseScore": zod.number().min(getMatchingStateResponseReadinessLearningBaseScoreMin).max(getMatchingStateResponseReadinessLearningBaseScoreMax).describe('The day-one readiness score, served to the user today.'),

@@ -1164,6 +1164,7 @@ export default function Matching() {
         {(() => {
           const demo: NonNullable<typeof readinessLearning> = {
             observing: true,
+            applied: false,
             headline:
               "Log a few date outcomes and the engine starts learning what actually fits you, then leans your readiness toward the signals that predict it.",
             totalDates: 0,
@@ -1212,7 +1213,7 @@ export default function Matching() {
                         <div className="rounded-2xl border border-foreground/8 p-4 text-center">
                           <div className="text-2xl font-bold">{learning.observedScore}</div>
                           <div className="text-xs text-muted-foreground mt-1">
-                            If we acted on it
+                            {learning.applied ? "Now applied" : "If we acted on it"}
                           </div>
                         </div>
                         <div className="rounded-2xl border border-foreground/8 p-4 text-center">
@@ -1226,9 +1227,9 @@ export default function Matching() {
                         </div>
                       </div>
                       <p className="text-xs text-muted-foreground mt-3">
-                        We are watching this in the background. Your score today
-                        is unchanged. When the pattern is strong enough, we use
-                        it to sharpen who we put in front of you.
+                        {learning.applied
+                          ? "This is live. Your readiness now reflects what your outcomes are teaching us, and we use it to sharpen who we put in front of you."
+                          : "We are watching this in the background. Your score today is unchanged. When the pattern is strong enough, we use it to sharpen who we put in front of you."}
                       </p>
                     </>
                   ) : (

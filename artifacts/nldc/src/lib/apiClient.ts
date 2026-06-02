@@ -982,6 +982,12 @@ export interface ReweightingResponse {
   adjustments: WeightAdjustment[];
 }
 
+export interface ReweightingLaneTilt {
+  id: string;
+  label: string;
+  users: number;
+}
+
 export interface ReweightingImpactResponse {
   mode: ReweightingMode;
   cohortPercent: number;
@@ -994,6 +1000,8 @@ export interface ReweightingImpactResponse {
   maxDecrease: number;
   thresholdCrossingsUp: number;
   thresholdCrossingsDown: number;
+  laneTilt: ReweightingLaneTilt[];
+  recommendation: string;
   truncated: boolean;
 }
 

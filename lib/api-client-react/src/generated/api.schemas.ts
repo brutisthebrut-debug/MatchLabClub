@@ -3102,6 +3102,8 @@ export interface OutcomeInsight {
 export interface ReadinessLearning {
   /** True when outcome-driven re-weighting is being computed (shadow or applied). False when held at day-one weights. */
   observing: boolean;
+  /** True only when the tilt is actually serving this user's score (applied mode and in the rollout cohort). False in shadow or hold, so the UI must not claim the matching gate moved unless this is true. */
+  applied: boolean;
   /** Spoken-English read of what the recent outcomes suggest. */
   headline: string;
   /**

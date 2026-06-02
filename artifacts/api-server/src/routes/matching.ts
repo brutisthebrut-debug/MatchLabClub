@@ -160,6 +160,7 @@ interface Readiness {
  */
 export interface ReadinessLearning {
   observing: boolean;
+  applied: boolean;
   headline: string;
   totalDates: number;
   baseScore: number;
@@ -199,6 +200,10 @@ export function buildReadinessLearning(
     .map((a) => a.label);
   return {
     observing,
+    // True only when the tilt is actually serving this user's score (applied
+    // mode + in-cohort). In shadow/hold it stays false, so the UI never claims
+    // the readiness gate moved.
+    applied: readiness.reweighting?.applied ?? false,
     headline: outcome.headline,
     totalDates: outcome.totalDates,
     baseScore,
@@ -297,9 +302,47 @@ export async function computeReweightingPreview(
   userId: string,
   controls: BrainControls,
 ): Promise<ReweightingObservation> {
+  return (await computeReweightingDetail(userId, controls)).observation;
+}
+
+/** A single lane the outcome tilt is leaning into, for aggregate founder views. */
+export interface ReweightingLane {
+  id: string;
+  label: string;
+}
+
+/**
+ * Like computeReweightingPreview but also reports WHICH registry lanes the tilt
+ * is leaning into for this user (label + id only, never raw outcomes). Lets the
+ * founder see what the brain is actually learning across the cohort, not just
+ * how much scores move. Computes breakdown + outcome once and derives both.
+ */
+export async function computeReweightingDetail(
+  userId: string,
+  controls: BrainControls,
+): Promise<{ observation: ReweightingObservation; leanLanes: ReweightingLane[] }> {
   const breakdown = await readinessBreakdownFor(userId, controls);
   const outcome = await computeOutcomeInsightForUser(userId);
-  return evaluateReweighting(breakdown, controls, outcome, userId).observation;
+  const observation = evaluateReweighting(
+    breakdown,
+    controls,
+    outcome,
+    userId,
+  ).observation;
+  const outcomeSignal: OutcomeSignal = {
+    anotherDate: outcome.anotherDate,
+    noMore: outcome.noMore,
+    ghosted: outcome.ghosted,
+    unsure: outcome.unsure,
+  };
+  const leanLanes = proposeWeightAdjustments(
+    outcomeSignal,
+    SIGNAL_REGISTRY,
+    effectiveBaseWeights(controls),
+  )
+    .filter((a) => a.adjustedWeight > a.defaultWeight + 1e-6)
+    .map((a) => ({ id: a.id, label: a.label }));
+  return { observation, leanLanes };
 }
 
 export async function computeOutcomeInsightForUser(

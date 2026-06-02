@@ -39,6 +39,7 @@ import {
   effectiveReadinessThreshold,
   CONNECTOR_CATALOG,
   type BrainControls,
+  type ReweightingMode,
 } from "../lib/brainConfig";
 import {
   SIGNAL_REGISTRY,
@@ -49,6 +50,7 @@ import {
   computeReadiness,
   computeOutcomeInsightForUser,
   computeReweightingPreview,
+  computeReweightingDetail,
 } from "./matching";
 import { recordJourneyEvent, summarizeJourneyEvents } from "../lib/journeyEvents";
 import { and, count, sql, desc, gte, asc, eq, isNotNull, lt, inArray, lte } from "drizzle-orm";
@@ -2481,8 +2483,8 @@ router.get(
     const truncated = idRows.length > REWEIGHTING_IMPACT_MAX_USERS;
     const ids = idRows.slice(0, REWEIGHTING_IMPACT_MAX_USERS);
 
-    const previews = await Promise.all(
-      ids.map((r) => computeReweightingPreview(r.userId, controls)),
+    const details = await Promise.all(
+      ids.map((r) => computeReweightingDetail(r.userId, controls)),
     );
 
     let cohortUsers = 0;
@@ -2492,13 +2494,22 @@ router.get(
     let maxDecrease = 0;
     let thresholdCrossingsUp = 0;
     let thresholdCrossingsDown = 0;
-    for (const p of previews) {
+    // Aggregate which registry lanes the tilt is leaning into across the sample,
+    // so the founder sees WHAT the brain is learning, not just how much scores
+    // move. Counts users per lane; labels + ids only, never raw outcomes.
+    const laneCounts = new Map<string, { label: string; users: number }>();
+    for (const { observation: p, leanLanes } of details) {
       if (p.inCohort) cohortUsers += 1;
       if (p.delta !== 0) {
         changedUsers += 1;
         totalAbsDelta += Math.abs(p.delta);
         if (p.delta > maxIncrease) maxIncrease = p.delta;
         if (p.delta < maxDecrease) maxDecrease = p.delta;
+      }
+      for (const lane of leanLanes) {
+        const entry = laneCounts.get(lane.id) ?? { label: lane.label, users: 0 };
+        entry.users += 1;
+        laneCounts.set(lane.id, entry);
       }
       // Threshold crossings count only users whose live score is (or would be)
       // affected: those inside the rollout cohort.
@@ -2510,25 +2521,70 @@ router.get(
       }
     }
 
+    const laneTilt = Array.from(laneCounts.entries())
+      .map(([id, v]) => ({ id, label: v.label, users: v.users }))
+      .sort((a, b) => b.users - a.users || a.label.localeCompare(b.label));
+
+    const averageAbsDelta =
+      changedUsers > 0 ? Number((totalAbsDelta / changedUsers).toFixed(2)) : 0;
+
     res.json({
       mode: controls.reweightingMode,
       cohortPercent: controls.reweightingCohortPercent,
       threshold,
-      scoredUsers: previews.length,
+      scoredUsers: details.length,
       cohortUsers,
       changedUsers,
-      averageAbsDelta:
-        changedUsers > 0
-          ? Number((totalAbsDelta / changedUsers).toFixed(2))
-          : 0,
+      averageAbsDelta,
       maxIncrease,
       maxDecrease,
       thresholdCrossingsUp,
       thresholdCrossingsDown,
+      laneTilt,
+      recommendation: buildReweightingRecommendation({
+        mode: controls.reweightingMode,
+        cohortPercent: controls.reweightingCohortPercent,
+        scoredUsers: details.length,
+        changedUsers,
+        averageAbsDelta,
+        thresholdCrossingsUp,
+        thresholdCrossingsDown,
+        topLane: laneTilt[0]?.label ?? null,
+      }),
       truncated,
     });
   },
 );
+
+/**
+ * Synthesize a plain-English graduate/hold recommendation from the aggregate
+ * impact stats so the founder gets a read, not just numbers. Deterministic and
+ * derived-only. No em dashes, no AI-tell words.
+ */
+export function buildReweightingRecommendation(s: {
+  mode: ReweightingMode;
+  cohortPercent: number;
+  scoredUsers: number;
+  changedUsers: number;
+  averageAbsDelta: number;
+  thresholdCrossingsUp: number;
+  thresholdCrossingsDown: number;
+  topLane: string | null;
+}): string {
+  if (s.changedUsers === 0) {
+    return "No scores would move yet. Keep gathering date outcomes and revisit before changing modes.";
+  }
+  const lane = s.topLane ? ` Mostly leaning into ${s.topLane}.` : "";
+  const base = `${s.changedUsers} of ${s.scoredUsers} users would shift by ${s.averageAbsDelta} pts on average.${lane}`;
+  if (s.mode === "applied") {
+    return `Live for ${s.cohortPercent}% of users. ${base} Watch the gate crossings before widening the cohort.`;
+  }
+  const net = s.thresholdCrossingsUp - s.thresholdCrossingsDown;
+  if (net >= 0) {
+    return `${base} ${s.thresholdCrossingsUp} would cross up at the gate vs ${s.thresholdCrossingsDown} down, so the tilt reads net positive. Graduating to applied at a small cohort is reasonable.`;
+  }
+  return `${base} ${s.thresholdCrossingsDown} would drop below the gate vs ${s.thresholdCrossingsUp} rising, so hold in shadow until the balance improves.`;
+}
 
 const CurationBody = z.object({
   entityType: z.enum(["match_proposal", "signal"]),

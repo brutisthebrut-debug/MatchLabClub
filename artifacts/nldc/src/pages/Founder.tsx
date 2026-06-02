@@ -32,7 +32,7 @@ import {
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
 import { useListAudits, useGetWaitlistStats, useGetCoachFollowUpTimeline, useGetFounderReferrals } from "@workspace/api-client-react";
-import { Lock, LogOut, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock, Share2, Heart, MapPin, Brain, SlidersHorizontal, RotateCcw, ThumbsUp, ThumbsDown, Activity, Save, Gauge } from "lucide-react";
+import { Lock, LogOut, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock, Share2, Heart, MapPin, Brain, SlidersHorizontal, RotateCcw, ThumbsUp, ThumbsDown, Activity, Save, Gauge, TrendingUp } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
 import { EchoPlaybookPanel } from "@/components/founder/EchoPlaybookPanel";
 import {
@@ -4761,6 +4761,39 @@ function ReweightingImpactPanel({
             label={`Crosses ${data.threshold}`}
             value={`+${data.thresholdCrossingsUp} / -${data.thresholdCrossingsDown}`}
           />
+          {data.laneTilt.length > 0 && (
+            <div className="col-span-full">
+              <span className="text-xs text-muted-foreground block mb-2">
+                Leaning into, across the sample
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {data.laneTilt.map((lane) => (
+                  <span
+                    key={lane.id}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[hsl(248_62%_52%/0.3)] bg-[hsl(248_62%_52%/0.12)] px-3 py-1 text-xs font-medium text-[hsl(248_62%_62%)]"
+                    data-testid={`impact-lane-${lane.id}`}
+                  >
+                    <TrendingUp className="w-3 h-3" />
+                    {lane.label}
+                    <span className="text-muted-foreground">{lane.users}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {data.recommendation && (
+            <div
+              className="col-span-full glass rounded-xl px-4 py-3 border border-[hsl(248_62%_52%/0.2)]"
+              data-testid="impact-recommendation"
+            >
+              <span className="text-xs uppercase tracking-widest font-bold text-muted-foreground block mb-1">
+                Read
+              </span>
+              <p className="text-sm text-foreground leading-relaxed">
+                {data.recommendation}
+              </p>
+            </div>
+          )}
           {data.truncated && (
             <p className="col-span-full text-xs text-muted-foreground">
               Sampled the first {data.scoredUsers} scored users.
