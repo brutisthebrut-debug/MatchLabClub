@@ -70,6 +70,11 @@ vi.mock("@/lib/apiClient", () => ({
   getFounderStats: vi.fn(async () => ({ leads: 0, purchaseInterest: 0, audits: 0, waitlist: 0, messages: 0 })),
   getLeads: vi.fn(async () => []),
   getPurchaseInterestList: vi.fn(async () => []),
+  getJourneyEvents: vi.fn(async () => ({
+    counts: [],
+    totals: { today: 0, last7d: 0, last30d: 0 },
+    recent: [],
+  })),
   getAiMetrics: vi.fn(async () => ({
     overall: {
       total: 0,

@@ -56,6 +56,11 @@ vi.mock("@workspace/api-client-react", () => ({
   useDeleteInsight: () => ({ mutate: vi.fn(), isPending: false }),
   getListInsightsQueryKey: () => ["insights"],
   getGetInsightsRollupQueryKey: () => ["insights-rollup"],
+  useGetMatchingState: () => ({
+    data: { eligible: false, readiness: { score: 0 }, nextActions: [] },
+    isLoading: false,
+  }),
+  getGetMatchingStateQueryKey: () => ["matching-state"],
 }));
 
 vi.mock("@workspace/replit-auth-web", () => ({

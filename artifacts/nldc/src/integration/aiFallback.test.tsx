@@ -52,6 +52,11 @@ vi.mock("@workspace/api-client-react", () => ({
   getGetCompassSignalContextQueryKey: () => ["compass-signal-context"],
   useGetAiContentConsent: () => ({ data: { consent: false }, isLoading: false }),
   getGetAiContentConsentQueryKey: () => ["ai-content-consent"],
+  useGetMatchingState: () => ({
+    data: { eligible: false, readiness: { score: 0 }, nextActions: [] },
+    isLoading: false,
+  }),
+  getGetMatchingStateQueryKey: () => ["matching-state"],
 }));
 
 // AppLayout pulls in Navbar/Footer which depend on auth + routing — pass through

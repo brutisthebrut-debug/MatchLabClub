@@ -62,6 +62,11 @@ vi.mock("@/lib/apiClient", () => {
     getFounderStats: stub,
     getLeads: async () => [],
     getPurchaseInterestList: async () => [],
+    getJourneyEvents: async () => ({
+      counts: [],
+      totals: { today: 0, last7d: 0, last30d: 0 },
+      recent: [],
+    }),
     getAiMetrics: stub,
     getAiThresholds: stub,
     updateAiThresholds: stub,
