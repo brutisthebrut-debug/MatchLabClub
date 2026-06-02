@@ -2,3 +2,4 @@
 - [Signal registry weights not pre-normalized](signal-registry-weights.md) — SIGNAL_REGISTRY weights sum to ~1.81; normalize before percentages, and demo fallbacks must mirror backend derivation exactly.
 - [Internal match proposal mirror + uniqueness](internal-match-proposals.md) — internal matches are two ordered rows per pair; partial unique index on ordered (user_id,proposed_to_user_id) keeps discover idempotent; dedupe before adding it.
 - [Accumulating-row advisory lock key](accumulating-row-lock-key.md) — a single accumulating row mutated via multiple lookup paths (owner vs handle) must lock on ONE owner-derived key, or concurrent writes lose updates.
+- [SelfHub anon gating + demo fallback](your-mirror-spine.md) — /me (SelfHub) hard-gates signed-out users to a sign-in card; the rich body renders only when authed-or-auth-loading, so per-section demo fallbacks (`!isAuthenticated`) cover the auth-loading window, not true anon.

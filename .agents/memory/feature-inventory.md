@@ -101,9 +101,9 @@ mode + claim-on-login handoff. Mobile-only: push notifications, camera OCR, nati
 - Beat 1 Connection Center repositioning — BUILT.
 - Beat 2 forwarding inbox (`{handle}@receipts.matchlab.club`) — NOT built (placeholder card "building").
 - Beat 3 Plaid spending — NOT built (placeholder "building"; no plaid dep). Secrets PLAID_CLIENT_ID/PLAID_SECRET are referenced as missing.
-- Beat 4 insight stream on /me — PARTIAL (/me + basic metrics exist; full stream not realized).
+- Beat 4 insight stream on /me — BUILT (unified client-assembled InsightStream on SelfHub across insights/compass/journal/post-date/wins/imports; demo fallback during auth-loading).
 - Beat 5 calendar .ics — BUILT end-to-end AND wired into readiness (calendar lane).
-- Beat 6 signal-density viz — NOT built.
+- Beat 6 signal-density viz — BUILT (shared SignalDensityMap component; live on /your-mirror AND /me via useGetMySignalMap + DEMO_SIGNAL_MAP fallback).
 - Beat 7 matching cohort opt-in — BUILT (pool-membership route + table).
 Connector cards genuinely built: Hinge GDPR zip, Instagram tone, message paste, photo scan,
 wellness, calendar paste, matching cohort. Placeholders: forwarding inbox, Plaid, Spotify.

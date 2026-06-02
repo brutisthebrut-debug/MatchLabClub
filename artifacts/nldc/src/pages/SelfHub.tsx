@@ -36,6 +36,7 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   useGetAccountSummary,
   getGetAccountSummaryQueryKey,
@@ -63,11 +64,14 @@ import {
   getGetMirrorPortraitQueryKey,
   useGetMyReferrals,
   getGetMyReferralsQueryKey,
+  useGetMySignalMap,
+  getGetMySignalMapQueryKey,
 } from "@workspace/api-client-react";
 import { ClimbCard } from "@/components/climb/ClimbCard";
 import { ShareButton } from "@/components/echo/ShareButton";
 import { NextBestActionCoach } from "@/components/coach/NextBestActionCoach";
-import { DEMO_PORTRAIT } from "@/lib/mirrorDemo";
+import { DEMO_PORTRAIT, DEMO_SIGNAL_MAP } from "@/lib/mirrorDemo";
+import { SignalDensityMap } from "@/components/SignalDensityMap";
 
 const WELLNESS_DIMENSION_COUNT = 18;
 
@@ -113,13 +117,20 @@ const fadeUp = (delay = 0) => ({
 
 function daysAgo(iso?: string | null): string {
   if (!iso) return "-";
-  const ms = Date.now() - new Date(iso).getTime();
+  const parsed = new Date(iso).getTime();
+  if (Number.isNaN(parsed)) return "-";
+  const ms = Date.now() - parsed;
   const days = Math.floor(ms / 86_400_000);
   if (days <= 0) return "today";
   if (days === 1) return "yesterday";
   if (days < 7) return `${days}d ago`;
   if (days < 30) return `${Math.floor(days / 7)}w ago`;
   return `${Math.floor(days / 30)}mo ago`;
+}
+
+function truncate(s: string, max: number): string {
+  const t = s.trim();
+  return t.length > max ? `${t.slice(0, max - 1)}...` : t;
 }
 
 function StatCard({
@@ -229,9 +240,9 @@ function SignalDensityPanel({ sources }: { sources: SignalSource[] }) {
   <div data-testid="signal-density-panel">
   <div className="flex items-start justify-between gap-4 mb-4">
   <div className="min-w-0">
-  <h3 className="font-serif text-xl font-bold text-foreground">Signal density</h3>
+  <h3 className="font-serif text-xl font-bold text-foreground">Sources plugged in</h3>
   <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-  {active} of {total} sources feeding your second brain. More sources, sharper reads.
+  {active} of {total} live sources connected. Each one the machine reads fills a lane above.
   </p>
   </div>
   <Link
@@ -309,103 +320,166 @@ function SignalDensityPanel({ sources }: { sources: SignalSource[] }) {
   );
 }
 
-type RecentInsight = {
-  id: number;
-  sourceLabel: string;
-  sourceApp?: string | null;
-  status: string;
-  createdAt: string;
+type StreamKind = "insight" | "compass" | "journal" | "postdate" | "win" | "import";
+
+type StreamItem = {
+  key: string;
+  kind: StreamKind;
+  title: string;
+  detail: string;
+  href: string;
+  occurredAt: string;
 };
 
-function RecentInsightStream({
-  insights,
+const STREAM_ICONS: Record<StreamKind, LucideIcon> = {
+  insight: Sparkles,
+  compass: Compass,
+  journal: BookOpen,
+  postdate: Heart,
+  win: Trophy,
+  import: Upload,
+};
+
+// Sample feed shown to signed-out visitors so the stream never reads empty.
+// It is clearly labelled as a sample wherever it appears.
+const DEMO_STREAM: StreamItem[] = [
+  {
+    key: "demo-insight",
+    kind: "insight",
+    title: "Hinge · message history",
+    detail: "Pattern read ready",
+    href: "/insights",
+    occurredAt: new Date(Date.now() - 2 * 3_600_000).toISOString(),
+  },
+  {
+    key: "demo-compass",
+    kind: "compass",
+    title: "Compass read on secure and direct",
+    detail: "You scored a connection. Real signal on what draws you.",
+    href: "/compatibility-compass",
+    occurredAt: new Date(Date.now() - 26 * 3_600_000).toISOString(),
+  },
+  {
+    key: "demo-win",
+    kind: "win",
+    title: "Dating win logged",
+    detail: "Sent the first message without overthinking it.",
+    href: "/progress/wins",
+    occurredAt: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+  },
+  {
+    key: "demo-journal",
+    kind: "journal",
+    title: "What I actually want this year",
+    detail: "A reflection folded into your Mirror.",
+    href: "/mirror/journal",
+    occurredAt: new Date(Date.now() - 5 * 86_400_000).toISOString(),
+  },
+  {
+    key: "demo-import",
+    kind: "import",
+    title: "Calendar import",
+    detail: "A whole export folded into your picture.",
+    href: "/imports",
+    occurredAt: new Date(Date.now() - 8 * 86_400_000).toISOString(),
+  },
+];
+
+function InsightStream({
+  items,
   isLoading,
+  isDemo,
 }: {
-  insights: RecentInsight[];
+  items: StreamItem[];
   isLoading: boolean;
+  isDemo: boolean;
 }) {
-  const recent = [...insights]
-.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-.slice(0, 3);
+  const shown = items.slice(0, 8);
   return (
-  <div data-testid="recent-insight-stream">
-  <div className="flex items-start justify-between gap-4 mb-4">
-  <div className="min-w-0">
-  <h3 className="font-serif text-xl font-bold text-foreground">Recent insights</h3>
-  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-  The last few pattern reads your second brain produced.
-  </p>
-  </div>
-  <Link
-  href="/insights"
-  className="flex-shrink-0 text-xs font-semibold text-[hsl(248_62%_52%)] hover:underline inline-flex items-center gap-1"
-  data-testid="link-recent-insights-all"
-  >
-  Open insights <ArrowRight className="h-3 w-3" />
-  </Link>
-  </div>
-  {isLoading ? (
-  <div className="space-y-2" aria-busy="true">
-  {[0, 1, 2].map((i) => (
-  <div key={i} className="h-14 rounded-xl bg-[hsl(248_30%_94%)] animate-pulse" />
-  ))}
-  </div>
-  ) : recent.length === 0 ? (
-  <div
-  className="rounded-xl border border-dashed border-[hsl(248_30%_85%)] p-5 text-center"
-  data-testid="recent-insight-empty"
-  >
-  <p className="text-sm text-muted-foreground mb-3">
-  No insights yet. Drop a message history into the analyzer to get your first pattern read.
-  </p>
-  <Button
-  asChild
-  size="sm"
-  variant="outline"
-  className="rounded-full font-semibold"
-  data-testid="button-recent-insight-empty-cta"
-  >
-  <Link href="/insights">Run my first insight</Link>
-  </Button>
-  </div>
-  ) : (
-  <ul className="space-y-2">
-  {recent.map((i) => (
-  <li
-  key={i.id}
-  className="flex items-center gap-3 rounded-xl border border-[hsl(248_30%_90%)] bg-white/60 px-3.5 py-3"
-  data-testid={`recent-insight-${i.id}`}
-  >
-  <div className="h-8 w-8 rounded-lg bg-[hsl(326_100%_60%/0.10)] flex items-center justify-center flex-shrink-0">
-  <Sparkles className="h-4 w-4 text-[hsl(326_100%_60%)]" aria-hidden="true" />
-  </div>
-  <div className="flex-1 min-w-0">
-  <p className="text-sm font-semibold text-foreground truncate">
-  {i.sourceApp ? `${i.sourceApp} · ` : ""}
-  {i.sourceLabel}
-  </p>
-  <p className="text-xs text-muted-foreground">
-  {i.status === "complete"
-  ? "Ready"
-  : i.status === "analyzing"
-  ? "Analyzing..."
-  : "Queued"}
-  {" · "}
-  {daysAgo(i.createdAt)}
-  </p>
-  </div>
-  <Link
-  href="/insights"
-  className="text-xs font-semibold text-[hsl(248_62%_52%)] hover:underline flex-shrink-0"
-  data-testid={`recent-insight-open-${i.id}`}
-  >
-  Open
-  </Link>
-  </li>
-  ))}
-  </ul>
-  )}
-  </div>
+    <div data-testid="insight-stream">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-serif text-xl font-bold text-foreground">Recent activity</h3>
+            {isDemo && (
+              <span
+                className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground border border-[hsl(248_30%_85%)] rounded-full px-2 py-0.5"
+                data-testid="insight-stream-sample"
+              >
+                Sample view
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+            The latest signals your second brain folded in, newest first.
+          </p>
+        </div>
+        <Link
+          href="/progress/feed"
+          className="flex-shrink-0 text-xs font-semibold text-[hsl(248_62%_52%)] hover:underline inline-flex items-center gap-1"
+          data-testid="link-insight-stream-all"
+        >
+          Open feed <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+      {isLoading ? (
+        <div className="space-y-2" aria-busy="true">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-14 rounded-xl bg-[hsl(248_30%_94%)] animate-pulse" />
+          ))}
+        </div>
+      ) : shown.length === 0 ? (
+        <div
+          className="rounded-xl border border-dashed border-[hsl(248_30%_85%)] p-5 text-center"
+          data-testid="insight-stream-empty"
+        >
+          <p className="text-sm text-muted-foreground mb-3">
+            Nothing here yet. Feed your first signal and it shows up here right away.
+          </p>
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="rounded-full font-semibold"
+            data-testid="button-insight-stream-empty-cta"
+          >
+            <Link href="/scan">Feed my first signal</Link>
+          </Button>
+        </div>
+      ) : (
+        <ul className="space-y-2">
+          {shown.map((item) => {
+            const Icon = STREAM_ICONS[item.kind];
+            return (
+              <li
+                key={item.key}
+                className="flex items-center gap-3 rounded-xl border border-[hsl(248_30%_90%)] bg-white/60 px-3.5 py-3"
+                data-testid={`insight-stream-item-${item.key}`}
+              >
+                <div className="h-8 w-8 rounded-lg bg-[hsl(326_100%_60%/0.10)] flex items-center justify-center flex-shrink-0">
+                  <Icon className="h-4 w-4 text-[hsl(326_100%_60%)]" aria-hidden="true" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">{item.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {item.detail}
+                    {" · "}
+                    {daysAgo(item.occurredAt)}
+                  </p>
+                </div>
+                <Link
+                  href={item.href}
+                  className="text-xs font-semibold text-[hsl(248_62%_52%)] hover:underline flex-shrink-0"
+                  data-testid={`insight-stream-open-${item.key}`}
+                >
+                  Open
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -445,6 +519,9 @@ export default function SelfHub() {
   });
   const datingWins = useGetDatingWins({
   query: { queryKey: getGetDatingWinsQueryKey(), enabled: isAuthenticated },
+  });
+  const signalMap = useGetMySignalMap({
+  query: { queryKey: getGetMySignalMapQueryKey(), enabled: isAuthenticated },
   });
   // The Mirror is the spine: surface the live portrait as the lead card. The
   // deterministic endpoint is always non-empty for a signed-in user; the demo
@@ -588,7 +665,82 @@ export default function SelfHub() {
   const nextActions = matchingState.data?.nextActions ?? [];
   const matchEligible = matchingState.data?.eligible ?? false;
 
-  const insightRows = (insights.data ?? []) as RecentInsight[];
+  const streamItems: StreamItem[] = [
+    ...(insights.data ?? []).map((i) => ({
+      key: `insight-${i.id}`,
+      kind: "insight" as const,
+      title: `${i.sourceApp ? `${i.sourceApp} · ` : ""}${i.sourceLabel}`,
+      detail:
+        i.status === "complete"
+          ? "Pattern read ready"
+          : i.status === "analyzing"
+            ? "Analyzing your patterns"
+            : "Queued for analysis",
+      href: "/insights",
+      occurredAt: i.createdAt,
+    })),
+    ...(compassReads.data?.reads ?? []).map((r) => ({
+      key: `compass-${r.id}`,
+      kind: "compass" as const,
+      title: `Compass read on ${truncate(r.connectionStyle, 48)}`,
+      detail: "You scored a connection. Real signal on what draws you.",
+      href: "/compatibility-compass",
+      occurredAt: r.createdAt,
+    })),
+    ...(journal.data?.entries ?? []).map((j) => ({
+      key: `journal-${j.id}`,
+      kind: "journal" as const,
+      title: j.prompt ? truncate(j.prompt, 60) : "Journal entry",
+      detail: "A reflection folded into your Mirror.",
+      href: "/mirror/journal",
+      occurredAt: j.createdAt,
+    })),
+    ...(postDate.data?.notes ?? []).map((n) => ({
+      key: `postdate-${n.id}`,
+      kind: "postdate" as const,
+      title: n.personLabel
+        ? `Post-date note on ${truncate(n.personLabel, 40)}`
+        : "Post-date note",
+      detail: "You logged how a date actually went.",
+      href: "/mirror/dates",
+      occurredAt: n.createdAt,
+    })),
+    ...(datingWins.data ?? []).map((w) => ({
+      key: `win-${w.id}`,
+      kind: "win" as const,
+      title: "Dating win logged",
+      detail: truncate(w.body, 90),
+      href: "/progress/wins",
+      occurredAt: w.createdAt,
+    })),
+    ...(imports.data?.imports ?? []).map((im) => ({
+      key: `import-${im.id}`,
+      kind: "import" as const,
+      title: `${im.source} import`,
+      detail:
+        im.status === "complete"
+          ? "A whole export folded into your picture."
+          : `Import ${im.status}`,
+      href: "/imports",
+      occurredAt: im.uploadedAt,
+    })),
+  ].sort(
+    (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
+  );
+
+  const streamIsDemo = !isAuthenticated;
+  const shownStream = streamIsDemo ? DEMO_STREAM : streamItems;
+  const streamLoading =
+    isAuthenticated &&
+    (insights.isLoading ||
+      compassReads.isLoading ||
+      journal.isLoading ||
+      postDate.isLoading ||
+      datingWins.isLoading ||
+      imports.isLoading);
+
+  const signalMapShown = signalMap.data ?? DEMO_SIGNAL_MAP;
+  const signalMapIsDemo = !signalMap.data;
 
   const signalSources: SignalSource[] = [
   { key: "audits", label: "Profile audits", icon: FileText, active: summaryData.audits > 0, href: "/dashboard", state: "live" },
@@ -797,17 +949,19 @@ export default function SelfHub() {
   />
   </motion.div>
 
-  {/* Beat 6: Signal density panel */}
-  <motion.div {...fadeUp(0.07)} className="glass rounded-3xl p-6 md:p-8 mb-6 md:mb-8" data-testid="card-signal-density">
+  {/* Beat 6: real signal-density map, lane by lane coverage */}
+  <motion.div {...fadeUp(0.07)} className="mb-6 md:mb-8">
+  <SignalDensityMap map={signalMapShown} isDemo={signalMapIsDemo} />
+  </motion.div>
+
+  {/* Sources plugged in: connector status tiles */}
+  <motion.div {...fadeUp(0.08)} className="glass rounded-3xl p-6 md:p-8 mb-6 md:mb-8" data-testid="card-connector-sources">
   <SignalDensityPanel sources={signalSources} />
   </motion.div>
 
-  {/* Beat 4 surface: recent insight stream */}
+  {/* Beat 4: unified insight stream across every source */}
   <motion.div {...fadeUp(0.09)} className="glass rounded-3xl p-6 md:p-8 mb-6 md:mb-8" data-testid="card-recent-insights">
-  <RecentInsightStream
-  insights={insightRows}
-  isLoading={insights.isLoading}
-  />
+  <InsightStream items={shownStream} isLoading={streamLoading} isDemo={streamIsDemo} />
   </motion.div>
 
   {/* Activity grid */}

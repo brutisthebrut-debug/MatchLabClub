@@ -90,6 +90,8 @@ vi.mock("@workspace/api-client-react", () => ({
   getGetMirrorPortraitQueryKey: () => ["mirror-portrait"],
   useGetMyReferrals: () => ({ data: undefined, isLoading: false }),
   getGetMyReferralsQueryKey: () => ["my-referrals"],
+  useGetMySignalMap: () => ({ data: undefined, isLoading: false }),
+  getGetMySignalMapQueryKey: () => ["my-signal-map"],
 }));
 
 vi.mock("@/components/layout/AppLayout", () => ({
