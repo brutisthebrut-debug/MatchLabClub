@@ -127,6 +127,13 @@
       "when": 1780273434939,
       "tag": "0017_shiny_natasha_romanoff",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1780376270872,
+      "tag": "0018_amused_jack_power",
+      "breakpoints": true
     }
   ]
 }

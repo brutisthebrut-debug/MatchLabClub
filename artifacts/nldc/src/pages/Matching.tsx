@@ -68,6 +68,7 @@ import {
   useGetMatchingProposals,
   getGetMatchingProposalsQueryKey,
   useRespondToMatchProposal,
+  useDiscoverMatches,
   type EchoMatchRead,
   type MatchProposal,
 } from "@workspace/api-client-react";
@@ -124,6 +125,15 @@ const PROPOSAL_STATUS_META: Record<
     note: "This one timed out before it moved forward.",
   },
 };
+
+// Human label for where a proposal came from, so an internal member match never
+// shows the raw "internal" source string and an external read reads cleanly.
+function proposalSourceLabel(source: string): string {
+  if (source === "internal") return "Member match";
+  if (source === "external_paste") return "Profile read";
+  if (source === "concierge") return "Founder pick";
+  return "Intro";
+}
 
 // Snap any stored distance to the nearest preset so the selector always has a
 // matching option, even for historical values saved before presets existed.
@@ -328,6 +338,7 @@ export default function Matching() {
   const runExternal = useCreateMatchingExternalRead();
   const runEcho = useCreateMatchingEchoRead();
   const respondProposal = useRespondToMatchProposal();
+  const discover = useDiscoverMatches();
 
   const proposals = useGetMatchingProposals({
     query: {
@@ -536,6 +547,27 @@ export default function Matching() {
       });
     } catch {
       toast({ title: "Couldn't record that. Try again." });
+    }
+  }
+
+  async function handleDiscoverMatches() {
+    try {
+      await discover.mutateAsync();
+      trackEvent("match_discover_run");
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: getGetMatchingProposalsQueryKey(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: getGetMatchingStateQueryKey(),
+        }),
+      ]);
+      toast({
+        title:
+          "We looked across the pool. Any new intros are in your match track below.",
+      });
+    } catch {
+      toast({ title: "Couldn't run a match pass right now. Try again." });
     }
   }
 
@@ -1127,6 +1159,19 @@ export default function Matching() {
                 for you. Say you are interested and it routes to the front of the
                 intro queue. This is a real track, not a preview.
               </CardDescription>
+              {eligible && (
+                <Button
+                  className="mt-3 rounded-full self-start"
+                  disabled={discover.isPending}
+                  onClick={handleDiscoverMatches}
+                  data-testid="button-discover-matches"
+                >
+                  <Sparkles className="mr-1 w-4 h-4" aria-hidden="true" />
+                  {discover.isPending
+                    ? "Looking across the pool."
+                    : "Find matches near you"}
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="space-y-3">
               {proposalList.length === 0 && (
@@ -1135,8 +1180,8 @@ export default function Matching() {
                   data-testid="text-no-proposals"
                 >
                   No intros yet. Keep feeding signals and turn on the pool above.
-                  When the founder curates a match for you, it shows up right
-                  here.
+                  When you are eligible, run a match pass to pair with other
+                  members, or wait for the founder to curate one for you.
                 </p>
               )}
               {proposalList.map((p: MatchProposal) => {
@@ -1145,16 +1190,30 @@ export default function Matching() {
                   tone: "muted" as const,
                 };
                 const open = p.status === "proposed";
+                const isMatch = p.status === "mutual_yes";
                 return (
                   <div
                     key={p.id}
-                    className="rounded-2xl border border-foreground/10 p-4"
+                    className={`rounded-2xl border p-4 ${
+                      isMatch
+                        ? "border-[hsl(326_100%_50%)]/50 bg-[hsl(326_100%_50%)]/5"
+                        : "border-foreground/10"
+                    }`}
                     data-testid={`proposal-${p.id}`}
                   >
+                    {isMatch && (
+                      <div
+                        className="flex items-center gap-1.5 text-sm font-semibold text-[hsl(326_100%_50%)] mb-2"
+                        data-testid={`proposal-match-${p.id}`}
+                      >
+                        <Heart className="w-4 h-4" aria-hidden="true" />
+                        It's a match
+                      </div>
+                    )}
                     <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold capitalize">
-                          {p.source} intro
+                        <span className="text-sm font-semibold">
+                          {proposalSourceLabel(p.source)}
                         </span>
                         <Badge
                           variant={

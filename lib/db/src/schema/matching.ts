@@ -7,6 +7,7 @@ import {
   timestamp,
   uuid,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -68,6 +69,14 @@ export const matchProposalsTable = pgTable(
   (t) => [
     index("match_proposals_user_created_idx").on(t.userId, t.createdAt.desc()),
     index("match_proposals_status_idx").on(t.status),
+    // One internal proposal per ordered (owner -> counterpart) pair. The mirror
+    // design stores A->B and B->A as distinct rows, so each direction is unique;
+    // this makes the discover engine idempotent and race-safe (concurrent runs
+    // collide here and are dropped via ON CONFLICT DO NOTHING). Partial so it
+    // only constrains internal matches, never external_paste/concierge rows.
+    uniqueIndex("match_proposals_internal_pair_uidx")
+      .on(t.userId, t.proposedToUserId)
+      .where(sql`${t.source} = 'internal'`),
   ],
 );
 

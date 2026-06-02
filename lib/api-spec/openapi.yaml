@@ -3645,6 +3645,44 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/matching/discover:
+    post:
+      tags: [Matching]
+      operationId: discoverMatches
+      summary: Find and create internal matches for the signed-in user
+      description: |
+        Runs the deterministic internal matching engine for the caller. Pairs
+        them with other eligible pool members, scores compatibility from
+        aggregate signals and stated preferences (no raw content, no PII), and
+        creates mutual internal proposals for the top candidates, skipping any
+        pair that already has an internal proposal in either direction. Returns
+        the caller's full proposal list (newest first), so the surface can
+        refresh in one round-trip. Requires the caller to be in the pool.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The caller's proposals after discovery.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MatchProposal'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '422':
+          description: Caller is not in the matching pool.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/matching/echo:
     post:
       tags: [Matching]

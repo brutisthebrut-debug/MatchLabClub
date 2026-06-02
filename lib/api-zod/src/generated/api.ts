@@ -4677,6 +4677,40 @@ export const GetMatchingProposalsResponse = zod.array(GetMatchingProposalsRespon
 
 
 /**
+ * Runs the deterministic internal matching engine for the caller. Pairs
+them with other eligible pool members, scores compatibility from
+aggregate signals and stated preferences (no raw content, no PII), and
+creates mutual internal proposals for the top candidates, skipping any
+pair that already has an internal proposal in either direction. Returns
+the caller's full proposal list (newest first), so the surface can
+refresh in one round-trip. Requires the caller to be in the pool.
+
+ * @summary Find and create internal matches for the signed-in user
+ */
+export const DiscoverMatchesHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const discoverMatchesResponseCompatibilityScoreMin = 0;
+export const discoverMatchesResponseCompatibilityScoreMax = 100;
+
+
+
+export const DiscoverMatchesResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "userId": zod.string(),
+  "proposedToUserId": zod.string().nullable(),
+  "source": zod.enum(['internal', 'external_paste', 'concierge']),
+  "compatibilityScore": zod.number().min(discoverMatchesResponseCompatibilityScoreMin).max(discoverMatchesResponseCompatibilityScoreMax),
+  "summary": zod.string().nullable(),
+  "status": zod.enum(['proposed', 'user_yes', 'user_no', 'mutual_yes', 'expired', 'completed']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const DiscoverMatchesResponse = zod.array(DiscoverMatchesResponseItem)
+
+
+/**
  * Returns Echo's read of the user grounded in their own aggregate signal
 coverage: what the machine can see, the kind of person it would put in
 front of them, the confidence of the read, and the gap to the pool.

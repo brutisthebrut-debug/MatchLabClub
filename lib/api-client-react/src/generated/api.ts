@@ -10240,6 +10240,84 @@ export function useGetMatchingProposals<TData = Awaited<ReturnType<typeof getMat
 
 
 
+export const getDiscoverMatchesUrl = () => {
+
+
+
+
+  return `/api/me/matching/discover`
+}
+
+/**
+ * Runs the deterministic internal matching engine for the caller. Pairs
+them with other eligible pool members, scores compatibility from
+aggregate signals and stated preferences (no raw content, no PII), and
+creates mutual internal proposals for the top candidates, skipping any
+pair that already has an internal proposal in either direction. Returns
+the caller's full proposal list (newest first), so the surface can
+refresh in one round-trip. Requires the caller to be in the pool.
+
+ * @summary Find and create internal matches for the signed-in user
+ */
+export const discoverMatches = async ( options?: RequestInit): Promise<MatchProposal[]> => {
+
+  return customFetch<MatchProposal[]>(getDiscoverMatchesUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getDiscoverMatchesMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof discoverMatches>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof discoverMatches>>, TError,void, TContext> => {
+
+const mutationKey = ['discoverMatches'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof discoverMatches>>, void> = () => {
+
+
+          return  discoverMatches(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DiscoverMatchesMutationResult = NonNullable<Awaited<ReturnType<typeof discoverMatches>>>
+
+    export type DiscoverMatchesMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Find and create internal matches for the signed-in user
+ */
+export const useDiscoverMatches = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof discoverMatches>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof discoverMatches>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDiscoverMatchesMutationOptions(options));
+    }
+
 export const getCreateMatchingEchoReadUrl = () => {
 
 

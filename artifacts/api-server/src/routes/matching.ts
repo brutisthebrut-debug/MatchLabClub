@@ -3,6 +3,7 @@ import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import {
   db,
   usersTable,
+  auditsTable,
   matchPreferencesTable,
   matchPoolMembershipTable,
   matchProposalsTable,
@@ -41,6 +42,10 @@ import {
   effectiveReadinessThreshold,
 } from "../lib/brainConfig";
 import { recordJourneyEvent } from "../lib/journeyEvents";
+import {
+  rankCandidates,
+  type MatchCandidate,
+} from "../lib/matchEngine";
 
 async function loadUserTier(userId: string): Promise<string | null> {
   const rows = await db
@@ -918,12 +923,219 @@ router.put(
       res.json(serializeProposal(current));
       return;
     }
+    // "It's a match" moment: when this is a yes on an internal (member-to-member)
+    // proposal, check the mirror row created at discover time. If the other side
+    // already said yes, flip BOTH to mutual_yes atomically.
+    let finalRow = updated;
+    if (
+      nextStatus === "user_yes" &&
+      updated.source === "internal" &&
+      updated.proposedToUserId
+    ) {
+      const reciprocal = await db
+        .select()
+        .from(matchProposalsTable)
+        .where(
+          and(
+            eq(matchProposalsTable.source, "internal"),
+            eq(matchProposalsTable.userId, updated.proposedToUserId),
+            eq(matchProposalsTable.proposedToUserId, updated.userId),
+          ),
+        )
+        .orderBy(desc(matchProposalsTable.createdAt))
+        .limit(1);
+      const other = reciprocal[0];
+      if (other && other.status === "user_yes") {
+        const ts = new Date();
+        await db
+          .update(matchProposalsTable)
+          .set({ status: "mutual_yes", updatedAt: ts })
+          .where(inArray(matchProposalsTable.id, [updated.id, other.id]));
+        finalRow = { ...updated, status: "mutual_yes", updatedAt: ts };
+        void recordJourneyEvent({
+          eventType: "match_step",
+          userId,
+          props: { step: "mutual_yes", proposalId: updated.id },
+        });
+      }
+    }
     req.log.info(
-      { proposalId: id, status: nextStatus },
+      { proposalId: id, status: finalRow.status },
       "matching.proposal user response recorded",
     );
-    res.json(serializeProposal(updated));
+    res.json(serializeProposal(finalRow));
   },
 );
+
+// Caps so a single discover call stays bounded: we never scan the whole pool,
+// and we only ever mint a small handful of fresh intros per run.
+const MAX_DISCOVER_CANDIDATES = 50;
+const MAX_NEW_PROPOSALS = 3;
+
+// Latest self-reported age/gender per user, read from the most recent audit row.
+// These are the only places this data lives today; absence is expected and
+// degrades to a lower-confidence match rather than a hard block.
+async function loadLatestAuditDemographics(
+  userIds: string[],
+): Promise<Map<string, { age: number | null; gender: string | null }>> {
+  const out = new Map<string, { age: number | null; gender: string | null }>();
+  if (userIds.length === 0) return out;
+  const rows = await db
+    .select({
+      userId: auditsTable.userId,
+      age: auditsTable.age,
+      gender: auditsTable.gender,
+    })
+    .from(auditsTable)
+    .where(inArray(auditsTable.userId, userIds))
+    .orderBy(desc(auditsTable.createdAt));
+  for (const row of rows) {
+    if (!row.userId || out.has(row.userId)) continue;
+    out.set(row.userId, {
+      age: row.age ?? null,
+      gender: row.gender ?? null,
+    });
+  }
+  return out;
+}
+
+// Assemble the engine's view of one member: preferences, computed readiness, and
+// best-available demographics. Everything here is aggregate, never raw content.
+async function buildMatchCandidate(
+  userId: string,
+  demographics: { age: number | null; gender: string | null } | undefined,
+): Promise<MatchCandidate> {
+  const [prefs, readiness] = await Promise.all([
+    loadPreferences(userId),
+    computeReadiness(userId),
+  ]);
+  return {
+    userId,
+    age: demographics?.age ?? null,
+    gender: demographics?.gender ?? null,
+    prefs: {
+      ageMin: prefs?.ageMin ?? null,
+      ageMax: prefs?.ageMax ?? null,
+      genderPreference: prefs?.genderPreference ?? null,
+      cityHint: prefs?.cityHint ?? null,
+    },
+    readinessScore: readiness.score,
+    breakdown: readiness.breakdown as unknown as Record<string, number>,
+  };
+}
+
+// The internal matching engine in route form: pair the caller with other live
+// pool members, score deterministically, and mint mutual internal proposals.
+router.post("/me/matching/discover", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const userId = req.user.id;
+
+  const membership = await loadMembership(userId);
+  const inPool =
+    membership != null &&
+    (membership.status === "building" || membership.status === "ready");
+  if (!inPool) {
+    res.status(422).json({
+      error:
+        "Turn on the matching pool first. Once your readiness clears the bar and the pool is on, we can pair you with other members.",
+    });
+    return;
+  }
+
+  // Eligible counterparts are other members actively in the pool. concierge_only
+  // (Wingman, founder-curated) is intentionally left out of automated pairing.
+  const memberRows = await db
+    .select({ userId: matchPoolMembershipTable.userId })
+    .from(matchPoolMembershipTable)
+    .where(inArray(matchPoolMembershipTable.status, ["building", "ready"]))
+    .limit(MAX_DISCOVER_CANDIDATES + 1);
+  const otherUserIds = memberRows
+    .map((r) => r.userId)
+    .filter((id): id is string => Boolean(id) && id !== userId)
+    .slice(0, MAX_DISCOVER_CANDIDATES);
+
+  // Existing internal pairings (either direction) so we never double-propose.
+  const existingInternal = await db
+    .select({
+      userId: matchProposalsTable.userId,
+      proposedToUserId: matchProposalsTable.proposedToUserId,
+    })
+    .from(matchProposalsTable)
+    .where(
+      and(
+        eq(matchProposalsTable.source, "internal"),
+        sql`(${matchProposalsTable.userId} = ${userId} OR ${matchProposalsTable.proposedToUserId} = ${userId})`,
+      ),
+    );
+  const alreadyPaired = new Set<string>();
+  for (const row of existingInternal) {
+    if (row.userId && row.userId !== userId) alreadyPaired.add(row.userId);
+    if (row.proposedToUserId && row.proposedToUserId !== userId) {
+      alreadyPaired.add(row.proposedToUserId);
+    }
+  }
+  const freshIds = otherUserIds.filter((id) => !alreadyPaired.has(id));
+
+  if (freshIds.length > 0) {
+    const demographics = await loadLatestAuditDemographics([
+      userId,
+      ...freshIds,
+    ]);
+    const me = await buildMatchCandidate(userId, demographics.get(userId));
+    const others = await Promise.all(
+      freshIds.map((id) => buildMatchCandidate(id, demographics.get(id))),
+    );
+    const ranked = rankCandidates(me, others, MAX_NEW_PROPOSALS);
+
+    if (ranked.length > 0) {
+      // Each match is a mirrored pair of internal proposals (one row per member)
+      // sharing the same symmetric score and summary. The summary is generic by
+      // construction, so no PII or raw content is ever stored on a proposal.
+      const values = ranked.flatMap((r) => [
+        {
+          userId,
+          proposedToUserId: r.candidate.userId,
+          source: "internal" as const,
+          compatibilityScore: r.score,
+          summary: r.summary,
+          status: "proposed" as const,
+        },
+        {
+          userId: r.candidate.userId,
+          proposedToUserId: userId,
+          source: "internal" as const,
+          compatibilityScore: r.score,
+          summary: r.summary,
+          status: "proposed" as const,
+        },
+      ]);
+      // ON CONFLICT DO NOTHING against the partial unique index on internal
+      // (userId, proposedToUserId) pairs makes this idempotent and race-safe:
+      // a concurrent discover run that already minted the same pair is dropped
+      // here instead of creating duplicates.
+      await db.insert(matchProposalsTable).values(values).onConflictDoNothing();
+      void recordJourneyEvent({
+        eventType: "match_step",
+        userId,
+        props: {
+          step: "proposal_created",
+          source: "internal",
+          count: ranked.length,
+        },
+      });
+    }
+  }
+
+  const rows = await db
+    .select()
+    .from(matchProposalsTable)
+    .where(eq(matchProposalsTable.userId, userId))
+    .orderBy(desc(matchProposalsTable.createdAt))
+    .limit(50);
+  res.json(rows.map(serializeProposal));
+});
 
 export default router;
