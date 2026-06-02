@@ -6,6 +6,8 @@ import { useMeta } from "@/hooks/useMeta";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Plus, Trash2, Calendar, MessageSquare, Sparkles, Eye, Star, Shield } from "lucide-react";
 import { WelcomePanel } from "@/components/WelcomePanel";
+import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
+import { useReadinessClimb } from "@/hooks/useReadinessClimb";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -61,6 +63,7 @@ export default function DatingWinsLog() {
   });
   const createWin = useCreateDatingWin();
   const removeWin = useDeleteDatingWin();
+  const climb = useReadinessClimb({ enabled: isAuthenticated });
 
   const wins: DisplayWin[] = (winsData ?? []).map((w) => ({
     id: w.id,
@@ -82,6 +85,9 @@ export default function DatingWinsLog() {
 
   const addWin = () => {
     if (!text.trim() || !isAuthenticated) return;
+    // Snapshot readiness before the win is recorded so the page can animate the
+    // real climb this win produced.
+    climb.snapshot();
     createWin.mutate(
       { data: { category, body: text.trim() } },
       {
@@ -205,6 +211,16 @@ export default function DatingWinsLog() {
   )}
   </AnimatePresence>
   </motion.div>
+
+  {isAuthenticated && climb.before !== null && (
+  <motion.div {...fadeUp(0.07)} className="mb-6">
+  <ReadinessClimbReveal
+  from={climb.before}
+  to={climb.current}
+  className="glass border border-white/8 rounded-2xl p-5"
+  />
+  </motion.div>
+  )}
 
   {/* Demo label */}
   {isDemo && displayed.length > 0 && (

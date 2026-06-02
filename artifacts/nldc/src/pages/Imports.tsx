@@ -16,6 +16,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useMeta } from "@/hooks/useMeta";
 import { ShareButton } from "@/components/echo/ShareButton";
+import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
+import { useReadinessClimb } from "@/hooks/useReadinessClimb";
+import { useQueryClient } from "@tanstack/react-query";
+import { getGetMatchingStateQueryKey } from "@workspace/api-client-react";
 
 type ImportStatus = "pending" | "complete" | "fallback" | string;
 
@@ -252,6 +256,8 @@ export default function Imports() {
     "Bring in your Hinge export and other history so the machine understands your patterns and matches you better.",
   );
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const climb = useReadinessClimb();
   const [imports, setImports] = useState<ImportRow[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -435,6 +441,9 @@ export default function Imports() {
       return;
     }
     setCalSubmitting(true);
+    // Snapshot readiness before the calendar lands so the success state can
+    // animate the real climb this paste produced.
+    climb.snapshot();
     try {
       const res = await fetch("/api/imports/calendar", {
         method: "POST",
@@ -449,6 +458,9 @@ export default function Imports() {
         setActiveId(row.id);
         setExpandedId(row.id);
         setIcsText("");
+        void queryClient.invalidateQueries({
+          queryKey: getGetMatchingStateQueryKey(),
+        });
         toast({
           title: "Calendar read",
           description: "We mapped your weekly rhythm. See it below.",
@@ -566,6 +578,13 @@ export default function Imports() {
               >
                 {calSubmitting ? "Reading..." : "Read my rhythm"}
               </Button>
+              {climb.before !== null && (
+                <ReadinessClimbReveal
+                  from={climb.before}
+                  to={climb.current}
+                  className="rounded-2xl border border-white/10 p-5"
+                />
+              )}
             </CardContent>
           </Card>
         </section>

@@ -4,6 +4,8 @@ import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { WelcomePanel } from "@/components/WelcomePanel";
+import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
+import { useReadinessClimb } from "@/hooks/useReadinessClimb";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCreateAudit, useGenerateAuditReport, getListAuditsQueryKey, getGetMatchingStateQueryKey } from "@workspace/api-client-react";
@@ -116,6 +118,7 @@ export default function Diagnosis() {
   const createAudit = useCreateAudit();
   const generateReport = useGenerateAuditReport();
   const { isAuthenticated } = useAuth();
+  const climb = useReadinessClimb({ enabled: isAuthenticated });
   const isBrandNewUser = isAuthenticated && !result && !loading;
 
   const LOADING_MSGS = [
@@ -134,6 +137,9 @@ export default function Diagnosis() {
   setLoadingMsg(LOADING_MSGS[i]);
   }, 1800);
 
+  // Snapshot readiness before the audit lands so the result can animate the
+  // real climb this diagnosis produced.
+  climb.snapshot();
   try {
   const audit = await createAudit.mutateAsync({
   data: {
@@ -239,6 +245,14 @@ export default function Diagnosis() {
   </div>
   <p className="text-muted-foreground leading-relaxed text-sm mt-5 border-t border-white/6 pt-5">{category!.summary}</p>
   </div>
+
+  {isAuthenticated && climb.before !== null && (
+  <ReadinessClimbReveal
+  from={climb.before}
+  to={climb.current}
+  className="glass border border-white/8 rounded-3xl p-7"
+  />
+  )}
 
   {/* Honest Audit */}
   <div className="glass border border-white/8 rounded-3xl p-7">

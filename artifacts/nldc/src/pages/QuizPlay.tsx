@@ -19,6 +19,8 @@ import {
 } from "@workspace/api-client-react";
 import { FallbackNotice } from "@/components/FallbackNotice";
 import { FallbackRateBadge } from "@/components/FallbackRateBadge";
+import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
+import { useReadinessClimb } from "@/hooks/useReadinessClimb";
 import { trackEvent } from "@/lib/analytics";
 import {
   getQuizBySlug,
@@ -95,6 +97,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
   // The single highest-leverage signal to feed next, surfaced on the result so
   // every quiz ends by pointing at the next thing that moves readiness.
   const nextSignal = matchingState.data?.nextActions?.[0] ?? null;
+  const climb = useReadinessClimb({ enabled: isAuthenticated });
 
   const [answers, setAnswers] = useState<number[]>(() =>
     quiz ? Array(quiz.questions.length).fill(-1) : [],
@@ -185,6 +188,9 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
     // Readiness. Works for anon and signed-in alike (server stamps the anon
     // claim cookie). Only the derived result moves, never the raw answers.
     // Fire-and-forget: a failed write must never block the result reveal.
+    // Snapshot readiness the instant before the signal lands so the result can
+    // animate the real climb this quiz produced.
+    climb.snapshot();
     createQuizResult.mutate(
       {
         data: {
@@ -433,6 +439,14 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                     label="Using your baseline readout, the AI layer didn't return a clean personalisation, so you're seeing the deterministic result (still based on your actual answers)."
                     onRetry={handleSubmit}
                     loading={submitting}
+                  />
+                )}
+
+                {isAuthenticated && climb.before !== null && (
+                  <ReadinessClimbReveal
+                    from={climb.before}
+                    to={climb.current}
+                    className="glass border border-foreground/10 rounded-[2rem] p-8"
                   />
                 )}
 

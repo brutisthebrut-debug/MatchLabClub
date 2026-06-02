@@ -7,6 +7,8 @@ import { useSavedContext } from "@/hooks/useSavedContext";
 import { SavedContextChip } from "@/components/SavedContextChip";
 import { FallbackNotice } from "@/components/FallbackNotice";
 import { WelcomePanel } from "@/components/WelcomePanel";
+import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
+import { useReadinessClimb } from "@/hooks/useReadinessClimb";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -185,6 +187,7 @@ export default function Coach() {
   const coachMessage = useCoachMessage();
   const savedCtx = useSavedContext();
   const recordFollowUp = useRecordCoachFollowUp();
+  const climb = useReadinessClimb({ enabled: isAuthenticated });
   const isLoading = createSession.isPending || coachMessage.isPending;
   const hasSessions = !!(sessions && sessions.length > 0);
   const isBrandNewUser = isAuthenticated && !sessionsLoading && !hasSessions && !result;
@@ -260,6 +263,9 @@ export default function Coach() {
   const appForRequest =
   sourceApp || detectAppFromText(`${context}\n${lastMessage}`) || null;
   setIsFallback(false);
+  // Snapshot readiness before the coaching session is recorded so the result
+  // can animate the real climb this session produced.
+  climb.snapshot();
   try {
   const session = await createSession.mutateAsync({
   data: { matchName: matchName || "My match", conversationContext: context, yourLastMessage: lastMessage, goal: goal || null, sourceApp: appForRequest },
@@ -833,6 +839,14 @@ export default function Coach() {
   label="coaching result"
   onRetry={() => { void handleCoach(); }}
   loading={isLoading}
+  />
+  )}
+
+  {result && isAuthenticated && climb.before !== null && (
+  <ReadinessClimbReveal
+  from={climb.before}
+  to={climb.current}
+  className="glass border border-white/8 rounded-3xl p-7"
   />
   )}
 

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WelcomePanel } from "@/components/WelcomePanel";
+import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
+import { useReadinessClimb } from "@/hooks/useReadinessClimb";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCreateAudit, useGenerateAuditReport, getListAuditsQueryKey, getGetMatchingStateQueryKey } from "@workspace/api-client-react";
@@ -116,6 +118,7 @@ export default function SignalCheck() {
   const createAudit = useCreateAudit();
   const generateReport = useGenerateAuditReport();
   const { isAuthenticated } = useAuth();
+  const climb = useReadinessClimb({ enabled: isAuthenticated });
   const isBrandNewUser = isAuthenticated && !result && !loading;
 
   const LOADING_STEPS = [
@@ -130,6 +133,9 @@ export default function SignalCheck() {
   setLoadingStep(0);
   const interval = setInterval(() => setLoadingStep(s => Math.min(s + 1, LOADING_STEPS.length - 1)), 1600);
   trackEvent("signal_check_started", { goal: goal || "find a relationship", bio_length: bio.trim().length });
+  // Snapshot readiness before the audit lands so the result can animate the
+  // real climb this check produced.
+  climb.snapshot();
   try {
   const audit = await createAudit.mutateAsync({
   data: {
@@ -249,6 +255,14 @@ export default function SignalCheck() {
   </span>
   </div>
   </div>
+
+  {isAuthenticated && climb.before !== null && (
+  <ReadinessClimbReveal
+  from={climb.before}
+  to={climb.current}
+  className="glass border border-white/8 rounded-3xl p-7"
+  />
+  )}
 
   {/* Key Improvement */}
   <div className="glass border border-[hsl(43_65%_62%/0.2)] rounded-3xl p-7" data-testid="card-signal-improvement">

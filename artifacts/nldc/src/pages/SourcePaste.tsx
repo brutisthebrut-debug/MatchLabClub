@@ -22,6 +22,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useMeta } from "@/hooks/useMeta";
+import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
+import { useReadinessClimb } from "@/hooks/useReadinessClimb";
 
 type SourceConfig = {
   /** Value written into imported_sources.source by the backend. */
@@ -141,6 +143,7 @@ export default function SourcePaste() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const paste = useCreateSourcePaste();
+  const climb = useReadinessClimb();
   const [raw, setRaw] = useState("");
   const [note, setNote] = useState("");
   const [done, setDone] = useState<number | null>(null);
@@ -182,6 +185,9 @@ export default function SourcePaste() {
       });
       return;
     }
+    // Snapshot readiness before the paste lands so the success card can animate
+    // the real climb these items produced.
+    climb.snapshot();
     paste.mutate(
       {
         data: {
@@ -257,8 +263,21 @@ export default function SourcePaste() {
               <p className="text-muted-foreground max-w-md mx-auto mb-6">
                 {config.readiness}
               </p>
+              {climb.before !== null && (
+                <ReadinessClimbReveal
+                  from={climb.before}
+                  to={climb.current}
+                  className="max-w-sm mx-auto mb-6 rounded-2xl border border-foreground/10 p-6 text-left"
+                />
+              )}
               <div className="flex flex-wrap gap-3 justify-center">
-                <Button onClick={() => setDone(null)} variant="outline">
+                <Button
+                  onClick={() => {
+                    setDone(null);
+                    climb.reset();
+                  }}
+                  variant="outline"
+                >
                   Add more
                 </Button>
                 <Button asChild>

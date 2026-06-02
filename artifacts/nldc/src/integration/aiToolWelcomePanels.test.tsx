@@ -108,6 +108,7 @@ vi.mock("@workspace/api-client-react", () => ({
   }),
   getGetDatingWinsQueryKey: () => ["dating-wins"],
   getGetMatchingStateQueryKey: () => ["matching-state"],
+  useGetMatchingState: () => ({ data: undefined, isLoading: false }),
 }));
 
 vi.mock("@/components/layout/AppLayout", () => ({
