@@ -112,7 +112,6 @@ vi.mock("@workspace/api-client-react", () => ({
     isLoading: false,
   }),
   getGetMatchingStateQueryKey: () => ["matching-state"],
-  useGetMatchingState: () => ({ data: undefined, isLoading: false }),
 }));
 
 vi.mock("@/components/layout/AppLayout", () => ({

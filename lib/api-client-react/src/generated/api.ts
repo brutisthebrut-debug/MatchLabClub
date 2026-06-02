@@ -172,6 +172,7 @@ import type {
   ScreenshotExtractResult,
   SetAiContentConsentInput,
   SetDigestPreferencesInput,
+  SignalMap,
   TestAiParams,
   TrashPurgeHeartbeat,
   TrashPurgeResult,
@@ -9610,6 +9611,92 @@ export function useGetMyAchievements<TData = Awaited<ReturnType<typeof getMyAchi
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetMyAchievementsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetMySignalMapUrl = () => {
+
+
+
+
+  return `/api/me/signal-map`
+}
+
+/**
+ * Returns a lane-by-lane view of how full the picture the machine holds
+of the caller is: every signal lane with its coverage, how much it
+counts toward the overall density, its confidence, the dimensions it
+informs, and the one action that fills it. The overall density equals
+the readiness score, since the map is derived from the same breakdown
+and weights. Purely a presentation lens over the signal registry: it
+never feeds the readiness score and never returns raw content. Safe to
+hit on every page load.
+
+ * @summary Get the signed-in user's signal-density map
+ */
+export const getMySignalMap = async ( options?: RequestInit): Promise<SignalMap> => {
+
+  return customFetch<SignalMap>(getGetMySignalMapUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMySignalMapQueryKey = () => {
+    return [
+    `/api/me/signal-map`
+    ] as const;
+    }
+
+
+export const getGetMySignalMapQueryOptions = <TData = Awaited<ReturnType<typeof getMySignalMap>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMySignalMap>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMySignalMapQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMySignalMap>>> = ({ signal }) => getMySignalMap({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMySignalMap>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMySignalMapQueryResult = NonNullable<Awaited<ReturnType<typeof getMySignalMap>>>
+export type GetMySignalMapQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the signed-in user's signal-density map
+ */
+
+export function useGetMySignalMap<TData = Awaited<ReturnType<typeof getMySignalMap>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMySignalMap>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMySignalMapQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

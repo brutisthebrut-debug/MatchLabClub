@@ -4397,6 +4397,84 @@ export const GetMyAchievementsResponse = zod.object({
 
 
 /**
+ * Returns a lane-by-lane view of how full the picture the machine holds
+of the caller is: every signal lane with its coverage, how much it
+counts toward the overall density, its confidence, the dimensions it
+informs, and the one action that fills it. The overall density equals
+the readiness score, since the map is derived from the same breakdown
+and weights. Purely a presentation lens over the signal registry: it
+never feeds the readiness score and never returns raw content. Safe to
+hit on every page load.
+
+ * @summary Get the signed-in user's signal-density map
+ */
+export const GetMySignalMapHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const getMySignalMapResponseDensityPercentMin = 0;
+export const getMySignalMapResponseDensityPercentMax = 100;
+
+export const getMySignalMapResponseLanesActiveMin = 0;
+
+export const getMySignalMapResponseTotalLanesMin = 0;
+
+export const getMySignalMapResponseLanesItemCoverageMin = 0;
+export const getMySignalMapResponseLanesItemCoverageMax = 100;
+
+export const getMySignalMapResponseLanesItemWeightPercentMin = 0;
+export const getMySignalMapResponseLanesItemWeightPercentMax = 100;
+
+export const getMySignalMapResponseLanesItemConfidenceMin = 0;
+export const getMySignalMapResponseLanesItemConfidenceMax = 100;
+
+export const getMySignalMapResponseTopBlindSpotOneCoverageMin = 0;
+export const getMySignalMapResponseTopBlindSpotOneCoverageMax = 100;
+
+export const getMySignalMapResponseTopBlindSpotOneWeightPercentMin = 0;
+export const getMySignalMapResponseTopBlindSpotOneWeightPercentMax = 100;
+
+export const getMySignalMapResponseTopBlindSpotOneConfidenceMin = 0;
+export const getMySignalMapResponseTopBlindSpotOneConfidenceMax = 100;
+
+
+
+export const GetMySignalMapResponse = zod.object({
+  "densityPercent": zod.number().min(getMySignalMapResponseDensityPercentMin).max(getMySignalMapResponseDensityPercentMax).describe('Overall fullness of the picture, equal to the readiness score (the weighted coverage across every lane).'),
+  "lanesActive": zod.number().min(getMySignalMapResponseLanesActiveMin).describe('How many lanes have any signal.'),
+  "totalLanes": zod.number().min(getMySignalMapResponseTotalLanesMin).describe('Total number of lanes the machine reads.'),
+  "lanes": zod.array(zod.object({
+  "id": zod.string().describe('Stable lane id, matches the readiness breakdown key.'),
+  "label": zod.string().describe('Human label for the lane.'),
+  "coverage": zod.number().min(getMySignalMapResponseLanesItemCoverageMin).max(getMySignalMapResponseLanesItemCoverageMax).describe('How full this lane is, from the readiness breakdown.'),
+  "weightPercent": zod.number().min(getMySignalMapResponseLanesItemWeightPercentMin).max(getMySignalMapResponseLanesItemWeightPercentMax).describe('How much this lane counts toward the overall density, as a whole-number percentage of the effective weights.'),
+  "confidence": zod.number().min(getMySignalMapResponseLanesItemConfidenceMin).max(getMySignalMapResponseLanesItemConfidenceMax).describe('Rough confidence in this lane\'s predictive value.'),
+  "dimensions": zod.array(zod.string()).describe('Wellness or personality dimensions this lane informs.'),
+  "hasSignal": zod.boolean().describe('True once the lane has any signal at all.'),
+  "action": zod.object({
+  "label": zod.string(),
+  "detail": zod.string(),
+  "href": zod.string()
+}).describe('The single do-this-next action that fills this lane.')
+}).describe('One lane of the signal-density map: a single signal source the machine reads, with how full it is, how much it counts, and the action that fills it. Derived from the signal registry plus the caller\'s own coverage; it carries no raw content.')).describe('Every lane, active ones first (fullest coverage first), then blind spots ordered by how much filling them would matter.'),
+  "topBlindSpot": zod.union([zod.object({
+  "id": zod.string().describe('Stable lane id, matches the readiness breakdown key.'),
+  "label": zod.string().describe('Human label for the lane.'),
+  "coverage": zod.number().min(getMySignalMapResponseTopBlindSpotOneCoverageMin).max(getMySignalMapResponseTopBlindSpotOneCoverageMax).describe('How full this lane is, from the readiness breakdown.'),
+  "weightPercent": zod.number().min(getMySignalMapResponseTopBlindSpotOneWeightPercentMin).max(getMySignalMapResponseTopBlindSpotOneWeightPercentMax).describe('How much this lane counts toward the overall density, as a whole-number percentage of the effective weights.'),
+  "confidence": zod.number().min(getMySignalMapResponseTopBlindSpotOneConfidenceMin).max(getMySignalMapResponseTopBlindSpotOneConfidenceMax).describe('Rough confidence in this lane\'s predictive value.'),
+  "dimensions": zod.array(zod.string()).describe('Wellness or personality dimensions this lane informs.'),
+  "hasSignal": zod.boolean().describe('True once the lane has any signal at all.'),
+  "action": zod.object({
+  "label": zod.string(),
+  "detail": zod.string(),
+  "href": zod.string()
+}).describe('The single do-this-next action that fills this lane.')
+}).describe('One lane of the signal-density map: a single signal source the machine reads, with how full it is, how much it counts, and the action that fills it. Derived from the signal registry plus the caller\'s own coverage; it carries no raw content.'),zod.null()]).describe('The highest-leverage empty lane, or null when every lane already has signal.')
+}).describe('The caller\'s signal-density map: every lane the machine reads plus a simple aggregate. The overall density equals the readiness score, since the map is derived from the same breakdown and weights. Purely a presentation lens; never feeds the readiness score.')
+
+
+/**
  * Inserts or updates the caller's row in `match_preferences`. Every
 field is optional. Pass null to clear a value. Age and distance
 bounds are validated server-side.

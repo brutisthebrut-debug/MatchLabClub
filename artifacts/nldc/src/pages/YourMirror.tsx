@@ -42,12 +42,15 @@ import {
   useListPostDateNotes,
   useGetMyJourneySummary,
   getGetMyJourneySummaryQueryKey,
+  useGetMySignalMap,
+  getGetMySignalMapQueryKey,
   type MirrorPortrait,
 } from "@workspace/api-client-react";
 import { ClimbCard } from "@/components/climb/ClimbCard";
 import { MomentumRecap } from "@/components/climb/MomentumRecap";
 import { NextBestActionCoach } from "@/components/coach/NextBestActionCoach";
-import { DEMO_PORTRAIT, DEMO_MOMENTUM } from "@/lib/mirrorDemo";
+import { SignalDensityMap } from "@/components/SignalDensityMap";
+import { DEMO_PORTRAIT, DEMO_MOMENTUM, DEMO_SIGNAL_MAP } from "@/lib/mirrorDemo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -497,6 +500,12 @@ export default function YourMirror() {
   const isDemo = !portrait && !portraitFailedForUser;
   const shownPortrait = portrait ?? DEMO_PORTRAIT;
 
+  const { data: signalMap } = useGetMySignalMap({
+    query: { queryKey: getGetMySignalMapQueryKey(), enabled: isAuthenticated },
+  });
+  const shownSignalMap = signalMap ?? DEMO_SIGNAL_MAP;
+  const signalMapIsDemo = !signalMap;
+
   return (
   <div className="min-h-screen bg-background">
   <div className="container mx-auto max-w-5xl px-4 py-8 md:py-12">
@@ -577,6 +586,10 @@ export default function YourMirror() {
   <MirrorChat disabled={isDemo} />
   </>
   )}
+  </div>
+
+  <div className="mb-12">
+  <SignalDensityMap map={shownSignalMap} isDemo={signalMapIsDemo} />
   </div>
 
   <div className="mb-6 mt-12 border-t pt-8">

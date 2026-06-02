@@ -1,1 +1,2 @@
 - [All-time counts use SQL aggregates](alltime-counts.md) — never fetch capped rows then JS-count for "all-time" totals; testDb supports filtered count aggregates.
+- [Signal registry weights not pre-normalized](signal-registry-weights.md) — SIGNAL_REGISTRY weights sum to ~1.81; normalize before percentages, and demo fallbacks must mirror backend derivation exactly.

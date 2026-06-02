@@ -1,33 +1,28 @@
 ---
-name: Signal registry weight assertions
-description: Why adding a contributor to SIGNAL_REGISTRY forces a test update, and how readiness weights normalize.
+name: Signal registry weights are not pre-normalized
+description: SIGNAL_REGISTRY weights sum to ~1.81, not 1.0; always normalize before deriving percentages, and mirror that in any hand-built demo of a derived endpoint.
 ---
 
-# Adding a signal to the living registry (`signalRegistry.ts`)
+# Signal registry weights are not pre-normalized
 
-Adding a contributor to `SIGNAL_REGISTRY` is mostly a one-entry edit, and `readiness.ts`
-(`computeBreakdown`/`scoreFromBreakdown`/`computeNextActions`) plus the matching prompt all derive
-from the registry automatically. But three things still need hand updates, and missing them breaks tests:
+The raw `weight` fields in `SIGNAL_REGISTRY` (api-server `signalRegistry.ts`) sum
+to roughly **1.81**, not 1.0. Several code comments claim "default weights already
+sum to 1.0" or "the raw weights sum to 1.0" — that is **stale/inaccurate**. Do not
+trust those comments.
 
-- The `ReadinessBreakdown` interface (add the new id) and `SignalCounts` interface (add the raw count
-  key). These are structural; TS will fail without them, including every `computeBreakdown({...})` call
-  site in `readiness.test.ts` (each input object must include the new count key) and the
-  `zeroBreakdown`/expected-breakdown objects (must include the new id).
-- `signalRegistry.test.ts` has a test that asserts each normalized weight to a hardcoded number.
+**Why:** readiness scoring divides by the total. `normalizedWeights()` and
+`effectiveBaseWeights(controls)` (with no founder overrides) both return
+`weight / sum`, so the effective weights used to score readiness DO sum to 1, but
+the per-lane raw weights do not. A lane's true "percent of the picture" is
+`weight / 1.81`, e.g. `wellness` 0.22 → ~12%, not 22%.
 
-**Why the weight test breaks:** `normalizedWeights()` divides each raw weight by the raw total. The
-shipped registry's raw weights happened to sum to 1.0, so the test asserted the raw values directly.
-Adding a contributor with weight `W` makes the raw total `1.0 + W`, so EVERY existing normalized weight
-becomes `raw / (1.0 + W)`. You must re-derive all the hardcoded assertions (e.g. divide by 1.1 when the
-new weight is 0.1) and add an assertion for the new id. `normalizedWeights()` still sums to 1.0 — that
-invariant never breaks; only the per-signal hardcoded numbers shift.
-
-**How to apply:** when adding a registry signal, update both interfaces, every `computeBreakdown` input
-and expected object in the tests, and re-normalize the hardcoded per-weight assertions by the new raw
-total. Verify "hinge import is the single biggest next-action step" still holds (it has the largest
-`contributorStep` because it is binary with a high weight; a small new count-signal won't dethrone it).
-
-**Frontend coupling:** `artifacts/nldc/src/pages/Matching.tsx` independently hardcodes the breakdown
-keys in a `BreakdownRow` union, a `BREAKDOWN_ROWS` lane array, and a default-breakdown fallback object.
-A new readiness lane must be added there too (and to the OpenAPI `MatchReadinessBreakdown` schema, then
-codegen) or it won't render / won't typecheck.
+**How to apply:**
+- Any feature that surfaces a per-signal weight percentage must use the
+  normalized/effective weights, never the raw `c.weight`.
+- When hand-building demo/fallback data for a derived endpoint (e.g.
+  `DEMO_SIGNAL_MAP` in nldc `mirrorDemo.ts`), it must mirror the backend
+  derivation EXACTLY or it will contradict a signed-in view: normalized weight
+  percentages, the same sort order (active-first by coverage, then blind spots by
+  weight with registry order breaking ties), and the same `topBlindSpot`
+  selection (heaviest empty lane; ties resolved to the earliest in registry
+  order). Guard these invariants with a static test on the demo constant.

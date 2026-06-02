@@ -3117,6 +3117,75 @@ export interface UserAchievements {
   totalCount: number;
 }
 
+/**
+ * The single do-this-next action that fills this lane.
+ */
+export type SignalMapLaneAction = {
+  label: string;
+  detail: string;
+  href: string;
+};
+
+/**
+ * One lane of the signal-density map: a single signal source the machine reads, with how full it is, how much it counts, and the action that fills it. Derived from the signal registry plus the caller's own coverage; it carries no raw content.
+ */
+export interface SignalMapLane {
+  /** Stable lane id, matches the readiness breakdown key. */
+  id: string;
+  /** Human label for the lane. */
+  label: string;
+  /**
+     * How full this lane is, from the readiness breakdown.
+     * @minimum 0
+     * @maximum 100
+     */
+  coverage: number;
+  /**
+     * How much this lane counts toward the overall density, as a whole-number percentage of the effective weights.
+     * @minimum 0
+     * @maximum 100
+     */
+  weightPercent: number;
+  /**
+     * Rough confidence in this lane's predictive value.
+     * @minimum 0
+     * @maximum 100
+     */
+  confidence: number;
+  /** Wellness or personality dimensions this lane informs. */
+  dimensions: string[];
+  /** True once the lane has any signal at all. */
+  hasSignal: boolean;
+  /** The single do-this-next action that fills this lane. */
+  action: SignalMapLaneAction;
+}
+
+/**
+ * The caller's signal-density map: every lane the machine reads plus a simple aggregate. The overall density equals the readiness score, since the map is derived from the same breakdown and weights. Purely a presentation lens; never feeds the readiness score.
+ */
+export interface SignalMap {
+  /**
+     * Overall fullness of the picture, equal to the readiness score (the weighted coverage across every lane).
+     * @minimum 0
+     * @maximum 100
+     */
+  densityPercent: number;
+  /**
+     * How many lanes have any signal.
+     * @minimum 0
+     */
+  lanesActive: number;
+  /**
+     * Total number of lanes the machine reads.
+     * @minimum 0
+     */
+  totalLanes: number;
+  /** Every lane, active ones first (fullest coverage first), then blind spots ordered by how much filling them would matter. */
+  lanes: SignalMapLane[];
+  /** The highest-leverage empty lane, or null when every lane already has signal. */
+  topBlindSpot: SignalMapLane | null;
+}
+
 export type DatingWinCategory = typeof DatingWinCategory[keyof typeof DatingWinCategory];
 
 

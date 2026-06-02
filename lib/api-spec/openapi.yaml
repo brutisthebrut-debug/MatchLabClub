@@ -3371,6 +3371,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/signal-map:
+    get:
+      tags: [Matching]
+      operationId: getMySignalMap
+      summary: Get the signed-in user's signal-density map
+      description: |
+        Returns a lane-by-lane view of how full the picture the machine holds
+        of the caller is: every signal lane with its coverage, how much it
+        counts toward the overall density, its confidence, the dimensions it
+        informs, and the one action that fills it. The overall density equals
+        the readiness score, since the map is derived from the same breakdown
+        and weights. Purely a presentation lens over the signal registry: it
+        never feeds the readiness score and never returns raw content. Safe to
+        hit on every page load.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The caller's signal-density map.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignalMap'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/matching/preferences:
     put:
       tags: [Matching]
@@ -7661,6 +7692,110 @@ components:
           type: integer
           minimum: 0
           description: Total number of unlocks on the board.
+
+    SignalMapLane:
+      type: object
+      description: >-
+        One lane of the signal-density map: a single signal source the machine
+        reads, with how full it is, how much it counts, and the action that
+        fills it. Derived from the signal registry plus the caller's own
+        coverage; it carries no raw content.
+      required:
+        - id
+        - label
+        - coverage
+        - weightPercent
+        - confidence
+        - dimensions
+        - hasSignal
+        - action
+      properties:
+        id:
+          type: string
+          description: Stable lane id, matches the readiness breakdown key.
+        label:
+          type: string
+          description: Human label for the lane.
+        coverage:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: How full this lane is, from the readiness breakdown.
+        weightPercent:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: >-
+            How much this lane counts toward the overall density, as a
+            whole-number percentage of the effective weights.
+        confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Rough confidence in this lane's predictive value.
+        dimensions:
+          type: array
+          description: Wellness or personality dimensions this lane informs.
+          items:
+            type: string
+        hasSignal:
+          type: boolean
+          description: True once the lane has any signal at all.
+        action:
+          type: object
+          description: The single do-this-next action that fills this lane.
+          required: [label, detail, href]
+          properties:
+            label:
+              type: string
+            detail:
+              type: string
+            href:
+              type: string
+
+    SignalMap:
+      type: object
+      description: >-
+        The caller's signal-density map: every lane the machine reads plus a
+        simple aggregate. The overall density equals the readiness score, since
+        the map is derived from the same breakdown and weights. Purely a
+        presentation lens; never feeds the readiness score.
+      required:
+        - densityPercent
+        - lanesActive
+        - totalLanes
+        - lanes
+        - topBlindSpot
+      properties:
+        densityPercent:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: >-
+            Overall fullness of the picture, equal to the readiness score (the
+            weighted coverage across every lane).
+        lanesActive:
+          type: integer
+          minimum: 0
+          description: How many lanes have any signal.
+        totalLanes:
+          type: integer
+          minimum: 0
+          description: Total number of lanes the machine reads.
+        lanes:
+          type: array
+          description: >-
+            Every lane, active ones first (fullest coverage first), then blind
+            spots ordered by how much filling them would matter.
+          items:
+            $ref: '#/components/schemas/SignalMapLane'
+        topBlindSpot:
+          description: >-
+            The highest-leverage empty lane, or null when every lane already
+            has signal.
+          oneOf:
+            - $ref: '#/components/schemas/SignalMapLane'
+            - type: 'null'
 
     ActivityStreak:
       type: object
