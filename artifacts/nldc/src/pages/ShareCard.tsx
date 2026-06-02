@@ -3,12 +3,23 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { toPng } from "html-to-image";
 import QRCode from "qrcode";
-import { Download, Share2, Copy, ArrowLeft, Check, Sparkles } from "lucide-react";
+import {
+  Download,
+  Share2,
+  Copy,
+  ArrowLeft,
+  Check,
+  Sparkles,
+  TrendingUp,
+  CheckCircle2,
+} from "lucide-react";
 import {
   useGetMatchingState,
   getGetMatchingStateQueryKey,
   useGetMirrorPortrait,
   getGetMirrorPortraitQueryKey,
+  useGetMyJourneySummary,
+  getGetMyJourneySummaryQueryKey,
 } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -17,6 +28,16 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { DEMO_MOMENTUM, DEMO_PORTRAIT } from "@/lib/mirrorDemo";
+
+// A signed-out visitor still gets a real, branded card so the surface never
+// looks empty or gated; it is clearly labelled as a sample and the lanes mirror
+// a believable mid-climb account. Real accounts always render their own counts.
+const DEMO_BREAKDOWN: Record<string, number> = {
+  audits: 72,
+  wellness: 64,
+  coaching: 41,
+};
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -50,8 +71,8 @@ type SnippetOption = { key: string; label: string; text: string };
 
 export default function ShareCard() {
   useMeta(
-    "Your readiness card",
-    "Share where you are on the path to being genuinely match ready.",
+    "Share your climb",
+    "Share the ground you covered this week on the path to being genuinely match ready.",
   );
 
   const { isAuthenticated, login } = useAuth();
@@ -70,7 +91,22 @@ export default function ShareCard() {
       retry: false,
     },
   });
-  const portrait = portraitQuery.data ?? null;
+  // The weekly climb (signals fed, readiness gained, tools completed this week)
+  // is the heart of the card: it is the same UserJourneySummary the Mirror
+  // momentum recap reads, only derived counts, never raw content. The endpoint
+  // 401s for anon, so signed-out visitors fall back to the labelled sample.
+  const journeyQuery = useGetMyJourneySummary({
+    query: {
+      queryKey: getGetMyJourneySummaryQueryKey(),
+      enabled: isAuthenticated,
+      retry: false,
+    },
+  });
+  // Signed-out visitors get a clearly-labelled sample card instead of a gate, so
+  // the surface is never empty and they can see exactly what they would share.
+  const isDemo = !isAuthenticated;
+  const portrait = isDemo ? DEMO_PORTRAIT : (portraitQuery.data ?? null);
+  const climb = isDemo ? DEMO_MOMENTUM : (journeyQuery.data ?? null);
   const { toast } = useToast();
   const cardRef = useRef<HTMLDivElement>(null);
   const [qr, setQr] = useState<string>("");
@@ -83,10 +119,13 @@ export default function ShareCard() {
   const [showLanes, setShowLanes] = useState(true);
   const [snippetKey, setSnippetKey] = useState<string>("headline");
 
-  const score = state.data?.readiness.score ?? 0;
+  const score = isDemo
+    ? DEMO_PORTRAIT.readinessScore
+    : (state.data?.readiness.score ?? 0);
   const breakdown = useMemo(
-    () => state.data?.readiness.breakdown ?? {},
-    [state.data],
+    () =>
+      isDemo ? DEMO_BREAKDOWN : (state.data?.readiness.breakdown ?? {}),
+    [isDemo, state.data],
   );
 
   const inviteUrl = useMemo(() => {
@@ -179,7 +218,7 @@ export default function ShareCard() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "matchlab-readiness.png";
+      a.download = "matchlab-climb.png";
       a.click();
       URL.revokeObjectURL(url);
     } catch {
@@ -193,7 +232,7 @@ export default function ShareCard() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "matchlab-readiness.png";
+    a.download = "matchlab-climb.png";
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -208,7 +247,7 @@ export default function ShareCard() {
     try {
       const blob = await render();
       file = blob
-        ? new File([blob], "matchlab-readiness.png", { type: "image/png" })
+        ? new File([blob], "matchlab-climb.png", { type: "image/png" })
         : null;
     } catch {
       file = null;
@@ -217,14 +256,14 @@ export default function ShareCard() {
       if (file && nav.canShare && nav.canShare({ files: [file] })) {
         await nav.share({
           files: [file],
-          title: "My readiness on MatchLab",
+          title: "My climb on MatchLab",
           text: `${stage.name}. ${score}% ready. ${inviteUrl}`,
         });
         return;
       }
       if (nav.share) {
         await nav.share({
-          title: "My readiness on MatchLab",
+          title: "My climb on MatchLab",
           text: `${stage.name}. ${score}% ready.`,
           url: inviteUrl,
         });
@@ -261,23 +300,6 @@ export default function ShareCard() {
   const circumference = 2 * Math.PI * 52;
   const dash = (score / 100) * circumference;
 
-  if (!isAuthenticated) {
-    return (
-      <AppLayout>
-        <div className="mx-auto max-w-md px-4 py-20 text-center">
-          <h1 className="font-serif text-3xl font-bold">Your readiness card</h1>
-          <p className="mt-3 text-muted-foreground">
-            Sign in to build a card from your real readiness, then share it and
-            bring people onto the path with you.
-          </p>
-          <Button onClick={() => login()} className="mt-6 rounded-full">
-            Sign in to build your card
-          </Button>
-        </div>
-      </AppLayout>
-    );
-  }
-
   return (
     <AppLayout>
       <div className="mx-auto max-w-5xl px-4 py-8">
@@ -289,33 +311,58 @@ export default function ShareCard() {
             </Link>
           </Button>
           <h1 className="mt-3 font-serif text-3xl md:text-4xl font-bold">
-            Show the work
+            Share your climb
           </h1>
           <p className="mt-2 text-muted-foreground max-w-xl">
-            This card shows your readiness stage and, if you want, one derived
-            line from your Mirror. It never shows what you wrote, who you talked
-            to, or any raw data. You choose what appears, then post it, send it,
-            and bring people onto the path with you.
+            This card shows the ground you covered this week and your readiness
+            stage. It never shows what you wrote, who you talked to, or any raw
+            data. You choose what else appears, then post it, send it, and bring
+            people onto the path with you.
           </p>
         </motion.div>
+
+        {isDemo && (
+          <motion.div
+            {...fadeUp(0.03)}
+            className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-foreground/8 bg-muted/40 p-4"
+            data-testid="banner-share-sample"
+          >
+            <p className="text-sm text-muted-foreground">
+              This is a sample card. Sign in to build one from your own climb.
+            </p>
+            <Button
+              onClick={() => login()}
+              size="sm"
+              className="rounded-full"
+              data-testid="button-share-signin"
+            >
+              Sign in to build your card
+            </Button>
+          </motion.div>
+        )}
 
         <div className="grid gap-8 lg:grid-cols-[auto_1fr] items-start">
           <motion.div {...fadeUp(0.05)} className="mx-auto">
             <div
               ref={cardRef}
-              className="relative w-[340px] min-h-[460px] overflow-hidden rounded-[28px] text-white"
-              style={{
-                background:
-                  "radial-gradient(120% 120% at 0% 0%, hsl(252 70% 22%) 0%, hsl(258 65% 12%) 45%, #0b0a17 100%)",
-              }}
+              className="relative w-[340px] min-h-[460px] overflow-hidden rounded-[28px] bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] text-white"
             >
               <div
                 className="pointer-events-none absolute -top-24 -right-20 w-72 h-72 rounded-full blur-3xl"
-                style={{ background: "hsl(326 100% 62% / 0.45)" }}
+                style={{ background: "hsl(326 100% 62% / 0.35)" }}
               />
               <div
                 className="pointer-events-none absolute -bottom-24 -left-16 w-72 h-72 rounded-full blur-3xl"
-                style={{ background: "hsl(252 90% 65% / 0.4)" }}
+                style={{ background: "hsl(252 90% 55% / 0.45)" }}
+              />
+              {/* Dark vignette toward the lower edge keeps the footer copy and QR
+                  legible over the bright rose end of the brand gradient. */}
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background:
+                    "radial-gradient(130% 100% at 50% 115%, rgba(11,10,23,0.6) 0%, rgba(11,10,23,0) 55%)",
+                }}
               />
               <div className="relative min-h-[460px] flex flex-col p-7">
                 <div className="flex items-center gap-2">
@@ -367,6 +414,54 @@ export default function ShareCard() {
                     <p className="mt-1 font-serif text-2xl font-bold leading-tight">
                       {stage.name}
                     </p>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/55">
+                    My climb this week
+                  </p>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {[
+                      {
+                        key: "signals",
+                        icon: Sparkles,
+                        value: climb?.signalsFedThisWeek ?? 0,
+                        label: "signals fed",
+                      },
+                      {
+                        key: "readiness",
+                        icon: TrendingUp,
+                        value: `+${climb?.readinessGainedThisWeek ?? 0}`,
+                        label: "readiness gained",
+                      },
+                      {
+                        key: "tools",
+                        icon: CheckCircle2,
+                        value: climb?.toolsCompletedThisWeek ?? 0,
+                        label: "tools done",
+                      },
+                    ].map((stat) => {
+                      const Icon = stat.icon;
+                      return (
+                        <div
+                          key={stat.key}
+                          className="rounded-xl bg-white/15 p-2.5 text-center"
+                        >
+                          <Icon
+                            className="mx-auto h-3.5 w-3.5"
+                            style={{ color: "hsl(326 100% 82%)" }}
+                            aria-hidden="true"
+                          />
+                          <div className="mt-1 font-serif text-xl font-bold leading-none text-white">
+                            {stat.value}
+                          </div>
+                          <div className="mt-1 text-[10px] leading-tight text-white/80">
+                            {stat.label}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -438,7 +533,8 @@ export default function ShareCard() {
               <h2 className="font-semibold">What to show</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 Build the card you want to share. The live card on the left is
-                exactly what goes out.
+                exactly what goes out. Your climb this week and your readiness
+                stage are always included; the rest is up to you.
               </p>
 
               <div className="mt-4 flex items-center justify-between gap-4">

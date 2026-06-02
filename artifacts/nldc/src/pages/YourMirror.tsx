@@ -568,7 +568,7 @@ export default function YourMirror() {
   >
   <Link href="/share-card">
   <Share2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
-  Share your readiness card
+  Share my climb
   </Link>
   </Button>
   </div>
