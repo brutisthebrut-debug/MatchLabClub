@@ -74,6 +74,8 @@ import type {
   CreateQuizResultResult,
   CreateSourcePasteInput,
   CreateSourcePasteResult,
+  CreateVoiceIntroInput,
+  CreateVoiceIntroResult,
   DatingProfile,
   DatingProfileInput,
   DatingProfileUpdate,
@@ -1389,6 +1391,92 @@ export const useCreateSourcePaste = <TError = ErrorType<AuthErrorEnvelope>,
         TContext
       > => {
       return useMutation(getCreateSourcePasteMutationOptions(options));
+    }
+
+export const getCreateVoiceIntroUrl = () => {
+
+
+
+
+  return `/api/me/voice-intro`
+}
+
+/**
+ * Records that the user recorded a short spoken intro and stores ONLY the
+derived acoustic metrics (length, energy, dynamics, pace, speech ratio)
+computed in the browser in the moment. The recording itself is never
+uploaded, stored, or transcribed. Persists the metrics into
+`imported_sources` with `source='voice-intro'` and a derived
+`parsedSummary.counts.items` of 1, so the signal feeds Match Readiness,
+the Mirror, and matching reasoning through the living signal registry's
+`voice` lane. For authenticated users with content consent on, a
+fire-and-forget Claude pass turns the derived metrics into a narrative
+read; otherwise the always-on deterministic engine produces the read, so
+the source never stalls. Only the derived numbers are ever sent to any
+prompt, never raw audio. Anon-safe: with no signed-in user, the row is
+stamped with the anonymous claim token cookie so it can be merged into
+the account later.
+
+ * @summary Capture derived acoustic metrics from a spoken voice intro
+ */
+export const createVoiceIntro = async (createVoiceIntroInput: CreateVoiceIntroInput, options?: RequestInit): Promise<CreateVoiceIntroResult> => {
+
+  return customFetch<CreateVoiceIntroResult>(getCreateVoiceIntroUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createVoiceIntroInput,)
+  }
+);}
+
+
+
+
+export const getCreateVoiceIntroMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVoiceIntro>>, TError,{data: BodyType<CreateVoiceIntroInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createVoiceIntro>>, TError,{data: BodyType<CreateVoiceIntroInput>}, TContext> => {
+
+const mutationKey = ['createVoiceIntro'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createVoiceIntro>>, {data: BodyType<CreateVoiceIntroInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createVoiceIntro(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateVoiceIntroMutationResult = NonNullable<Awaited<ReturnType<typeof createVoiceIntro>>>
+    export type CreateVoiceIntroMutationBody = BodyType<CreateVoiceIntroInput>
+    export type CreateVoiceIntroMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Capture derived acoustic metrics from a spoken voice intro
+ */
+export const useCreateVoiceIntro = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVoiceIntro>>, TError,{data: BodyType<CreateVoiceIntroInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createVoiceIntro>>,
+        TError,
+        {data: BodyType<CreateVoiceIntroInput>},
+        TContext
+      > => {
+      return useMutation(getCreateVoiceIntroMutationOptions(options));
     }
 
 export const getGetReceiptsInboxUrl = () => {

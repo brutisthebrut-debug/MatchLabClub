@@ -2,7 +2,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Sparkles, ArrowRight, Clock, Award, Compass, Search, Target, Zap, HeartHandshake, Eye, BookOpen, UserCircle, Rocket } from "lucide-react";
+import { Sparkles, ArrowRight, Clock, Award, Compass, Search, Target, Zap, HeartHandshake, Eye, BookOpen, UserCircle, Rocket, Gift, Map } from "lucide-react";
 import { QUIZZES, readQuizResults } from "@/lib/quizzes";
 import { useEffect, useState } from "react";
 import type { SavedQuizResult } from "@/lib/quizzes";
@@ -36,6 +36,8 @@ const QUIZ_ICONS: Record<string, any> = {
   "love-pace": HeartHandshake,
   "conflict-instinct": Zap,
   "what-lights-you-up": Rocket,
+  "love-language": Gift,
+  "future-vision": Map,
 };
 
 export default function Quizzes() {

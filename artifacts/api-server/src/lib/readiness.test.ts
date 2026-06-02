@@ -42,6 +42,12 @@ describe("computeBreakdown", () => {
       curiosity: 0,
       film: 0,
       reading: 0,
+      podcasts: 0,
+      gaming: 0,
+      places: 0,
+      screenRhythm: 0,
+      preferences: 0,
+      voice: 0,
     });
     expect(scoreFromBreakdown(b)).toBe(0);
   });
@@ -68,6 +74,12 @@ describe("computeBreakdown", () => {
       curiosityItems: 50,
       filmItems: 50,
       readingItems: 50,
+      podcastItems: 50,
+      gamingItems: 50,
+      placeItems: 50,
+      screenRhythmItems: 50,
+      preferenceItems: 50,
+      voiceRecorded: 1,
     });
     expect(b).toEqual({
       compass: 100,
@@ -90,6 +102,12 @@ describe("computeBreakdown", () => {
       curiosity: 100,
       film: 100,
       reading: 100,
+      podcasts: 100,
+      gaming: 100,
+      places: 100,
+      screenRhythm: 100,
+      preferences: 100,
+      voice: 100,
     });
     expect(scoreFromBreakdown(b)).toBe(100);
   });

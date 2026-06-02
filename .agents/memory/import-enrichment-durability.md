@@ -41,3 +41,16 @@ a deterministic read), so only Hinge rows are fallback-recoverable.
 **Why:** caught in code review; both were silent strand-forever bugs.
 **How to apply:** any new enrichment source or recovery rule must preserve both
 invariants and target persisted `aiError` names.
+
+## 3. Deterministic-always sources should insert `complete`, not `pending`
+A source whose deterministic read can be computed synchronously from the inbound
+payload (e.g. voice-intro from its derived acoustic metrics) should write the
+deterministic read AND `status:complete` in the SAME insert, then layer the
+optional Claude pass fire-and-forget for signed-in users. Do NOT insert
+`pending` and rely on a background update to fill the read.
+**Why:** an insert-then-fire-and-forget-update leaves a strand window: if the
+async update fails, the row sits `pending` forever, and such sources are usually
+NOT in the recovery sweep's `ENRICHABLE_SOURCES`. Readiness counting does not
+filter by status, so a stranded `pending` still scores, masking the bug.
+**How to apply:** if the deterministic read needs no external fetch, compute it
+inline and land `complete` on first write; the Claude pass only ever upgrades.

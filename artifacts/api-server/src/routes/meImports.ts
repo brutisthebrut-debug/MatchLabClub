@@ -5,10 +5,15 @@ import {
   CreateInstagramPasteBody,
   CreateQuizResultBody,
   CreateSourcePasteBody,
+  CreateVoiceIntroBody,
 } from "@workspace/api-zod";
 import { pasteCaptureSources } from "../lib/signalRegistry";
 import { getOrCreateAnonClaimToken } from "../lib/anonClaimToken";
-import { runInstagramToneRead } from "../lib/importEnrichment";
+import {
+  deterministicVoiceRead,
+  runInstagramToneRead,
+  runVoiceIntroRead,
+} from "../lib/importEnrichment";
 import { recordJourneyEvent } from "../lib/journeyEvents";
 
 const router: IRouter = Router();
@@ -189,6 +194,106 @@ router.post("/me/source-paste", async (req, res): Promise<void> => {
     source: inserted!.source,
     status: inserted!.status,
     itemCount: items.length,
+    uploadedAt:
+      inserted!.uploadedAt instanceof Date
+        ? inserted!.uploadedAt.toISOString()
+        : String(inserted!.uploadedAt),
+  });
+});
+
+/**
+ * POST /api/me/voice-intro
+ *
+ * Records that the user recorded a short spoken intro. The recording itself is
+ * never uploaded; the browser derives a handful of acoustic metrics (length,
+ * energy, dynamics, pace, speech ratio) in the moment and only those numbers
+ * arrive here. We store them into `imported_sources` tagged
+ * `source = "voice-intro"` with a derived `counts.items` of 1, so the signal
+ * feeds the `voice` lane of Match Readiness, the Mirror, and matching reasoning.
+ * Unlike a plain paste, this source carries a narrative read: status lands
+ * `pending`, then a fire-and-forget pass writes the read. The read follows the
+ * hybrid contract: Claude is layered on opt-in behind content consent and the
+ * daily cap, with the always-on deterministic engine as the fallback, so the
+ * source never stalls. Only the derived numbers are ever sent to any prompt,
+ * never audio. Anon-safe via the standard claim-token cookie; the Claude pass
+ * only fires for signed-in users since consent is per-account.
+ */
+router.post("/me/voice-intro", async (req, res): Promise<void> => {
+  const parsed = CreateVoiceIntroBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const metrics = {
+    durationSec: parsed.data.durationSec,
+    energy: parsed.data.energy,
+    dynamics: parsed.data.dynamics,
+    pace: parsed.data.pace,
+    speechRatio: parsed.data.speechRatio,
+  };
+
+  const userId = req.user?.id;
+  const anonToken = userId ? null : getOrCreateAnonClaimToken(req, res);
+
+  // Write the always-on deterministic read synchronously so the row lands
+  // `complete` the moment it is created. There is no `pending` window to strand
+  // a row in, and the signal feeds readiness immediately. For signed-in users
+  // we then layer the Claude read on top (consent + daily cap), overwriting the
+  // deterministic read if it succeeds and falling back to it if it does not.
+  const [inserted] = await db
+    .insert(importedSourcesTable)
+    .values({
+      userId: userId ?? null,
+      anonymousClaimToken: anonToken,
+      source: "voice-intro",
+      status: "complete",
+      parsedSummary: {
+        metrics,
+        counts: { items: 1 },
+        aiVoiceRead: deterministicVoiceRead(metrics),
+        voiceEngine: "deterministic",
+      },
+      processedAt: new Date(),
+    })
+    .returning({
+      id: importedSourcesTable.id,
+      source: importedSourcesTable.source,
+      status: importedSourcesTable.status,
+      uploadedAt: importedSourcesTable.uploadedAt,
+    });
+
+  req.log.info(
+    {
+      userId: userId ?? null,
+      importId: inserted?.id,
+      source: "voice-intro",
+    },
+    "Captured voice intro metrics",
+  );
+
+  void recordJourneyEvent({
+    eventType: "signal_fed",
+    userId: userId ?? null,
+    anonId: anonToken,
+    props: { source: "voice-intro" },
+  });
+
+  // The Claude read is per-account (consent + daily cap), so it only fires for
+  // signed-in users. If it never runs or fails, the deterministic read written
+  // above stands, so the source is never left without a read.
+  if (userId) {
+    void runVoiceIntroRead({
+      importId: inserted!.id,
+      userId,
+      metrics,
+    });
+  }
+
+  res.status(201).json({
+    id: inserted!.id,
+    source: inserted!.source,
+    status: inserted!.status,
     uploadedAt:
       inserted!.uploadedAt instanceof Date
         ? inserted!.uploadedAt.toISOString()

@@ -31,6 +31,12 @@ import {
   Palette,
   Clapperboard,
   Video,
+  Headphones,
+  Gamepad2,
+  MapPin,
+  Smartphone,
+  Shuffle,
+  Mic,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -306,6 +312,132 @@ const LIVE: Connector[] = [
     cta: { href: "/connections/add/vitality", label: "Add vitality" },
     readiness:
       "Fills the vitality lane of your Match Readiness. A clearer rhythm helps the machine pace a real connection around your energy.",
+  },
+  {
+    id: "podcasts-paste",
+    title: "Podcast lineup",
+    icon: Headphones,
+    color: "hsl(265 60% 60%)",
+    blurb:
+      "Paste the shows you keep subscribed to, one per line, or drop in your OPML export. The ideas and voices you come back to read curiosity and humour better than a bio line. No login, no OAuth.",
+    returns: "A read on the ideas and voices that hold your attention.",
+    access: [
+      "The list of shows you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "OAuth access to Spotify, Apple Podcasts, or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    cta: { href: "/connections/add/podcasts", label: "Add podcasts" },
+    readiness:
+      "Fills the podcasts lane of your Match Readiness. The truer the lineup, the better we match on curiosity.",
+  },
+  {
+    id: "gaming-paste",
+    title: "Gaming signature",
+    icon: Gamepad2,
+    color: "hsl(190 60% 50%)",
+    blurb:
+      "Paste the games you keep returning to, one per line, or drop in your Steam list. How you unwind and play is a real read on shared-leisure fit. We read the overlap, never the playtime. No login, no OAuth.",
+    returns: "A read on how you unwind and the kind of play you share.",
+    access: [
+      "The list of games you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "OAuth access to Steam, Xbox, PlayStation, or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    cta: { href: "/connections/add/gaming", label: "Add games" },
+    readiness:
+      "Fills the gaming lane of your Match Readiness. The truer the list, the better we match on shared-leisure fit.",
+  },
+  {
+    id: "places-paste",
+    title: "Places rhythm",
+    icon: MapPin,
+    color: "hsl(160 55% 45%)",
+    blurb:
+      "Paste the kinds of places you spend time, one per line (gym, trails, cafes, travel), or distil a Maps Timeline category summary into a list. Where life happens is a real read on shared-activity fit. We read the categories, never a single location. No login, no OAuth.",
+    returns: "A read on the kinds of places your life actually happens in.",
+    access: [
+      "The kinds of places you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Any location, address, or coordinate, ever",
+      "OAuth access to Google Maps, your timeline, or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    cta: { href: "/connections/add/places", label: "Add places" },
+    readiness:
+      "Fills the places lane of your Match Readiness. A fuller map of where you spend time reads as a fuller life to match around.",
+  },
+  {
+    id: "screen-rhythm-paste",
+    title: "Screen rhythm",
+    icon: Smartphone,
+    color: "hsl(220 50% 58%)",
+    blurb:
+      "Paste how your day splits across kinds of apps, one per line (social, reading, work, rest), or distil a Screen Time category summary into a list. How attention and rest balance out helps pace a real connection. We read the balance, never an app or message. No login, no OAuth.",
+    returns: "A read on how attention and rest split across your day.",
+    access: [
+      "The kinds of app time you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Any specific app, message, notification, or usage record",
+      "OAuth or device access to your phone or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    cta: { href: "/connections/add/screen-rhythm", label: "Add screen rhythm" },
+    readiness:
+      "Fills the screen rhythm lane of your Match Readiness. A clearer daily balance helps pace a real connection.",
+  },
+  {
+    id: "preferences-this-or-that",
+    title: "This or That",
+    icon: Shuffle,
+    color: "hsl(326 70% 58%)",
+    blurb:
+      "Tap through quick either-or choices. Each round reads the small instinctive preferences that quietly shape day-to-day fit. No typing, no login, no OAuth.",
+    returns: "A read on the instincts that shape what a good day-to-day fit feels like.",
+    access: [
+      "Which side you picked on each pair",
+      "A simple count of how many you answered, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not tap through",
+      "Your choices are never tied back to any sensitive attribute or sold",
+      "Your raw choices are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    cta: { href: "/this-or-that", label: "Play This or That" },
+    readiness:
+      "Fills the rapid-fire preferences lane of your Match Readiness. Each round adds a read on day-to-day fit.",
+  },
+  {
+    id: "voice-intro",
+    title: "Voice intro",
+    icon: Mic,
+    color: "hsl(285 65% 62%)",
+    blurb:
+      "Record a few words about what you are looking for. We read only how you sound, the warmth, energy, and pace, never the words. The recording is analysed on your device in the moment and never uploaded. No login, no OAuth.",
+    returns: "A read on how you come across out loud, from derived sound alone.",
+    access: [
+      "A handful of derived numbers about how you sound: length, energy, expressiveness, pace, and speech ratio",
+      "A single count that fills the voice lane of your readiness",
+    ],
+    excludes: [
+      "The recording itself, which never leaves your device or gets uploaded",
+      "Any transcript, words, or content of what you said",
+      "Only the derived numbers move your readiness, never audio",
+    ],
+    cta: { href: "/voice-intro", label: "Record voice intro" },
+    readiness:
+      "Fills the voice lane of your Match Readiness. How you sound is a real read that text never captures.",
   },
   {
     id: "matching-cohort",

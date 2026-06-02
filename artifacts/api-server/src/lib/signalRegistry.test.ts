@@ -34,6 +34,12 @@ const zeroBreakdown: ReadinessBreakdown = {
   curiosity: 0,
   film: 0,
   reading: 0,
+  podcasts: 0,
+  gaming: 0,
+  places: 0,
+  screenRhythm: 0,
+  preferences: 0,
+  voice: 0,
 };
 
 describe("signal registry", () => {
@@ -44,17 +50,19 @@ describe("signal registry", () => {
   });
 
   it("reflects the current registry weights, auto-normalized to sum to 1", () => {
-    // Raw registry weights sum to 2.18. Building up: the original 1.0, plus the
+    // Raw registry weights sum to 2.48. Building up: the original 1.0, plus the
     // calendar signal (0.1), the four brain-unification lanes (audits 0.16,
     // coaching 0.12, instagram 0.1, lifePulse 0.08), the paste-based taste (0.08)
     // and lifestyle (0.07) lanes, the quizzes lane (0.1), and the receipts lane
     // (0.1) brought the total to 1.91. The five export/paste connector lanes
     // (music 0.06, film 0.06, reading 0.05, curiosity 0.05, vitality 0.05) add
-    // 0.27, bringing the raw total to 2.18. Each normalized weight is its raw
-    // weight divided by the raw-weight total. The relative proportions between
-    // every signal are preserved exactly; adding contributors never forces a
-    // manual re-balance.
-    const total = 2.18;
+    // 0.27, bringing the total to 2.18. The five paste data-source lanes (podcasts
+    // 0.05, gaming 0.05, places 0.05, screenRhythm 0.04, preferences 0.06) add
+    // 0.25, bringing the total to 2.43. The voice intro lane (0.05) brings the raw
+    // total to 2.48. Each normalized weight is its raw weight divided by the
+    // raw-weight total. The relative proportions between every signal are
+    // preserved exactly; adding contributors never forces a manual re-balance.
+    const total = 2.48;
     const w = normalizedWeights();
     expect(w.wellness).toBeCloseTo(0.22 / total, 6);
     expect(w.compass).toBeCloseTo(0.2 / total, 6);
@@ -76,6 +84,12 @@ describe("signal registry", () => {
     expect(w.reading).toBeCloseTo(0.05 / total, 6);
     expect(w.curiosity).toBeCloseTo(0.05 / total, 6);
     expect(w.vitality).toBeCloseTo(0.05 / total, 6);
+    expect(w.podcasts).toBeCloseTo(0.05 / total, 6);
+    expect(w.gaming).toBeCloseTo(0.05 / total, 6);
+    expect(w.places).toBeCloseTo(0.05 / total, 6);
+    expect(w.screenRhythm).toBeCloseTo(0.04 / total, 6);
+    expect(w.preferences).toBeCloseTo(0.06 / total, 6);
+    expect(w.voice).toBeCloseTo(0.05 / total, 6);
   });
 
   it("auto-normalizes when a new contributor is added, never breaking the sum", () => {
@@ -270,6 +284,11 @@ describe("applyDecay", () => {
     curiosity: 100,
     film: 100,
     reading: 100,
+    podcasts: 100,
+    gaming: 100,
+    places: 100,
+    screenRhythm: 100,
+    preferences: 100,
   };
 
   it("leaves durable lanes (no half-life) untouched", () => {

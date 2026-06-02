@@ -516,6 +516,54 @@ export const CreateSourcePasteBody = zod.object({
 
 
 /**
+ * Records that the user recorded a short spoken intro and stores ONLY the
+derived acoustic metrics (length, energy, dynamics, pace, speech ratio)
+computed in the browser in the moment. The recording itself is never
+uploaded, stored, or transcribed. Persists the metrics into
+`imported_sources` with `source='voice-intro'` and a derived
+`parsedSummary.counts.items` of 1, so the signal feeds Match Readiness,
+the Mirror, and matching reasoning through the living signal registry's
+`voice` lane. For authenticated users with content consent on, a
+fire-and-forget Claude pass turns the derived metrics into a narrative
+read; otherwise the always-on deterministic engine produces the read, so
+the source never stalls. Only the derived numbers are ever sent to any
+prompt, never raw audio. Anon-safe: with no signed-in user, the row is
+stamped with the anonymous claim token cookie so it can be merged into
+the account later.
+
+ * @summary Capture derived acoustic metrics from a spoken voice intro
+ */
+export const CreateVoiceIntroHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const createVoiceIntroBodyDurationSecMin = 0;
+export const createVoiceIntroBodyDurationSecMax = 600;
+
+export const createVoiceIntroBodyEnergyMin = 0;
+export const createVoiceIntroBodyEnergyMax = 1;
+
+export const createVoiceIntroBodyDynamicsMin = 0;
+export const createVoiceIntroBodyDynamicsMax = 1;
+
+export const createVoiceIntroBodyPaceMin = 0;
+export const createVoiceIntroBodyPaceMax = 10;
+
+export const createVoiceIntroBodySpeechRatioMin = 0;
+export const createVoiceIntroBodySpeechRatioMax = 1;
+
+
+
+export const CreateVoiceIntroBody = zod.object({
+  "durationSec": zod.number().min(createVoiceIntroBodyDurationSecMin).max(createVoiceIntroBodyDurationSecMax).describe('How many seconds the user spoke. Derived in the browser.'),
+  "energy": zod.number().min(createVoiceIntroBodyEnergyMin).max(createVoiceIntroBodyEnergyMax).describe('Average loudness of the speech, normalized 0-1. A derived acoustic metric only; the audio it came from is never uploaded.'),
+  "dynamics": zod.number().min(createVoiceIntroBodyDynamicsMin).max(createVoiceIntroBodyDynamicsMax).describe('How much the loudness varies over time, normalized 0-1 (expressive vs flat). Derived in the browser.'),
+  "pace": zod.number().min(createVoiceIntroBodyPaceMin).max(createVoiceIntroBodyPaceMax).describe('Speech onsets per second, a proxy for how fast and animated the delivery is. Derived in the browser.'),
+  "speechRatio": zod.number().min(createVoiceIntroBodySpeechRatioMin).max(createVoiceIntroBodySpeechRatioMax).describe('Fraction of the take that was speech rather than silence, 0-1. Derived in the browser.')
+})
+
+
+/**
  * Returns the user's private receipts forwarding address, the running count
 of confirmations captured, and a small, capped list of the most recent
 receipts (sender, subject, and time only). The body of any email is never

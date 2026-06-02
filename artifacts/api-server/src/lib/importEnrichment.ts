@@ -484,6 +484,229 @@ export async function runInstagramToneRead(args: {
 }
 
 // ---------------------------------------------------------------------------
+// Voice intro read enrichment
+// ---------------------------------------------------------------------------
+
+/**
+ * Derived acoustic metrics computed in the browser from a short voice intro.
+ * The recording itself is never uploaded; only these numbers are ever stored or
+ * sent to any prompt.
+ */
+export interface VoiceMetrics {
+  /** How many seconds the user spoke. */
+  durationSec: number;
+  /** Average loudness, normalized 0-1. */
+  energy: number;
+  /** How much loudness varies over time, 0-1 (expressive vs flat). */
+  dynamics: number;
+  /** Speech onsets per second, a proxy for how fast and animated delivery is. */
+  pace: number;
+  /** Fraction of the take that was speech rather than silence, 0-1. */
+  speechRatio: number;
+}
+
+export const VoiceIntroReadSchema = z.object({
+  read: z.object({
+    warmth: z.string().trim().min(1).max(60),
+    energy: z.string().trim().min(1).max(60),
+    pace: z.string().trim().min(1).max(60),
+  }),
+  summary: z.string().trim().min(1).max(600),
+  datingRelevant: z.object({
+    signals: z.array(z.string().trim().min(1).max(200)).min(2).max(4),
+    suggestions: z.array(z.string().trim().min(1).max(200)).min(2).max(3),
+  }),
+});
+export type VoiceIntroRead = z.infer<typeof VoiceIntroReadSchema>;
+
+export function deterministicVoiceRead(metrics: VoiceMetrics): VoiceIntroRead {
+  const { durationSec, energy, dynamics, pace, speechRatio } = metrics;
+
+  const warmth =
+    energy >= 0.66
+      ? "Warm and full, easy to be around"
+      : energy >= 0.33
+        ? "Even and approachable"
+        : "Calm and understated";
+
+  const energyLabel =
+    dynamics >= 0.6
+      ? "Expressive, your tone moves with what you say"
+      : dynamics >= 0.3
+        ? "Steady with natural lift"
+        : "Level and measured throughout";
+
+  const paceLabel =
+    pace >= 3
+      ? "Quick and lively"
+      : pace >= 1
+        ? "Natural, easy to follow"
+        : "Unhurried, you give words room";
+
+  const lengthNote =
+    durationSec < 10
+      ? "You kept it short, which reads as confident when the delivery is clear."
+      : durationSec <= 40
+        ? "You gave a real sample of how you actually sound."
+        : "You spoke generously, so there is plenty of presence to read.";
+
+  const spaceNote =
+    speechRatio >= 0.75
+      ? "You spoke throughout with little hesitation."
+      : speechRatio >= 0.4
+        ? "You left a few natural pauses, which reads as relaxed."
+        : "You left a lot of space, so a touch more talking would help us read you.";
+
+  const summary = `${warmth.toLowerCase().replace(/,.*/, "")} voice with a ${paceLabel.toLowerCase()} pace. ${lengthNote} ${spaceNote}`;
+
+  const signals: string[] = [];
+  if (energy >= 0.5)
+    signals.push(
+      "Your energy comes through on first listen, which lands well in a voice note or a first call.",
+    );
+  else
+    signals.push(
+      "Your calm delivery reads as grounded; it suits someone who values steadiness.",
+    );
+  if (dynamics >= 0.4)
+    signals.push(
+      "An expressive range suggests you are comfortable being yourself out loud.",
+    );
+  else
+    signals.push(
+      "A level tone suggests you choose words carefully; people will lean in to listen.",
+    );
+  if (pace >= 2)
+    signals.push(
+      "A lively pace works in playful, fast-moving conversation.",
+    );
+
+  const suggestions: string[] = [
+    "Lead a first call with a voice note if the app allows it; how you sound is a strength worth using early.",
+    pace >= 3
+      ? "Slow down a touch on the important lines so they land."
+      : "A little more lift on the openers will make the warmth obvious.",
+  ];
+
+  return {
+    read: { warmth, energy: energyLabel, pace: paceLabel },
+    summary: summary.trim(),
+    datingRelevant: {
+      signals: signals.slice(0, 4),
+      suggestions: suggestions.slice(0, 3),
+    },
+  };
+}
+
+function buildVoicePrompt(metrics: VoiceMetrics): string {
+  const { durationSec, energy, dynamics, pace, speechRatio } = metrics;
+  return [
+    "Read this person's voice intro from derived acoustic metrics only. No audio, words, or transcript were shared, just these numbers. Give a warm, honest read of how they likely come across.",
+    "",
+    `Length spoken: ${durationSec.toFixed(1)} seconds`,
+    `Energy (average loudness, 0-1): ${energy.toFixed(2)}`,
+    `Dynamics (how much loudness varies, 0-1): ${dynamics.toFixed(2)}`,
+    `Pace (speech onsets per second): ${pace.toFixed(2)}`,
+    `Speech ratio (speech vs silence, 0-1): ${speechRatio.toFixed(2)}`,
+    "",
+    "Return ONLY a single JSON object, no prose, no code fences, with this exact shape:",
+    "{",
+    '  "read": { "warmth": "short label", "energy": "short label", "pace": "short label" },',
+    '  "summary": "1-3 sentence read of how they sound and come across",',
+    '  "datingRelevant": { "signals": [2-4 things this implies about how they would show up dating], "suggestions": [2-3 concrete ways to use their voice as a strength] }',
+    "}",
+  ].join("\n");
+}
+
+export async function runVoiceIntroRead(args: {
+  importId: number;
+  userId: string;
+  metrics: VoiceMetrics;
+}): Promise<void> {
+  const { importId, userId, metrics } = args;
+  const system = buildEchoSystemPrompt(
+    "Read how a person comes across from the derived acoustic metrics of their voice intro. No audio or words were shared. Return JSON only, no prose, no code fences.",
+  );
+  const user = buildVoicePrompt(metrics);
+  const deterministic = deterministicVoiceRead(metrics);
+  const originalPayload = { metrics, counts: { items: 1 } };
+
+  const serveDeterministic = async (reason: string): Promise<void> => {
+    await db
+      .update(importedSourcesTable)
+      .set({
+        status: "complete",
+        parsedSummary: {
+          ...originalPayload,
+          aiVoiceRead: deterministic,
+          voiceEngine: "deterministic",
+          aiError: reason,
+        },
+        processedAt: new Date(),
+      })
+      .where(eq(importedSourcesTable.id, importId));
+  };
+
+  try {
+    const result = await generateWithRetry({
+      provider: "anthropic",
+      model: "claude-sonnet-4-6",
+      system,
+      user,
+      expectJson: true,
+      requireContentConsent: true,
+      userId,
+      maxTokens: 8192,
+    });
+
+    if (result.isFallback || !result.output) {
+      const reason =
+        result.error === "consent_required"
+          ? "consent_not_granted"
+          : (result.error ?? "no_output");
+      await serveDeterministic(reason);
+      return;
+    }
+
+    const raw = result.raw ?? result.output;
+    const parsed = extractAndValidateJson<VoiceIntroRead>(
+      VoiceIntroReadSchema,
+      raw,
+    );
+    if (!parsed.ok) {
+      await serveDeterministic("schema_validation_failed");
+      return;
+    }
+
+    await db
+      .update(importedSourcesTable)
+      .set({
+        status: "complete",
+        parsedSummary: {
+          ...originalPayload,
+          aiVoiceRead: parsed.value,
+          voiceEngine: "anthropic",
+        },
+        processedAt: new Date(),
+      })
+      .where(eq(importedSourcesTable.id, importId));
+  } catch (err) {
+    logger.warn(
+      {
+        err: err instanceof Error ? err.message : String(err),
+        importId,
+      },
+      "Voice intro read enrichment failed, serving deterministic read",
+    );
+    await serveDeterministic(
+      err instanceof Error ? err.message : "unknown_error",
+    ).catch(() => {
+      // swallow, we already logged the original failure
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Recovery dispatcher (used by importRecoveryJob)
 // ---------------------------------------------------------------------------
 

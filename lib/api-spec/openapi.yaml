@@ -433,6 +433,49 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/voice-intro:
+    post:
+      tags: [Auth]
+      operationId: createVoiceIntro
+      summary: Capture derived acoustic metrics from a spoken voice intro
+      description: |
+        Records that the user recorded a short spoken intro and stores ONLY the
+        derived acoustic metrics (length, energy, dynamics, pace, speech ratio)
+        computed in the browser in the moment. The recording itself is never
+        uploaded, stored, or transcribed. Persists the metrics into
+        `imported_sources` with `source='voice-intro'` and a derived
+        `parsedSummary.counts.items` of 1, so the signal feeds Match Readiness,
+        the Mirror, and matching reasoning through the living signal registry's
+        `voice` lane. For authenticated users with content consent on, a
+        fire-and-forget Claude pass turns the derived metrics into a narrative
+        read; otherwise the always-on deterministic engine produces the read, so
+        the source never stalls. Only the derived numbers are ever sent to any
+        prompt, never raw audio. Anon-safe: with no signed-in user, the row is
+        stamped with the anonymous claim token cookie so it can be merged into
+        the account later.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVoiceIntroInput'
+      responses:
+        '201':
+          description: Voice intro metrics captured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVoiceIntroResult'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/receipts:
     get:
       tags: [Auth]
@@ -6830,6 +6873,63 @@ components:
         itemCount:
           type: integer
           description: Number of non-empty items stored for this paste.
+        uploadedAt:
+          type: string
+          format: date-time
+
+    CreateVoiceIntroInput:
+      type: object
+      required: [durationSec, energy, dynamics, pace, speechRatio]
+      properties:
+        durationSec:
+          type: number
+          minimum: 0
+          maximum: 600
+          description: How many seconds the user spoke. Derived in the browser.
+        energy:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: >-
+            Average loudness of the speech, normalized 0-1. A derived acoustic
+            metric only; the audio it came from is never uploaded.
+        dynamics:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: >-
+            How much the loudness varies over time, normalized 0-1 (expressive
+            vs flat). Derived in the browser.
+        pace:
+          type: number
+          minimum: 0
+          maximum: 10
+          description: >-
+            Speech onsets per second, a proxy for how fast and animated the
+            delivery is. Derived in the browser.
+        speechRatio:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: >-
+            Fraction of the take that was speech rather than silence, 0-1.
+            Derived in the browser.
+
+    CreateVoiceIntroResult:
+      type: object
+      required: [id, source, status, uploadedAt]
+      properties:
+        id:
+          type: integer
+        source:
+          type: string
+          const: voice-intro
+        status:
+          type: string
+          enum: [pending, complete]
+          description: >-
+            `pending` while the read is being written, `complete` once the
+            deterministic or Claude read is stored.
         uploadedAt:
           type: string
           format: date-time

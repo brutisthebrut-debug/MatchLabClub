@@ -487,6 +487,12 @@ export default function Matching() {
     curiosity: 0,
     film: 0,
     reading: 0,
+    podcasts: 0,
+    gaming: 0,
+    places: 0,
+    screenRhythm: 0,
+    preferences: 0,
+    voice: 0,
   };
   const nextActions = state.data?.nextActions ?? [];
   const history = state.data?.history ?? [];

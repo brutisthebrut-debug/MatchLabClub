@@ -2209,6 +2209,58 @@ export interface CreateSourcePasteResult {
   uploadedAt: string;
 }
 
+export interface CreateVoiceIntroInput {
+  /**
+     * How many seconds the user spoke. Derived in the browser.
+     * @minimum 0
+     * @maximum 600
+     */
+  durationSec: number;
+  /**
+     * Average loudness of the speech, normalized 0-1. A derived acoustic metric only; the audio it came from is never uploaded.
+     * @minimum 0
+     * @maximum 1
+     */
+  energy: number;
+  /**
+     * How much the loudness varies over time, normalized 0-1 (expressive vs flat). Derived in the browser.
+     * @minimum 0
+     * @maximum 1
+     */
+  dynamics: number;
+  /**
+     * Speech onsets per second, a proxy for how fast and animated the delivery is. Derived in the browser.
+     * @minimum 0
+     * @maximum 10
+     */
+  pace: number;
+  /**
+     * Fraction of the take that was speech rather than silence, 0-1. Derived in the browser.
+     * @minimum 0
+     * @maximum 1
+     */
+  speechRatio: number;
+}
+
+/**
+ * `pending` while the read is being written, `complete` once the deterministic or Claude read is stored.
+ */
+export type CreateVoiceIntroResultStatus = typeof CreateVoiceIntroResultStatus[keyof typeof CreateVoiceIntroResultStatus];
+
+
+export const CreateVoiceIntroResultStatus = {
+  pending: 'pending',
+  complete: 'complete',
+} as const;
+
+export interface CreateVoiceIntroResult {
+  id: number;
+  source: 'voice-intro';
+  /** `pending` while the read is being written, `complete` once the deterministic or Claude read is stored. */
+  status: CreateVoiceIntroResultStatus;
+  uploadedAt: string;
+}
+
 export interface ReceiptEntry {
   /**
      * The sender shown on the confirmation, if known. Never the body.

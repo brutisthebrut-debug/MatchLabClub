@@ -71,6 +71,8 @@ import {
   Ticket,
   Send,
   Lock,
+  Shuffle,
+  Mic,
 } from "lucide-react";
 
 type NavLink = {
@@ -176,6 +178,8 @@ const SECTIONS: NavSection[] = [
       { name: "Imports", href: "/imports", icon: Download },
     ],
     more: [
+      { name: "This or That", href: "/this-or-that", icon: Shuffle },
+      { name: "Voice intro", href: "/voice-intro", icon: Mic },
       { name: "Life Context", href: "/life-context", icon: Briefcase },
       { name: "Communication Insights", href: "/insights", icon: Lightbulb },
       { name: "Integrations Roadmap", href: "/integrations", icon: Network },

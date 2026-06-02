@@ -13,6 +13,10 @@ import {
   BookOpen,
   History,
   Activity,
+  Headphones,
+  Gamepad2,
+  MapPin,
+  Smartphone,
   type LucideIcon,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -201,6 +205,94 @@ const CONFIG: Record<string, SourceConfig> = {
     ],
     readiness:
       "Fills the vitality lane of your Match Readiness. A clearer rhythm helps the machine pace a real connection around your energy.",
+  },
+  podcasts: {
+    source: "podcasts-paste",
+    title: "Podcast lineup",
+    icon: Headphones,
+    color: "hsl(265 60% 60%)",
+    lead: "The shows you keep subscribed to. The ideas and voices you come back to read curiosity and humour better than most prompt answers.",
+    prompt:
+      "List the shows you keep subscribed to, one per line. Paste from your OPML export, or just type the ones you never skip.",
+    placeholder:
+      "The Rest Is History\nNormal Gossip\n99% Invisible\nIf Books Could Kill\nOlogies\nHeavyweight",
+    access: [
+      "The list of shows you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "OAuth access to Spotify, Apple Podcasts, or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    readiness:
+      "Fills the podcasts lane of your Match Readiness. The truer the lineup, the better we match on curiosity.",
+  },
+  gaming: {
+    source: "gaming-paste",
+    title: "Gaming signature",
+    icon: Gamepad2,
+    color: "hsl(190 60% 50%)",
+    lead: "The games you keep returning to. How you unwind and play is a real read on shared-leisure fit that a bio rarely shows.",
+    prompt:
+      "List the games you keep returning to, one per line. Paste from your Steam list, or just type the ones you always come back to.",
+    placeholder:
+      "Stardew Valley\nElden Ring\nMario Kart with friends\nBaldur's Gate 3\nTetris\nCatan night",
+    access: [
+      "The list of games you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "OAuth access to Steam, Xbox, PlayStation, or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    readiness:
+      "Fills the gaming lane of your Match Readiness. The truer the list, the better we match on shared-leisure fit.",
+  },
+  places: {
+    source: "places-paste",
+    title: "Places rhythm",
+    icon: MapPin,
+    color: "hsl(160 55% 45%)",
+    lead: "The kinds of places your life actually happens in. Where you spend time is a real read on lifestyle and shared-activity fit.",
+    prompt:
+      "List the kinds of places you spend time, one per line (gym, trails, cafes, travel). Distil a Maps Timeline category summary into a list, or just type them. We read the categories, never a single location.",
+    placeholder:
+      "Climbing gym\nWeekend hikes\nNeighbourhood cafes\nLive music venues\nFarmers markets\nTravel a few times a year",
+    access: [
+      "The kinds of places you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Any location, address, or coordinate, ever",
+      "OAuth access to Google Maps, your timeline, or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    readiness:
+      "Fills the places lane of your Match Readiness. A fuller map of where you spend time reads as a fuller life to match around.",
+  },
+  "screen-rhythm": {
+    source: "screen-rhythm-paste",
+    title: "Screen rhythm",
+    icon: Smartphone,
+    color: "hsl(220 50% 58%)",
+    lead: "How your day splits across kinds of apps. The balance of attention and rest helps pace a real connection around your week.",
+    prompt:
+      "List how your day splits across kinds of apps, one per line (social, reading, work, rest). Distil a Screen Time category summary into a list, or just type them. We read the balance, never an app or message.",
+    placeholder:
+      "Mostly reading apps at night\nSocial in short bursts\nLong stretches off the phone on weekends\nMaps and music when out\nWork apps nine to five\nNo phone first hour of the day",
+    access: [
+      "The kinds of app time you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Any specific app, message, notification, or usage record",
+      "OAuth or device access to your phone or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    readiness:
+      "Fills the screen rhythm lane of your Match Readiness. A clearer daily balance helps pace a real connection.",
   },
 };
 

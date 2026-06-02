@@ -67,6 +67,8 @@ import Quiz from "@/pages/Quiz";
 import Gallery from "@/pages/Gallery";
 import ConnectionCenter from "@/pages/ConnectionCenter";
 import SourcePaste from "@/pages/SourcePaste";
+import ThisOrThat from "@/pages/ThisOrThat";
+import VoiceIntro from "@/pages/VoiceIntro";
 import Receipts from "@/pages/Receipts";
 import DataVault from "@/pages/DataVault";
 import Imports from "@/pages/Imports";
@@ -177,6 +179,8 @@ function Router() {
       <Route path="/insights" component={Insights} />
       <Route path="/integrations" component={Integrations} />
       <Route path="/connections/add/:source" component={SourcePaste} />
+      <Route path="/this-or-that" component={ThisOrThat} />
+      <Route path="/voice-intro" component={VoiceIntro} />
       <Route path="/receipts" component={Receipts} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/waitlist" component={Waitlist} />

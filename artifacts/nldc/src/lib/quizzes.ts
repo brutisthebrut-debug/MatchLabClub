@@ -788,6 +788,205 @@ const MESSAGE_STAMINA: Quiz = {
   },
 };
 
+// ── Quiz: Your Love Language ─────────────────────────────────────────────────
+const LOVE_LANGUAGE: Quiz = {
+  slug: "love-language",
+  title: "What's your love language?",
+  pitch: "Five questions to find how you most naturally give and receive love, the currency that makes you feel actually wanted.",
+  durationSec: 90,
+  emoji: "💞",
+  feeds: ["affection.style", "affection.expression", "connection.repair"],
+  questions: [
+    {
+      q: "A partner does one small thing this week and you feel genuinely loved. It's...",
+      options: [
+        { label: "They tell you, in words, exactly what you mean to them", scores: { words: 2, touch: 1 }, wellness: { questionId: "affection.receive", dimension: "affection", category: "style", questionText: "How do you most naturally receive love?", answer: "Words of affirmation, hearing it said plainly." } },
+        { label: "They clear their evening to just be with you", scores: { time: 2, words: 1 }, wellness: { questionId: "affection.receive", dimension: "affection", category: "style", questionText: "How do you most naturally receive love?", answer: "Quality time, undivided attention." } },
+        { label: "They quietly handle something off your plate", scores: { acts: 2, time: 1 }, wellness: { questionId: "affection.receive", dimension: "affection", category: "style", questionText: "How do you most naturally receive love?", answer: "Acts of service, being taken care of practically." } },
+        { label: "They reach for your hand without thinking about it", scores: { touch: 2, time: 1 }, wellness: { questionId: "affection.receive", dimension: "affection", category: "style", questionText: "How do you most naturally receive love?", answer: "Physical touch, closeness and contact." } },
+      ],
+    },
+    {
+      q: "When you want to show someone you care, your instinct is to...",
+      options: [
+        { label: "Tell them what you admire about them", scores: { words: 2 }, wellness: { questionId: "affection.express", dimension: "affection", category: "expression", questionText: "How do you most naturally express love?", answer: "Through words, naming what I value out loud." } },
+        { label: "Carve out real, unhurried time together", scores: { time: 2 } },
+        { label: "Do something useful they didn't ask for", scores: { acts: 2 }, wellness: { questionId: "affection.express", dimension: "affection", category: "expression", questionText: "How do you most naturally express love?", answer: "Through acts of service, doing for them." } },
+        { label: "Bring them a small thing that made you think of them", scores: { gifts: 2 } },
+      ],
+    },
+    {
+      q: "The compliment that actually lands for you is...",
+      options: [
+        { label: "\"I love the way your mind works\"", scores: { words: 2 } },
+        { label: "\"I always feel calmer around you\"", scores: { time: 2, touch: 1 } },
+        { label: "\"I don't know how I'd manage without you\"", scores: { acts: 2 } },
+        { label: "\"You give the most thoughtful gifts\"", scores: { gifts: 2 } },
+      ],
+    },
+    {
+      q: "After a hard week, the gesture that resets you is...",
+      options: [
+        { label: "A long, honest conversation", scores: { words: 2, time: 1 }, wellness: { questionId: "connection.repair", dimension: "connection", category: "repair", questionText: "What helps you reconnect after a hard stretch?", answer: "Talking it through, words and reassurance." } },
+        { label: "A whole evening with no agenda but each other", scores: { time: 2 }, wellness: { questionId: "connection.repair", dimension: "connection", category: "repair", questionText: "What helps you reconnect after a hard stretch?", answer: "Time together, presence over fixing." } },
+        { label: "Someone just handling dinner so you can breathe", scores: { acts: 2 }, wellness: { questionId: "connection.repair", dimension: "connection", category: "repair", questionText: "What helps you reconnect after a hard stretch?", answer: "Practical help that lightens the load." } },
+        { label: "Being held, no words needed", scores: { touch: 2 }, wellness: { questionId: "connection.repair", dimension: "connection", category: "repair", questionText: "What helps you reconnect after a hard stretch?", answer: "Physical closeness, touch over talk." } },
+      ],
+    },
+    {
+      q: "What stings most when it's missing?",
+      options: [
+        { label: "They stop saying how they feel", scores: { words: 2 } },
+        { label: "They're around but never really present", scores: { time: 2 } },
+        { label: "I'm always the one carrying the load", scores: { acts: 2 } },
+        { label: "The easy physical closeness fades", scores: { touch: 2 } },
+      ],
+    },
+  ],
+  archetypes: {
+    words: {
+      name: "Words of Affirmation",
+      emoji: "🗣️",
+      tagline: "You feel loved when it's said out loud. Naming the feeling is the feeling.",
+      insight: "You read care through language, so a partner who says what they appreciate keeps you secure, while one who 'shows not tells' can leave you guessing. The trick isn't needing constant praise; it's needing the relationship narrated honestly. When you know where you stand in words, you give your best self back.",
+      nextStep: "Tell a partner, or a future one, the exact sentence you most want to hear. Specificity beats hinting.",
+      cta: { label: "Map your full Connection Style", href: "/connection-style" },
+      color: "326 80% 62%",
+    },
+    time: {
+      name: "Quality Time",
+      emoji: "🕰️",
+      tagline: "Presence is the gift. You measure love in undivided attention.",
+      insight: "You feel most wanted when someone chooses to be fully with you, phone down, no rush. Distraction reads as distance to you even when none is meant. Naming this early saves a lot of quiet hurt, because the fix is rarely more hours, it's more presence in the hours you have.",
+      nextStep: "Protect one device-free window with someone this week. Notice how different it feels from time that's only technically shared.",
+      cta: { label: "See your readiness picture", href: "/your-mirror" },
+      color: "248 62% 62%",
+    },
+    acts: {
+      name: "Acts of Service",
+      emoji: "🤲",
+      tagline: "Love is a verb to you. Showing up beats saying so.",
+      insight: "You trust what people do more than what they declare, so a partner who notices and lightens your load earns deep loyalty. Your risk is over-giving and quietly resenting it when it isn't matched. The work is letting yourself receive, and asking plainly instead of waiting to be read.",
+      nextStep: "Let someone do one thing for you this week without insisting you're fine. Receiving is part of the language too.",
+      cta: { label: "Map your full Connection Style", href: "/connection-style" },
+      color: "141 60% 45%",
+    },
+    touch: {
+      name: "Physical Touch",
+      emoji: "🤝",
+      tagline: "Closeness regulates you. Contact says what words can't.",
+      insight: "You feel safest and most connected through warmth and proximity, so touch is how you both give and read affection. When it fades you can feel the distance before anything is said. Pairing well here is about naming the need out loud, since touch-led people often partner with words-led people and both have to learn the other's dialect.",
+      nextStep: "Name how you most like to be close, and ask what feels good to them. Calibration matters more than frequency.",
+      cta: { label: "See your readiness picture", href: "/your-mirror" },
+      color: "12 75% 60%",
+    },
+    gifts: {
+      name: "Thoughtful Gifts",
+      emoji: "🎁",
+      tagline: "It's not the object, it's the proof you were thought of when apart.",
+      insight: "For you a well-chosen thing is shorthand for 'I notice what you love,' so it's the attention behind it that lands, not the price. The misread is that this looks materialistic when it's really about being held in mind. Pairs best with someone willing to pay attention to the small details you drop.",
+      nextStep: "Tell a partner the kind of thoughtful gesture that lands for you, so it never has to be guessed.",
+      cta: { label: "Map your full Connection Style", href: "/connection-style" },
+      color: "43 70% 55%",
+    },
+  },
+};
+
+// ── Quiz: Future Vision ──────────────────────────────────────────────────────
+const FUTURE_VISION: Quiz = {
+  slug: "future-vision",
+  title: "Where are you headed?",
+  pitch: "Five questions on the life you're actually building, so matching reads direction, not just chemistry.",
+  durationSec: 90,
+  emoji: "🧭",
+  feeds: ["values.direction", "lifestyle.pace", "values.commitment"],
+  questions: [
+    {
+      q: "Picture your life three years out. The word that fits best is...",
+      options: [
+        { label: "Rooted, a home and a rhythm I've built", scores: { builder: 2, grower: 1 }, wellness: { questionId: "values.direction", dimension: "values", category: "direction", questionText: "What does your ideal near future look like?", answer: "Settled and rooted, building a stable home base." } },
+        { label: "Open, room to move, travel, and change my mind", scores: { explorer: 2, grower: 1 }, wellness: { questionId: "values.direction", dimension: "values", category: "direction", questionText: "What does your ideal near future look like?", answer: "Open and mobile, keeping options and freedom." } },
+        { label: "Steady, growing the things already in motion", scores: { grower: 2, builder: 1 }, wellness: { questionId: "values.direction", dimension: "values", category: "direction", questionText: "What does your ideal near future look like?", answer: "Gradual growth, deepening what I've already started." } },
+        { label: "Partnered, a shared life at the center", scores: { anchor: 2, builder: 1 }, wellness: { questionId: "values.direction", dimension: "values", category: "direction", questionText: "What does your ideal near future look like?", answer: "Partnership-centered, building a shared life." } },
+      ],
+    },
+    {
+      q: "When you imagine the right relationship, it mostly...",
+      options: [
+        { label: "Gives me a stable base to build from", scores: { builder: 2 }, wellness: { questionId: "values.commitment", dimension: "values", category: "commitment", questionText: "What role does a relationship play in your bigger plan?", answer: "A stable foundation to build the rest of life on." } },
+        { label: "Adds a partner in adventure, not an anchor", scores: { explorer: 2 }, wellness: { questionId: "values.commitment", dimension: "values", category: "commitment", questionText: "What role does a relationship play in your bigger plan?", answer: "A companion for adventure, freedom preserved." } },
+        { label: "Grows slowly alongside everything else", scores: { grower: 2 }, wellness: { questionId: "values.commitment", dimension: "values", category: "commitment", questionText: "What role does a relationship play in your bigger plan?", answer: "Something that grows steadily alongside my life." } },
+        { label: "Becomes the thing I organize my life around", scores: { anchor: 2 }, wellness: { questionId: "values.commitment", dimension: "values", category: "commitment", questionText: "What role does a relationship play in your bigger plan?", answer: "The center, what I organize the rest around." } },
+      ],
+    },
+    {
+      q: "A free Saturday with no plans. You're most likely...",
+      options: [
+        { label: "Working on the home, the garden, a long project", scores: { builder: 2 } },
+        { label: "Booking a last-minute trip or saying yes to something new", scores: { explorer: 2 } },
+        { label: "Chipping away at a goal that's slowly taking shape", scores: { grower: 2 } },
+        { label: "Doing whatever it is, as long as it's together", scores: { anchor: 2 } },
+      ],
+    },
+    {
+      q: "The pace of change you're most comfortable with is...",
+      options: [
+        { label: "Slow and deliberate, I like things to last", scores: { builder: 2, grower: 1 }, wellness: { questionId: "lifestyle.pace", dimension: "lifestyle", category: "pace", questionText: "What pace of life suits you best?", answer: "Slow and deliberate, durability over novelty." } },
+        { label: "Fast and varied, I get restless when things settle", scores: { explorer: 2 }, wellness: { questionId: "lifestyle.pace", dimension: "lifestyle", category: "pace", questionText: "What pace of life suits you best?", answer: "Fast and varied, novelty keeps me alive." } },
+        { label: "Measured, steady forward motion", scores: { grower: 2 }, wellness: { questionId: "lifestyle.pace", dimension: "lifestyle", category: "pace", questionText: "What pace of life suits you best?", answer: "Measured, consistent forward motion." } },
+        { label: "Whatever keeps the two of us in step", scores: { anchor: 2 }, wellness: { questionId: "lifestyle.pace", dimension: "lifestyle", category: "pace", questionText: "What pace of life suits you best?", answer: "Synced to a partner, moving in step." } },
+      ],
+    },
+    {
+      q: "A dealbreaker for you would be a partner who...",
+      options: [
+        { label: "Never wants to put down roots", scores: { builder: 2 } },
+        { label: "Needs everything mapped years ahead", scores: { explorer: 2 } },
+        { label: "Wants it all fast or not at all", scores: { grower: 2 } },
+        { label: "Keeps the relationship at the edge of their life", scores: { anchor: 2 } },
+      ],
+    },
+  ],
+  archetypes: {
+    builder: {
+      name: "The Builder",
+      emoji: "🏡",
+      tagline: "You're building something to last. Roots, not options.",
+      insight: "You're drawn to permanence, a home, a rhythm, a base you can count on, which makes you a steadying force for the right person. The friction shows up with partners who read stability as confinement. Knowing your direction early lets you screen for someone who wants to build, not just visit.",
+      nextStep: "Name one concrete thing you're building toward. Direction is attractive when it's specific.",
+      cta: { label: "See your readiness picture", href: "/your-mirror" },
+      color: "141 55% 45%",
+    },
+    explorer: {
+      name: "The Explorer",
+      emoji: "🧗",
+      tagline: "You're built for motion. The right partner is a co-adventurer.",
+      insight: "Freedom and novelty keep you alive, so you thrive with someone who travels light alongside you rather than anchoring you down. The risk is reading every plan as a cage when sometimes it's just care. Your best matches want a shared adventure with enough structure that neither of you drifts.",
+      nextStep: "Get honest about the one form of commitment that wouldn't feel like a cage. That's your real green light.",
+      cta: { label: "Map your full Connection Style", href: "/connection-style" },
+      color: "207 70% 50%",
+    },
+    grower: {
+      name: "The Grower",
+      emoji: "🌱",
+      tagline: "You move steady. Love is something you compound over time.",
+      insight: "You trust gradual, you'd rather deepen than rush, which makes you a safe bet for someone wary of intensity that burns out. Your edge is partners who want fast certainty. When you find someone content to grow in step, you build the kind of thing that quietly outlasts the flashy versions.",
+      nextStep: "Tell a new connection the pace that actually works for you. The right person will exhale, not pull back.",
+      cta: { label: "See your readiness picture", href: "/your-mirror" },
+      color: "43 70% 55%",
+    },
+    anchor: {
+      name: "The Anchor",
+      emoji: "⚓",
+      tagline: "Partnership is the center, not a side plot.",
+      insight: "You organize your life around the people you love, which makes you devoted and present in a way that's increasingly rare. The caution is losing your own edges inside a relationship. Your strongest match wants the same closeness back, so the togetherness feels chosen by both, never carried by one.",
+      nextStep: "Keep one thing that's fully yours, even at your most partnered. It makes the closeness sustainable.",
+      cta: { label: "Map your full Connection Style", href: "/connection-style" },
+      color: "326 80% 62%",
+    },
+  },
+};
+
 export const QUIZZES: Quiz[] = [
   LOVE_PACE,
   CONFLICT_INSTINCT,
@@ -796,6 +995,8 @@ export const QUIZZES: Quiz[] = [
   ATTACHMENT_STYLE,
   POST_DATE_INSTINCT,
   MESSAGE_STAMINA,
+  LOVE_LANGUAGE,
+  FUTURE_VISION,
 ];
 
 /**

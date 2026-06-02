@@ -38,6 +38,12 @@ export interface ReadinessBreakdown {
   curiosity: number;
   film: number;
   reading: number;
+  podcasts: number;
+  gaming: number;
+  places: number;
+  screenRhythm: number;
+  preferences: number;
+  voice: number;
 }
 
 /** Raw counts pulled from the database for each contributor. */
@@ -124,6 +130,44 @@ export interface SignalCounts {
    * derived item count is used here, never the raw shelves or ratings.
    */
   readingItems: number;
+  /**
+   * Podcast titles shared in the most recent podcast paste (the shows they keep
+   * subscribed to), pulled from an OPML export or typed by hand. Only the derived
+   * item count is used here, never the raw feed history.
+   */
+  podcastItems: number;
+  /**
+   * Games shared in the most recent gaming paste (the games they keep returning
+   * to), pulled from a Steam list or typed by hand. Only the derived item count
+   * is used here, never the raw playtime or library.
+   */
+  gamingItems: number;
+  /**
+   * Place categories shared in the most recent places paste (where life actually
+   * happens: gym, trails, cafes, travel), pulled from a Maps Timeline summary or
+   * typed by hand. Only the derived category count is used here, never any
+   * location, address, or coordinate.
+   */
+  placeItems: number;
+  /**
+   * Screen-rhythm categories shared in the most recent screen-time paste (how the
+   * day splits across kinds of apps), typed by hand or summarized from a Screen
+   * Time export. Only the derived category count is used here, never any app,
+   * message, or usage record.
+   */
+  screenRhythmItems: number;
+  /**
+   * Rapid-fire preferences logged in the most recent This or That round (the
+   * small instinctive choices that shape day-to-day fit). Only the derived count
+   * of choices is used here, never tied back to any sensitive attribute.
+   */
+  preferenceItems: number;
+  /**
+   * Whether the user has recorded a spoken voice intro. Binary in practice: only
+   * derived acoustic metrics (length, energy, dynamics, pace) are ever stored,
+   * computed in the moment; the recording itself is never uploaded or kept.
+   */
+  voiceRecorded: number;
 }
 
 /**
@@ -918,6 +962,247 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "Your individual answer choices, which are never sold or shared",
         "Anything beyond the quizzes you choose to play",
         "Your raw answers are never sent to any AI prompt, only the derived result moves your readiness",
+      ],
+    },
+  },
+  {
+    id: "podcasts",
+    countKey: "podcastItems",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "podcasts-paste",
+      summaryPath: ["counts", "items"],
+      capture: "paste",
+    },
+    label: "Podcast lineup",
+    dimensions: [
+      "intellectual interests",
+      "humour and curiosity",
+      "what holds their attention",
+    ],
+    weight: 0.05,
+    confidence: 0.5,
+    normalize: { kind: "count", denominator: 6 },
+    describe: (c) =>
+      `Has shared enough of their podcast lineup to cover ${c}% of that lane, a read on the ideas and voices they keep coming back to that sharpens how we match on curiosity.`,
+    action: {
+      label: "Share your podcasts",
+      detail:
+        "Paste the shows you keep subscribed to, or your OPML export. We read the lineup, never the feed.",
+      href: "/connections/add/podcasts",
+    },
+    trust: {
+      origin: "The podcast list you paste in, or the OPML export you drop in.",
+      noun: "item",
+      seen: [
+        "The list of shows you paste in, one per line",
+        "A simple count of how many you gave us, used to fill the lane",
+      ],
+      neverTouched: [
+        "Anything you do not paste in",
+        "OAuth access to Spotify, Apple Podcasts, or any account",
+        "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+      ],
+    },
+  },
+  {
+    id: "gaming",
+    countKey: "gamingItems",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "gaming-paste",
+      summaryPath: ["counts", "items"],
+      capture: "paste",
+    },
+    label: "Gaming signature",
+    dimensions: [
+      "how they unwind",
+      "play style",
+      "shared-leisure fit",
+    ],
+    weight: 0.05,
+    confidence: 0.45,
+    normalize: { kind: "count", denominator: 6 },
+    describe: (c) =>
+      `Has shared enough of their gaming signature to cover ${c}% of that lane, a read on how they unwind and play that helps us match on shared-leisure fit.`,
+    action: {
+      label: "Share your games",
+      detail:
+        "Paste the games you keep returning to, or your Steam list. We read the overlap, never the playtime.",
+      href: "/connections/add/gaming",
+    },
+    trust: {
+      origin: "The games list you paste in, or the Steam list you drop in.",
+      noun: "item",
+      seen: [
+        "The list of games you paste in, one per line",
+        "A simple count of how many you gave us, used to fill the lane",
+      ],
+      neverTouched: [
+        "Anything you do not paste in",
+        "OAuth access to Steam, Xbox, PlayStation, or any account",
+        "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+      ],
+    },
+  },
+  {
+    id: "places",
+    countKey: "placeItems",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "places-paste",
+      summaryPath: ["counts", "items"],
+      capture: "paste",
+    },
+    label: "Places rhythm",
+    dimensions: [
+      "where life actually happens",
+      "lifestyle and pace",
+      "shared-activity fit",
+    ],
+    weight: 0.05,
+    confidence: 0.5,
+    normalize: { kind: "count", denominator: 6 },
+    describe: (c) =>
+      `Has shared enough of where life happens to cover ${c}% of that lane, a read on the kinds of places they spend time that helps us match on real shared-activity fit.`,
+    action: {
+      label: "Share your places rhythm",
+      detail:
+        "Paste the kinds of places you spend time (gym, trails, cafes, travel), or your Maps Timeline category summary. We read the categories, never a single location.",
+      href: "/connections/add/places",
+    },
+    trust: {
+      origin:
+        "The place categories you paste in, or the Maps Timeline summary you drop in.",
+      noun: "item",
+      seen: [
+        "The kinds of places you paste in, one per line",
+        "A simple count of how many you gave us, used to fill the lane",
+      ],
+      neverTouched: [
+        "Any location, address, or coordinate, ever",
+        "OAuth access to Google Maps, your timeline, or any account",
+        "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+      ],
+    },
+  },
+  {
+    id: "screenRhythm",
+    countKey: "screenRhythmItems",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "screen-rhythm-paste",
+      summaryPath: ["counts", "items"],
+      capture: "paste",
+    },
+    label: "Screen rhythm",
+    dimensions: [
+      "digital habits",
+      "attention and rest",
+      "daily rhythm",
+    ],
+    weight: 0.04,
+    confidence: 0.45,
+    normalize: { kind: "count", denominator: 5 },
+    describe: (c) =>
+      `Has shared enough of their screen rhythm to cover ${c}% of that lane, a read on how attention and rest split across the day that helps pace a real connection.`,
+    action: {
+      label: "Share your screen rhythm",
+      detail:
+        "Paste how your day splits across kinds of apps (social, reading, work, rest), or your Screen Time category summary. We read the balance, never an app or message.",
+      href: "/connections/add/screen-rhythm",
+    },
+    trust: {
+      origin:
+        "The screen-time categories you paste in, or the Screen Time summary you drop in.",
+      noun: "item",
+      seen: [
+        "The kinds of app time you paste in, one per line",
+        "A simple count of how many you gave us, used to fill the lane",
+      ],
+      neverTouched: [
+        "Any specific app, message, notification, or usage record",
+        "OAuth or device access to your phone or any account",
+        "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+      ],
+    },
+  },
+  {
+    id: "preferences",
+    countKey: "preferenceItems",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "preferences-paste",
+      summaryPath: ["counts", "items"],
+      capture: "paste",
+    },
+    label: "Rapid-fire preferences",
+    dimensions: [
+      "instinctive preferences",
+      "taste and temperament",
+      "day-to-day fit",
+    ],
+    weight: 0.06,
+    confidence: 0.5,
+    normalize: { kind: "count", denominator: 12 },
+    describe: (c) =>
+      `Has played enough rapid-fire rounds to cover ${c}% of that lane, so we can read the small instinctive preferences that quietly shape day-to-day fit.`,
+    action: {
+      label: "Play This or That",
+      detail:
+        "Tap through quick either-or choices. Each round adds a read on the instincts that shape day-to-day fit.",
+      href: "/this-or-that",
+    },
+    trust: {
+      origin: "The quick either-or choices you tap through in This or That.",
+      noun: "choice",
+      seen: [
+        "Which side you picked on each pair",
+        "A simple count of how many you answered, used to fill the lane",
+      ],
+      neverTouched: [
+        "Anything you do not tap through",
+        "Your choices are never tied back to any sensitive attribute or sold",
+        "Your raw choices are never sent to any AI prompt, only the count moves your readiness",
+      ],
+    },
+  },
+  {
+    id: "voice",
+    countKey: "voiceRecorded",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "voice-intro",
+      summaryPath: ["counts", "items"],
+    },
+    label: "Voice intro",
+    dimensions: [
+      "how they actually sound",
+      "warmth and energy",
+      "presence in person",
+    ],
+    weight: 0.05,
+    confidence: 0.6,
+    normalize: { kind: "binary" },
+    describe: (c) =>
+      `Has recorded a spoken intro covering ${c}% of that lane, so we can read the warmth, energy, and pace of how they actually come across, not just how they write.`,
+    action: {
+      label: "Record a voice intro",
+      detail:
+        "Record a short spoken intro. We read the warmth, energy, and pace in the moment, never the recording itself.",
+      href: "/voice-intro",
+    },
+    trust: {
+      origin: "A short voice intro you record in the browser.",
+      noun: "recording",
+      seen: [
+        "Derived acoustic metrics only: how long you spoke, your energy, your dynamics, and your pace",
+        "A simple flag that you recorded an intro, used to fill the lane",
+      ],
+      neverTouched: [
+        "The recording itself, which is analysed in the moment and never uploaded or stored",
+        "Any transcript or the words you said",
+        "Your raw audio is never sent to any AI prompt, only the derived metrics move your readiness",
       ],
     },
   },
