@@ -13,6 +13,7 @@ import {
   Download,
   Heart,
   Instagram,
+  Mail,
   MapPin,
   MessageCircle,
   Share2,
@@ -180,6 +181,7 @@ interface BreakdownRow {
     | "postDate"
     | "wins"
     | "calendar"
+    | "receipts"
     | "audits"
     | "coaching"
     | "instagram"
@@ -247,6 +249,14 @@ const BREAKDOWN_ROWS: BreakdownRow[] = [
     href: "/imports",
     cta: "Paste your calendar",
     icon: CalendarDays,
+  },
+  {
+    key: "receipts",
+    label: "Receipts inbox",
+    blurb: "Forward order, booking, and ticket emails so we can read your real-world rhythm. Sender and subject only, never the body.",
+    href: "/receipts",
+    cta: "Forward a few receipts",
+    icon: Mail,
   },
   {
     key: "audits",
@@ -402,6 +412,7 @@ export default function Matching() {
     taste: 0,
     lifestyle: 0,
     quizzes: 0,
+    receipts: 0,
   };
   const nextActions = state.data?.nextActions ?? [];
   const history = state.data?.history ?? [];

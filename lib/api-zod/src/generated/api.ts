@@ -516,6 +516,93 @@ export const CreateSourcePasteBody = zod.object({
 
 
 /**
+ * Returns the user's private receipts forwarding address, the running count
+of confirmations captured, and a small, capped list of the most recent
+receipts (sender, subject, and time only). The body of any email is never
+stored or returned. The count feeds the `receipts` lane of the living
+signal registry, so it nudges Match Readiness, the Mirror, and matching
+reasoning. Anon-safe: with no signed-in user, the inbox is scoped to the
+anonymous claim token cookie so it can be merged into the account later.
+When the inbox has not been activated yet, `handle` and `address` are
+null and the count is zero.
+
+ * @summary Read the user's real-life receipts inbox
+ */
+export const GetReceiptsInboxHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetReceiptsInboxResponse = zod.object({
+  "handle": zod.string().nullable().describe('The user\'s forwarding handle, or null before activation.'),
+  "address": zod.string().nullable().describe('The full forwarding address, or null before activation.'),
+  "count": zod.number().describe('Running count of confirmations captured. Drives the receipts lane.'),
+  "recent": zod.array(zod.object({
+  "sender": zod.string().nullish().describe('The sender shown on the confirmation, if known. Never the body.'),
+  "subject": zod.string().describe('The subject line of the confirmation. Never the body.'),
+  "receivedAt": zod.coerce.date().describe('When the confirmation was received.')
+})).describe('Capped, most-recent confirmations (headers only, never bodies).')
+})
+
+
+/**
+ * Manually adds one or more real-life confirmations by their headers only
+(subject, optional sender, optional time). This is the easy import path
+that needs no email setup. The entries accumulate into the user's single
+receipts row: the running count drives the `receipts` signal lane, and a
+capped, most-recent list is kept for the user's own review. The body of
+any email is never accepted, stored, or sent to any prompt. Activates the
+inbox (mints a forwarding handle) on first use if needed. Anon-safe via
+the anonymous claim token cookie.
+
+ * @summary Add receipts manually by pasting their headers
+ */
+export const AddReceiptsHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const addReceiptsBodyEntriesItemSubjectMax = 300;
+
+export const addReceiptsBodyEntriesItemSenderMax = 200;
+
+export const addReceiptsBodyEntriesMax = 50;
+
+
+
+export const AddReceiptsBody = zod.object({
+  "entries": zod.array(zod.object({
+  "subject": zod.string().min(1).max(addReceiptsBodyEntriesItemSubjectMax).describe('The subject line of the confirmation. The body is never accepted.'),
+  "sender": zod.string().max(addReceiptsBodyEntriesItemSenderMax).optional().describe('Optional sender shown on the confirmation.'),
+  "receivedAt": zod.coerce.date().optional().describe('Optional time the confirmation was received; defaults to now.')
+})).min(1).max(addReceiptsBodyEntriesMax)
+})
+
+
+/**
+ * Mints a private forwarding handle for the user if they do not already
+have one and returns the inbox state including the full forwarding
+address. Idempotent: calling it again returns the existing handle rather
+than minting a new one. Anon-safe via the anonymous claim token cookie so
+the inbox can be merged into the account on login.
+
+ * @summary Activate the user's receipts forwarding inbox
+ */
+export const ActivateReceiptsInboxHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const ActivateReceiptsInboxResponse = zod.object({
+  "handle": zod.string().nullable().describe('The user\'s forwarding handle, or null before activation.'),
+  "address": zod.string().nullable().describe('The full forwarding address, or null before activation.'),
+  "count": zod.number().describe('Running count of confirmations captured. Drives the receipts lane.'),
+  "recent": zod.array(zod.object({
+  "sender": zod.string().nullish().describe('The sender shown on the confirmation, if known. Never the body.'),
+  "subject": zod.string().describe('The subject line of the confirmation. Never the body.'),
+  "receivedAt": zod.coerce.date().describe('When the confirmation was received.')
+})).describe('Capped, most-recent confirmations (headers only, never bodies).')
+})
+
+
+/**
  * Captures a completed quiz as derived signal feeding Match Readiness, the
 Mirror, and matching reasoning through the living signal registry's
 `quizzes` lane. Persists only the derived result (which quiz, which
@@ -4229,6 +4316,9 @@ export const getMatchingStateResponseReadinessBreakdownLifestyleMax = 100;
 export const getMatchingStateResponseReadinessBreakdownQuizzesMin = 0;
 export const getMatchingStateResponseReadinessBreakdownQuizzesMax = 100;
 
+export const getMatchingStateResponseReadinessBreakdownReceiptsMin = 0;
+export const getMatchingStateResponseReadinessBreakdownReceiptsMax = 100;
+
 export const getMatchingStateResponseReadinessThresholdMin = 0;
 export const getMatchingStateResponseReadinessThresholdMax = 100;
 
@@ -4291,7 +4381,8 @@ export const GetMatchingStateResponse = zod.object({
   "lifePulse": zod.number().min(getMatchingStateResponseReadinessBreakdownLifePulseMin).max(getMatchingStateResponseReadinessBreakdownLifePulseMax),
   "taste": zod.number().min(getMatchingStateResponseReadinessBreakdownTasteMin).max(getMatchingStateResponseReadinessBreakdownTasteMax),
   "lifestyle": zod.number().min(getMatchingStateResponseReadinessBreakdownLifestyleMin).max(getMatchingStateResponseReadinessBreakdownLifestyleMax),
-  "quizzes": zod.number().min(getMatchingStateResponseReadinessBreakdownQuizzesMin).max(getMatchingStateResponseReadinessBreakdownQuizzesMax)
+  "quizzes": zod.number().min(getMatchingStateResponseReadinessBreakdownQuizzesMin).max(getMatchingStateResponseReadinessBreakdownQuizzesMax),
+  "receipts": zod.number().min(getMatchingStateResponseReadinessBreakdownReceiptsMin).max(getMatchingStateResponseReadinessBreakdownReceiptsMax)
 })
 }),
   "eligible": zod.boolean().describe('True when readiness.score is at or above readinessThreshold. The client uses this to gate the pool opt-in switch.'),

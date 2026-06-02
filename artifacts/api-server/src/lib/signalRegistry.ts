@@ -32,6 +32,7 @@ export interface ReadinessBreakdown {
   taste: number;
   lifestyle: number;
   quizzes: number;
+  receipts: number;
 }
 
 /** Raw counts pulled from the database for each contributor. */
@@ -80,6 +81,13 @@ export interface SignalCounts {
    * and retakes of the same quiz are deduped so the count is distinct quizzes.
    */
   quizzesCompleted: number;
+  /**
+   * Real-life confirmations the user has forwarded to their private receipts
+   * address or pasted in (dinners, trips, shows, classes), accumulated in one
+   * receipts row. Only the running item count is read here, never the sender,
+   * subject, or any email body.
+   */
+  receiptItems: number;
 }
 
 /**
@@ -388,6 +396,44 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "Anything you do not paste in",
         "OAuth access to Google or Apple Calendar",
         "Any ability to create, edit, or delete events on your calendar",
+      ],
+    },
+  },
+  {
+    id: "receipts",
+    countKey: "receiptItems",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "receipts",
+      summaryPath: ["counts", "items"],
+    },
+    label: "Real-life receipts",
+    dimensions: [
+      "how full their life is outside dating",
+      "the kinds of things they actually show up for",
+    ],
+    weight: 0.1,
+    confidence: 0.5,
+    normalize: { kind: "count", denominator: 12 },
+    describe: (c) =>
+      `Has forwarded enough confirmations to cover ${c}% of that lane, so we can read the rhythm of what they actually do, the dinners, trips, shows, and classes, never the contents of any email.`,
+    action: {
+      label: "Forward your receipts",
+      detail:
+        "Send booking and confirmation emails to your private receipts address, or paste them in. We read the sender, subject, and time, never the body.",
+      href: "/receipts",
+    },
+    trust: {
+      origin:
+        "Confirmation emails you forward to your private receipts address, or paste in yourself.",
+      noun: "receipt",
+      seen: [
+        "The sender, subject line, and time of each confirmation, used to read your real-life rhythm",
+      ],
+      neverTouched: [
+        "The body of any email",
+        "Anything you do not forward or paste in",
+        "Your inbox itself, we never connect to your email account",
       ],
     },
   },

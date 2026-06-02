@@ -77,4 +77,9 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   quizzes: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  receipts: number;
 }

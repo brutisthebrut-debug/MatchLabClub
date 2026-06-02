@@ -22,6 +22,7 @@ import type {
 import type {
   AccountExport,
   AccountSummary,
+  AddReceiptsInput,
   AiContentConsentState,
   AiEnhanceInput,
   AiError,
@@ -157,6 +158,7 @@ import type {
   PostDateNotePatch,
   ProfileRewrite,
   PurgeTrustSourceResult,
+  ReceiptsInbox,
   RedeemAnonymousClaimHandoffInput,
   RefreshGeoipParams,
   RegisterPushTokenInput,
@@ -1387,6 +1389,249 @@ export const useCreateSourcePaste = <TError = ErrorType<AuthErrorEnvelope>,
         TContext
       > => {
       return useMutation(getCreateSourcePasteMutationOptions(options));
+    }
+
+export const getGetReceiptsInboxUrl = () => {
+
+
+
+
+  return `/api/me/receipts`
+}
+
+/**
+ * Returns the user's private receipts forwarding address, the running count
+of confirmations captured, and a small, capped list of the most recent
+receipts (sender, subject, and time only). The body of any email is never
+stored or returned. The count feeds the `receipts` lane of the living
+signal registry, so it nudges Match Readiness, the Mirror, and matching
+reasoning. Anon-safe: with no signed-in user, the inbox is scoped to the
+anonymous claim token cookie so it can be merged into the account later.
+When the inbox has not been activated yet, `handle` and `address` are
+null and the count is zero.
+
+ * @summary Read the user's real-life receipts inbox
+ */
+export const getReceiptsInbox = async ( options?: RequestInit): Promise<ReceiptsInbox> => {
+
+  return customFetch<ReceiptsInbox>(getGetReceiptsInboxUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetReceiptsInboxQueryKey = () => {
+    return [
+    `/api/me/receipts`
+    ] as const;
+    }
+
+
+export const getGetReceiptsInboxQueryOptions = <TData = Awaited<ReturnType<typeof getReceiptsInbox>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReceiptsInbox>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetReceiptsInboxQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getReceiptsInbox>>> = ({ signal }) => getReceiptsInbox({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getReceiptsInbox>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetReceiptsInboxQueryResult = NonNullable<Awaited<ReturnType<typeof getReceiptsInbox>>>
+export type GetReceiptsInboxQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Read the user's real-life receipts inbox
+ */
+
+export function useGetReceiptsInbox<TData = Awaited<ReturnType<typeof getReceiptsInbox>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReceiptsInbox>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetReceiptsInboxQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAddReceiptsUrl = () => {
+
+
+
+
+  return `/api/me/receipts`
+}
+
+/**
+ * Manually adds one or more real-life confirmations by their headers only
+(subject, optional sender, optional time). This is the easy import path
+that needs no email setup. The entries accumulate into the user's single
+receipts row: the running count drives the `receipts` signal lane, and a
+capped, most-recent list is kept for the user's own review. The body of
+any email is never accepted, stored, or sent to any prompt. Activates the
+inbox (mints a forwarding handle) on first use if needed. Anon-safe via
+the anonymous claim token cookie.
+
+ * @summary Add receipts manually by pasting their headers
+ */
+export const addReceipts = async (addReceiptsInput: AddReceiptsInput, options?: RequestInit): Promise<ReceiptsInbox> => {
+
+  return customFetch<ReceiptsInbox>(getAddReceiptsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      addReceiptsInput,)
+  }
+);}
+
+
+
+
+export const getAddReceiptsMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addReceipts>>, TError,{data: BodyType<AddReceiptsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addReceipts>>, TError,{data: BodyType<AddReceiptsInput>}, TContext> => {
+
+const mutationKey = ['addReceipts'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addReceipts>>, {data: BodyType<AddReceiptsInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  addReceipts(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddReceiptsMutationResult = NonNullable<Awaited<ReturnType<typeof addReceipts>>>
+    export type AddReceiptsMutationBody = BodyType<AddReceiptsInput>
+    export type AddReceiptsMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Add receipts manually by pasting their headers
+ */
+export const useAddReceipts = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addReceipts>>, TError,{data: BodyType<AddReceiptsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addReceipts>>,
+        TError,
+        {data: BodyType<AddReceiptsInput>},
+        TContext
+      > => {
+      return useMutation(getAddReceiptsMutationOptions(options));
+    }
+
+export const getActivateReceiptsInboxUrl = () => {
+
+
+
+
+  return `/api/me/receipts/activate`
+}
+
+/**
+ * Mints a private forwarding handle for the user if they do not already
+have one and returns the inbox state including the full forwarding
+address. Idempotent: calling it again returns the existing handle rather
+than minting a new one. Anon-safe via the anonymous claim token cookie so
+the inbox can be merged into the account on login.
+
+ * @summary Activate the user's receipts forwarding inbox
+ */
+export const activateReceiptsInbox = async ( options?: RequestInit): Promise<ReceiptsInbox> => {
+
+  return customFetch<ReceiptsInbox>(getActivateReceiptsInboxUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getActivateReceiptsInboxMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activateReceiptsInbox>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof activateReceiptsInbox>>, TError,void, TContext> => {
+
+const mutationKey = ['activateReceiptsInbox'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof activateReceiptsInbox>>, void> = () => {
+
+
+          return  activateReceiptsInbox(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActivateReceiptsInboxMutationResult = NonNullable<Awaited<ReturnType<typeof activateReceiptsInbox>>>
+
+    export type ActivateReceiptsInboxMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Activate the user's receipts forwarding inbox
+ */
+export const useActivateReceiptsInbox = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activateReceiptsInbox>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof activateReceiptsInbox>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getActivateReceiptsInboxMutationOptions(options));
     }
 
 export const getCreateQuizResultUrl = () => {

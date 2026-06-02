@@ -2209,6 +2209,59 @@ export interface CreateSourcePasteResult {
   uploadedAt: string;
 }
 
+export interface ReceiptEntry {
+  /**
+     * The sender shown on the confirmation, if known. Never the body.
+     * @nullable
+     */
+  sender?: string | null;
+  /** The subject line of the confirmation. Never the body. */
+  subject: string;
+  /** When the confirmation was received. */
+  receivedAt: string;
+}
+
+export interface ReceiptInputEntry {
+  /**
+     * The subject line of the confirmation. The body is never accepted.
+     * @minLength 1
+     * @maxLength 300
+     */
+  subject: string;
+  /**
+     * Optional sender shown on the confirmation.
+     * @maxLength 200
+     */
+  sender?: string;
+  /** Optional time the confirmation was received; defaults to now. */
+  receivedAt?: string;
+}
+
+export interface AddReceiptsInput {
+  /**
+     * @minItems 1
+     * @maxItems 50
+     */
+  entries: ReceiptInputEntry[];
+}
+
+export interface ReceiptsInbox {
+  /**
+     * The user's forwarding handle, or null before activation.
+     * @nullable
+     */
+  handle: string | null;
+  /**
+     * The full forwarding address, or null before activation.
+     * @nullable
+     */
+  address: string | null;
+  /** Running count of confirmations captured. Drives the receipts lane. */
+  count: number;
+  /** Capped, most-recent confirmations (headers only, never bodies). */
+  recent: ReceiptEntry[];
+}
+
 export interface CreateQuizResultInput {
   /**
      * The quiz's stable slug, e.g. `attachment-style`.
@@ -2908,6 +2961,11 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   quizzes: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  receipts: number;
 }
 
 export interface MatchReadiness {

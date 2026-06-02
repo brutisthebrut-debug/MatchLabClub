@@ -43,6 +43,25 @@ How to refresh:
 
 The updater fetches current GeoLite2 CSV files directly from MaxMind, converts them to geoip-lite's binary format, and writes them into `artifacts/api-server/node_modules/geoip-lite/data/`. No runtime behavior or email format changes — only the location lookups become fresher.
 
+## Receipts forwarding inbox (Beat 2)
+
+Each user gets a private address `{handle}@receipts.matchlab.club` (the `handle` is a 12-char hex token minted on activation). They forward real-life confirmation emails (reservations, tickets, bookings, class sign-ups) there, or paste the headers in by hand on `/receipts`. Both paths accumulate into ONE row in `imported_sources` (`source = "receipts"`), whose derived item count feeds the `receipts` lane of the signal registry and nudges Match Readiness. We read and store ONLY the sender, subject line, and timestamp. The email body is never accepted, stored, or sent to any prompt.
+
+Related env var:
+
+- `RECEIPTS_WEBHOOK_SECRET` — shared secret the inbound email provider must send in the `x-receipts-secret` header. Defaults to `receipts-${REPL_ID}` when unset, so it is safe to ship before configuring a provider.
+
+### Wiring up the inbound webhook (DNS + provider, the last mile)
+
+The webhook route `POST /api/receipts/inbound` is already live. To actually receive forwarded mail you need an inbound-email provider (for example SendGrid Inbound Parse, Mailgun Routes, or Postmark inbound) pointed at the domain:
+
+1. Add an MX record for `receipts.matchlab.club` pointing at your inbound-email provider's mail host (per their docs).
+2. In the provider, route all mail for `receipts.matchlab.club` to a webhook (the "inbound parse" feature). Set the destination URL to `https://<your-domain>/api/receipts/inbound`.
+3. Configure the provider to POST a JSON body with at least `to`, `from`, `subject`, and `date`. Any body/text/html fields the provider also posts are ignored by our schema and never read.
+4. Set `RECEIPTS_WEBHOOK_SECRET` in the API server environment and configure the provider to send the same value in the `x-receipts-secret` header on every call. Requests without a matching secret are rejected with 401.
+
+The endpoint resolves the recipient handle back to its owning row and accumulates one header-only entry. It returns `202` even for unknown handles, so it never leaks which handles exist. Until an MX record and provider are configured, the manual paste path on `/receipts` works standalone.
+
 ## Stripe checkout operations
 
 Checkout (`/checkout/:product`) renders a Stripe Payment Link button when the corresponding env var is set, and falls back to a "save your spot" purchase-interest form when it isn't. Wiring is in `artifacts/nldc/src/pages/Checkout.tsx` (`PaidForm` reads `import.meta.env[config.stripeEnvKey]`).

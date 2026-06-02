@@ -139,6 +139,28 @@ const LIVE: Connector[] = [
       "Fills the calendar rhythm lane of your Match Readiness. A fuller week reads as a fuller life outside dating.",
   },
   {
+    id: "receipts-inbox",
+    title: "Receipts inbox",
+    icon: Mail,
+    color: "hsl(326 100% 62%)",
+    blurb:
+      "Your own private address at receipts.matchlab.club. Forward Hinge renewals, OpenTable confirmations, DoorDash receipts, Airbnb bookings, or paste a few in by hand. We read the sender, subject, and timestamp. Never the body.",
+    returns:
+      "An honest read of your subscription stack, travel rhythm, and dating-app cadence that keeps building as you forward.",
+    access: [
+      "Subject lines and sender of mail you forward to us or paste in",
+      "The date and time each forwarded message arrived",
+    ],
+    excludes: [
+      "The body of any email, ever",
+      "Anything in your inbox you do not explicitly forward",
+      "OAuth access to your Gmail, Outlook, or any account",
+    ],
+    cta: { href: "/receipts", label: "Open Receipts inbox" },
+    readiness:
+      "Fills the receipts lane of your Match Readiness. A busier real-world rhythm reads as a fuller life outside dating.",
+  },
+  {
     id: "taste-paste",
     title: "Taste paste",
     icon: Sparkles,
@@ -204,26 +226,6 @@ const LIVE: Connector[] = [
 
 // What we're actively building, in roughly the order we'll ship.
 const BUILDING: Connector[] = [
-  {
-    id: "forwarding-inbox",
-    title: "Forwarding inbox",
-    icon: Mail,
-    color: "hsl(326 100% 62%)",
-    blurb:
-      "Your own private address at receipts.matchlab.club. You forward Hinge renewals, OpenTable confirmations, DoorDash receipts, Airbnb bookings. We read subject lines, senders, and timestamps. Never the body.",
-    returns:
-      "An honest read of your subscription stack, travel rhythm, and dating-app cadence, refreshed automatically.",
-    access: [
-      "Subject lines and sender domains of mail you forward to us",
-      "The date and time each forwarded message arrived",
-    ],
-    excludes: [
-      "The body of any email, ever",
-      "Anything in your inbox you do not explicitly forward",
-      "Access to your Gmail or Outlook account",
-    ],
-    comingNote: "Beat 2 of the connection roadmap. Mailbox infrastructure standing up next.",
-  },
   {
     id: "plaid",
     title: "Plaid spending signals",

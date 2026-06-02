@@ -433,6 +433,89 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/receipts:
+    get:
+      tags: [Auth]
+      operationId: getReceiptsInbox
+      summary: Read the user's real-life receipts inbox
+      description: |
+        Returns the user's private receipts forwarding address, the running count
+        of confirmations captured, and a small, capped list of the most recent
+        receipts (sender, subject, and time only). The body of any email is never
+        stored or returned. The count feeds the `receipts` lane of the living
+        signal registry, so it nudges Match Readiness, the Mirror, and matching
+        reasoning. Anon-safe: with no signed-in user, the inbox is scoped to the
+        anonymous claim token cookie so it can be merged into the account later.
+        When the inbox has not been activated yet, `handle` and `address` are
+        null and the count is zero.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The current receipts inbox state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiptsInbox'
+    post:
+      tags: [Auth]
+      operationId: addReceipts
+      summary: Add receipts manually by pasting their headers
+      description: |
+        Manually adds one or more real-life confirmations by their headers only
+        (subject, optional sender, optional time). This is the easy import path
+        that needs no email setup. The entries accumulate into the user's single
+        receipts row: the running count drives the `receipts` signal lane, and a
+        capped, most-recent list is kept for the user's own review. The body of
+        any email is never accepted, stored, or sent to any prompt. Activates the
+        inbox (mints a forwarding handle) on first use if needed. Anon-safe via
+        the anonymous claim token cookie.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddReceiptsInput'
+      responses:
+        '201':
+          description: Receipts captured; returns the updated inbox state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiptsInbox'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/receipts/activate:
+    post:
+      tags: [Auth]
+      operationId: activateReceiptsInbox
+      summary: Activate the user's receipts forwarding inbox
+      description: |
+        Mints a private forwarding handle for the user if they do not already
+        have one and returns the inbox state including the full forwarding
+        address. Idempotent: calling it again returns the existing handle rather
+        than minting a new one. Anon-safe via the anonymous claim token cookie so
+        the inbox can be merged into the account on login.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The activated receipts inbox state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiptsInbox'
+
   /me/quiz-result:
     post:
       tags: [Auth]
@@ -6751,6 +6834,69 @@ components:
           type: string
           format: date-time
 
+    ReceiptEntry:
+      type: object
+      required: [subject, receivedAt]
+      properties:
+        sender:
+          type: [string, 'null']
+          description: The sender shown on the confirmation, if known. Never the body.
+        subject:
+          type: string
+          description: The subject line of the confirmation. Never the body.
+        receivedAt:
+          type: string
+          format: date-time
+          description: When the confirmation was received.
+
+    ReceiptInputEntry:
+      type: object
+      required: [subject]
+      properties:
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 300
+          description: The subject line of the confirmation. The body is never accepted.
+        sender:
+          type: string
+          maxLength: 200
+          description: Optional sender shown on the confirmation.
+        receivedAt:
+          type: string
+          format: date-time
+          description: Optional time the confirmation was received; defaults to now.
+
+    AddReceiptsInput:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/ReceiptInputEntry'
+
+    ReceiptsInbox:
+      type: object
+      required: [handle, address, count, recent]
+      properties:
+        handle:
+          type: [string, 'null']
+          description: The user's forwarding handle, or null before activation.
+        address:
+          type: [string, 'null']
+          description: The full forwarding address, or null before activation.
+        count:
+          type: integer
+          description: Running count of confirmations captured. Drives the receipts lane.
+        recent:
+          type: array
+          description: Capped, most-recent confirmations (headers only, never bodies).
+          items:
+            $ref: '#/components/schemas/ReceiptEntry'
+
     CreateQuizResultInput:
       type: object
       required: [slug, archetypeKey, archetypeName]
@@ -7445,7 +7591,7 @@ components:
 
     MatchReadinessBreakdown:
       type: object
-      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse, taste, lifestyle, quizzes]
+      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse, taste, lifestyle, quizzes, receipts]
       properties:
         compass:
           type: integer
@@ -7500,6 +7646,10 @@ components:
           minimum: 0
           maximum: 100
         quizzes:
+          type: integer
+          minimum: 0
+          maximum: 100
+        receipts:
           type: integer
           minimum: 0
           maximum: 100
