@@ -32,6 +32,7 @@ import {
 import {
   applyDecay,
   describeActiveSignals,
+  proposeWeightAdjustments,
   SIGNAL_REGISTRY,
   type OutcomeSignal,
 } from "../lib/signalRegistry";
@@ -149,6 +150,62 @@ interface Readiness {
   weights: Record<string, number>;
   /** Shadow/applied re-weighting impact, present when mode is not "hold". */
   reweighting?: ReweightingObservation;
+}
+
+/**
+ * A derived, user-facing read of how the engine is learning from the caller's
+ * own logged date outcomes. Aggregate/derived only (scores + lane labels),
+ * never raw notes or PII. In shadow mode this is informational: the base score
+ * is what the user is served, observedScore is the would-be tilt.
+ */
+export interface ReadinessLearning {
+  observing: boolean;
+  headline: string;
+  totalDates: number;
+  baseScore: number;
+  observedScore: number;
+  delta: number;
+  leaningInto: string[];
+}
+
+/**
+ * Build the user-facing learning read from data already loaded by the state
+ * handler. `proposeWeightAdjustments` is deterministic and bounded; we only
+ * surface the labels of lanes nudged up and the derived score deltas, so no raw
+ * outcome ever leaves here.
+ */
+export function buildReadinessLearning(
+  controls: BrainControls,
+  readiness: Readiness,
+  outcome: OutcomeInsight,
+): ReadinessLearning {
+  const observing = controls.reweightingMode !== "hold";
+  const baseScore = readiness.reweighting?.baseScore ?? readiness.score;
+  const observedScore = readiness.reweighting?.tiltedScore ?? readiness.score;
+  const delta = readiness.reweighting?.delta ?? 0;
+  const outcomeSignal: OutcomeSignal = {
+    anotherDate: outcome.anotherDate,
+    noMore: outcome.noMore,
+    ghosted: outcome.ghosted,
+    unsure: outcome.unsure,
+  };
+  const adjustments = proposeWeightAdjustments(
+    outcomeSignal,
+    SIGNAL_REGISTRY,
+    effectiveBaseWeights(controls),
+  );
+  const leaningInto = adjustments
+    .filter((a) => a.adjustedWeight > a.defaultWeight + 1e-6)
+    .map((a) => a.label);
+  return {
+    observing,
+    headline: outcome.headline,
+    totalDates: outcome.totalDates,
+    baseScore,
+    observedScore,
+    delta,
+    leaningInto,
+  };
 }
 
 /**
@@ -403,7 +460,7 @@ router.get("/me/matching/state", async (req, res): Promise<void> => {
     return;
   }
   const userId = req.user.id;
-  const [prefs, membership, readiness, total, tier, outcomeInsight] =
+  const [prefs, membership, readiness, total, tier, outcomeInsight, controls] =
     await Promise.all([
       loadPreferences(userId),
       loadMembership(userId),
@@ -411,7 +468,13 @@ router.get("/me/matching/state", async (req, res): Promise<void> => {
       totalPoolCount(),
       loadUserTier(userId),
       computeOutcomeInsightForUser(userId),
+      loadBrainControls(),
     ]);
+  const readinessLearning = buildReadinessLearning(
+    controls,
+    readiness,
+    outcomeInsight,
+  );
   const cityHint = prefs?.cityHint ?? null;
   let density = total;
   if (cityHint && cityHint.trim().length > 0) {
@@ -471,6 +534,7 @@ router.get("/me/matching/state", async (req, res): Promise<void> => {
     history,
     outcomeInsight,
     activityStreak,
+    readinessLearning,
   });
 });
 

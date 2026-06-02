@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "ZDp6JAruIywqfbhiGrYXm"
@@ -30,3 +29,9 @@ id = "1Lh_kXEap3rCD7Ti0VU5h"
 uri = "file://artifacts/nldc/public/couples/couple-embrace.png"
 type = "image"
 title = "black couple embrace"
+
+[[outputs]]
+id = "XqoPP9RR8TihuRti-HmHN"
+uri = "file://MARKETING_HANDOFF.md"
+type = "text"
+title = "Marketing Handoff Brief"

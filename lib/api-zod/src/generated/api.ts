@@ -4412,6 +4412,14 @@ export const getMatchingStateResponseActivityStreakLongestMin = 0;
 export const getMatchingStateResponseActivityStreakDaysActiveLast14Min = 0;
 export const getMatchingStateResponseActivityStreakDaysActiveLast14Max = 14;
 
+export const getMatchingStateResponseReadinessLearningTotalDatesMin = 0;
+
+export const getMatchingStateResponseReadinessLearningBaseScoreMin = 0;
+export const getMatchingStateResponseReadinessLearningBaseScoreMax = 100;
+
+export const getMatchingStateResponseReadinessLearningObservedScoreMin = 0;
+export const getMatchingStateResponseReadinessLearningObservedScoreMax = 100;
+
 
 
 export const GetMatchingStateResponse = zod.object({
@@ -4481,7 +4489,16 @@ export const GetMatchingStateResponse = zod.object({
   "longest": zod.number().min(getMatchingStateResponseActivityStreakLongestMin).describe('Longest consecutive run of active days ever.'),
   "activeToday": zod.boolean().describe('True when the user has already fed a signal today (UTC).'),
   "daysActiveLast14": zod.number().min(getMatchingStateResponseActivityStreakDaysActiveLast14Min).max(getMatchingStateResponseActivityStreakDaysActiveLast14Max).describe('How many of the last 14 days (inclusive of today) had activity.')
-}).optional().describe('A gamification lens on how consistently the user feeds any signal. Purely derived from activity history; it never affects the readiness score.')
+}).optional().describe('A gamification lens on how consistently the user feeds any signal. Purely derived from activity history; it never affects the readiness score.'),
+  "readinessLearning": zod.object({
+  "observing": zod.boolean().describe('True when outcome-driven re-weighting is being computed (shadow or applied). False when held at day-one weights.'),
+  "headline": zod.string().describe('Spoken-English read of what the recent outcomes suggest.'),
+  "totalDates": zod.number().min(getMatchingStateResponseReadinessLearningTotalDatesMin).describe('How many date outcomes the user has logged.'),
+  "baseScore": zod.number().min(getMatchingStateResponseReadinessLearningBaseScoreMin).max(getMatchingStateResponseReadinessLearningBaseScoreMax).describe('The day-one readiness score, served to the user today.'),
+  "observedScore": zod.number().min(getMatchingStateResponseReadinessLearningObservedScoreMin).max(getMatchingStateResponseReadinessLearningObservedScoreMax).describe('The would-be readiness score if the outcome tilt were applied. Observational only in shadow mode.'),
+  "delta": zod.number().describe('observedScore minus baseScore. Can be negative.'),
+  "leaningInto": zod.array(zod.string()).describe('Plain-English labels of the signal lanes the tilt is leaning into, given the recent outcomes. Empty when nothing is being tilted yet.')
+}).optional().describe('A derived, user-facing read of how the engine is learning from the caller\'s own logged date outcomes. Carries only aggregate, derived numbers (scores and lane labels), never raw notes or any PII. When observing is true the engine is watching the would-be tilt without changing the score the user is served (shadow), so this is informational and does not claim the matching gate moved.')
 })
 
 

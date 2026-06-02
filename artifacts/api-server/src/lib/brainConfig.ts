@@ -151,7 +151,7 @@ export function defaultControls(): BrainControls {
     cohortMinSize: 3,
     anonDailyCap: DEFAULT_ANON_DAILY_CAP,
     freeDailyCap: DEFAULT_FREE_DAILY_CAP,
-    reweightingMode: "hold",
+    reweightingMode: "shadow",
     reweightingCohortPercent: 100,
     confidenceWeighting: "hold",
     decayMode: "hold",

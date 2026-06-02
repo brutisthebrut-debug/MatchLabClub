@@ -30,9 +30,9 @@ describe("brainConfig defaults", () => {
     expect(sum).toBeCloseTo(1, 6);
   });
 
-  it("default controls have hold mode, no overrides, all connectors on", () => {
+  it("default controls observe in shadow, no overrides, all connectors on", () => {
     const c = defaultControls();
-    expect(c.reweightingMode).toBe("hold");
+    expect(c.reweightingMode).toBe("shadow");
     expect(c.signalWeightOverrides).toBeNull();
     expect(c.connectorToggles).toEqual({});
     for (const entry of CONNECTOR_CATALOG) {

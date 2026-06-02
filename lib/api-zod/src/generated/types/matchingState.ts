@@ -12,6 +12,7 @@ import type { MatchPreferences } from './matchPreferences';
 import type { MatchReadiness } from './matchReadiness';
 import type { OutcomeInsight } from './outcomeInsight';
 import type { ReadinessHistoryPoint } from './readinessHistoryPoint';
+import type { ReadinessLearning } from './readinessLearning';
 import type { ReadinessNextAction } from './readinessNextAction';
 
 export interface MatchingState {
@@ -38,4 +39,5 @@ export interface MatchingState {
   history: ReadinessHistoryPoint[];
   outcomeInsight: OutcomeInsight;
   activityStreak?: ActivityStreak;
+  readinessLearning?: ReadinessLearning;
 }

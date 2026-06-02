@@ -257,6 +257,7 @@ export * from './postDateOutcome';
 export * from './profileRewrite';
 export * from './purgeTrustSourceResult';
 export * from './readinessHistoryPoint';
+export * from './readinessLearning';
 export * from './readinessNextAction';
 export * from './receiptEntry';
 export * from './receiptInputEntry';

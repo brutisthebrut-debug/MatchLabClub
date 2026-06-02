@@ -24,6 +24,7 @@ Two layers. The deterministic engine (`aiEngine.ts`) runs on every account by de
 - Optional env: `GEOIP_KEY_MISSING_ALERT_DAYS` — days since the last successful GeoIP refresh before the founder is emailed about a missing/expired MAXMIND_LICENSE_KEY (default 35)
 - Optional env: `GEOIP_ALERT_REBREACH_COOLDOWN_MINUTES` — min healthy minutes after the GeoIP key is restored before another missing-key alert may fire (default 15)
 - Optional env: `SENTRY_DSN_API` / `VITE_SENTRY_DSN` — Sentry DSNs (server / client). When unset, monitoring is a no-op. Setup steps in `OPERATIONS.md`.
+- Optional env: `VITE_GA_MEASUREMENT_ID` — Google Analytics 4 measurement id (e.g. `G-XXXXXXXXXX`). When unset, GA is a no-op (mirrors the Sentry env-gate): `initAnalytics()` does nothing, and `trackPageView`/`trackEvent` skip gtag while the first-party Activity beacons still fire. When set, gtag loads and a `page_view` is sent on every Wouter route change via `usePageTracking`. Wiring lives in `artifacts/nldc/src/lib/analytics.ts`.
 - Optional env: `MAXMIND_LICENSE_KEY` — for the monthly GeoIP dataset refresh used by sign-in location emails. Refresh steps in `OPERATIONS.md`.
 
 > Operational runbooks (Sentry setup, monthly GeoIP refresh, Stripe payment-link creation + webhook/reconciliation) live in `OPERATIONS.md`. The summaries below stay here; the step-by-step procedures moved there to keep this file scannable.

@@ -2,7 +2,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Sparkles, ArrowRight, Clock, Award, Compass, Search, Target, Zap, HeartHandshake, Eye, BookOpen, UserCircle, Rocket, Gift, Map } from "lucide-react";
+import { Sparkles, ArrowRight, Clock, Award, Compass, Search, Target, Zap, HeartHandshake, Eye, BookOpen, UserCircle, Rocket, Gift, Map, Anchor, Shield, MessagesSquare } from "lucide-react";
 import { QUIZZES, readQuizResults } from "@/lib/quizzes";
 import { useEffect, useState } from "react";
 import type { SavedQuizResult } from "@/lib/quizzes";
@@ -38,7 +38,13 @@ const QUIZ_ICONS: Record<string, any> = {
   "what-lights-you-up": Rocket,
   "love-language": Gift,
   "future-vision": Map,
+  "attachment-style": Anchor,
+  "boundary-blueprint": Shield,
+  "post-date-instinct": Eye,
+  "message-stamina": MessagesSquare,
 };
+
+const FEATURED_QUIZ_SLUG = "attachment-style";
 
 export default function Quizzes() {
   useMeta(
@@ -50,6 +56,10 @@ export default function Quizzes() {
   const shareRef = user?.id ? `user-${user.id}` : "quiz-catalog";
   const [saved, setSaved] = useState<SavedQuizResult[]>([]);
   useEffect(() => { setSaved(readQuizResults()); }, []);
+
+  const orderedQuizzes = [...QUIZZES].sort((a, b) =>
+    a.slug === FEATURED_QUIZ_SLUG ? -1 : b.slug === FEATURED_QUIZ_SLUG ? 1 : 0,
+  );
 
   return (
     <AppLayout>
@@ -98,21 +108,28 @@ export default function Quizzes() {
 
           {/* Quiz grid */}
           <div className="grid md:grid-cols-2 gap-6 mb-20">
-            {QUIZZES.map((q, i) => {
+            {orderedQuizzes.map((q, i) => {
               const result = saved.find(s => s.slug === q.slug);
               const Icon = QUIZ_ICONS[q.slug] || Compass;
+              const isFeatured = q.slug === FEATURED_QUIZ_SLUG;
               
               return (
                 <motion.div
                   {...fadeUp(0.15 + (i * 0.1))}
                   key={q.slug}
-                  className="group relative glass-strong border border-foreground/10 rounded-[2rem] p-8 overflow-hidden hover:border-[hsl(248_62%_52%/0.5)] transition-all hover:-translate-y-1 hover:shadow-xl"
+                  className={`group relative glass-strong border rounded-[2rem] p-8 overflow-hidden transition-all hover:-translate-y-1 hover:shadow-xl ${isFeatured ? "md:col-span-2 border-[hsl(248_62%_52%/0.45)] shadow-lg" : "border-foreground/10 hover:border-[hsl(248_62%_52%/0.5)]"}`}
                 >
                   <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 pointer-events-none">
                     <Icon className="w-32 h-32 text-foreground" />
                   </div>
                   
                   <Link href={`/quizzes/${q.slug}`} className="block relative z-10">
+                    {isFeatured && (
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[hsl(248_62%_52%/0.12)] border border-[hsl(248_62%_52%/0.3)] text-[11px] font-bold uppercase tracking-widest text-[hsl(248_62%_62%)] mb-4">
+                        <Sparkles className="w-3 h-3" />
+                        Start here
+                      </div>
+                    )}
                     <div className="flex items-start gap-5 mb-5">
                       <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] text-white shadow-lg shadow-[hsl(248_62%_52%/0.25)]">
                         <Icon className="w-6 h-6" />

@@ -2,8 +2,12 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import crypto from "crypto";
 import { eq } from "drizzle-orm";
 import { db, pool, postDateNotesTable } from "@workspace/db";
-import { saveBrainControls, resetBrainControls } from "../lib/brainConfig";
-import { computeReadiness } from "./matching";
+import {
+  saveBrainControls,
+  resetBrainControls,
+  defaultControls,
+} from "../lib/brainConfig";
+import { computeReadiness, buildReadinessLearning } from "./matching";
 
 // A user with several fizzling post-date outcomes: this both gives them real
 // postDate coverage AND tilts the outcome re-weighting toward in-person fit
@@ -75,5 +79,80 @@ describe("computeReadiness re-weighting", () => {
     expect(r.score).toBe(rw.baseScore);
     // The preview is still computed so the founder can see what would happen.
     expect(rw.tiltedScore).not.toBe(rw.baseScore);
+  });
+});
+
+describe("buildReadinessLearning privacy contract", () => {
+  // The raw debrief text a user might type. It must NEVER appear in the
+  // user-facing learning read; only derived counts, scores, and lane labels do.
+  const RAW_NOTE = "he ghosted me after I overshared about my ex at dinner";
+
+  const readiness = {
+    score: 58,
+    breakdown: {} as never,
+    weights: {},
+    reweighting: {
+      baseScore: 58,
+      tiltedScore: 63,
+      delta: 5,
+      inCohort: false,
+      applied: false,
+    },
+  };
+
+  const outcome = {
+    anotherDate: 0,
+    noMore: 3,
+    ghosted: 2,
+    unsure: 1,
+    totalDates: 6,
+    headline: "Most of your recent dates fizzled. Let us look at why.",
+  };
+
+  it("returns only derived fields and never leaks raw outcome text", () => {
+    const learning = buildReadinessLearning(
+      { ...defaultControls(), reweightingMode: "shadow" },
+      readiness,
+      outcome,
+    );
+
+    // Exact key allowlist: no extra fields can smuggle data out.
+    expect(Object.keys(learning).sort()).toEqual(
+      [
+        "baseScore",
+        "delta",
+        "headline",
+        "leaningInto",
+        "observedScore",
+        "observing",
+        "totalDates",
+      ].sort(),
+    );
+
+    // Derived scalars mirror the observation, nothing more.
+    expect(learning.observing).toBe(true);
+    expect(learning.baseScore).toBe(58);
+    expect(learning.observedScore).toBe(63);
+    expect(learning.delta).toBe(5);
+    expect(learning.totalDates).toBe(6);
+
+    // leaningInto carries registry lane LABELS, not raw content.
+    expect(Array.isArray(learning.leaningInto)).toBe(true);
+    expect(learning.leaningInto).not.toContain(RAW_NOTE);
+
+    // The whole serialized payload is free of any raw debrief text.
+    expect(JSON.stringify(learning)).not.toContain(RAW_NOTE);
+  });
+
+  it("hold mode reports observing=false", () => {
+    const learning = buildReadinessLearning(
+      { ...defaultControls(), reweightingMode: "hold" },
+      { ...readiness, reweighting: undefined },
+      outcome,
+    );
+    expect(learning.observing).toBe(false);
+    expect(learning.baseScore).toBe(58);
+    expect(learning.observedScore).toBe(58);
+    expect(learning.delta).toBe(0);
   });
 });

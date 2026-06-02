@@ -7842,6 +7842,52 @@ components:
           type: string
           description: One spoken-English read of the user's recent date outcomes.
 
+    ReadinessLearning:
+      type: object
+      description: >-
+        A derived, user-facing read of how the engine is learning from the
+        caller's own logged date outcomes. Carries only aggregate, derived
+        numbers (scores and lane labels), never raw notes or any PII. When
+        observing is true the engine is watching the would-be tilt without
+        changing the score the user is served (shadow), so this is informational
+        and does not claim the matching gate moved.
+      required: [observing, headline, totalDates, baseScore, observedScore, delta, leaningInto]
+      properties:
+        observing:
+          type: boolean
+          description: >-
+            True when outcome-driven re-weighting is being computed (shadow or
+            applied). False when held at day-one weights.
+        headline:
+          type: string
+          description: Spoken-English read of what the recent outcomes suggest.
+        totalDates:
+          type: integer
+          minimum: 0
+          description: How many date outcomes the user has logged.
+        baseScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: The day-one readiness score, served to the user today.
+        observedScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: >-
+            The would-be readiness score if the outcome tilt were applied.
+            Observational only in shadow mode.
+        delta:
+          type: integer
+          description: observedScore minus baseScore. Can be negative.
+        leaningInto:
+          type: array
+          description: >-
+            Plain-English labels of the signal lanes the tilt is leaning into,
+            given the recent outcomes. Empty when nothing is being tilted yet.
+          items:
+            type: string
+
     MatchingState:
       type: object
       required: [preferences, poolStatus, tier, readiness, eligible, readinessThreshold, cityDensity, totalPoolCount, nextActions, history, outcomeInsight]
@@ -7894,6 +7940,8 @@ components:
           $ref: '#/components/schemas/OutcomeInsight'
         activityStreak:
           $ref: '#/components/schemas/ActivityStreak'
+        readinessLearning:
+          $ref: '#/components/schemas/ReadinessLearning'
 
     UserJourneySummary:
       type: object

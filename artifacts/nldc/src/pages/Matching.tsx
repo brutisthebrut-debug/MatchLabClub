@@ -497,6 +497,7 @@ export default function Matching() {
   const nextActions = state.data?.nextActions ?? [];
   const history = state.data?.history ?? [];
   const outcomeInsight = state.data?.outcomeInsight ?? null;
+  const readinessLearning = state.data?.readinessLearning ?? null;
   const cityDensity = state.data?.cityDensity ?? 0;
   const totalPool = state.data?.totalPoolCount ?? 0;
   const tier = state.data?.tier ?? null;
@@ -1158,6 +1159,101 @@ export default function Matching() {
             </Card>
           </motion.div>
         )}
+
+        {/* What your dates are teaching your brain (outcome-driven learning) */}
+        {(() => {
+          const demo: NonNullable<typeof readinessLearning> = {
+            observing: true,
+            headline:
+              "Log a few date outcomes and the engine starts learning what actually fits you, then leans your readiness toward the signals that predict it.",
+            totalDates: 0,
+            baseScore: readinessScore,
+            observedScore: readinessScore,
+            delta: 0,
+            leaningInto: [],
+          };
+          const learning = readinessLearning ?? demo;
+          const hasData = learning.totalDates > 0 && learning.leaningInto.length > 0;
+          return (
+            <motion.div {...fadeUp(0.095)}>
+              <Card className="mb-6" data-testid="card-readiness-learning">
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <Brain className="w-5 h-5 text-[hsl(248_62%_52%)]" aria-hidden="true" />
+                    What your dates are teaching your brain
+                  </CardTitle>
+                  <CardDescription>{learning.headline}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {hasData ? (
+                    <>
+                      <div className="flex flex-wrap items-center gap-2 mb-4">
+                        <span className="text-sm text-muted-foreground">
+                          Leaning into
+                        </span>
+                        {learning.leaningInto.map((lane) => (
+                          <span
+                            key={lane}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-[hsl(248_62%_52%/0.25)] bg-[hsl(248_62%_52%/0.08)] px-3 py-1 text-xs font-semibold text-[hsl(248_62%_62%)]"
+                            data-testid={`learning-lane-${lane.toLowerCase().replace(/\s+/g, "-")}`}
+                          >
+                            <TrendingUp className="w-3 h-3" aria-hidden="true" />
+                            {lane}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="rounded-2xl border border-foreground/8 p-4 text-center">
+                          <div className="text-2xl font-bold">{learning.baseScore}</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Your score today
+                          </div>
+                        </div>
+                        <div className="rounded-2xl border border-foreground/8 p-4 text-center">
+                          <div className="text-2xl font-bold">{learning.observedScore}</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            If we acted on it
+                          </div>
+                        </div>
+                        <div className="rounded-2xl border border-foreground/8 p-4 text-center">
+                          <div className="text-2xl font-bold">
+                            {learning.delta > 0 ? "+" : ""}
+                            {learning.delta}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Difference
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-3">
+                        We are watching this in the background. Your score today
+                        is unchanged. When the pattern is strong enough, we use
+                        it to sharpen who we put in front of you.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-between gap-4 flex-wrap">
+                      <p className="text-sm text-muted-foreground max-w-md">
+                        Nothing logged yet. Each date outcome you record teaches
+                        the engine which signals predict a real connection for
+                        you, with no change to your score until the pattern is
+                        clear.
+                      </p>
+                      <Link
+                        href="/mirror/dates"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                        data-testid="link-log-date-outcome"
+                      >
+                        Log a date outcome
+                        <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                      </Link>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })()}
 
         {/* City density */}
         <motion.div {...fadeUp(0.1)}>
