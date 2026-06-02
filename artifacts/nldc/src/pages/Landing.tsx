@@ -9,7 +9,7 @@ import {
   Instagram, Mail, Wallet, Music2, Palette, Clapperboard, Film, 
   Footprints, HeartPulse, Flame, Lock, LayoutGrid, Sparkles,
   LineChart, Database, History, HelpCircle, User, CheckSquare, Target,
-  Zap, Eye, MessageSquare, PenTool, Trophy, BarChart2
+  Zap, Eye, MessageSquare, PenTool, Trophy, BarChart2, Activity
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMeta } from "@/hooks/useMeta";
@@ -235,10 +235,12 @@ export default function Landing() {
               { icon: Footprints, label: "Lifestyle paste", status: "Paste", color: "hsl(248 62% 60%)" },
               { icon: Mail, label: "Forwarding inbox", status: "Building", color: "hsl(326 100% 62%)" },
               { icon: Wallet, label: "Plaid spending", status: "Building", color: "hsl(142 55% 55%)" },
-              { icon: Music2, label: "Spotify taste", status: "Building", color: "hsl(141 73% 42%)" },
-              { icon: Film, label: "Letterboxd", status: "Researching", color: "hsl(28 80% 55%)" },
+              { icon: Music2, label: "Music taste", status: "Paste", color: "hsl(141 73% 42%)" },
+              { icon: Film, label: "Film taste", status: "Paste", color: "hsl(28 80% 55%)" },
+              { icon: BookOpen, label: "Reading taste", status: "Paste", color: "hsl(38 90% 50%)" },
+              { icon: History, label: "Curiosity trail", status: "Paste", color: "hsl(207 70% 45%)" },
+              { icon: Activity, label: "Vitality rhythm", status: "Paste", color: "hsl(348 70% 60%)" },
               { icon: Footprints, label: "Strava rhythm", status: "Researching", color: "hsl(18 90% 55%)" },
-              { icon: BookOpen, label: "Goodreads", status: "Researching", color: "hsl(38 90% 50%)" },
               { icon: Palette, label: "Photo library vibe", status: "Researching", color: "hsl(348 80% 55%)" },
             ].map((s, i) => {
               const isActive = s.status === "Live" || s.status === "Import" || s.status === "Paste" || s.status === "Upload";

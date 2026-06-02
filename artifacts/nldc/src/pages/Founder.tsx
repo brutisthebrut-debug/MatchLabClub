@@ -12,9 +12,10 @@ import {
   getMatchingQueue, getMatchingPool, setMatchingProposalStatus, addMatchingProposalNote,
   getReferralAttribution, getEchoUserSignals, getFounderFunnel, getJourneyEvents,
   getBrainControls, updateBrainControls, resetBrainControls, getBrainMap,
-  getReweighting, getCuration, saveCuration,
+  getReweighting, getReweightingImpact, getCuration, saveCuration,
   type BrainControls, type BrainControlsResponse, type BrainMapResponse,
-  type ReweightingResponse, type CurationEntry,
+  type ReweightingMode, type ReweightingResponse,
+  type ReweightingImpactResponse, type CurationEntry,
   type MatchingQueueItem, type MatchingPoolItem,
   type ReferralAttributionResponse, type EchoUserSignalsResponse, type FounderFunnelResponse,
   type JourneyEventsResponse,
@@ -4470,10 +4471,10 @@ function BrainTab({ founderKey, refreshKey }: { founderKey: string; refreshKey: 
         <div className="mt-6 pt-6 border-t border-white/10">
           <span className="text-sm font-medium text-foreground">Re-weighting mode</span>
           <p className="text-xs text-muted-foreground mt-0.5 mb-3">
-            Hold keeps base weights for everyone. Applied lets outcome-driven proposals tilt a user's weights.
+            Hold keeps base weights for everyone. Shadow computes the outcome tilt and reports its impact, but still serves the base score so nothing a user sees changes. Applied serves the tilt, but only to the rollout cohort below.
           </p>
           <div className="flex gap-2">
-            {(["hold", "applied"] as const).map((m) => (
+            {(["hold", "shadow", "applied"] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => patch({ reweightingMode: m })}
@@ -4483,10 +4484,27 @@ function BrainTab({ founderKey, refreshKey }: { founderKey: string; refreshKey: 
                     : "text-muted-foreground hover:text-foreground hover:bg-white/5 border border-white/10"
                 }`}
               >
-                {m === "hold" ? "Hold" : "Applied"}
+                {m === "hold" ? "Hold" : m === "shadow" ? "Shadow" : "Applied"}
               </button>
             ))}
           </div>
+          {draft.reweightingMode === "applied" && (
+            <div className="mt-4">
+              <NumberField
+                label="Rollout cohort percent"
+                hint="Share of users (0-100) whose live score uses the tilt, bucketed deterministically by user id. 100 is everyone, 0 is no one. Ramp this up while watching the impact panel."
+                value={draft.reweightingCohortPercent}
+                min={0}
+                max={100}
+                onChange={(n) => patch({ reweightingCohortPercent: n })}
+              />
+            </div>
+          )}
+          <ReweightingImpactPanel
+            founderKey={founderKey}
+            mode={draft.reweightingMode}
+            cohortPercent={draft.reweightingCohortPercent}
+          />
         </div>
 
         {/* Confidence weighting */}
@@ -4664,7 +4682,112 @@ function BrainTab({ founderKey, refreshKey }: { founderKey: string; refreshKey: 
   );
 }
 
-function ReweightingPanel({ founderKey, mode }: { founderKey: string; mode: "hold" | "applied" }) {
+function ReweightingImpactPanel({
+  founderKey,
+  mode,
+  cohortPercent,
+}: {
+  founderKey: string;
+  mode: ReweightingMode;
+  cohortPercent: number;
+}) {
+  const [data, setData] = useState<ReweightingImpactResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function run() {
+    setLoading(true);
+    setErr(null);
+    try {
+      setData(await getReweightingImpact(founderKey));
+    } catch (ex) {
+      setErr(ex instanceof Error ? ex.message : "Impact lookup failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="mt-4 glass rounded-xl px-4 py-4 border border-white/10">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <span className="text-sm font-medium text-foreground">
+            Rollout impact, before and after
+          </span>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Compares every scored user's base score against the would-be tilted score, computed regardless of the current mode so you can see the impact before flipping the switch.
+          </p>
+        </div>
+        <button
+          onClick={run}
+          disabled={loading}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)] disabled:opacity-50 shrink-0"
+        >
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Activity className="w-4 h-4" />
+          )}
+          Measure impact
+        </button>
+      </div>
+
+      {err && (
+        <div className="text-sm text-[hsl(0_70%_70%)] flex items-center gap-2 mt-3">
+          <AlertTriangle className="w-4 h-4" />
+          {err}
+        </div>
+      )}
+
+      {data && (
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <ImpactStat label="Scored users" value={String(data.scoredUsers)} />
+          <ImpactStat
+            label={`In cohort (${
+              mode === "applied" ? `${cohortPercent}%` : "n/a"
+            })`}
+            value={String(data.cohortUsers)}
+          />
+          <ImpactStat label="Would change" value={String(data.changedUsers)} />
+          <ImpactStat
+            label="Avg shift"
+            value={`${data.averageAbsDelta} pts`}
+          />
+          <ImpactStat
+            label="Range"
+            value={`${data.maxDecrease} / +${data.maxIncrease}`}
+          />
+          <ImpactStat
+            label={`Crosses ${data.threshold}`}
+            value={`+${data.thresholdCrossingsUp} / -${data.thresholdCrossingsDown}`}
+          />
+          {data.truncated && (
+            <p className="col-span-full text-xs text-muted-foreground">
+              Sampled the first {data.scoredUsers} scored users.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ImpactStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="glass rounded-xl px-3 py-2 border border-white/10">
+      <span className="text-xs text-muted-foreground block">{label}</span>
+      <span className="text-sm font-medium text-foreground">{value}</span>
+    </div>
+  );
+}
+
+function ReweightingPanel({
+  founderKey,
+  mode,
+}: {
+  founderKey: string;
+  mode: ReweightingMode;
+}) {
   const [email, setEmail] = useState("");
   const [data, setData] = useState<ReweightingResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -4729,12 +4852,43 @@ function ReweightingPanel({ founderKey, mode }: { founderKey: string; mode: "hol
             <span className="text-muted-foreground">Readiness {data.readinessScore}</span>
             <span
               className={`text-xs px-2.5 py-1 rounded-full ${
-                mode === "applied"
+                data.preview.applied
                   ? "bg-[hsl(150_60%_45%/0.2)] text-[hsl(150_60%_65%)]"
                   : "bg-white/5 text-muted-foreground"
               }`}
             >
-              {mode === "applied" ? "Applied: tilts live scoring" : "Hold: preview only"}
+              {data.preview.applied
+                ? "Applied: tilting this user's live score"
+                : mode === "applied"
+                  ? "Held back: user is outside the rollout cohort"
+                  : mode === "shadow"
+                    ? "Shadow: preview only, live score unchanged"
+                    : "Hold: preview only"}
+            </span>
+          </div>
+          <div className="glass rounded-xl px-4 py-3 border border-white/10 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+            <span className="text-muted-foreground">
+              Base score{" "}
+              <span className="text-foreground font-medium">{data.preview.baseScore}</span>
+            </span>
+            <span className="text-muted-foreground">
+              Tilted score{" "}
+              <span className="text-foreground font-medium">{data.preview.tiltedScore}</span>
+            </span>
+            <span
+              className={`font-medium ${
+                data.preview.delta > 0
+                  ? "text-[hsl(150_60%_65%)]"
+                  : data.preview.delta < 0
+                    ? "text-[hsl(0_70%_70%)]"
+                    : "text-muted-foreground"
+              }`}
+            >
+              {data.preview.delta > 0 ? "+" : ""}
+              {data.preview.delta} pts
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {data.preview.inCohort ? "In cohort" : "Outside cohort"}
             </span>
           </div>
           <p className="text-sm text-muted-foreground">{data.outcome.headline}</p>

@@ -48,6 +48,7 @@ import {
 import {
   computeReadiness,
   computeOutcomeInsightForUser,
+  computeReweightingPreview,
 } from "./matching";
 import { recordJourneyEvent, summarizeJourneyEvents } from "../lib/journeyEvents";
 import { and, count, sql, desc, gte, asc, eq, isNotNull, lt, inArray, lte } from "drizzle-orm";
@@ -2242,7 +2243,8 @@ const BrainControlsPatch = z.object({
   cohortMinSize: z.number().int().min(1).max(1000).optional(),
   anonDailyCap: z.number().int().min(0).max(10000).optional(),
   freeDailyCap: z.number().int().min(0).max(100000).optional(),
-  reweightingMode: z.enum(["hold", "applied"]).optional(),
+  reweightingMode: z.enum(["hold", "shadow", "applied"]).optional(),
+  reweightingCohortPercent: z.number().int().min(0).max(100).optional(),
   confidenceWeighting: z.enum(["hold", "applied"]).optional(),
   decayMode: z.enum(["hold", "applied"]).optional(),
   signalWeightOverrides: z.record(z.string(), z.number().min(0)).nullable().optional(),
@@ -2417,18 +2419,30 @@ router.get(
 
     const controls = await loadBrainControls();
     const base = effectiveBaseWeights(controls);
-    const [readiness, outcome] = await Promise.all([
+    const [readiness, outcome, preview] = await Promise.all([
       computeReadiness(user.id),
       computeOutcomeInsightForUser(user.id),
+      computeReweightingPreview(user.id, controls),
     ]);
     const adjustments = proposeWeightAdjustments(outcome, SIGNAL_REGISTRY, base);
 
     res.json({
       user: { id: user.id, email: user.email },
       mode: controls.reweightingMode,
+      cohortPercent: controls.reweightingCohortPercent,
       confidenceWeighting: controls.confidenceWeighting,
       decayMode: controls.decayMode,
       readinessScore: readiness.score,
+      // Before/after preview, computed regardless of mode so the founder can see
+      // impact before flipping the switch. `applied` reflects whether this user's
+      // live score is actually using the tilt right now.
+      preview: {
+        baseScore: preview.baseScore,
+        tiltedScore: preview.tiltedScore,
+        delta: preview.delta,
+        inCohort: preview.inCohort,
+        applied: preview.applied,
+      },
       outcome: {
         totalDates: outcome.totalDates,
         anotherDate: outcome.anotherDate,
@@ -2438,6 +2452,80 @@ router.get(
         headline: outcome.headline,
       },
       adjustments,
+    });
+  },
+);
+
+/**
+ * Aggregate before/after impact of re-weighting across scored users. Computed
+ * on demand (founder-only, no hot-path writes) so the founder can watch the
+ * impact in "shadow" mode and ramp the cohort safely before going fully live.
+ * Only derived scores are summarized, never raw outcomes or content.
+ */
+const REWEIGHTING_IMPACT_MAX_USERS = 250;
+
+router.get(
+  "/founder/brain/reweighting-impact",
+  requireFounder,
+  async (_req, res): Promise<void> => {
+    const controls = await loadBrainControls();
+    const threshold = controls.readinessThreshold;
+
+    const idRows = await db
+      .selectDistinct({ userId: matchingReadinessSnapshotsTable.userId })
+      .from(matchingReadinessSnapshotsTable)
+      // Order by the distinct key so the sampled window is stable across calls
+      // when the population exceeds the cap (otherwise truncation is arbitrary).
+      .orderBy(asc(matchingReadinessSnapshotsTable.userId))
+      .limit(REWEIGHTING_IMPACT_MAX_USERS + 1);
+    const truncated = idRows.length > REWEIGHTING_IMPACT_MAX_USERS;
+    const ids = idRows.slice(0, REWEIGHTING_IMPACT_MAX_USERS);
+
+    const previews = await Promise.all(
+      ids.map((r) => computeReweightingPreview(r.userId, controls)),
+    );
+
+    let cohortUsers = 0;
+    let changedUsers = 0;
+    let totalAbsDelta = 0;
+    let maxIncrease = 0;
+    let maxDecrease = 0;
+    let thresholdCrossingsUp = 0;
+    let thresholdCrossingsDown = 0;
+    for (const p of previews) {
+      if (p.inCohort) cohortUsers += 1;
+      if (p.delta !== 0) {
+        changedUsers += 1;
+        totalAbsDelta += Math.abs(p.delta);
+        if (p.delta > maxIncrease) maxIncrease = p.delta;
+        if (p.delta < maxDecrease) maxDecrease = p.delta;
+      }
+      // Threshold crossings count only users whose live score is (or would be)
+      // affected: those inside the rollout cohort.
+      if (p.inCohort) {
+        const baseEligible = p.baseScore >= threshold;
+        const tiltedEligible = p.tiltedScore >= threshold;
+        if (!baseEligible && tiltedEligible) thresholdCrossingsUp += 1;
+        if (baseEligible && !tiltedEligible) thresholdCrossingsDown += 1;
+      }
+    }
+
+    res.json({
+      mode: controls.reweightingMode,
+      cohortPercent: controls.reweightingCohortPercent,
+      threshold,
+      scoredUsers: previews.length,
+      cohortUsers,
+      changedUsers,
+      averageAbsDelta:
+        changedUsers > 0
+          ? Number((totalAbsDelta / changedUsers).toFixed(2))
+          : 0,
+      maxIncrease,
+      maxDecrease,
+      thresholdCrossingsUp,
+      thresholdCrossingsDown,
+      truncated,
     });
   },
 );

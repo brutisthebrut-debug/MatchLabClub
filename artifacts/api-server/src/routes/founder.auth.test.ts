@@ -32,6 +32,7 @@ const PROTECTED_GET_ROUTES = [
   "/api/founder/brain/controls",
   "/api/founder/brain/map",
   "/api/founder/brain/reweighting/nobody@example.com",
+  "/api/founder/brain/reweighting-impact",
   "/api/founder/curation",
   "/api/founder/funnel",
   "/api/founder/events",

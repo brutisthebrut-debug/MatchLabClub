@@ -4,6 +4,8 @@ import {
   coerceControls,
   effectiveBaseWeights,
   effectiveWeightsForUser,
+  reweightedWeights,
+  inReweightingCohort,
   connectorEnabled,
   CONNECTOR_CATALOG,
   type BrainControls,
@@ -73,9 +75,18 @@ describe("coerceControls", () => {
     expect(c.connectorToggles).toEqual({ plaid: false, spotify: true });
   });
 
-  it("only accepts applied as a non-default reweighting mode", () => {
+  it("accepts hold, shadow, and applied reweighting modes, rejecting others", () => {
     expect(coerceControls({ reweightingMode: "applied" }).reweightingMode).toBe("applied");
+    expect(coerceControls({ reweightingMode: "shadow" }).reweightingMode).toBe("shadow");
+    expect(coerceControls({ reweightingMode: "hold" }).reweightingMode).toBe("hold");
     expect(coerceControls({ reweightingMode: "garbage" }).reweightingMode).toBe("hold");
+  });
+
+  it("defaults the reweighting cohort to 100 percent and clamps out-of-range", () => {
+    expect(defaultControls().reweightingCohortPercent).toBe(100);
+    expect(coerceControls({ reweightingCohortPercent: 250 }).reweightingCohortPercent).toBe(100);
+    expect(coerceControls({ reweightingCohortPercent: -10 }).reweightingCohortPercent).toBe(0);
+    expect(coerceControls({ reweightingCohortPercent: 42 }).reweightingCohortPercent).toBe(42);
   });
 });
 
@@ -119,6 +130,75 @@ describe("effectiveWeightsForUser", () => {
     expect(sum).toBeCloseTo(1, 2);
     // postDate is a lean-into signal and should rise above its base share.
     expect(w["postDate"]).toBeGreaterThan(base["postDate"]!);
+  });
+});
+
+describe("reweightedWeights", () => {
+  it("always tilts regardless of mode, ignoring the gate", () => {
+    const base = effectiveBaseWeights(defaultControls());
+    const fizzling: OutcomeSignal = { anotherDate: 0, noMore: 2, ghosted: 2, unsure: 0 };
+    // mode is "hold" here, but reweightedWeights tilts anyway (shadow/preview use).
+    const w = reweightedWeights(defaultControls(), fizzling);
+    const sum = Object.values(w).reduce((a, b) => a + b, 0);
+    expect(sum).toBeCloseTo(1, 2);
+    expect(w["postDate"]!).toBeGreaterThan(base["postDate"]!);
+  });
+
+  it("shadow mode leaves effectiveWeightsForUser on base, but reweightedWeights still tilts", () => {
+    const shadow: BrainControls = { ...defaultControls(), reweightingMode: "shadow" };
+    const fizzling: OutcomeSignal = { anotherDate: 0, noMore: 2, ghosted: 2, unsure: 0 };
+    const served = effectiveWeightsForUser(shadow, fizzling);
+    const base = effectiveBaseWeights(shadow);
+    for (const id of Object.keys(base)) {
+      expect(served[id]).toBeCloseTo(base[id]!, 9);
+    }
+    const tilted = reweightedWeights(shadow, fizzling);
+    expect(tilted["postDate"]!).toBeGreaterThan(base["postDate"]!);
+  });
+});
+
+describe("inReweightingCohort", () => {
+  it("includes everyone at 100 and no one at 0", () => {
+    const all: BrainControls = { ...defaultControls(), reweightingCohortPercent: 100 };
+    const none: BrainControls = { ...defaultControls(), reweightingCohortPercent: 0 };
+    for (const id of ["a", "user-123", "zzz", ""]) {
+      expect(inReweightingCohort(all, id)).toBe(true);
+      expect(inReweightingCohort(none, id)).toBe(false);
+    }
+  });
+
+  it("is deterministic for the same user id", () => {
+    const controls: BrainControls = { ...defaultControls(), reweightingCohortPercent: 50 };
+    const first = inReweightingCohort(controls, "stable-user");
+    for (let i = 0; i < 5; i++) {
+      expect(inReweightingCohort(controls, "stable-user")).toBe(first);
+    }
+  });
+
+  it("membership only grows as the cohort percent rises (monotonic)", () => {
+    const id = "ramp-user";
+    let included = false;
+    for (let pct = 0; pct <= 100; pct += 5) {
+      const here = inReweightingCohort(
+        { ...defaultControls(), reweightingCohortPercent: pct },
+        id,
+      );
+      if (included) expect(here).toBe(true);
+      included = here;
+    }
+    expect(included).toBe(true);
+  });
+
+  it("roughly approximates the requested share across many ids", () => {
+    const controls: BrainControls = { ...defaultControls(), reweightingCohortPercent: 30 };
+    let inCount = 0;
+    const total = 2000;
+    for (let i = 0; i < total; i++) {
+      if (inReweightingCohort(controls, `user-${i}`)) inCount += 1;
+    }
+    const share = inCount / total;
+    expect(share).toBeGreaterThan(0.2);
+    expect(share).toBeLessThan(0.4);
   });
 });
 

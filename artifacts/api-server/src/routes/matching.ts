@@ -33,14 +33,17 @@ import {
   applyDecay,
   describeActiveSignals,
   SIGNAL_REGISTRY,
+  type OutcomeSignal,
 } from "../lib/signalRegistry";
 import { collectSignalCounts, collectSignalRecency } from "../lib/signalCounts";
 import { computeActivityStreak, type ActivityStreak } from "../lib/streak";
 import {
   loadBrainControls,
   effectiveBaseWeights,
-  effectiveWeightsForUser,
+  reweightedWeights,
+  inReweightingCohort,
   effectiveReadinessThreshold,
+  type BrainControls,
 } from "../lib/brainConfig";
 import { recordJourneyEvent } from "../lib/journeyEvents";
 import {
@@ -124,23 +127,41 @@ async function loadMembership(userId: string): Promise<PoolRow | null> {
   return rows[0] ?? null;
 }
 
+/**
+ * Outcome of comparing the live (served) score against the would-be re-weighted
+ * score for a user. Present on Readiness only when reweighting is not on "hold".
+ * `applied` is true only when the live score actually used the tilt (mode
+ * "applied" AND the user is inside the rollout cohort). Only derived scores
+ * leave here, never raw outcomes or content.
+ */
+export interface ReweightingObservation {
+  baseScore: number;
+  tiltedScore: number;
+  delta: number;
+  inCohort: boolean;
+  applied: boolean;
+}
+
 interface Readiness {
   score: number;
   breakdown: ReadinessBreakdown;
   /** Effective per-signal weights used to produce this score (founder-tunable). */
   weights: Record<string, number>;
+  /** Shadow/applied re-weighting impact, present when mode is not "hold". */
+  reweighting?: ReweightingObservation;
 }
 
-export async function computeReadiness(userId: string): Promise<Readiness> {
+/**
+ * Build the readiness breakdown for a user, applying freshness decay when the
+ * founder has switched it on. Shared by the live score and the re-weighting
+ * preview so both read the exact same coverage.
+ */
+async function readinessBreakdownFor(
+  userId: string,
+  controls: BrainControls,
+): Promise<ReadinessBreakdown> {
   const counts = await collectSignalCounts(userId);
   let breakdown = computeBreakdown(counts);
-
-  // Effective weights and breakdown both come from the founder control center.
-  // With no overrides and every scoring lever on "hold" this reproduces the
-  // exact day-one score. Each gated step adds its own query only when switched
-  // on, so the default path stays a single counts query.
-  const controls = await loadBrainControls();
-
   // Freshness decay: fade time-sensitive lanes by their half-life since the user
   // last fed them. Only runs (and only queries recency) when switched to
   // "applied". The decayed breakdown is what both the score and the next-action
@@ -149,14 +170,79 @@ export async function computeReadiness(userId: string): Promise<Readiness> {
     const recency = await collectSignalRecency(userId);
     breakdown = applyDecay(breakdown, recency);
   }
+  return breakdown;
+}
+
+/**
+ * Compare the base score against the would-be tilted score for a user, and
+ * decide which weights the live score should use. The tilt only becomes the
+ * served weights when mode is "applied" AND the user is in the rollout cohort,
+ * so "shadow" mode observes impact without changing anything a user sees.
+ */
+function evaluateReweighting(
+  breakdown: ReadinessBreakdown,
+  controls: BrainControls,
+  outcome: OutcomeSignal,
+  userId: string,
+): { weights: Record<string, number>; observation: ReweightingObservation } {
+  const base = effectiveBaseWeights(controls);
+  const tilted = reweightedWeights(controls, outcome);
+  const baseScore = scoreFromBreakdown(breakdown, base);
+  const tiltedScore = scoreFromBreakdown(breakdown, tilted);
+  const inCohort = inReweightingCohort(controls, userId);
+  const applied = controls.reweightingMode === "applied" && inCohort;
+  return {
+    weights: applied ? tilted : base,
+    observation: {
+      baseScore,
+      tiltedScore,
+      delta: tiltedScore - baseScore,
+      inCohort,
+      applied,
+    },
+  };
+}
+
+export async function computeReadiness(userId: string): Promise<Readiness> {
+  // Effective weights and breakdown both come from the founder control center.
+  // With no overrides and every scoring lever on "hold" this reproduces the
+  // exact day-one score. Each gated step adds its own query only when switched
+  // on, so the default path stays a single counts query.
+  const controls = await loadBrainControls();
+  const breakdown = await readinessBreakdownFor(userId, controls);
 
   let weights = effectiveBaseWeights(controls);
-  if (controls.reweightingMode === "applied") {
+  let reweighting: ReweightingObservation | undefined;
+  // Re-weighting: compute the tilt for both "shadow" (observe only) and
+  // "applied" (serve to the cohort). "hold" skips the extra outcome query so the
+  // default path is unchanged.
+  if (controls.reweightingMode !== "hold") {
     const outcome = await computeOutcomeInsightForUser(userId);
-    weights = effectiveWeightsForUser(controls, outcome);
+    const ev = evaluateReweighting(breakdown, controls, outcome, userId);
+    weights = ev.weights;
+    reweighting = ev.observation;
   }
 
-  return { score: scoreFromBreakdown(breakdown, weights), breakdown, weights };
+  return {
+    score: scoreFromBreakdown(breakdown, weights),
+    breakdown,
+    weights,
+    reweighting,
+  };
+}
+
+/**
+ * Founder-only preview of the re-weighting impact for a single user, computed
+ * regardless of the current mode (so the founder can see impact before flipping
+ * the switch). Returns only derived scores, never raw outcomes or content.
+ */
+export async function computeReweightingPreview(
+  userId: string,
+  controls: BrainControls,
+): Promise<ReweightingObservation> {
+  const breakdown = await readinessBreakdownFor(userId, controls);
+  const outcome = await computeOutcomeInsightForUser(userId);
+  return evaluateReweighting(breakdown, controls, outcome, userId).observation;
 }
 
 export async function computeOutcomeInsightForUser(

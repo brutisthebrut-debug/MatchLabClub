@@ -33,6 +33,11 @@ export interface ReadinessBreakdown {
   lifestyle: number;
   quizzes: number;
   receipts: number;
+  music: number;
+  vitality: number;
+  curiosity: number;
+  film: number;
+  reading: number;
 }
 
 /** Raw counts pulled from the database for each contributor. */
@@ -88,6 +93,37 @@ export interface SignalCounts {
    * subject, or any email body.
    */
   receiptItems: number;
+  /**
+   * Music taste items shared in the most recent music paste (top artists,
+   * tracks, the sound they keep coming back to), pulled from a Spotify export or
+   * typed by hand. Only the derived item count is used here, never the titles.
+   */
+  musicItems: number;
+  /**
+   * Vitality items shared in the most recent health paste (workouts, sleep
+   * rhythm, the way they keep their energy up), pulled from an Apple Health
+   * export or typed by hand. Only the derived item count is used here, never any
+   * underlying health record.
+   */
+  vitalityItems: number;
+  /**
+   * Curiosity items shared in the most recent interests paste (what they search,
+   * watch, and follow), pulled from a Google Takeout export or typed by hand.
+   * Only the derived item count is used here, never the raw history.
+   */
+  curiosityItems: number;
+  /**
+   * Film items shared in the most recent film paste (the films and shows they
+   * love), pulled from a Letterboxd export or typed by hand. Only the derived
+   * item count is used here, never the raw titles or ratings.
+   */
+  filmItems: number;
+  /**
+   * Reading items shared in the most recent reading paste (the books and authors
+   * they return to), pulled from a Goodreads export or typed by hand. Only the
+   * derived item count is used here, never the raw shelves or ratings.
+   */
+  readingItems: number;
 }
 
 /**
@@ -644,6 +680,208 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       neverTouched: [
         "Anything you do not paste in",
         "OAuth access to your calendar, fitness apps, or any account",
+        "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+      ],
+    },
+  },
+  {
+    id: "music",
+    countKey: "musicItems",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "music-paste",
+      summaryPath: ["counts", "items"],
+      capture: "paste",
+    },
+    label: "Music taste",
+    dimensions: [
+      "music taste",
+      "mood and energy",
+      "shared-listening fit",
+    ],
+    weight: 0.06,
+    confidence: 0.55,
+    normalize: { kind: "count", denominator: 8 },
+    describe: (c) =>
+      `Has shared enough of their music to cover ${c}% of that lane, so we can match on the sound someone keeps coming back to, a strong read on mood and conversation chemistry.`,
+    action: {
+      label: "Share your music taste",
+      detail:
+        "Paste your top artists and tracks, or your Spotify export. We read the overlap, never your account.",
+      href: "/connections/add/music",
+    },
+    trust: {
+      origin: "The music list you paste in, or the Spotify export you drop in.",
+      noun: "item",
+      seen: [
+        "The list of artists and tracks you paste in, one per line",
+        "A simple count of how many you gave us, used to fill the lane",
+      ],
+      neverTouched: [
+        "Anything you do not paste in",
+        "OAuth access to Spotify or any account",
+        "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+      ],
+    },
+  },
+  {
+    id: "film",
+    countKey: "filmItems",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "film-paste",
+      summaryPath: ["counts", "items"],
+      capture: "paste",
+    },
+    label: "Film taste",
+    dimensions: [
+      "film taste",
+      "emotional palette",
+      "what a night in looks like",
+    ],
+    weight: 0.06,
+    confidence: 0.55,
+    normalize: { kind: "count", denominator: 8 },
+    describe: (c) =>
+      `Has shared enough of their film taste to cover ${c}% of that lane, so we can match on humour and the kind of stories that move them, not just a prompt answer.`,
+    action: {
+      label: "Share your film taste",
+      detail:
+        "Paste the films and shows you love, or your Letterboxd export. We read the overlap, never judge the list.",
+      href: "/connections/add/film",
+    },
+    trust: {
+      origin: "The film list you paste in, or the Letterboxd export you drop in.",
+      noun: "item",
+      seen: [
+        "The list of films and shows you paste in, one per line",
+        "A simple count of how many you gave us, used to fill the lane",
+      ],
+      neverTouched: [
+        "Anything you do not paste in",
+        "OAuth access to Letterboxd, Netflix, or any account",
+        "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+      ],
+    },
+  },
+  {
+    id: "reading",
+    countKey: "readingItems",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "reading-paste",
+      summaryPath: ["counts", "items"],
+      capture: "paste",
+    },
+    label: "Reading taste",
+    dimensions: [
+      "reading taste",
+      "curiosity and values",
+      "inner life",
+    ],
+    weight: 0.05,
+    confidence: 0.55,
+    normalize: { kind: "count", denominator: 6 },
+    describe: (c) =>
+      `Has shared enough of their reading to cover ${c}% of that lane, a quiet read on curiosity and values that deepens how we reason about fit.`,
+    action: {
+      label: "Share your reading",
+      detail:
+        "Paste the books and authors you return to, or your Goodreads export. We read the overlap, never the shelves.",
+      href: "/connections/add/reading",
+    },
+    trust: {
+      origin: "The reading list you paste in, or the Goodreads export you drop in.",
+      noun: "item",
+      seen: [
+        "The list of books and authors you paste in, one per line",
+        "A simple count of how many you gave us, used to fill the lane",
+      ],
+      neverTouched: [
+        "Anything you do not paste in",
+        "OAuth access to Goodreads, Amazon, or any account",
+        "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+      ],
+    },
+  },
+  {
+    id: "curiosity",
+    countKey: "curiosityItems",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "curiosity-paste",
+      summaryPath: ["counts", "items"],
+      capture: "paste",
+    },
+    label: "Curiosity trail",
+    dimensions: [
+      "intellectual curiosity",
+      "what holds their attention",
+      "interests",
+    ],
+    weight: 0.05,
+    confidence: 0.5,
+    normalize: { kind: "count", denominator: 8 },
+    describe: (c) =>
+      `Has shared enough of what they are curious about to cover ${c}% of that lane, so we can match on the interests and rabbit holes that actually hold their attention.`,
+    action: {
+      label: "Share your interests",
+      detail:
+        "Paste what you search, watch, and follow, or your Google Takeout summary. We read the themes, never the raw history.",
+      href: "/connections/add/curiosity",
+    },
+    trust: {
+      origin:
+        "The interests list you paste in, or the Google Takeout summary you drop in.",
+      noun: "item",
+      seen: [
+        "The list of interests and topics you paste in, one per line",
+        "A simple count of how many you gave us, used to fill the lane",
+      ],
+      neverTouched: [
+        "Anything you do not paste in",
+        "OAuth access to Google, YouTube, or any account",
+        "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+      ],
+    },
+  },
+  {
+    id: "vitality",
+    countKey: "vitalityItems",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "vitality-paste",
+      summaryPath: ["counts", "items"],
+      capture: "paste",
+    },
+    label: "Vitality rhythm",
+    dimensions: [
+      "energy and vitality",
+      "weekly movement rhythm",
+      "how they care for themselves",
+    ],
+    weight: 0.05,
+    confidence: 0.5,
+    normalize: { kind: "count", denominator: 6 },
+    describe: (c) =>
+      `Has shared enough of their vitality rhythm to cover ${c}% of that lane, a read on energy and weekly cadence that helps pace a real connection.`,
+    action: {
+      label: "Share your vitality rhythm",
+      detail:
+        "Paste your workout and rest rhythm, or your Apple Health summary. We read the cadence, never any health record.",
+      href: "/connections/add/vitality",
+    },
+    trust: {
+      origin:
+        "The rhythm list you paste in, or the Apple Health summary you drop in.",
+      noun: "item",
+      seen: [
+        "The list of activities and rhythms you paste in, one per line",
+        "A simple count of how many you gave us, used to fill the lane",
+      ],
+      neverTouched: [
+        "Anything you do not paste in",
+        "Any underlying health record, vitals, or medical detail",
         "Your raw items are never sent to any AI prompt, only the count moves your readiness",
       ],
     },

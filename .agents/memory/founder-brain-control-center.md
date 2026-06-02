@@ -22,8 +22,21 @@ all knobs back to default restores original scoring exactly.
 **How to apply:**
 - All reads fail-open to `defaultControls()` so a missing table / read error never
   breaks scoring or AI calls.
-- `reweightingMode`: "hold" = base weights for everyone; "applied" = bounded
-  per-user outcome tilt (`proposeWeightAdjustments`) layered on the base.
+- `reweightingMode` is a 3-state safe-rollout dial: "hold" = base weights for
+  everyone (live path skips the outcome fetch + tilt entirely); "shadow" = tilt is
+  computed for observability but the served score stays on base (nothing a user
+  sees changes); "applied" = tilt served, but ONLY to users inside the rollout
+  cohort. `reweightedWeights()` always computes the tilt; `effectiveWeightsForUser`
+  is the mode+cohort-gated wrapper. Mirror this hold/shadow/applied dial when
+  rolling out any other scoring change (decay, confidence, geo).
+- Cohort gating: `inReweightingCohort(controls,userId)` buckets a stable FNV-1a
+  hash of the userId into 0-99, in-cohort when bucket < `reweightingCohortPercent`.
+  Normalize the hash UNSIGNED (`h >>> 0`), not `Math.abs`, before `% 100`. Pure +
+  deterministic so a user never flips between scorings; 100=all, 0=none.
+- Observability is an on-demand founder endpoint only (`/founder/brain/reweighting-impact`,
+  capped fan-out, derived deltas only). Do NOT write per-`computeReadiness` journey
+  rows for this — the hot path would flood. When sampling a capped population,
+  `orderBy` the distinct key so the truncated window is stable across calls.
 - `proposeWeightAdjustments` rounds `adjustedWeight` to 4 decimals, so applied-mode
   weight sums can drift ~0.0001 per signal (don't assert `toBeCloseTo(1, 6)` on
   applied-mode sums; use precision 2).

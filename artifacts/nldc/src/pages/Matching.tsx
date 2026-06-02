@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
+  Activity,
   ArrowRight,
   BookOpen,
   Brain,
@@ -11,11 +12,16 @@ import {
   Camera,
   Compass,
   Download,
+  Film,
+  Footprints,
   Heart,
+  HelpCircle,
+  History,
   Instagram,
   Mail,
   MapPin,
   MessageCircle,
+  Music2,
   Share2,
   Sparkles,
   TrendingUp,
@@ -72,6 +78,7 @@ import {
   useDiscoverMatches,
   type EchoMatchRead,
   type MatchProposal,
+  type MatchReadinessBreakdown,
 } from "@workspace/api-client-react";
 
 const fadeUp = (delay = 0) => ({
@@ -173,19 +180,7 @@ function normalizeGenderPreference(value: string | null | undefined): string {
 }
 
 interface BreakdownRow {
-  key:
-    | "compass"
-    | "journal"
-    | "wellness"
-    | "hingeImport"
-    | "postDate"
-    | "wins"
-    | "calendar"
-    | "receipts"
-    | "audits"
-    | "coaching"
-    | "instagram"
-    | "lifePulse";
+  key: keyof MatchReadinessBreakdown;
   label: string;
   blurb: string;
   href: string;
@@ -193,7 +188,7 @@ interface BreakdownRow {
   icon: typeof Compass;
 }
 
-const BREAKDOWN_ROWS: BreakdownRow[] = [
+const BREAKDOWN_ROWS = [
   {
     key: "compass",
     label: "Compass reads",
@@ -290,7 +285,81 @@ const BREAKDOWN_ROWS: BreakdownRow[] = [
     cta: "Log a life pulse",
     icon: Heart,
   },
-];
+  {
+    key: "taste",
+    label: "Taste paste",
+    blurb: "Paste what you are into so the machine reads your vibe beyond a bio.",
+    href: "/connections/add/taste",
+    cta: "Add your taste",
+    icon: Sparkles,
+  },
+  {
+    key: "lifestyle",
+    label: "Lifestyle paste",
+    blurb: "A picture of your week reads as a fuller life to match around.",
+    href: "/connections/add/lifestyle",
+    cta: "Add your lifestyle",
+    icon: Footprints,
+  },
+  {
+    key: "quizzes",
+    label: "Quizzes",
+    blurb: "Each quiz you finish teaches the machine something a profile never shows.",
+    href: "/quizzes",
+    cta: "Take a quiz",
+    icon: HelpCircle,
+  },
+  {
+    key: "music",
+    label: "Music taste",
+    blurb: "Your top artists and tracks read mood and chemistry better than most prompts.",
+    href: "/connections/add/music",
+    cta: "Add your music",
+    icon: Music2,
+  },
+  {
+    key: "film",
+    label: "Film taste",
+    blurb: "The films and shows you love say a lot about your humour and your nights in.",
+    href: "/connections/add/film",
+    cta: "Add your film taste",
+    icon: Film,
+  },
+  {
+    key: "reading",
+    label: "Reading taste",
+    blurb: "A fuller shelf reads as a fuller inner life to match around.",
+    href: "/connections/add/reading",
+    cta: "Add your reading",
+    icon: BookOpen,
+  },
+  {
+    key: "curiosity",
+    label: "Curiosity trail",
+    blurb: "The rabbit holes that hold your attention show what you would actually talk about.",
+    href: "/connections/add/curiosity",
+    cta: "Add your interests",
+    icon: History,
+  },
+  {
+    key: "vitality",
+    label: "Vitality rhythm",
+    blurb: "The rhythms that keep your energy up help pace a real connection around your week.",
+    href: "/connections/add/vitality",
+    cta: "Add your rhythm",
+    icon: Activity,
+  },
+] satisfies readonly BreakdownRow[];
+
+// Compile-time drift guard: BREAKDOWN_ROWS must cover every readiness lane in
+// MatchReadinessBreakdown. Add a lane to the signal registry plus OpenAPI without
+// a row here and this stops compiling, so the matching breakdown can never
+// silently drop a lane.
+type BreakdownRowKey = (typeof BREAKDOWN_ROWS)[number]["key"];
+const _allLanesHaveRows: keyof MatchReadinessBreakdown extends BreakdownRowKey
+  ? true
+  : never = true;
+void _allLanesHaveRows;
 
 function ChipList({
   items,
@@ -413,6 +482,11 @@ export default function Matching() {
     lifestyle: 0,
     quizzes: 0,
     receipts: 0,
+    music: 0,
+    vitality: 0,
+    curiosity: 0,
+    film: 0,
+    reading: 0,
   };
   const nextActions = state.data?.nextActions ?? [];
   const history = state.data?.history ?? [];

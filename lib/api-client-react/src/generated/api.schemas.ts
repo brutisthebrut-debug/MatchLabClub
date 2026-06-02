@@ -2966,6 +2966,31 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   receipts: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  music: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  vitality: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  curiosity: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  film: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  reading: number;
 }
 
 export interface MatchReadiness {

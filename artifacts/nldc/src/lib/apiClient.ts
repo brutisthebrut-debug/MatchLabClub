@@ -871,7 +871,7 @@ export const resetAlertSettings = (founderKey: string) =>
 
 // --- Founder brain: control center, brain map, curation ---
 
-export type ReweightingMode = "hold" | "applied";
+export type ReweightingMode = "hold" | "shadow" | "applied";
 export type ScoringMode = "hold" | "applied";
 
 export interface BrainControls {
@@ -881,6 +881,7 @@ export interface BrainControls {
   anonDailyCap: number;
   freeDailyCap: number;
   reweightingMode: ReweightingMode;
+  reweightingCohortPercent: number;
   confidenceWeighting: ScoringMode;
   decayMode: ScoringMode;
   signalWeightOverrides: Record<string, number> | null;
@@ -954,12 +955,22 @@ export interface WeightAdjustment {
   reason: string;
 }
 
+export interface ReweightingPreview {
+  baseScore: number;
+  tiltedScore: number;
+  delta: number;
+  inCohort: boolean;
+  applied: boolean;
+}
+
 export interface ReweightingResponse {
   user: { id: string; email: string | null };
   mode: ReweightingMode;
+  cohortPercent: number;
   confidenceWeighting: ScoringMode;
   decayMode: ScoringMode;
   readinessScore: number;
+  preview: ReweightingPreview;
   outcome: {
     totalDates: number;
     anotherDate: number;
@@ -969,6 +980,21 @@ export interface ReweightingResponse {
     headline: string;
   };
   adjustments: WeightAdjustment[];
+}
+
+export interface ReweightingImpactResponse {
+  mode: ReweightingMode;
+  cohortPercent: number;
+  threshold: number;
+  scoredUsers: number;
+  cohortUsers: number;
+  changedUsers: number;
+  averageAbsDelta: number;
+  maxIncrease: number;
+  maxDecrease: number;
+  thresholdCrossingsUp: number;
+  thresholdCrossingsDown: number;
+  truncated: boolean;
 }
 
 export const getBrainControls = (founderKey: string) =>
@@ -1016,6 +1042,11 @@ export const getReweighting = (founderKey: string, email: string) =>
     `/founder/brain/reweighting/${encodeURIComponent(email)}`,
     { headers: { "x-founder-key": founderKey } },
   );
+
+export const getReweightingImpact = (founderKey: string) =>
+  get<ReweightingImpactResponse>("/founder/brain/reweighting-impact", {
+    headers: { "x-founder-key": founderKey },
+  });
 
 export const getCuration = (founderKey: string, entityType?: string) =>
   get<{ curation: CurationEntry[] }>(

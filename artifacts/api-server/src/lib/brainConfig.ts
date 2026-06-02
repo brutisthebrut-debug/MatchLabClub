@@ -32,7 +32,7 @@ export const BRAIN_CONTROLS_KEY = "controls";
 export const DEFAULT_ANON_DAILY_CAP = 5;
 export const DEFAULT_FREE_DAILY_CAP = 30;
 
-export type ReweightingMode = "hold" | "applied";
+export type ReweightingMode = "hold" | "shadow" | "applied";
 
 /**
  * A scoring lever that is either held at day-one behavior or applied live. Used
@@ -54,10 +54,22 @@ export interface BrainControls {
   freeDailyCap: number;
   /**
    * Whether bounded, outcome-driven re-weighting is wired into live scoring.
-   * "hold" keeps day-one weights; "applied" tilts each user's weights toward
-   * in-person fit signals when their recent dates fizzle (bounded, re-normalized).
+   * "hold" keeps day-one weights and skips the tilt on the live scoring path
+   * (founder preview endpoints can still compute a would-be tilt on demand).
+   * "shadow" computes the tilted score alongside the live one for observability
+   * but still serves the day-one (base) score, so nothing a user sees changes.
+   * "applied"
+   * serves the tilted score, but only to users inside the rollout cohort (see
+   * reweightingCohortPercent); users outside the cohort stay on the base score.
    */
   reweightingMode: ReweightingMode;
+  /**
+   * Rollout cohort size for "applied" re-weighting, as a percent (0-100) of
+   * users, bucketed deterministically by a stable hash of the user id. 100 means
+   * every user (the day-one applied semantics); 0 means no one. Has no effect in
+   * "hold" or "shadow" mode. Lets the founder ramp the live tilt gradually.
+   */
+  reweightingCohortPercent: number;
   /**
    * Whether confidence-weighting is wired into live scoring. "applied" leans the
    * readiness weights toward the lanes we trust most (each weight scaled by its
@@ -140,6 +152,7 @@ export function defaultControls(): BrainControls {
     anonDailyCap: DEFAULT_ANON_DAILY_CAP,
     freeDailyCap: DEFAULT_FREE_DAILY_CAP,
     reweightingMode: "hold",
+    reweightingCohortPercent: 100,
     confidenceWeighting: "hold",
     decayMode: "hold",
     signalWeightOverrides: null,
@@ -185,7 +198,18 @@ export function coerceControls(raw: unknown): BrainControls {
     cohortMinSize: clampInt(v.cohortMinSize, 1, 1000, base.cohortMinSize),
     anonDailyCap: clampInt(v.anonDailyCap, 0, 10000, base.anonDailyCap),
     freeDailyCap: clampInt(v.freeDailyCap, 0, 100000, base.freeDailyCap),
-    reweightingMode: v.reweightingMode === "applied" ? "applied" : "hold",
+    reweightingMode:
+      v.reweightingMode === "applied"
+        ? "applied"
+        : v.reweightingMode === "shadow"
+          ? "shadow"
+          : "hold",
+    reweightingCohortPercent: clampInt(
+      v.reweightingCohortPercent,
+      0,
+      100,
+      base.reweightingCohortPercent,
+    ),
     confidenceWeighting: v.confidenceWeighting === "applied" ? "applied" : "hold",
     decayMode: v.decayMode === "applied" ? "applied" : "hold",
     signalWeightOverrides: overrides,
@@ -287,20 +311,57 @@ export function effectiveBaseWeights(
 }
 
 /**
- * The effective per-user weights actually used to score readiness. In "hold"
- * mode this is the base weights. In "applied" mode the bounded outcome tilt is
- * layered on top of the base, per user, and re-normalized.
+ * The bounded outcome tilt layered on top of the base weights, ALWAYS applied
+ * regardless of mode or cohort. This is the "what re-weighting would do" view
+ * used for shadow observability and the founder impact preview. Re-normalized to
+ * sum to 1.0 by proposeWeightAdjustments.
+ */
+export function reweightedWeights(
+  controls: BrainControls,
+  outcome: OutcomeSignal,
+): Record<string, number> {
+  const base = effectiveBaseWeights(controls);
+  const adjustments = proposeWeightAdjustments(outcome, SIGNAL_REGISTRY, base);
+  const out: Record<string, number> = {};
+  for (const a of adjustments) out[a.id] = a.adjustedWeight;
+  return out;
+}
+
+/**
+ * The effective per-user weights actually used to score readiness when the tilt
+ * is fully on. In "hold"/"shadow" mode this is the base weights (the tilt is not
+ * served); in "applied" mode it is the tilted weights. Cohort gating is applied
+ * by the caller (computeReadiness), which knows the user id.
  */
 export function effectiveWeightsForUser(
   controls: BrainControls,
   outcome: OutcomeSignal,
 ): Record<string, number> {
-  const base = effectiveBaseWeights(controls);
-  if (controls.reweightingMode !== "applied") return base;
-  const adjustments = proposeWeightAdjustments(outcome, SIGNAL_REGISTRY, base);
-  const out: Record<string, number> = {};
-  for (const a of adjustments) out[a.id] = a.adjustedWeight;
-  return out;
+  if (controls.reweightingMode !== "applied") return effectiveBaseWeights(controls);
+  return reweightedWeights(controls, outcome);
+}
+
+/**
+ * Deterministic rollout-cohort membership for "applied" re-weighting. A stable
+ * FNV-1a hash of the user id, normalized unsigned and bucketed into 0-99; a
+ * user is in-cohort when their bucket is below reweightingCohortPercent. 100
+ * includes everyone, 0 no one. Pure and stable so a user does not flip in and
+ * out between scorings.
+ */
+export function inReweightingCohort(
+  controls: BrainControls,
+  userId: string,
+): boolean {
+  const pct = controls.reweightingCohortPercent;
+  if (pct >= 100) return true;
+  if (pct <= 0 || !userId) return false;
+  let h = 2166136261;
+  for (let i = 0; i < userId.length; i++) {
+    h ^= userId.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const bucket = (h >>> 0) % 100;
+  return bucket < pct;
 }
 
 /** Effective matching pool threshold (founder override → env → 50). */

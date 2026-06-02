@@ -37,6 +37,11 @@ describe("computeBreakdown", () => {
       lifestyle: 0,
       quizzes: 0,
       receipts: 0,
+      music: 0,
+      vitality: 0,
+      curiosity: 0,
+      film: 0,
+      reading: 0,
     });
     expect(scoreFromBreakdown(b)).toBe(0);
   });
@@ -58,6 +63,11 @@ describe("computeBreakdown", () => {
       lifestyleItems: 50,
       quizzesCompleted: 50,
       receiptItems: 50,
+      musicItems: 50,
+      vitalityItems: 50,
+      curiosityItems: 50,
+      filmItems: 50,
+      readingItems: 50,
     });
     expect(b).toEqual({
       compass: 100,
@@ -75,6 +85,11 @@ describe("computeBreakdown", () => {
       lifestyle: 100,
       quizzes: 100,
       receipts: 100,
+      music: 100,
+      vitality: 100,
+      curiosity: 100,
+      film: 100,
+      reading: 100,
     });
     expect(scoreFromBreakdown(b)).toBe(100);
   });

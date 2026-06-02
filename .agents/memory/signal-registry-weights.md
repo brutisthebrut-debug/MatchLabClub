@@ -1,20 +1,22 @@
 ---
 name: Signal registry weights are not pre-normalized
-description: SIGNAL_REGISTRY weights sum to ~1.81, not 1.0; always normalize before deriving percentages, and mirror that in any hand-built demo of a derived endpoint.
+description: SIGNAL_REGISTRY raw weights sum to well over 1.0 (grows as lanes are added); always normalize before deriving percentages, and mirror that in every hand-built demo/UI of a derived endpoint.
 ---
 
 # Signal registry weights are not pre-normalized
 
 The raw `weight` fields in `SIGNAL_REGISTRY` (api-server `signalRegistry.ts`) sum
-to roughly **1.81**, not 1.0. Several code comments claim "default weights already
-sum to 1.0" or "the raw weights sum to 1.0" — that is **stale/inaccurate**. Do not
-trust those comments.
+to **well over 1.0**, and the total keeps growing every time a lane is added
+(each new connector/quiz/import is its own lane per founder direction). Do NOT
+hardcode or reason from a specific raw total — it is mutable. Compute it from the
+registry. Several old code comments claim "default weights already sum to 1.0" —
+that is **stale/inaccurate**; do not trust them.
 
-**Why:** readiness scoring divides by the total. `normalizedWeights()` and
+**Why:** readiness scoring divides by the live total. `normalizedWeights()` and
 `effectiveBaseWeights(controls)` (with no founder overrides) both return
 `weight / sum`, so the effective weights used to score readiness DO sum to 1, but
 the per-lane raw weights do not. A lane's true "percent of the picture" is
-`weight / 1.81`, e.g. `wellness` 0.22 → ~12%, not 22%.
+`weight / rawTotal`, not its raw weight.
 
 **How to apply:**
 - Any feature that surfaces a per-signal weight percentage must use the
@@ -26,3 +28,9 @@ the per-lane raw weights do not. A lane's true "percent of the picture" is
   weight with registry order breaking ties), and the same `topBlindSpot`
   selection (heaviest empty lane; ties resolved to the earliest in registry
   order). Guard these invariants with a static test on the demo constant.
+- Adding a lane is a registry edit PLUS an OpenAPI `MatchReadinessBreakdown`
+  edit PLUS codegen. The matching page (`Matching.tsx`) has a compile-time drift
+  guard: `BREAKDOWN_ROWS` uses `satisfies readonly BreakdownRow[]` and a
+  `keyof MatchReadinessBreakdown extends BreakdownRowKey ? true : never` assertion,
+  so omitting a row for any lane stops the build. Keep registry + OpenAPI + the
+  Matching rows + every hand-written breakdown fallback object in lockstep.

@@ -203,6 +203,111 @@ const LIVE: Connector[] = [
       "Fills the lifestyle lane of your Match Readiness. A fuller picture of your week reads as a fuller life to match around.",
   },
   {
+    id: "music-paste",
+    title: "Music taste",
+    icon: Music2,
+    color: "hsl(141 73% 42%)",
+    blurb:
+      "Paste your top artists and tracks, one per line, or drop in the export Spotify hands you. Music taste reads mood and conversation chemistry better than most prompt answers. No login, no OAuth.",
+    returns: "A music read that grounds your profile in the sound you actually live in.",
+    access: [
+      "The list of artists and tracks you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "OAuth access to Spotify or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    cta: { href: "/connections/add/music", label: "Add music" },
+    readiness:
+      "Fills the music lane of your Match Readiness. The truer the list, the better we read your mood and the kind of night you light up on.",
+  },
+  {
+    id: "film-paste",
+    title: "Film taste",
+    icon: Film,
+    color: "hsl(28 80% 55%)",
+    blurb:
+      "Paste the films and shows you love, one per line, or drop in your Letterboxd diary export. What you watch says a lot about your humour and what a good night in looks like for you. No login, no OAuth.",
+    returns: "A film read that sharpens date ideas and conversation openers.",
+    access: [
+      "The list of films and shows you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "OAuth access to Letterboxd, Netflix, or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    cta: { href: "/connections/add/film", label: "Add film" },
+    readiness:
+      "Fills the film lane of your Match Readiness. The more honest the list, the better the machine reads your humour and taste.",
+  },
+  {
+    id: "reading-paste",
+    title: "Reading taste",
+    icon: BookOpen,
+    color: "hsl(38 90% 50%)",
+    blurb:
+      "Paste the books and authors you return to, one per line, or drop in your Goodreads export. What you read is a quiet window into curiosity and values a bio rarely shows. No login, no OAuth.",
+    returns: "A reading read that deepens how the machine reasons about fit.",
+    access: [
+      "The list of books and authors you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "OAuth access to Goodreads, Amazon, or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    cta: { href: "/connections/add/reading", label: "Add reading" },
+    readiness:
+      "Fills the reading lane of your Match Readiness. A fuller shelf reads as a fuller inner life to match around.",
+  },
+  {
+    id: "curiosity-paste",
+    title: "Curiosity trail",
+    icon: History,
+    color: "hsl(207 70% 45%)",
+    blurb:
+      "Paste the interests and rabbit holes that hold your attention, one per line, or distil a Google Takeout summary into a list. The things you search, watch, and follow when no one is choosing for you. No login, no OAuth.",
+    returns: "An interests read that grounds your profile in what you would actually talk about.",
+    access: [
+      "The list of interests and topics you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "OAuth access to Google, YouTube, or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    cta: { href: "/connections/add/curiosity", label: "Add interests" },
+    readiness:
+      "Fills the curiosity lane of your Match Readiness. The more we see of what holds your attention, the better we match the things you would actually talk about.",
+  },
+  {
+    id: "vitality-paste",
+    title: "Vitality rhythm",
+    icon: Activity,
+    color: "hsl(348 70% 60%)",
+    blurb:
+      "Paste the rhythms that keep your energy up, one per line, or distil an Apple Health summary into a list. Workouts, rest, walks, sleep habits. We read the cadence, never any health record. No login, no OAuth.",
+    returns: "An energy read that helps pace a real connection around your week.",
+    access: [
+      "The list of activities and rhythms you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "Any underlying health record, vitals, or medical detail",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    cta: { href: "/connections/add/vitality", label: "Add vitality" },
+    readiness:
+      "Fills the vitality lane of your Match Readiness. A clearer rhythm helps the machine pace a real connection around your energy.",
+  },
+  {
     id: "matching-cohort",
     title: "Matching cohort",
     icon: Users,
@@ -246,47 +351,9 @@ const BUILDING: Connector[] = [
     ],
     comingNote: "Beat 3 of the connection roadmap. Lands after the forwarding inbox.",
   },
-  {
-    id: "spotify",
-    title: "Spotify",
-    icon: Music2,
-    color: "hsl(141 73% 42%)",
-    blurb:
-      "One-click Spotify connect. We read top artists, recently played, and saved tracks. Music taste turns out to predict conversation chemistry better than most prompt answers.",
-    returns: "A vibe signal that feeds compatibility reads and date-prep suggestions.",
-    access: [
-      "Top artists and tracks across short, medium, and long-term windows",
-      "Recently played tracks",
-      "Your saved track and album library",
-    ],
-    excludes: [
-      "Anything you have played in private listening sessions",
-      "Your playlists you have not chosen to share",
-      "Any ability to play, queue, or change what you are listening to",
-    ],
-    comingNote: "Sequenced behind the spending connector.",
-  },
 ];
 
 const RESEARCHING: Connector[] = [
-  {
-    id: "apple-health",
-    title: "Apple Health export",
-    icon: Activity,
-    color: "hsl(348 70% 60%)",
-    blurb:
-      "Same drop-the-ZIP pattern as Hinge. Apple Health lets you export your data archive. Sleep, workouts, and step rhythm tell us a lot about energy and social cadence. Research question: which signals are durable and which are noise.",
-    returns: "If it lands, an energy and rhythm read that informs date pacing.",
-  },
-  {
-    id: "google-takeout",
-    title: "Google Takeout history",
-    icon: History,
-    color: "hsl(207 70% 45%)",
-    blurb:
-      "Google lets you download Location History, Search History, and YouTube history as a ZIP. High signal if a user is willing to share it. Research question: how do we surface anything useful here without making it feel invasive.",
-    returns: "Where you actually go, what you are actually curious about, and the rhythm of both.",
-  },
   {
     id: "messaging-e2ee",
     title: "WhatsApp and iMessage",
@@ -295,23 +362,6 @@ const RESEARCHING: Connector[] = [
     blurb:
       "End-to-end encrypted by design. We are researching on-device processing so message tone analysis happens without anything leaving your phone. Open question: can we deliver useful coaching while honouring the E2EE contract.",
     returns: "If it lands, the most accurate tone read in the product.",
-  },
-  {
-    id: "letterboxd",
-    title: "Letterboxd taste",
-    icon: Film,
-    color: "hsl(28 80% 55%)",
-    blurb:
-      "Letterboxd lets you export your full diary and ratings as a CSV. Film taste says a lot about mood, humour, and what a good night in looks like for you. Research question: how much of compatibility actually lives in what people watch versus what they say they watch.",
-    returns: "If it lands, a taste read that sharpens date-idea suggestions and conversation openers.",
-    access: [
-      "The films, ratings, and dates in the diary CSV you export and drop in",
-    ],
-    excludes: [
-      "Your Letterboxd password or account login",
-      "Reviews or lists you choose not to export",
-      "Anything you have not put in the file yourself",
-    ],
   },
   {
     id: "strava",
@@ -329,23 +379,6 @@ const RESEARCHING: Connector[] = [
       "GPS routes, start points, or any precise location",
       "Heart rate, pace, or performance metrics",
       "Any ability to post, kudos, or change your activities",
-    ],
-  },
-  {
-    id: "goodreads",
-    title: "Goodreads shelf",
-    icon: BookOpen,
-    color: "hsl(38 45% 50%)",
-    blurb:
-      "Goodreads lets you export your shelves and ratings as a CSV. What you read, and how you rate it, is a quiet window into curiosity and values. Research question: which reading signals are durable preferences and which are aspirational shelf decoration.",
-    returns: "If it lands, a curiosity and values read that deepens compatibility reasoning.",
-    access: [
-      "Titles, shelves, ratings, and dates from the CSV you export and drop in",
-    ],
-    excludes: [
-      "Your Goodreads or Amazon login",
-      "Private notes or highlights you do not export",
-      "Anything outside the file you choose to share",
     ],
   },
   {

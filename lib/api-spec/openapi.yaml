@@ -7591,7 +7591,7 @@ components:
 
     MatchReadinessBreakdown:
       type: object
-      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse, taste, lifestyle, quizzes, receipts]
+      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse, taste, lifestyle, quizzes, receipts, music, vitality, curiosity, film, reading]
       properties:
         compass:
           type: integer
@@ -7650,6 +7650,26 @@ components:
           minimum: 0
           maximum: 100
         receipts:
+          type: integer
+          minimum: 0
+          maximum: 100
+        music:
+          type: integer
+          minimum: 0
+          maximum: 100
+        vitality:
+          type: integer
+          minimum: 0
+          maximum: 100
+        curiosity:
+          type: integer
+          minimum: 0
+          maximum: 100
+        film:
+          type: integer
+          minimum: 0
+          maximum: 100
+        reading:
           type: integer
           minimum: 0
           maximum: 100

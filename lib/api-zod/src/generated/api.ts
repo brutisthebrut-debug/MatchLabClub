@@ -4319,6 +4319,21 @@ export const getMatchingStateResponseReadinessBreakdownQuizzesMax = 100;
 export const getMatchingStateResponseReadinessBreakdownReceiptsMin = 0;
 export const getMatchingStateResponseReadinessBreakdownReceiptsMax = 100;
 
+export const getMatchingStateResponseReadinessBreakdownMusicMin = 0;
+export const getMatchingStateResponseReadinessBreakdownMusicMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownVitalityMin = 0;
+export const getMatchingStateResponseReadinessBreakdownVitalityMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownCuriosityMin = 0;
+export const getMatchingStateResponseReadinessBreakdownCuriosityMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownFilmMin = 0;
+export const getMatchingStateResponseReadinessBreakdownFilmMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownReadingMin = 0;
+export const getMatchingStateResponseReadinessBreakdownReadingMax = 100;
+
 export const getMatchingStateResponseReadinessThresholdMin = 0;
 export const getMatchingStateResponseReadinessThresholdMax = 100;
 
@@ -4382,7 +4397,12 @@ export const GetMatchingStateResponse = zod.object({
   "taste": zod.number().min(getMatchingStateResponseReadinessBreakdownTasteMin).max(getMatchingStateResponseReadinessBreakdownTasteMax),
   "lifestyle": zod.number().min(getMatchingStateResponseReadinessBreakdownLifestyleMin).max(getMatchingStateResponseReadinessBreakdownLifestyleMax),
   "quizzes": zod.number().min(getMatchingStateResponseReadinessBreakdownQuizzesMin).max(getMatchingStateResponseReadinessBreakdownQuizzesMax),
-  "receipts": zod.number().min(getMatchingStateResponseReadinessBreakdownReceiptsMin).max(getMatchingStateResponseReadinessBreakdownReceiptsMax)
+  "receipts": zod.number().min(getMatchingStateResponseReadinessBreakdownReceiptsMin).max(getMatchingStateResponseReadinessBreakdownReceiptsMax),
+  "music": zod.number().min(getMatchingStateResponseReadinessBreakdownMusicMin).max(getMatchingStateResponseReadinessBreakdownMusicMax),
+  "vitality": zod.number().min(getMatchingStateResponseReadinessBreakdownVitalityMin).max(getMatchingStateResponseReadinessBreakdownVitalityMax),
+  "curiosity": zod.number().min(getMatchingStateResponseReadinessBreakdownCuriosityMin).max(getMatchingStateResponseReadinessBreakdownCuriosityMax),
+  "film": zod.number().min(getMatchingStateResponseReadinessBreakdownFilmMin).max(getMatchingStateResponseReadinessBreakdownFilmMax),
+  "reading": zod.number().min(getMatchingStateResponseReadinessBreakdownReadingMin).max(getMatchingStateResponseReadinessBreakdownReadingMax)
 })
 }),
   "eligible": zod.boolean().describe('True when readiness.score is at or above readinessThreshold. The client uses this to gate the pool opt-in switch.'),

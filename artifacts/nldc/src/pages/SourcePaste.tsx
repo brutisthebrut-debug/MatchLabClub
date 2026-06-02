@@ -8,6 +8,11 @@ import {
   CheckCircle2,
   ShieldCheck,
   Loader2,
+  Music2,
+  Film,
+  BookOpen,
+  History,
+  Activity,
   type LucideIcon,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -86,6 +91,116 @@ const CONFIG: Record<string, SourceConfig> = {
     ],
     readiness:
       "Fills the lifestyle lane of your Match Readiness. A fuller picture of your week reads as a fuller life to match around.",
+  },
+  music: {
+    source: "music-paste",
+    title: "Music taste",
+    icon: Music2,
+    color: "hsl(141 73% 42%)",
+    lead: "The sound you keep coming back to. Music taste turns out to read mood and conversation chemistry better than most prompt answers.",
+    prompt:
+      "List your top artists and tracks, one per line. Paste from your Spotify export, or just type the ones that feel like you.",
+    placeholder:
+      "Phoebe Bridgers\nFred again..\nThe National\nSunday morning jazz\nFrank Ocean, Blonde\nLittle Simz",
+    access: [
+      "The list of artists and tracks you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "OAuth access to Spotify or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    readiness:
+      "Fills the music lane of your Match Readiness. The truer the list, the better we read your mood and the kind of night you light up on.",
+  },
+  film: {
+    source: "film-paste",
+    title: "Film taste",
+    icon: Film,
+    color: "hsl(28 80% 55%)",
+    lead: "The films and shows you love say a lot about your humour, your mood, and what a good night in actually looks like for you.",
+    prompt:
+      "List the films and shows you love, one per line. Paste from your Letterboxd export, or just type the ones that stuck.",
+    placeholder:
+      "Past Lives\nPortrait of a Lady on Fire\nThe Bear\nPaddington 2\nIn the Mood for Love\nFleabag",
+    access: [
+      "The list of films and shows you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "OAuth access to Letterboxd, Netflix, or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    readiness:
+      "Fills the film lane of your Match Readiness. The more honest the list, the better the machine reads your humour and taste.",
+  },
+  reading: {
+    source: "reading-paste",
+    title: "Reading taste",
+    icon: BookOpen,
+    color: "hsl(38 90% 50%)",
+    lead: "What you read, and what you return to, is a quiet window into curiosity and values that a bio rarely shows.",
+    prompt:
+      "List the books and authors you love, one per line. Paste from your Goodreads export, or just type the ones that shaped you.",
+    placeholder:
+      "Cormac McCarthy\nThe Overstory\nElena Ferrante\nDune\nBraiding Sweetgrass\nKazuo Ishiguro",
+    access: [
+      "The list of books and authors you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "OAuth access to Goodreads, Amazon, or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    readiness:
+      "Fills the reading lane of your Match Readiness. A fuller shelf reads as a fuller inner life to match around.",
+  },
+  curiosity: {
+    source: "curiosity-paste",
+    title: "Curiosity trail",
+    icon: History,
+    color: "hsl(207 70% 45%)",
+    lead: "The interests, rabbit holes, and topics that actually hold your attention. The things you search, watch, and follow when no one is choosing for you.",
+    prompt:
+      "List what you are curious about, one per line. Topics, channels, hobbies, the things you fall down a rabbit hole on. Paste from a Google Takeout summary, or just type them.",
+    placeholder:
+      "Urban planning\nFermentation\nFormula 1\nMid-century design\nMarine biology\nStandup comedy",
+    access: [
+      "The list of interests and topics you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "OAuth access to Google, YouTube, or any account",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    readiness:
+      "Fills the curiosity lane of your Match Readiness. The more we see of what holds your attention, the better we match the things you would actually talk about.",
+  },
+  vitality: {
+    source: "vitality-paste",
+    title: "Vitality rhythm",
+    icon: Activity,
+    color: "hsl(348 70% 60%)",
+    lead: "How you keep your energy up across a week. The movement, rest, and rhythms that shape how you actually show up.",
+    prompt:
+      "List the rhythms that keep you going, one per line. Workouts, walks, sleep habits, rest days. Paste from an Apple Health summary, or just type them.",
+    placeholder:
+      "Run three mornings a week\nYoga on Sundays\nEarly to bed\nLong walks after work\nClimbing on Tuesdays\nRest day Fridays",
+    access: [
+      "The list of activities and rhythms you paste in, one per line",
+      "A simple count of how many you gave us, used to fill the lane",
+    ],
+    excludes: [
+      "Anything you do not paste in",
+      "Any underlying health record, vitals, or medical detail",
+      "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+    ],
+    readiness:
+      "Fills the vitality lane of your Match Readiness. A clearer rhythm helps the machine pace a real connection around your energy.",
   },
 };
 
