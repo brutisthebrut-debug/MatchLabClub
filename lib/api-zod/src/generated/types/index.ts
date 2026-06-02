@@ -283,6 +283,7 @@ export * from './trustLedger';
 export * from './trustLedgerEntry';
 export * from './unregisterPushTokenParams';
 export * from './unregisterPushTokenResult';
+export * from './userJourneySummary';
 export * from './waitlistEntry';
 export * from './waitlistInput';
 export * from './waitlistStats';

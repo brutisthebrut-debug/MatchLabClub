@@ -178,6 +178,7 @@ import type {
   TrustLedger,
   UnregisterPushTokenParams,
   UnregisterPushTokenResult,
+  UserJourneySummary,
   WaitlistEntry,
   WaitlistInput,
   WaitlistStats,
@@ -9440,6 +9441,90 @@ export function useGetMatchingState<TData = Awaited<ReturnType<typeof getMatchin
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetMatchingStateQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetMyJourneySummaryUrl = () => {
+
+
+
+
+  return `/api/me/journey/summary`
+}
+
+/**
+ * Returns a small, user-scoped summary of the caller's own journey
+events over the last 7 days: how many signals they fed, how much
+readiness they gained, and how many tools they completed. Derived
+only from the caller's own events, never anyone else's. No raw
+content is ever returned, only derived counts. Safe to hit on every
+page load.
+
+ * @summary Get the signed-in user's own weekly momentum recap
+ */
+export const getMyJourneySummary = async ( options?: RequestInit): Promise<UserJourneySummary> => {
+
+  return customFetch<UserJourneySummary>(getGetMyJourneySummaryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyJourneySummaryQueryKey = () => {
+    return [
+    `/api/me/journey/summary`
+    ] as const;
+    }
+
+
+export const getGetMyJourneySummaryQueryOptions = <TData = Awaited<ReturnType<typeof getMyJourneySummary>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyJourneySummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyJourneySummaryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyJourneySummary>>> = ({ signal }) => getMyJourneySummary({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyJourneySummary>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyJourneySummaryQueryResult = NonNullable<Awaited<ReturnType<typeof getMyJourneySummary>>>
+export type GetMyJourneySummaryQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the signed-in user's own weekly momentum recap
+ */
+
+export function useGetMyJourneySummary<TData = Awaited<ReturnType<typeof getMyJourneySummary>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyJourneySummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyJourneySummaryQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

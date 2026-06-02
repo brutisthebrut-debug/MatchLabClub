@@ -3034,6 +3034,29 @@ export interface MatchingState {
   activityStreak?: ActivityStreak;
 }
 
+/**
+ * A user-scoped weekly momentum recap derived from the caller's own journey events. Only derived counts are returned, never raw content, and it never includes any other user's activity.
+ */
+export interface UserJourneySummary {
+  /**
+     * Count of signals the caller fed in the last 7 days.
+     * @minimum 0
+     */
+  signalsFedThisWeek: number;
+  /**
+     * Total readiness points the caller gained in the last 7 days, summed from their readiness-gain events.
+     * @minimum 0
+     */
+  readinessGainedThisWeek: number;
+  /**
+     * Count of tools the caller completed in the last 7 days.
+     * @minimum 0
+     */
+  toolsCompletedThisWeek: number;
+  /** True when the caller has any journey event on record, so the client can show a first-week welcome state instead of zeros. */
+  hasHistory: boolean;
+}
+
 export type DatingWinCategory = typeof DatingWinCategory[keyof typeof DatingWinCategory];
 
 

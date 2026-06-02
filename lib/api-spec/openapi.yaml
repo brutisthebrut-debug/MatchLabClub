@@ -3313,6 +3313,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/journey/summary:
+    get:
+      tags: [Matching]
+      operationId: getMyJourneySummary
+      summary: Get the signed-in user's own weekly momentum recap
+      description: |
+        Returns a small, user-scoped summary of the caller's own journey
+        events over the last 7 days: how many signals they fed, how much
+        readiness they gained, and how many tools they completed. Derived
+        only from the caller's own events, never anyone else's. No raw
+        content is ever returned, only derived counts. Safe to hit on every
+        page load.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The caller's weekly momentum summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserJourneySummary'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/matching/preferences:
     put:
       tags: [Matching]
@@ -7497,6 +7526,38 @@ components:
           $ref: '#/components/schemas/OutcomeInsight'
         activityStreak:
           $ref: '#/components/schemas/ActivityStreak'
+
+    UserJourneySummary:
+      type: object
+      description: >-
+        A user-scoped weekly momentum recap derived from the caller's own
+        journey events. Only derived counts are returned, never raw content,
+        and it never includes any other user's activity.
+      required:
+        - signalsFedThisWeek
+        - readinessGainedThisWeek
+        - toolsCompletedThisWeek
+        - hasHistory
+      properties:
+        signalsFedThisWeek:
+          type: integer
+          minimum: 0
+          description: Count of signals the caller fed in the last 7 days.
+        readinessGainedThisWeek:
+          type: integer
+          minimum: 0
+          description: >-
+            Total readiness points the caller gained in the last 7 days,
+            summed from their readiness-gain events.
+        toolsCompletedThisWeek:
+          type: integer
+          minimum: 0
+          description: Count of tools the caller completed in the last 7 days.
+        hasHistory:
+          type: boolean
+          description: >-
+            True when the caller has any journey event on record, so the
+            client can show a first-week welcome state instead of zeros.
 
     ActivityStreak:
       type: object

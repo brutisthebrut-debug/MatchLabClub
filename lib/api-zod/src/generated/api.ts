@@ -4327,6 +4327,36 @@ export const GetMatchingStateResponse = zod.object({
 
 
 /**
+ * Returns a small, user-scoped summary of the caller's own journey
+events over the last 7 days: how many signals they fed, how much
+readiness they gained, and how many tools they completed. Derived
+only from the caller's own events, never anyone else's. No raw
+content is ever returned, only derived counts. Safe to hit on every
+page load.
+
+ * @summary Get the signed-in user's own weekly momentum recap
+ */
+export const GetMyJourneySummaryHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const getMyJourneySummaryResponseSignalsFedThisWeekMin = 0;
+
+export const getMyJourneySummaryResponseReadinessGainedThisWeekMin = 0;
+
+export const getMyJourneySummaryResponseToolsCompletedThisWeekMin = 0;
+
+
+
+export const GetMyJourneySummaryResponse = zod.object({
+  "signalsFedThisWeek": zod.number().min(getMyJourneySummaryResponseSignalsFedThisWeekMin).describe('Count of signals the caller fed in the last 7 days.'),
+  "readinessGainedThisWeek": zod.number().min(getMyJourneySummaryResponseReadinessGainedThisWeekMin).describe('Total readiness points the caller gained in the last 7 days, summed from their readiness-gain events.'),
+  "toolsCompletedThisWeek": zod.number().min(getMyJourneySummaryResponseToolsCompletedThisWeekMin).describe('Count of tools the caller completed in the last 7 days.'),
+  "hasHistory": zod.boolean().describe('True when the caller has any journey event on record, so the client can show a first-week welcome state instead of zeros.')
+}).describe('A user-scoped weekly momentum recap derived from the caller\'s own journey events. Only derived counts are returned, never raw content, and it never includes any other user\'s activity.')
+
+
+/**
  * Inserts or updates the caller's row in `match_preferences`. Every
 field is optional. Pass null to clear a value. Age and distance
 bounds are validated server-side.

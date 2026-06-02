@@ -1,4 +1,16 @@
-import type { MirrorPortrait } from "@workspace/api-client-react";
+import type {
+  MirrorPortrait,
+  UserJourneySummary,
+} from "@workspace/api-client-react";
+
+// Sample momentum shown to signed-out visitors so the recap card is never empty.
+// Real accounts always get their own counts from their own journey events.
+export const DEMO_MOMENTUM: UserJourneySummary = {
+  signalsFedThisWeek: 4,
+  readinessGainedThisWeek: 11,
+  toolsCompletedThisWeek: 3,
+  hasHistory: true,
+};
 
 // Shown when the visitor is signed out (portrait endpoint 401s) or while a
 // signed-in user's first portrait is still loading. Real accounts always get

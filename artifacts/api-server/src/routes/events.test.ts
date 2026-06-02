@@ -177,3 +177,62 @@ describe("summarizeJourneyEvents", () => {
     expect(feedTypes).toContain("readiness_gained");
   });
 });
+
+describe("summarizeUserJourney", () => {
+  it("counts only the caller's own events within the last seven days", async () => {
+    const { recordJourneyEvent, summarizeUserJourney } = await import(
+      "../lib/journeyEvents"
+    );
+    await recordJourneyEvent({ eventType: "signal_fed", userId: "recap-me" });
+    await recordJourneyEvent({ eventType: "signal_fed", userId: "recap-me" });
+    await recordJourneyEvent({
+      eventType: "tool_completed",
+      userId: "recap-me",
+      props: { tool: "coach" },
+    });
+    await recordJourneyEvent({
+      eventType: "readiness_gained",
+      userId: "recap-me",
+      props: { delta: 7 },
+    });
+    await recordJourneyEvent({
+      eventType: "readiness_gained",
+      userId: "recap-me",
+      props: { delta: 4 },
+    });
+    // Another user's activity must never leak into the caller's recap.
+    await recordJourneyEvent({ eventType: "signal_fed", userId: "recap-other" });
+
+    const summary = await summarizeUserJourney("recap-me");
+    expect(summary.signalsFedThisWeek).toBe(2);
+    expect(summary.toolsCompletedThisWeek).toBe(1);
+    expect(summary.readinessGainedThisWeek).toBe(11);
+    expect(summary.hasHistory).toBe(true);
+  });
+
+  it("excludes events older than the window but still reports history", async () => {
+    const { recordJourneyEvent, summarizeUserJourney } = await import(
+      "../lib/journeyEvents"
+    );
+    await recordJourneyEvent({ eventType: "signal_fed", userId: "recap-old" });
+
+    // Evaluate the window from eight days in the future, so the just-inserted
+    // event falls outside the seven-day cutoff.
+    const future = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000);
+    const summary = await summarizeUserJourney("recap-old", future);
+    expect(summary.signalsFedThisWeek).toBe(0);
+    expect(summary.readinessGainedThisWeek).toBe(0);
+    expect(summary.hasHistory).toBe(true);
+  });
+
+  it("returns an empty summary for a user with no events", async () => {
+    const { summarizeUserJourney } = await import("../lib/journeyEvents");
+    const summary = await summarizeUserJourney("recap-nobody");
+    expect(summary).toEqual({
+      signalsFedThisWeek: 0,
+      readinessGainedThisWeek: 0,
+      toolsCompletedThisWeek: 0,
+      hasHistory: false,
+    });
+  });
+});

@@ -9,7 +9,7 @@
  * delta), never raw user content or PII.
  */
 import { db, journeyEventsTable, JOURNEY_EVENT_TYPES } from "@workspace/db";
-import { sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import type { JourneyEventType } from "@workspace/db";
 import { logger } from "./logger";
 
@@ -152,4 +152,84 @@ export async function summarizeJourneyEvents(
   }
 
   return { counts, totals, recent };
+}
+
+export interface UserJourneySummary {
+  signalsFedThisWeek: number;
+  readinessGainedThisWeek: number;
+  toolsCompletedThisWeek: number;
+  hasHistory: boolean;
+}
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * A user-scoped weekly momentum recap built only from the caller's own journey
+ * events. We pull the caller's recent rows by a simple equality predicate, then
+ * compute the 7-day window in JS rather than via a SQL interval/group-by, so the
+ * same code path works under the test harness (which cannot evaluate interval
+ * filters) and in production. Only derived counts leave this function; raw event
+ * props are never returned. Fail-open: any error degrades to an empty summary so
+ * the surface that calls it never breaks.
+ */
+export async function summarizeUserJourney(
+  userId: string,
+  now: Date = new Date(),
+): Promise<UserJourneySummary> {
+  const empty: UserJourneySummary = {
+    signalsFedThisWeek: 0,
+    readinessGainedThisWeek: 0,
+    toolsCompletedThisWeek: 0,
+    hasHistory: false,
+  };
+  if (!userId) return empty;
+
+  try {
+    const rows = await db
+      .select({
+        eventType: journeyEventsTable.eventType,
+        props: journeyEventsTable.props,
+        createdAt: journeyEventsTable.createdAt,
+      })
+      .from(journeyEventsTable)
+      .where(eq(journeyEventsTable.userId, userId))
+      .orderBy(desc(journeyEventsTable.createdAt))
+      .limit(500);
+
+    const cutoff = now.getTime() - WEEK_MS;
+    let signalsFedThisWeek = 0;
+    let readinessGainedThisWeek = 0;
+    let toolsCompletedThisWeek = 0;
+    for (const row of rows) {
+      const ts =
+        row.createdAt instanceof Date
+          ? row.createdAt.getTime()
+          : new Date(row.createdAt as unknown as string).getTime();
+      if (Number.isNaN(ts) || ts < cutoff) continue;
+      if (row.eventType === "signal_fed") {
+        signalsFedThisWeek += 1;
+      } else if (row.eventType === "tool_completed") {
+        toolsCompletedThisWeek += 1;
+      } else if (row.eventType === "readiness_gained") {
+        const props = (row.props as Record<string, unknown> | null) ?? null;
+        const delta = Number(props?.delta ?? 0);
+        if (Number.isFinite(delta) && delta > 0) {
+          readinessGainedThisWeek += delta;
+        }
+      }
+    }
+
+    return {
+      signalsFedThisWeek,
+      readinessGainedThisWeek: Math.round(readinessGainedThisWeek),
+      toolsCompletedThisWeek,
+      hasHistory: rows.length > 0,
+    };
+  } catch (err) {
+    logger.warn(
+      { err: err instanceof Error ? err.message : String(err) },
+      "summarizeUserJourney failed; returning empty summary",
+    );
+    return empty;
+  }
 }

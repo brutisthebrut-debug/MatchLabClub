@@ -40,11 +40,14 @@ import {
   getGetMatchingStateQueryKey,
   useListJournalEntries,
   useListPostDateNotes,
+  useGetMyJourneySummary,
+  getGetMyJourneySummaryQueryKey,
   type MirrorPortrait,
 } from "@workspace/api-client-react";
 import { ClimbCard } from "@/components/climb/ClimbCard";
+import { MomentumRecap } from "@/components/climb/MomentumRecap";
 import { NextBestActionCoach } from "@/components/coach/NextBestActionCoach";
-import { DEMO_PORTRAIT } from "@/lib/mirrorDemo";
+import { DEMO_PORTRAIT, DEMO_MOMENTUM } from "@/lib/mirrorDemo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -125,6 +128,14 @@ function MirrorPortraitSection({
   portrait: MirrorPortrait;
   isDemo: boolean;
 }) {
+  // Frame the blind spots as a quest the user is completing: every dimension is
+  // either mapped (a known) or not (a blind spot), so progress is simply how
+  // many of the total are mapped. This turns a flat "missing" list into an
+  // ordered climb that ties back into readiness.
+  const mappedCount = portrait.known.length;
+  const totalAreas = portrait.known.length + portrait.blindSpots.length;
+  const questPercent =
+  totalAreas === 0 ? 0 : Math.round((mappedCount / totalAreas) * 100);
   return (
   <div className="space-y-6">
   <Card
@@ -201,19 +212,42 @@ function MirrorPortraitSection({
   </CardTitle>
   </CardHeader>
   <CardContent>
+  {totalAreas > 0 && (
+  <div className="mb-4" data-testid="blindspot-quest-progress">
+  <div className="flex items-center justify-between text-xs text-muted-foreground">
+  <span className="font-medium">
+  {mappedCount} of {totalAreas} areas mapped
+  </span>
+  <span>{questPercent}%</span>
+  </div>
+  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+  <div
+  className="h-full rounded-full bg-amber-500"
+  style={{ width: `${questPercent}%` }}
+  />
+  </div>
+  </div>
+  )}
   {portrait.blindSpots.length === 0 ? (
   <p className="text-sm text-muted-foreground">
-  I have a fairly full picture of you. Keep feeding outcomes and it
-  stays sharp.
+  Every area is mapped. Keep feeding outcomes and your Mirror stays
+  sharp.
   </p>
   ) : (
-  <ul className="space-y-3">
-  {portrait.blindSpots.map((b) => (
+  <ol className="space-y-3">
+  {portrait.blindSpots.map((b, i) => (
   <li
   key={b.key}
   data-testid={`row-blindspot-${b.key}`}
-  className="rounded-lg border bg-card/40 p-3"
+  className="flex gap-3 rounded-lg border bg-card/40 p-3"
   >
+  <span
+  className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-xs font-bold text-amber-600"
+  aria-hidden="true"
+  >
+  {mappedCount + i + 1}
+  </span>
+  <div className="min-w-0">
   <p className="text-sm font-medium">{b.label}</p>
   <p className="mt-1 text-xs text-muted-foreground">{b.why}</p>
   <Link
@@ -224,9 +258,10 @@ function MirrorPortraitSection({
   {b.actionLabel}
   <ArrowUpRight className="h-3 w-3" />
   </Link>
+  </div>
   </li>
   ))}
-  </ul>
+  </ol>
   )}
   </CardContent>
   </Card>
@@ -445,6 +480,12 @@ export default function YourMirror() {
   const { data: matchingState } = useGetMatchingState({
     query: { queryKey: getGetMatchingStateQueryKey(), enabled: isAuthenticated },
   });
+  const { data: journeySummary } = useGetMyJourneySummary({
+    query: {
+      queryKey: getGetMyJourneySummaryQueryKey(),
+      enabled: isAuthenticated,
+    },
+  });
   const {
     data: portrait,
     isLoading: portraitLoading,
@@ -507,13 +548,16 @@ export default function YourMirror() {
   ) : (
   <>
   <MirrorPortraitSection portrait={shownPortrait} isDemo={isDemo} />
-  {!isDemo && (
+  {isDemo ? (
+  <MomentumRecap summary={DEMO_MOMENTUM} isDemo />
+  ) : (
   <>
   <ClimbCard
   score={matchingState?.readiness?.score ?? 0}
   threshold={matchingState?.readinessThreshold ?? 50}
   streak={matchingState?.activityStreak}
   />
+  <MomentumRecap summary={journeySummary ?? DEMO_MOMENTUM} />
   <div className="flex justify-center">
   <Button
   asChild

@@ -40,6 +40,7 @@ import {
   readOnboardingSeeking,
 } from "@/lib/onboardingState";
 import { trackEvent } from "@/lib/analytics";
+import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
 
 const GOALS = [
   { value: "find a relationship", label: "Find a relationship", desc: "Something real and lasting" },
@@ -124,6 +125,11 @@ export default function Onboarding() {
   const [seeking, setSeeking] = useState<string[]>(() => readOnboardingSeeking());
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  // Readiness snapshot taken the instant before the user feeds their first
+  // onboarding signal, so the final step can animate the real gain (before to
+  // after) rather than a flat number. Null until they save, so a pure skip
+  // shows no celebratory delta.
+  const [readinessBefore, setReadinessBefore] = useState<number | null>(null);
 
   const createAnswer = useCreateWellnessAnswer();
   const matchingState = useGetMatchingState();
@@ -191,6 +197,9 @@ export default function Onboarding() {
       return;
     }
     setSaving(true);
+    // Snapshot readiness before any answer is saved so the Mirror step can show
+    // the climb that these answers produced.
+    setReadinessBefore(readiness);
     try {
       for (const [questionId, answer] of entries) {
         const q = STARTER_MODULE.find((sq) => sq.id === questionId);
@@ -545,46 +554,19 @@ export default function Onboarding() {
                     )}
                   </div>
                 ) : (
-                  <div className="mx-auto mt-8 max-w-sm rounded-2xl border border-foreground/10 p-6">
-                    <div className="flex items-end justify-between">
-                      <span className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                        Match Readiness
-                      </span>
-                      <span className="font-serif text-3xl font-bold gradient-text">{readiness}%</span>
-                    </div>
-                    <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-foreground/10">
-                      <motion.div
-                        className="h-full rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B]"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${readiness}%` }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                      />
-                    </div>
-                    <p className="mt-3 text-left text-xs text-muted-foreground">
-                      Keep going on your Mirror to unlock matching.
-                    </p>
-                  </div>
+                  <ReadinessClimbReveal
+                    from={readinessBefore ?? readiness}
+                    to={readiness}
+                    className="mx-auto mt-8 max-w-sm rounded-2xl border border-foreground/10 p-6"
+                  />
                 )}
 
                 {portrait && (
-                  <div className="mx-auto mt-6 flex max-w-md items-center justify-between gap-3 rounded-xl border border-foreground/10 px-4 py-3">
-                    <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                      Match Readiness
-                    </span>
-                    <div className="flex flex-1 items-center gap-3">
-                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-foreground/10">
-                        <motion.div
-                          className="h-full rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B]"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${portrait.readinessScore}%` }}
-                          transition={{ duration: 0.8, ease: "easeOut" }}
-                        />
-                      </div>
-                      <span className="font-serif text-lg font-bold gradient-text">
-                        {portrait.readinessScore}%
-                      </span>
-                    </div>
-                  </div>
+                  <ReadinessClimbReveal
+                    from={readinessBefore ?? portrait.readinessScore}
+                    to={portrait.readinessScore}
+                    className="mx-auto mt-6 max-w-md rounded-2xl border border-foreground/10 p-6"
+                  />
                 )}
 
                 <div className="mt-8 flex flex-col items-center gap-3">
