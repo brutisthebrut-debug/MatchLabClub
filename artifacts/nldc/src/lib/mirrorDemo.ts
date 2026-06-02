@@ -1,6 +1,7 @@
 import type {
   MirrorPortrait,
   UserJourneySummary,
+  UserAchievements,
 } from "@workspace/api-client-react";
 
 // Sample momentum shown to signed-out visitors so the recap card is never empty.
@@ -74,4 +75,25 @@ export const DEMO_PORTRAIT: MirrorPortrait = {
   eligible: false,
   threshold: 60,
   engineVersion: "sample",
+};
+
+// Sample unlock board shown while a signed-in user's first board loads, or if the
+// board endpoint hiccups, so the unlocks section is never empty. Real accounts
+// always get their own board computed from their own progress. Clearly labelled
+// as a sample where it is shown.
+export const DEMO_ACHIEVEMENTS: UserAchievements = {
+  unlockedCount: 4,
+  totalCount: 10,
+  achievements: [
+    { id: "first-signal", title: "First signal", description: "Teach the machine its first thing about you.", icon: "Sparkles", tier: "bronze", unit: "signals", target: 1, progress: 1, unlocked: true },
+    { id: "signal-10", title: "Signal stacker", description: "Feed ten signals into your second brain.", icon: "Layers", tier: "silver", unit: "signals", target: 10, progress: 7, unlocked: false },
+    { id: "signal-25", title: "Open book", description: "Feed twenty-five signals and keep going.", icon: "BookOpen", tier: "gold", unit: "signals", target: 25, progress: 7, unlocked: false },
+    { id: "streak-3", title: "Warming up", description: "Show up three days in a row.", icon: "Flame", tier: "bronze", unit: "days", target: 3, progress: 3, unlocked: true },
+    { id: "streak-7", title: "Week strong", description: "Keep a seven-day streak alive.", icon: "Flame", tier: "gold", unit: "days", target: 7, progress: 3, unlocked: false },
+    { id: "tools-3", title: "Toolkit", description: "Finish three tools across the app.", icon: "Wrench", tier: "bronze", unit: "tools", target: 3, progress: 3, unlocked: true },
+    { id: "lanes-3", title: "Portrait forming", description: "Map three areas of your Mirror.", icon: "Compass", tier: "silver", unit: "areas", target: 3, progress: 3, unlocked: true },
+    { id: "lanes-6", title: "Wide open", description: "Map six areas so the picture gets sharp.", icon: "Telescope", tier: "gold", unit: "areas", target: 6, progress: 3, unlocked: false },
+    { id: "ready-25", title: "Off the ground", description: "Climb to twenty-five readiness.", icon: "TrendingUp", tier: "bronze", unit: "readiness", target: 25, progress: 25, unlocked: true },
+    { id: "match-ready", title: "Match ready", description: "Reach the readiness that opens introductions.", icon: "Heart", tier: "gold", unit: "readiness", target: 60, progress: 48, unlocked: false },
+  ],
 };

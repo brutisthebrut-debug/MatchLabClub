@@ -9,6 +9,8 @@
 export * from './accountExport';
 export * from './accountExportUser';
 export * from './accountSummary';
+export * from './achievement';
+export * from './achievementTier';
 export * from './actionPlanItem';
 export * from './activityStreak';
 export * from './aiContentConsentState';
@@ -283,6 +285,7 @@ export * from './trustLedger';
 export * from './trustLedgerEntry';
 export * from './unregisterPushTokenParams';
 export * from './unregisterPushTokenResult';
+export * from './userAchievements';
 export * from './userJourneySummary';
 export * from './waitlistEntry';
 export * from './waitlistInput';

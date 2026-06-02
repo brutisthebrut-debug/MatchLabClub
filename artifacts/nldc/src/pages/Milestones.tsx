@@ -15,6 +15,8 @@ import {
 import {
   useGetMatchingState,
   getGetMatchingStateQueryKey,
+  useGetMyAchievements,
+  getGetMyAchievementsQueryKey,
 } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -35,6 +37,8 @@ import {
 } from "@/lib/milestones";
 import { computeClimb } from "@/lib/climb";
 import { StreakBadge } from "@/components/climb/StreakBadge";
+import { AchievementsGrid } from "@/components/climb/AchievementsGrid";
+import { DEMO_ACHIEVEMENTS } from "@/lib/mirrorDemo";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -63,9 +67,23 @@ export default function Milestones() {
     },
   });
 
+  const achievementsQuery = useGetMyAchievements({
+    query: {
+      queryKey: getGetMyAchievementsQueryKey(),
+      enabled: isAuthenticated,
+    },
+  });
+
   const score = state.data?.readiness.score ?? 0;
   const threshold = state.data?.readinessThreshold ?? 50;
   const streak = state.data?.activityStreak;
+
+  // The real board is always non-empty (it returns every unlock, locked at zero
+  // when nothing is earned). The demo only stands in while the first load is in
+  // flight or if the board endpoint hiccups, so the section never looks broken.
+  const achievements = achievementsQuery.data ?? null;
+  const board = achievements ?? DEMO_ACHIEVEMENTS;
+  const boardIsDemo = achievements === null;
 
   const milestones = useMemo(() => buildMilestones(threshold), [threshold]);
   const upcoming = useMemo(
@@ -272,9 +290,13 @@ export default function Milestones() {
           </div>
         </div>
 
+        <motion.section {...fadeUp(0.28)} className="mt-12">
+          <AchievementsGrid data={board} isDemo={boardIsDemo} />
+        </motion.section>
+
         <motion.p
-          {...fadeUp(0.3)}
-          className="mt-8 text-center text-sm text-muted-foreground"
+          {...fadeUp(0.34)}
+          className="mt-10 text-center text-sm text-muted-foreground"
         >
           Want to show how far you have come?{" "}
           <Link

@@ -4357,6 +4357,46 @@ export const GetMyJourneySummaryResponse = zod.object({
 
 
 /**
+ * Returns the caller's full achievements board: every unlock with its
+target, current progress, and whether it is unlocked. Purely a
+gamification lens derived from the caller's own aggregate progress
+(signals fed, tools completed, current streak, Mirror areas mapped,
+readiness score). It never feeds the readiness score and never returns
+raw content. Safe to hit on every page load.
+
+ * @summary Get the signed-in user's unlock board
+ */
+export const GetMyAchievementsHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+
+export const getMyAchievementsResponseAchievementsItemProgressMin = 0;
+
+export const getMyAchievementsResponseUnlockedCountMin = 0;
+
+export const getMyAchievementsResponseTotalCountMin = 0;
+
+
+
+export const GetMyAchievementsResponse = zod.object({
+  "achievements": zod.array(zod.object({
+  "id": zod.string().describe('Stable unlock id.'),
+  "title": zod.string().describe('Short unlock name.'),
+  "description": zod.string().describe('One-line description of what earns the unlock.'),
+  "icon": zod.string().describe('lucide-react icon name, resolved on the client.'),
+  "tier": zod.enum(['bronze', 'silver', 'gold']).describe('Visual tier of the unlock.'),
+  "unit": zod.string().describe('Short noun for progress copy, e.g. \"signals\" or \"days\".'),
+  "target": zod.number().min(1).describe('Value the metric must reach to unlock. The \"match ready\" unlock uses the live readiness threshold.'),
+  "progress": zod.number().min(getMyAchievementsResponseAchievementsItemProgressMin).describe('Current progress toward the target, clamped to the target.'),
+  "unlocked": zod.boolean().describe('True when the unlock has been earned.')
+}).describe('A single unlock on the climb. Derived only from the caller\'s aggregate progress; it never affects the readiness score and never carries raw content.')).describe('Every unlock, locked and unlocked, in journey order.'),
+  "unlockedCount": zod.number().min(getMyAchievementsResponseUnlockedCountMin).describe('How many unlocks the caller has earned.'),
+  "totalCount": zod.number().min(getMyAchievementsResponseTotalCountMin).describe('Total number of unlocks on the board.')
+}).describe('The caller\'s full unlock board plus a simple unlocked\/total tally. Purely derived gamification; never feeds the readiness score.')
+
+
+/**
  * Inserts or updates the caller's row in `match_preferences`. Every
 field is optional. Pass null to clear a value. Age and distance
 bounds are validated server-side.

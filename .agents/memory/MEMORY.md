@@ -1,7 +1,1 @@
-- [Per-route layout remounts](applayout-remount.md) — AppLayout is rendered by every page, so it remounts on navigation; cross-navigation state (delta watchers, refs) must mount at App.tsx root.
-- [Trust ledger held vs signal](trust-ledger-held-vs-signal.md) — a "what we hold" / export-delete surface must base held/purgeable on stored rows a purge removes, not the narrower readiness signal count.
-- [Blog SEO is client-side only](blog-seo-client-side.md) — per-post meta/OG/JSON-LD applied at runtime via useMeta+JsonLd; no SSR, so non-JS unfurl bots see index.html defaults.
-- [testDb fake SQL harness gotchas](testdb-fake-sql-harness.md) — in-memory db mock: raw `sql` WHERE preds are no-ops unless pattern-matched, transactions/execute are inert, and the secure anon_claim cookie is dropped by supertest agents.
-- [drizzle push ignores index predicate changes](drizzle-push-partial-index.md) — push diffs by index name, so partial->non-partial unique-index edits don't apply; drop manually. Also: populating a long-empty table can surface latent NOT NULL + onDelete:set-null FK traps.
-- [nldc api-client-react vi.mock allowlist](nldc-api-mock-allowlist.md) — frontend integration tests mock the api client as a strict allowlist; a new hook on a tested page must be added to each mock or the suite throws.
-- [testDb aggregate limits](testdb-aggregate-limits.md) — testDb mock has no groupBy and can't eval interval/date count filters; summary helpers must split counts vs feed into independent fail-open blocks to stay testable.
+- [All-time counts use SQL aggregates](alltime-counts.md) — never fetch capped rows then JS-count for "all-time" totals; testDb supports filtered count aggregates.

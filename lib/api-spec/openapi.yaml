@@ -3342,6 +3342,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/achievements:
+    get:
+      tags: [Matching]
+      operationId: getMyAchievements
+      summary: Get the signed-in user's unlock board
+      description: |
+        Returns the caller's full achievements board: every unlock with its
+        target, current progress, and whether it is unlocked. Purely a
+        gamification lens derived from the caller's own aggregate progress
+        (signals fed, tools completed, current streak, Mirror areas mapped,
+        readiness score). It never feeds the readiness score and never returns
+        raw content. Safe to hit on every page load.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The caller's unlock board.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAchievements'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/matching/preferences:
     put:
       tags: [Matching]
@@ -7558,6 +7587,80 @@ components:
           description: >-
             True when the caller has any journey event on record, so the
             client can show a first-week welcome state instead of zeros.
+
+    Achievement:
+      type: object
+      description: >-
+        A single unlock on the climb. Derived only from the caller's aggregate
+        progress; it never affects the readiness score and never carries raw
+        content.
+      required:
+        - id
+        - title
+        - description
+        - icon
+        - tier
+        - unit
+        - target
+        - progress
+        - unlocked
+      properties:
+        id:
+          type: string
+          description: Stable unlock id.
+        title:
+          type: string
+          description: Short unlock name.
+        description:
+          type: string
+          description: One-line description of what earns the unlock.
+        icon:
+          type: string
+          description: lucide-react icon name, resolved on the client.
+        tier:
+          type: string
+          enum: [bronze, silver, gold]
+          description: Visual tier of the unlock.
+        unit:
+          type: string
+          description: Short noun for progress copy, e.g. "signals" or "days".
+        target:
+          type: integer
+          minimum: 1
+          description: >-
+            Value the metric must reach to unlock. The "match ready" unlock uses
+            the live readiness threshold.
+        progress:
+          type: integer
+          minimum: 0
+          description: Current progress toward the target, clamped to the target.
+        unlocked:
+          type: boolean
+          description: True when the unlock has been earned.
+
+    UserAchievements:
+      type: object
+      description: >-
+        The caller's full unlock board plus a simple unlocked/total tally. Purely
+        derived gamification; never feeds the readiness score.
+      required:
+        - achievements
+        - unlockedCount
+        - totalCount
+      properties:
+        achievements:
+          type: array
+          description: Every unlock, locked and unlocked, in journey order.
+          items:
+            $ref: '#/components/schemas/Achievement'
+        unlockedCount:
+          type: integer
+          minimum: 0
+          description: How many unlocks the caller has earned.
+        totalCount:
+          type: integer
+          minimum: 0
+          description: Total number of unlocks on the board.
 
     ActivityStreak:
       type: object

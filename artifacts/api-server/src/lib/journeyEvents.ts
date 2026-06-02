@@ -233,3 +233,44 @@ export async function summarizeUserJourney(
     return empty;
   }
 }
+
+export interface UserJourneyTotals {
+  signalsFed: number;
+  toolsCompleted: number;
+}
+
+/**
+ * All-time totals of the caller's own signal-feeding and tool-completion events,
+ * used to drive achievement unlocks. Scoped strictly to the caller by an equality
+ * predicate and counted DB-side with filtered aggregates so the figure is a true
+ * all-time count with no row cap (a high-activity user must never be undercounted
+ * into a stuck unlock). Only the two derived counts leave this function.
+ * Fail-open: any error degrades to zeros so the unlock board never breaks the page.
+ */
+export async function countUserJourneyTotals(
+  userId: string,
+): Promise<UserJourneyTotals> {
+  const empty: UserJourneyTotals = { signalsFed: 0, toolsCompleted: 0 };
+  if (!userId) return empty;
+
+  try {
+    const [row] = await db
+      .select({
+        signalsFed: sql<number>`count(*) filter (where ${journeyEventsTable.eventType} = 'signal_fed')::int`,
+        toolsCompleted: sql<number>`count(*) filter (where ${journeyEventsTable.eventType} = 'tool_completed')::int`,
+      })
+      .from(journeyEventsTable)
+      .where(eq(journeyEventsTable.userId, userId));
+
+    return {
+      signalsFed: Number(row?.signalsFed ?? 0),
+      toolsCompleted: Number(row?.toolsCompleted ?? 0),
+    };
+  } catch (err) {
+    logger.warn(
+      { err: err instanceof Error ? err.message : String(err) },
+      "countUserJourneyTotals failed; returning zeros",
+    );
+    return empty;
+  }
+}

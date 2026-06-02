@@ -192,7 +192,7 @@ async function loadReadinessHistory(
   return rows.map((r) => ({ day: r.day, score: Number(r.score) }));
 }
 
-function todayUtc(): string {
+export function todayUtc(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
@@ -200,7 +200,7 @@ function todayUtc(): string {
 // first-party signal table. This powers the activity streak (a gamification
 // lens) and is read-only: it never feeds the readiness score. We only ever read
 // the calendar day a row was created, never any of its content.
-async function loadActivityDays(userId: string): Promise<string[]> {
+export async function loadActivityDays(userId: string): Promise<string[]> {
   const result = await db.execute<{ day: string }>(sql`
     SELECT DISTINCT day FROM (
       SELECT to_char(created_at, 'YYYY-MM-DD') AS day FROM compatibility_reads WHERE user_id = ${userId}

@@ -178,6 +178,7 @@ import type {
   TrustLedger,
   UnregisterPushTokenParams,
   UnregisterPushTokenResult,
+  UserAchievements,
   UserJourneySummary,
   WaitlistEntry,
   WaitlistInput,
@@ -9525,6 +9526,90 @@ export function useGetMyJourneySummary<TData = Awaited<ReturnType<typeof getMyJo
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetMyJourneySummaryQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetMyAchievementsUrl = () => {
+
+
+
+
+  return `/api/me/achievements`
+}
+
+/**
+ * Returns the caller's full achievements board: every unlock with its
+target, current progress, and whether it is unlocked. Purely a
+gamification lens derived from the caller's own aggregate progress
+(signals fed, tools completed, current streak, Mirror areas mapped,
+readiness score). It never feeds the readiness score and never returns
+raw content. Safe to hit on every page load.
+
+ * @summary Get the signed-in user's unlock board
+ */
+export const getMyAchievements = async ( options?: RequestInit): Promise<UserAchievements> => {
+
+  return customFetch<UserAchievements>(getGetMyAchievementsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyAchievementsQueryKey = () => {
+    return [
+    `/api/me/achievements`
+    ] as const;
+    }
+
+
+export const getGetMyAchievementsQueryOptions = <TData = Awaited<ReturnType<typeof getMyAchievements>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyAchievements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyAchievementsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyAchievements>>> = ({ signal }) => getMyAchievements({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyAchievements>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyAchievementsQueryResult = NonNullable<Awaited<ReturnType<typeof getMyAchievements>>>
+export type GetMyAchievementsQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the signed-in user's unlock board
+ */
+
+export function useGetMyAchievements<TData = Awaited<ReturnType<typeof getMyAchievements>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyAchievements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyAchievementsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

@@ -3057,6 +3057,66 @@ export interface UserJourneySummary {
   hasHistory: boolean;
 }
 
+/**
+ * Visual tier of the unlock.
+ */
+export type AchievementTier = typeof AchievementTier[keyof typeof AchievementTier];
+
+
+export const AchievementTier = {
+  bronze: 'bronze',
+  silver: 'silver',
+  gold: 'gold',
+} as const;
+
+/**
+ * A single unlock on the climb. Derived only from the caller's aggregate progress; it never affects the readiness score and never carries raw content.
+ */
+export interface Achievement {
+  /** Stable unlock id. */
+  id: string;
+  /** Short unlock name. */
+  title: string;
+  /** One-line description of what earns the unlock. */
+  description: string;
+  /** lucide-react icon name, resolved on the client. */
+  icon: string;
+  /** Visual tier of the unlock. */
+  tier: AchievementTier;
+  /** Short noun for progress copy, e.g. "signals" or "days". */
+  unit: string;
+  /**
+     * Value the metric must reach to unlock. The "match ready" unlock uses the live readiness threshold.
+     * @minimum 1
+     */
+  target: number;
+  /**
+     * Current progress toward the target, clamped to the target.
+     * @minimum 0
+     */
+  progress: number;
+  /** True when the unlock has been earned. */
+  unlocked: boolean;
+}
+
+/**
+ * The caller's full unlock board plus a simple unlocked/total tally. Purely derived gamification; never feeds the readiness score.
+ */
+export interface UserAchievements {
+  /** Every unlock, locked and unlocked, in journey order. */
+  achievements: Achievement[];
+  /**
+     * How many unlocks the caller has earned.
+     * @minimum 0
+     */
+  unlockedCount: number;
+  /**
+     * Total number of unlocks on the board.
+     * @minimum 0
+     */
+  totalCount: number;
+}
+
 export type DatingWinCategory = typeof DatingWinCategory[keyof typeof DatingWinCategory];
 
 
