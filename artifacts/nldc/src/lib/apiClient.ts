@@ -872,6 +872,7 @@ export const resetAlertSettings = (founderKey: string) =>
 // --- Founder brain: control center, brain map, curation ---
 
 export type ReweightingMode = "hold" | "applied";
+export type ScoringMode = "hold" | "applied";
 
 export interface BrainControls {
   readinessThreshold: number;
@@ -880,6 +881,8 @@ export interface BrainControls {
   anonDailyCap: number;
   freeDailyCap: number;
   reweightingMode: ReweightingMode;
+  confidenceWeighting: ScoringMode;
+  decayMode: ScoringMode;
   signalWeightOverrides: Record<string, number> | null;
   connectorToggles: Record<string, boolean>;
 }
@@ -954,6 +957,8 @@ export interface WeightAdjustment {
 export interface ReweightingResponse {
   user: { id: string; email: string | null };
   mode: ReweightingMode;
+  confidenceWeighting: ScoringMode;
+  decayMode: ScoringMode;
   readinessScore: number;
   outcome: {
     totalDates: number;

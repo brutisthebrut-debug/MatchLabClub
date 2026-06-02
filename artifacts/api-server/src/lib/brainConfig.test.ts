@@ -130,3 +130,47 @@ describe("connectorEnabled", () => {
     expect(connectorEnabled(controls, "unknown-id")).toBe(true);
   });
 });
+
+describe("confidence weighting gate", () => {
+  it("defaults to hold, leaving base weights at the registry default", () => {
+    const controls = defaultControls();
+    expect(controls.confidenceWeighting).toBe("hold");
+    const base = effectiveBaseWeights(controls);
+    const registry = normalizedWeights();
+    for (const id of Object.keys(registry)) {
+      expect(base[id]).toBeCloseTo(registry[id]!, 9);
+    }
+  });
+
+  it("coerces unknown values back to hold and parses applied", () => {
+    expect(coerceControls({ confidenceWeighting: "garbage" }).confidenceWeighting).toBe(
+      "hold",
+    );
+    expect(coerceControls({ confidenceWeighting: "applied" }).confidenceWeighting).toBe(
+      "applied",
+    );
+  });
+
+  it("tilts base weights toward trusted lanes when applied", () => {
+    const hold = effectiveBaseWeights(defaultControls());
+    const applied = effectiveBaseWeights({
+      ...defaultControls(),
+      confidenceWeighting: "applied",
+    });
+    const sum = Object.values(applied).reduce((a, b) => a + b, 0);
+    expect(sum).toBeCloseTo(1, 9);
+    // postDate is the highest-confidence lane, so its share rises vs. hold.
+    expect(applied["postDate"]!).toBeGreaterThan(hold["postDate"]!);
+  });
+});
+
+describe("decay mode gate", () => {
+  it("defaults to hold", () => {
+    expect(defaultControls().decayMode).toBe("hold");
+  });
+
+  it("coerces unknown values back to hold and parses applied", () => {
+    expect(coerceControls({ decayMode: "garbage" }).decayMode).toBe("hold");
+    expect(coerceControls({ decayMode: "applied" }).decayMode).toBe("applied");
+  });
+});

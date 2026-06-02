@@ -2243,6 +2243,8 @@ const BrainControlsPatch = z.object({
   anonDailyCap: z.number().int().min(0).max(10000).optional(),
   freeDailyCap: z.number().int().min(0).max(100000).optional(),
   reweightingMode: z.enum(["hold", "applied"]).optional(),
+  confidenceWeighting: z.enum(["hold", "applied"]).optional(),
+  decayMode: z.enum(["hold", "applied"]).optional(),
   signalWeightOverrides: z.record(z.string(), z.number().min(0)).nullable().optional(),
   connectorToggles: z.record(z.string(), z.boolean()).optional(),
 });
@@ -2424,6 +2426,8 @@ router.get(
     res.json({
       user: { id: user.id, email: user.email },
       mode: controls.reweightingMode,
+      confidenceWeighting: controls.confidenceWeighting,
+      decayMode: controls.decayMode,
       readinessScore: readiness.score,
       outcome: {
         totalDates: outcome.totalDates,

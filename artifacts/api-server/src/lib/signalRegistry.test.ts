@@ -3,9 +3,13 @@ import {
   SIGNAL_REGISTRY,
   coverageFor,
   normalizedWeights,
+  confidenceWeightedWeights,
+  decayMultiplier,
+  applyDecay,
   contributorStep,
   describeActiveSignals,
   proposeWeightAdjustments,
+  DECAY_FLOOR,
   type ReadinessBreakdown,
 } from "./signalRegistry";
 
@@ -178,5 +182,105 @@ describe("proposeWeightAdjustments (the breathing layer)", () => {
     for (const a of adj) {
       expect(a.adjustedWeight).toBeCloseTo(a.defaultWeight, 4);
     }
+  });
+});
+
+describe("confidenceWeightedWeights", () => {
+  it("re-normalizes to sum 1.0", () => {
+    const base = normalizedWeights();
+    const w = confidenceWeightedWeights(base);
+    const sum = Object.values(w).reduce((a, b) => a + b, 0);
+    expect(sum).toBeCloseTo(1, 9);
+  });
+
+  it("raises a high-confidence lane's share and lowers a low-confidence one", () => {
+    const base = normalizedWeights();
+    const w = confidenceWeightedWeights(base);
+    // Post-date notes are the highest-confidence lane (0.85), wins among the
+    // lowest (0.5). Confidence weighting should push the trusted lane up
+    // relative to its base share and the weak lane down.
+    expect(w["postDate"]! / base["postDate"]!).toBeGreaterThan(
+      w["wins"]! / base["wins"]!,
+    );
+  });
+
+  it("is a pure function of its input weights", () => {
+    const base = normalizedWeights();
+    const a = confidenceWeightedWeights(base);
+    const b = confidenceWeightedWeights(base);
+    expect(a).toEqual(b);
+  });
+});
+
+describe("decayMultiplier", () => {
+  it("is full strength for fresh or future-dated activity", () => {
+    expect(decayMultiplier(0, 30)).toBe(1);
+    expect(decayMultiplier(-5, 30)).toBe(1);
+  });
+
+  it("halves at one half-life", () => {
+    expect(decayMultiplier(30, 30)).toBeCloseTo(0.5, 9);
+    expect(decayMultiplier(60, 60)).toBeCloseTo(0.5, 9);
+  });
+
+  it("never falls below the floor", () => {
+    expect(decayMultiplier(100000, 30)).toBe(DECAY_FLOOR);
+  });
+
+  it("decreases monotonically as a lane ages", () => {
+    expect(decayMultiplier(10, 30)).toBeGreaterThan(decayMultiplier(40, 30));
+  });
+
+  it("treats a non-positive half-life as no decay", () => {
+    expect(decayMultiplier(50, 0)).toBe(1);
+  });
+});
+
+describe("applyDecay", () => {
+  const full: ReadinessBreakdown = {
+    compass: 100,
+    journal: 100,
+    wellness: 100,
+    hingeImport: 100,
+    postDate: 100,
+    wins: 100,
+    calendar: 100,
+    audits: 100,
+    coaching: 100,
+    instagram: 100,
+    lifePulse: 100,
+    taste: 100,
+    lifestyle: 100,
+    quizzes: 100,
+    receipts: 100,
+  };
+
+  it("leaves durable lanes (no half-life) untouched", () => {
+    const out = applyDecay(full, { wellness: 9999, journal: 9999, audits: 9999 });
+    expect(out.wellness).toBe(100);
+    expect(out.journal).toBe(100);
+    expect(out.audits).toBe(100);
+  });
+
+  it("fades a stale time-sensitive lane toward the floor", () => {
+    const out = applyDecay(full, { lifePulse: 100000 });
+    expect(out.lifePulse).toBe(Math.round(100 * DECAY_FLOOR));
+  });
+
+  it("does not fade lanes with unknown recency", () => {
+    const out = applyDecay(full, { lifePulse: null });
+    expect(out.lifePulse).toBe(100);
+  });
+
+  it("never mutates the input breakdown", () => {
+    const snapshot = { ...full };
+    applyDecay(full, { lifePulse: 100000, compass: 100000 });
+    expect(full).toEqual(snapshot);
+  });
+
+  it("halves a lane at exactly one half-life", () => {
+    // lifePulse half-life is 30 days.
+    const out = applyDecay(full, { lifePulse: 30 });
+    expect(out.lifePulse).toBe(50);
   });
 });

@@ -30,10 +30,11 @@ import {
   type ReadinessNextAction,
 } from "../lib/readiness";
 import {
+  applyDecay,
   describeActiveSignals,
   SIGNAL_REGISTRY,
 } from "../lib/signalRegistry";
-import { collectSignalCounts } from "../lib/signalCounts";
+import { collectSignalCounts, collectSignalRecency } from "../lib/signalCounts";
 import { computeActivityStreak, type ActivityStreak } from "../lib/streak";
 import {
   loadBrainControls,
@@ -132,13 +133,23 @@ interface Readiness {
 
 export async function computeReadiness(userId: string): Promise<Readiness> {
   const counts = await collectSignalCounts(userId);
-  const breakdown = computeBreakdown(counts);
+  let breakdown = computeBreakdown(counts);
 
-  // Effective weights come from the founder control center. With no overrides
-  // and the re-weighting mode on "hold" this is the exact registry default, so
-  // the day-one score is reproduced. In "applied" mode the bounded outcome tilt
-  // is layered on per user. The extra outcome query only runs in applied mode.
+  // Effective weights and breakdown both come from the founder control center.
+  // With no overrides and every scoring lever on "hold" this reproduces the
+  // exact day-one score. Each gated step adds its own query only when switched
+  // on, so the default path stays a single counts query.
   const controls = await loadBrainControls();
+
+  // Freshness decay: fade time-sensitive lanes by their half-life since the user
+  // last fed them. Only runs (and only queries recency) when switched to
+  // "applied". The decayed breakdown is what both the score and the next-action
+  // list read, so a faded lane re-surfaces as a thing to do again.
+  if (controls.decayMode === "applied") {
+    const recency = await collectSignalRecency(userId);
+    breakdown = applyDecay(breakdown, recency);
+  }
+
   let weights = effectiveBaseWeights(controls);
   if (controls.reweightingMode === "applied") {
     const outcome = await computeOutcomeInsightForUser(userId);

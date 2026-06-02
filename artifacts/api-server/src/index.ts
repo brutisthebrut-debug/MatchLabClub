@@ -21,6 +21,7 @@ import { startAuditTrashPushJob } from "./lib/auditTrashPushJob";
 import { startGeoipUpdateJob } from "./lib/geoipUpdateJob";
 import { startMatchingNudgeJob } from "./lib/matchingNudgeJob";
 import { startMirrorDigestJob } from "./lib/mirrorDigestJob";
+import { startImportRecoveryJob } from "./lib/importRecoveryJob";
 import { initStripe } from "./lib/initStripe";
 
 Sentry.setupExpressErrorHandler(app);
@@ -56,6 +57,7 @@ app.listen(port, (err) => {
   startGeoipUpdateJob();
   startMatchingNudgeJob();
   startMirrorDigestJob();
+  startImportRecoveryJob();
   refreshLearnedRulesCache().catch((err) =>
     logger.warn({ err }, "Initial OCR learned-rules load failed"),
   );

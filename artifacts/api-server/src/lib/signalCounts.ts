@@ -22,7 +22,11 @@ import {
   messageCoachingSessionsTable,
   lifePulsesTable,
 } from "@workspace/db";
-import { SIGNAL_REGISTRY, type SignalCounts } from "./signalRegistry";
+import {
+  SIGNAL_REGISTRY,
+  type ReadinessBreakdown,
+  type SignalCounts,
+} from "./signalRegistry";
 
 // Minimum substantive journal length (chars) to count toward readiness. A
 // lazy one-liner should not move the needle; a real reflection should.
@@ -198,4 +202,128 @@ export async function collectSignalCounts(
   }
 
   return counts;
+}
+
+/** Days since a timestamp, never negative. */
+function ageDaysFrom(ts: Date | string | null | undefined): number | null {
+  if (ts == null) return null;
+  const t = ts instanceof Date ? ts.getTime() : new Date(ts).getTime();
+  if (!Number.isFinite(t)) return null;
+  return Math.max(0, (Date.now() - t) / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * Per-lane recency: how many days since each decaying lane last received signal,
+ * keyed by contributor id. Only lanes that declare a `decayHalfLifeDays` are
+ * queried, so this is free for durable lanes and only runs when freshness decay
+ * is actually switched on. A lane with no contributions maps to null (nothing to
+ * fade). We read only the MAX timestamp per lane, never any row content, so this
+ * surfaces recency without touching what the user actually wrote or imported.
+ */
+export async function collectSignalRecency(
+  userId: string,
+): Promise<Partial<Record<keyof ReadinessBreakdown, number | null>>> {
+  const decaying = SIGNAL_REGISTRY.filter(
+    (c) => (c.decayHalfLifeDays ?? 0) > 0,
+  );
+  if (decaying.length === 0) return {};
+
+  // Latest activity per import source, in one grouped query (covers calendar,
+  // receipts, hinge import, instagram tone, and any future import lane).
+  const importLatest = new Map<string, Date>();
+  const needsImport = decaying.some(
+    (c) =>
+      c.dataSource.kind === "importRows" ||
+      c.dataSource.kind === "importSummaryCount",
+  );
+  if (needsImport) {
+    const rows = await db
+      .select({
+        source: importedSourcesTable.source,
+        latest: sql<string | null>`max(${importedSourcesTable.uploadedAt})`,
+      })
+      .from(importedSourcesTable)
+      .where(
+        and(
+          eq(importedSourcesTable.userId, userId),
+          isNull(importedSourcesTable.deletedAt),
+        ),
+      )
+      .groupBy(importedSourcesTable.source);
+    for (const r of rows) {
+      if (r.latest) importLatest.set(r.source, new Date(r.latest));
+    }
+  }
+
+  // Latest first-party timestamp per lane: MAX(created_at) from each dedicated
+  // table, soft-deleted rows excluded so a purged source stops counting as
+  // recent. One small grouped helper keeps each lane a one-liner.
+  const firstParty: Partial<Record<string, Date | null>> = {};
+  const decayingIds = new Set(decaying.map((c) => c.id as string));
+
+  async function latestFor(
+    id: string,
+    query: () => Promise<{ latest: string | null }[]>,
+  ): Promise<void> {
+    if (!decayingIds.has(id)) return;
+    const rows = await query();
+    const latest = rows[0]?.latest;
+    firstParty[id] = latest ? new Date(latest) : null;
+  }
+
+  await latestFor("compass", () =>
+    db
+      .select({ latest: sql<string | null>`max(${compatibilityReadsTable.createdAt})` })
+      .from(compatibilityReadsTable)
+      .where(
+        and(
+          eq(compatibilityReadsTable.userId, userId),
+          isNull(compatibilityReadsTable.deletedAt),
+        ),
+      ),
+  );
+  await latestFor("wins", () =>
+    db
+      .select({ latest: sql<string | null>`max(${datingWinsTable.createdAt})` })
+      .from(datingWinsTable)
+      .where(
+        and(eq(datingWinsTable.userId, userId), isNull(datingWinsTable.deletedAt)),
+      ),
+  );
+  await latestFor("postDate", () =>
+    db
+      .select({ latest: sql<string | null>`max(${postDateNotesTable.createdAt})` })
+      .from(postDateNotesTable)
+      .where(
+        and(
+          eq(postDateNotesTable.userId, userId),
+          isNull(postDateNotesTable.deletedAt),
+        ),
+      ),
+  );
+  await latestFor("coaching", () =>
+    db
+      .select({
+        latest: sql<string | null>`max(${messageCoachingSessionsTable.createdAt})`,
+      })
+      .from(messageCoachingSessionsTable)
+      .where(eq(messageCoachingSessionsTable.userId, userId)),
+  );
+  await latestFor("lifePulse", () =>
+    db
+      .select({ latest: sql<string | null>`max(${lifePulsesTable.createdAt})` })
+      .from(lifePulsesTable)
+      .where(eq(lifePulsesTable.userId, userId)),
+  );
+
+  const out: Partial<Record<keyof ReadinessBreakdown, number | null>> = {};
+  for (const c of decaying) {
+    const ds = c.dataSource;
+    if (ds.kind === "importRows" || ds.kind === "importSummaryCount") {
+      out[c.id] = ageDaysFrom(importLatest.get(ds.source) ?? null);
+    } else {
+      out[c.id] = ageDaysFrom(firstParty[c.id as string] ?? null);
+    }
+  }
+  return out;
 }

@@ -20,6 +20,7 @@ import { eq } from "drizzle-orm";
 import {
   SIGNAL_REGISTRY,
   normalizedWeights,
+  confidenceWeightedWeights,
   proposeWeightAdjustments,
   type OutcomeSignal,
 } from "./signalRegistry";
@@ -32,6 +33,13 @@ export const DEFAULT_ANON_DAILY_CAP = 5;
 export const DEFAULT_FREE_DAILY_CAP = 30;
 
 export type ReweightingMode = "hold" | "applied";
+
+/**
+ * A scoring lever that is either held at day-one behavior or applied live. Used
+ * for confidence-weighting and freshness decay, which both change scores, so
+ * each ships off and the founder flips it on once they have watched the impact.
+ */
+export type ScoringMode = "hold" | "applied";
 
 export interface BrainControls {
   /** Minimum readiness score (0-100) to join the matching pool. */
@@ -50,6 +58,18 @@ export interface BrainControls {
    * in-person fit signals when their recent dates fizzle (bounded, re-normalized).
    */
   reweightingMode: ReweightingMode;
+  /**
+   * Whether confidence-weighting is wired into live scoring. "applied" leans the
+   * readiness weights toward the lanes we trust most (each weight scaled by its
+   * registry confidence, then re-normalized); "hold" keeps day-one weights.
+   */
+  confidenceWeighting: ScoringMode;
+  /**
+   * Whether freshness decay is wired into live scoring. "applied" fades a lane's
+   * coverage by its registry half-life since the user last fed it; "hold" keeps
+   * raw coverage. Off by default so day-one scores are unchanged.
+   */
+  decayMode: ScoringMode;
   /**
    * Founder weight overrides, RAW weights keyed by signal id. Partial: any
    * signal not present falls back to its registry default. Null = no overrides.
@@ -120,6 +140,8 @@ export function defaultControls(): BrainControls {
     anonDailyCap: DEFAULT_ANON_DAILY_CAP,
     freeDailyCap: DEFAULT_FREE_DAILY_CAP,
     reweightingMode: "hold",
+    confidenceWeighting: "hold",
+    decayMode: "hold",
     signalWeightOverrides: null,
     connectorToggles: {},
   };
@@ -164,6 +186,8 @@ export function coerceControls(raw: unknown): BrainControls {
     anonDailyCap: clampInt(v.anonDailyCap, 0, 10000, base.anonDailyCap),
     freeDailyCap: clampInt(v.freeDailyCap, 0, 100000, base.freeDailyCap),
     reweightingMode: v.reweightingMode === "applied" ? "applied" : "hold",
+    confidenceWeighting: v.confidenceWeighting === "applied" ? "applied" : "hold",
+    decayMode: v.decayMode === "applied" ? "applied" : "hold",
     signalWeightOverrides: overrides,
     connectorToggles: toggles,
   };
@@ -232,25 +256,34 @@ export async function resetBrainControls(): Promise<BrainControls> {
 
 /**
  * Base weights for scoring: registry defaults, with any founder raw-weight
- * overrides applied, re-normalized to sum to 1.0. With no overrides this is the
- * exact registry normalization (day-one identity).
+ * overrides applied, re-normalized to sum to 1.0, then optionally tilted toward
+ * the lanes we trust most when confidence-weighting is "applied". With no
+ * overrides and confidence-weighting on "hold" this is the exact registry
+ * normalization (day-one identity).
  */
 export function effectiveBaseWeights(
   controls: BrainControls,
 ): Record<string, number> {
-  if (!controls.signalWeightOverrides) return normalizedWeights();
-  const raw: Record<string, number> = {};
-  for (const c of SIGNAL_REGISTRY) {
-    const id = c.id as string;
-    const override = controls.signalWeightOverrides[id];
-    raw[id] = Number.isFinite(override) ? (override as number) : c.weight;
+  let base: Record<string, number>;
+  if (!controls.signalWeightOverrides) {
+    base = normalizedWeights();
+  } else {
+    const raw: Record<string, number> = {};
+    for (const c of SIGNAL_REGISTRY) {
+      const id = c.id as string;
+      const override = controls.signalWeightOverrides[id];
+      raw[id] = Number.isFinite(override) ? (override as number) : c.weight;
+    }
+    const total = Object.values(raw).reduce((a, b) => a + b, 0);
+    base = {};
+    for (const id of Object.keys(raw)) {
+      base[id] = total > 0 ? raw[id]! / total : 0;
+    }
   }
-  const total = Object.values(raw).reduce((a, b) => a + b, 0);
-  const out: Record<string, number> = {};
-  for (const id of Object.keys(raw)) {
-    out[id] = total > 0 ? raw[id]! / total : 0;
+  if (controls.confidenceWeighting === "applied") {
+    return confidenceWeightedWeights(base);
   }
-  return out;
+  return base;
 }
 
 /**

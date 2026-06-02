@@ -71,4 +71,46 @@ END:VCALENDAR`;
     expect(s.rhythm.busiestDay).toBeNull();
     expect(s.reads).toEqual([]);
   });
+
+  it("handles an empty string without throwing", () => {
+    const s = parseCalendarIcs("");
+    expect(s.counts.totalEvents).toBe(0);
+    expect(s.source).toBe("calendar-ics");
+  });
+
+  it("ignores events with missing or unparseable DTSTART", () => {
+    const ics = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+SUMMARY:No start time
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:garbage-not-a-date
+SUMMARY:Bad start time
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20260106T120000Z
+SUMMARY:Valid event
+END:VEVENT
+END:VCALENDAR`;
+    const s = parseCalendarIcs(ics);
+    // Only the one parseable event is counted; the broken ones do not throw
+    // or poison the rollup.
+    expect(s.counts.totalEvents).toBe(1);
+  });
+
+  it("tolerates an unterminated VEVENT block", () => {
+    const ics = `BEGIN:VCALENDAR
+BEGIN:VEVENT
+DTSTART:20260106T120000Z
+SUMMARY:Never closed`;
+    const s = parseCalendarIcs(ics);
+    expect(s.counts.totalEvents).toBeGreaterThanOrEqual(0);
+  });
+
+  it("does not emit em dashes even on degenerate input", () => {
+    const s = parseCalendarIcs("BEGIN:VEVENT\nSUMMARY:x\nEND:VEVENT");
+    for (const line of s.reads) {
+      expect(line).not.toContain("\u2014");
+    }
+  });
 });

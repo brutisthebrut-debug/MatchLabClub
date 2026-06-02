@@ -11,6 +11,8 @@
 // scoreCompatibility(b, a), because both members see the same compatibility
 // number on the same proposed pair.
 
+import { proximityBetween } from "./geo";
+
 export interface MatchCandidate {
   userId: string;
   /** Self-reported age (from the latest profile audit), or null if unknown. */
@@ -143,10 +145,6 @@ export function gatesPass(a: MatchCandidate, b: MatchCandidate): boolean {
   );
 }
 
-function normalizeCity(raw: string | null): string {
-  return (raw ?? "").trim().toLowerCase();
-}
-
 function coveredLanes(breakdown: Record<string, number>): Set<string> {
   const out = new Set<string>();
   for (const [lane, value] of Object.entries(breakdown)) {
@@ -181,10 +179,12 @@ export function scoreCompatibility(
   a: MatchCandidate,
   b: MatchCandidate,
 ): CompatibilityResult {
-  const sameCity =
-    normalizeCity(a.prefs.cityHint).length > 0 &&
-    normalizeCity(a.prefs.cityHint) === normalizeCity(b.prefs.cityHint);
-  const proximity = sameCity ? 1 : 0;
+  // Graded geographic proximity. Resolvable cities get real great-circle
+  // distance; unresolvable ones fall back to alias-aware name equality. Distance
+  // is derived only from the coarse city hint, so it carries no PII and is safe
+  // to surface in reasons. proximityBetween is symmetric in its two arguments.
+  const prox = proximityBetween(a.prefs.cityHint, b.prefs.cityHint);
+  const proximity = prox.score;
 
   const lanesA = coveredLanes(a.breakdown);
   const lanesB = coveredLanes(b.breakdown);
@@ -206,7 +206,14 @@ export function scoreCompatibility(
   const score = Math.max(0, Math.min(100, Math.round(blend * 100)));
 
   const reasons: string[] = [];
-  if (proximity === 1) {
+  if (prox.distanceMiles != null) {
+    if (prox.distanceMiles <= 15) {
+      reasons.push("You're right in the same area");
+    } else if (prox.score > 0) {
+      const approx = Math.max(5, Math.round(prox.distanceMiles / 5) * 5);
+      reasons.push(`You're about ${approx} miles apart, close enough to meet`);
+    }
+  } else if (prox.sameCanonicalCity) {
     reasons.push("You're both in the same area");
   }
   if (shared > 0) {

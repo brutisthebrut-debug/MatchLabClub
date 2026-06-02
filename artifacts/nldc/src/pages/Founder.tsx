@@ -4489,6 +4489,52 @@ function BrainTab({ founderKey, refreshKey }: { founderKey: string; refreshKey: 
           </div>
         </div>
 
+        {/* Confidence weighting */}
+        <div className="mt-6 pt-6 border-t border-white/10">
+          <span className="text-sm font-medium text-foreground">Confidence weighting</span>
+          <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+            Hold treats every signal's weight as-is. Applied leans the score toward the lanes we trust most, scaling each weight by its confidence and re-normalizing.
+          </p>
+          <div className="flex gap-2">
+            {(["hold", "applied"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => patch({ confidenceWeighting: m })}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  draft.confidenceWeighting === m
+                    ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/5 border border-white/10"
+                }`}
+              >
+                {m === "hold" ? "Hold" : "Applied"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Freshness decay */}
+        <div className="mt-6 pt-6 border-t border-white/10">
+          <span className="text-sm font-medium text-foreground">Freshness decay</span>
+          <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+            Hold keeps coverage at full strength forever. Applied fades a time-sensitive lane by its half-life since the user last fed it, so stale signal cools off and the lane resurfaces as a next step.
+          </p>
+          <div className="flex gap-2">
+            {(["hold", "applied"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => patch({ decayMode: m })}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  draft.decayMode === m
+                    ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/5 border border-white/10"
+                }`}
+              >
+                {m === "hold" ? "Hold" : "Applied"}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Connector toggles */}
         <div className="mt-6 pt-6 border-t border-white/10">
           <span className="text-sm font-medium text-foreground">Connectors</span>

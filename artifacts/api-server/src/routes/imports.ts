@@ -4,14 +4,16 @@ import multer from "multer";
 import unzipper from "unzipper";
 import { z } from "zod";
 import { db, importedSourcesTable } from "@workspace/db";
-import { buildEchoSystemPrompt } from "@workspace/echo";
 import {
   getAnonClaimToken,
   getOrCreateAnonClaimToken,
 } from "../lib/anonClaimToken";
-import { generate } from "../lib/aiService";
 import { parseCalendarIcs } from "../lib/calendarParser";
-import { logger } from "../lib/logger";
+import {
+  runHingeAiRead,
+  type HingeParsedSummary,
+  type DerivedStats,
+} from "../lib/importEnrichment";
 
 const router: IRouter = Router();
 
@@ -34,36 +36,30 @@ const upload = multer({
   },
 });
 
-interface HingeMatchRecord {
-  match?: { timestamp?: string }[];
-  chats?: { timestamp?: string; body?: string }[];
-  block?: unknown;
-  like?: { timestamp?: string }[];
-}
+/**
+ * Permissive schema for a single Hinge `matches.json` record. Hinge has shipped
+ * more than one shape over the years, so every field is optional and unknown
+ * keys pass through. We only validate the structure enough to roll up counts;
+ * we never read message bodies. A record that does not match this shape is
+ * dropped rather than throwing, so one malformed entry cannot zero out a whole
+ * export.
+ */
+const HingeTimestamped = z
+  .object({ timestamp: z.string().optional() })
+  .passthrough();
 
-interface DerivedStats {
-  totalMatches: number;
-  totalConversations: number;
-  totalMessagesSent: number;
-  oldestMatchAt: string | null;
-  newestMatchAt: string | null;
-  topConversationLength: number;
-  messageToMatchRatio: number;
-  rawJsonFileCount: number;
-  mediaFileCount: number;
-}
+const HingeMatchRecordSchema = z
+  .object({
+    match: z.array(HingeTimestamped).optional(),
+    chats: z.array(HingeTimestamped).optional(),
+    like: z.array(HingeTimestamped).optional(),
+    block: z.unknown().optional(),
+  })
+  .passthrough();
 
-interface HingeParsedSummary {
-  counts: {
-    matches: number;
-    conversations: number;
-    messagesSent: number;
-    mediaFiles: number;
-    jsonFiles: number;
-  };
-  derivedStats: DerivedStats;
-  originalFilename: string | null;
-}
+const HingeRecordsSchema = z.array(z.unknown());
+
+type HingeMatchRecord = z.infer<typeof HingeMatchRecordSchema>;
 
 function categorizeFilename(name: string): "match" | "user" | "prompt" | "other" {
   const lower = name.toLowerCase();
@@ -87,7 +83,7 @@ function isoOrNull(raw: unknown): string | null {
  * shapes for this file over the years, and other categorised files (user,
  * prompts) might be objects rather than arrays.
  */
-function rollupMatches(records: unknown): {
+export function rollupMatches(records: unknown): {
   matches: number;
   conversations: number;
   messagesSent: number;
@@ -95,7 +91,8 @@ function rollupMatches(records: unknown): {
   newestMs: number | null;
   topConversationLength: number;
 } {
-  if (!Array.isArray(records)) {
+  const arr = HingeRecordsSchema.safeParse(records);
+  if (!arr.success) {
     return {
       matches: 0,
       conversations: 0,
@@ -111,8 +108,10 @@ function rollupMatches(records: unknown): {
   let oldest: number | null = null;
   let newest: number | null = null;
   let topLen = 0;
-  for (const entry of records as HingeMatchRecord[]) {
-    if (!entry || typeof entry !== "object") continue;
+  for (const candidate of arr.data) {
+    const validated = HingeMatchRecordSchema.safeParse(candidate);
+    if (!validated.success) continue;
+    const entry: HingeMatchRecord = validated.data;
     const matchEvents = Array.isArray(entry.match) ? entry.match : [];
     const chats = Array.isArray(entry.chats) ? entry.chats : [];
     if (matchEvents.length > 0) matches += 1;
@@ -238,147 +237,6 @@ async function parseHingeZip(
     derivedStats,
     originalFilename,
   };
-}
-
-const HingeAiReadSchema = z.object({
-  narrativeRead: z.string().trim().min(1).max(800),
-  patterns: z.array(z.string().trim().min(1).max(200)).min(2).max(5),
-  strengths: z.array(z.string().trim().min(1).max(200)).min(1).max(3),
-  blindspots: z.array(z.string().trim().min(1).max(200)).min(1).max(3),
-  coachingPrompts: z.array(z.string().trim().min(1).max(200)).min(2).max(4),
-});
-type HingeAiRead = z.infer<typeof HingeAiReadSchema>;
-
-function buildHingeUserPrompt(summary: HingeParsedSummary): string {
-  const d = summary.derivedStats;
-  const span =
-    d.oldestMatchAt && d.newestMatchAt
-      ? `from ${d.oldestMatchAt.slice(0, 10)} to ${d.newestMatchAt.slice(0, 10)}`
-      : "with no datestamped activity we could read";
-  return [
-    "Read this person's Hinge history summary and give a narrative read of their dating patterns. The numbers below are all you have. No raw messages were shared.",
-    "",
-    `Total matches: ${d.totalMatches}`,
-    `Total conversations started: ${d.totalConversations}`,
-    `Total messages they sent: ${d.totalMessagesSent}`,
-    `Longest single conversation length: ${d.topConversationLength} messages`,
-    `Average messages per match: ${d.messageToMatchRatio}`,
-    `Activity window: ${span}`,
-    `Media attachments in export: ${d.mediaFileCount}`,
-    "",
-    "Return ONLY a single JSON object, no prose, no code fences, with this exact shape:",
-    "{",
-    '  "narrativeRead": "2-4 sentence summary in Echo voice of what these numbers actually say about how this person dates",',
-    '  "patterns": ["2-5 specific behavioural patterns the numbers imply"],',
-    '  "strengths": ["1-3 things they are clearly doing well"],',
-    '  "blindspots": ["1-3 things worth examining"],',
-    '  "coachingPrompts": ["2-4 questions Echo would ask this person to deepen the read"]',
-    "}",
-  ].join("\n");
-}
-
-async function runHingeAiRead(args: {
-  importId: number;
-  userId: string;
-  summary: HingeParsedSummary;
-}): Promise<void> {
-  const { importId, userId, summary } = args;
-  const system = buildEchoSystemPrompt(
-    "Read a person's Hinge GDPR export summary and give them a narrative read of their dating patterns. Return JSON only, no prose, no code fences.",
-  );
-  const user = buildHingeUserPrompt(summary);
-
-  try {
-    const result = await generate(
-      {
-        provider: "anthropic",
-        model: "claude-sonnet-4-6",
-        system,
-        user,
-        expectJson: true,
-        requireContentConsent: true,
-        userId,
-        maxTokens: 8192,
-      },
-      "",
-    );
-
-    if (result.isFallback || !result.output) {
-      const reason =
-        result.error === "consent_required"
-          ? "consent_not_granted"
-          : (result.error ?? "no_output");
-      await db
-        .update(importedSourcesTable)
-        .set({
-          status: "fallback",
-          parsedSummary: { ...summary, aiError: reason },
-          processedAt: new Date(),
-        })
-        .where(eq(importedSourcesTable.id, importId));
-      return;
-    }
-
-    const raw = result.raw ?? result.output;
-    let parsedJson: unknown;
-    try {
-      parsedJson = JSON.parse(raw);
-    } catch {
-      await db
-        .update(importedSourcesTable)
-        .set({
-          status: "fallback",
-          parsedSummary: { ...summary, aiError: "json_parse_failed" },
-          processedAt: new Date(),
-        })
-        .where(eq(importedSourcesTable.id, importId));
-      return;
-    }
-    const validated = HingeAiReadSchema.safeParse(parsedJson);
-    if (!validated.success) {
-      await db
-        .update(importedSourcesTable)
-        .set({
-          status: "fallback",
-          parsedSummary: { ...summary, aiError: "schema_validation_failed" },
-          processedAt: new Date(),
-        })
-        .where(eq(importedSourcesTable.id, importId));
-      return;
-    }
-
-    const aiRead: HingeAiRead = validated.data;
-    await db
-      .update(importedSourcesTable)
-      .set({
-        status: "complete",
-        parsedSummary: { ...summary, aiRead },
-        processedAt: new Date(),
-      })
-      .where(eq(importedSourcesTable.id, importId));
-  } catch (err) {
-    logger.warn(
-      {
-        err: err instanceof Error ? err.message : String(err),
-        importId,
-      },
-      "Hinge AI read enrichment failed",
-    );
-    await db
-      .update(importedSourcesTable)
-      .set({
-        status: "fallback",
-        parsedSummary: {
-          ...summary,
-          aiError: err instanceof Error ? err.message : "unknown_error",
-        },
-        processedAt: new Date(),
-      })
-      .where(eq(importedSourcesTable.id, importId))
-      .catch(() => {
-        // already logged
-      });
-  }
 }
 
 function ownerScope(req: Request): SQL {

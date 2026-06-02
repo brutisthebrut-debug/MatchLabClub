@@ -224,6 +224,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     weight: 0.2,
     confidence: 0.8,
     normalize: { kind: "count", denominator: 5 },
+    decayHalfLifeDays: 120,
     describe: (c) =>
       `Has run enough compatibility reads to cover ${c}% of that lane, so we have real signal on who they lean toward.`,
     action: {
@@ -254,6 +255,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     weight: 0.16,
     confidence: 0.7,
     normalize: { kind: "binary" },
+    decayHalfLifeDays: 180,
     describe: () =>
       `Imported their Hinge history, so we can see how they actually talk and behave on a dating app, not just how they describe themselves.`,
     action: {
@@ -283,6 +285,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     weight: 0.16,
     confidence: 0.85,
     normalize: { kind: "count", denominator: 3 },
+    decayHalfLifeDays: 120,
     describe: (c) =>
       `Has reflected on enough real dates to cover ${c}% of that lane, so we know what fits them in person, not just on paper.`,
     action: {
@@ -342,6 +345,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     weight: 0.12,
     confidence: 0.5,
     normalize: { kind: "count", denominator: 5 },
+    decayHalfLifeDays: 90,
     describe: (c) =>
       `Has logged enough wins to cover ${c}% of that lane, a read on their momentum and willingness to put themselves out there.`,
     action: {
@@ -379,6 +383,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     weight: 0.1,
     confidence: 0.55,
     normalize: { kind: "count", denominator: 12 },
+    decayHalfLifeDays: 45,
     describe: (c) =>
       `Has shared enough of their calendar to cover ${c}% of that lane, so we can see how full their week is and when they actually have room to date.`,
     action: {
@@ -415,6 +420,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     weight: 0.1,
     confidence: 0.5,
     normalize: { kind: "count", denominator: 12 },
+    decayHalfLifeDays: 60,
     describe: (c) =>
       `Has forwarded enough confirmations to cover ${c}% of that lane, so we can read the rhythm of what they actually do, the dinners, trips, shows, and classes, never the contents of any email.`,
     action: {
@@ -476,6 +482,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     weight: 0.12,
     confidence: 0.65,
     normalize: { kind: "count", denominator: 5 },
+    decayHalfLifeDays: 120,
     describe: (c) =>
       `Has worked through enough message coaching to cover ${c}% of that lane, so we can see how they actually communicate, not just how they describe it.`,
     action: {
@@ -506,6 +513,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     weight: 0.1,
     confidence: 0.6,
     normalize: { kind: "binary" },
+    decayHalfLifeDays: 180,
     describe: () =>
       `Has shared their Instagram tone, so we have a read on their public-facing personality and voice beyond the dating apps.`,
     action: {
@@ -538,6 +546,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     weight: 0.08,
     confidence: 0.55,
     normalize: { kind: "count", denominator: 7 },
+    decayHalfLifeDays: 30,
     describe: (c) =>
       `Has logged enough life pulses to cover ${c}% of that lane, a read on their energy and headspace over time, which shapes when they are ready to date.`,
     action: {
@@ -731,6 +740,82 @@ export function normalizedWeights(
   const out: Record<string, number> = {};
   for (const c of registry) {
     out[c.id] = total > 0 ? c.weight / total : 0;
+  }
+  return out;
+}
+
+/**
+ * Confidence-weighted weights: each signal's weight is scaled by its confidence
+ * (how predictive we believe that lane is for matching) and the result is
+ * re-normalized to sum to 1.0. This leans the score toward the lanes we trust
+ * most without deflating the overall scale. Off by default in scoring; the
+ * founder turns it on through the brain control center, so day-one behavior is
+ * preserved until then.
+ */
+export function confidenceWeightedWeights(
+  baseWeights: Record<string, number>,
+  registry: readonly SignalContributor[] = SIGNAL_REGISTRY,
+): Record<string, number> {
+  const raw: Record<string, number> = {};
+  for (const c of registry) {
+    const base = baseWeights[c.id] ?? 0;
+    const conf = Number.isFinite(c.confidence) ? c.confidence : 0;
+    raw[c.id] = base * Math.max(0, conf);
+  }
+  const total = Object.values(raw).reduce((a, b) => a + b, 0);
+  const out: Record<string, number> = {};
+  for (const c of registry) {
+    out[c.id] = total > 0 ? raw[c.id]! / total : 0;
+  }
+  return out;
+}
+
+/**
+ * Lowest a freshness decay multiplier can drive a lane: stale signal fades but
+ * never fully vanishes, because the user still did the work. Coverage is scaled
+ * by a value in [DECAY_FLOOR, 1].
+ */
+export const DECAY_FLOOR = 0.3;
+
+/**
+ * Freshness multiplier for one lane given how many days have passed since its
+ * most recent contribution and the lane's half-life. A signal halves its weight
+ * every `halfLifeDays`, floored at DECAY_FLOOR. Fresh or future-dated activity
+ * (ageDays <= 0) reads as full. Pure and deterministic.
+ */
+export function decayMultiplier(
+  ageDays: number,
+  halfLifeDays: number,
+  floor: number = DECAY_FLOOR,
+): number {
+  if (!Number.isFinite(ageDays) || ageDays <= 0) return 1;
+  if (!Number.isFinite(halfLifeDays) || halfLifeDays <= 0) return 1;
+  const m = Math.pow(0.5, ageDays / halfLifeDays);
+  return Math.max(floor, Math.min(1, m));
+}
+
+/**
+ * Apply freshness decay to a coverage breakdown. Only contributors that declare
+ * a `decayHalfLifeDays` and have a known recency (days since last activity) are
+ * faded; everything else passes through unchanged. Returns a new breakdown, so
+ * the input is never mutated. The decayed breakdown is what both the score and
+ * the "do this next" list read, so a faded lane re-surfaces as a next step.
+ */
+export function applyDecay(
+  breakdown: ReadinessBreakdown,
+  ageDaysById: Partial<Record<keyof ReadinessBreakdown, number | null>>,
+  registry: readonly SignalContributor[] = SIGNAL_REGISTRY,
+  floor: number = DECAY_FLOOR,
+): ReadinessBreakdown {
+  const out = { ...breakdown } as ReadinessBreakdown;
+  for (const c of registry) {
+    const halfLife = c.decayHalfLifeDays;
+    if (!halfLife || halfLife <= 0) continue;
+    const ageDays = ageDaysById[c.id];
+    if (ageDays == null) continue;
+    const coverage = out[c.id] ?? 0;
+    if (coverage <= 0) continue;
+    out[c.id] = Math.round(coverage * decayMultiplier(ageDays, halfLife, floor));
   }
   return out;
 }
