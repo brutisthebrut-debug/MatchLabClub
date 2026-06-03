@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion, useMotionValue, animate } from "framer-motion";
 import { useAuth } from "@workspace/replit-auth-web";
+import { trackEvent } from "@/lib/analytics";
 import {
   useGetCompanion,
   getGetCompanionQueryKey,
@@ -292,7 +293,16 @@ export function EchoPresence() {
       .mutateAsync()
       .then((res) => {
         if (cancelled) return;
-        if (res.reaction.moved) setReaction(res.reaction);
+        if (res.reaction.moved) {
+          setReaction(res.reaction);
+          // The crossing-into-matching reaction is the payoff of the
+          // readiness funnel, so we measure how often it actually fires.
+          // Derived signals only (tone + score), never user content.
+          trackEvent("echo_reaction_shown", {
+            tone: res.reaction.tone,
+            score: res.reaction.toScore,
+          });
+        }
         qc.invalidateQueries({ queryKey: getGetCompanionQueryKey() });
       })
       .catch(() => {
@@ -367,6 +377,7 @@ export function EchoPresence() {
   }
 
   function goMatching(): void {
+    trackEvent("echo_reaction_to_matching", { tone: reaction?.tone ?? null });
     setReaction(null);
     setOpen(false);
     navigate("/matching");
