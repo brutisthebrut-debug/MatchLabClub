@@ -87,6 +87,12 @@ const Receipts = lazy(() => import("@/pages/Receipts"));
 const DataVault = lazy(() => import("@/pages/DataVault"));
 const Imports = lazy(() => import("@/pages/Imports"));
 const DatingWinsLog = lazy(() => import("@/pages/DatingWinsLog"));
+const WouldYouRather = lazy(() => import("@/pages/WouldYouRather"));
+const Scenarios = lazy(() => import("@/pages/Scenarios"));
+const PredictYourself = lazy(() => import("@/pages/PredictYourself"));
+const TimeCapsule = lazy(() => import("@/pages/TimeCapsule"));
+const Wingman = lazy(() => import("@/pages/Wingman"));
+const WingmanRespond = lazy(() => import("@/pages/WingmanRespond"));
 const PatternBreaker = lazy(() => import("@/pages/PatternBreaker"));
 const WhatChanged = lazy(() => import("@/pages/WhatChanged"));
 const Feedback = lazy(() => import("@/pages/Feedback"));
@@ -264,6 +270,12 @@ function Router() {
         <Route path="/vault" component={DataVault} />
         <Route path="/imports" component={Imports} />
         <Route path="/progress/wins" component={DatingWinsLog} />
+        <Route path="/games/would-you-rather" component={WouldYouRather} />
+        <Route path="/games/scenarios" component={Scenarios} />
+        <Route path="/games/predict" component={PredictYourself} />
+        <Route path="/games/time-capsule" component={TimeCapsule} />
+        <Route path="/wingman" component={Wingman} />
+        <Route path="/wingman/r/:token" component={WingmanRespond} />
         <Route path="/progress/pattern-breaker" component={PatternBreaker} />
         <Route path="/copilot/what-changed" component={WhatChanged} />
         <Route path="/feedback" component={Feedback} />

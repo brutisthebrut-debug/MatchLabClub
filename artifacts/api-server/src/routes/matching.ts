@@ -38,6 +38,7 @@ import {
 } from "../lib/signalRegistry";
 import { collectSignalCounts, collectSignalRecency } from "../lib/signalCounts";
 import { computeActivityStreak, type ActivityStreak } from "../lib/streak";
+import { loadActivityDays } from "../lib/activityDays";
 import {
   loadBrainControls,
   effectiveBaseWeights,
@@ -600,28 +601,10 @@ export function todayUtc(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-// Distinct UTC days on which the user produced ANY signal, across every
-// first-party signal table. This powers the activity streak (a gamification
-// lens) and is read-only: it never feeds the readiness score. We only ever read
-// the calendar day a row was created, never any of its content.
-export async function loadActivityDays(userId: string): Promise<string[]> {
-  const result = await db.execute<{ day: string }>(sql`
-    SELECT DISTINCT day FROM (
-      SELECT to_char(created_at, 'YYYY-MM-DD') AS day FROM compatibility_reads WHERE user_id = ${userId}
-      UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM journal_entries WHERE user_id = ${userId}
-      UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM post_date_notes WHERE user_id = ${userId}
-      UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM wellness_answers WHERE user_id = ${userId}
-      UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM dating_wins WHERE user_id = ${userId}
-      UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM message_coaching_sessions WHERE user_id = ${userId}
-      UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM life_pulses WHERE user_id = ${userId}
-      UNION ALL SELECT to_char(uploaded_at, 'YYYY-MM-DD') FROM imported_sources WHERE user_id = ${userId}
-      UNION ALL SELECT to_char(created_at, 'YYYY-MM-DD') FROM audits WHERE user_id = ${userId} AND report_generated_at IS NOT NULL
-    ) t
-  `);
-  return (result.rows ?? [])
-    .map((r) => r.day)
-    .filter((d): d is string => typeof d === "string" && d.length > 0);
-}
+// loadActivityDays lives in ../lib/activityDays (single source of truth for which
+// tables count as "showing up"). Re-exported here so existing importers that pull
+// it from "./matching" (and the achievements route + its test mock) keep working.
+export { loadActivityDays };
 
 const EMPTY_STREAK: ActivityStreak = {
   current: 0,

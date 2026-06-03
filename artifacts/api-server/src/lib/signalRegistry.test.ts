@@ -59,10 +59,16 @@ describe("signal registry", () => {
     // 0.27, bringing the total to 2.18. The five paste data-source lanes (podcasts
     // 0.05, gaming 0.05, places 0.05, screenRhythm 0.04, preferences 0.06) add
     // 0.25, bringing the total to 2.43. The voice intro lane (0.05) brings the raw
-    // total to 2.48. Each normalized weight is its raw weight divided by the
-    // raw-weight total. The relative proportions between every signal are
-    // preserved exactly; adding contributors never forces a manual re-balance.
-    const total = 2.48;
+    // total to 2.48. The Would You Rather daily game lane (0.07) brings the raw
+    // total to 2.55. The daily consistency lane (0.05) brings the raw total to
+    // 2.60. The scenario reels lane (0.06) brings the raw total to 2.66. The
+    // predict-yourself self-awareness lane (0.05) brings the raw total to 2.71. The
+    // time-capsule lane (0.04) brings the raw total to 2.75. The wingman
+    // external-calibration lane (0.05) brings the raw total to 2.80. Each
+    // normalized weight is its raw weight divided by the raw-weight
+    // total. The relative proportions between every signal are preserved exactly;
+    // adding contributors never forces a manual re-balance.
+    const total = 2.8;
     const w = normalizedWeights();
     expect(w.wellness).toBeCloseTo(0.22 / total, 6);
     expect(w.compass).toBeCloseTo(0.2 / total, 6);
@@ -90,6 +96,12 @@ describe("signal registry", () => {
     expect(w.screenRhythm).toBeCloseTo(0.04 / total, 6);
     expect(w.preferences).toBeCloseTo(0.06 / total, 6);
     expect(w.voice).toBeCloseTo(0.05 / total, 6);
+    expect(w.wyr).toBeCloseTo(0.07 / total, 6);
+    expect(w.consistency).toBeCloseTo(0.05 / total, 6);
+    expect(w.scenarioReels).toBeCloseTo(0.06 / total, 6);
+    expect(w.selfAwareness).toBeCloseTo(0.05 / total, 6);
+    expect(w.timeCapsule).toBeCloseTo(0.04 / total, 6);
+    expect(w.externalCalibration).toBeCloseTo(0.05 / total, 6);
   });
 
   it("auto-normalizes when a new contributor is added, never breaking the sum", () => {

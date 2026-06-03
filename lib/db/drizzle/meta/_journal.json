@@ -148,6 +148,41 @@
       "when": 1780461723143,
       "tag": "0020_majestic_skin",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1780514599608,
+      "tag": "0021_whole_the_executioner",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1780516518854,
+      "tag": "0022_open_fantastic_four",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1780517047388,
+      "tag": "0023_narrow_william_stryker",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1780517424059,
+      "tag": "0024_useful_pet_avengers",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1780518325390,
+      "tag": "0025_greedy_hawkeye",
+      "breakpoints": true
     }
   ]
 }

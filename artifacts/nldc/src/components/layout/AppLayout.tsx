@@ -27,6 +27,7 @@ const MARKETING_PREFIXES = [
   "/partners",
   "/checkout",
   "/feedback",
+  "/wingman/r",
 ];
 
 function isMarketingRoute(location: string): boolean {

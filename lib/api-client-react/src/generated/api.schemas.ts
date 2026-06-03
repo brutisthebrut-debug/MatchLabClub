@@ -3273,6 +3273,36 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   reading: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  wyr: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  consistency: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  scenarioReels: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  selfAwareness: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  timeCapsule: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  externalCalibration: number;
 }
 
 export interface MatchReadiness {
@@ -3688,6 +3718,202 @@ export interface DatingWinInput {
      * @maxLength 2000
      */
   body: string;
+}
+
+export type WyrAnswerChoice = typeof WyrAnswerChoice[keyof typeof WyrAnswerChoice];
+
+
+export const WyrAnswerChoice = {
+  a: 'a',
+  b: 'b',
+} as const;
+
+export interface WyrAnswer {
+  promptId: string;
+  choice: WyrAnswerChoice;
+  createdAt: string;
+}
+
+export type WyrAnswerInputChoice = typeof WyrAnswerInputChoice[keyof typeof WyrAnswerInputChoice];
+
+
+export const WyrAnswerInputChoice = {
+  a: 'a',
+  b: 'b',
+} as const;
+
+export interface WyrAnswerInput {
+  /**
+     * @minLength 1
+     * @maxLength 64
+     */
+  promptId: string;
+  choice: WyrAnswerInputChoice;
+}
+
+export interface ScenarioResponse {
+  scenarioId: string;
+  optionId: string;
+  createdAt: string;
+}
+
+export interface ScenarioResponseInput {
+  /**
+     * @minLength 1
+     * @maxLength 64
+     */
+  scenarioId: string;
+  /**
+     * @minLength 1
+     * @maxLength 16
+     */
+  optionId: string;
+}
+
+export interface PredictionResponse {
+  itemId: string;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  predicted: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  actual: number;
+  createdAt: string;
+}
+
+export interface PredictionResponseInput {
+  /**
+     * @minLength 1
+     * @maxLength 64
+     */
+  itemId: string;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  predicted: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  actual: number;
+}
+
+export interface TimeCapsule {
+  id: number;
+  body: string;
+  createdAt: string;
+}
+
+export interface TimeCapsuleInput {
+  /**
+     * @minLength 1
+     * @maxLength 280
+     */
+  body: string;
+}
+
+export interface WingmanRatings {
+  warmth: number;
+  humor: number;
+  drive: number;
+  openness: number;
+  steadiness: number;
+}
+
+export interface WingmanRatingsInput {
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  warmth: number;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  humor: number;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  drive: number;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  openness: number;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  steadiness: number;
+}
+
+export interface WingmanInviteInput {
+  /**
+     * @maxLength 60
+     * @nullable
+     */
+  friendLabel?: string | null;
+}
+
+export type WingmanInviteStatus = typeof WingmanInviteStatus[keyof typeof WingmanInviteStatus];
+
+
+export const WingmanInviteStatus = {
+  pending: 'pending',
+  answered: 'answered',
+} as const;
+
+export interface WingmanInvite {
+  id: number;
+  /** @nullable */
+  friendLabel: string | null;
+  status: WingmanInviteStatus;
+  createdAt: string;
+  /**
+     * Fresh signed share path, present only for pending invites.
+     * @nullable
+     */
+  path?: string | null;
+}
+
+export type WingmanGapLargest = {
+  trait: string;
+  selfRating: number;
+  friendRating: number;
+  delta: number;
+};
+
+export interface WingmanGap {
+  warmth: number;
+  humor: number;
+  drive: number;
+  openness: number;
+  steadiness: number;
+  largest: WingmanGapLargest;
+}
+
+export interface WingmanState {
+  /** @minimum 0 */
+  perspectives: number;
+  selfRatings: WingmanRatings | null;
+  friendAverages: WingmanRatings | null;
+  gap: WingmanGap | null;
+  invites: WingmanInvite[];
+}
+
+export interface WingmanInvitePublic {
+  inviterName: string;
+  answered: boolean;
+}
+
+export interface WingmanAnswerAck {
+  ok: boolean;
 }
 
 export interface MatchPoolIneligible {

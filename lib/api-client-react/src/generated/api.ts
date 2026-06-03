@@ -179,6 +179,8 @@ import type {
   PostDateNoteInput,
   PostDateNoteList,
   PostDateNotePatch,
+  PredictionResponse,
+  PredictionResponseInput,
   ProfileRewrite,
   PulseCompanion401,
   PurgeTrustSourceResult,
@@ -196,6 +198,8 @@ import type {
   RevokeSessionsResult,
   SayToCompanion400,
   SayToCompanion401,
+  ScenarioResponse,
+  ScenarioResponseInput,
   ScreenshotAuditInput,
   ScreenshotAuditReport,
   ScreenshotExtractInput,
@@ -204,6 +208,8 @@ import type {
   SetDigestPreferencesInput,
   SignalMap,
   TestAiParams,
+  TimeCapsule,
+  TimeCapsuleInput,
   TrashPurgeHeartbeat,
   TrashPurgeResult,
   TrustLedger,
@@ -224,7 +230,15 @@ import type {
   WellnessTag,
   WellnessTagInput,
   WellnessTagList,
-  WellnessTagPatch
+  WellnessTagPatch,
+  WingmanAnswerAck,
+  WingmanInvite,
+  WingmanInviteInput,
+  WingmanInvitePublic,
+  WingmanRatingsInput,
+  WingmanState,
+  WyrAnswer,
+  WyrAnswerInput
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -11291,6 +11305,1023 @@ export const useDeleteDatingWin = <TError = ErrorType<AuthErrorEnvelope>,
         TContext
       > => {
       return useMutation(getDeleteDatingWinMutationOptions(options));
+    }
+
+export const getGetWouldYouRatherAnswersUrl = () => {
+
+
+
+
+  return `/api/me/would-you-rather`
+}
+
+/**
+ * Returns the caller's answers to the Would You Rather deck, newest first.
+Each answer records only which side was chosen, never any free text.
+Distinct prompts answered feed matching readiness as a low-weight signal.
+
+ * @summary List the signed-in user's Would You Rather answers
+ */
+export const getWouldYouRatherAnswers = async ( options?: RequestInit): Promise<WyrAnswer[]> => {
+
+  return customFetch<WyrAnswer[]>(getGetWouldYouRatherAnswersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWouldYouRatherAnswersQueryKey = () => {
+    return [
+    `/api/me/would-you-rather`
+    ] as const;
+    }
+
+
+export const getGetWouldYouRatherAnswersQueryOptions = <TData = Awaited<ReturnType<typeof getWouldYouRatherAnswers>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWouldYouRatherAnswers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWouldYouRatherAnswersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWouldYouRatherAnswers>>> = ({ signal }) => getWouldYouRatherAnswers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWouldYouRatherAnswers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWouldYouRatherAnswersQueryResult = NonNullable<Awaited<ReturnType<typeof getWouldYouRatherAnswers>>>
+export type GetWouldYouRatherAnswersQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary List the signed-in user's Would You Rather answers
+ */
+
+export function useGetWouldYouRatherAnswers<TData = Awaited<ReturnType<typeof getWouldYouRatherAnswers>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWouldYouRatherAnswers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWouldYouRatherAnswersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateWouldYouRatherAnswerUrl = () => {
+
+
+
+
+  return `/api/me/would-you-rather`
+}
+
+/**
+ * Records the side chosen for one prompt. Answering the same prompt again
+updates the choice in place, so the distinct-prompt count stays honest.
+
+ * @summary Record a Would You Rather answer
+ */
+export const createWouldYouRatherAnswer = async (wyrAnswerInput: WyrAnswerInput, options?: RequestInit): Promise<WyrAnswer> => {
+
+  return customFetch<WyrAnswer>(getCreateWouldYouRatherAnswerUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      wyrAnswerInput,)
+  }
+);}
+
+
+
+
+export const getCreateWouldYouRatherAnswerMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWouldYouRatherAnswer>>, TError,{data: BodyType<WyrAnswerInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWouldYouRatherAnswer>>, TError,{data: BodyType<WyrAnswerInput>}, TContext> => {
+
+const mutationKey = ['createWouldYouRatherAnswer'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWouldYouRatherAnswer>>, {data: BodyType<WyrAnswerInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createWouldYouRatherAnswer(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWouldYouRatherAnswerMutationResult = NonNullable<Awaited<ReturnType<typeof createWouldYouRatherAnswer>>>
+    export type CreateWouldYouRatherAnswerMutationBody = BodyType<WyrAnswerInput>
+    export type CreateWouldYouRatherAnswerMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Record a Would You Rather answer
+ */
+export const useCreateWouldYouRatherAnswer = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWouldYouRatherAnswer>>, TError,{data: BodyType<WyrAnswerInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createWouldYouRatherAnswer>>,
+        TError,
+        {data: BodyType<WyrAnswerInput>},
+        TContext
+      > => {
+      return useMutation(getCreateWouldYouRatherAnswerMutationOptions(options));
+    }
+
+export const getGetScenarioResponsesUrl = () => {
+
+
+
+
+  return `/api/me/scenarios`
+}
+
+/**
+ * Returns the caller's responses to the scenario reels, newest first. Each
+response records only which option was chosen, never any free text.
+Distinct scenarios answered feed matching readiness as a low-weight
+communication and conflict-style signal.
+
+ * @summary List the signed-in user's scenario reel responses
+ */
+export const getScenarioResponses = async ( options?: RequestInit): Promise<ScenarioResponse[]> => {
+
+  return customFetch<ScenarioResponse[]>(getGetScenarioResponsesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetScenarioResponsesQueryKey = () => {
+    return [
+    `/api/me/scenarios`
+    ] as const;
+    }
+
+
+export const getGetScenarioResponsesQueryOptions = <TData = Awaited<ReturnType<typeof getScenarioResponses>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getScenarioResponses>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetScenarioResponsesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getScenarioResponses>>> = ({ signal }) => getScenarioResponses({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getScenarioResponses>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetScenarioResponsesQueryResult = NonNullable<Awaited<ReturnType<typeof getScenarioResponses>>>
+export type GetScenarioResponsesQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary List the signed-in user's scenario reel responses
+ */
+
+export function useGetScenarioResponses<TData = Awaited<ReturnType<typeof getScenarioResponses>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getScenarioResponses>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetScenarioResponsesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateScenarioResponseUrl = () => {
+
+
+
+
+  return `/api/me/scenarios`
+}
+
+/**
+ * Records the option chosen for one scenario. Answering the same scenario
+again updates the choice in place, so the distinct-scenario count stays
+honest.
+
+ * @summary Record a scenario reel response
+ */
+export const createScenarioResponse = async (scenarioResponseInput: ScenarioResponseInput, options?: RequestInit): Promise<ScenarioResponse> => {
+
+  return customFetch<ScenarioResponse>(getCreateScenarioResponseUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      scenarioResponseInput,)
+  }
+);}
+
+
+
+
+export const getCreateScenarioResponseMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createScenarioResponse>>, TError,{data: BodyType<ScenarioResponseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createScenarioResponse>>, TError,{data: BodyType<ScenarioResponseInput>}, TContext> => {
+
+const mutationKey = ['createScenarioResponse'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createScenarioResponse>>, {data: BodyType<ScenarioResponseInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createScenarioResponse(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateScenarioResponseMutationResult = NonNullable<Awaited<ReturnType<typeof createScenarioResponse>>>
+    export type CreateScenarioResponseMutationBody = BodyType<ScenarioResponseInput>
+    export type CreateScenarioResponseMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Record a scenario reel response
+ */
+export const useCreateScenarioResponse = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createScenarioResponse>>, TError,{data: BodyType<ScenarioResponseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createScenarioResponse>>,
+        TError,
+        {data: BodyType<ScenarioResponseInput>},
+        TContext
+      > => {
+      return useMutation(getCreateScenarioResponseMutationOptions(options));
+    }
+
+export const getGetPredictionResponsesUrl = () => {
+
+
+
+
+  return `/api/me/predictions`
+}
+
+/**
+ * Returns the caller's completed predict-yourself rounds, newest first.
+Each round records only the predicted count and the actual count, never
+which individual statements were marked true. Distinct rounds completed
+feed matching readiness as a low-weight self-awareness signal.
+
+ * @summary List the signed-in user's predict-yourself rounds
+ */
+export const getPredictionResponses = async ( options?: RequestInit): Promise<PredictionResponse[]> => {
+
+  return customFetch<PredictionResponse[]>(getGetPredictionResponsesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPredictionResponsesQueryKey = () => {
+    return [
+    `/api/me/predictions`
+    ] as const;
+    }
+
+
+export const getGetPredictionResponsesQueryOptions = <TData = Awaited<ReturnType<typeof getPredictionResponses>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPredictionResponses>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPredictionResponsesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPredictionResponses>>> = ({ signal }) => getPredictionResponses({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPredictionResponses>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPredictionResponsesQueryResult = NonNullable<Awaited<ReturnType<typeof getPredictionResponses>>>
+export type GetPredictionResponsesQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary List the signed-in user's predict-yourself rounds
+ */
+
+export function useGetPredictionResponses<TData = Awaited<ReturnType<typeof getPredictionResponses>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPredictionResponses>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPredictionResponsesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreatePredictionResponseUrl = () => {
+
+
+
+
+  return `/api/me/predictions`
+}
+
+/**
+ * Records the predicted and actual counts for one round. Completing the
+same round again updates both in place, so the distinct-round count stays
+honest.
+
+ * @summary Record a completed predict-yourself round
+ */
+export const createPredictionResponse = async (predictionResponseInput: PredictionResponseInput, options?: RequestInit): Promise<PredictionResponse> => {
+
+  return customFetch<PredictionResponse>(getCreatePredictionResponseUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      predictionResponseInput,)
+  }
+);}
+
+
+
+
+export const getCreatePredictionResponseMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPredictionResponse>>, TError,{data: BodyType<PredictionResponseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPredictionResponse>>, TError,{data: BodyType<PredictionResponseInput>}, TContext> => {
+
+const mutationKey = ['createPredictionResponse'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPredictionResponse>>, {data: BodyType<PredictionResponseInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPredictionResponse(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePredictionResponseMutationResult = NonNullable<Awaited<ReturnType<typeof createPredictionResponse>>>
+    export type CreatePredictionResponseMutationBody = BodyType<PredictionResponseInput>
+    export type CreatePredictionResponseMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Record a completed predict-yourself round
+ */
+export const useCreatePredictionResponse = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPredictionResponse>>, TError,{data: BodyType<PredictionResponseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPredictionResponse>>,
+        TError,
+        {data: BodyType<PredictionResponseInput>},
+        TContext
+      > => {
+      return useMutation(getCreatePredictionResponseMutationOptions(options));
+    }
+
+export const getGetTimeCapsulesUrl = () => {
+
+
+
+
+  return `/api/me/time-capsules`
+}
+
+/**
+ * Returns the caller's time-capsule notes, newest first, so they can replay
+what they wrote earlier. The note body is the user's own content shown
+only to them. Distinct notes written feed matching readiness as a
+low-weight intent and values signal.
+
+ * @summary List the signed-in user's notes to a future partner
+ */
+export const getTimeCapsules = async ( options?: RequestInit): Promise<TimeCapsule[]> => {
+
+  return customFetch<TimeCapsule[]>(getGetTimeCapsulesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTimeCapsulesQueryKey = () => {
+    return [
+    `/api/me/time-capsules`
+    ] as const;
+    }
+
+
+export const getGetTimeCapsulesQueryOptions = <TData = Awaited<ReturnType<typeof getTimeCapsules>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTimeCapsules>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTimeCapsulesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTimeCapsules>>> = ({ signal }) => getTimeCapsules({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTimeCapsules>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTimeCapsulesQueryResult = NonNullable<Awaited<ReturnType<typeof getTimeCapsules>>>
+export type GetTimeCapsulesQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary List the signed-in user's notes to a future partner
+ */
+
+export function useGetTimeCapsules<TData = Awaited<ReturnType<typeof getTimeCapsules>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTimeCapsules>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTimeCapsulesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateTimeCapsuleUrl = () => {
+
+
+
+
+  return `/api/me/time-capsules`
+}
+
+/**
+ * Stores one short note. Notes accumulate over time so the user can return
+and replay them; each distinct note nudges readiness.
+
+ * @summary Write a note to a future partner
+ */
+export const createTimeCapsule = async (timeCapsuleInput: TimeCapsuleInput, options?: RequestInit): Promise<TimeCapsule> => {
+
+  return customFetch<TimeCapsule>(getCreateTimeCapsuleUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      timeCapsuleInput,)
+  }
+);}
+
+
+
+
+export const getCreateTimeCapsuleMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTimeCapsule>>, TError,{data: BodyType<TimeCapsuleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTimeCapsule>>, TError,{data: BodyType<TimeCapsuleInput>}, TContext> => {
+
+const mutationKey = ['createTimeCapsule'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTimeCapsule>>, {data: BodyType<TimeCapsuleInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createTimeCapsule(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTimeCapsuleMutationResult = NonNullable<Awaited<ReturnType<typeof createTimeCapsule>>>
+    export type CreateTimeCapsuleMutationBody = BodyType<TimeCapsuleInput>
+    export type CreateTimeCapsuleMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Write a note to a future partner
+ */
+export const useCreateTimeCapsule = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTimeCapsule>>, TError,{data: BodyType<TimeCapsuleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTimeCapsule>>,
+        TError,
+        {data: BodyType<TimeCapsuleInput>},
+        TContext
+      > => {
+      return useMutation(getCreateTimeCapsuleMutationOptions(options));
+    }
+
+export const getGetWingmanStateUrl = () => {
+
+
+
+
+  return `/api/me/wingman`
+}
+
+/**
+ * Returns how many outside perspectives the user has gathered, their own
+self-rating, the averaged friend ratings, the derived self-vs-others gap,
+and their invites. Friend answers are only ever surfaced aggregated, never
+attributed back to an individual friend. Distinct perspectives gathered
+feed matching readiness as the externalCalibration lane.
+
+ * @summary The signed-in user's Wingman loop state
+ */
+export const getWingmanState = async ( options?: RequestInit): Promise<WingmanState> => {
+
+  return customFetch<WingmanState>(getGetWingmanStateUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWingmanStateQueryKey = () => {
+    return [
+    `/api/me/wingman`
+    ] as const;
+    }
+
+
+export const getGetWingmanStateQueryOptions = <TData = Awaited<ReturnType<typeof getWingmanState>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWingmanState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWingmanStateQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWingmanState>>> = ({ signal }) => getWingmanState({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWingmanState>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWingmanStateQueryResult = NonNullable<Awaited<ReturnType<typeof getWingmanState>>>
+export type GetWingmanStateQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary The signed-in user's Wingman loop state
+ */
+
+export function useGetWingmanState<TData = Awaited<ReturnType<typeof getWingmanState>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWingmanState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWingmanStateQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSetWingmanSelfRatingUrl = () => {
+
+
+
+
+  return `/api/me/wingman/self`
+}
+
+/**
+ * Stores the user's self-rating on the five traits (1-5 each). Re-rating
+overwrites the previous values. The self-rating is what the friend
+averages are compared against to surface the calibration gap.
+
+ * @summary Set the signed-in user's own trait self-rating
+ */
+export const setWingmanSelfRating = async (wingmanRatingsInput: WingmanRatingsInput, options?: RequestInit): Promise<WingmanState> => {
+
+  return customFetch<WingmanState>(getSetWingmanSelfRatingUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      wingmanRatingsInput,)
+  }
+);}
+
+
+
+
+export const getSetWingmanSelfRatingMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setWingmanSelfRating>>, TError,{data: BodyType<WingmanRatingsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setWingmanSelfRating>>, TError,{data: BodyType<WingmanRatingsInput>}, TContext> => {
+
+const mutationKey = ['setWingmanSelfRating'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setWingmanSelfRating>>, {data: BodyType<WingmanRatingsInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setWingmanSelfRating(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetWingmanSelfRatingMutationResult = NonNullable<Awaited<ReturnType<typeof setWingmanSelfRating>>>
+    export type SetWingmanSelfRatingMutationBody = BodyType<WingmanRatingsInput>
+    export type SetWingmanSelfRatingMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Set the signed-in user's own trait self-rating
+ */
+export const useSetWingmanSelfRating = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setWingmanSelfRating>>, TError,{data: BodyType<WingmanRatingsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setWingmanSelfRating>>,
+        TError,
+        {data: BodyType<WingmanRatingsInput>},
+        TContext
+      > => {
+      return useMutation(getSetWingmanSelfRatingMutationOptions(options));
+    }
+
+export const getCreateWingmanInviteUrl = () => {
+
+
+
+
+  return `/api/me/wingman/invites`
+}
+
+/**
+ * Creates an invite and returns a signed, time-limited share path the user
+can send to a friend. The friend opens it with no account and submits five
+1-5 trait scores. The optional friendLabel is a private nickname for the
+owner's own reference and is never shown to the friend.
+
+ * @summary Mint a signed invite link for a friend
+ */
+export const createWingmanInvite = async (wingmanInviteInput?: WingmanInviteInput, options?: RequestInit): Promise<WingmanInvite> => {
+
+  return customFetch<WingmanInvite>(getCreateWingmanInviteUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      wingmanInviteInput,)
+  }
+);}
+
+
+
+
+export const getCreateWingmanInviteMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWingmanInvite>>, TError,{data?: BodyType<WingmanInviteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWingmanInvite>>, TError,{data?: BodyType<WingmanInviteInput>}, TContext> => {
+
+const mutationKey = ['createWingmanInvite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWingmanInvite>>, {data?: BodyType<WingmanInviteInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createWingmanInvite(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWingmanInviteMutationResult = NonNullable<Awaited<ReturnType<typeof createWingmanInvite>>>
+    export type CreateWingmanInviteMutationBody = BodyType<WingmanInviteInput> | undefined
+    export type CreateWingmanInviteMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Mint a signed invite link for a friend
+ */
+export const useCreateWingmanInvite = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWingmanInvite>>, TError,{data?: BodyType<WingmanInviteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createWingmanInvite>>,
+        TError,
+        {data?: BodyType<WingmanInviteInput>},
+        TContext
+      > => {
+      return useMutation(getCreateWingmanInviteMutationOptions(options));
+    }
+
+export const getGetWingmanInvitePublicUrl = (token: string,) => {
+
+
+
+
+  return `/api/wingman/invite/${token}`
+}
+
+/**
+ * Resolves a signed invite token so a friend can see who invited them and
+whether the invite has already been answered. Requires no account. Returns
+404 for an invalid, expired, or unknown token.
+
+ * @summary Public view of an invite (no auth)
+ */
+export const getWingmanInvitePublic = async (token: string, options?: RequestInit): Promise<WingmanInvitePublic> => {
+
+  return customFetch<WingmanInvitePublic>(getGetWingmanInvitePublicUrl(token),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWingmanInvitePublicQueryKey = (token: string,) => {
+    return [
+    `/api/wingman/invite/${token}`
+    ] as const;
+    }
+
+
+export const getGetWingmanInvitePublicQueryOptions = <TData = Awaited<ReturnType<typeof getWingmanInvitePublic>>, TError = ErrorType<AuthErrorEnvelope>>(token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWingmanInvitePublic>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWingmanInvitePublicQueryKey(token);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWingmanInvitePublic>>> = ({ signal }) => getWingmanInvitePublic(token, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(token), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWingmanInvitePublic>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWingmanInvitePublicQueryResult = NonNullable<Awaited<ReturnType<typeof getWingmanInvitePublic>>>
+export type GetWingmanInvitePublicQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Public view of an invite (no auth)
+ */
+
+export function useGetWingmanInvitePublic<TData = Awaited<ReturnType<typeof getWingmanInvitePublic>>, TError = ErrorType<AuthErrorEnvelope>>(
+ token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWingmanInvitePublic>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWingmanInvitePublicQueryOptions(token,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAnswerWingmanInviteUrl = (token: string,) => {
+
+
+
+
+  return `/api/wingman/invite/${token}/answer`
+}
+
+/**
+ * Records a friend's five 1-5 trait scores for the invite. Requires no
+account. An invite can only be answered once. Only the five scores are
+stored, never any free text, and they are only ever shown back to the
+owner aggregated.
+
+ * @summary Submit a friend's trait ratings (no auth)
+ */
+export const answerWingmanInvite = async (token: string,
+    wingmanRatingsInput: WingmanRatingsInput, options?: RequestInit): Promise<WingmanAnswerAck> => {
+
+  return customFetch<WingmanAnswerAck>(getAnswerWingmanInviteUrl(token),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      wingmanRatingsInput,)
+  }
+);}
+
+
+
+
+export const getAnswerWingmanInviteMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof answerWingmanInvite>>, TError,{token: string;data: BodyType<WingmanRatingsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof answerWingmanInvite>>, TError,{token: string;data: BodyType<WingmanRatingsInput>}, TContext> => {
+
+const mutationKey = ['answerWingmanInvite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof answerWingmanInvite>>, {token: string;data: BodyType<WingmanRatingsInput>}> = (props) => {
+          const {token,data} = props ?? {};
+
+          return  answerWingmanInvite(token,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AnswerWingmanInviteMutationResult = NonNullable<Awaited<ReturnType<typeof answerWingmanInvite>>>
+    export type AnswerWingmanInviteMutationBody = BodyType<WingmanRatingsInput>
+    export type AnswerWingmanInviteMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Submit a friend's trait ratings (no auth)
+ */
+export const useAnswerWingmanInvite = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof answerWingmanInvite>>, TError,{token: string;data: BodyType<WingmanRatingsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof answerWingmanInvite>>,
+        TError,
+        {token: string;data: BodyType<WingmanRatingsInput>},
+        TContext
+      > => {
+      return useMutation(getAnswerWingmanInviteMutationOptions(options));
     }
 
 export const getGetMatchingProposalsUrl = () => {

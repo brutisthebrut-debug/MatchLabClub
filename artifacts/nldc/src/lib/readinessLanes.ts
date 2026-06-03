@@ -5,9 +5,11 @@ import {
   Calendar,
   CalendarDays,
   Camera,
+  Clapperboard,
   Compass,
   Download,
   Film,
+  Flame,
   Footprints,
   Heart,
   HelpCircle,
@@ -16,8 +18,11 @@ import {
   Mail,
   MessageCircle,
   Music2,
+  Scale,
   Sparkles,
+  Target,
   Trophy,
+  Users,
 } from "lucide-react";
 import type { MatchReadinessBreakdown } from "@workspace/api-client-react";
 
@@ -204,6 +209,60 @@ export const BREAKDOWN_ROWS = [
     href: "/connections/add/vitality",
     cta: "Add your rhythm",
     icon: Activity,
+  },
+  {
+    key: "wyr",
+    label: "Would You Rather",
+    blurb:
+      "Forced two-way tradeoffs reveal what you actually value, faster than any questionnaire.",
+    href: "/games/would-you-rather",
+    cta: "Answer today's tradeoff",
+    icon: Scale,
+  },
+  {
+    key: "consistency",
+    label: "Daily consistency",
+    blurb:
+      "Showing up across days, not in one burst, is its own read on follow-through.",
+    href: "/your-mirror",
+    cta: "Keep your streak going",
+    icon: Flame,
+  },
+  {
+    key: "scenarioReels",
+    label: "Scenario reels",
+    blurb:
+      "Real relationship moments reveal how you communicate and handle friction when it actually shows up.",
+    href: "/games/scenarios",
+    cta: "Play a scenario",
+    icon: Clapperboard,
+  },
+  {
+    key: "selfAwareness",
+    label: "Predict yourself",
+    blurb:
+      "Predicting how you will answer, then checking yourself, reveals how well your self-image matches reality.",
+    href: "/games/predict",
+    cta: "Play a round",
+    icon: Target,
+  },
+  {
+    key: "timeCapsule",
+    label: "Time capsule",
+    blurb:
+      "Short notes toward a future partner reveal, in your own words, how clearly you can name what you are looking for.",
+    href: "/games/time-capsule",
+    cta: "Write a note",
+    icon: Mail,
+  },
+  {
+    key: "externalCalibration",
+    label: "Wingman perspectives",
+    blurb:
+      "How friends who know you actually see you, and where that lines up with or diverges from your own self-image.",
+    href: "/wingman",
+    cta: "Ask a friend",
+    icon: Users,
   },
 ] satisfies readonly BreakdownRow[];
 

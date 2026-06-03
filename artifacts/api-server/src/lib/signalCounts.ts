@@ -21,12 +21,18 @@ import {
   auditsTable,
   messageCoachingSessionsTable,
   lifePulsesTable,
+  wyrAnswersTable,
+  scenarioResponsesTable,
+  predictionResponsesTable,
+  timeCapsulesTable,
+  wingmanAnswersTable,
 } from "@workspace/db";
 import {
   SIGNAL_REGISTRY,
   type ReadinessBreakdown,
   type SignalCounts,
 } from "./signalRegistry";
+import { loadActivityDays } from "./activityDays";
 
 // Minimum substantive journal length (chars) to count toward readiness. A
 // lazy one-liner should not move the needle; a real reflection should.
@@ -130,6 +136,63 @@ export async function collectSignalCounts(
     .where(eq(lifePulsesTable.userId, userId));
   const lifePulseCount = Number(lifePulseRows[0]?.count ?? 0);
 
+  // Would You Rather answers. A forced binary tradeoff reveals a preference more
+  // honestly than a stated one, so distinct prompts answered feed readiness. One
+  // row per (user, prompt), so count(*) is the distinct-prompt count.
+  const wyrRows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(wyrAnswersTable)
+    .where(eq(wyrAnswersTable.userId, userId));
+  const wyrCount = Number(wyrRows[0]?.count ?? 0);
+
+  // Scenario reels: distinct "what would you do" scenarios responded to. One row
+  // per (user, scenario) via the unique index, so a plain count is the distinct
+  // count. We store only the option chosen, never any free text.
+  const scenarioRows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(scenarioResponsesTable)
+    .where(eq(scenarioResponsesTable.userId, userId));
+  const scenarioCount = Number(scenarioRows[0]?.count ?? 0);
+
+  // Predict yourself: distinct rounds completed. One row per (user, item) via the
+  // unique index, so a plain count is the distinct count. We store only the
+  // predicted and actual counts, never which statements were marked true.
+  const predictionRows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(predictionResponsesTable)
+    .where(eq(predictionResponsesTable.userId, userId));
+  const predictionCount = Number(predictionRows[0]?.count ?? 0);
+
+  // Time capsule: notes written to a future partner. Notes accumulate, so a
+  // plain row count is the signal. We read only the count here, never the note
+  // bodies, which are shown back only to the user who wrote them.
+  const capsuleRows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(timeCapsulesTable)
+    .where(eq(timeCapsulesTable.userId, userId));
+  const capsuleCount = Number(capsuleRows[0]?.count ?? 0);
+
+  // Wingman: outside perspectives gathered. One answer row per answered invite,
+  // denormalized with the owner's userId, so a plain count is the number of
+  // friends who weighed in. We read only the count here, never the individual
+  // 1-5 scores, which are only ever surfaced aggregated.
+  const wingmanRows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(wingmanAnswersTable)
+    .where(eq(wingmanAnswersTable.userId, userId));
+  const wingmanCount = Number(wingmanRows[0]?.count ?? 0);
+
+  // Consistency: distinct days the user showed up and fed ANY signal in the
+  // trailing 14-day window. Showing up across days, not in one burst, is its own
+  // read on follow-through, so it feeds a small lane. loadActivityDays already
+  // returns DISTINCT days across every source, so this reads deduped calendar
+  // days only, never what was done on them, and never re-counts the per-lane
+  // action counts above.
+  const since14 = new Date(Date.now() - 13 * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  const activeDays14 = (await loadActivityDays(userId, since14)).length;
+
   // First-party counts: each comes from a bespoke query against a dedicated
   // table above, keyed here by the contributor's countKey.
   const counts = {
@@ -141,6 +204,12 @@ export async function collectSignalCounts(
     audits: auditsCount,
     coaching: coachingCount,
     lifePulse: lifePulseCount,
+    wyrAnswered: wyrCount,
+    activeDays14,
+    scenariosPlayed: scenarioCount,
+    predictionsAnswered: predictionCount,
+    capsulesWritten: capsuleCount,
+    wingmanPerspectives: wingmanCount,
   } as SignalCounts;
 
   // Import-backed counts, derived from the registry's data-source descriptors so

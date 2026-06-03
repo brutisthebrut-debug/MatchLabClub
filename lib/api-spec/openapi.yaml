@@ -4096,6 +4096,439 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/would-you-rather:
+    get:
+      tags: [Matching]
+      operationId: getWouldYouRatherAnswers
+      summary: List the signed-in user's Would You Rather answers
+      description: |
+        Returns the caller's answers to the Would You Rather deck, newest first.
+        Each answer records only which side was chosen, never any free text.
+        Distinct prompts answered feed matching readiness as a low-weight signal.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: List of answers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WyrAnswer'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+    post:
+      tags: [Matching]
+      operationId: createWouldYouRatherAnswer
+      summary: Record a Would You Rather answer
+      description: |
+        Records the side chosen for one prompt. Answering the same prompt again
+        updates the choice in place, so the distinct-prompt count stays honest.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WyrAnswerInput'
+      responses:
+        '201':
+          description: The recorded answer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WyrAnswer'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/scenarios:
+    get:
+      tags: [Matching]
+      operationId: getScenarioResponses
+      summary: List the signed-in user's scenario reel responses
+      description: |
+        Returns the caller's responses to the scenario reels, newest first. Each
+        response records only which option was chosen, never any free text.
+        Distinct scenarios answered feed matching readiness as a low-weight
+        communication and conflict-style signal.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: List of responses.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScenarioResponse'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+    post:
+      tags: [Matching]
+      operationId: createScenarioResponse
+      summary: Record a scenario reel response
+      description: |
+        Records the option chosen for one scenario. Answering the same scenario
+        again updates the choice in place, so the distinct-scenario count stays
+        honest.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScenarioResponseInput'
+      responses:
+        '201':
+          description: The recorded response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioResponse'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/predictions:
+    get:
+      tags: [Matching]
+      operationId: getPredictionResponses
+      summary: List the signed-in user's predict-yourself rounds
+      description: |
+        Returns the caller's completed predict-yourself rounds, newest first.
+        Each round records only the predicted count and the actual count, never
+        which individual statements were marked true. Distinct rounds completed
+        feed matching readiness as a low-weight self-awareness signal.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: List of rounds.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PredictionResponse'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+    post:
+      tags: [Matching]
+      operationId: createPredictionResponse
+      summary: Record a completed predict-yourself round
+      description: |
+        Records the predicted and actual counts for one round. Completing the
+        same round again updates both in place, so the distinct-round count stays
+        honest.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PredictionResponseInput'
+      responses:
+        '201':
+          description: The recorded round.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredictionResponse'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/time-capsules:
+    get:
+      tags: [Matching]
+      operationId: getTimeCapsules
+      summary: List the signed-in user's notes to a future partner
+      description: |
+        Returns the caller's time-capsule notes, newest first, so they can replay
+        what they wrote earlier. The note body is the user's own content shown
+        only to them. Distinct notes written feed matching readiness as a
+        low-weight intent and values signal.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: List of notes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeCapsule'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+    post:
+      tags: [Matching]
+      operationId: createTimeCapsule
+      summary: Write a note to a future partner
+      description: |
+        Stores one short note. Notes accumulate over time so the user can return
+        and replay them; each distinct note nudges readiness.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeCapsuleInput'
+      responses:
+        '201':
+          description: The stored note.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeCapsule'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/wingman:
+    get:
+      tags: [Matching]
+      operationId: getWingmanState
+      summary: The signed-in user's Wingman loop state
+      description: |
+        Returns how many outside perspectives the user has gathered, their own
+        self-rating, the averaged friend ratings, the derived self-vs-others gap,
+        and their invites. Friend answers are only ever surfaced aggregated, never
+        attributed back to an individual friend. Distinct perspectives gathered
+        feed matching readiness as the externalCalibration lane.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The user's Wingman state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WingmanState'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/wingman/self:
+    put:
+      tags: [Matching]
+      operationId: setWingmanSelfRating
+      summary: Set the signed-in user's own trait self-rating
+      description: |
+        Stores the user's self-rating on the five traits (1-5 each). Re-rating
+        overwrites the previous values. The self-rating is what the friend
+        averages are compared against to surface the calibration gap.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WingmanRatingsInput'
+      responses:
+        '200':
+          description: The updated Wingman state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WingmanState'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/wingman/invites:
+    post:
+      tags: [Matching]
+      operationId: createWingmanInvite
+      summary: Mint a signed invite link for a friend
+      description: |
+        Creates an invite and returns a signed, time-limited share path the user
+        can send to a friend. The friend opens it with no account and submits five
+        1-5 trait scores. The optional friendLabel is a private nickname for the
+        owner's own reference and is never shown to the friend.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WingmanInviteInput'
+      responses:
+        '201':
+          description: The created invite with its share path.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WingmanInvite'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /wingman/invite/{token}:
+    get:
+      tags: [Matching]
+      operationId: getWingmanInvitePublic
+      summary: Public view of an invite (no auth)
+      description: |
+        Resolves a signed invite token so a friend can see who invited them and
+        whether the invite has already been answered. Requires no account. Returns
+        404 for an invalid, expired, or unknown token.
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The public invite view.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WingmanInvitePublic'
+        '404':
+          description: Invalid, expired, or unknown token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /wingman/invite/{token}/answer:
+    post:
+      tags: [Matching]
+      operationId: answerWingmanInvite
+      summary: Submit a friend's trait ratings (no auth)
+      description: |
+        Records a friend's five 1-5 trait scores for the invite. Requires no
+        account. An invite can only be answered once. Only the five scores are
+        stored, never any free text, and they are only ever shown back to the
+        owner aggregated.
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WingmanRatingsInput'
+      responses:
+        '200':
+          description: The answer was recorded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WingmanAnswerAck'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Invalid, expired, or unknown token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '409':
+          description: This invite was already answered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/matching/proposals:
     get:
       tags: [Matching]
@@ -8404,7 +8837,7 @@ components:
 
     MatchReadinessBreakdown:
       type: object
-      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse, taste, lifestyle, quizzes, receipts, music, vitality, curiosity, film, reading]
+      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse, taste, lifestyle, quizzes, receipts, music, vitality, curiosity, film, reading, wyr, consistency, scenarioReels, selfAwareness, timeCapsule, externalCalibration]
       properties:
         compass:
           type: integer
@@ -8483,6 +8916,30 @@ components:
           minimum: 0
           maximum: 100
         reading:
+          type: integer
+          minimum: 0
+          maximum: 100
+        wyr:
+          type: integer
+          minimum: 0
+          maximum: 100
+        consistency:
+          type: integer
+          minimum: 0
+          maximum: 100
+        scenarioReels:
+          type: integer
+          minimum: 0
+          maximum: 100
+        selfAwareness:
+          type: integer
+          minimum: 0
+          maximum: 100
+        timeCapsule:
+          type: integer
+          minimum: 0
+          maximum: 100
+        externalCalibration:
           type: integer
           minimum: 0
           maximum: 100
@@ -9024,6 +9481,239 @@ components:
           type: string
           minLength: 1
           maxLength: 2000
+
+    WyrAnswer:
+      type: object
+      required: [promptId, choice, createdAt]
+      properties:
+        promptId:
+          type: string
+        choice:
+          type: string
+          enum: [a, b]
+        createdAt:
+          type: string
+
+    WyrAnswerInput:
+      type: object
+      required: [promptId, choice]
+      properties:
+        promptId:
+          type: string
+          minLength: 1
+          maxLength: 64
+        choice:
+          type: string
+          enum: [a, b]
+
+    ScenarioResponse:
+      type: object
+      required: [scenarioId, optionId, createdAt]
+      properties:
+        scenarioId:
+          type: string
+        optionId:
+          type: string
+        createdAt:
+          type: string
+
+    ScenarioResponseInput:
+      type: object
+      required: [scenarioId, optionId]
+      properties:
+        scenarioId:
+          type: string
+          minLength: 1
+          maxLength: 64
+        optionId:
+          type: string
+          minLength: 1
+          maxLength: 16
+
+    PredictionResponse:
+      type: object
+      required: [itemId, predicted, actual, createdAt]
+      properties:
+        itemId:
+          type: string
+        predicted:
+          type: integer
+          minimum: 0
+          maximum: 100
+        actual:
+          type: integer
+          minimum: 0
+          maximum: 100
+        createdAt:
+          type: string
+
+    PredictionResponseInput:
+      type: object
+      required: [itemId, predicted, actual]
+      properties:
+        itemId:
+          type: string
+          minLength: 1
+          maxLength: 64
+        predicted:
+          type: integer
+          minimum: 0
+          maximum: 100
+        actual:
+          type: integer
+          minimum: 0
+          maximum: 100
+
+    TimeCapsule:
+      type: object
+      required: [id, body, createdAt]
+      properties:
+        id:
+          type: integer
+        body:
+          type: string
+        createdAt:
+          type: string
+
+    TimeCapsuleInput:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 280
+
+    WingmanRatings:
+      type: object
+      required: [warmth, humor, drive, openness, steadiness]
+      properties:
+        warmth:
+          type: number
+        humor:
+          type: number
+        drive:
+          type: number
+        openness:
+          type: number
+        steadiness:
+          type: number
+
+    WingmanRatingsInput:
+      type: object
+      required: [warmth, humor, drive, openness, steadiness]
+      properties:
+        warmth:
+          type: integer
+          minimum: 1
+          maximum: 5
+        humor:
+          type: integer
+          minimum: 1
+          maximum: 5
+        drive:
+          type: integer
+          minimum: 1
+          maximum: 5
+        openness:
+          type: integer
+          minimum: 1
+          maximum: 5
+        steadiness:
+          type: integer
+          minimum: 1
+          maximum: 5
+
+    WingmanInviteInput:
+      type: object
+      properties:
+        friendLabel:
+          type: [string, 'null']
+          maxLength: 60
+
+    WingmanInvite:
+      type: object
+      required: [id, friendLabel, status, createdAt]
+      properties:
+        id:
+          type: integer
+        friendLabel:
+          type: [string, 'null']
+        status:
+          type: string
+          enum: [pending, answered]
+        createdAt:
+          type: string
+        path:
+          type: [string, 'null']
+          description: Fresh signed share path, present only for pending invites.
+
+    WingmanGap:
+      type: object
+      required: [warmth, humor, drive, openness, steadiness, largest]
+      properties:
+        warmth:
+          type: number
+        humor:
+          type: number
+        drive:
+          type: number
+        openness:
+          type: number
+        steadiness:
+          type: number
+        largest:
+          type: object
+          required: [trait, selfRating, friendRating, delta]
+          properties:
+            trait:
+              type: string
+            selfRating:
+              type: number
+            friendRating:
+              type: number
+            delta:
+              type: number
+
+    WingmanState:
+      type: object
+      required: [perspectives, selfRatings, friendAverages, gap, invites]
+      properties:
+        perspectives:
+          type: integer
+          minimum: 0
+        selfRatings:
+          oneOf:
+            - $ref: '#/components/schemas/WingmanRatings'
+            - type: 'null'
+        friendAverages:
+          oneOf:
+            - $ref: '#/components/schemas/WingmanRatings'
+            - type: 'null'
+        gap:
+          oneOf:
+            - $ref: '#/components/schemas/WingmanGap'
+            - type: 'null'
+        invites:
+          type: array
+          items:
+            $ref: '#/components/schemas/WingmanInvite'
+
+    WingmanInvitePublic:
+      type: object
+      required: [inviterName, answered]
+      properties:
+        inviterName:
+          type: string
+        answered:
+          type: boolean
+
+    WingmanAnswerAck:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
 
     MatchPoolIneligible:
       type: object

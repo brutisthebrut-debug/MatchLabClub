@@ -44,6 +44,12 @@ export interface ReadinessBreakdown {
   screenRhythm: number;
   preferences: number;
   voice: number;
+  wyr: number;
+  consistency: number;
+  scenarioReels: number;
+  selfAwareness: number;
+  timeCapsule: number;
+  externalCalibration: number;
 }
 
 /** Raw counts pulled from the database for each contributor. */
@@ -60,6 +66,12 @@ export interface SignalCounts {
   postDateReflected: number;
   /** Logged dating wins. */
   wins: number;
+  /**
+   * Distinct Would You Rather tradeoffs answered. A forced binary pick reveals a
+   * preference more honestly than a stated one; only which side was chosen is
+   * stored, never any free text.
+   */
+  wyrAnswered: number;
   /**
    * Events in the most recent pasted calendar (.ics) import. A fuller calendar
    * reads as a fuller life outside dating; only the derived count is used here,
@@ -168,6 +180,27 @@ export interface SignalCounts {
    * computed in the moment; the recording itself is never uploaded or kept.
    */
   voiceRecorded: number;
+  /**
+   * Distinct calendar days (UTC) the user showed up and fed ANY signal in the
+   * trailing 14-day window. Showing up across days, not in one burst, is its own
+   * read on follow-through. Only the deduped count of active days is used here,
+   * never what was done on any given day, so this never re-counts the per-lane
+   * action counts above.
+   */
+  activeDays14: number;
+  /** Distinct "what would you do" scenario reels the user has responded to. */
+  scenariosPlayed: number;
+  /** Distinct "predict yourself" rounds the user has completed. */
+  predictionsAnswered: number;
+  /** Notes the user has written to a future partner. */
+  capsulesWritten: number;
+  /**
+   * Outside perspectives gathered through the Wingman loop: distinct friends who
+   * answered an invite about the user. Seeing yourself through people who know
+   * you is its own read; only the count of perspectives feeds this lane, and
+   * each friend ever submits only five 1-5 scores, never any free text.
+   */
+  wingmanPerspectives: number;
 }
 
 /**
@@ -1203,6 +1236,190 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "The recording itself, which is analysed in the moment and never uploaded or stored",
         "Any transcript or the words you said",
         "Your raw audio is never sent to any AI prompt, only the derived metrics move your readiness",
+      ],
+    },
+  },
+  {
+    id: "wyr",
+    countKey: "wyrAnswered",
+    dataSource: { kind: "firstParty" },
+    label: "Would You Rather",
+    dimensions: [
+      "what they value",
+      "what they are looking for",
+      "their standards and dealbreakers",
+    ],
+    weight: 0.07,
+    confidence: 0.55,
+    normalize: { kind: "count", denominator: 12 },
+    describe: (c) =>
+      `Has answered enough Would You Rather tradeoffs to cover ${c}% of that lane, a revealed read on what they actually choose under a forced pick, not just what they say they want.`,
+    action: {
+      label: "Answer today's Would You Rather",
+      detail:
+        "Forced two-way tradeoffs reveal what you actually value, faster than any questionnaire.",
+      href: "/games/would-you-rather",
+    },
+    trust: {
+      origin: "The Would You Rather tradeoffs you answer.",
+      noun: "answer",
+      seen: [
+        "Which side you picked on each tradeoff",
+        "How many distinct tradeoffs you have answered",
+      ],
+      neverTouched: [
+        "Anything beyond the two choices we offer",
+        "Any free text, since the game never asks for any",
+      ],
+    },
+  },
+  {
+    id: "consistency",
+    countKey: "activeDays14",
+    dataSource: { kind: "firstParty" },
+    label: "Daily consistency",
+    dimensions: ["follow-through", "how steadily they invest"],
+    weight: 0.05,
+    confidence: 0.5,
+    normalize: { kind: "count", denominator: 7 },
+    describe: (c) =>
+      `Has shown up across enough recent days to cover ${c}% of that lane, a read on follow-through and how steadily they invest, not just a one-time burst.`,
+    action: {
+      label: "Keep your streak going",
+      detail:
+        "Feed any signal today. Showing up across days is its own read on follow-through.",
+      href: "/your-mirror",
+    },
+    trust: {
+      origin: "The days you show up and feed any signal, across every tool.",
+      noun: "active day",
+      seen: [
+        "Which calendar days you were active, used to read your consistency",
+        "How many of the last 14 days you showed up",
+      ],
+      neverTouched: [
+        "What you actually did on any given day, only that you were active",
+        "Any day you were not active",
+      ],
+    },
+  },
+  {
+    id: "scenarioReels",
+    countKey: "scenariosPlayed",
+    dataSource: { kind: "firstParty" },
+    label: "Scenario reels",
+    dimensions: ["communication", "conflict style"],
+    weight: 0.06,
+    confidence: 0.5,
+    normalize: { kind: "count", denominator: 8 },
+    describe: (c) =>
+      `Has worked through enough "what would you do" scenarios to cover ${c}% of that lane, a read on how they communicate and handle friction when it actually shows up.`,
+    action: {
+      label: "Play a scenario",
+      detail:
+        "Work through a real relationship moment. How you respond reveals your communication and conflict style.",
+      href: "/games/scenarios",
+    },
+    trust: {
+      origin: "The response you pick on each scenario reel.",
+      noun: "scenario",
+      seen: [
+        "Which response you picked on each scenario",
+        "How many distinct scenarios you have worked through",
+      ],
+      neverTouched: [
+        "Anything beyond the responses we offer",
+        "Any free text, since the reels never ask for any",
+      ],
+    },
+  },
+  {
+    id: "selfAwareness",
+    countKey: "predictionsAnswered",
+    dataSource: { kind: "firstParty" },
+    label: "Predict yourself",
+    dimensions: ["self-awareness"],
+    weight: 0.05,
+    confidence: 0.5,
+    normalize: { kind: "count", denominator: 6 },
+    describe: (c) =>
+      `Has predicted then checked themselves across enough rounds to cover ${c}% of that lane, a read on how well their self-image matches how they actually answer.`,
+    action: {
+      label: "Predict yourself",
+      detail:
+        "Guess how you will answer before you do, then see how close you were. The gap is a real read on self-awareness.",
+      href: "/games/predict",
+    },
+    trust: {
+      origin: "Your predicted count and your actual count on each round.",
+      noun: "round",
+      seen: [
+        "How many statements you predicted would be true of you",
+        "How many you actually marked true, and how many rounds you finished",
+      ],
+      neverTouched: [
+        "Which individual statements you marked true",
+        "Any free text, since the rounds never ask for any",
+      ],
+    },
+  },
+  {
+    id: "timeCapsule",
+    countKey: "capsulesWritten",
+    dataSource: { kind: "firstParty" },
+    label: "Time capsule",
+    dimensions: ["intent", "values"],
+    weight: 0.04,
+    confidence: 0.5,
+    normalize: { kind: "count", denominator: 5 },
+    describe: (c) =>
+      `Has written enough short notes toward a future partner to cover ${c}% of that lane, a read on how clearly they can name what they are looking for.`,
+    action: {
+      label: "Write a time capsule",
+      detail:
+        "Write one line to the person you have not met yet. Replay them later. Naming what you want is its own signal of intent.",
+      href: "/games/time-capsule",
+    },
+    trust: {
+      origin: "The short notes you write toward a future partner.",
+      noun: "note",
+      seen: [
+        "How many notes you have written over time",
+        "Derived themes only, never the words you wrote",
+      ],
+      neverTouched: [
+        "The text of your notes, which is shown back only to you",
+        "Anything beyond the derived count and themes",
+      ],
+    },
+  },
+  {
+    id: "externalCalibration",
+    countKey: "wingmanPerspectives",
+    dataSource: { kind: "firstParty" },
+    label: "Wingman perspectives",
+    dimensions: ["how others actually see them", "self-vs-others calibration"],
+    weight: 0.05,
+    confidence: 0.65,
+    normalize: { kind: "count", denominator: 3 },
+    describe: (c) =>
+      `Has gathered enough outside perspectives to cover ${c}% of that lane, a read on how friends actually see them and where their self-image and outside view line up or diverge.`,
+    action: {
+      label: "Ask a friend",
+      detail:
+        "Send a friend a link to rate you on five traits. Seeing yourself through people who know you is real signal you cannot give yourself.",
+      href: "/wingman",
+    },
+    trust: {
+      origin: "The five 1-5 trait scores friends submit through your invite links.",
+      noun: "perspective",
+      seen: [
+        "How many friends have weighed in",
+        "Averaged trait scores and the gap against your own self-rating",
+      ],
+      neverTouched: [
+        "Who said what, since answers are only ever shown aggregated",
+        "Any free text, since friends only ever submit 1-5 scores",
       ],
     },
   },

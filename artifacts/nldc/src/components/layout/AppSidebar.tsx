@@ -30,6 +30,7 @@ import {
   UserPen,
   ClipboardList,
   CalendarCheck,
+  Clapperboard,
   Flame,
   Gauge,
   LineChart,
@@ -41,6 +42,7 @@ import {
   Rss,
   SlidersHorizontal,
   Target,
+  Mail,
   Trophy,
   Unplug,
   Plug,
@@ -73,6 +75,7 @@ import {
   Send,
   Lock,
   Shuffle,
+  Scale,
   Mic,
 } from "lucide-react";
 
@@ -181,6 +184,11 @@ const SECTIONS: NavSection[] = [
     ],
     more: [
       { name: "This or That", href: "/this-or-that", icon: Shuffle },
+      { name: "Would You Rather", href: "/games/would-you-rather", icon: Scale },
+      { name: "Scenario reels", href: "/games/scenarios", icon: Clapperboard },
+      { name: "Predict yourself", href: "/games/predict", icon: Target },
+      { name: "Time capsule", href: "/games/time-capsule", icon: Mail },
+      { name: "Wingman", href: "/wingman", icon: Users },
       { name: "Voice intro", href: "/voice-intro", icon: Mic },
       { name: "Life Context", href: "/life-context", icon: Briefcase },
       { name: "Communication Insights", href: "/insights", icon: Lightbulb },

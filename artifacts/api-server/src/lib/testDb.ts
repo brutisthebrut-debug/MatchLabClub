@@ -192,6 +192,17 @@ stores.life_pulses = {
   nextId: 1,
   defaults: { userId: null, anonymousClaimToken: null, note: null },
 };
+stores.wingman_invites = {
+  rows: [],
+  nextId: 1,
+  defaults: { friendLabel: null, answeredAt: null },
+};
+ensureStore("wingman_answers");
+stores.wingman_self_ratings = {
+  rows: [],
+  nextId: 1,
+  defaults: {},
+};
 ensureStore("leads");
 ensureStore("waitlist");
 ensureStore("purchase_interest");
@@ -208,6 +219,9 @@ export const dataExportTokensTable = makeTable("data_export_tokens");
 export const usersTable = makeTable("users");
 export const sessionsTable = makeTable("sessions");
 export const lifePulsesTable = makeTable("life_pulses");
+export const wingmanInvitesTable = makeTable("wingman_invites");
+export const wingmanAnswersTable = makeTable("wingman_answers");
+export const wingmanSelfRatingsTable = makeTable("wingman_self_ratings");
 ensureStore("compatibility_reads");
 export const compatibilityReadsTable = makeTable("compatibility_reads");
 ensureStore("journal_entries");

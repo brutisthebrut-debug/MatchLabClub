@@ -48,6 +48,12 @@ describe("computeBreakdown", () => {
       screenRhythm: 0,
       preferences: 0,
       voice: 0,
+      wyr: 0,
+      consistency: 0,
+      scenarioReels: 0,
+      selfAwareness: 0,
+      timeCapsule: 0,
+      externalCalibration: 0,
     });
     expect(scoreFromBreakdown(b)).toBe(0);
   });
@@ -80,6 +86,12 @@ describe("computeBreakdown", () => {
       screenRhythmItems: 50,
       preferenceItems: 50,
       voiceRecorded: 1,
+      wyrAnswered: 50,
+      activeDays14: 50,
+      scenariosPlayed: 50,
+      predictionsAnswered: 50,
+      capsulesWritten: 50,
+      wingmanPerspectives: 50,
     });
     expect(b).toEqual({
       compass: 100,
@@ -108,6 +120,12 @@ describe("computeBreakdown", () => {
       screenRhythm: 100,
       preferences: 100,
       voice: 100,
+      wyr: 100,
+      consistency: 100,
+      scenarioReels: 100,
+      selfAwareness: 100,
+      timeCapsule: 100,
+      externalCalibration: 100,
     });
     expect(scoreFromBreakdown(b)).toBe(100);
   });

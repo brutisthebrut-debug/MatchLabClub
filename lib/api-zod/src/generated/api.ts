@@ -4655,6 +4655,24 @@ export const getMatchingStateResponseReadinessBreakdownFilmMax = 100;
 export const getMatchingStateResponseReadinessBreakdownReadingMin = 0;
 export const getMatchingStateResponseReadinessBreakdownReadingMax = 100;
 
+export const getMatchingStateResponseReadinessBreakdownWyrMin = 0;
+export const getMatchingStateResponseReadinessBreakdownWyrMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownConsistencyMin = 0;
+export const getMatchingStateResponseReadinessBreakdownConsistencyMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownScenarioReelsMin = 0;
+export const getMatchingStateResponseReadinessBreakdownScenarioReelsMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownSelfAwarenessMin = 0;
+export const getMatchingStateResponseReadinessBreakdownSelfAwarenessMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownTimeCapsuleMin = 0;
+export const getMatchingStateResponseReadinessBreakdownTimeCapsuleMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownExternalCalibrationMin = 0;
+export const getMatchingStateResponseReadinessBreakdownExternalCalibrationMax = 100;
+
 export const getMatchingStateResponseReadinessThresholdMin = 0;
 export const getMatchingStateResponseReadinessThresholdMax = 100;
 
@@ -4731,7 +4749,13 @@ export const GetMatchingStateResponse = zod.object({
   "vitality": zod.number().min(getMatchingStateResponseReadinessBreakdownVitalityMin).max(getMatchingStateResponseReadinessBreakdownVitalityMax),
   "curiosity": zod.number().min(getMatchingStateResponseReadinessBreakdownCuriosityMin).max(getMatchingStateResponseReadinessBreakdownCuriosityMax),
   "film": zod.number().min(getMatchingStateResponseReadinessBreakdownFilmMin).max(getMatchingStateResponseReadinessBreakdownFilmMax),
-  "reading": zod.number().min(getMatchingStateResponseReadinessBreakdownReadingMin).max(getMatchingStateResponseReadinessBreakdownReadingMax)
+  "reading": zod.number().min(getMatchingStateResponseReadinessBreakdownReadingMin).max(getMatchingStateResponseReadinessBreakdownReadingMax),
+  "wyr": zod.number().min(getMatchingStateResponseReadinessBreakdownWyrMin).max(getMatchingStateResponseReadinessBreakdownWyrMax),
+  "consistency": zod.number().min(getMatchingStateResponseReadinessBreakdownConsistencyMin).max(getMatchingStateResponseReadinessBreakdownConsistencyMax),
+  "scenarioReels": zod.number().min(getMatchingStateResponseReadinessBreakdownScenarioReelsMin).max(getMatchingStateResponseReadinessBreakdownScenarioReelsMax),
+  "selfAwareness": zod.number().min(getMatchingStateResponseReadinessBreakdownSelfAwarenessMin).max(getMatchingStateResponseReadinessBreakdownSelfAwarenessMax),
+  "timeCapsule": zod.number().min(getMatchingStateResponseReadinessBreakdownTimeCapsuleMin).max(getMatchingStateResponseReadinessBreakdownTimeCapsuleMax),
+  "externalCalibration": zod.number().min(getMatchingStateResponseReadinessBreakdownExternalCalibrationMin).max(getMatchingStateResponseReadinessBreakdownExternalCalibrationMax)
 })
 }),
   "eligible": zod.boolean().describe('True when readiness.score is at or above readinessThreshold. The client uses this to gate the pool opt-in switch.'),
@@ -5148,6 +5172,389 @@ export const DeleteDatingWinParams = zod.object({
 
 export const DeleteDatingWinHeader = zod.object({
   "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+
+/**
+ * Returns the caller's answers to the Would You Rather deck, newest first.
+Each answer records only which side was chosen, never any free text.
+Distinct prompts answered feed matching readiness as a low-weight signal.
+
+ * @summary List the signed-in user's Would You Rather answers
+ */
+export const GetWouldYouRatherAnswersHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetWouldYouRatherAnswersResponseItem = zod.object({
+  "promptId": zod.string(),
+  "choice": zod.enum(['a', 'b']),
+  "createdAt": zod.string()
+})
+export const GetWouldYouRatherAnswersResponse = zod.array(GetWouldYouRatherAnswersResponseItem)
+
+
+/**
+ * Records the side chosen for one prompt. Answering the same prompt again
+updates the choice in place, so the distinct-prompt count stays honest.
+
+ * @summary Record a Would You Rather answer
+ */
+export const CreateWouldYouRatherAnswerHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const createWouldYouRatherAnswerBodyPromptIdMax = 64;
+
+
+
+export const CreateWouldYouRatherAnswerBody = zod.object({
+  "promptId": zod.string().min(1).max(createWouldYouRatherAnswerBodyPromptIdMax),
+  "choice": zod.enum(['a', 'b'])
+})
+
+
+/**
+ * Returns the caller's responses to the scenario reels, newest first. Each
+response records only which option was chosen, never any free text.
+Distinct scenarios answered feed matching readiness as a low-weight
+communication and conflict-style signal.
+
+ * @summary List the signed-in user's scenario reel responses
+ */
+export const GetScenarioResponsesHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetScenarioResponsesResponseItem = zod.object({
+  "scenarioId": zod.string(),
+  "optionId": zod.string(),
+  "createdAt": zod.string()
+})
+export const GetScenarioResponsesResponse = zod.array(GetScenarioResponsesResponseItem)
+
+
+/**
+ * Records the option chosen for one scenario. Answering the same scenario
+again updates the choice in place, so the distinct-scenario count stays
+honest.
+
+ * @summary Record a scenario reel response
+ */
+export const CreateScenarioResponseHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const createScenarioResponseBodyScenarioIdMax = 64;
+
+export const createScenarioResponseBodyOptionIdMax = 16;
+
+
+
+export const CreateScenarioResponseBody = zod.object({
+  "scenarioId": zod.string().min(1).max(createScenarioResponseBodyScenarioIdMax),
+  "optionId": zod.string().min(1).max(createScenarioResponseBodyOptionIdMax)
+})
+
+
+/**
+ * Returns the caller's completed predict-yourself rounds, newest first.
+Each round records only the predicted count and the actual count, never
+which individual statements were marked true. Distinct rounds completed
+feed matching readiness as a low-weight self-awareness signal.
+
+ * @summary List the signed-in user's predict-yourself rounds
+ */
+export const GetPredictionResponsesHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const getPredictionResponsesResponsePredictedMin = 0;
+export const getPredictionResponsesResponsePredictedMax = 100;
+
+export const getPredictionResponsesResponseActualMin = 0;
+export const getPredictionResponsesResponseActualMax = 100;
+
+
+
+export const GetPredictionResponsesResponseItem = zod.object({
+  "itemId": zod.string(),
+  "predicted": zod.number().min(getPredictionResponsesResponsePredictedMin).max(getPredictionResponsesResponsePredictedMax),
+  "actual": zod.number().min(getPredictionResponsesResponseActualMin).max(getPredictionResponsesResponseActualMax),
+  "createdAt": zod.string()
+})
+export const GetPredictionResponsesResponse = zod.array(GetPredictionResponsesResponseItem)
+
+
+/**
+ * Records the predicted and actual counts for one round. Completing the
+same round again updates both in place, so the distinct-round count stays
+honest.
+
+ * @summary Record a completed predict-yourself round
+ */
+export const CreatePredictionResponseHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const createPredictionResponseBodyItemIdMax = 64;
+
+export const createPredictionResponseBodyPredictedMin = 0;
+export const createPredictionResponseBodyPredictedMax = 100;
+
+export const createPredictionResponseBodyActualMin = 0;
+export const createPredictionResponseBodyActualMax = 100;
+
+
+
+export const CreatePredictionResponseBody = zod.object({
+  "itemId": zod.string().min(1).max(createPredictionResponseBodyItemIdMax),
+  "predicted": zod.number().min(createPredictionResponseBodyPredictedMin).max(createPredictionResponseBodyPredictedMax),
+  "actual": zod.number().min(createPredictionResponseBodyActualMin).max(createPredictionResponseBodyActualMax)
+})
+
+
+/**
+ * Returns the caller's time-capsule notes, newest first, so they can replay
+what they wrote earlier. The note body is the user's own content shown
+only to them. Distinct notes written feed matching readiness as a
+low-weight intent and values signal.
+
+ * @summary List the signed-in user's notes to a future partner
+ */
+export const GetTimeCapsulesHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetTimeCapsulesResponseItem = zod.object({
+  "id": zod.number(),
+  "body": zod.string(),
+  "createdAt": zod.string()
+})
+export const GetTimeCapsulesResponse = zod.array(GetTimeCapsulesResponseItem)
+
+
+/**
+ * Stores one short note. Notes accumulate over time so the user can return
+and replay them; each distinct note nudges readiness.
+
+ * @summary Write a note to a future partner
+ */
+export const CreateTimeCapsuleHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const createTimeCapsuleBodyBodyMax = 280;
+
+
+
+export const CreateTimeCapsuleBody = zod.object({
+  "body": zod.string().min(1).max(createTimeCapsuleBodyBodyMax)
+})
+
+
+/**
+ * Returns how many outside perspectives the user has gathered, their own
+self-rating, the averaged friend ratings, the derived self-vs-others gap,
+and their invites. Friend answers are only ever surfaced aggregated, never
+attributed back to an individual friend. Distinct perspectives gathered
+feed matching readiness as the externalCalibration lane.
+
+ * @summary The signed-in user's Wingman loop state
+ */
+export const GetWingmanStateHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const getWingmanStateResponsePerspectivesMin = 0;
+
+
+
+export const GetWingmanStateResponse = zod.object({
+  "perspectives": zod.number().min(getWingmanStateResponsePerspectivesMin),
+  "selfRatings": zod.union([zod.object({
+  "warmth": zod.number(),
+  "humor": zod.number(),
+  "drive": zod.number(),
+  "openness": zod.number(),
+  "steadiness": zod.number()
+}),zod.null()]),
+  "friendAverages": zod.union([zod.object({
+  "warmth": zod.number(),
+  "humor": zod.number(),
+  "drive": zod.number(),
+  "openness": zod.number(),
+  "steadiness": zod.number()
+}),zod.null()]),
+  "gap": zod.union([zod.object({
+  "warmth": zod.number(),
+  "humor": zod.number(),
+  "drive": zod.number(),
+  "openness": zod.number(),
+  "steadiness": zod.number(),
+  "largest": zod.object({
+  "trait": zod.string(),
+  "selfRating": zod.number(),
+  "friendRating": zod.number(),
+  "delta": zod.number()
+})
+}),zod.null()]),
+  "invites": zod.array(zod.object({
+  "id": zod.number(),
+  "friendLabel": zod.string().nullable(),
+  "status": zod.enum(['pending', 'answered']),
+  "createdAt": zod.string(),
+  "path": zod.string().nullish().describe('Fresh signed share path, present only for pending invites.')
+}))
+})
+
+
+/**
+ * Stores the user's self-rating on the five traits (1-5 each). Re-rating
+overwrites the previous values. The self-rating is what the friend
+averages are compared against to surface the calibration gap.
+
+ * @summary Set the signed-in user's own trait self-rating
+ */
+export const SetWingmanSelfRatingHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const setWingmanSelfRatingBodyWarmthMax = 5;
+
+export const setWingmanSelfRatingBodyHumorMax = 5;
+
+export const setWingmanSelfRatingBodyDriveMax = 5;
+
+export const setWingmanSelfRatingBodyOpennessMax = 5;
+
+export const setWingmanSelfRatingBodySteadinessMax = 5;
+
+
+
+export const SetWingmanSelfRatingBody = zod.object({
+  "warmth": zod.number().min(1).max(setWingmanSelfRatingBodyWarmthMax),
+  "humor": zod.number().min(1).max(setWingmanSelfRatingBodyHumorMax),
+  "drive": zod.number().min(1).max(setWingmanSelfRatingBodyDriveMax),
+  "openness": zod.number().min(1).max(setWingmanSelfRatingBodyOpennessMax),
+  "steadiness": zod.number().min(1).max(setWingmanSelfRatingBodySteadinessMax)
+})
+
+export const setWingmanSelfRatingResponsePerspectivesMin = 0;
+
+
+
+export const SetWingmanSelfRatingResponse = zod.object({
+  "perspectives": zod.number().min(setWingmanSelfRatingResponsePerspectivesMin),
+  "selfRatings": zod.union([zod.object({
+  "warmth": zod.number(),
+  "humor": zod.number(),
+  "drive": zod.number(),
+  "openness": zod.number(),
+  "steadiness": zod.number()
+}),zod.null()]),
+  "friendAverages": zod.union([zod.object({
+  "warmth": zod.number(),
+  "humor": zod.number(),
+  "drive": zod.number(),
+  "openness": zod.number(),
+  "steadiness": zod.number()
+}),zod.null()]),
+  "gap": zod.union([zod.object({
+  "warmth": zod.number(),
+  "humor": zod.number(),
+  "drive": zod.number(),
+  "openness": zod.number(),
+  "steadiness": zod.number(),
+  "largest": zod.object({
+  "trait": zod.string(),
+  "selfRating": zod.number(),
+  "friendRating": zod.number(),
+  "delta": zod.number()
+})
+}),zod.null()]),
+  "invites": zod.array(zod.object({
+  "id": zod.number(),
+  "friendLabel": zod.string().nullable(),
+  "status": zod.enum(['pending', 'answered']),
+  "createdAt": zod.string(),
+  "path": zod.string().nullish().describe('Fresh signed share path, present only for pending invites.')
+}))
+})
+
+
+/**
+ * Creates an invite and returns a signed, time-limited share path the user
+can send to a friend. The friend opens it with no account and submits five
+1-5 trait scores. The optional friendLabel is a private nickname for the
+owner's own reference and is never shown to the friend.
+
+ * @summary Mint a signed invite link for a friend
+ */
+export const CreateWingmanInviteHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const createWingmanInviteBodyFriendLabelMax = 60;
+
+
+
+export const CreateWingmanInviteBody = zod.object({
+  "friendLabel": zod.string().max(createWingmanInviteBodyFriendLabelMax).nullish()
+})
+
+
+/**
+ * Resolves a signed invite token so a friend can see who invited them and
+whether the invite has already been answered. Requires no account. Returns
+404 for an invalid, expired, or unknown token.
+
+ * @summary Public view of an invite (no auth)
+ */
+export const GetWingmanInvitePublicParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const GetWingmanInvitePublicResponse = zod.object({
+  "inviterName": zod.string(),
+  "answered": zod.boolean()
+})
+
+
+/**
+ * Records a friend's five 1-5 trait scores for the invite. Requires no
+account. An invite can only be answered once. Only the five scores are
+stored, never any free text, and they are only ever shown back to the
+owner aggregated.
+
+ * @summary Submit a friend's trait ratings (no auth)
+ */
+export const AnswerWingmanInviteParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const answerWingmanInviteBodyWarmthMax = 5;
+
+export const answerWingmanInviteBodyHumorMax = 5;
+
+export const answerWingmanInviteBodyDriveMax = 5;
+
+export const answerWingmanInviteBodyOpennessMax = 5;
+
+export const answerWingmanInviteBodySteadinessMax = 5;
+
+
+
+export const AnswerWingmanInviteBody = zod.object({
+  "warmth": zod.number().min(1).max(answerWingmanInviteBodyWarmthMax),
+  "humor": zod.number().min(1).max(answerWingmanInviteBodyHumorMax),
+  "drive": zod.number().min(1).max(answerWingmanInviteBodyDriveMax),
+  "openness": zod.number().min(1).max(answerWingmanInviteBodyOpennessMax),
+  "steadiness": zod.number().min(1).max(answerWingmanInviteBodySteadinessMax)
+})
+
+export const AnswerWingmanInviteResponse = zod.object({
+  "ok": zod.boolean()
 })
 
 

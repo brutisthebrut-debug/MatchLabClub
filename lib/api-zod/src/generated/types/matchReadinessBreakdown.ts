@@ -107,4 +107,34 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   reading: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  wyr: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  consistency: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  scenarioReels: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  selfAwareness: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  timeCapsule: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  externalCalibration: number;
 }

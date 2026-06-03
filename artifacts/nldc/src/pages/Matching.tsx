@@ -298,6 +298,12 @@ export default function Matching() {
     screenRhythm: 0,
     preferences: 0,
     voice: 0,
+    wyr: 0,
+    consistency: 0,
+    scenarioReels: 0,
+    selfAwareness: 0,
+    timeCapsule: 0,
+    externalCalibration: 0,
   };
   const nextActions = state.data?.nextActions ?? [];
   const history = state.data?.history ?? [];
