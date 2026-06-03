@@ -882,6 +882,7 @@ export interface BrainControls {
   freeDailyCap: number;
   reweightingMode: ReweightingMode;
   reweightingCohortPercent: number;
+  reweightingMinOutcomes: number;
   confidenceWeighting: ScoringMode;
   decayMode: ScoringMode;
   signalWeightOverrides: Record<string, number> | null;

@@ -4488,6 +4488,18 @@ function BrainTab({ founderKey, refreshKey }: { founderKey: string; refreshKey: 
               </button>
             ))}
           </div>
+          {draft.reweightingMode !== "hold" && (
+            <div className="mt-4">
+              <NumberField
+                label="Confidence floor (min outcomes)"
+                hint="Minimum logged date outcomes before the tilt moves a user's weights. Below this the sample is too small to trust, so base weights stand. Hard floor of 2."
+                value={draft.reweightingMinOutcomes}
+                min={2}
+                max={1000}
+                onChange={(n) => patch({ reweightingMinOutcomes: n })}
+              />
+            </div>
+          )}
           {draft.reweightingMode === "applied" && (
             <div className="mt-4">
               <NumberField
