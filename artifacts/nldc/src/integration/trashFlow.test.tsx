@@ -346,7 +346,7 @@ describe("Web Trash / Recently-deleted flow", () => {
 
     // A success toast should appear
     await waitFor(() => {
-      expect(screen.getByText(/restored/i)).toBeTruthy();
+      expect(screen.getAllByText(/restored/i).length).toBeGreaterThanOrEqual(1);
     });
   });
 

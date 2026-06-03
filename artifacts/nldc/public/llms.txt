@@ -1,0 +1,101 @@
+# MatchLab Club
+
+> MatchLab Club is an AI-powered companion for your dating life. It audits dating profiles, rewrites bios, coaches messages, tracks communication patterns, and matches members with compatible people nearby. The single promise: become genuinely relationship-ready, then get matched with people you would never find on your own.
+
+## What this site is
+
+MatchLab Club sits alongside apps like Tinder, Hinge, and Bumble. It reads what a person's profile and messages are actually communicating, surfaces blind spots, and helps them improve before introducing matching. Matching is radius-based, AI-driven, and reserved for members who have built enough signal. Inclusivity is core: all genders and orientations are welcome.
+
+## Canonical domain
+
+https://matchlab.club
+
+## Key public pages
+
+- https://matchlab.club/ — landing page and product overview
+- https://matchlab.club/how-it-works — how the readiness-first, matching-as-payoff model works
+- https://matchlab.club/pricing — three tiers (free / $97 / $197/mo) with feature breakdown
+- https://matchlab.club/waitlist — early-access waitlist with listener perks
+- https://matchlab.club/sample-report — example profile audit report (no sign-in required)
+- https://matchlab.club/signal-check — free profile signal check tool
+- https://matchlab.club/blog — editorial content on dating profiles, messaging, compatibility, and mindset
+- https://matchlab.club/quizzes — self-knowledge quizzes (attachment style, conflict instinct, love pace, etc.)
+- https://matchlab.club/privacy — privacy policy
+- https://matchlab.club/terms — terms of service
+
+## Blog (editorial content on dating and relationships)
+
+- https://matchlab.club/blog/what-your-dating-profile-is-actually-communicating
+- https://matchlab.club/blog/the-science-of-message-coaching
+- https://matchlab.club/blog/red-flags-in-your-own-profile
+- https://matchlab.club/blog/photo-psychology-dating-apps
+- https://matchlab.club/blog/matching-with-the-wrong-people
+- https://matchlab.club/blog/attachment-styles-on-dating-apps
+- https://matchlab.club/blog/first-date-question-predicts-second-date
+- https://matchlab.club/blog/good-vibes-only-bio
+- https://matchlab.club/blog/three-message-test
+- https://matchlab.club/blog/read-a-profile-like-a-compatibility-analyst
+- https://matchlab.club/blog/dating-app-burnout-reset
+- https://matchlab.club/blog/voice-notes-on-dating-apps
+- https://matchlab.club/blog/post-date-reflection-questions
+- https://matchlab.club/blog/what-your-message-history-reveals
+- https://matchlab.club/blog/love-pace-mismatch
+- https://matchlab.club/blog/conflict-instinct-says-everything
+- https://matchlab.club/blog/soft-boundary-trap
+- https://matchlab.club/blog/specificity-beats-clever
+- https://matchlab.club/blog/photo-order-on-hinge
+- https://matchlab.club/blog/what-your-prompts-actually-say
+- https://matchlab.club/blog/bio-anti-patterns-i-keep-seeing
+- https://matchlab.club/blog/the-everything-profile-attracts-nobody
+- https://matchlab.club/blog/when-good-photos-still-fail
+- https://matchlab.club/blog/one-prompt-to-pre-filter-everyone-wrong
+- https://matchlab.club/blog/profile-as-invitation-not-resume
+- https://matchlab.club/blog/second-brain-for-dating
+- https://matchlab.club/blog/the-death-of-hey
+- https://matchlab.club/blog/reply-rhythm-and-when-silence-means-something
+- https://matchlab.club/blog/how-to-rescue-a-dead-thread
+- https://matchlab.club/blog/when-to-ask-them-out
+- https://matchlab.club/blog/voice-notes-are-a-cheat-code
+- https://matchlab.club/blog/the-question-that-actually-tells-you-something
+- https://matchlab.club/blog/wyd-and-other-conversational-dead-ends
+- https://matchlab.club/blog/small-talk-to-real-talk-in-three-moves
+- https://matchlab.club/blog/attachment-styles-without-the-tiktok
+- https://matchlab.club/blog/the-im-bad-at-dating-reframe
+- https://matchlab.club/blog/self-knowledge-is-the-pressure-point
+- https://matchlab.club/blog/healing-and-avoidance-look-the-same-from-the-outside
+- https://matchlab.club/blog/what-wellness-actually-means-when-youre-dating
+- https://matchlab.club/blog/the-question-you-keep-not-asking-yourself
+- https://matchlab.club/blog/you-are-not-your-pattern
+- https://matchlab.club/blog/picking-right-is-not-the-skill
+- https://matchlab.club/blog/what-actually-predicts-second-dates
+- https://matchlab.club/blog/values-mismatch-shows-up-early
+- https://matchlab.club/blog/conflict-instinct-is-a-compatibility-signal
+- https://matchlab.club/blog/the-love-pace-conversation
+- https://matchlab.club/blog/chemistry-is-not-compatibility
+- https://matchlab.club/blog/money-family-kids-the-conversations-everyone-delays
+- https://matchlab.club/blog/fixable-vs-structural-mismatch
+- https://matchlab.club/blog/compatibility-is-mostly-about-defaults
+- https://matchlab.club/blog/dating-fatigue-is-real-and-its-fixable
+- https://matchlab.club/blog/the-reset-week-and-why-it-works
+- https://matchlab.club/blog/journaling-without-making-it-homework
+- https://matchlab.club/blog/post-date-reflection-without-the-spiral
+- https://matchlab.club/blog/when-to-delete-the-apps-actually
+- https://matchlab.club/blog/taking-a-real-break-vs-avoiding
+- https://matchlab.club/blog/micro-rituals-between-dates
+- https://matchlab.club/blog/the-sunday-night-wind-down-with-yourself
+
+## Quizzes (self-knowledge assessments)
+
+- https://matchlab.club/quizzes/love-pace — how fast you move in relationships
+- https://matchlab.club/quizzes/conflict-instinct — your default conflict response style
+- https://matchlab.club/quizzes/what-lights-you-up — what genuinely energizes you
+- https://matchlab.club/quizzes/boundary-blueprint — how you set and maintain limits
+- https://matchlab.club/quizzes/attachment-style — secure, anxious, avoidant, or disorganized
+- https://matchlab.club/quizzes/post-date-instinct — how you read a date after the fact
+- https://matchlab.club/quizzes/message-stamina — how you sustain digital conversations
+- https://matchlab.club/quizzes/love-language — your primary love language
+- https://matchlab.club/quizzes/future-vision — what you are actually looking for long-term
+
+## Pages to skip
+
+Authenticated app pages (dashboard, coach, report, mirror, echo, matching, settings, account, vault, progress, copilot, etc.) require a sign-in and are not useful to crawl.
