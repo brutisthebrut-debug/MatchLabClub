@@ -1401,17 +1401,30 @@ export interface WeightAdjustment {
  * (post-date notes, compass); when dates are landing, leave the defaults alone.
  *
  * This is deterministic, bounded (no signal moves more than ADJUST_CAP of its
- * default), and re-normalized to sum to 1.0. It is intentionally NOT wired into
- * the live readiness score, so day-one behavior is unchanged. It exists so the
- * algorithm can be tuned by real outcomes once we choose to act on it, and so
- * the founder can see how a user's signals would re-weight.
+ * default), gated behind a confidence floor (minOutcomes), and re-normalized to
+ * sum to 1.0. It is off the live readiness score by default (the founder control
+ * center decides via reweightingMode, and only serves it to the rollout cohort),
+ * so day-one behavior is unchanged. It exists so the algorithm can be tuned by
+ * real outcomes once we choose to act on it, and so the founder can see how a
+ * user's signals would re-weight before flipping the switch.
  */
 const ADJUST_CAP = 0.25;
+
+/**
+ * Confidence floor: the minimum number of logged date outcomes before the
+ * outcome tilt is allowed to move any weight. Below this, the sample is too
+ * small to be signal rather than noise, so the base weights stand. Mirrors the
+ * small-cohort suppression used elsewhere (e.g. BENCHMARK_MIN_COHORT). A hard
+ * floor of 2 is always enforced even if a caller passes something lower, so the
+ * tilt can never learn from a single date.
+ */
+export const DEFAULT_REWEIGHT_MIN_OUTCOMES = 8;
 
 export function proposeWeightAdjustments(
   outcome: OutcomeSignal,
   registry: readonly SignalContributor[] = SIGNAL_REGISTRY,
   baseWeights?: Record<string, number>,
+  minOutcomes: number = DEFAULT_REWEIGHT_MIN_OUTCOMES,
 ): WeightAdjustment[] {
   // The base the tilt operates on. Defaults to the registry normalization, but
   // the founder control center can pass weight overrides so re-weighting tilts
@@ -1420,10 +1433,13 @@ export function proposeWeightAdjustments(
   const totalDates =
     outcome.anotherDate + outcome.noMore + outcome.ghosted + outcome.unsure;
 
-  // No outcomes yet: nothing to learn from, defaults stand.
+  // Confidence floor: never tilt until there are enough outcomes to be signal,
+  // and never below a hard floor of 2 no matter what a caller passes.
+  const floor = Math.max(2, Math.round(minOutcomes));
   const fizzleRate =
     totalDates > 0 ? (outcome.noMore + outcome.ghosted) / totalDates : 0;
-  const tilt = totalDates >= 2 ? Math.min(ADJUST_CAP, fizzleRate * ADJUST_CAP) : 0;
+  const tilt =
+    totalDates >= floor ? Math.min(ADJUST_CAP, fizzleRate * ADJUST_CAP) : 0;
 
   // Signals that capture in-person fit get nudged up when dates fizzle.
   const lean = new Set(["postDate", "compass"]);

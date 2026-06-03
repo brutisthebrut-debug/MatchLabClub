@@ -194,6 +194,7 @@ export function buildReadinessLearning(
     outcomeSignal,
     SIGNAL_REGISTRY,
     effectiveBaseWeights(controls),
+    controls.reweightingMinOutcomes,
   );
   const leaningInto = adjustments
     .filter((a) => a.adjustedWeight > a.defaultWeight + 1e-6)
@@ -339,6 +340,7 @@ export async function computeReweightingDetail(
     outcomeSignal,
     SIGNAL_REGISTRY,
     effectiveBaseWeights(controls),
+    controls.reweightingMinOutcomes,
   )
     .filter((a) => a.adjustedWeight > a.defaultWeight + 1e-6)
     .map((a) => ({ id: a.id, label: a.label }));

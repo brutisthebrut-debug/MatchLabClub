@@ -26,7 +26,9 @@ async function seedFizzlingDates(userId: string, n: number): Promise<void> {
 
 describe("computeReadiness re-weighting", () => {
   beforeAll(async () => {
-    await seedFizzlingDates(USER, 6);
+    // Seed comfortably above the default confidence floor (8) so the outcome
+    // tilt actually engages and base vs tilted scores diverge measurably.
+    await seedFizzlingDates(USER, 10);
   });
 
   afterAll(async () => {

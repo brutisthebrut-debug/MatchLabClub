@@ -170,8 +170,8 @@ describe("proposeWeightAdjustments (the breathing layer)", () => {
   it("leans into in-person fit signals when dates keep fizzling", () => {
     const adj = proposeWeightAdjustments({
       anotherDate: 0,
-      noMore: 3,
-      ghosted: 2,
+      noMore: 5,
+      ghosted: 3,
       unsure: 0,
     });
     const postDate = adj.find((a) => a.id === "postDate")!;
@@ -205,6 +205,42 @@ describe("proposeWeightAdjustments (the breathing layer)", () => {
       ghosted: 0,
       unsure: 0,
     });
+    for (const a of adj) {
+      expect(a.adjustedWeight).toBeCloseTo(a.defaultWeight, 4);
+    }
+  });
+
+  it("does not lean below the default confidence floor of 8 outcomes", () => {
+    const adj = proposeWeightAdjustments({
+      anotherDate: 0,
+      noMore: 4,
+      ghosted: 3,
+      unsure: 0,
+    });
+    for (const a of adj) {
+      expect(a.adjustedWeight).toBeCloseTo(a.defaultWeight, 4);
+    }
+  });
+
+  it("honors a custom minOutcomes floor", () => {
+    const outcome = { anotherDate: 0, noMore: 2, ghosted: 1, unsure: 0 };
+    // Below the custom floor of 5: defaults stand.
+    for (const a of proposeWeightAdjustments(outcome, SIGNAL_REGISTRY, undefined, 5)) {
+      expect(a.adjustedWeight).toBeCloseTo(a.defaultWeight, 4);
+    }
+    // A floor of 2 lets the same small sample tilt the in-person lanes up.
+    const tilted = proposeWeightAdjustments(outcome, SIGNAL_REGISTRY, undefined, 2);
+    const postDate = tilted.find((a) => a.id === "postDate")!;
+    expect(postDate.adjustedWeight).toBeGreaterThan(postDate.defaultWeight);
+  });
+
+  it("never tilts on a single outcome even when a caller passes a floor below 2", () => {
+    const adj = proposeWeightAdjustments(
+      { anotherDate: 0, noMore: 1, ghosted: 0, unsure: 0 },
+      SIGNAL_REGISTRY,
+      undefined,
+      1,
+    );
     for (const a of adj) {
       expect(a.adjustedWeight).toBeCloseTo(a.defaultWeight, 4);
     }

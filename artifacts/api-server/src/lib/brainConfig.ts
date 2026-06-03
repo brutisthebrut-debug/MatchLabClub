@@ -71,6 +71,12 @@ export interface BrainControls {
    */
   reweightingCohortPercent: number;
   /**
+   * Minimum number of logged date outcomes before the outcome tilt is allowed
+   * to move a user's weights. Below this the sample is too small to be signal,
+   * so the base weights stand even in "applied" mode. Floored at 2.
+   */
+  reweightingMinOutcomes: number;
+  /**
    * Whether confidence-weighting is wired into live scoring. "applied" leans the
    * readiness weights toward the lanes we trust most (each weight scaled by its
    * registry confidence, then re-normalized); "hold" keeps day-one weights.
@@ -144,6 +150,12 @@ function envReadinessThreshold(): number {
   return Math.max(0, Math.min(100, Math.round(raw)));
 }
 
+function envReweightMinOutcomes(): number {
+  const raw = Number(process.env.MATCHING_REWEIGHT_MIN_OUTCOMES);
+  if (!Number.isFinite(raw)) return 8;
+  return Math.max(2, Math.min(1000, Math.round(raw)));
+}
+
 export function defaultControls(): BrainControls {
   return {
     readinessThreshold: envReadinessThreshold(),
@@ -153,6 +165,7 @@ export function defaultControls(): BrainControls {
     freeDailyCap: DEFAULT_FREE_DAILY_CAP,
     reweightingMode: "shadow",
     reweightingCohortPercent: 100,
+    reweightingMinOutcomes: envReweightMinOutcomes(),
     confidenceWeighting: "hold",
     decayMode: "hold",
     signalWeightOverrides: null,
@@ -209,6 +222,12 @@ export function coerceControls(raw: unknown): BrainControls {
       0,
       100,
       base.reweightingCohortPercent,
+    ),
+    reweightingMinOutcomes: clampInt(
+      v.reweightingMinOutcomes,
+      2,
+      1000,
+      base.reweightingMinOutcomes,
     ),
     confidenceWeighting: v.confidenceWeighting === "applied" ? "applied" : "hold",
     decayMode: v.decayMode === "applied" ? "applied" : "hold",
@@ -321,7 +340,12 @@ export function reweightedWeights(
   outcome: OutcomeSignal,
 ): Record<string, number> {
   const base = effectiveBaseWeights(controls);
-  const adjustments = proposeWeightAdjustments(outcome, SIGNAL_REGISTRY, base);
+  const adjustments = proposeWeightAdjustments(
+    outcome,
+    SIGNAL_REGISTRY,
+    base,
+    controls.reweightingMinOutcomes,
+  );
   const out: Record<string, number> = {};
   for (const a of adjustments) out[a.id] = a.adjustedWeight;
   return out;

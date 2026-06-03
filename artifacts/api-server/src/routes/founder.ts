@@ -2247,6 +2247,7 @@ const BrainControlsPatch = z.object({
   freeDailyCap: z.number().int().min(0).max(100000).optional(),
   reweightingMode: z.enum(["hold", "shadow", "applied"]).optional(),
   reweightingCohortPercent: z.number().int().min(0).max(100).optional(),
+  reweightingMinOutcomes: z.number().int().min(2).max(1000).optional(),
   confidenceWeighting: z.enum(["hold", "applied"]).optional(),
   decayMode: z.enum(["hold", "applied"]).optional(),
   signalWeightOverrides: z.record(z.string(), z.number().min(0)).nullable().optional(),
@@ -2426,7 +2427,12 @@ router.get(
       computeOutcomeInsightForUser(user.id),
       computeReweightingPreview(user.id, controls),
     ]);
-    const adjustments = proposeWeightAdjustments(outcome, SIGNAL_REGISTRY, base);
+    const adjustments = proposeWeightAdjustments(
+      outcome,
+      SIGNAL_REGISTRY,
+      base,
+      controls.reweightingMinOutcomes,
+    );
 
     res.json({
       user: { id: user.id, email: user.email },

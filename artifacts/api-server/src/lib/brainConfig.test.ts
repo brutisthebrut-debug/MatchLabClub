@@ -33,6 +33,7 @@ describe("brainConfig defaults", () => {
   it("default controls observe in shadow, no overrides, all connectors on", () => {
     const c = defaultControls();
     expect(c.reweightingMode).toBe("shadow");
+    expect(c.reweightingMinOutcomes).toBe(8);
     expect(c.signalWeightOverrides).toBeNull();
     expect(c.connectorToggles).toEqual({});
     for (const entry of CONNECTOR_CATALOG) {
@@ -124,7 +125,7 @@ describe("effectiveWeightsForUser", () => {
   it("applied mode tilts toward in-person fit signals when dates fizzle", () => {
     const controls: BrainControls = { ...defaultControls(), reweightingMode: "applied" };
     const base = effectiveBaseWeights(controls);
-    const fizzling: OutcomeSignal = { anotherDate: 0, noMore: 2, ghosted: 2, unsure: 0 };
+    const fizzling: OutcomeSignal = { anotherDate: 0, noMore: 5, ghosted: 3, unsure: 0 };
     const w = effectiveWeightsForUser(controls, fizzling);
     const sum = Object.values(w).reduce((a, b) => a + b, 0);
     expect(sum).toBeCloseTo(1, 2);
@@ -136,7 +137,7 @@ describe("effectiveWeightsForUser", () => {
 describe("reweightedWeights", () => {
   it("always tilts regardless of mode, ignoring the gate", () => {
     const base = effectiveBaseWeights(defaultControls());
-    const fizzling: OutcomeSignal = { anotherDate: 0, noMore: 2, ghosted: 2, unsure: 0 };
+    const fizzling: OutcomeSignal = { anotherDate: 0, noMore: 5, ghosted: 3, unsure: 0 };
     // mode is "hold" here, but reweightedWeights tilts anyway (shadow/preview use).
     const w = reweightedWeights(defaultControls(), fizzling);
     const sum = Object.values(w).reduce((a, b) => a + b, 0);
@@ -146,7 +147,7 @@ describe("reweightedWeights", () => {
 
   it("shadow mode leaves effectiveWeightsForUser on base, but reweightedWeights still tilts", () => {
     const shadow: BrainControls = { ...defaultControls(), reweightingMode: "shadow" };
-    const fizzling: OutcomeSignal = { anotherDate: 0, noMore: 2, ghosted: 2, unsure: 0 };
+    const fizzling: OutcomeSignal = { anotherDate: 0, noMore: 5, ghosted: 3, unsure: 0 };
     const served = effectiveWeightsForUser(shadow, fizzling);
     const base = effectiveBaseWeights(shadow);
     for (const id of Object.keys(base)) {
