@@ -987,6 +987,386 @@ const FUTURE_VISION: Quiz = {
   },
 };
 
+// ── Quiz 10: Dealbreaker Radar ──────────────────────────────────────────────
+const DEALBREAKER_RADAR: Quiz = {
+  slug: "dealbreaker-radar",
+  title: "What are your real dealbreakers?",
+  pitch: "Five questions to separate your true non-negotiables from the preferences you can flex on. The output doubles as your matching filter.",
+  durationSec: 90,
+  emoji: "🚦",
+  feeds: ["values.nonNegotiables", "standards.clarity", "matching.filters"],
+  questions: [
+    {
+      q: "A person you like is great company but cancels plans last-minute, twice. You...",
+      options: [
+        { label: "Name it once. If it keeps happening, I'm out", scores: { clearList: 2, fastLearner: 1 }, wellness: { questionId: "values.dealbreaker.effort", dimension: "values", category: "dealbreakers", questionText: "How firm are you about reliability and effort early on?", answer: "Reliability is a hard line. Repeated flakiness ends it for me." } },
+        { label: "Give grace, life is busy, but I'm watching", scores: { flexibleCore: 2 }, wellness: { questionId: "values.dealbreaker.effort", dimension: "values", category: "dealbreakers", questionText: "How firm are you about reliability and effort early on?", answer: "I extend grace on effort but track the pattern." } },
+        { label: "Honestly I'd talk myself out of minding", scores: { softEdges: 2 }, wellness: { questionId: "values.dealbreaker.effort", dimension: "values", category: "dealbreakers", questionText: "How firm are you about reliability and effort early on?", answer: "I tend to minimize effort issues to avoid conflict." } },
+        { label: "I'd test it on purpose before deciding", scores: { fastLearner: 2, clearList: 1 }, wellness: { questionId: "values.dealbreaker.effort", dimension: "values", category: "dealbreakers", questionText: "How firm are you about reliability and effort early on?", answer: "I learn my dealbreakers by watching how people actually behave." } },
+      ],
+    },
+    {
+      q: "You catch a small, pointless lie early on. Your gut says...",
+      options: [
+        { label: "That's the whole answer. Trust is the floor", scores: { clearList: 2 }, wellness: { questionId: "values.dealbreaker.honesty", dimension: "values", category: "dealbreakers", questionText: "Where does honesty sit in your dealbreakers?", answer: "Honesty is non-negotiable. Even small lies end it." } },
+        { label: "Depends what it was about and why", scores: { flexibleCore: 2, fastLearner: 1 }, wellness: { questionId: "values.dealbreaker.honesty", dimension: "values", category: "dealbreakers", questionText: "Where does honesty sit in your dealbreakers?", answer: "I weigh context before deciding a lie is disqualifying." } },
+        { label: "I'd probably let it slide and hope", scores: { softEdges: 2 }, wellness: { questionId: "values.dealbreaker.honesty", dimension: "values", category: "dealbreakers", questionText: "Where does honesty sit in your dealbreakers?", answer: "I tend to overlook early dishonesty." } },
+        { label: "One data point. I need two before I call it", scores: { fastLearner: 2 }, wellness: { questionId: "values.dealbreaker.honesty", dimension: "values", category: "dealbreakers", questionText: "Where does honesty sit in your dealbreakers?", answer: "I look for a pattern before treating dishonesty as a dealbreaker." } },
+      ],
+    },
+    {
+      q: "How clear are you on what you will not compromise on?",
+      options: [
+        { label: "Crystal. I could list five right now", scores: { clearList: 2 } },
+        { label: "I have two or three hard lines, the rest flexes", scores: { flexibleCore: 2 } },
+        { label: "I find out the moment something crosses one", scores: { fastLearner: 2 } },
+        { label: "Honestly my lines move depending on how I feel about them", scores: { softEdges: 2 } },
+      ],
+    },
+    {
+      q: "Different life goals (kids, location, ambition) show up. You...",
+      options: [
+        { label: "If the big ones clash, I end it kindly and early", scores: { clearList: 2, fastLearner: 1 }, wellness: { questionId: "values.dealbreaker.lifegoals", dimension: "values", category: "dealbreakers", questionText: "How do you handle clashing long-term life goals?", answer: "Core life-goal mismatches are dealbreakers I act on early." } },
+        { label: "I'll explore whether there's a real middle", scores: { flexibleCore: 2 }, wellness: { questionId: "values.dealbreaker.lifegoals", dimension: "values", category: "dealbreakers", questionText: "How do you handle clashing long-term life goals?", answer: "I look for genuine compromise before walking on life goals." } },
+        { label: "I'd stay and quietly hope they change", scores: { softEdges: 2 }, wellness: { questionId: "values.dealbreaker.lifegoals", dimension: "values", category: "dealbreakers", questionText: "How do you handle clashing long-term life goals?", answer: "I sometimes stay despite goal mismatches, hoping they shift." } },
+        { label: "I'd want to see how they handle the conversation first", scores: { fastLearner: 2, flexibleCore: 1 }, wellness: { questionId: "values.dealbreaker.lifegoals", dimension: "values", category: "dealbreakers", questionText: "How do you handle clashing long-term life goals?", answer: "How someone discusses a goal gap matters as much as the gap itself." } },
+      ],
+    },
+    {
+      q: "When a dealbreaker gets crossed, how fast do you actually act on it?",
+      options: [
+        { label: "Quickly. I'd rather lose weeks than months", scores: { clearList: 2, fastLearner: 1 } },
+        { label: "After a fair conversation, then I move", scores: { flexibleCore: 2 } },
+        { label: "Slowly. I talk myself in circles first", scores: { softEdges: 2 } },
+        { label: "I act fast once, then second-guess it", scores: { fastLearner: 2, softEdges: 1 } },
+      ],
+    },
+  ],
+  archetypes: {
+    clearList: {
+      name: "The Clear List",
+      emoji: "📋",
+      tagline: "You know your non-negotiables and you hold them. That clarity saves you months other people lose.",
+      insight: "You can name your dealbreakers without flinching, which means you waste very little time on connections that were never going to work. The risk is that a list held too rigidly can screen out a good person over a fixable thing. Keep the hard lines hard and let the small stuff be small.",
+      nextStep: "Turn your top three lines into your matching filters so the machine stops surfacing people who fail them.",
+      cta: { label: "Set your matching filters", href: "/matching" },
+      color: "8 80% 60%",
+    },
+    flexibleCore: {
+      name: "The Flexible Core",
+      emoji: "🧭",
+      tagline: "A few hard lines, everything else negotiable. You filter on what matters and stay open on the rest.",
+      insight: "You hold a small set of true non-negotiables and treat the rest as preferences, which is the healthiest place to be. You rarely lose a good match over something cosmetic. The watch-out is letting the negotiable list quietly absorb things that should have been hard lines.",
+      nextStep: "Write down which two or three lines are actually hard. Naming them protects them.",
+      cta: { label: "Map this in Your Mirror", href: "/your-mirror" },
+      color: "190 55% 58%",
+    },
+    fastLearner: {
+      name: "The Fast Learner",
+      emoji: "🔬",
+      tagline: "You discover your dealbreakers by watching real behavior, not by guessing in advance.",
+      insight: "You trust evidence over theory, so your standards get sharper with every person you date. That makes you hard to fool. The cost is that learning live can mean a few extra weeks invested before the lesson lands. Logging what you notice speeds the loop up.",
+      nextStep: "After your next date, write one thing that moved your standards. Patterns build fast when you track them.",
+      cta: { label: "Log a post-date debrief", href: "/copilot/debrief" },
+      color: "248 62% 62%",
+    },
+    softEdges: {
+      name: "The Soft Edges",
+      emoji: "🌫️",
+      tagline: "You feel your lines but struggle to hold them. The work is not stricter rules, it is trusting the ones you have.",
+      insight: "You sense when something is off, then talk yourself out of it to keep the peace or keep the person. This is common and it is workable. The shift is treating your first quiet no as information, not as you being difficult. Your standards are probably more reliable than you give them credit for.",
+      nextStep: "Pick one line you keep letting slide and decide it is firm before the next person tests it.",
+      cta: { label: "Strengthen your boundaries", href: "/quizzes/boundary-blueprint" },
+      color: "280 45% 64%",
+    },
+  },
+};
+
+// ── Quiz 11: Readiness Self-Check ───────────────────────────────────────────
+const READINESS_CHECK: Quiz = {
+  slug: "readiness-check",
+  title: "Are you actually ready to date right now?",
+  pitch: "An honest five-question read on your real capacity for a new connection. No shame either way, just a clearer picture.",
+  durationSec: 90,
+  emoji: "🌱",
+  feeds: ["readiness.self", "emotional.availability", "intent.clarity"],
+  questions: [
+    {
+      q: "When you picture dating right now, the honest feeling is...",
+      options: [
+        { label: "Genuine excitement, I have room for someone", scores: { readyOpen: 2 }, wellness: { questionId: "readiness.bandwidth", dimension: "readiness", category: "bandwidth", questionText: "What is your real emotional bandwidth for dating right now?", answer: "High. I feel open and have room for someone new." } },
+        { label: "Curious but a little guarded", scores: { curiousGuarded: 2 }, wellness: { questionId: "readiness.bandwidth", dimension: "readiness", category: "bandwidth", questionText: "What is your real emotional bandwidth for dating right now?", answer: "Cautiously open. Interested but protecting myself." } },
+        { label: "Tired just thinking about it", scores: { stretchedThin: 2 }, wellness: { questionId: "readiness.bandwidth", dimension: "readiness", category: "bandwidth", questionText: "What is your real emotional bandwidth for dating right now?", answer: "Low. My capacity is stretched thin right now." } },
+        { label: "A pull toward someone specific from my past", scores: { stillHealing: 2 }, wellness: { questionId: "readiness.bandwidth", dimension: "readiness", category: "bandwidth", questionText: "What is your real emotional bandwidth for dating right now?", answer: "Divided. Part of me is still attached to someone before." } },
+      ],
+    },
+    {
+      q: "Your most recent relationship or situationship feels...",
+      options: [
+        { label: "Fully closed. I learned from it and moved on", scores: { readyOpen: 2 }, wellness: { questionId: "readiness.closure", dimension: "readiness", category: "closure", questionText: "How resolved is your most recent connection?", answer: "Resolved. I have closure and have processed it." } },
+        { label: "Mostly closed, the odd pang", scores: { curiousGuarded: 2, readyOpen: 1 }, wellness: { questionId: "readiness.closure", dimension: "readiness", category: "closure", questionText: "How resolved is your most recent connection?", answer: "Mostly closed with occasional residual feeling." } },
+        { label: "Still raw, I think about it a lot", scores: { stillHealing: 2 }, wellness: { questionId: "readiness.closure", dimension: "readiness", category: "closure", questionText: "How resolved is your most recent connection?", answer: "Still raw. It occupies a lot of my headspace." } },
+        { label: "Honestly not over it", scores: { stillHealing: 2, stretchedThin: 1 }, wellness: { questionId: "readiness.closure", dimension: "readiness", category: "closure", questionText: "How resolved is your most recent connection?", answer: "Not over it yet." } },
+      ],
+    },
+    {
+      q: "Do you have the time and energy for someone else's needs right now?",
+      options: [
+        { label: "Yes, my life has real space in it", scores: { readyOpen: 2 } },
+        { label: "Some, if it is the right person", scores: { curiousGuarded: 2 } },
+        { label: "Not much, I'm running close to empty", scores: { stretchedThin: 2 } },
+        { label: "I'd make space I don't really have", scores: { stretchedThin: 2, stillHealing: 1 } },
+      ],
+    },
+    {
+      q: "Why do you want to date right now?",
+      options: [
+        { label: "I'm content alone and want to share that", scores: { readyOpen: 2 }, wellness: { questionId: "intent.why", dimension: "intent", category: "motivation", questionText: "What is driving your desire to date right now?", answer: "I am secure on my own and want to share a good life." } },
+        { label: "I'm curious what is out there", scores: { curiousGuarded: 2 }, wellness: { questionId: "intent.why", dimension: "intent", category: "motivation", questionText: "What is driving your desire to date right now?", answer: "Curiosity and openness to possibility." } },
+        { label: "I don't love being alone", scores: { stretchedThin: 1, stillHealing: 1 }, wellness: { questionId: "intent.why", dimension: "intent", category: "motivation", questionText: "What is driving your desire to date right now?", answer: "Discomfort with being alone is part of the pull." } },
+        { label: "Partly to move on from someone", scores: { stillHealing: 2 }, wellness: { questionId: "intent.why", dimension: "intent", category: "motivation", questionText: "What is driving your desire to date right now?", answer: "Partly to get over a previous person." } },
+      ],
+    },
+    {
+      q: "When a date does not work out, how do you tend to take it?",
+      options: [
+        { label: "It rolls off. Not every fit is the fit", scores: { readyOpen: 2 } },
+        { label: "A small sting, then I'm fine", scores: { curiousGuarded: 2, readyOpen: 1 } },
+        { label: "It lands hard and lingers", scores: { stillHealing: 2 } },
+        { label: "I don't have the reserves for the letdown", scores: { stretchedThin: 2 } },
+      ],
+    },
+  ],
+  archetypes: {
+    readyOpen: {
+      name: "Ready and Open",
+      emoji: "🌤️",
+      tagline: "You have closure, capacity, and a clear reason. This is the strongest place to date from.",
+      insight: "You are not dating to fill a hole, you are dating to add to a life that already works. That shows up as steadiness and low neediness, which the right person reads as safety. The only caution is not to let a busy stretch quietly erode the space you have made.",
+      nextStep: "Pour this readiness into the meter. The more the machine knows, the better it matches you.",
+      cta: { label: "Build your Match Readiness", href: "/your-mirror" },
+      color: "190 60% 58%",
+    },
+    curiousGuarded: {
+      name: "Curious but Guarded",
+      emoji: "🚪",
+      tagline: "Open enough to look, careful enough to protect yourself. A reasonable place to start.",
+      insight: "You are interested and a little self-protective at the same time, which is healthy after anything that did not end well. You will do better with slow, low-pressure connection than with anything intense up front. Let trust build at the speed of evidence rather than forcing it.",
+      nextStep: "Start with low-stakes signal: a quiz or two, a profile audit. Momentum lowers the guard naturally.",
+      cta: { label: "See where you stand", href: "/me" },
+      color: "248 55% 62%",
+    },
+    stillHealing: {
+      name: "Still Healing",
+      emoji: "🩹",
+      tagline: "Part of you is still with someone before. That is not a failing, it is just real, and worth honoring.",
+      insight: "Dating to get over someone usually means carrying the last person into the next, which is unfair to you and to them. There is no shame here, only timing. A little more closure now will make the eventual connection far better than rushing it would.",
+      nextStep: "Be honest about the pull backward before you take the next date. Naming it loosens its grip.",
+      cta: { label: "Work it through in Your Mirror", href: "/your-mirror" },
+      color: "8 70% 62%",
+    },
+    stretchedThin: {
+      name: "Stretched Thin",
+      emoji: "🫧",
+      tagline: "Your capacity is low right now, and a new person needs capacity. Worth knowing before you start.",
+      insight: "When you are running close to empty, dating tends to feel like one more obligation, and good people can get the tired version of you. This is about bandwidth, not desire. Topping yourself back up first will change the whole experience.",
+      nextStep: "Pick one thing draining you this month and ease it before you add dating on top.",
+      cta: { label: "Check your readiness honestly", href: "/me" },
+      color: "280 40% 64%",
+    },
+  },
+};
+
+// ── Quiz 12: Money in Love ──────────────────────────────────────────────────
+const MONEY_IN_LOVE: Quiz = {
+  slug: "money-in-love",
+  title: "What's your money style in love?",
+  pitch: "Money is one of the quietest compatibility signals there is. Five questions to name yours before it ever comes up on a date.",
+  durationSec: 90,
+  emoji: "💸",
+  feeds: ["values.money", "lifestyle.spending", "compatibility.finance"],
+  questions: [
+    {
+      q: "First date. The check lands. Your instinct is...",
+      options: [
+        { label: "I offered to pay and I'd plan within a budget", scores: { planner: 2 }, wellness: { questionId: "values.money.firstdate", dimension: "values", category: "finance", questionText: "How do you approach money on early dates?", answer: "I plan within a budget and am happy to pay thoughtfully." } },
+        { label: "I'd happily treat, generosity is how I show care", scores: { generous: 2 }, wellness: { questionId: "values.money.firstdate", dimension: "values", category: "finance", questionText: "How do you approach money on early dates?", answer: "I show care through generosity and like to treat." } },
+        { label: "Split it, clean and equal", scores: { securitySeeker: 1, planner: 1 }, wellness: { questionId: "values.money.firstdate", dimension: "values", category: "finance", questionText: "How do you approach money on early dates?", answer: "I prefer splitting evenly to keep things fair." } },
+        { label: "I picked somewhere memorable, cost aside", scores: { experienceSeeker: 2 }, wellness: { questionId: "values.money.firstdate", dimension: "values", category: "finance", questionText: "How do you approach money on early dates?", answer: "I prioritize a memorable experience over the cost." } },
+      ],
+    },
+    {
+      q: "An unexpected windfall hits your account. You...",
+      options: [
+        { label: "Straight to savings and the plan", scores: { planner: 2, securitySeeker: 1 }, wellness: { questionId: "values.money.windfall", dimension: "values", category: "finance", questionText: "What do you do with unexpected money?", answer: "Save it and stick to the long-term plan." } },
+        { label: "Treat the people I love", scores: { generous: 2 }, wellness: { questionId: "values.money.windfall", dimension: "values", category: "finance", questionText: "What do you do with unexpected money?", answer: "Spend it on the people I care about." } },
+        { label: "Book the trip I've been wanting", scores: { experienceSeeker: 2 }, wellness: { questionId: "values.money.windfall", dimension: "values", category: "finance", questionText: "What do you do with unexpected money?", answer: "Spend it on an experience I have wanted." } },
+        { label: "Build the emergency cushion higher", scores: { securitySeeker: 2 }, wellness: { questionId: "values.money.windfall", dimension: "values", category: "finance", questionText: "What do you do with unexpected money?", answer: "Strengthen my safety net first." } },
+      ],
+    },
+    {
+      q: "When does money become fair to talk about with a partner?",
+      options: [
+        { label: "Early. Aligned plans matter to me", scores: { planner: 2 }, wellness: { questionId: "values.money.transparency", dimension: "values", category: "finance", questionText: "When are you comfortable discussing money in a relationship?", answer: "Early. Financial alignment is a priority for me." } },
+        { label: "Once it is serious, no rush", scores: { generous: 1, experienceSeeker: 1 }, wellness: { questionId: "values.money.transparency", dimension: "values", category: "finance", questionText: "When are you comfortable discussing money in a relationship?", answer: "When it gets serious, not before." } },
+        { label: "Only when something practical forces it", scores: { experienceSeeker: 2 }, wellness: { questionId: "values.money.transparency", dimension: "values", category: "finance", questionText: "When are you comfortable discussing money in a relationship?", answer: "Only when a practical decision requires it." } },
+        { label: "Before anything serious. I want to know we match", scores: { securitySeeker: 2, planner: 1 }, wellness: { questionId: "values.money.transparency", dimension: "values", category: "finance", questionText: "When are you comfortable discussing money in a relationship?", answer: "Before committing. I want to confirm we are compatible." } },
+      ],
+    },
+    {
+      q: "What does money mostly represent to you?",
+      options: [
+        { label: "A plan coming together over time", scores: { planner: 2 } },
+        { label: "A way to take care of people", scores: { generous: 2 } },
+        { label: "Freedom and good memories", scores: { experienceSeeker: 2 } },
+        { label: "Safety and peace of mind", scores: { securitySeeker: 2 } },
+      ],
+    },
+    {
+      q: "A partner spends very differently from you. You...",
+      options: [
+        { label: "Want a shared system we both agree on", scores: { planner: 2, securitySeeker: 1 } },
+        { label: "Can flex, as long as the care is there", scores: { generous: 2 } },
+        { label: "Don't mind, money is for living", scores: { experienceSeeker: 2 } },
+        { label: "Need to know my base is protected first", scores: { securitySeeker: 2 } },
+      ],
+    },
+  ],
+  archetypes: {
+    planner: {
+      name: "The Planner",
+      emoji: "📊",
+      tagline: "You think in systems and timelines. Money is a tool you steer on purpose.",
+      insight: "You bring stability and foresight, which makes you a reassuring partner for the long game. The friction shows up with someone more spontaneous, who can read your planning as control. The fix is naming the why behind the plan so it feels like shared security, not a leash.",
+      nextStep: "When this gets serious with someone, share the goal behind your habits, not just the rules.",
+      cta: { label: "See your money signal grow", href: "/connections" },
+      color: "210 60% 58%",
+    },
+    generous: {
+      name: "The Generous",
+      emoji: "🎁",
+      tagline: "Giving is how you love. Money, in your hands, is mostly about taking care of people.",
+      insight: "Your warmth is obvious and people feel cared for around you. The watch-out is over-investing financially before someone has earned it, then feeling unmatched. Generosity lands best when it is a choice you can sustain, not a way to secure affection.",
+      nextStep: "Notice whether your giving is mutual. The right person gives back in their own currency.",
+      cta: { label: "Reflect on this in Your Mirror", href: "/your-mirror" },
+      color: "326 70% 64%",
+    },
+    experienceSeeker: {
+      name: "The Experience Seeker",
+      emoji: "🧳",
+      tagline: "Money is for living. You'd rather have the memory than the balance.",
+      insight: "You bring adventure and a refusal to let life get joyless, which is genuinely attractive. The tension comes with a security-minded partner who needs a cushion to feel safe. Compatibility here is less about the number and more about respecting each other's relationship to risk.",
+      nextStep: "Ask a serious partner early how safe they need to feel. It prevents a quiet recurring fight.",
+      cta: { label: "Map your compatibility", href: "/compatibility-compass" },
+      color: "40 70% 58%",
+    },
+    securitySeeker: {
+      name: "The Security Seeker",
+      emoji: "🛡️",
+      tagline: "Peace of mind comes first. A solid base is what lets you relax into anything else.",
+      insight: "You value steadiness and you are clear-eyed about risk, which protects a partnership from a lot of stress. With a spender or a free spirit, the gap can feel like distrust if it is not named. Framed as a need for safety rather than a judgment, it usually lands fine.",
+      nextStep: "Tell a serious partner what safety actually looks like to you in concrete terms.",
+      cta: { label: "Check your readiness signals", href: "/me" },
+      color: "160 45% 50%",
+    },
+  },
+};
+
+// ── Quiz 13: Ick Radar ──────────────────────────────────────────────────────
+const ICK_RADAR: Quiz = {
+  slug: "ick-radar",
+  title: "What's your ick threshold?",
+  pitch: "Some icks protect you. Some cost you good people. Five questions to tell which is which.",
+  durationSec: 90,
+  emoji: "🫣",
+  feeds: ["standards.filters", "attraction.triggers", "self.awareness"],
+  questions: [
+    {
+      q: "A great date does one small cringe thing. Your reaction?",
+      options: [
+        { label: "It's over in my head almost instantly", scores: { quickFilter: 2 }, wellness: { questionId: "standards.ick.speed", dimension: "standards", category: "filters", questionText: "How quickly does a small turn-off end your interest?", answer: "Very fast. A single ick can end it for me." } },
+        { label: "I note it but give the whole picture weight", scores: { benefitDoubt: 2 }, wellness: { questionId: "standards.ick.speed", dimension: "standards", category: "filters", questionText: "How quickly does a small turn-off end your interest?", answer: "Slowly. I weigh one moment against the whole person." } },
+        { label: "Depends if it points to something real", scores: { valuesFilter: 2 }, wellness: { questionId: "standards.ick.speed", dimension: "standards", category: "filters", questionText: "How quickly does a small turn-off end your interest?", answer: "It depends whether the ick reflects a real value gap." } },
+        { label: "Honestly I forget it by the next day", scores: { forgiving: 2 }, wellness: { questionId: "standards.ick.speed", dimension: "standards", category: "filters", questionText: "How quickly does a small turn-off end your interest?", answer: "I rarely let small turn-offs stick." } },
+      ],
+    },
+    {
+      q: "Be honest, most of your icks are about...",
+      options: [
+        { label: "Tiny mannerisms and vibes", scores: { quickFilter: 2 }, wellness: { questionId: "standards.ick.source", dimension: "standards", category: "filters", questionText: "What are most of your icks actually about?", answer: "Mostly small mannerisms and surface vibes." } },
+        { label: "A mix, but I try to look deeper", scores: { benefitDoubt: 2 }, wellness: { questionId: "standards.ick.source", dimension: "standards", category: "filters", questionText: "What are most of your icks actually about?", answer: "A mix of surface and substance, leaning toward substance." } },
+        { label: "How they treat people and what they value", scores: { valuesFilter: 2 }, wellness: { questionId: "standards.ick.source", dimension: "standards", category: "filters", questionText: "What are most of your icks actually about?", answer: "Mostly how they treat others and what they value." } },
+        { label: "I don't really get icks", scores: { forgiving: 2 }, wellness: { questionId: "standards.ick.source", dimension: "standards", category: "filters", questionText: "What are most of your icks actually about?", answer: "I rarely experience icks at all." } },
+      ],
+    },
+    {
+      q: "Looking back, have your icks ever cost you someone good?",
+      options: [
+        { label: "Probably more than once", scores: { quickFilter: 2, benefitDoubt: 1 } },
+        { label: "Maybe once, I learned from it", scores: { benefitDoubt: 2 } },
+        { label: "No, my icks tend to be right", scores: { valuesFilter: 2 } },
+        { label: "Not that I can think of", scores: { forgiving: 2 } },
+      ],
+    },
+    {
+      q: "An ick hits mid-date. What do you do with the rest of the night?",
+      options: [
+        { label: "I check out and wind it down", scores: { quickFilter: 2 } },
+        { label: "I stay present and reassess after", scores: { benefitDoubt: 2 } },
+        { label: "I test whether it was a one-off or a pattern", scores: { valuesFilter: 2, benefitDoubt: 1 } },
+        { label: "I let it go and keep enjoying myself", scores: { forgiving: 2 } },
+      ],
+    },
+    {
+      q: "What would actually make you override an ick?",
+      options: [
+        { label: "Almost nothing, the feeling is the feeling", scores: { quickFilter: 2 } },
+        { label: "Seeing a genuinely good person underneath", scores: { benefitDoubt: 2 } },
+        { label: "Proof their values are solid", scores: { valuesFilter: 2 } },
+        { label: "I don't need much, I override easily", scores: { forgiving: 2 } },
+      ],
+    },
+  ],
+  archetypes: {
+    quickFilter: {
+      name: "The Quick Filter",
+      emoji: "⚡",
+      tagline: "You decide fast. Efficient, and occasionally a little ruthless on the small stuff.",
+      insight: "Your instincts are quick and they save you from forcing chemistry that is not there. The honest risk is that surface icks sometimes screen out people who would have grown on you by date three. Worth asking whether the ick is about them or about an old pattern of yours.",
+      nextStep: "Next ick, pause and name what it is really pointing at before you decide. It might surprise you.",
+      cta: { label: "Unpack your patterns", href: "/your-mirror" },
+      color: "48 90% 58%",
+    },
+    benefitDoubt: {
+      name: "The Benefit of the Doubt",
+      emoji: "🤝",
+      tagline: "You weigh the whole person against the moment. Fair, and rarely unfairly harsh.",
+      insight: "You give people room to be human, which means you do not lose good matches over a nervous laugh or a bad outfit. The flip side is making sure real red flags still get the same attention as small icks. Keep the grace, just do not extend it past your actual lines.",
+      nextStep: "Sort your last few icks into surface versus substance. The substance ones deserve more weight.",
+      cta: { label: "Clarify your dealbreakers", href: "/quizzes/dealbreaker-radar" },
+      color: "190 55% 58%",
+    },
+    valuesFilter: {
+      name: "The Values Filter",
+      emoji: "🎯",
+      tagline: "Your icks are wired to substance. When something turns you off, it usually means something.",
+      insight: "You react less to mannerisms and more to how someone treats a waiter or talks about an ex, which makes your icks genuinely useful data. The only caution is that a values-led filter can be quietly demanding, so make sure your standards are ones you also meet. Mostly, trust this instinct.",
+      nextStep: "Keep logging what triggers it. Your icks are a clean signal worth feeding the machine.",
+      cta: { label: "Feed this into matching", href: "/your-mirror" },
+      color: "260 55% 64%",
+    },
+    forgiving: {
+      name: "The Forgiving",
+      emoji: "🌊",
+      tagline: "Very little throws you off. Easygoing, with one thing to keep an eye on.",
+      insight: "You are not derailed by small stuff, which makes dating you feel relaxed and unjudged. The watch-out is the opposite of everyone else's: make sure forgiving the small things is not how you also wave past the real ones. A low ick threshold is a gift as long as your dealbreakers still hold.",
+      nextStep: "Double-check that your easygoing nature is not quietly skipping past actual red flags.",
+      cta: { label: "Pressure-test your boundaries", href: "/quizzes/boundary-blueprint" },
+      color: "200 60% 56%",
+    },
+  },
+};
+
 export const QUIZZES: Quiz[] = [
   LOVE_PACE,
   CONFLICT_INSTINCT,
@@ -997,6 +1377,10 @@ export const QUIZZES: Quiz[] = [
   MESSAGE_STAMINA,
   LOVE_LANGUAGE,
   FUTURE_VISION,
+  DEALBREAKER_RADAR,
+  READINESS_CHECK,
+  MONEY_IN_LOVE,
+  ICK_RADAR,
 ];
 
 /**
