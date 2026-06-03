@@ -14,7 +14,8 @@ import { useGetAudit, useGenerateAuditReport, useGetEngineMeta, useListAuditRepo
 import {
   CheckCircle, XCircle, AlertCircle, ArrowRight, Copy, Check,
   Trophy, Calendar, Eye, Sparkles, MessageSquare, Camera,
-  TrendingUp, Lightbulb, Heart, Zap, RefreshCw, History, ChevronDown, ChevronUp, GitCompare, CheckSquare, Square, Lock, Activity
+  TrendingUp, Lightbulb, Heart, Zap, RefreshCw, History, ChevronDown, ChevronUp, GitCompare, CheckSquare, Square, Lock, Activity,
+  ArrowUp, ArrowDown, Plus, Minus
 } from "lucide-react";
 import { CompareVersionsDialog } from "@/components/CompareVersionsDialog";
 import { ShareButton } from "@/components/echo/ShareButton";
@@ -571,6 +572,108 @@ export default function Report() {
               <Button onClick={viewLatest} variant="outline" size="sm" className="rounded-full bg-white/5 border-white/10" data-testid="button-return-latest">
                 Back to Current
               </Button>
+            </motion.div>
+          )}
+
+          {/* ── What Changed Since Last Run ── */}
+          {showChangeSummary && changeSummary && (
+            <motion.div
+              {...fadeUp(0.08)}
+              className="rounded-[2rem] p-6 md:p-7 border border-[hsl(248_62%_52%/0.3)] bg-[hsl(248_62%_52%/0.06)] space-y-5"
+              data-testid="card-what-changed"
+            >
+              <div className="flex items-center gap-3 flex-wrap">
+                <Zap className="w-5 h-5 text-[hsl(248_62%_62%)] flex-shrink-0" />
+                <h3 className="text-lg font-bold text-foreground tracking-tight">
+                  What changed since last run
+                </h3>
+                <span
+                  data-testid="badge-score-delta"
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border ${
+                    changeSummary.scoreDelta > 0
+                      ? "bg-[hsl(142_55%_60%/0.12)] text-[hsl(142_55%_65%)] border-[hsl(142_55%_60%/0.3)]"
+                      : changeSummary.scoreDelta < 0
+                        ? "bg-[hsl(348_55%_65%/0.12)] text-[hsl(348_55%_65%)] border-[hsl(348_55%_65%/0.3)]"
+                        : "bg-white/5 text-muted-foreground border-white/10"
+                  }`}
+                >
+                  {changeSummary.scoreDelta > 0 ? (
+                    <ArrowUp className="w-3 h-3" />
+                  ) : changeSummary.scoreDelta < 0 ? (
+                    <ArrowDown className="w-3 h-3" />
+                  ) : null}
+                  {changeSummary.scoreDelta === 0
+                    ? "Score unchanged"
+                    : `${changeSummary.scoreDelta > 0 ? "+" : ""}${changeSummary.scoreDelta} pts`}
+                </span>
+              </div>
+
+              <p className="text-sm font-medium text-muted-foreground" data-testid="text-score-from-to">
+                Signal Score: {changeSummary.previousScore} &rarr; {changeSummary.newScore}
+              </p>
+
+              <div className="grid sm:grid-cols-2 gap-5">
+                {changeSummary.addedStrengths.length > 0 && (
+                  <div data-testid="list-added-strengths" className="space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-wider text-[hsl(142_55%_65%)]">
+                      New strengths
+                    </p>
+                    <ul className="space-y-1.5">
+                      {changeSummary.addedStrengths.map((s, i) => (
+                        <li key={`as-${i}`} className="flex items-start gap-2 text-sm text-foreground">
+                          <Plus className="w-3.5 h-3.5 text-[hsl(142_55%_65%)] flex-shrink-0 mt-0.5" />
+                          <span>{s}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {changeSummary.removedStrengths.length > 0 && (
+                  <div data-testid="list-removed-strengths" className="space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      No longer strengths
+                    </p>
+                    <ul className="space-y-1.5">
+                      {changeSummary.removedStrengths.map((s, i) => (
+                        <li key={`rs-${i}`} className="flex items-start gap-2 text-sm text-muted-foreground line-through">
+                          <Minus className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                          <span>{s}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {changeSummary.addedRisks.length > 0 && (
+                  <div data-testid="list-added-risks" className="space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-wider text-[hsl(348_55%_65%)]">
+                      New risks
+                    </p>
+                    <ul className="space-y-1.5">
+                      {changeSummary.addedRisks.map((s, i) => (
+                        <li key={`ar-${i}`} className="flex items-start gap-2 text-sm text-foreground">
+                          <Plus className="w-3.5 h-3.5 text-[hsl(348_55%_65%)] flex-shrink-0 mt-0.5" />
+                          <span>{s}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {changeSummary.removedRisks.length > 0 && (
+                  <div data-testid="list-removed-risks" className="space-y-2">
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      No longer risks
+                    </p>
+                    <ul className="space-y-1.5">
+                      {changeSummary.removedRisks.map((s, i) => (
+                        <li key={`rr-${i}`} className="flex items-start gap-2 text-sm text-muted-foreground line-through">
+                          <Minus className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                          <span>{s}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
 
