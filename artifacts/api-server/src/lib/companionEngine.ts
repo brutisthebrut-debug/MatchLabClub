@@ -235,6 +235,234 @@ export function deriveObservations(
   return out;
 }
 
+// ── In-the-moment reaction ───────────────────────────────────────────────────
+// The instant a user's readiness moves, Echo reacts: it names the change, what
+// it can now see that it could not before, and the single next move. This is the
+// deterministic baseline; companionService.echoReact reshapes the voice when the
+// account has opted into the deep AI lane. It reasons only from the portrait and
+// the prior per-lane coverage, never raw content.
+
+export type ReactionTone = "rise" | "crossing" | "dip" | "steady";
+
+export interface ReactionLaneMove {
+  key: string;
+  label: string;
+  from: number;
+  to: number;
+}
+
+export interface ReadinessReaction {
+  // True when there is a real movement worth surfacing. False on the first ever
+  // look (no prior baseline) and on a flat read, so Echo never fakes a reaction.
+  moved: boolean;
+  tone: ReactionTone;
+  delta: number;
+  fromScore: number;
+  toScore: number;
+  threshold: number;
+  eligible: boolean;
+  crossedThreshold: boolean;
+  headline: string;
+  nowSee: string | null;
+  lanesMoved: ReactionLaneMove[];
+  nextMove: { label: string; detail: string; href: string; points: number } | null;
+}
+
+export interface BuildReactionInput {
+  portrait: MirrorPortrait;
+  previousScore: number | null;
+  previousCoverageByKey: Record<string, number> | null;
+  persona: CompanionPersona;
+  candor: number;
+}
+
+type RiseSize = "small" | "solid" | "big";
+
+function riseSize(delta: number): RiseSize {
+  if (delta >= 6) return "big";
+  if (delta >= 3) return "solid";
+  return "small";
+}
+
+function riseHeadline(
+  persona: CompanionPersona,
+  candor: number,
+  delta: number,
+): string {
+  const size = riseSize(delta);
+  const plus = `plus ${delta}`;
+  if (persona === "tough_coach") {
+    if (size === "big")
+      return `Good. ${capitalize(plus)}. That is what real work looks like. Do not coast on it.`;
+    if (size === "solid")
+      return `${capitalize(plus)}. Earned, not handed to you. Keep going.`;
+    return `${capitalize(plus)}. It counts, but I want a bigger one from you next.`;
+  }
+  if (persona === "witty_sibling") {
+    if (size === "big") return `Look at you. ${capitalize(plus)} in one move. I am almost impressed.`;
+    if (size === "solid") return `${capitalize(plus)}. Not bad at all, honestly.`;
+    return `${capitalize(plus)}. I saw it. Barely, but I saw it.`;
+  }
+  if (persona === "calm_mentor") {
+    if (size === "big")
+      return `That mattered. ${capitalize(plus)}, and the picture of you just came into clearer focus.`;
+    if (size === "solid") return `${capitalize(plus)}. The kind of steady progress that lasts.`;
+    return `${capitalize(plus)}. Small, and still a real step toward who you are becoming.`;
+  }
+  // best_friend
+  if (size === "big") return `That was a real jump. ${capitalize(plus)}, and I felt the picture of you sharpen.`;
+  if (size === "solid") return `${capitalize(plus)}. That nudged you up and I can see you a little better now.`;
+  const soft = candor <= 1 ? " No pressure, just keep stacking these." : " Keep stacking these.";
+  return `${capitalize(plus)}, small but it counts.${soft}`;
+}
+
+function crossingHeadline(
+  persona: CompanionPersona,
+  toScore: number,
+  threshold: number,
+): string {
+  switch (persona) {
+    case "tough_coach":
+      return `There it is. ${toScore}, past ${threshold}. Matching is open. Now the real work starts.`;
+    case "witty_sibling":
+      return `Well, well. ${toScore}. You crossed it. Matching is open, try to act surprised.`;
+    case "calm_mentor":
+      return `You reached it. ${toScore}, past the line. Matching is open. Take a breath, then keep building.`;
+    case "best_friend":
+    default:
+      return `You did it. Readiness ${toScore}, past ${threshold}. Matching is open now, and I have been waiting to tell you.`;
+  }
+}
+
+function dipHeadline(
+  persona: CompanionPersona,
+  candor: number,
+  drop: number,
+): string {
+  const word = candorWord(candor);
+  switch (persona) {
+    case "tough_coach":
+      return `Down ${drop}. Something went quiet. I am telling you ${word} so it does not become a trend.`;
+    case "witty_sibling":
+      return `Minus ${drop}. I noticed. I always notice. Want to fix it?`;
+    case "calm_mentor":
+      return `You slipped ${drop}. It happens. Let us look at what went quiet, no judgment.`;
+    case "best_friend":
+    default:
+      return `Heads up, you slipped ${drop}. I would rather name it ${word} than let it slide. Want to climb back?`;
+  }
+}
+
+function capitalize(s: string): string {
+  return s.length ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+
+function reactionNowSee(
+  tone: ReactionTone,
+  lanesMoved: ReactionLaneMove[],
+): string | null {
+  if (tone === "dip" || tone === "steady") return null;
+  const top = lanesMoved[0];
+  if (!top) {
+    return tone === "crossing"
+      ? "I can see enough of you now to start finding people who actually fit."
+      : "The picture of you just got a little sharper.";
+  }
+  const lane = top.label.toLowerCase();
+  if (top.from <= 0) {
+    return `Because of that, I can finally read your ${lane} instead of guessing at it.`;
+  }
+  return `I can see your ${lane} more clearly now than I could a moment ago.`;
+}
+
+/**
+ * The deterministic in-the-moment reaction. Pure and total. `moved` is false on
+ * the first look (no baseline) and on a flat read, so Echo only ever reacts to a
+ * real change.
+ */
+export function buildReaction(input: BuildReactionInput): ReadinessReaction {
+  const { portrait, previousScore, previousCoverageByKey, persona, candor } = input;
+  const toScore = portrait.readinessScore;
+  const threshold = portrait.threshold;
+  const eligible = portrait.eligible;
+
+  // No prior baseline means this is the first look; establish it silently.
+  if (previousScore === null) {
+    return {
+      moved: false,
+      tone: "steady",
+      delta: 0,
+      fromScore: toScore,
+      toScore,
+      threshold,
+      eligible,
+      crossedThreshold: false,
+      headline: "",
+      nowSee: null,
+      lanesMoved: [],
+      nextMove: null,
+    };
+  }
+
+  const fromScore = previousScore;
+  const delta = toScore - fromScore;
+
+  const lanesMoved: ReactionLaneMove[] = previousCoverageByKey
+    ? portrait.known
+        .map((dim) => {
+          const prev = previousCoverageByKey[dim.key] ?? 0;
+          return { key: dim.key, label: dim.label, from: prev, to: dim.coverage };
+        })
+        .filter((m) => m.to - m.from >= 1)
+        .sort((a, b) => b.to - b.from - (a.to - a.from))
+        .slice(0, 3)
+    : [];
+
+  const crossedThreshold = fromScore < threshold && toScore >= threshold;
+
+  let tone: ReactionTone;
+  if (crossedThreshold) tone = "crossing";
+  else if (delta >= 1) tone = "rise";
+  else if (delta <= -1) tone = "dip";
+  else tone = "steady";
+
+  const moved = tone !== "steady" || lanesMoved.length > 0;
+
+  let headline: string;
+  if (tone === "crossing") headline = crossingHeadline(persona, toScore, threshold);
+  else if (tone === "dip") headline = dipHeadline(persona, candor, Math.abs(delta));
+  else if (tone === "rise") headline = riseHeadline(persona, candor, delta);
+  else if (lanesMoved.length > 0) {
+    // Score held flat but a lane deepened; still worth a quiet, honest note.
+    headline =
+      persona === "tough_coach"
+        ? "The number held, but you did feed me something. I logged it."
+        : "Your score held steady, and I still picked up something new about you.";
+  } else {
+    headline = "";
+  }
+
+  const next = portrait.nextSignal;
+  const nextMove = next
+    ? { label: next.label, detail: next.detail, href: next.href, points: next.points }
+    : null;
+
+  return {
+    moved,
+    tone,
+    delta,
+    fromScore,
+    toScore,
+    threshold,
+    eligible,
+    crossedThreshold,
+    headline,
+    nowSee: moved ? reactionNowSee(tone, lanesMoved) : null,
+    lanesMoved,
+    nextMove,
+  };
+}
+
 // ── Commitments ─────────────────────────────────────────────────────────────
 // Lightweight detection of "I will ..." style commitments in something the user
 // typed to Echo, so it can follow up. This is intentionally conservative: it

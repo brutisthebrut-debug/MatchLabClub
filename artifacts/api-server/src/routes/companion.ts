@@ -17,6 +17,7 @@ import {
   SayToCompanionResponse,
   ReviewMessageWithCompanionBody,
   ReviewMessageWithCompanionResponse,
+  PulseCompanionResponse,
   ListCompanionNotificationsResponse,
   MarkCompanionNotificationsReadBody,
   MarkCompanionNotificationsReadResponse,
@@ -39,10 +40,15 @@ import {
   normalizePersona,
   clampCandor,
   personaLabel,
+  buildReaction,
   type CompanionPersona,
   type MessageDirection,
 } from "../lib/companionEngine";
-import { echoReply, echoReviewMessage } from "../lib/companionService";
+import {
+  echoReply,
+  echoReviewMessage,
+  echoReact,
+} from "../lib/companionService";
 
 const router: IRouter = Router();
 
@@ -78,6 +84,21 @@ async function loadPortrait(userId: string): Promise<MirrorPortrait> {
     nextActions,
     outcome,
   });
+}
+
+// The per-lane coverage map (lane key -> derived 0-100 coverage) used as the
+// reaction baseline. Holds only derived numbers, never raw content.
+function coverageFromPortrait(portrait: MirrorPortrait): Record<string, number> {
+  return Object.fromEntries(portrait.known.map((k) => [k.key, k.coverage]));
+}
+
+// Canonical advisory-lock key for a user's reaction baseline. Every pulse
+// contends on the SAME key so two concurrent pulses (multiple tabs, rapid
+// duplicate requests) read+advance the baseline serially. The loser then reads
+// the freshly-advanced baseline and naturally computes moved=false, so one
+// readiness move can only ever produce one reaction.
+function reactionLockKey(userId: string): string {
+  return `companion-reaction:${userId}`;
 }
 
 async function getState(userId: string): Promise<CompanionStateRow | null> {
@@ -167,6 +188,11 @@ async function refreshObservations(
     }
   }
 
+  // Seed the reaction baseline the first time we ever see this user (row insert,
+  // or an existing row whose reaction baseline was never set). We use COALESCE so
+  // an established baseline is never overwritten here, which would consume a
+  // pending delta before the pulse endpoint could react to it.
+  const coverage = coverageFromPortrait(portrait);
   await db
     .insert(companionStateTable)
     .values({
@@ -174,6 +200,9 @@ async function refreshObservations(
       evolvingSummary: summary,
       lastSeenScore: portrait.readinessScore,
       lastSeenAt: now,
+      lastReactedScore: portrait.readinessScore,
+      lastReactedCoverage: coverage,
+      lastReactedAt: now,
       persona: state?.persona ?? "best_friend",
       candor: state?.candor ?? 2,
       updatedAt: now,
@@ -184,6 +213,9 @@ async function refreshObservations(
         evolvingSummary: summary,
         lastSeenScore: portrait.readinessScore,
         lastSeenAt: now,
+        lastReactedScore: sql`coalesce(${companionStateTable.lastReactedScore}, ${portrait.readinessScore})`,
+        lastReactedCoverage: sql`coalesce(${companionStateTable.lastReactedCoverage}, ${JSON.stringify(coverage)}::jsonb)`,
+        lastReactedAt: sql`coalesce(${companionStateTable.lastReactedAt}, ${now.toISOString()})`,
         updatedAt: now,
       },
     });
@@ -453,6 +485,101 @@ router.post("/me/companion/review", async (req, res): Promise<void> => {
       risks: result.risks,
       suggestion: result.suggestion,
       isFallback: result.isFallback,
+    }),
+  );
+});
+
+// Called the instant the readiness meter moves. Compares the current portrait to
+// the stored reaction baseline, builds an honest reaction, enriches the voice if
+// the deep AI lane is on, then advances the baseline so a single climb is never
+// reacted to twice.
+router.post("/me/companion/pulse", async (req, res): Promise<void> => {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "Sign in to meet Echo." });
+    return;
+  }
+
+  // Read the reaction baseline and advance it atomically under a per-user
+  // advisory lock so two concurrent pulses can only consume a single move. The
+  // portrait and the deterministic build happen inside the lock; Claude
+  // enrichment runs AFTER the transaction so we never hold the lock across a
+  // network call.
+  const { deterministic, persona, candor } = await db.transaction(async (tx) => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${reactionLockKey(userId)})::bigint)`,
+    );
+
+    // Derive the portrait inside the lock so the score we react to and the
+    // baseline we read/advance are taken at the same serialized point. If we
+    // computed it before the lock, a concurrent pulse could advance the
+    // baseline past our stale score and we would react to a phantom dip and
+    // regress the baseline.
+    const portrait = await loadPortrait(userId);
+
+    const [state] = await tx
+      .select()
+      .from(companionStateTable)
+      .where(eq(companionStateTable.userId, userId))
+      .limit(1);
+
+    const persona = normalizePersona(state?.persona);
+    const candor = clampCandor(state?.candor);
+    const previousScore = state?.lastReactedScore ?? null;
+    const previousCoverageByKey = state?.lastReactedCoverage ?? null;
+
+    const deterministic = buildReaction({
+      portrait,
+      previousScore,
+      previousCoverageByKey,
+      persona,
+      candor,
+    });
+
+    // Advance the baseline only when we reacted to a real move (or when no
+    // baseline existed yet). A flat read leaves the baseline untouched so a
+    // later move is still measured against the right starting point. Advancing
+    // here, under the lock, is what makes a concurrent duplicate pulse read the
+    // new baseline and compute moved=false.
+    if (deterministic.moved || previousScore === null) {
+      const now = new Date();
+      const coverage = coverageFromPortrait(portrait);
+      await tx
+        .insert(companionStateTable)
+        .values({
+          userId,
+          lastReactedScore: portrait.readinessScore,
+          lastReactedCoverage: coverage,
+          lastReactedAt: now,
+          persona: state?.persona ?? "best_friend",
+          candor: state?.candor ?? 2,
+          updatedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: companionStateTable.userId,
+          set: {
+            lastReactedScore: portrait.readinessScore,
+            lastReactedCoverage: coverage,
+            lastReactedAt: now,
+            updatedAt: now,
+          },
+        });
+    }
+
+    return { deterministic, persona, candor };
+  });
+
+  const { reaction, isFallback } = await echoReact({
+    userId,
+    deterministic,
+    persona,
+    candor,
+  });
+
+  res.json(
+    PulseCompanionResponse.parse({
+      reaction,
+      isFallback,
     }),
   );
 });

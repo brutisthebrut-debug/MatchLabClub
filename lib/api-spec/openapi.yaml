@@ -2752,6 +2752,37 @@ paths:
                   error:
                     type: string
 
+  /me/companion/pulse:
+    post:
+      operationId: pulseCompanion
+      tags: [audits]
+      summary: Get Echo's in-the-moment reaction to a readiness change
+      description: |
+        Called the instant the Match Readiness meter moves. Echo compares the
+        user's current portrait against the last reaction baseline, and if there
+        is a real movement it returns an honest, persona-voiced reaction: the
+        tone, the delta, which lanes deepened, what it can now see, and the next
+        move. The deterministic reaction is the baseline; when the account has
+        granted content consent, Claude reshapes the voice from derived numbers
+        only (never raw content). Advances the reaction baseline so a single
+        climb is never reacted to twice. Requires auth.
+      responses:
+        "200":
+          description: Echo's reaction to the readiness change
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanionPulseResult"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
   /me/companion/notifications:
     get:
       operationId: listCompanionNotifications
@@ -6807,6 +6838,87 @@ components:
             type: string
         suggestion:
           type: string
+        isFallback:
+          type: boolean
+
+    ReactionLaneMove:
+      type: object
+      required: [key, label, from, to]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        from:
+          type: integer
+        to:
+          type: integer
+
+    CompanionReaction:
+      type: object
+      required:
+        - moved
+        - tone
+        - delta
+        - fromScore
+        - toScore
+        - threshold
+        - eligible
+        - crossedThreshold
+        - headline
+        - nowSee
+        - lanesMoved
+        - nextMove
+      properties:
+        moved:
+          type: boolean
+          description: True only when there is a real movement worth surfacing.
+        tone:
+          type: string
+          enum: [rise, crossing, dip, steady]
+        delta:
+          type: integer
+        fromScore:
+          type: integer
+        toScore:
+          type: integer
+        threshold:
+          type: integer
+        eligible:
+          type: boolean
+        crossedThreshold:
+          type: boolean
+        headline:
+          type: string
+        nowSee:
+          oneOf:
+            - type: string
+            - type: "null"
+        lanesMoved:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReactionLaneMove"
+        nextMove:
+          oneOf:
+            - type: "null"
+            - type: object
+              required: [label, detail, href, points]
+              properties:
+                label:
+                  type: string
+                detail:
+                  type: string
+                href:
+                  type: string
+                points:
+                  type: integer
+
+    CompanionPulseResult:
+      type: object
+      required: [reaction, isFallback]
+      properties:
+        reaction:
+          $ref: "#/components/schemas/CompanionReaction"
         isFallback:
           type: boolean
 

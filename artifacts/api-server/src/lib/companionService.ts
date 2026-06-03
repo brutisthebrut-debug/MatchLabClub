@@ -22,6 +22,7 @@ import {
   type MessageReview,
   type MessageDirection,
   type CompanionPersona,
+  type ReadinessReaction,
   personaVoice,
   personaLabel,
 } from "./companionEngine";
@@ -286,4 +287,126 @@ export async function echoReviewMessage(args: {
   }
 
   return { ...result, isFallback };
+}
+
+export interface EchoReactResult {
+  reaction: ReadinessReaction;
+  isFallback: boolean;
+}
+
+/**
+ * In-the-moment reaction enrichment. The deterministic `buildReaction` already
+ * decided the tone, the magnitude, which lanes moved, and the next move; this
+ * only reshapes the two voiced strings (headline + nowSee) in the user's persona
+ * voice when the deep AI lane is on. Claude sees only derived numbers and lane
+ * labels, never raw content. Anything short of a clean, voice-clean result keeps
+ * the deterministic copy, so the reaction never breaks or drifts off voice.
+ */
+export async function echoReact(args: {
+  userId: string;
+  deterministic: ReadinessReaction;
+  persona: CompanionPersona;
+  candor: number;
+}): Promise<EchoReactResult> {
+  const { userId, deterministic, persona, candor } = args;
+
+  // Nothing to voice for a non-event; never spend a Claude call on silence.
+  if (!deterministic.moved || !deterministic.headline) {
+    return { reaction: deterministic, isFallback: true };
+  }
+
+  let reaction = deterministic;
+  let isFallback = true;
+
+  const toneNote =
+    deterministic.tone === "crossing"
+      ? "They just crossed the line into matching. This is the payoff moment, own it without being saccharine."
+      : deterministic.tone === "dip"
+        ? "Their readiness slipped. Name it honestly and kindly, do not scold, point at a way back."
+        : "Their readiness rose. React in proportion to the size, do not oversell a small move.";
+
+  const laneLines = deterministic.lanesMoved
+    .map((l) => `- ${l.label}: ${l.from} to ${l.to} (out of 100)`)
+    .join("\n");
+
+  const facts = [
+    `Readiness moved from ${deterministic.fromScore} to ${deterministic.toScore} (delta ${deterministic.delta}).`,
+    `Matching threshold is ${deterministic.threshold}. Eligible for matching now: ${deterministic.eligible ? "yes" : "no"}.`,
+    deterministic.lanesMoved.length
+      ? `Lanes that deepened (these are derived coverage scores, not raw content):\n${laneLines}`
+      : "No single lane stood out; the overall picture shifted.",
+    `Deterministic headline to improve on: ${deterministic.headline}`,
+    deterministic.nowSee ? `Deterministic "what I can now see": ${deterministic.nowSee}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const system = [
+    `You are ${personaLabel(persona)} inside MatchLab Club, reacting in real time`,
+    "the instant the user's Match Readiness score changed.",
+    `Your voice is ${personaVoice(persona)}.`,
+    candorInstruction(candor),
+    toneNote,
+    "You are perceptive and specific, never a generic cheerleader. Two short",
+    "sentences at most for the headline. Ground what you can now see in the lane",
+    "that actually moved. Speak only to what these numbers show; invent nothing.",
+    "",
+    "Return JSON only. No prose, no code fences. Match this shape exactly:",
+    '{ "headline": "one or two sentence in-the-moment reaction",',
+    '  "nowSee": "one sentence on what you can now see more clearly, may be empty" }',
+    "",
+    "Voice rules: no em dashes. No filler words like 'unlock', 'leverage',",
+    "'seamless', 'elevate', 'transformative', 'game-changer', 'cutting-edge',",
+    "'dive in', 'unleash', or 'in today's world'. No emojis.",
+  ].join("\n");
+
+  try {
+    const aiResult = await generate(
+      {
+        provider: "anthropic",
+        system,
+        user: facts,
+        expectJson: true,
+        requireContentConsent: true,
+        userId,
+        context: { toolName: "Echo Pulse" },
+        maxTokens: 300,
+      },
+      "",
+    );
+    if (!aiResult.isFallback && aiResult.validated && aiResult.output) {
+      const ai = JSON.parse(aiResult.output) as {
+        headline?: string;
+        nowSee?: string;
+      };
+      const headline = ai.headline?.trim();
+      const nowSee = ai.nowSee?.trim() ?? "";
+      const cleanHeadline = !!headline && isVoiceClean(headline);
+      const cleanNowSee = !nowSee || isVoiceClean(nowSee);
+      if (cleanHeadline && cleanNowSee) {
+        reaction = {
+          ...deterministic,
+          headline,
+          nowSee: nowSee || deterministic.nowSee,
+        };
+        isFallback = false;
+      } else if (headline) {
+        logger.info("echo pulse failed voice check; using deterministic baseline");
+      }
+    } else if (aiResult.fallbackReason) {
+      logger.info(
+        { fallbackReason: aiResult.fallbackReason },
+        "echo pulse fell back to deterministic baseline",
+      );
+    }
+  } catch (err) {
+    reaction = deterministic;
+    isFallback = true;
+    logger.warn(
+      { err: err instanceof Error ? err.message : String(err) },
+      "echo pulse deep-AI lane threw; using deterministic baseline",
+    );
+  }
+
+  return { reaction, isFallback };
 }

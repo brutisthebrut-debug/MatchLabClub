@@ -3692,6 +3692,47 @@ export const ReviewMessageWithCompanionResponse = zod.object({
 
 
 /**
+ * Called the instant the Match Readiness meter moves. Echo compares the
+user's current portrait against the last reaction baseline, and if there
+is a real movement it returns an honest, persona-voiced reaction: the
+tone, the delta, which lanes deepened, what it can now see, and the next
+move. The deterministic reaction is the baseline; when the account has
+granted content consent, Claude reshapes the voice from derived numbers
+only (never raw content). Advances the reaction baseline so a single
+climb is never reacted to twice. Requires auth.
+
+ * @summary Get Echo's in-the-moment reaction to a readiness change
+ */
+export const PulseCompanionResponse = zod.object({
+  "reaction": zod.object({
+  "moved": zod.boolean().describe('True only when there is a real movement worth surfacing.'),
+  "tone": zod.enum(['rise', 'crossing', 'dip', 'steady']),
+  "delta": zod.number(),
+  "fromScore": zod.number(),
+  "toScore": zod.number(),
+  "threshold": zod.number(),
+  "eligible": zod.boolean(),
+  "crossedThreshold": zod.boolean(),
+  "headline": zod.string(),
+  "nowSee": zod.union([zod.string(),zod.null()]),
+  "lanesMoved": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "from": zod.number(),
+  "to": zod.number()
+})),
+  "nextMove": zod.union([zod.null(),zod.object({
+  "label": zod.string(),
+  "detail": zod.string(),
+  "href": zod.string(),
+  "points": zod.number()
+})])
+}),
+  "isFallback": zod.boolean()
+})
+
+
+/**
  * Returns the most recent notifications Echo has surfaced for the user
 (proactive nudges, commitment follow-ups, system notes), newest first.
 Requires auth.

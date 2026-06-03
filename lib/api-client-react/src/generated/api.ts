@@ -62,6 +62,7 @@ import type {
   CompanionCommitment,
   CompanionMarkReadInput,
   CompanionNotificationList,
+  CompanionPulseResult,
   CompanionReviewInput,
   CompanionReviewResult,
   CompanionSayInput,
@@ -179,6 +180,7 @@ import type {
   PostDateNoteList,
   PostDateNotePatch,
   ProfileRewrite,
+  PulseCompanion401,
   PurgeTrustSourceResult,
   ReceiptsInbox,
   RedeemAnonymousClaimHandoffInput,
@@ -7760,6 +7762,85 @@ export const useReviewMessageWithCompanion = <TError = ErrorType<ReviewMessageWi
         TContext
       > => {
       return useMutation(getReviewMessageWithCompanionMutationOptions(options));
+    }
+
+export const getPulseCompanionUrl = () => {
+
+
+
+
+  return `/api/me/companion/pulse`
+}
+
+/**
+ * Called the instant the Match Readiness meter moves. Echo compares the
+user's current portrait against the last reaction baseline, and if there
+is a real movement it returns an honest, persona-voiced reaction: the
+tone, the delta, which lanes deepened, what it can now see, and the next
+move. The deterministic reaction is the baseline; when the account has
+granted content consent, Claude reshapes the voice from derived numbers
+only (never raw content). Advances the reaction baseline so a single
+climb is never reacted to twice. Requires auth.
+
+ * @summary Get Echo's in-the-moment reaction to a readiness change
+ */
+export const pulseCompanion = async ( options?: RequestInit): Promise<CompanionPulseResult> => {
+
+  return customFetch<CompanionPulseResult>(getPulseCompanionUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getPulseCompanionMutationOptions = <TError = ErrorType<PulseCompanion401>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pulseCompanion>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof pulseCompanion>>, TError,void, TContext> => {
+
+const mutationKey = ['pulseCompanion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof pulseCompanion>>, void> = () => {
+
+
+          return  pulseCompanion(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PulseCompanionMutationResult = NonNullable<Awaited<ReturnType<typeof pulseCompanion>>>
+
+    export type PulseCompanionMutationError = ErrorType<PulseCompanion401>
+
+    /**
+ * @summary Get Echo's in-the-moment reaction to a readiness change
+ */
+export const usePulseCompanion = <TError = ErrorType<PulseCompanion401>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pulseCompanion>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof pulseCompanion>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getPulseCompanionMutationOptions(options));
     }
 
 export const getListCompanionNotificationsUrl = () => {

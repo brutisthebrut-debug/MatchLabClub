@@ -1,28 +1,36 @@
-import { useState } from "react";
-import { Link } from "wouter";
+import { useEffect, useRef, useState, type ReactElement } from "react";
+import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, motion, useMotionValue, animate } from "framer-motion";
 import { useAuth } from "@workspace/replit-auth-web";
 import {
   useGetCompanion,
   getGetCompanionQueryKey,
+  useGetMatchingState,
   useSayToCompanion,
   useReviewMessageWithCompanion,
   useCompleteCompanionCommitment,
   useDismissCompanionObservation,
+  usePulseCompanion,
   getGetMatchingStateQueryKey,
 } from "@workspace/api-client-react";
 import type {
   CompanionObservation,
   CompanionCommitment,
+  CompanionReaction,
 } from "@workspace/api-client-react";
 import {
   ArrowRight,
+  ArrowUpRight,
   Bell,
   Check,
+  Heart,
   MessageSquare,
   Send,
   Sparkles,
   Target,
+  TrendingDown,
+  TrendingUp,
   X,
 } from "lucide-react";
 
@@ -34,6 +42,181 @@ type EchoTurn = {
 };
 
 type Tab = "talk" | "notices" | "review";
+
+// Animated count from one score to the next so the number feels alive when a
+// reaction lands, not just swapped out.
+function CountUp({ from, to }: { from: number; to: number }): ReactElement {
+  const mv = useMotionValue(from);
+  const [display, setDisplay] = useState(from);
+  useEffect(() => {
+    const controls = animate(mv, to, {
+      duration: 1,
+      ease: "easeOut",
+      onUpdate: (v) => setDisplay(Math.round(v)),
+    });
+    return () => controls.stop();
+  }, [mv, to]);
+  return <>{display}</>;
+}
+
+function toneAccent(tone: CompanionReaction["tone"]): {
+  ring: string;
+  text: string;
+  Icon: typeof TrendingUp;
+} {
+  if (tone === "crossing")
+    return {
+      ring: "from-[#3D35CC] to-[#FF2D9B]",
+      text: "text-[hsl(326_100%_45%)]",
+      Icon: Heart,
+    };
+  if (tone === "dip")
+    return {
+      ring: "from-[hsl(28_90%_55%)] to-[hsl(351_80%_55%)]",
+      text: "text-[hsl(28_90%_42%)]",
+      Icon: TrendingDown,
+    };
+  return {
+    ring: "from-[hsl(142_60%_45%)] to-[hsl(168_60%_45%)]",
+    text: "text-[hsl(142_55%_36%)]",
+    Icon: TrendingUp,
+  };
+}
+
+/**
+ * The in-the-moment reaction card. Shown floating (when Echo is closed) and
+ * inline at the top of the Talk tab (when open). Crossing the matching threshold
+ * gets the loud, celebratory treatment with a link into matching; rises and dips
+ * get a quieter, honest read. The score animates from where it was to where it
+ * landed.
+ */
+function ReactionCard({
+  reaction,
+  onClose,
+  onGoMatching,
+  variant,
+}: {
+  reaction: CompanionReaction;
+  onClose: () => void;
+  onGoMatching: () => void;
+  variant: "floating" | "inline";
+}): ReactElement {
+  const accent = toneAccent(reaction.tone);
+  const isCrossing = reaction.tone === "crossing";
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: variant === "floating" ? 16 : -8, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+      transition={{ type: "spring", stiffness: 320, damping: 26 }}
+      className={`relative overflow-hidden rounded-2xl border bg-background p-4 shadow-xl ${
+        isCrossing
+          ? "border-[hsl(326_100%_60%/0.4)]"
+          : "border-foreground/12"
+      } ${variant === "floating" ? "w-[min(92vw,360px)]" : ""}`}
+      data-testid="echo-reaction-card"
+      data-tone={reaction.tone}
+    >
+      <div
+        className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accent.ring}`}
+        aria-hidden="true"
+      />
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute right-2 top-2 rounded-lg p-1 text-muted-foreground hover:text-foreground"
+        aria-label="Dismiss reaction"
+        data-testid="echo-reaction-dismiss"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+
+      <div className="flex items-start gap-3">
+        <div
+          className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${accent.ring} text-white`}
+        >
+          {isCrossing ? (
+            <motion.span
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1, type: "spring", stiffness: 400 }}
+            >
+              <accent.Icon className="h-5 w-5" aria-hidden="true" />
+            </motion.span>
+          ) : (
+            <accent.Icon className="h-5 w-5" aria-hidden="true" />
+          )}
+        </div>
+        <div className="min-w-0 flex-1 pr-4">
+          <p className="flex items-baseline gap-1.5">
+            <span className="text-2xl font-bold tabular-nums text-foreground">
+              <CountUp from={reaction.fromScore} to={reaction.toScore} />
+            </span>
+            <span className={`text-xs font-semibold ${accent.text}`}>
+              {reaction.delta > 0 ? `+${reaction.delta}` : reaction.delta}
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              readiness
+            </span>
+          </p>
+          <p className="mt-1 text-sm font-medium text-foreground">
+            {reaction.headline}
+          </p>
+          {reaction.nowSee && (
+            <p className="mt-1.5 text-[13px] text-muted-foreground">
+              {reaction.nowSee}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {reaction.lanesMoved.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {reaction.lanesMoved.map((l) => (
+            <span
+              key={l.key}
+              className="inline-flex items-center gap-1 rounded-full border border-foreground/12 bg-foreground/[0.03] px-2 py-0.5 text-[11px] text-muted-foreground"
+            >
+              {l.label}
+              <span className={`font-semibold ${accent.text}`}>
+                {l.from} to {l.to}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-3 flex items-center gap-2">
+        {isCrossing ? (
+          <button
+            type="button"
+            onClick={onGoMatching}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] px-3 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
+            data-testid="echo-reaction-matching"
+          >
+            Matching is open
+            <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+          </button>
+        ) : (
+          reaction.nextMove && (
+            <Link
+              href={reaction.nextMove.href}
+              onClick={onClose}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-foreground/15 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-foreground/[0.04]"
+              data-testid="echo-reaction-next"
+            >
+              {reaction.nextMove.label}
+              <span className={`font-semibold ${accent.text}`}>
+                +{reaction.nextMove.points}
+              </span>
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </Link>
+          )
+        )}
+      </div>
+    </motion.div>
+  );
+}
 
 function severityClass(severity: CompanionObservation["severity"]): string {
   if (severity === "praise")
@@ -54,6 +237,7 @@ function severityClass(severity: CompanionObservation["severity"]): string {
 export function EchoPresence() {
   const { isAuthenticated } = useAuth();
   const qc = useQueryClient();
+  const [, navigate] = useLocation();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("talk");
 
@@ -64,16 +248,70 @@ export function EchoPresence() {
     },
   });
 
+  const { data: matchingState } = useGetMatchingState({
+    query: {
+      queryKey: getGetMatchingStateQueryKey(),
+      enabled: isAuthenticated,
+    },
+  });
+
   const say = useSayToCompanion();
   const review = useReviewMessageWithCompanion();
   const completeCommitment = useCompleteCompanionCommitment();
   const dismissObservation = useDismissCompanionObservation();
+  const pulse = usePulseCompanion();
 
   const [turns, setTurns] = useState<EchoTurn[]>([]);
   const [draft, setDraft] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [reviewDir, setReviewDir] =
     useState<"sending" | "received">("sending");
+
+  // Live readiness reaction. We watch the shared matching-state score and ask
+  // Echo to react whenever it is different from the score this mount last
+  // pulsed on. The server, not this component, is the real arbiter of whether a
+  // move happened: it owns the persisted reaction baseline, so it returns
+  // moved=false for a flat read and moved=true only for a genuine change. That
+  // is what makes the reaction survive navigation. AppLayout (and so this
+  // component) remounts on every route change, which resets the local ref, but
+  // because we pulse on the first score we see after a remount too, a move that
+  // landed while the user was navigating still surfaces on the next page
+  // instead of being silently swallowed. The local ref only dedupes re-renders
+  // that carry the same score within a single mount.
+  const [reaction, setReaction] = useState<CompanionReaction | null>(null);
+  const lastScoreRef = useRef<number | null>(null);
+  const score = matchingState?.readiness.score ?? null;
+
+  useEffect(() => {
+    if (!isAuthenticated || score === null) return;
+    if (score === lastScoreRef.current) return;
+    lastScoreRef.current = score;
+
+    let cancelled = false;
+    pulse
+      .mutateAsync()
+      .then((res) => {
+        if (cancelled) return;
+        if (res.reaction.moved) setReaction(res.reaction);
+        qc.invalidateQueries({ queryKey: getGetCompanionQueryKey() });
+      })
+      .catch(() => {
+        /* a missed reaction is silent; never block the app on it */
+      });
+    return () => {
+      cancelled = true;
+    };
+    // We intentionally key only on the score so a single move fires one pulse.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [score, isAuthenticated]);
+
+  // Rises and dips auto-dismiss so they feel in-the-moment; crossing into
+  // matching is the payoff and stays until the user acts on or closes it.
+  useEffect(() => {
+    if (!reaction || reaction.tone === "crossing") return;
+    const t = setTimeout(() => setReaction(null), 10000);
+    return () => clearTimeout(t);
+  }, [reaction]);
 
   if (!isAuthenticated || !data) return null;
 
@@ -128,28 +366,47 @@ export function EchoPresence() {
     refresh();
   }
 
+  function goMatching(): void {
+    setReaction(null);
+    setOpen(false);
+    navigate("/matching");
+  }
+
   return (
     <>
       {/* Floating presence */}
       {!open && (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] px-4 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-[1.03]"
-          data-testid="echo-presence-button"
-          aria-label="Open Echo"
-        >
-          <Sparkles className="h-4 w-4" aria-hidden="true" />
-          Echo
-          {unread > 0 && (
-            <span
-              className="ml-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold text-[#3D35CC]"
-              data-testid="echo-unread-badge"
-            >
-              {unread}
-            </span>
-          )}
-        </button>
+        <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-3">
+          <AnimatePresence>
+            {reaction && (
+              <ReactionCard
+                key="floating-reaction"
+                reaction={reaction}
+                variant="floating"
+                onClose={() => setReaction(null)}
+                onGoMatching={goMatching}
+              />
+            )}
+          </AnimatePresence>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="flex items-center gap-2 rounded-full bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] px-4 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-[1.03]"
+            data-testid="echo-presence-button"
+            aria-label="Open Echo"
+          >
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            Echo
+            {unread > 0 && (
+              <span
+                className="ml-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[11px] font-bold text-[#3D35CC]"
+                data-testid="echo-unread-badge"
+              >
+                {unread}
+              </span>
+            )}
+          </button>
+        </div>
       )}
 
       {/* Panel */}
@@ -229,6 +486,17 @@ export function EchoPresence() {
           <div className="flex-1 overflow-y-auto p-4">
             {tab === "talk" && (
               <div className="space-y-3">
+                <AnimatePresence>
+                  {reaction && (
+                    <ReactionCard
+                      key="inline-reaction"
+                      reaction={reaction}
+                      variant="inline"
+                      onClose={() => setReaction(null)}
+                      onGoMatching={goMatching}
+                    />
+                  )}
+                </AnimatePresence>
                 {turns.length === 0 && (
                   <div className="rounded-xl border border-foreground/10 bg-foreground/[0.03] p-3">
                     <p className="text-sm text-foreground">{data.greeting}</p>

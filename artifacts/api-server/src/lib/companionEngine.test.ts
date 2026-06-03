@@ -11,6 +11,7 @@ import {
   normalizePersona,
   clampCandor,
   personaLabel,
+  buildReaction,
 } from "./companionEngine";
 
 const AI_TELL_WORDS =
@@ -191,5 +192,150 @@ describe("personaLabel", () => {
   it("returns a human label for every persona", () => {
     expect(personaLabel("best_friend")).toMatch(/Echo/);
     expect(personaLabel("witty_sibling")).toMatch(/Echo/);
+  });
+});
+
+describe("buildReaction", () => {
+  function coverageOf(portrait: MirrorPortrait): Record<string, number> {
+    return Object.fromEntries(portrait.known.map((k) => [k.key, k.coverage]));
+  }
+
+  function breakdownWith(overrides: Record<string, number>): ReadinessBreakdown {
+    return { ...emptyBreakdown(), ...overrides } as ReadinessBreakdown;
+  }
+
+  it("is silent on the first look with no prior baseline", () => {
+    const portrait = makePortrait(emptyBreakdown(), 20);
+    const r = buildReaction({
+      portrait,
+      previousScore: null,
+      previousCoverageByKey: null,
+      persona: "best_friend",
+      candor: 2,
+    });
+    expect(r.moved).toBe(false);
+    expect(r.tone).toBe("steady");
+    expect(r.headline).toBe("");
+    expect(r.nowSee).toBeNull();
+  });
+
+  it("reacts to a rise and attributes the lane that deepened", () => {
+    const before = makePortrait(breakdownWith({ wellness: 20 }), 30);
+    const after = makePortrait(breakdownWith({ wellness: 60 }), 38);
+    const r = buildReaction({
+      portrait: after,
+      previousScore: before.readinessScore,
+      previousCoverageByKey: coverageOf(before),
+      persona: "best_friend",
+      candor: 2,
+    });
+    expect(r.moved).toBe(true);
+    expect(r.tone).toBe("rise");
+    expect(r.delta).toBe(after.readinessScore - before.readinessScore);
+    expect(r.lanesMoved.length).toBeGreaterThan(0);
+    expect(r.lanesMoved[0]!.key).toBe("wellness");
+    expect(r.lanesMoved[0]!.to).toBeGreaterThan(r.lanesMoved[0]!.from);
+    expect(r.nowSee).toBeTruthy();
+  });
+
+  it("marks a lane read for the first time when it went from zero", () => {
+    const before = makePortrait(emptyBreakdown(), 30);
+    const after = makePortrait(breakdownWith({ compass: 70 }), 40);
+    const r = buildReaction({
+      portrait: after,
+      previousScore: before.readinessScore,
+      previousCoverageByKey: coverageOf(before),
+      persona: "calm_mentor",
+      candor: 2,
+    });
+    expect(r.lanesMoved[0]!.from).toBe(0);
+    expect(r.nowSee).toMatch(/finally read/i);
+  });
+
+  it("celebrates crossing the matching threshold and exposes eligibility", () => {
+    const before = makePortrait(breakdownWith({ wellness: 40 }), 45);
+    const after = makePortrait(breakdownWith({ wellness: 80, compass: 70 }), 55);
+    const r = buildReaction({
+      portrait: after,
+      previousScore: before.readinessScore,
+      previousCoverageByKey: coverageOf(before),
+      persona: "best_friend",
+      candor: 2,
+    });
+    expect(r.tone).toBe("crossing");
+    expect(r.crossedThreshold).toBe(true);
+    expect(r.eligible).toBe(true);
+    expect(r.headline).toMatch(/matching is open/i);
+  });
+
+  it("names a dip honestly without a nowSee", () => {
+    const before = makePortrait(breakdownWith({ wellness: 60 }), 40);
+    const after = makePortrait(breakdownWith({ wellness: 60 }), 34);
+    const r = buildReaction({
+      portrait: after,
+      previousScore: before.readinessScore,
+      previousCoverageByKey: coverageOf(before),
+      persona: "best_friend",
+      candor: 2,
+    });
+    expect(r.tone).toBe("dip");
+    expect(r.delta).toBeLessThan(0);
+    expect(r.nowSee).toBeNull();
+    expect(r.headline).toMatch(/slip|down/i);
+  });
+
+  it("treats a flat read with no lane movement as steady and silent", () => {
+    const portrait = makePortrait(breakdownWith({ wellness: 50 }), 40);
+    const r = buildReaction({
+      portrait,
+      previousScore: 40,
+      previousCoverageByKey: coverageOf(portrait),
+      persona: "best_friend",
+      candor: 2,
+    });
+    expect(r.tone).toBe("steady");
+    expect(r.moved).toBe(false);
+    expect(r.headline).toBe("");
+  });
+
+  it("scales the headline by magnitude and stays voice-clean for every persona", () => {
+    const personas = [
+      "best_friend",
+      "tough_coach",
+      "witty_sibling",
+      "calm_mentor",
+    ] as const;
+    const deltas = [
+      { from: 30, to: 31 },
+      { from: 30, to: 34 },
+      { from: 30, to: 40 },
+    ];
+    for (const persona of personas) {
+      for (const { from, to } of deltas) {
+        const before = makePortrait(breakdownWith({ wellness: 20 }), from);
+        const after = makePortrait(breakdownWith({ wellness: 50 }), to);
+        const r = buildReaction({
+          portrait: after,
+          previousScore: before.readinessScore,
+          previousCoverageByKey: coverageOf(before),
+          persona,
+          candor: 2,
+        });
+        assertVoiceClean(r.headline);
+        if (r.nowSee) assertVoiceClean(r.nowSee);
+      }
+      // Dip and crossing copy must also be clean.
+      const dipBefore = makePortrait(breakdownWith({ wellness: 60 }), 42);
+      const dipAfter = makePortrait(breakdownWith({ wellness: 60 }), 35);
+      assertVoiceClean(
+        buildReaction({
+          portrait: dipAfter,
+          previousScore: dipBefore.readinessScore,
+          previousCoverageByKey: coverageOf(dipBefore),
+          persona,
+          candor: 3,
+        }).headline,
+      );
+    }
   });
 });

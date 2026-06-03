@@ -9,3 +9,4 @@
 - [Radius hard gate semantics](radius-gate.md) — matching radius is a HARD gate only when a member set a radius and the cities geocode; no implicit default cap; uses min of both radii, stays symmetric.
 - [Founder brain control center](founder-brain-control-center.md) — scoring rollouts use a hold/shadow/applied dial + deterministic FNV cohort bucketing; observability is an on-demand founder endpoint, never per-computeReadiness writes.
 - [Dashboard pending-audit-delete dual executors](pending-audit-delete-paths.md) — unmount mutate (for no-remount) + on-mount drain (reliable for remount race) are both required; finalizePending clears localStorage, unmount must NOT; test trashFlow+undoFlow together.
+- [Auto-proposal sweep pollutes idempotency tests](auto-proposal-test-flakiness.md) — autoProposalJob/matching.discover "expected 1 got 2" failures under full suite are flaky; pass in isolation.

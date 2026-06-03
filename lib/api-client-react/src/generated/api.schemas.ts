@@ -1940,6 +1940,51 @@ export interface CompanionReviewResult {
   isFallback: boolean;
 }
 
+export interface ReactionLaneMove {
+  key: string;
+  label: string;
+  from: number;
+  to: number;
+}
+
+export type CompanionReactionTone = typeof CompanionReactionTone[keyof typeof CompanionReactionTone];
+
+
+export const CompanionReactionTone = {
+  rise: 'rise',
+  crossing: 'crossing',
+  dip: 'dip',
+  steady: 'steady',
+} as const;
+
+export type CompanionReactionNextMove = null | {
+  label: string;
+  detail: string;
+  href: string;
+  points: number;
+};
+
+export interface CompanionReaction {
+  /** True only when there is a real movement worth surfacing. */
+  moved: boolean;
+  tone: CompanionReactionTone;
+  delta: number;
+  fromScore: number;
+  toScore: number;
+  threshold: number;
+  eligible: boolean;
+  crossedThreshold: boolean;
+  headline: string;
+  nowSee: string | null;
+  lanesMoved: ReactionLaneMove[];
+  nextMove: CompanionReactionNextMove;
+}
+
+export interface CompanionPulseResult {
+  reaction: CompanionReaction;
+  isFallback: boolean;
+}
+
 export interface CompanionNotification {
   id: number;
   source: string;
@@ -3896,6 +3941,10 @@ export type ReviewMessageWithCompanion400 = {
 };
 
 export type ReviewMessageWithCompanion401 = {
+  error?: string;
+};
+
+export type PulseCompanion401 = {
   error?: string;
 };
 

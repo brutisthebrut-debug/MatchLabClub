@@ -1,4 +1,11 @@
-import { pgTable, varchar, integer, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  varchar,
+  integer,
+  text,
+  timestamp,
+  jsonb,
+} from "drizzle-orm/pg-core";
 
 /**
  * One accumulating row per user for the Echo companion. This is Echo's evolving
@@ -24,6 +31,17 @@ export const companionStateTable = pgTable("companion_state", {
   lastSeenScore: integer("last_seen_score"),
   lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
   lastProactiveAt: timestamp("last_proactive_at", { withTimezone: true }),
+  // Baseline for the in-the-moment readiness reaction. Distinct from
+  // last_seen_* (which drives ambient observations): the pulse endpoint advances
+  // these only when it actually reacts, so a single climb is never double-counted
+  // and the "what I can now see" attribution stays grounded in the prior
+  // per-lane coverage. Coverage holds only derived 0-100 lane scores, never raw
+  // content or PII.
+  lastReactedScore: integer("last_reacted_score"),
+  lastReactedCoverage: jsonb("last_reacted_coverage").$type<
+    Record<string, number>
+  >(),
+  lastReactedAt: timestamp("last_reacted_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

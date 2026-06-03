@@ -117,6 +117,13 @@ export const echoMatchReadSchema = z.object({
 
 export type EchoMatchReadAiOutput = z.infer<typeof echoMatchReadSchema>;
 
+export const echoPulseSchema = z.object({
+  headline: z.string().trim().min(1),
+  nowSee: z.string().trim().default(""),
+});
+
+export type EchoPulseAiOutput = z.infer<typeof echoPulseSchema>;
+
 export function parseAiJson<T>(
   schema: z.ZodType<T>,
   raw: string,
@@ -146,6 +153,7 @@ export const aiToolSchemas = {
   "Echo Match Read": echoMatchReadSchema,
   Echo: echoReplySchema,
   "Echo Review": echoReviewSchema,
+  "Echo Pulse": echoPulseSchema,
 } as const;
 
 export type AiToolName = keyof typeof aiToolSchemas;
