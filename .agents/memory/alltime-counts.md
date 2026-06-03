@@ -20,3 +20,12 @@ and `max(...) filter (...)`, and a projection with any aggregate spec returns a 
 projected row even without `groupBy`. So the same query works in both prod Postgres and tests.
 Add a regression test that records well past any old cap (e.g. >5000 rows) and asserts the
 exact count, so "all-time" cannot regress back into a capped fetch.
+
+**Windowed counts (e.g. a 7-day "this week" recap) have the same trap, with a twist:**
+the test harness stores `createdAt` as a fake `Date`, but `testDb.gte` only matches numeric
+columns and the `sql` aggregate fake cannot evaluate `now() - interval '7 days'` or json
+(`props->>'x'`) math. So a windowed per-user recap that must filter by time/json typically
+aggregates in JS. That JS aggregation MUST fetch the user's rows with NO `.limit(N)` — scope
+to one user with `eq(userId)` only — then apply the time cutoff in JS. A `.limit(500)` (or any
+cap) silently undercounts a user who logs more than N events inside the window. Same fix shape,
+same regression test: insert >cap rows in-window and assert the exact count.

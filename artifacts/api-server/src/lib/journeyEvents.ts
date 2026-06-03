@@ -9,7 +9,7 @@
  * delta), never raw user content or PII.
  */
 import { db, journeyEventsTable, JOURNEY_EVENT_TYPES } from "@workspace/db";
-import { desc, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { JourneyEventType } from "@workspace/db";
 import { logger } from "./logger";
 
@@ -165,12 +165,15 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * A user-scoped weekly momentum recap built only from the caller's own journey
- * events. We pull the caller's recent rows by a simple equality predicate, then
- * compute the 7-day window in JS rather than via a SQL interval/group-by, so the
- * same code path works under the test harness (which cannot evaluate interval
- * filters) and in production. Only derived counts leave this function; raw event
- * props are never returned. Fail-open: any error degrades to an empty summary so
- * the surface that calls it never breaks.
+ * events. We pull the caller's rows by a simple equality predicate, then compute
+ * the 7-day window in JS rather than via a SQL interval/group-by, so the same
+ * code path works under the test harness (whose fake timestamps are not real
+ * Dates and so cannot be filtered by a SQL interval) and in production. The query
+ * is intentionally NOT row-capped: a high-activity user can log more than a few
+ * hundred events inside a week, and a cap would silently undercount the recap.
+ * Scoping to one user's rows keeps the scan bounded. Only derived counts leave
+ * this function; raw event props are never returned. Fail-open: any error
+ * degrades to an empty summary so the surface that calls it never breaks.
  */
 export async function summarizeUserJourney(
   userId: string,
@@ -192,9 +195,7 @@ export async function summarizeUserJourney(
         createdAt: journeyEventsTable.createdAt,
       })
       .from(journeyEventsTable)
-      .where(eq(journeyEventsTable.userId, userId))
-      .orderBy(desc(journeyEventsTable.createdAt))
-      .limit(500);
+      .where(eq(journeyEventsTable.userId, userId));
 
     const cutoff = now.getTime() - WEEK_MS;
     let signalsFedThisWeek = 0;
