@@ -2,7 +2,7 @@ import { withAlpha } from "@/lib/brandColor";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import {
   Flame,
   Instagram,
@@ -40,12 +40,15 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-const fadeUp = (delay = 0) => ({
+const fadeUpVariants: Variants = {
   initial: { opacity: 0, y: 20 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true },
-  transition: { duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
-});
+  whileInView: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+};
+
+const containerVariants: Variants = {
+  initial: { opacity: 0 },
+  whileInView: { opacity: 1, transition: { staggerChildren: 0.06 } },
+};
 
 type Status = "live" | "building" | "researching";
 
@@ -631,13 +634,13 @@ function ConnectorCard({
   const Icon = card.icon;
   return (
     <motion.div
-      {...fadeUp(0.04 + index * 0.04)}
-      className="glass border border-white/8 rounded-2xl p-5 flex flex-col gap-3 hover:border-white/15 transition-colors"
+      variants={fadeUpVariants}
+      className="glass rounded-[2rem] p-6 flex flex-col gap-4 border border-white/10 hover:border-white/20 hover:shadow-lg transition-all"
       data-testid={testId}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-4">
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          className="w-12 h-12 rounded-[1.25rem] flex items-center justify-center flex-shrink-0"
           style={{
             background: withAlpha(card.color, 0.14),
             border: `1px solid ${withAlpha(card.color, 0.25)}`,
@@ -646,33 +649,33 @@ function ConnectorCard({
           <Icon className="w-5 h-5" style={{ color: card.color }} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-1">
-            <p className="font-semibold text-foreground text-sm leading-snug">{card.title}</p>
+          <div className="flex items-center gap-2 flex-wrap mb-1.5">
+            <h3 className="font-serif font-bold text-foreground text-lg leading-snug">{card.title}</h3>
             <StatusBadge status={status} />
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">{card.blurb}</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">{card.blurb}</p>
         </div>
       </div>
 
-      <div className="rounded-xl bg-white/3 border border-white/6 px-3 py-2.5 flex items-start gap-2">
-        <Sparkles className="w-3.5 h-3.5 text-[hsl(var(--brand-gold))] flex-shrink-0 mt-0.5" />
-        <p className="text-[11px] text-muted-foreground/85 leading-relaxed">
-          <strong className="text-foreground/80">What you get back: </strong>
+      <div className="rounded-[1.25rem] bg-white/40 dark:bg-black/10 border border-white/20 dark:border-white/5 px-4 py-3 flex items-start gap-3 mt-1">
+        <Sparkles className="w-4 h-4 text-[hsl(var(--brand-gold))] flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          <strong className="text-foreground">What you get back: </strong>
           {card.returns}
         </p>
       </div>
 
       {(card.access || card.excludes) && (
-        <div className="grid sm:grid-cols-2 gap-2.5">
+        <div className="grid sm:grid-cols-2 gap-3 mt-1">
           {card.access && (
-            <div className="rounded-xl border border-[hsl(142_55%_60%/0.2)] bg-[hsl(142_55%_45%/0.06)] p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(142_55%_62%)] mb-1.5 flex items-center gap-1.5">
-                <CheckCircle className="w-3 h-3" /> What we'll see
+            <div className="rounded-[1.25rem] border border-[hsl(142_55%_60%/0.2)] bg-[hsl(142_55%_45%/0.04)] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(142_55%_55%)] mb-2 flex items-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5" /> What we'll see
               </p>
-              <ul className="space-y-1">
+              <ul className="space-y-2">
                 {card.access.map((item) => (
-                  <li key={item} className="text-[11px] text-muted-foreground leading-snug flex gap-1.5">
-                    <span className="w-1 h-1 rounded-full bg-[hsl(142_55%_60%)] mt-1.5 flex-shrink-0" />
+                  <li key={item} className="text-xs text-muted-foreground leading-snug flex gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[hsl(142_55%_55%)] mt-1 flex-shrink-0 opacity-80" />
                     {item}
                   </li>
                 ))}
@@ -680,14 +683,14 @@ function ConnectorCard({
             </div>
           )}
           {card.excludes && (
-            <div className="rounded-xl border border-[hsl(348_55%_65%/0.2)] bg-[hsl(348_55%_55%/0.06)] p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(348_55%_72%)] mb-1.5 flex items-center gap-1.5">
-                <Lock className="w-3 h-3" /> What we'll never touch
+            <div className="rounded-[1.25rem] border border-[hsl(348_55%_65%/0.2)] bg-[hsl(348_55%_55%/0.04)] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(348_55%_65%)] mb-2 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5" /> What we'll never touch
               </p>
-              <ul className="space-y-1">
+              <ul className="space-y-2">
                 {card.excludes.map((item) => (
-                  <li key={item} className="text-[11px] text-muted-foreground leading-snug flex gap-1.5">
-                    <span className="w-1 h-1 rounded-full bg-[hsl(348_55%_65%)] mt-1.5 flex-shrink-0" />
+                  <li key={item} className="text-xs text-muted-foreground leading-snug flex gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[hsl(348_55%_65%)] mt-1 flex-shrink-0 opacity-80" />
                     {item}
                   </li>
                 ))}
@@ -699,15 +702,15 @@ function ConnectorCard({
 
       {card.readiness && (
         <div
-          className="rounded-xl px-3 py-2.5 flex items-start gap-2"
+          className="rounded-[1.25rem] px-4 py-3 flex items-start gap-3 mt-1"
           style={{
-            background: withAlpha("hsl(var(--brand-green))", 0.08),
-            border: `1px solid ${withAlpha("hsl(var(--brand-green))", 0.22)}`,
+            background: withAlpha("hsl(var(--brand-green))", 0.06),
+            border: `1px solid ${withAlpha("hsl(var(--brand-green))", 0.2)}`,
           }}
           data-testid={`readiness-${card.id}`}
         >
-          <Activity className="w-3.5 h-3.5 text-[hsl(var(--brand-green))] flex-shrink-0 mt-0.5" />
-          <p className="text-[11px] text-muted-foreground/85 leading-relaxed">
+          <Activity className="w-4 h-4 text-[hsl(var(--brand-green))] flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground leading-relaxed">
             <strong className="text-[hsl(var(--brand-green))]">Match Readiness: </strong>
             {card.readiness}
           </p>
@@ -715,19 +718,21 @@ function ConnectorCard({
       )}
 
       {card.comingNote && (
-        <p className="text-[11px] text-[hsl(var(--brand-indigo))] leading-relaxed italic">
+        <p className="text-xs text-[hsl(var(--brand-indigo))] leading-relaxed italic px-1 mt-1">
           {card.comingNote}
         </p>
       )}
 
       {card.cta && (
-        <Link
-          href={card.cta.href}
-          className="inline-flex items-center gap-1 self-start text-xs font-semibold text-[hsl(248_62%_62%)] hover:text-[hsl(248_62%_72%)]"
-          data-testid={`link-${testId}`}
-        >
-          {card.cta.label} <ArrowRight className="w-3 h-3" />
-        </Link>
+        <div className="mt-2 pt-1 border-t border-white/5">
+          <Link
+            href={card.cta.href}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[hsl(248_62%_55%)] hover:text-[hsl(326_100%_59%)] transition-colors"
+            data-testid={`link-${testId}`}
+          >
+            {card.cta.label} <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
       )}
     </motion.div>
   );
@@ -747,20 +752,20 @@ function SectionHeader({
   accent: string;
 }) {
   return (
-    <div className="mb-5">
-      <div className="flex items-center gap-2 mb-2">
+    <div className="mb-8">
+      <div className="flex items-center gap-2.5 mb-3">
         <div
-          className="w-7 h-7 rounded-lg flex items-center justify-center"
+          className="w-8 h-8 rounded-[10px] flex items-center justify-center"
           style={{ background: withAlpha(accent, 0.14), border: `1px solid ${withAlpha(accent, 0.25)}` }}
         >
-          <Icon className="w-3.5 h-3.5" style={{ color: accent }} />
+          <Icon className="w-4 h-4" style={{ color: accent }} />
         </div>
-        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: accent }}>
+        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: accent }}>
           {eyebrow}
         </p>
       </div>
-      <h2 className="text-xl sm:text-2xl font-bold text-foreground">{title}</h2>
-      <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{subtitle}</p>
+      <h2 className="text-2xl sm:text-3xl font-serif font-bold text-foreground tracking-tight">{title}</h2>
+      <p className="text-base text-muted-foreground mt-2 leading-relaxed max-w-2xl">{subtitle}</p>
     </div>
   );
 }
@@ -773,140 +778,150 @@ export default function ConnectionCenter() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen mesh-bg py-10 px-4">
-        <div className="orb orb-violet fixed w-[420px] h-[420px] -top-24 -right-16 opacity-30 pointer-events-none" />
-        <div className="orb orb-gold fixed w-[300px] h-[300px] bottom-10 -left-20 opacity-25 pointer-events-none" />
+      <div className="min-h-screen mesh-bg py-12 px-4 sm:px-6 overflow-hidden">
+        <div className="orb orb-violet fixed w-[500px] h-[500px] -top-32 -right-24 opacity-30 pointer-events-none" />
+        <div className="orb orb-gold fixed w-[400px] h-[400px] bottom-10 -left-32 opacity-20 pointer-events-none" />
 
         <div className="max-w-4xl mx-auto relative z-10">
           {/* Hero */}
-          <motion.div {...fadeUp(0)} className="mb-8 text-center sm:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass border border-[hsl(248_62%_52%/0.25)] mb-4">
-              <Sparkles className="w-3.5 h-3.5 text-[hsl(248_62%_62%)]" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[hsl(248_62%_62%)]">
+          <motion.div variants={fadeUpVariants} initial="initial" animate="whileInView" className="mb-12 text-center sm:text-left">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border border-[hsl(248_62%_52%/0.25)] mb-6 shadow-sm">
+              <Sparkles className="w-4 h-4 text-[hsl(248_62%_62%)]" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[hsl(248_62%_62%)]">
                 Connection Center
               </span>
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground tracking-tight">
-              Plug things in. Get back what you didn't expect.
+            <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-bold text-foreground tracking-tight leading-tight">
+              Plug things in.<br className="hidden sm:block" /> Get back what you didn't expect.
             </h1>
-            <p className="text-base text-muted-foreground mt-3 max-w-2xl leading-relaxed">
+            <p className="text-lg text-muted-foreground mt-5 max-w-2xl leading-relaxed">
               Every source you plug in returns a small read of who you actually are when no one is watching, and feeds one rising Match Readiness meter. Some sources fill a readiness lane directly, all of them sharpen the reads matching runs on. The more the machine knows you, the better it matches you. Each one is opt-in, each one shows you exactly what we'll see and what we'll never touch, each one can be removed in one click.
             </p>
           </motion.div>
 
           {/* Privacy promise */}
           <motion.div
-            {...fadeUp(0.04)}
-            className="mb-10 flex items-start gap-3 px-4 py-3.5 rounded-xl glass border border-white/8"
+            variants={fadeUpVariants}
+            initial="initial"
+            animate="whileInView"
+            className="mb-12 flex items-start gap-4 px-6 py-5 rounded-[2rem] glass border border-white/10 shadow-sm"
             data-testid="connections-privacy-promise"
           >
-            <Shield className="w-4 h-4 text-[hsl(142_55%_60%)] flex-shrink-0 mt-0.5" />
-            <div className="space-y-0.5">
-              <p className="text-xs font-semibold text-foreground">Your data, your control</p>
-              <p className="text-[11px] text-muted-foreground/80 leading-relaxed">
+            <div className="w-10 h-10 rounded-[1.25rem] bg-[hsl(142_55%_60%/0.15)] flex items-center justify-center flex-shrink-0 border border-[hsl(142_55%_60%/0.2)]">
+              <Shield className="w-5 h-5 text-[hsl(142_55%_55%)]" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-foreground uppercase tracking-wide">Your data, your control</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Read only on every source. We never post, write, or send anything from your accounts. Sensitive surfaces (mail, bank) are subject-line and category-level only, never the underlying content. One toggle removes any source and purges its data.
               </p>
             </div>
           </motion.div>
 
           {/* Quick legend */}
-          <motion.div {...fadeUp(0.06)} className="flex flex-wrap items-center gap-2 mb-10">
+          <motion.div variants={fadeUpVariants} initial="initial" animate="whileInView" className="flex flex-wrap items-center gap-3 mb-12">
             <StatusBadge status="live" />
-            <span className="text-[11px] text-muted-foreground">Working today.</span>
-            <span className="text-white/15">·</span>
+            <span className="text-xs text-muted-foreground">Working today.</span>
+            <span className="text-white/15 px-1">·</span>
             <StatusBadge status="building" />
-            <span className="text-[11px] text-muted-foreground">In active build, sequenced.</span>
-            <span className="text-white/15">·</span>
+            <span className="text-xs text-muted-foreground">In active build, sequenced.</span>
+            <span className="text-white/15 px-1">·</span>
             <StatusBadge status="researching" />
-            <span className="text-[11px] text-muted-foreground">Open question, real research in progress.</span>
+            <span className="text-xs text-muted-foreground">Open question, real research in progress.</span>
           </motion.div>
 
-          {/* Plugged in today */}
-          <section className="mb-12">
-            <SectionHeader
-              icon={CheckCircle}
-              eyebrow="Plugged in today"
-              title="Sources you can use right now"
-              subtitle="Each of these returns a real read in the product today. No API gate, no waitlist."
-              accent="hsl(142 55% 60%)"
-            />
-            <div className="grid gap-4 md:grid-cols-2">
-              {LIVE.map((card, i) => (
-                <ConnectorCard key={card.id} card={card} status="live" index={i} />
-              ))}
-            </div>
-          </section>
+          <motion.div variants={containerVariants} initial="initial" whileInView="whileInView" viewport={{ once: true }}>
+            {/* Plugged in today */}
+            <section className="mb-16">
+              <SectionHeader
+                icon={CheckCircle}
+                eyebrow="Plugged in today"
+                title="Sources you can use right now"
+                subtitle="Each of these returns a real read in the product today. No API gate, no waitlist."
+                accent="hsl(142 55% 60%)"
+              />
+              <div className="grid gap-6 md:grid-cols-2">
+                {LIVE.map((card, i) => (
+                  <ConnectorCard key={card.id} card={card} status="live" index={i} />
+                ))}
+              </div>
+            </section>
 
-          {/* Building */}
-          <section className="mb-12">
-            <SectionHeader
-              icon={Wrench}
-              eyebrow="In active build"
-              title="What's coming, in order"
-              subtitle="The roadmap, with the full data contract upfront. Each one ships standing alone. You'll see them light up here as they land."
-              accent="hsl(var(--brand-indigo))"
-            />
-            <div className="grid gap-4">
-              {BUILDING.map((card, i) => (
-                <ConnectorCard key={card.id} card={card} status="building" index={i} />
-              ))}
-            </div>
-          </section>
+            {/* Building */}
+            <section className="mb-16">
+              <SectionHeader
+                icon={Wrench}
+                eyebrow="In active build"
+                title="What's coming, in order"
+                subtitle="The roadmap, with the full data contract upfront. Each one ships standing alone. You'll see them light up here as they land."
+                accent="hsl(var(--brand-indigo))"
+              />
+              <div className="grid gap-6">
+                {BUILDING.map((card, i) => (
+                  <ConnectorCard key={card.id} card={card} status="building" index={i} />
+                ))}
+              </div>
+            </section>
 
-          {/* Researching */}
-          <section className="mb-12">
-            <SectionHeader
-              icon={FlaskConical}
-              eyebrow="Researching"
-              title="Open questions we're still answering"
-              subtitle="Sources where the signal is real but the privacy contract or the API shape isn't there yet. We won't ship anything we can't honour."
-              accent="hsl(43 65% 65%)"
-            />
-            <div className="grid gap-4 md:grid-cols-3">
-              {RESEARCHING.map((card, i) => (
-                <ConnectorCard key={card.id} card={card} status="researching" index={i} />
-              ))}
-            </div>
-          </section>
+            {/* Researching */}
+            <section className="mb-16">
+              <SectionHeader
+                icon={FlaskConical}
+                eyebrow="Researching"
+                title="Open questions we're still answering"
+                subtitle="Sources where the signal is real but the privacy contract or the API shape isn't there yet. We won't ship anything we can't honour."
+                accent="hsl(43 65% 65%)"
+              />
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {RESEARCHING.map((card, i) => (
+                  <ConnectorCard key={card.id} card={card} status="researching" index={i} />
+                ))}
+              </div>
+            </section>
+          </motion.div>
 
           {/* Footer pointers */}
           <motion.div
-            {...fadeUp(0.1)}
-            className="rounded-2xl p-5 sm:p-6 mb-10"
+            variants={fadeUpVariants}
+            initial="initial"
+            whileInView="whileInView"
+            viewport={{ once: true }}
+            className="rounded-[2rem] p-8 mb-12 relative overflow-hidden"
             style={{
-              background: "linear-gradient(135deg, hsl(248 62% 52% / 0.07), hsl(43 65% 62% / 0.05))",
-              border: "1px solid hsl(248 62% 52% / 0.2)",
+              background: "linear-gradient(135deg, hsl(248 62% 52% / 0.08), hsl(43 65% 62% / 0.05))",
+              border: "1px solid hsl(248 62% 52% / 0.15)",
             }}
           >
-            <p className="text-sm text-foreground font-semibold mb-2">Where to go next</p>
-            <div className="flex flex-wrap items-center gap-4 text-xs">
+            <div className="absolute inset-0 bg-white/5 backdrop-blur-3xl -z-10" />
+            <h3 className="text-xl font-serif font-bold text-foreground mb-4">Where to go next</h3>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
               <Link
                 href="/integrations"
-                className="inline-flex items-center gap-1 text-[hsl(248_62%_62%)] hover:text-[hsl(248_62%_72%)] font-semibold"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-[hsl(248_62%_55%)] hover:text-[hsl(326_100%_59%)] transition-colors"
                 data-testid="link-platform-map"
               >
-                Full platform map <ArrowRight className="w-3 h-3" />
+                Full platform map <ArrowRight className="w-4 h-4" />
               </Link>
-              <span className="text-white/15">·</span>
+              <div className="h-4 w-px bg-white/10 hidden sm:block" />
               <Link
                 href="/vault"
-                className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 data-testid="link-data-vault"
               >
-                <Lock className="w-3 h-3" /> View Data Vault
+                <Lock className="w-4 h-4" /> View Data Vault
               </Link>
-              <span className="text-white/15">·</span>
+              <div className="h-4 w-px bg-white/10 hidden sm:block" />
               <Link
                 href="/user-control"
-                className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 data-testid="link-user-control"
               >
                 Privacy and data settings
               </Link>
-              <span className="text-white/15">·</span>
+              <div className="h-4 w-px bg-white/10 hidden lg:block" />
               <Link
                 href="/me"
-                className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 data-testid="link-self-hub"
               >
                 Open Self Hub

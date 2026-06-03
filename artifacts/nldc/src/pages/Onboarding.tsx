@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,6 +14,11 @@ import {
   MessageCircle,
   Sparkles,
   Loader2,
+  TrendingUp,
+  Award,
+  Zap,
+  Icon,
+  Target,
 } from "lucide-react";
 import { useMeta } from "@/hooks/useMeta";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -40,7 +45,6 @@ import {
   readOnboardingSeeking,
 } from "@/lib/onboardingState";
 import { trackEvent } from "@/lib/analytics";
-import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
 
 const GOALS = [
   { value: "find a relationship", label: "Find a relationship", desc: "Something real and lasting" },
@@ -49,13 +53,9 @@ const GOALS = [
   { value: "just curious", label: "Just curious", desc: "Exploring what's out there" },
 ];
 
-// Inclusive by default. These mirror the vocabulary in Wizard.tsx so a user sees
-// the same options across the product. Identity is optional in onboarding: it
-// only flavours the copy so everyone sees themselves from the first screen.
 const ORIENTATIONS = ["Straight", "Gay", "Lesbian", "Bisexual", "Queer", "Other"];
 const SEEKING = ["Women", "Men", "Non-binary people", "Everyone", "Other / it's complicated"];
 
-// Goal-aware framing for the question step so the prompt fits the person.
 function goalIntro(goal: string): string {
   switch (goal) {
     case "heal from a breakup":
@@ -76,6 +76,7 @@ const SOURCES = [
     desc: "Upload a photo or screenshot and we read the signal.",
     href: "/scan",
     cta: "Open Photo Scan",
+    points: 15,
   },
   {
     icon: Download,
@@ -83,6 +84,7 @@ const SOURCES = [
     desc: "Bring your match and message history in one file.",
     href: "/imports",
     cta: "Open Imports",
+    points: 30,
   },
   {
     icon: MessageCircle,
@@ -90,6 +92,7 @@ const SOURCES = [
     desc: "Paste a chat and get reply options that sound like you.",
     href: "/coach",
     cta: "Open Message Coach",
+    points: 10,
   },
   {
     icon: Plug,
@@ -97,15 +100,85 @@ const SOURCES = [
     desc: "The Connection Center shows what each source adds and never touches.",
     href: "/connections",
     cta: "Open Connection Center",
+    points: 0,
   },
 ];
 
 const fadeStep = {
-  initial: { opacity: 0, y: 18 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -12 },
-  transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+  initial: { opacity: 0, x: 20, filter: "blur(4px)" },
+  animate: { opacity: 1, x: 0, filter: "blur(0px)" },
+  exit: { opacity: 0, x: -20, filter: "blur(4px)" },
+  transition: { duration: 0.4, ease: [0.25, 1, 0.5, 1] as [number, number, number, number] },
 };
+
+function AnimatedMeter({ score, label, previousScore }: { score: number, label: string, previousScore?: number | null }) {
+  const [displayScore, setDisplayScore] = useState(previousScore ?? 0);
+  
+  useEffect(() => {
+    let startTime: number;
+    const duration = 1500;
+    const startValue = previousScore ?? 0;
+    
+    function update(time: number) {
+      if (!startTime) startTime = time;
+      const progress = Math.min((time - startTime) / duration, 1);
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      setDisplayScore(startValue + (score - startValue) * easeOutQuart);
+      
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      }
+    }
+    requestAnimationFrame(update);
+  }, [score, previousScore]);
+
+  const percentage = Math.max(0, Math.min(100, displayScore));
+  
+  return (
+    <div className="bg-background/80 border border-border/50 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
+      <div className="absolute inset-0 bg-gradient-to-r from-[hsl(248_62%_52%/0.03)] to-[hsl(326_100%_59%/0.03)] pointer-events-none" />
+      <div className="flex items-end justify-between mb-4 relative z-10">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+            <TrendingUp className="w-3.5 h-3.5" />
+            {label}
+          </p>
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="text-4xl font-bold font-serif tabular-nums text-foreground tracking-tight">
+              {Math.round(displayScore)}
+            </span>
+            <span className="text-muted-foreground font-semibold">/ 100</span>
+          </div>
+        </div>
+        {previousScore !== null && previousScore !== undefined && score > previousScore && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.5, type: "spring" }}
+            className="bg-[hsl(142_55%_60%/0.15)] text-[hsl(142_55%_45%)] dark:text-[hsl(142_55%_60%)] px-3 py-1.5 rounded-xl font-bold text-sm flex items-center gap-1"
+          >
+            <TrendingUp className="w-4 h-4" />
+            +{Math.round(score - previousScore)} pts
+          </motion.div>
+        )}
+      </div>
+      
+      <div className="h-4 w-full bg-secondary/80 rounded-full overflow-hidden relative z-10 p-0.5">
+        <motion.div
+          className="h-full bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(326_100%_59%)] rounded-full relative"
+          style={{ width: `${percentage}%` }}
+        >
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.4)_50%,transparent_100%)] translate-x-[-100%] animate-[shimmer_2s_infinite]" />
+        </motion.div>
+      </div>
+      <div className="flex justify-between mt-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest relative z-10">
+        <span>Cold Start</span>
+        <span>Match Ready</span>
+      </div>
+    </div>
+  );
+}
+
 
 export default function Onboarding() {
   useMeta(
@@ -118,27 +191,17 @@ export default function Onboarding() {
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState(0);
-  // Hydrate from client-side persistence so a refresh or re-entry mid-onboarding
-  // keeps the user's choices instead of resetting them.
   const [goal, setGoal] = useState(() => readOnboardingGoal() ?? "");
   const [orientation, setOrientation] = useState(() => readOnboardingOrientation() ?? "");
   const [seeking, setSeeking] = useState<string[]>(() => readOnboardingSeeking());
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
-  // Readiness snapshot taken the instant before the user feeds their first
-  // onboarding signal, so the final step can animate the real gain (before to
-  // after) rather than a flat number. Null until they save, so a pure skip
-  // shows no celebratory delta.
   const [readinessBefore, setReadinessBefore] = useState<number | null>(null);
 
   const createAnswer = useCreateWellnessAnswer();
   const matchingState = useGetMatchingState();
   const readiness = matchingState.data?.readiness?.score ?? 0;
 
-  // The real Mirror portrait, fetched only once the user lands on the final
-  // handoff step. The endpoint is deterministic and always non-empty for a
-  // signed-in user, so by the time they finish their three answers it reflects
-  // them. Retry off so a transient error falls back to the readiness meter.
   const portraitQuery = useGetMirrorPortrait({
     query: {
       queryKey: getGetMirrorPortraitQueryKey(),
@@ -155,9 +218,6 @@ export default function Onboarding() {
   function finish() {
     markOnboardingComplete();
     trackEvent("onboarding_complete", { goal });
-    // Land a brand-new user straight on Your Mirror: the model of them is
-    // already forming from what they just answered, with the readiness climb
-    // and the single next signal to feed visible right away.
     setLocation("/your-mirror");
   }
 
@@ -197,8 +257,6 @@ export default function Onboarding() {
       return;
     }
     setSaving(true);
-    // Snapshot readiness before any answer is saved so the Mirror step can show
-    // the climb that these answers produced.
     setReadinessBefore(readiness);
     try {
       for (const [questionId, answer] of entries) {
@@ -239,169 +297,195 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground">
-      <div className="mx-auto flex min-h-[100dvh] max-w-2xl flex-col px-5 py-8 md:py-12">
+    <div className="min-h-[100dvh] bg-background text-foreground relative overflow-hidden">
+      <div className="orb orb-violet fixed w-[800px] h-[800px] -top-[400px] -right-[200px] opacity-25 pointer-events-none" />
+      <div className="orb orb-rose fixed w-[600px] h-[600px] -bottom-[300px] -left-[200px] opacity-15 pointer-events-none" />
+
+      <div className="mx-auto flex min-h-[100dvh] max-w-3xl flex-col px-6 py-8 md:py-12 relative z-10">
         {/* Header: logo + progress */}
-        <div className="mb-8">
-          <div className="mb-5 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <img
-                src="/matchlab-logo.png"
-                alt="MatchLab Club"
-                className="h-8 w-auto"
-                style={{ filter: "drop-shadow(0 2px 10px hsl(326 100% 60% / 0.4))" }}
-              />
-              <span className="font-serif text-base font-bold tracking-tight">
-                MatchLab<span className="gradient-text">.</span>
+        <div className="mb-10">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(326_100%_59%)] p-[1px] shadow-lg">
+                <div className="w-full h-full bg-background rounded-[11px] flex items-center justify-center overflow-hidden relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[hsl(248_62%_52%/0.2)] to-[hsl(326_100%_59%/0.2)]" />
+                  <Sparkles className="w-5 h-5 text-[hsl(248_62%_52%)]" />
+                </div>
+              </div>
+              <span className="font-serif text-xl font-bold tracking-tight">
+                MatchLab<span className="text-[hsl(326_100%_59%)]">.</span>
               </span>
             </div>
             <button
               type="button"
               onClick={skipAll}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="text-sm font-bold text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary px-4 py-2 rounded-full"
               data-testid="onboarding-skip"
             >
               Skip for now
             </button>
           </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
-            <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B]"
-              initial={false}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            />
+          
+          <div className="flex items-center gap-4">
+            <div className="flex-1 h-2 w-full overflow-hidden rounded-full bg-secondary/80 shadow-inner">
+              <motion.div
+                className="h-full rounded-full bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(326_100%_59%)]"
+                initial={false}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              />
+            </div>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">
+              <span className="text-[hsl(248_62%_52%)]">{progress}%</span> Ready
+            </p>
           </div>
-          <p className="mt-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            Step {step + 1} of {totalSteps}
-          </p>
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 flex flex-col justify-center">
           <AnimatePresence mode="wait">
             {step === 0 && (
-              <motion.div key="step0" {...fadeStep}>
-                <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl">
-                  {firstName ? `Welcome, ${firstName}.` : "Welcome to MatchLab."}
-                </h1>
-                <p className="mt-3 text-base text-muted-foreground">
-                  This is your readiness lab. The more it knows you, the better it matches you with
-                  people you would never find on your own, near you. Two minutes to begin.
-                </p>
-                <p className="mt-8 mb-3 text-sm font-semibold uppercase tracking-widest text-foreground/60">
-                  What are you here for?
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {GOALS.map((g) => {
-                    const active = goal === g.value;
-                    return (
-                      <button
-                        key={g.value}
-                        type="button"
-                        onClick={() => pickGoal(g.value)}
-                        className={
-                          "rounded-2xl border p-4 text-left transition-all " +
-                          (active
-                            ? "border-[hsl(248_62%_52%)] bg-[hsl(248_62%_52%/0.08)] ring-2 ring-[hsl(248_62%_52%/0.3)]"
-                            : "border-foreground/10 hover:border-foreground/25 hover:bg-foreground/5")
-                        }
-                        data-testid={`onboarding-goal-${g.value.replace(/\s+/g, "-")}`}
-                      >
-                        <span className="flex items-center justify-between">
-                          <span className="font-semibold">{g.label}</span>
-                          {active && <Check className="h-4 w-4 text-[hsl(248_62%_52%)]" />}
-                        </span>
-                        <span className="mt-1 block text-sm text-muted-foreground">{g.desc}</span>
-                      </button>
-                    );
-                  })}
+              <motion.div key="step0" {...fadeStep} className="max-w-2xl mx-auto w-full">
+                <div className="text-center mb-10">
+                  <motion.div 
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", delay: 0.1 }}
+                    className="w-16 h-16 rounded-2xl bg-[hsl(248_62%_52%/0.1)] border border-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_52%)] flex items-center justify-center mx-auto mb-6 shadow-inner"
+                  >
+                    <Award className="w-8 h-8" />
+                  </motion.div>
+                  <h1 className="font-serif text-4xl font-bold leading-tight md:text-5xl tracking-tight mb-4">
+                    {firstName ? `Welcome to the lab, ${firstName}.` : "Welcome to the lab."}
+                  </h1>
+                  <p className="text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto">
+                    This is your personal readiness engine. The more signals you feed it, the more accurately it maps your profile, spots blind spots, and ultimately introduces you to highly compatible people near you.
+                  </p>
                 </div>
 
-                <p className="mt-8 mb-1 text-sm font-semibold uppercase tracking-widest text-foreground/60">
-                  A bit about you
-                </p>
-                <p className="mb-3 text-sm text-muted-foreground">
-                  Optional, and you can change it anytime. We are inclusive of every gender and
-                  orientation, and this just helps your Mirror fit you from the start.
-                </p>
-                <div className="mb-5">
-                  <p className="mb-2 text-xs font-medium text-foreground/70">How you identify</p>
-                  <div className="flex flex-wrap gap-2">
-                    {ORIENTATIONS.map((o) => {
-                      const active = orientation === o;
+                <div className="glass-strong border border-border/50 rounded-[2rem] p-6 sm:p-10 shadow-xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-b from-[hsl(248_62%_52%/0.1)] to-transparent rounded-full blur-3xl" />
+                  
+                  <p className="mb-4 text-xs font-bold uppercase tracking-widest text-foreground/60 flex items-center gap-2">
+                    <Target className="w-4 h-4 text-[hsl(248_62%_52%)]" /> What are you here for?
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2 mb-10">
+                    {GOALS.map((g) => {
+                      const active = goal === g.value;
                       return (
                         <button
-                          key={o}
+                          key={g.value}
                           type="button"
-                          onClick={() => pickOrientation(o)}
+                          onClick={() => pickGoal(g.value)}
                           className={
-                            "rounded-full border px-4 py-2 text-sm font-medium transition-all " +
+                            "rounded-2xl border-2 p-5 text-left transition-all " +
                             (active
-                              ? "border-[hsl(248_62%_52%)] bg-[hsl(248_62%_52%)] text-white"
-                              : "border-foreground/15 hover:border-foreground/30 hover:bg-foreground/5")
+                              ? "border-[hsl(248_62%_52%)] bg-[hsl(248_62%_52%/0.08)] shadow-md"
+                              : "border-border/60 hover:border-[hsl(248_62%_52%/0.3)] hover:bg-background/50 bg-background/30")
                           }
-                          data-testid={`onboarding-orientation-${o.toLowerCase()}`}
+                          data-testid={`onboarding-goal-${g.value.replace(/\s+/g, "-")}`}
                         >
-                          {o}
+                          <span className="flex items-center justify-between mb-1.5">
+                            <span className={`font-bold ${active ? "text-[hsl(248_62%_52%)]" : "text-foreground"}`}>{g.label}</span>
+                            {active && <Check className="h-5 w-5 text-[hsl(248_62%_52%)]" />}
+                          </span>
+                          <span className="block text-sm text-muted-foreground leading-snug">{g.desc}</span>
                         </button>
                       );
                     })}
                   </div>
-                </div>
-                <div>
-                  <p className="mb-2 text-xs font-medium text-foreground/70">Who you want to meet</p>
-                  <div className="flex flex-wrap gap-2">
-                    {SEEKING.map((s) => {
-                      const active = seeking.includes(s);
-                      return (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => toggleSeeking(s)}
-                          className={
-                            "rounded-full border px-4 py-2 text-sm font-medium transition-all " +
-                            (active
-                              ? "border-[hsl(248_62%_52%)] bg-[hsl(248_62%_52%)] text-white"
-                              : "border-foreground/15 hover:border-foreground/30 hover:bg-foreground/5")
-                          }
-                          data-testid={`onboarding-seeking-${s.toLowerCase().replace(/[ /']+/g, "-")}`}
-                        >
-                          {s}
-                        </button>
-                      );
-                    })}
+
+                  <p className="mb-4 text-xs font-bold uppercase tracking-widest text-foreground/60 flex items-center gap-2">
+                    <Eye className="w-4 h-4 text-[hsl(248_62%_52%)]" /> Calibration
+                  </p>
+                  <div className="space-y-6 bg-background/50 border border-border/50 rounded-2xl p-6">
+                    <div>
+                      <p className="mb-3 text-sm font-bold text-foreground">How you identify <span className="text-[10px] font-medium uppercase tracking-widest ml-2 bg-secondary px-2 py-1 rounded text-muted-foreground">Optional</span></p>
+                      <div className="flex flex-wrap gap-2.5">
+                        {ORIENTATIONS.map((o) => {
+                          const active = orientation === o;
+                          return (
+                            <button
+                              key={o}
+                              type="button"
+                              onClick={() => pickOrientation(o)}
+                              className={
+                                "rounded-xl border-2 px-5 py-2.5 text-sm font-bold transition-all " +
+                                (active
+                                  ? "border-[hsl(248_62%_52%)] bg-[hsl(248_62%_52%)] text-white shadow-md"
+                                  : "border-border/60 hover:border-[hsl(248_62%_52%/0.4)] bg-background/40 hover:bg-background")
+                              }
+                              data-testid={`onboarding-orientation-${o.toLowerCase()}`}
+                            >
+                              {o}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="mb-3 text-sm font-bold text-foreground">Who you want to meet <span className="text-[10px] font-medium uppercase tracking-widest ml-2 bg-secondary px-2 py-1 rounded text-muted-foreground">Multiple ok</span></p>
+                      <div className="flex flex-wrap gap-2.5">
+                        {SEEKING.map((s) => {
+                          const active = seeking.includes(s);
+                          return (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => toggleSeeking(s)}
+                              className={
+                                "rounded-xl border-2 px-5 py-2.5 text-sm font-bold transition-all " +
+                                (active
+                                  ? "border-[hsl(248_62%_52%)] bg-[hsl(248_62%_52%)] text-white shadow-md"
+                                  : "border-border/60 hover:border-[hsl(248_62%_52%/0.4)] bg-background/40 hover:bg-background")
+                              }
+                              data-testid={`onboarding-seeking-${s.toLowerCase().replace(/[ /']+/g, "-")}`}
+                            >
+                              {s}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-8 flex justify-end">
+                <div className="mt-10 flex justify-end">
                   <Button
                     size="lg"
                     disabled={!goal}
                     onClick={() => setStep(1)}
-                    className="gap-1.5"
+                    className="h-14 px-8 rounded-full text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                     data-testid="onboarding-next-0"
                   >
-                    Continue <ArrowRight className="h-4 w-4" />
+                    Start the Climb <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
               </motion.div>
             )}
 
             {step === 1 && (
-              <motion.div key="step1" {...fadeStep}>
-                <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl">
-                  Three quick questions
-                </h1>
-                <p className="mt-3 text-base text-muted-foreground">
-                  {goalIntro(goal)}
-                </p>
-                <div className="mt-8 space-y-6">
-                  {STARTER_MODULE.map((q) => (
-                    <div key={q.id}>
+              <motion.div key="step1" {...fadeStep} className="max-w-2xl mx-auto w-full">
+                <div className="mb-8">
+                  <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl tracking-tight mb-4">
+                    The First Signal
+                  </h1>
+                  <p className="text-lg text-muted-foreground leading-relaxed">
+                    {goalIntro(goal)}
+                  </p>
+                </div>
+                
+                <div className="mb-10">
+                  <AnimatedMeter score={readiness} label="Current Readiness" />
+                </div>
+
+                <div className="space-y-6 mb-10">
+                  {STARTER_MODULE.map((q, i) => (
+                    <div key={q.id} className="glass-strong border border-border/50 rounded-3xl p-6 shadow-sm group focus-within:border-[hsl(248_62%_52%/0.4)] focus-within:shadow-md transition-all">
                       <label
                         htmlFor={`q-${q.id}`}
-                        className="mb-2 block text-sm font-semibold text-foreground"
+                        className="mb-3 block text-base font-bold text-foreground flex gap-3"
                       >
+                        <span className="text-[hsl(248_62%_52%)] bg-[hsl(248_62%_52%/0.1)] w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0">{i + 1}</span>
                         {q.text}
                       </label>
                       <Textarea
@@ -410,36 +494,36 @@ export default function Onboarding() {
                         onChange={(e) =>
                           setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
                         }
-                        placeholder="Type your answer..."
-                        rows={2}
+                        placeholder="Type your answer... (a sentence or two is perfect)"
+                        className="min-h-[100px] resize-none border-foreground/10 bg-background/50 rounded-xl text-base focus-visible:ring-2 focus-visible:ring-[hsl(248_62%_52%)] p-4"
                         data-testid={`onboarding-answer-${q.id}`}
                       />
                     </div>
                   ))}
                 </div>
-                <div className="mt-8 flex items-center justify-between">
+                <div className="flex items-center justify-between border-t border-border/50 pt-8">
                   <Button
                     variant="ghost"
                     onClick={() => setStep(0)}
-                    className="gap-1.5"
+                    className="h-14 px-6 rounded-full font-bold text-muted-foreground hover:text-foreground"
                     data-testid="onboarding-back-1"
                   >
-                    <ArrowLeft className="h-4 w-4" /> Back
+                    <ArrowLeft className="mr-2 h-5 w-5" /> Back
                   </Button>
                   <Button
                     size="lg"
                     onClick={saveBaseline}
                     disabled={saving}
-                    className="gap-1.5"
+                    className="h-14 px-8 rounded-full text-base font-bold bg-[hsl(248_62%_52%)] hover:bg-[hsl(248_62%_52%/0.9)] text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                     data-testid="onboarding-next-1"
                   >
                     {saving ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> Saving
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing Signal...
                       </>
                     ) : (
                       <>
-                        Continue <ArrowRight className="h-4 w-4" />
+                        Feed Signal <ArrowRight className="ml-2 h-5 w-5" />
                       </>
                     )}
                   </Button>
@@ -448,152 +532,140 @@ export default function Onboarding() {
             )}
 
             {step === 2 && (
-              <motion.div key="step2" {...fadeStep}>
-                <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl">
-                  Connect one source
-                </h1>
-                <p className="mt-3 text-base text-muted-foreground">
-                  Every source you plug in sharpens your readiness and your matches. Pick one to try
-                  now, or do it later from your Home. You control what is shared and can remove any
-                  source anytime.
-                </p>
-                <div className="mt-8 grid gap-3">
-                  {SOURCES.map((s) => {
+              <motion.div key="step2" {...fadeStep} className="max-w-2xl mx-auto w-full">
+                <div className="mb-8">
+                  <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl tracking-tight mb-4">
+                    Momentum Unlocked
+                  </h1>
+                  <p className="text-lg text-muted-foreground leading-relaxed">
+                    Every source you plug in sharpens your readiness and opens up new features. Pick one to try now, or do it later. You control your data.
+                  </p>
+                </div>
+                
+                <div className="mb-10">
+                  <AnimatedMeter score={readiness} label="Readiness After First Signal" previousScore={readinessBefore} />
+                </div>
+
+                <div className="grid gap-4 mb-10">
+                  {SOURCES.map((s, i) => {
                     const Icon = s.icon;
                     return (
                       <button
                         key={s.href}
                         type="button"
                         onClick={() => connectSource(s.href)}
-                        className="flex items-center gap-4 rounded-2xl border border-foreground/10 p-4 text-left transition-all hover:border-foreground/25 hover:bg-foreground/5"
+                        className="group flex flex-col sm:flex-row sm:items-center gap-5 rounded-[2rem] border border-border/60 bg-background/50 p-5 text-left transition-all hover:border-[hsl(248_62%_52%/0.4)] hover:bg-[hsl(248_62%_52%/0.03)] hover:shadow-md"
                         data-testid={`onboarding-source-${s.href.replace(/\//g, "")}`}
                       >
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[hsl(248_62%_52%/0.1)]">
-                          <Icon className="h-5 w-5 text-[hsl(248_62%_52%)]" />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block font-semibold">{s.title}</span>
-                          <span className="block text-sm text-muted-foreground">{s.desc}</span>
-                        </span>
-                        <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <div className="flex items-center gap-4 flex-1">
+                          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[hsl(248_62%_52%/0.15)] to-[hsl(326_100%_59%/0.15)] border border-[hsl(248_62%_52%/0.2)] shadow-inner">
+                            <Icon className="h-6 w-6 text-[hsl(248_62%_52%)]" />
+                          </span>
+                          <div>
+                            <span className="block font-bold text-lg text-foreground mb-1 group-hover:text-[hsl(248_62%_52%)] transition-colors">{s.title}</span>
+                            <span className="block text-sm text-muted-foreground leading-snug">{s.desc}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto mt-4 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-border/50">
+                          {s.points > 0 && (
+                            <div className="flex items-center gap-1.5 bg-[hsl(38_90%_50%/0.15)] text-[hsl(38_90%_40%)] dark:text-[hsl(38_90%_60%)] px-3 py-1.5 rounded-xl text-xs font-bold">
+                              <Zap className="w-3.5 h-3.5" /> +{s.points} pts
+                            </div>
+                          )}
+                          <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center group-hover:bg-[hsl(248_62%_52%)] group-hover:text-white transition-colors">
+                            <ArrowRight className="h-4 w-4" />
+                          </div>
+                        </div>
                       </button>
                     );
                   })}
                 </div>
-                <div className="mt-8 flex items-center justify-between">
+                
+                <div className="flex items-center justify-between border-t border-border/50 pt-8">
                   <Button
                     variant="ghost"
                     onClick={() => setStep(1)}
-                    className="gap-1.5"
+                    className="h-14 px-6 rounded-full font-bold text-muted-foreground hover:text-foreground"
                     data-testid="onboarding-back-2"
                   >
-                    <ArrowLeft className="h-4 w-4" /> Back
+                    <ArrowLeft className="mr-2 h-5 w-5" /> Back
                   </Button>
                   <Button
                     size="lg"
-                    variant="outline"
                     onClick={() => setStep(3)}
-                    className="gap-1.5"
+                    className="h-14 px-8 rounded-full text-base font-bold bg-foreground text-background hover:bg-foreground/90 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                     data-testid="onboarding-next-2"
                   >
-                    I'll do this later <ArrowRight className="h-4 w-4" />
+                    Continue to Dashboard <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
               </motion.div>
             )}
 
             {step === 3 && (
-              <motion.div key="step3" {...fadeStep} className="text-center">
-                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B]">
-                  <Sparkles className="h-8 w-8 text-white" />
+              <motion.div key="step3" {...fadeStep} className="max-w-2xl mx-auto w-full text-center">
+                <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-[2rem] bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(326_100%_59%)] shadow-[0_0_50px_hsl(248_62%_52%/0.3)]">
+                  <Sparkles className="h-12 w-12 text-white animate-pulse" />
                 </div>
-                <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl">
-                  Meet your Mirror
+                <h1 className="font-serif text-4xl font-bold leading-tight md:text-5xl tracking-tight mb-4">
+                  Meet Your Mirror
                 </h1>
-                <p className="mx-auto mt-3 max-w-md text-base text-muted-foreground">
-                  This is the machine's first read on you, built only from what you just shared. It
-                  grows sharper with every signal you feed it.
+                <p className="mx-auto mt-4 max-w-lg text-lg text-muted-foreground leading-relaxed">
+                  This is the engine's first read on you. It's built entirely from the signals you just fed it, and it learns with every move you make.
                 </p>
 
                 {portraitQuery.isLoading ? (
                   <div
-                    className="mx-auto mt-8 flex max-w-md items-center justify-center gap-2 rounded-2xl border border-foreground/10 p-8 text-sm text-muted-foreground"
+                    className="mx-auto mt-12 flex max-w-md flex-col items-center justify-center gap-4 rounded-[2rem] border border-border/50 bg-background/50 p-10 shadow-inner"
                     data-testid="onboarding-portrait-loading"
                   >
-                    <Loader2 className="h-4 w-4 animate-spin" /> Building your Mirror...
+                    <Loader2 className="h-8 w-8 animate-spin text-[hsl(248_62%_52%)]" />
+                    <p className="font-bold text-muted-foreground">Constructing your baseline...</p>
                   </div>
                 ) : portrait ? (
                   <div
-                    className="mx-auto mt-8 max-w-md rounded-2xl border border-[hsl(248_62%_52%/0.3)] bg-[hsl(248_62%_52%/0.04)] p-6 text-left"
+                    className="mx-auto mt-12 max-w-xl rounded-[2rem] border border-[hsl(248_62%_52%/0.3)] bg-gradient-to-b from-[hsl(248_62%_52%/0.08)] to-transparent p-8 text-left shadow-xl relative overflow-hidden"
                     data-testid="onboarding-portrait"
                   >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(248_62%_52%/0.12)] px-3 py-1 text-xs font-semibold text-[hsl(248_62%_52%)]">
-                        <Eye className="h-3 w-3" /> {portrait.stageLabel}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[hsl(248_62%_52%/0.2)] rounded-full blur-3xl" />
+                    
+                    <div className="flex flex-wrap items-center gap-3 relative z-10">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(248_62%_52%)] px-4 py-1.5 text-xs font-bold text-white shadow-sm">
+                        <Eye className="h-3.5 w-3.5" /> {portrait.stageLabel}
                       </span>
-                      <span className="rounded-full border border-foreground/15 px-3 py-1 text-xs font-medium text-muted-foreground">
+                      <span className="rounded-full border-2 border-foreground/10 bg-background/80 px-4 py-1.5 text-xs font-bold text-muted-foreground">
                         {portrait.coveragePercent}% of you mapped
                       </span>
                     </div>
                     <p
-                      className="mt-4 font-serif text-lg leading-relaxed"
+                      className="mt-6 font-serif text-2xl md:text-3xl font-bold leading-snug text-foreground relative z-10"
                       data-testid="onboarding-portrait-headline"
                     >
                       {portrait.headline}
                     </p>
                     {portrait.nextSignal && (
-                      <div className="mt-5 rounded-xl border border-foreground/10 bg-background/60 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          The one move that sharpens me most
+                      <div className="mt-8 rounded-2xl border border-[hsl(326_100%_59%/0.2)] bg-background/80 p-5 relative z-10">
+                        <p className="text-xs font-bold uppercase tracking-widest text-[hsl(326_100%_59%)] flex items-center gap-2">
+                          <Zap className="w-3.5 h-3.5" /> Highest Leverage Next Move
                         </p>
-                        <p className="mt-1 font-semibold">{portrait.nextSignal.label}</p>
-                        <p className="mt-1 text-sm text-muted-foreground">
+                        <p className="mt-2 text-lg font-bold text-foreground">{portrait.nextSignal.label}</p>
+                        <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
                           {portrait.nextSignal.detail}
                         </p>
                       </div>
                     )}
                   </div>
-                ) : (
-                  <ReadinessClimbReveal
-                    from={readinessBefore ?? readiness}
-                    to={readiness}
-                    className="mx-auto mt-8 max-w-sm rounded-2xl border border-foreground/10 p-6"
-                  />
-                )}
+                ) : null}
 
-                {portrait && (
-                  <ReadinessClimbReveal
-                    from={readinessBefore ?? portrait.readinessScore}
-                    to={portrait.readinessScore}
-                    className="mx-auto mt-6 max-w-md rounded-2xl border border-foreground/10 p-6"
-                  />
-                )}
-
-                <div className="mt-8 flex flex-col items-center gap-3">
-                  <Button size="lg" onClick={finish} className="gap-1.5" data-testid="onboarding-finish">
-                    Go to my Mirror <ArrowRight className="h-4 w-4" />
+                <div className="mt-12 flex justify-center">
+                  <Button
+                    size="lg"
+                    onClick={finish}
+                    className="h-16 px-10 rounded-full text-lg font-bold bg-foreground text-background hover:bg-foreground/90 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all"
+                    data-testid="onboarding-finish"
+                  >
+                    Enter Your Dashboard <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
-                  {portrait?.nextSignal ? (
-                    <Link href={portrait.nextSignal.href}>
-                      <button
-                        type="button"
-                        onClick={markOnboardingComplete}
-                        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-                        data-testid="onboarding-next-signal"
-                      >
-                        <Compass className="h-4 w-4" /> Feed {portrait.nextSignal.label.toLowerCase()} now
-                      </button>
-                    </Link>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setStep(2)}
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-                      data-testid="onboarding-back-3"
-                    >
-                      <Compass className="h-4 w-4" /> Connect a source first
-                    </button>
-                  )}
                 </div>
               </motion.div>
             )}

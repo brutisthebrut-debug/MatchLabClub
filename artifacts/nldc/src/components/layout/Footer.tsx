@@ -15,7 +15,7 @@ export function Footer() {
   <img
   src="/matchlab-logo.png"
   alt="MatchLab Club"
-  className="h-12 w-auto transition-opacity group-hover:opacity-85"
+  className="h-16 w-auto transition-opacity group-hover:opacity-85"
   />
   </Link>
   <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">

@@ -346,7 +346,7 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
           <img
             src="/matchlab-logo.png"
             alt="MatchLab Club"
-            className="h-9 w-auto transition-transform group-hover:scale-[1.04]"
+            className="h-12 w-auto transition-transform group-hover:scale-[1.04]"
             style={{ filter: "drop-shadow(0 2px 10px hsl(326 100% 60% / 0.4))" }}
           />
           <div className="flex flex-col leading-tight">

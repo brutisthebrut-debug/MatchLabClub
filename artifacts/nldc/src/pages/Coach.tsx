@@ -5,7 +5,6 @@ import { trackEvent } from "@/lib/analytics";
 import { useMeta } from "@/hooks/useMeta";
 import { useSavedContext } from "@/hooks/useSavedContext";
 import { SavedContextChip } from "@/components/SavedContextChip";
-import { FallbackNotice } from "@/components/FallbackNotice";
 import { WelcomePanel } from "@/components/WelcomePanel";
 import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
 import { useReadinessClimb } from "@/hooks/useReadinessClimb";
@@ -14,8 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, type Variants, AnimatePresence } from "framer-motion";
 import {
   useListMessageCoachingSessions, useCreateMessageCoachingSession,
   useCoachMessage, getListMessageCoachingSessionsQueryKey,
@@ -26,11 +24,10 @@ import {
   getGetMatchingStateQueryKey,
 } from "@workspace/api-client-react";
 import type { CoachFollowUpInputAnswer } from "@workspace/api-client-react";
-import { BarChart, Bar, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
-import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Clock, ArrowRight, Sparkles, Send, Upload, X, AlertCircle, TrendingUp, TrendingDown, Minus, Moon, Sunrise } from "lucide-react";
+import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Sparkles, Send, Upload, X, AlertCircle, Moon, Clock, Minus, Sunrise, TrendingDown, TrendingUp } from "lucide-react";
 import { ShareButton } from "@/components/echo/ShareButton";
 import {
   useCoachNudgePrefs,
@@ -38,6 +35,8 @@ import {
   buildTonightHourOptions,
   buildTomorrowMorningHourOptions,
 } from "@/lib/coachPrefs";
+import { FallbackNotice } from "@/components/FallbackNotice";
+import { BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Bar } from "recharts";
 
 const GOALS = ["Get a date", "Keep it going", "Recover from awkward", "Re-engage after ghosting"];
 const SOURCE_APPS = ["Hinge", "Bumble", "Tinder"] as const;
@@ -319,9 +318,9 @@ export default function Coach() {
   <div className="max-w-3xl mx-auto relative z-10">
   {/* Header */}
   <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-  <p className="text-sm font-medium text-muted-foreground mb-1">Communication Tools</p>
-  <h1 className="text-3xl font-bold text-foreground">Message Coach</h1>
-  <p className="text-muted-foreground mt-2">Paste a conversation. Get 3 reply drafts. Playful, Direct, Warm, with the why behind each pick.</p>
+  <p className="text-sm font-semibold tracking-wider uppercase text-[hsl(248_62%_52%)] mb-2">Communication Tools</p>
+  <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground">Message Coach</h1>
+  <p className="text-lg text-muted-foreground mt-3 font-medium">Paste a conversation. Get 3 reply drafts. Playful, Direct, Warm, with the why behind each pick.</p>
   </motion.div>
 
   {isBrandNewUser && (

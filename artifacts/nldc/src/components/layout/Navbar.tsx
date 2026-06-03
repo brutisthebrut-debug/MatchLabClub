@@ -46,7 +46,7 @@ export function Navbar() {
           <img
             src="/matchlab-logo.png"
             alt="MatchLab Club"
-            className="h-12 md:h-14 w-auto transition-transform group-hover:scale-[1.04]"
+            className="h-16 md:h-20 w-auto transition-transform group-hover:scale-[1.04]"
             style={{ filter: "drop-shadow(0 2px 14px hsl(326 100% 60% / 0.45)) drop-shadow(0 0 18px hsl(248 75% 60% / 0.35))" }}
           />
           <div className="hidden sm:flex flex-col leading-tight">

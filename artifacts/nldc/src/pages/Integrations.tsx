@@ -5,7 +5,7 @@ import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { Link } from "wouter";
 import {
   Shield,
@@ -170,12 +170,15 @@ const RESEARCHING: IntegrationCard[] = [
   },
 ];
 
-const fadeUp = (delay = 0) => ({
+const fadeUpVariants: Variants = {
   initial: { opacity: 0, y: 20 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true },
-  transition: { duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
-});
+  whileInView: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+};
+
+const containerVariants: Variants = {
+  initial: { opacity: 0 },
+  whileInView: { opacity: 1, transition: { staggerChildren: 0.06 } },
+};
 
 function StatusBadge({ status }: { status: Status }) {
   const meta = STATUS_META[status];
@@ -199,47 +202,47 @@ function Card({ card, status, index }: { card: IntegrationCard; status: Status; 
   const testId = `card-${status}-${card.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`;
   return (
     <motion.div
-      {...fadeUp(0.04 + index * 0.04)}
-      className="glass border border-white/8 rounded-2xl p-5 flex flex-col gap-3 hover:border-white/15 transition-colors"
+      variants={fadeUpVariants}
+      className="glass rounded-[2rem] p-6 flex flex-col gap-4 border border-white/10 hover:border-white/20 hover:shadow-lg transition-all"
       data-testid={testId}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-4">
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          className="w-12 h-12 rounded-[1.25rem] flex items-center justify-center flex-shrink-0"
           style={{ background: withAlpha(card.color, 0.14), border: `1px solid ${withAlpha(card.color, 0.25)}` }}
         >
           <card.icon className="w-5 h-5" style={{ color: card.color }} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-1">
-            <p className="font-semibold text-foreground text-sm leading-snug">{card.title}</p>
+          <div className="flex items-center gap-2 flex-wrap mb-1.5">
+            <h3 className="font-serif font-bold text-foreground text-lg leading-snug">{card.title}</h3>
             <StatusBadge status={status} />
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">{card.blurb}</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">{card.blurb}</p>
         </div>
       </div>
 
       {card.privacy && (
-        <div className="flex items-start gap-2 rounded-xl bg-white/3 border border-white/6 px-3 py-2.5">
-          <Shield className="w-3.5 h-3.5 text-[hsl(142_55%_60%)] flex-shrink-0 mt-0.5" />
-          <p className="text-[11px] text-muted-foreground/80 leading-relaxed">
-            <strong className="text-foreground/75">Privacy: </strong>
+        <div className="rounded-[1.25rem] bg-white/40 dark:bg-black/10 border border-white/20 dark:border-white/5 px-4 py-3 flex items-start gap-3 mt-1">
+          <Shield className="w-4 h-4 text-[hsl(142_55%_55%)] flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            <strong className="text-foreground">Privacy: </strong>
             {card.privacy}
           </p>
         </div>
       )}
 
       {(card.access || card.excludes) && (
-        <div className="grid sm:grid-cols-2 gap-2.5 mt-1">
+        <div className="grid sm:grid-cols-2 gap-3 mt-1">
           {card.access && (
-            <div className="rounded-xl border border-[hsl(142_55%_60%/0.2)] bg-[hsl(142_55%_45%/0.06)] p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(142_55%_62%)] mb-1.5 flex items-center gap-1.5">
-                <CheckCircle className="w-3 h-3" /> What we'll access
+            <div className="rounded-[1.25rem] border border-[hsl(142_55%_60%/0.2)] bg-[hsl(142_55%_45%/0.04)] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(142_55%_55%)] mb-2 flex items-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5" /> What we'll access
               </p>
-              <ul className="space-y-1">
+              <ul className="space-y-2">
                 {card.access.map((item) => (
-                  <li key={item} className="text-[11px] text-muted-foreground leading-snug flex gap-1.5">
-                    <span className="w-1 h-1 rounded-full bg-[hsl(142_55%_60%)] mt-1.5 flex-shrink-0" />
+                  <li key={item} className="text-xs text-muted-foreground leading-snug flex gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[hsl(142_55%_55%)] mt-1 flex-shrink-0 opacity-80" />
                     {item}
                   </li>
                 ))}
@@ -247,14 +250,14 @@ function Card({ card, status, index }: { card: IntegrationCard; status: Status; 
             </div>
           )}
           {card.excludes && (
-            <div className="rounded-xl border border-[hsl(348_55%_65%/0.2)] bg-[hsl(348_55%_55%/0.06)] p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(348_55%_72%)] mb-1.5 flex items-center gap-1.5">
-                <Lock className="w-3 h-3" /> What we won't
+            <div className="rounded-[1.25rem] border border-[hsl(348_55%_65%/0.2)] bg-[hsl(348_55%_55%/0.04)] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(348_55%_65%)] mb-2 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5" /> What we won't
               </p>
-              <ul className="space-y-1">
+              <ul className="space-y-2">
                 {card.excludes.map((item) => (
-                  <li key={item} className="text-[11px] text-muted-foreground leading-snug flex gap-1.5">
-                    <span className="w-1 h-1 rounded-full bg-[hsl(348_55%_65%)] mt-1.5 flex-shrink-0" />
+                  <li key={item} className="text-xs text-muted-foreground leading-snug flex gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[hsl(348_55%_65%)] mt-1 flex-shrink-0 opacity-80" />
                     {item}
                   </li>
                 ))}
@@ -265,14 +268,16 @@ function Card({ card, status, index }: { card: IntegrationCard; status: Status; 
       )}
 
       {card.link && (
-        <a
-          href={card.link.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[11px] font-semibold text-[hsl(248_62%_65%)] hover:text-[hsl(248_62%_75%)] inline-flex items-center gap-1 self-start"
-        >
-          {card.link.label} <ArrowRight className="w-3 h-3" />
-        </a>
+        <div className="mt-2 pt-1 border-t border-white/5">
+          <a
+            href={card.link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[hsl(248_62%_55%)] hover:text-[hsl(326_100%_59%)] transition-colors"
+          >
+            {card.link.label} <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
       )}
     </motion.div>
   );
@@ -292,18 +297,18 @@ function SectionHeader({
   accent: string;
 }) {
   return (
-    <div className="mb-5">
-      <div className="flex items-center gap-2 mb-2">
+    <div className="mb-8">
+      <div className="flex items-center gap-2.5 mb-3">
         <div
-          className="w-7 h-7 rounded-lg flex items-center justify-center"
+          className="w-8 h-8 rounded-[10px] flex items-center justify-center"
           style={{ background: withAlpha(accent, 0.14), border: `1px solid ${withAlpha(accent, 0.25)}` }}
         >
-          <Icon className="w-3.5 h-3.5" style={{ color: accent }} />
+          <Icon className="w-4 h-4" style={{ color: accent }} />
         </div>
-        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: accent }}>{eyebrow}</p>
+        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: accent }}>{eyebrow}</p>
       </div>
-      <h2 className="text-xl sm:text-2xl font-bold text-foreground">{title}</h2>
-      <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{subtitle}</p>
+      <h2 className="text-2xl sm:text-3xl font-serif font-bold text-foreground tracking-tight">{title}</h2>
+      <p className="text-base text-muted-foreground mt-2 leading-relaxed max-w-2xl">{subtitle}</p>
     </div>
   );
 }
@@ -355,14 +360,16 @@ function RequestForm() {
   if (submitted) {
     return (
       <div
-        className="rounded-2xl border p-6 text-center"
-        style={{ background: "hsl(142 55% 45% / 0.06)", borderColor: "hsl(142 55% 60% / 0.3)" }}
+        className="rounded-[2rem] border p-8 text-center"
+        style={{ background: "hsl(142 55% 45% / 0.04)", borderColor: "hsl(142 55% 60% / 0.2)" }}
         data-testid="integration-request-success"
       >
-        <CheckCircle className="w-7 h-7 text-[hsl(142_55%_60%)] mx-auto mb-2" />
-        <p className="font-semibold text-foreground">Got it, {firstName || "friend"}.</p>
-        <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-          Your request for <strong className="text-foreground/80">{platform}</strong> is in. We'll email you the day it ships.
+        <div className="w-12 h-12 rounded-full bg-[hsl(142_55%_60%/0.15)] flex items-center justify-center mx-auto mb-4 border border-[hsl(142_55%_60%/0.2)]">
+          <CheckCircle className="w-6 h-6 text-[hsl(142_55%_55%)]" />
+        </div>
+        <p className="font-serif font-bold text-xl text-foreground mb-2">Got it, {firstName || "friend"}.</p>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Your request for <strong className="text-foreground">{platform}</strong> is in. We'll email you the day it ships.
         </p>
       </div>
     );
@@ -371,18 +378,18 @@ function RequestForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="glass border border-white/10 rounded-2xl p-5 sm:p-6 space-y-4"
+      className="glass border border-white/10 rounded-[2rem] p-6 sm:p-8 space-y-5"
       data-testid="form-integration-request"
     >
       <div>
-        <p className="font-semibold text-foreground text-sm">Request an integration</p>
-        <p className="text-xs text-muted-foreground mt-0.5">
+        <h3 className="font-serif font-bold text-xl text-foreground">Request an integration</h3>
+        <p className="text-sm text-muted-foreground mt-1">
           Tell us the platform you want next. We'll log it against demand and email you the day it lands.
         </p>
       </div>
-      <div className="grid sm:grid-cols-2 gap-3">
+      <div className="grid sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1.5 block">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 block pl-1">
             First name
           </label>
           <Input
@@ -390,10 +397,11 @@ function RequestForm() {
             onChange={(e) => setFirstName(e.target.value)}
             placeholder="Jordan"
             data-testid="input-integration-firstname"
+            className="rounded-xl h-11"
           />
         </div>
         <div>
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1.5 block">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 block pl-1">
             Email
           </label>
           <Input
@@ -403,12 +411,13 @@ function RequestForm() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
             data-testid="input-integration-email"
+            className="rounded-xl h-11"
           />
         </div>
       </div>
       <div>
-        <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1.5 block">
-          Platform <span className="text-[hsl(248_62%_62%)]">*</span>
+        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 block pl-1">
+          Platform <span className="text-[hsl(326_100%_59%)]">*</span>
         </label>
         <Input
           required
@@ -416,31 +425,32 @@ function RequestForm() {
           onChange={(e) => setPlatform(e.target.value)}
           placeholder="Feeld, OkCupid, Strava, your dating spreadsheet, anything"
           data-testid="input-integration-platform"
+          className="rounded-xl h-11"
         />
       </div>
       <div>
-        <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1.5 block">
+        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 block pl-1">
           Why this matters to you (optional)
         </label>
         <Textarea
           value={why}
           onChange={(e) => setWhy(e.target.value)}
           placeholder="What signal would it surface that nothing else does?"
-          className="min-h-[90px] resize-none"
+          className="min-h-[100px] resize-none rounded-xl"
           data-testid="textarea-integration-why"
         />
       </div>
-      <div className="flex items-center justify-between gap-3 flex-wrap pt-1">
-        <p className="text-[11px] text-muted-foreground/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+        <p className="text-xs text-muted-foreground">
           We use this to prioritise the roadmap. No marketing list.
         </p>
         <Button
           type="submit"
           disabled={isPending}
-          className="rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 font-semibold"
+          className="rounded-full bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(326_100%_59%)] border-0 font-bold px-6 h-11 hover:opacity-90 transition-opacity text-white"
           data-testid="button-submit-integration-request"
         >
-          <Send className="w-3.5 h-3.5 mr-2" />
+          <Send className="w-4 h-4 mr-2" />
           {isPending ? "Sending..." : "Send request"}
         </Button>
       </div>
@@ -456,135 +466,123 @@ export default function Integrations() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen mesh-bg py-10 px-4">
-        <div className="orb orb-violet fixed w-[420px] h-[420px] -top-24 -right-16 opacity-30 pointer-events-none" />
-        <div className="orb orb-gold fixed w-[300px] h-[300px] bottom-10 -left-20 opacity-25 pointer-events-none" />
+      <div className="min-h-screen mesh-bg py-12 px-4 sm:px-6 overflow-hidden">
+        <div className="orb orb-violet fixed w-[500px] h-[500px] -top-32 -right-24 opacity-30 pointer-events-none" />
+        <div className="orb orb-gold fixed w-[400px] h-[400px] bottom-10 -left-32 opacity-20 pointer-events-none" />
 
         <div className="max-w-4xl mx-auto relative z-10">
           {/* Hero */}
-          <motion.div {...fadeUp(0)} className="mb-10 text-center sm:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass border border-[hsl(248_62%_52%/0.25)] mb-4">
-              <Sparkles className="w-3.5 h-3.5 text-[hsl(248_62%_62%)]" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[hsl(248_62%_62%)]">Platform Map</span>
+          <motion.div variants={fadeUpVariants} initial="initial" animate="whileInView" className="mb-12 text-center sm:text-left">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border border-[hsl(248_62%_52%/0.25)] mb-6 shadow-sm">
+              <Sparkles className="w-4 h-4 text-[hsl(248_62%_62%)]" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[hsl(248_62%_62%)]">Platform Map</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground tracking-tight">
-              Every connection, every promise.
+            <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-bold text-foreground tracking-tight leading-tight">
+              Every connection, <br className="hidden sm:block" />every promise.
             </h1>
-            <p className="text-base text-muted-foreground mt-3 max-w-2xl leading-relaxed">
+            <p className="text-lg text-muted-foreground mt-5 max-w-2xl leading-relaxed">
               What we're connected to, what's coming, and what works today via paste. One page, no marketing fog.
             </p>
           </motion.div>
 
           {/* Quick legend */}
-          <motion.div {...fadeUp(0.05)} className="flex flex-wrap items-center gap-2 mb-10">
+          <motion.div variants={fadeUpVariants} initial="initial" animate="whileInView" className="flex flex-wrap items-center gap-3 mb-12">
             <StatusBadge status="live" />
-            <span className="text-[11px] text-muted-foreground">Shipping today.</span>
-            <span className="text-white/15">·</span>
+            <span className="text-xs text-muted-foreground">Shipping today.</span>
+            <span className="text-white/15 px-1">·</span>
             <StatusBadge status="coming" />
-            <span className="text-[11px] text-muted-foreground">Built when the platform opens its API.</span>
-            <span className="text-white/15">·</span>
+            <span className="text-xs text-muted-foreground">Built when the platform opens its API.</span>
+            <span className="text-white/15 px-1">·</span>
             <StatusBadge status="researching" />
-            <span className="text-[11px] text-muted-foreground">Open question. Real research in progress.</span>
+            <span className="text-xs text-muted-foreground">Open question. Real research in progress.</span>
           </motion.div>
 
-          {/* Connected (live) */}
-          <section className="mb-12">
-            <SectionHeader
-              icon={CheckCircle}
-              eyebrow="Connected today"
-              title="What works right now"
-              subtitle="No API required. No login dance. Each of these is in the product today."
-              accent="hsl(142 55% 60%)"
-            />
-            <div className="grid gap-4">
-              {CONNECTED.map((card, i) => (
-                <Card key={card.title} card={card} status="live" index={i} />
-              ))}
-            </div>
-            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <Link
-                href="/insights"
-                className="inline-flex items-center gap-1 font-semibold text-[hsl(142_55%_62%)] hover:text-[hsl(142_55%_72%)]"
-                data-testid="link-try-paste"
-              >
-                <Download className="w-3.5 h-3.5" /> Try the Hinge ZIP import
-              </Link>
-              <span className="text-white/15">·</span>
-              <Link
-                href="/coach"
-                className="inline-flex items-center gap-1 font-semibold text-[hsl(142_55%_62%)] hover:text-[hsl(142_55%_72%)]"
-                data-testid="link-try-coach"
-              >
-                <MessageSquare className="w-3.5 h-3.5" /> Paste a thread into Chemistry Lab
-              </Link>
-            </div>
-          </section>
-
-          {/* Coming Q3 2026 */}
-          <section className="mb-12">
-            <SectionHeader
-              icon={Clock}
-              eyebrow="Coming Q3 2026"
-              title="The integrations queued up"
-              subtitle="Each one ships when the platform's API opens at the level we need. We've already specced the data contract."
-              accent="hsl(var(--brand-indigo))"
-            />
-            <div className="grid md:grid-cols-2 gap-4">
-              {COMING.map((card, i) => (
-                <Card key={card.title} card={card} status="coming" index={i} />
-              ))}
-            </div>
-          </section>
-
-          {/* Researching */}
-          <section className="mb-12">
-            <SectionHeader
-              icon={FlaskConical}
-              eyebrow="Researching"
-              title="Open questions we're still answering"
-              subtitle="These are platforms where the signal is real but the privacy contract or the API shape isn't there yet. We won't ship anything we can't honour."
-              accent="hsl(43 65% 65%)"
-            />
-            <div className="grid md:grid-cols-3 gap-4">
-              {RESEARCHING.map((card, i) => (
-                <Card key={card.title} card={card} status="researching" index={i} />
-              ))}
-            </div>
-          </section>
-
-          {/* Why-not block */}
-          <motion.div
-            {...fadeUp(0.08)}
-            className="rounded-2xl p-5 sm:p-6 mb-10"
-            style={{
-              background: "linear-gradient(135deg, hsl(248 62% 52% / 0.07), hsl(43 65% 62% / 0.05))",
-              border: "1px solid hsl(248 62% 52% / 0.2)",
-            }}
-            data-testid="card-tos-promise"
-          >
-            <div className="flex items-start gap-3">
-              <Shield className="w-5 h-5 text-[hsl(248_62%_62%)] flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-foreground mb-1">Why we don't have all these wired today</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  We read every TOS before we ship. Building the bones now so the integrations land cleanly when each platform opens up. The shortcut is to scrape, lie about user agents, and apologise later. We're not doing that.
-                </p>
+          <motion.div variants={containerVariants} initial="initial" whileInView="whileInView" viewport={{ once: true }}>
+            {/* Connected (live) */}
+            <section className="mb-16">
+              <SectionHeader
+                icon={CheckCircle}
+                eyebrow="Connected today"
+                title="What works right now"
+                subtitle="No API required. No login dance. Each of these is in the product today."
+                accent="hsl(142 55% 60%)"
+              />
+              <div className="grid gap-6">
+                {CONNECTED.map((card, i) => (
+                  <Card key={card.title} card={card} status="live" index={i} />
+                ))}
               </div>
-            </div>
-          </motion.div>
+              <div className="mt-6 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/imports"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-[hsl(142_55%_55%)] hover:text-[hsl(142_55%_65%)] transition-colors"
+                  data-testid="link-try-paste"
+                >
+                  <Download className="w-4 h-4" /> Try the Hinge ZIP import
+                </Link>
+                <div className="h-4 w-px bg-white/10 hidden sm:block" />
+                <Link
+                  href="/coach"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-[hsl(142_55%_55%)] hover:text-[hsl(142_55%_65%)] transition-colors"
+                  data-testid="link-try-coach"
+                >
+                  <MessageSquare className="w-4 h-4" /> Paste a thread into Chemistry Lab
+                </Link>
+              </div>
+            </section>
 
-          {/* Request form */}
-          <section className="mb-10">
-            <RequestForm />
-          </section>
+            {/* Coming Q3 2026 */}
+            <section className="mb-16">
+              <SectionHeader
+                icon={Clock}
+                eyebrow="Coming Q3 2026"
+                title="The integrations queued up"
+                subtitle="Each one ships when the platform's API opens at the level we need. We've already specced the data contract."
+                accent="hsl(var(--brand-indigo))"
+              />
+              <div className="grid md:grid-cols-2 gap-6">
+                {COMING.map((card, i) => (
+                  <Card key={card.title} card={card} status="coming" index={i} />
+                ))}
+              </div>
+            </section>
 
-          {/* Footer link back to consent center */}
-          <motion.div {...fadeUp(0.1)} className="text-center text-xs text-muted-foreground">
-            Already a member? Manage what's saved on the{" "}
-            <Link href="/connections" className="font-semibold text-[hsl(248_62%_62%)] hover:text-[hsl(248_62%_72%)]">
-              Connection Center
-            </Link>
-            .
+            {/* Researching */}
+            <section className="mb-16">
+              <SectionHeader
+                icon={FlaskConical}
+                eyebrow="Researching"
+                title="Open questions we're still answering"
+                subtitle="These are platforms where the signal is real but the privacy contract or the API shape isn't there yet. We won't ship anything we can't honour."
+                accent="hsl(43 65% 65%)"
+              />
+              <div className="grid md:grid-cols-3 gap-6">
+                {RESEARCHING.map((card, i) => (
+                  <Card key={card.title} card={card} status="researching" index={i} />
+                ))}
+              </div>
+            </section>
+
+            {/* Why-not block */}
+            <motion.div
+              variants={fadeUpVariants}
+              className="rounded-[2rem] p-8 mb-12 relative overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, hsl(248 62% 52% / 0.08), hsl(43 65% 62% / 0.05))",
+                border: "1px solid hsl(248 62% 52% / 0.15)",
+              }}
+            >
+              <div className="absolute inset-0 bg-white/5 backdrop-blur-3xl -z-10" />
+              <h3 className="text-xl font-serif font-bold text-foreground mb-4">Why isn't [Platform] on here?</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                If an app doesn't have a public API and their GDPR export is useless, we can't build a durable integration that respects your privacy. We won't ask you for your plaintext passwords or run headless scrapers against terms of service. As platforms open up, we build.
+              </p>
+            </motion.div>
+
+            {/* Request Form */}
+            <motion.div variants={fadeUpVariants} className="max-w-2xl mb-12">
+              <RequestForm />
+            </motion.div>
           </motion.div>
         </div>
       </div>
