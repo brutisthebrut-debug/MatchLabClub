@@ -11,6 +11,7 @@ import type { MatchingStateTier } from './matchingStateTier';
 import type { MatchPreferences } from './matchPreferences';
 import type { MatchReadiness } from './matchReadiness';
 import type { OutcomeInsight } from './outcomeInsight';
+import type { ReadinessDelta } from './readinessDelta';
 import type { ReadinessHistoryPoint } from './readinessHistoryPoint';
 import type { ReadinessLearning } from './readinessLearning';
 import type { ReadinessNextAction } from './readinessNextAction';
@@ -37,6 +38,8 @@ export interface MatchingState {
   nextActions: ReadinessNextAction[];
   /** Daily readiness snapshots, oldest first, for the trend line. Up to ~30 points. */
   history: ReadinessHistoryPoint[];
+  /** What moved between the two most recent daily readiness snapshots, or null until there are at least two snapshots to compare. */
+  readinessDelta?: ReadinessDelta | null;
   outcomeInsight: OutcomeInsight;
   activityStreak?: ActivityStreak;
   readinessLearning?: ReadinessLearning;

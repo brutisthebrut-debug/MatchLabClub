@@ -139,6 +139,7 @@ import type {
   MatchPreferencesInput,
   MatchProposal,
   MatchProposalResponseInput,
+  MatchingBenchmarks,
   MatchingState,
   MeConsent,
   MeReferralsResponse,
@@ -9776,6 +9777,92 @@ export function useGetMatchingState<TData = Awaited<ReturnType<typeof getMatchin
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetMatchingStateQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetMatchingBenchmarksUrl = () => {
+
+
+
+
+  return `/api/me/matching/benchmarks`
+}
+
+/**
+ * Returns the caller's per-lane readiness coverage compared against the
+anonymized cohort of users who share their (normalized) dating goal.
+Each lane carries the caller's own coverage, the cohort median, and the
+caller's percentile within the cohort. Derived only: it reads coverage
+maps and a goal bucket, never identities or raw content. Guarded by a
+minimum cohort size; below that threshold `available` is false and
+`lanes` is empty, so a small group can never narrow toward an
+individual.
+
+ * @summary Get the signed-in user's anonymized per-lane standing vs their goal cohort
+ */
+export const getMatchingBenchmarks = async ( options?: RequestInit): Promise<MatchingBenchmarks> => {
+
+  return customFetch<MatchingBenchmarks>(getGetMatchingBenchmarksUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMatchingBenchmarksQueryKey = () => {
+    return [
+    `/api/me/matching/benchmarks`
+    ] as const;
+    }
+
+
+export const getGetMatchingBenchmarksQueryOptions = <TData = Awaited<ReturnType<typeof getMatchingBenchmarks>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMatchingBenchmarks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMatchingBenchmarksQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMatchingBenchmarks>>> = ({ signal }) => getMatchingBenchmarks({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMatchingBenchmarks>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMatchingBenchmarksQueryResult = NonNullable<Awaited<ReturnType<typeof getMatchingBenchmarks>>>
+export type GetMatchingBenchmarksQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the signed-in user's anonymized per-lane standing vs their goal cohort
+ */
+
+export function useGetMatchingBenchmarks<TData = Awaited<ReturnType<typeof getMatchingBenchmarks>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMatchingBenchmarks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMatchingBenchmarksQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

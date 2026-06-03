@@ -3439,6 +3439,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/matching/benchmarks:
+    get:
+      tags: [Matching]
+      operationId: getMatchingBenchmarks
+      summary: Get the signed-in user's anonymized per-lane standing vs their goal cohort
+      description: |
+        Returns the caller's per-lane readiness coverage compared against the
+        anonymized cohort of users who share their (normalized) dating goal.
+        Each lane carries the caller's own coverage, the cohort median, and the
+        caller's percentile within the cohort. Derived only: it reads coverage
+        maps and a goal bucket, never identities or raw content. Guarded by a
+        minimum cohort size; below that threshold `available` is false and
+        `lanes` is empty, so a small group can never narrow toward an
+        individual.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The caller's anonymized cohort benchmark.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchingBenchmarks'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/journey/summary:
     get:
       tags: [Matching]
@@ -7942,12 +7973,113 @@ components:
             ~30 points.
           items:
             $ref: '#/components/schemas/ReadinessHistoryPoint'
+        readinessDelta:
+          oneOf:
+            - $ref: '#/components/schemas/ReadinessDelta'
+            - type: 'null'
+          description: >-
+            What moved between the two most recent daily readiness snapshots, or
+            null until there are at least two snapshots to compare.
         outcomeInsight:
           $ref: '#/components/schemas/OutcomeInsight'
         activityStreak:
           $ref: '#/components/schemas/ActivityStreak'
         readinessLearning:
           $ref: '#/components/schemas/ReadinessLearning'
+
+    ReadinessDelta:
+      type: object
+      description: >-
+        The change in matching readiness between the two most recent daily
+        snapshots. scoreDelta is the change in the overall readiness score
+        (can be negative). lanes lists the signal lanes whose coverage changed,
+        biggest absolute move first. Derived only, never includes raw content.
+      required: [scoreDelta, fromDay, toDay, lanes]
+      properties:
+        scoreDelta:
+          type: integer
+          description: Change in the overall readiness score since the prior snapshot.
+        fromDay:
+          type: string
+          format: date
+          description: Calendar day (UTC) of the prior snapshot being compared against.
+        toDay:
+          type: string
+          format: date
+          description: Calendar day (UTC) of the most recent snapshot.
+        lanes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReadinessDeltaLane'
+
+    ReadinessDeltaLane:
+      type: object
+      required: [key, delta]
+      properties:
+        key:
+          type: string
+          description: Signal lane id, matching a MatchReadinessBreakdown key.
+        delta:
+          type: integer
+          description: Coverage change for this lane (0-100 scale), can be negative.
+
+    MatchingBenchmarks:
+      type: object
+      description: >-
+        The caller's anonymized per-lane standing against the cohort of users
+        who share their normalized dating goal. Derived only (coverage maps +
+        goal bucket, never identities or raw content). When available is false
+        the cohort is below the minimum size and lanes is empty.
+      required: [available, goal, cohortSize, minCohort, lanes]
+      properties:
+        available:
+          type: boolean
+          description: >-
+            True only when the goal cohort meets the minimum size. When false,
+            lanes is empty and no percentile is revealed.
+        goal:
+          type: string
+          description: >-
+            The normalized goal bucket the cohort is built from (e.g.
+            long-term, casual, friends-first, exploring).
+        cohortSize:
+          type: integer
+          minimum: 0
+          description: Number of other users in the caller's goal cohort.
+        minCohort:
+          type: integer
+          minimum: 0
+          description: Minimum cohort size required before benchmarks are shown.
+        lanes:
+          type: array
+          description: Per-lane standing, one entry per readiness signal lane.
+          items:
+            $ref: '#/components/schemas/BenchmarkLane'
+
+    BenchmarkLane:
+      type: object
+      required: [key, coverage, cohortMedian, percentile]
+      properties:
+        key:
+          type: string
+          description: Signal lane id, matching a MatchReadinessBreakdown key.
+        coverage:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: The caller's own coverage for this lane.
+        cohortMedian:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: The cohort's median coverage for this lane.
+        percentile:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: >-
+            Where the caller sits within the cohort for this lane, as a
+            percentile (share of the cohort at or below the caller's coverage).
 
     UserJourneySummary:
       type: object

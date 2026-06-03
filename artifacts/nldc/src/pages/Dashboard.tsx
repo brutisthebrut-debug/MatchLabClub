@@ -46,9 +46,15 @@ import {
   deleteAudit as deleteAuditRequest,
   useListExpiringTrashedAudits,
   getListExpiringTrashedAuditsQueryKey,
+  useGetMatchingState,
+  getGetMatchingStateQueryKey,
+  useGetMatchingBenchmarks,
+  getGetMatchingBenchmarksQueryKey,
   type Audit,
   type ListAuditsParams,
 } from "@workspace/api-client-react";
+import { ReadinessDeltaCard } from "@/components/ReadinessDeltaCard";
+import { MatchBenchmarkCard } from "@/components/MatchBenchmarkCard";
 import { useAuth } from "@workspace/replit-auth-web";
 import {
   recordPendingAuditDelete,
@@ -784,6 +790,15 @@ export default function Dashboard() {
   const { data: expiringTrashedData } = useListExpiringTrashedAudits(undefined, {
     query: { enabled: isAuthenticated, queryKey: getListExpiringTrashedAuditsQueryKey() },
   });
+  const { data: matchingState } = useGetMatchingState({
+    query: { enabled: isAuthenticated, queryKey: getGetMatchingStateQueryKey() },
+  });
+  const { data: matchingBenchmarks } = useGetMatchingBenchmarks({
+    query: {
+      enabled: isAuthenticated,
+      queryKey: getGetMatchingBenchmarksQueryKey(),
+    },
+  });
   const [trashBannerDismissed, setTrashBannerDismissed] = useState(() => isDashboardBannerDismissed());
 
   const hasRealProfiles = (profiles && profiles.length > 0) || false;
@@ -1087,6 +1102,18 @@ export default function Dashboard() {
                   </motion.div>
                 );
               })()}
+
+              {matchingState?.readinessDelta && (
+                <motion.div variants={itemVariants}>
+                  <ReadinessDeltaCard delta={matchingState.readinessDelta} />
+                </motion.div>
+              )}
+
+              {matchingBenchmarks?.available && (
+                <motion.div variants={itemVariants}>
+                  <MatchBenchmarkCard benchmarks={matchingBenchmarks} />
+                </motion.div>
+              )}
             </div>
 
             {/* Core Stats Row */}

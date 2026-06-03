@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AppSidebar } from "@/components/layout/AppSidebar";
+import { MatchPathBar } from "@/components/layout/MatchPathBar";
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -71,6 +72,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </Link>
           <ThemeToggle />
         </header>
+        <MatchPathBar />
         <main className="flex-1 flex flex-col">{children}</main>
       </div>
     </div>

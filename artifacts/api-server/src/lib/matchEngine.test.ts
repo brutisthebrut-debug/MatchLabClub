@@ -249,6 +249,104 @@ describe("gatesPass", () => {
     expect(gatesPass(seeker, man)).toBe(true);
     expect(gatesPass(seeker, woman)).toBe(false);
   });
+
+  it("hard-fails a pair whose measured distance exceeds the tighter radius", () => {
+    // New York and Los Angeles resolve to real coordinates ~2400 miles apart.
+    const a = candidate({
+      userId: "a",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "New York",
+        radiusMiles: 25,
+      },
+    });
+    const b = candidate({
+      userId: "b",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "Los Angeles",
+        radiusMiles: 25,
+      },
+    });
+    expect(gatesPass(a, b)).toBe(false);
+  });
+
+  it("admits a pair within the tighter radius", () => {
+    const a = candidate({
+      userId: "a",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "New York",
+        radiusMiles: 50,
+      },
+    });
+    const b = candidate({
+      userId: "b",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "New York",
+        radiusMiles: 50,
+      },
+    });
+    expect(gatesPass(a, b)).toBe(true);
+  });
+
+  it("uses the MIN of the two radii, so one tight radius blocks the pair", () => {
+    const tight = candidate({
+      userId: "tight",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "New York",
+        radiusMiles: 10,
+      },
+    });
+    const loose = candidate({
+      userId: "loose",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "Philadelphia",
+        radiusMiles: 500,
+      },
+    });
+    // NYC to Philadelphia is ~80 miles: inside the loose radius, outside tight.
+    expect(gatesPass(tight, loose)).toBe(false);
+  });
+
+  it("degrades gracefully when a city cannot be resolved (no hard block)", () => {
+    const a = candidate({
+      userId: "a",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "Somewhereville",
+        radiusMiles: 5,
+      },
+    });
+    const b = candidate({
+      userId: "b",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "New York",
+        radiusMiles: 5,
+      },
+    });
+    expect(gatesPass(a, b)).toBe(true);
+  });
 });
 
 describe("rankCandidates", () => {

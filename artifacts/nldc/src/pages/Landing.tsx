@@ -563,6 +563,14 @@ export default function Landing() {
               <Button asChild variant="outline" size="lg" className="w-full rounded-full border-foreground/20 font-bold h-14 text-lg">
                 <Link href="/signal-check">Start free</Link>
               </Button>
+              <Link
+                href="/match-path"
+                className="mt-4 inline-flex items-center justify-center gap-1 text-sm font-semibold text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                data-testid="link-match-path"
+              >
+                See what it takes to get matched
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </motion.div>
 
             <motion.div className="glass-strong rounded-[2.5rem] p-12 border border-[hsl(248_62%_52%/0.5)] shadow-2xl relative flex flex-col glow-violet" {...fadeUp(0.2)}>

@@ -24,6 +24,12 @@ export interface MatchCandidate {
     ageMax: number | null;
     genderPreference: string | null;
     cityHint: string | null;
+    /**
+     * Max distance this member is willing to match across, in miles. Null/absent
+     * means "no explicit cap"; the radius gate then falls back to
+     * DEFAULT_RADIUS_MILES so an unset preference still respects a sane bound.
+     */
+    radiusMiles?: number | null;
   };
   /** Readiness score 0-100. */
   readinessScore: number;
@@ -135,13 +141,36 @@ function agePrefAdmits(
   return true;
 }
 
-/** True when both members' hard preferences (gender, age) admit each other. */
+// The radius gate: a measured distance between the two members must fall within
+// the tighter of their two radius preferences. This is a HARD filter, unlike the
+// graded `proximity` component in scoreCompatibility (which only nudges the
+// score). It is symmetric because it uses the symmetric proximityBetween and the
+// min of both radii. Two graceful-degradation rules keep it from excluding real
+// people on data we do not have: (1) if we cannot measure a real distance (one
+// or both cities unresolvable), the gate passes; (2) if NEITHER side has set a
+// radius, the gate passes (we only hard-filter on a preference a member actually
+// expressed; the graded proximity component still nudges the score).
+export function radiusGatePasses(a: MatchCandidate, b: MatchCandidate): boolean {
+  const prox = proximityBetween(a.prefs.cityHint, b.prefs.cityHint);
+  if (prox.distanceMiles == null) return true;
+  const radii = [a.prefs.radiusMiles, b.prefs.radiusMiles].filter(
+    (r): r is number => typeof r === "number" && r > 0,
+  );
+  if (radii.length === 0) return true;
+  return prox.distanceMiles <= Math.min(...radii);
+}
+
+/**
+ * True when both members' hard preferences admit each other: gender, age, and
+ * the radius cap (a measurable distance within the tighter of the two radii).
+ */
 export function gatesPass(a: MatchCandidate, b: MatchCandidate): boolean {
   return (
     genderPrefAdmits(a.prefs.genderPreference, b.gender) &&
     genderPrefAdmits(b.prefs.genderPreference, a.gender) &&
     agePrefAdmits(a.prefs.ageMin, a.prefs.ageMax, b.age) &&
-    agePrefAdmits(b.prefs.ageMin, b.prefs.ageMax, a.age)
+    agePrefAdmits(b.prefs.ageMin, b.prefs.ageMax, a.age) &&
+    radiusGatePasses(a, b)
   );
 }
 

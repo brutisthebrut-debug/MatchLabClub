@@ -3152,6 +3152,26 @@ export const MatchingStateTier = {
   wingman: 'wingman',
 } as const;
 
+export interface ReadinessDeltaLane {
+  /** Signal lane id, matching a MatchReadinessBreakdown key. */
+  key: string;
+  /** Coverage change for this lane (0-100 scale), can be negative. */
+  delta: number;
+}
+
+/**
+ * The change in matching readiness between the two most recent daily snapshots. scoreDelta is the change in the overall readiness score (can be negative). lanes lists the signal lanes whose coverage changed, biggest absolute move first. Derived only, never includes raw content.
+ */
+export interface ReadinessDelta {
+  /** Change in the overall readiness score since the prior snapshot. */
+  scoreDelta: number;
+  /** Calendar day (UTC) of the prior snapshot being compared against. */
+  fromDay: string;
+  /** Calendar day (UTC) of the most recent snapshot. */
+  toDay: string;
+  lanes: ReadinessDeltaLane[];
+}
+
 /**
  * A gamification lens on how consistently the user feeds any signal. Purely derived from activity history; it never affects the readiness score.
  */
@@ -3198,9 +3218,56 @@ export interface MatchingState {
   nextActions: ReadinessNextAction[];
   /** Daily readiness snapshots, oldest first, for the trend line. Up to ~30 points. */
   history: ReadinessHistoryPoint[];
+  /** What moved between the two most recent daily readiness snapshots, or null until there are at least two snapshots to compare. */
+  readinessDelta?: ReadinessDelta | null;
   outcomeInsight: OutcomeInsight;
   activityStreak?: ActivityStreak;
   readinessLearning?: ReadinessLearning;
+}
+
+export interface BenchmarkLane {
+  /** Signal lane id, matching a MatchReadinessBreakdown key. */
+  key: string;
+  /**
+     * The caller's own coverage for this lane.
+     * @minimum 0
+     * @maximum 100
+     */
+  coverage: number;
+  /**
+     * The cohort's median coverage for this lane.
+     * @minimum 0
+     * @maximum 100
+     */
+  cohortMedian: number;
+  /**
+     * Where the caller sits within the cohort for this lane, as a percentile (share of the cohort at or below the caller's coverage).
+     * @minimum 0
+     * @maximum 100
+     */
+  percentile: number;
+}
+
+/**
+ * The caller's anonymized per-lane standing against the cohort of users who share their normalized dating goal. Derived only (coverage maps + goal bucket, never identities or raw content). When available is false the cohort is below the minimum size and lanes is empty.
+ */
+export interface MatchingBenchmarks {
+  /** True only when the goal cohort meets the minimum size. When false, lanes is empty and no percentile is revealed. */
+  available: boolean;
+  /** The normalized goal bucket the cohort is built from (e.g. long-term, casual, friends-first, exploring). */
+  goal: string;
+  /**
+     * Number of other users in the caller's goal cohort.
+     * @minimum 0
+     */
+  cohortSize: number;
+  /**
+     * Minimum cohort size required before benchmarks are shown.
+     * @minimum 0
+     */
+  minCohort: number;
+  /** Per-lane standing, one entry per readiness signal lane. */
+  lanes: BenchmarkLane[];
 }
 
 /**

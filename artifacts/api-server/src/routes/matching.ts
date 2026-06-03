@@ -394,6 +394,206 @@ async function loadReadinessHistory(
   return rows.map((r) => ({ day: r.day, score: Number(r.score) }));
 }
 
+interface ReadinessDeltaLane {
+  key: string;
+  delta: number;
+}
+interface ReadinessDeltaResult {
+  scoreDelta: number;
+  fromDay: string;
+  toDay: string;
+  lanes: ReadinessDeltaLane[];
+}
+
+// Derive what actually moved between the two most recent daily snapshots so the
+// product can answer "why did my readiness change." The score delta comes from
+// the stored score; per-lane deltas are coverage changes (0-100 each) read from
+// the stored breakdown maps. Only lanes that changed are returned, biggest move
+// first. Returns null until there are at least two snapshots to compare, so a
+// brand-new account never shows a misleading delta. Reads only derived counts,
+// never any underlying content.
+async function loadReadinessDelta(
+  userId: string,
+): Promise<ReadinessDeltaResult | null> {
+  const rows = await db
+    .select({
+      day: matchingReadinessSnapshotsTable.day,
+      score: matchingReadinessSnapshotsTable.score,
+      breakdown: matchingReadinessSnapshotsTable.breakdown,
+    })
+    .from(matchingReadinessSnapshotsTable)
+    .where(eq(matchingReadinessSnapshotsTable.userId, userId))
+    .orderBy(desc(matchingReadinessSnapshotsTable.day))
+    .limit(2);
+  if (rows.length < 2) return null;
+  const [latest, prev] = rows;
+  const latestBreakdown = (latest.breakdown ?? {}) as Record<string, number>;
+  const prevBreakdown = (prev.breakdown ?? {}) as Record<string, number>;
+  const keys = new Set([
+    ...Object.keys(latestBreakdown),
+    ...Object.keys(prevBreakdown),
+  ]);
+  const lanes: ReadinessDeltaLane[] = [];
+  for (const key of keys) {
+    const delta = Math.round(
+      (latestBreakdown[key] ?? 0) - (prevBreakdown[key] ?? 0),
+    );
+    if (delta !== 0) lanes.push({ key, delta });
+  }
+  lanes.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+  return {
+    scoreDelta: Number(latest.score) - Number(prev.score),
+    fromDay: prev.day,
+    toDay: latest.day,
+    lanes: lanes.slice(0, 8),
+  };
+}
+
+// Minimum cohort size before any benchmark is shown. Below this we never reveal
+// a percentile, both because a tiny cohort is statistically meaningless and
+// because a small group plus a known goal could narrow toward an individual.
+// Aggregate-only by construction (we read coverage maps, never identities or
+// content), and this guard keeps it that way.
+const BENCHMARK_MIN_COHORT = Math.max(
+  3,
+  Number(process.env.BENCHMARK_MIN_COHORT ?? 8) || 8,
+);
+
+// Collapse the freeform dating-goal text every intake/wizard surface writes into
+// a few stable buckets so a cohort is large enough to be meaningful and the
+// comparison is apples-to-apples. Keyword based and order-sensitive (long-term
+// intent wins over the word "open"). Unknown/empty goals fall into "exploring".
+export function normalizeGoal(raw: string | null | undefined): string {
+  const g = (raw ?? "").toLowerCase();
+  if (!g.trim()) return "exploring";
+  if (/(marriage|married|life partner|long.?term|serious|relationship)/.test(g))
+    return "long-term";
+  if (/(casual|hookup|hook up|fun|open|fling|short.?term)/.test(g))
+    return "casual";
+  if (/(friend)/.test(g)) return "friends-first";
+  return "exploring";
+}
+
+interface BenchmarkLane {
+  key: string;
+  /** The caller's own coverage for this lane, 0-100. */
+  coverage: number;
+  /** The cohort's median coverage for this lane, 0-100. */
+  cohortMedian: number;
+  /** Where the caller sits in the cohort for this lane, 0-100 percentile. */
+  percentile: number;
+}
+interface BenchmarksResult {
+  available: boolean;
+  /** Normalized goal bucket the cohort is built from. */
+  goal: string;
+  cohortSize: number;
+  minCohort: number;
+  lanes: BenchmarkLane[];
+}
+
+function median(sorted: number[]): number {
+  if (sorted.length === 0) return 0;
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? Math.round((sorted[mid - 1] + sorted[mid]) / 2)
+    : sorted[mid];
+}
+
+// Anonymized per-lane standing for the caller against everyone who shares their
+// (normalized) dating goal. The cohort is built from the latest daily readiness
+// snapshot per user (already derived coverage maps, never raw content), joined
+// to each user's most recent goal. We read only coverage numbers and a goal
+// bucket, never identities, so this is aggregate by construction; the min-cohort
+// guard blocks reveals that could narrow toward an individual. Returns
+// available:false (no lanes) when the caller has no goal-bearing audit or the
+// cohort is too small.
+async function loadBenchmarks(userId: string): Promise<BenchmarksResult> {
+  // The caller's own goal, from their most recent generated audit.
+  const goalRows = await db
+    .select({ goal: auditsTable.datingGoal })
+    .from(auditsTable)
+    .where(
+      and(
+        eq(auditsTable.userId, userId),
+        isNull(auditsTable.deletedAt),
+        sql`${auditsTable.reportGeneratedAt} is not null`,
+      ),
+    )
+    .orderBy(desc(auditsTable.reportGeneratedAt))
+    .limit(1);
+  const goal = normalizeGoal(goalRows[0]?.goal);
+
+  // Latest goal per user (most recent generated audit), so we can bucket the
+  // whole population by normalized goal in JS.
+  const goalByUser = await db.execute<{ user_id: string; dating_goal: string }>(sql`
+    SELECT DISTINCT ON (user_id) user_id, dating_goal
+    FROM audits
+    WHERE report_generated_at IS NOT NULL AND deleted_at IS NULL
+    ORDER BY user_id, report_generated_at DESC
+  `);
+  const cohortUserIds = new Set<string>();
+  for (const row of goalByUser.rows ?? []) {
+    if (row.user_id === userId) continue;
+    if (normalizeGoal(row.dating_goal) === goal) cohortUserIds.add(row.user_id);
+  }
+
+  // Latest snapshot breakdown per user, filtered to the cohort. These are
+  // derived coverage maps only.
+  const snapRows = await db.execute<{
+    user_id: string;
+    breakdown: Record<string, number> | null;
+  }>(sql`
+    SELECT DISTINCT ON (user_id) user_id, breakdown
+    FROM matching_readiness_snapshots
+    ORDER BY user_id, day DESC
+  `);
+  const cohortBreakdowns: Record<string, number>[] = [];
+  for (const row of snapRows.rows ?? []) {
+    if (!cohortUserIds.has(row.user_id)) continue;
+    cohortBreakdowns.push((row.breakdown ?? {}) as Record<string, number>);
+  }
+
+  const cohortSize = cohortBreakdowns.length;
+  if (cohortSize < BENCHMARK_MIN_COHORT) {
+    return {
+      available: false,
+      goal,
+      cohortSize,
+      minCohort: BENCHMARK_MIN_COHORT,
+      lanes: [],
+    };
+  }
+
+  // The caller's own current coverage, computed fresh so it always reflects the
+  // very latest signal rather than a possibly-stale snapshot.
+  const readiness = await computeReadiness(userId);
+  const lanes: BenchmarkLane[] = [];
+  for (const contributor of SIGNAL_REGISTRY) {
+    const key = contributor.id as string;
+    const mine = Math.round(readiness.breakdown[contributor.id] ?? 0);
+    const cohort = cohortBreakdowns
+      .map((b) => Math.round(b[key] ?? 0))
+      .sort((a, b) => a - b);
+    const atOrBelow = cohort.filter((v) => v <= mine).length;
+    const percentile = Math.round((atOrBelow / cohort.length) * 100);
+    lanes.push({
+      key,
+      coverage: mine,
+      cohortMedian: median(cohort),
+      percentile,
+    });
+  }
+
+  return {
+    available: true,
+    goal,
+    cohortSize,
+    minCohort: BENCHMARK_MIN_COHORT,
+    lanes,
+  };
+}
+
 export function todayUtc(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -547,11 +747,12 @@ router.get("/me/matching/state", async (req, res): Promise<void> => {
   } catch (err) {
     req.log.warn({ err }, "Failed to write readiness snapshot");
   }
-  const [history, nextActions] = await Promise.all([
+  const [history, nextActions, readinessDelta] = await Promise.all([
     loadReadinessHistory(userId),
     Promise.resolve(
       computeNextActions(readiness.breakdown, eligible, 3, readiness.weights),
     ),
+    loadReadinessDelta(userId),
   ]);
 
   // Activity streak is a gamification lens only. A failure here must never break
@@ -575,10 +776,22 @@ router.get("/me/matching/state", async (req, res): Promise<void> => {
     totalPoolCount: total,
     nextActions,
     history,
+    readinessDelta,
     outcomeInsight,
     activityStreak,
     readinessLearning,
   });
+});
+
+// Anonymized per-lane standing against the caller's goal cohort. Guarded below a
+// minimum cohort size and derived-only (coverage maps + goal bucket, no PII).
+router.get("/me/matching/benchmarks", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const benchmarks = await loadBenchmarks(req.user.id);
+  res.json(benchmarks);
 });
 
 router.put("/me/matching/preferences", async (req, res): Promise<void> => {
@@ -1176,6 +1389,11 @@ router.put(
 const MAX_DISCOVER_CANDIDATES = 50;
 const MAX_NEW_PROPOSALS = 3;
 
+// Radius preferences are stored in km (the UI presets are km-based); the geo
+// engine reasons in miles. One conversion constant, used wherever a stored
+// distanceKm needs to become the engine's radiusMiles.
+const MILES_PER_KM = 0.621371;
+
 // Latest self-reported age/gender per user, read from the most recent audit row.
 // These are the only places this data lives today; absence is expected and
 // degrades to a lower-confidence match rather than a hard block.
@@ -1222,33 +1440,23 @@ async function buildMatchCandidate(
       ageMax: prefs?.ageMax ?? null,
       genderPreference: prefs?.genderPreference ?? null,
       cityHint: prefs?.cityHint ?? null,
+      radiusMiles:
+        prefs?.distanceKm != null ? prefs.distanceKm * MILES_PER_KM : null,
     },
     readinessScore: readiness.score,
     breakdown: readiness.breakdown as unknown as Record<string, number>,
   };
 }
 
-// The internal matching engine in route form: pair the caller with other live
-// pool members, score deterministically, and mint mutual internal proposals.
-router.post("/me/matching/discover", async (req, res): Promise<void> => {
-  if (!req.user?.id) {
-    res.status(401).json({ error: "Not authenticated" });
-    return;
-  }
-  const userId = req.user.id;
-
-  const membership = await loadMembership(userId);
-  const inPool =
-    membership != null &&
-    (membership.status === "building" || membership.status === "ready");
-  if (!inPool) {
-    res.status(422).json({
-      error:
-        "Turn on the matching pool first. Once your readiness clears the bar and the pool is on, we can pair you with other members.",
-    });
-    return;
-  }
-
+// Core of the internal matching engine, shared by the on-demand discover route
+// and the background auto-proposal job. Assumes the caller is already a live
+// pool member. Pairs them with other live members, scores deterministically,
+// and mints mutual internal proposals. Returns how many new matches were minted.
+// Idempotent by construction: the partial unique index on internal
+// (userId, proposedToUserId) pairs + ON CONFLICT DO NOTHING drop re-proposals.
+export async function mintInternalProposalsForMember(
+  userId: string,
+): Promise<number> {
   // Eligible counterparts are other members actively in the pool. concierge_only
   // (Wingman, founder-curated) is intentionally left out of automated pairing.
   const memberRows = await db
@@ -1282,56 +1490,76 @@ router.post("/me/matching/discover", async (req, res): Promise<void> => {
     }
   }
   const freshIds = otherUserIds.filter((id) => !alreadyPaired.has(id));
+  if (freshIds.length === 0) return 0;
 
-  if (freshIds.length > 0) {
-    const demographics = await loadLatestAuditDemographics([
+  const demographics = await loadLatestAuditDemographics([userId, ...freshIds]);
+  const me = await buildMatchCandidate(userId, demographics.get(userId));
+  const others = await Promise.all(
+    freshIds.map((id) => buildMatchCandidate(id, demographics.get(id))),
+  );
+  const ranked = rankCandidates(me, others, MAX_NEW_PROPOSALS);
+  if (ranked.length === 0) return 0;
+
+  // Each match is a mirrored pair of internal proposals (one row per member)
+  // sharing the same symmetric score and summary. The summary is generic by
+  // construction, so no PII or raw content is ever stored on a proposal.
+  const values = ranked.flatMap((r) => [
+    {
       userId,
-      ...freshIds,
-    ]);
-    const me = await buildMatchCandidate(userId, demographics.get(userId));
-    const others = await Promise.all(
-      freshIds.map((id) => buildMatchCandidate(id, demographics.get(id))),
-    );
-    const ranked = rankCandidates(me, others, MAX_NEW_PROPOSALS);
+      proposedToUserId: r.candidate.userId,
+      source: "internal" as const,
+      compatibilityScore: r.score,
+      summary: r.summary,
+      status: "proposed" as const,
+    },
+    {
+      userId: r.candidate.userId,
+      proposedToUserId: userId,
+      source: "internal" as const,
+      compatibilityScore: r.score,
+      summary: r.summary,
+      status: "proposed" as const,
+    },
+  ]);
+  // ON CONFLICT DO NOTHING against the partial unique index on internal
+  // (userId, proposedToUserId) pairs makes this idempotent and race-safe:
+  // a concurrent run that already minted the same pair is dropped here
+  // instead of creating duplicates.
+  await db.insert(matchProposalsTable).values(values).onConflictDoNothing();
+  void recordJourneyEvent({
+    eventType: "match_step",
+    userId,
+    props: {
+      step: "proposal_created",
+      source: "internal",
+      count: ranked.length,
+    },
+  });
+  return ranked.length;
+}
 
-    if (ranked.length > 0) {
-      // Each match is a mirrored pair of internal proposals (one row per member)
-      // sharing the same symmetric score and summary. The summary is generic by
-      // construction, so no PII or raw content is ever stored on a proposal.
-      const values = ranked.flatMap((r) => [
-        {
-          userId,
-          proposedToUserId: r.candidate.userId,
-          source: "internal" as const,
-          compatibilityScore: r.score,
-          summary: r.summary,
-          status: "proposed" as const,
-        },
-        {
-          userId: r.candidate.userId,
-          proposedToUserId: userId,
-          source: "internal" as const,
-          compatibilityScore: r.score,
-          summary: r.summary,
-          status: "proposed" as const,
-        },
-      ]);
-      // ON CONFLICT DO NOTHING against the partial unique index on internal
-      // (userId, proposedToUserId) pairs makes this idempotent and race-safe:
-      // a concurrent discover run that already minted the same pair is dropped
-      // here instead of creating duplicates.
-      await db.insert(matchProposalsTable).values(values).onConflictDoNothing();
-      void recordJourneyEvent({
-        eventType: "match_step",
-        userId,
-        props: {
-          step: "proposal_created",
-          source: "internal",
-          count: ranked.length,
-        },
-      });
-    }
+// The internal matching engine in route form: pair the caller with other live
+// pool members, score deterministically, and mint mutual internal proposals.
+router.post("/me/matching/discover", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
   }
+  const userId = req.user.id;
+
+  const membership = await loadMembership(userId);
+  const inPool =
+    membership != null &&
+    (membership.status === "building" || membership.status === "ready");
+  if (!inPool) {
+    res.status(422).json({
+      error:
+        "Turn on the matching pool first. Once your readiness clears the bar and the pool is on, we can pair you with other members.",
+    });
+    return;
+  }
+
+  await mintInternalProposalsForMember(userId);
 
   const rows = await db
     .select()

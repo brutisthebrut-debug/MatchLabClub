@@ -40,6 +40,7 @@ import {
   Map as MapIcon,
   Rss,
   SlidersHorizontal,
+  Target,
   Trophy,
   Unplug,
   Plug,
@@ -191,6 +192,7 @@ const SECTIONS: NavSection[] = [
     id: "matching",
     label: "Get matched",
     primary: [
+      { name: "What it takes", href: "/match-path", icon: Target },
       { name: "Matching", href: "/matching", icon: HeartHandshake, badge: "Beta" },
       { name: "Future Connections", href: "/future-connections", icon: Users },
     ],

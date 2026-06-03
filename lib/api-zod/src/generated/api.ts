@@ -4476,6 +4476,15 @@ export const GetMatchingStateResponse = zod.object({
   "day": zod.string().describe('Calendar day (YYYY-MM-DD, UTC) of the snapshot.'),
   "score": zod.number().min(getMatchingStateResponseHistoryItemScoreMin).max(getMatchingStateResponseHistoryItemScoreMax)
 })).describe('Daily readiness snapshots, oldest first, for the trend line. Up to ~30 points.'),
+  "readinessDelta": zod.union([zod.object({
+  "scoreDelta": zod.number().describe('Change in the overall readiness score since the prior snapshot.'),
+  "fromDay": zod.coerce.date().describe('Calendar day (UTC) of the prior snapshot being compared against.'),
+  "toDay": zod.coerce.date().describe('Calendar day (UTC) of the most recent snapshot.'),
+  "lanes": zod.array(zod.object({
+  "key": zod.string().describe('Signal lane id, matching a MatchReadinessBreakdown key.'),
+  "delta": zod.number().describe('Coverage change for this lane (0-100 scale), can be negative.')
+}))
+}).describe('The change in matching readiness between the two most recent daily snapshots. scoreDelta is the change in the overall readiness score (can be negative). lanes lists the signal lanes whose coverage changed, biggest absolute move first. Derived only, never includes raw content.'),zod.null()]).optional().describe('What moved between the two most recent daily readiness snapshots, or null until there are at least two snapshots to compare.'),
   "outcomeInsight": zod.object({
   "totalDates": zod.number().min(getMatchingStateResponseOutcomeInsightTotalDatesMin),
   "anotherDate": zod.number().min(getMatchingStateResponseOutcomeInsightAnotherDateMin),
@@ -4501,6 +4510,51 @@ export const GetMatchingStateResponse = zod.object({
   "leaningInto": zod.array(zod.string()).describe('Plain-English labels of the signal lanes the tilt is leaning into, given the recent outcomes. Empty when nothing is being tilted yet.')
 }).optional().describe('A derived, user-facing read of how the engine is learning from the caller\'s own logged date outcomes. Carries only aggregate, derived numbers (scores and lane labels), never raw notes or any PII. When observing is true the engine is watching the would-be tilt without changing the score the user is served (shadow), so this is informational and does not claim the matching gate moved.')
 })
+
+
+/**
+ * Returns the caller's per-lane readiness coverage compared against the
+anonymized cohort of users who share their (normalized) dating goal.
+Each lane carries the caller's own coverage, the cohort median, and the
+caller's percentile within the cohort. Derived only: it reads coverage
+maps and a goal bucket, never identities or raw content. Guarded by a
+minimum cohort size; below that threshold `available` is false and
+`lanes` is empty, so a small group can never narrow toward an
+individual.
+
+ * @summary Get the signed-in user's anonymized per-lane standing vs their goal cohort
+ */
+export const GetMatchingBenchmarksHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const getMatchingBenchmarksResponseCohortSizeMin = 0;
+
+export const getMatchingBenchmarksResponseMinCohortMin = 0;
+
+export const getMatchingBenchmarksResponseLanesItemCoverageMin = 0;
+export const getMatchingBenchmarksResponseLanesItemCoverageMax = 100;
+
+export const getMatchingBenchmarksResponseLanesItemCohortMedianMin = 0;
+export const getMatchingBenchmarksResponseLanesItemCohortMedianMax = 100;
+
+export const getMatchingBenchmarksResponseLanesItemPercentileMin = 0;
+export const getMatchingBenchmarksResponseLanesItemPercentileMax = 100;
+
+
+
+export const GetMatchingBenchmarksResponse = zod.object({
+  "available": zod.boolean().describe('True only when the goal cohort meets the minimum size. When false, lanes is empty and no percentile is revealed.'),
+  "goal": zod.string().describe('The normalized goal bucket the cohort is built from (e.g. long-term, casual, friends-first, exploring).'),
+  "cohortSize": zod.number().min(getMatchingBenchmarksResponseCohortSizeMin).describe('Number of other users in the caller\'s goal cohort.'),
+  "minCohort": zod.number().min(getMatchingBenchmarksResponseMinCohortMin).describe('Minimum cohort size required before benchmarks are shown.'),
+  "lanes": zod.array(zod.object({
+  "key": zod.string().describe('Signal lane id, matching a MatchReadinessBreakdown key.'),
+  "coverage": zod.number().min(getMatchingBenchmarksResponseLanesItemCoverageMin).max(getMatchingBenchmarksResponseLanesItemCoverageMax).describe('The caller\'s own coverage for this lane.'),
+  "cohortMedian": zod.number().min(getMatchingBenchmarksResponseLanesItemCohortMedianMin).max(getMatchingBenchmarksResponseLanesItemCohortMedianMax).describe('The cohort\'s median coverage for this lane.'),
+  "percentile": zod.number().min(getMatchingBenchmarksResponseLanesItemPercentileMin).max(getMatchingBenchmarksResponseLanesItemPercentileMax).describe('Where the caller sits within the cohort for this lane, as a percentile (share of the cohort at or below the caller\'s coverage).')
+})).describe('Per-lane standing, one entry per readiness signal lane.')
+}).describe('The caller\'s anonymized per-lane standing against the cohort of users who share their normalized dating goal. Derived only (coverage maps + goal bucket, never identities or raw content). When available is false the cohort is below the minimum size and lanes is empty.')
 
 
 /**
