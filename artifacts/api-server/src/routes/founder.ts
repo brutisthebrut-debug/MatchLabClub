@@ -80,6 +80,8 @@ import {
 } from "../lib/auditTrashPurge";
 import { KNOWN_JOB_NAMES, getStaleThresholdMs } from "../lib/jobHeartbeat";
 import { runGeoipUpdate } from "../lib/geoipUpdateJob";
+import { autoProposalTick } from "../lib/autoProposalJob";
+import { companionNudgeTick } from "../lib/companionNudgeJob";
 import {
   DEFAULT_REBREACH_COOLDOWN_MINUTES,
   getEnvRebreachCooldownMinutes,
@@ -2250,6 +2252,8 @@ const BrainControlsPatch = z.object({
   reweightingMinOutcomes: z.number().int().min(2).max(1000).optional(),
   confidenceWeighting: z.enum(["hold", "applied"]).optional(),
   decayMode: z.enum(["hold", "applied"]).optional(),
+  autoProposalEnabled: z.boolean().optional(),
+  companionNudgeEnabled: z.boolean().optional(),
   signalWeightOverrides: z.record(z.string(), z.number().min(0)).nullable().optional(),
   connectorToggles: z.record(z.string(), z.boolean()).optional(),
 });
@@ -2264,6 +2268,12 @@ router.put(
       return;
     }
     const controls = await saveBrainControls(parsed.data as Partial<BrainControls>);
+    // When the founder explicitly flips a background sweep on, fire one immediate
+    // tick so the toggle takes effect now instead of waiting for the next
+    // interval. Each tick re-reads the controls and gates itself, so this is safe
+    // and idempotent even if the sweep was already running.
+    if (parsed.data.autoProposalEnabled === true) void autoProposalTick();
+    if (parsed.data.companionNudgeEnabled === true) void companionNudgeTick();
     res.json(serializeControls(controls, true));
   },
 );

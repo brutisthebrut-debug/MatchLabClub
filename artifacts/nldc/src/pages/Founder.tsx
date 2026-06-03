@@ -4565,6 +4565,55 @@ function BrainTab({ founderKey, refreshKey }: { founderKey: string; refreshKey: 
           </div>
         </div>
 
+        {/* Background automation */}
+        <div className="mt-6 pt-6 border-t border-white/10">
+          <span className="text-sm font-medium text-foreground">Background automation</span>
+          <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+            Turn the scheduled sweeps on or off live, no redeploy. Auto-proposal mints internal matches for ready members on a schedule (on-demand matching still works either way). Echo proactivity writes proactive nudges to engaged users and fans them out to their opted-in channels. SMS delivery additionally needs the Twilio credentials set.
+          </p>
+          <div className="space-y-2">
+            {([
+              {
+                key: "autoProposalEnabled" as const,
+                title: "Auto-proposal sweep",
+                desc: "Mints internal match proposals on a schedule.",
+                value: draft.autoProposalEnabled,
+              },
+              {
+                key: "companionNudgeEnabled" as const,
+                title: "Echo proactivity sweep",
+                desc: "Writes proactive nudges and fans them out to opted-in channels.",
+                value: draft.companionNudgeEnabled,
+              },
+            ]).map((row) => (
+              <div
+                key={row.key}
+                className="flex items-center justify-between glass rounded-xl px-4 py-3 border border-white/10"
+              >
+                <span>
+                  <span className="text-sm text-foreground block">{row.title}</span>
+                  <span className="text-xs text-muted-foreground">{row.desc}</span>
+                </span>
+                <div className="flex gap-2 shrink-0">
+                  {([false, true] as const).map((on) => (
+                    <button
+                      key={String(on)}
+                      onClick={() => patch({ [row.key]: on } as Partial<BrainControls>)}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                        row.value === on
+                          ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)]"
+                          : "text-muted-foreground hover:text-foreground hover:bg-white/5 border border-white/10"
+                      }`}
+                    >
+                      {on ? "On" : "Off"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Connector toggles */}
         <div className="mt-6 pt-6 border-t border-white/10">
           <span className="text-sm font-medium text-foreground">Connectors</span>

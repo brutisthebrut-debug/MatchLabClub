@@ -13,6 +13,7 @@ import { logger } from "./logger";
 import { recordJobHeartbeat, getStaleThresholdMs } from "./jobHeartbeat";
 import { sendMail } from "./mailer";
 import { sendSms } from "./sms";
+import { loadBrainControls } from "./brainConfig";
 import {
   computeReadiness,
   readinessThreshold,
@@ -319,28 +320,42 @@ export async function runCompanionNudgeSweep(options?: {
 
 let scheduledTimer: NodeJS.Timeout | null = null;
 
+// One scheduled tick. The timer always runs; whether a sweep actually fires is
+// gated on the live founder control (seeded from COMPANION_NUDGE_ENABLED), so the
+// founder can flip Echo's proactivity on or off from the control center with no
+// redeploy. Echo still responds on demand regardless.
+export async function companionNudgeTick(): Promise<void> {
+  try {
+    const controls = await loadBrainControls();
+    if (!controls.companionNudgeEnabled) return;
+    await runCompanionNudgeSweep();
+  } catch (err) {
+    logger.warn(
+      { err: err instanceof Error ? err.message : String(err) },
+      "Companion nudge tick failed to read controls; skipping this run",
+    );
+  }
+}
+
 export function startCompanionNudgeJob(): void {
   if (scheduledTimer) return;
-  if (!isCompanionNudgeEnabled()) {
-    logger.info(
-      "Companion nudge job is disabled (set COMPANION_NUDGE_ENABLED to turn it on)",
-    );
-    return;
-  }
   const intervalHours = readPositiveNumberEnv(
     "COMPANION_NUDGE_INTERVAL_HOURS",
     DEFAULT_INTERVAL_HOURS,
   );
   const intervalMs = intervalHours * 60 * 60 * 1000;
 
-  void runCompanionNudgeSweep();
+  void companionNudgeTick();
 
   scheduledTimer = setInterval(() => {
-    void runCompanionNudgeSweep();
+    void companionNudgeTick();
   }, intervalMs);
   if (typeof scheduledTimer.unref === "function") scheduledTimer.unref();
 
-  logger.info({ intervalHours }, "Started companion nudge job");
+  logger.info(
+    { intervalHours },
+    "Started companion nudge job (gated by founder control)",
+  );
 }
 
 export function stopCompanionNudgeJob(): void {

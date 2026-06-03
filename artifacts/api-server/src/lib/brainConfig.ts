@@ -89,6 +89,21 @@ export interface BrainControls {
    */
   decayMode: ScoringMode;
   /**
+   * Whether the background auto-proposal sweep runs (mints internal match
+   * proposals for eligible members on a schedule). The founder flips this from
+   * the control center with no redeploy; the AUTO_PROPOSAL_ENABLED env var only
+   * seeds the default. Off by default. On-demand minting via the discover route
+   * is unaffected either way.
+   */
+  autoProposalEnabled: boolean;
+  /**
+   * Whether Echo's background proactivity sweep runs (writes proactive nudges to
+   * each engaged user's feed and fans them out to opted-in channels). Toggled
+   * live from the control center; COMPANION_NUDGE_ENABLED only seeds the default.
+   * Off by default. SMS delivery additionally needs the Twilio credentials.
+   */
+  companionNudgeEnabled: boolean;
+  /**
    * Founder weight overrides, RAW weights keyed by signal id. Partial: any
    * signal not present falls back to its registry default. Null = no overrides.
    */
@@ -156,6 +171,14 @@ function envReweightMinOutcomes(): number {
   return Math.max(2, Math.min(1000, Math.round(raw)));
 }
 
+// Truthy env flag parser, shared by the background-sweep defaults below. Mirrors
+// isAutoProposalEnabled / isCompanionNudgeEnabled in the job files so the env var
+// keeps working as the seed default once the founder toggle is the live source.
+function envTruthy(name: string): boolean {
+  const raw = (process.env[name] ?? "").trim().toLowerCase();
+  return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
+}
+
 export function defaultControls(): BrainControls {
   return {
     readinessThreshold: envReadinessThreshold(),
@@ -168,6 +191,8 @@ export function defaultControls(): BrainControls {
     reweightingMinOutcomes: envReweightMinOutcomes(),
     confidenceWeighting: "hold",
     decayMode: "hold",
+    autoProposalEnabled: envTruthy("AUTO_PROPOSAL_ENABLED"),
+    companionNudgeEnabled: envTruthy("COMPANION_NUDGE_ENABLED"),
     signalWeightOverrides: null,
     connectorToggles: {},
   };
@@ -231,6 +256,14 @@ export function coerceControls(raw: unknown): BrainControls {
     ),
     confidenceWeighting: v.confidenceWeighting === "applied" ? "applied" : "hold",
     decayMode: v.decayMode === "applied" ? "applied" : "hold",
+    autoProposalEnabled:
+      typeof v.autoProposalEnabled === "boolean"
+        ? v.autoProposalEnabled
+        : base.autoProposalEnabled,
+    companionNudgeEnabled:
+      typeof v.companionNudgeEnabled === "boolean"
+        ? v.companionNudgeEnabled
+        : base.companionNudgeEnabled,
     signalWeightOverrides: overrides,
     connectorToggles: toggles,
   };

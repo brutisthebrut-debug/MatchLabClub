@@ -3,6 +3,7 @@ import { db, matchPoolMembershipTable, jobHeartbeatsTable } from "@workspace/db"
 import { logger } from "./logger";
 import { recordJobHeartbeat, getStaleThresholdMs } from "./jobHeartbeat";
 import { mintInternalProposalsForMember } from "../routes/matching";
+import { loadBrainControls } from "./brainConfig";
 
 const AUTO_PROPOSAL_JOB = "auto_proposal";
 
@@ -96,28 +97,42 @@ export async function runAutoProposalSweep(options?: {
 
 let scheduledTimer: NodeJS.Timeout | null = null;
 
+// One scheduled tick. The timer always runs; whether a sweep actually fires is
+// gated on the live founder control (seeded from AUTO_PROPOSAL_ENABLED), so the
+// founder can flip auto-proposal on or off from the control center with no
+// redeploy. On-demand minting via the discover route is unaffected either way.
+export async function autoProposalTick(): Promise<void> {
+  try {
+    const controls = await loadBrainControls();
+    if (!controls.autoProposalEnabled) return;
+    await runAutoProposalSweep();
+  } catch (err) {
+    logger.warn(
+      { err: err instanceof Error ? err.message : String(err) },
+      "Auto-proposal tick failed to read controls; skipping this run",
+    );
+  }
+}
+
 export function startAutoProposalJob(): void {
   if (scheduledTimer) return;
-  if (!isAutoProposalEnabled()) {
-    logger.info(
-      "Auto-proposal job is disabled (set AUTO_PROPOSAL_ENABLED to turn it on)",
-    );
-    return;
-  }
   const intervalHours = readPositiveNumberEnv(
     "AUTO_PROPOSAL_INTERVAL_HOURS",
     DEFAULT_INTERVAL_HOURS,
   );
   const intervalMs = intervalHours * 60 * 60 * 1000;
 
-  void runAutoProposalSweep();
+  void autoProposalTick();
 
   scheduledTimer = setInterval(() => {
-    void runAutoProposalSweep();
+    void autoProposalTick();
   }, intervalMs);
   if (typeof scheduledTimer.unref === "function") scheduledTimer.unref();
 
-  logger.info({ intervalHours }, "Started auto-proposal job");
+  logger.info(
+    { intervalHours },
+    "Started auto-proposal job (gated by founder control)",
+  );
 }
 
 export function stopAutoProposalJob(): void {

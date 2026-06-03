@@ -885,6 +885,8 @@ export interface BrainControls {
   reweightingMinOutcomes: number;
   confidenceWeighting: ScoringMode;
   decayMode: ScoringMode;
+  autoProposalEnabled: boolean;
+  companionNudgeEnabled: boolean;
   signalWeightOverrides: Record<string, number> | null;
   connectorToggles: Record<string, boolean>;
 }

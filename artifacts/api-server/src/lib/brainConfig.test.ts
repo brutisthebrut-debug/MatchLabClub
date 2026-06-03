@@ -76,6 +76,22 @@ describe("coerceControls", () => {
     expect(c.connectorToggles).toEqual({ plaid: false, spotify: true });
   });
 
+  it("defaults background sweeps off and only honors explicit booleans", () => {
+    const base = defaultControls();
+    expect(base.autoProposalEnabled).toBe(false);
+    expect(base.companionNudgeEnabled).toBe(false);
+    // Missing fields fall back to the env-seeded default, not coerced to false.
+    const missing = coerceControls({ readinessThreshold: 50 });
+    expect(missing.autoProposalEnabled).toBe(base.autoProposalEnabled);
+    expect(missing.companionNudgeEnabled).toBe(base.companionNudgeEnabled);
+    // Explicit booleans are respected; non-booleans fall back to the default.
+    expect(coerceControls({ autoProposalEnabled: true }).autoProposalEnabled).toBe(true);
+    expect(coerceControls({ companionNudgeEnabled: true }).companionNudgeEnabled).toBe(true);
+    expect(coerceControls({ autoProposalEnabled: "yes" }).autoProposalEnabled).toBe(
+      base.autoProposalEnabled,
+    );
+  });
+
   it("accepts hold, shadow, and applied reweighting modes, rejecting others", () => {
     expect(coerceControls({ reweightingMode: "applied" }).reweightingMode).toBe("applied");
     expect(coerceControls({ reweightingMode: "shadow" }).reweightingMode).toBe("shadow");
