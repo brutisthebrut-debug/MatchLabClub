@@ -2638,6 +2638,296 @@ paths:
                   error:
                     type: string
 
+  /me/companion:
+    get:
+      operationId: getCompanion
+      tags: [audits]
+      summary: The current state of Echo, the persistent companion
+      description: |
+        Returns Echo's current read on the signed-in user: a persona-voiced
+        greeting, the honest read, the single next move, an optional challenge,
+        Echo's recent self-made observations, open commitments it is holding the
+        user to, the unread notification count, and the user's persona/candor
+        and channel settings. Deterministic and always non-empty. Requires auth.
+      responses:
+        "200":
+          description: Echo's present-tense view of the user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanionState"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /me/companion/say:
+    post:
+      operationId: sayToCompanion
+      tags: [audits]
+      summary: Say something to Echo and get an honest reply
+      description: |
+        Persists the user's message and Echo's reply to the durable thread. The
+        deterministic baseline always answers; when the account has granted
+        content consent, Claude shapes a warmer, persona-voiced reply from
+        derived signal coverage only (never raw content). If Echo detects a
+        commitment ("I'll text her back tonight") it records it to follow up on.
+        Requires auth.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanionSayInput"
+      responses:
+        "200":
+          description: Echo's reply plus any commitment it recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanionSayResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /me/companion/review:
+    post:
+      operationId: reviewMessageWithCompanion
+      tags: [audits]
+      summary: Ask Echo for an honest read on a message
+      description: |
+        The user shares one message they are about to send or just received and
+        Echo reacts honestly. The deterministic review is the baseline; when the
+        account has granted content consent, Claude sharpens it. The message is
+        consent-gated before any model sees it and is never stored. Requires auth.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanionReviewInput"
+      responses:
+        "200":
+          description: Echo's read on the message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanionReviewResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /me/companion/notifications:
+    get:
+      operationId: listCompanionNotifications
+      tags: [audits]
+      summary: Echo's in-app notification feed
+      description: |
+        Returns the most recent notifications Echo has surfaced for the user
+        (proactive nudges, commitment follow-ups, system notes), newest first.
+        Requires auth.
+      responses:
+        "200":
+          description: The notification feed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanionNotificationList"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /me/companion/notifications/read:
+    post:
+      operationId: markCompanionNotificationsRead
+      tags: [audits]
+      summary: Mark Echo notifications as read
+      description: |
+        Marks the given notification ids as read, or all of them when no ids are
+        supplied. Returns the new unread count. Requires auth.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanionMarkReadInput"
+      responses:
+        "200":
+          description: The updated unread count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanionUnreadCount"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /me/companion/settings:
+    patch:
+      operationId: updateCompanionSettings
+      tags: [audits]
+      summary: Update Echo's persona, candor, and channel preferences
+      description: |
+        Sets how Echo sounds (persona), how blunt it is (candor 1 to 3), and how
+        it is allowed to reach the user off-screen (in-app, email, SMS with an
+        explicit phone number and opt-in). Requires auth.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanionSettingsInput"
+      responses:
+        "200":
+          description: The updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanionSettings"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /me/companion/commitments/{id}/done:
+    post:
+      operationId: completeCompanionCommitment
+      tags: [audits]
+      summary: Mark a commitment Echo is tracking as done
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The updated commitment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanionCommitment"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "404":
+          description: Commitment not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /me/companion/observations/{id}/dismiss:
+    post:
+      operationId: dismissCompanionObservation
+      tags: [audits]
+      summary: Dismiss one of Echo's observations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Acknowledged
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    type: boolean
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        "404":
+          description: Observation not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
   /insights:
     get:
       operationId: listInsights
@@ -6314,6 +6604,286 @@ components:
           type: string
         isFallback:
           type: boolean
+
+    CompanionPersona:
+      type: string
+      enum: [best_friend, tough_coach, witty_sibling, calm_mentor]
+
+    CompanionObservation:
+      type: object
+      required: [id, kind, severity, body, createdAt]
+      properties:
+        id:
+          type: integer
+        kind:
+          type: string
+        severity:
+          type: string
+          enum: [praise, note, challenge]
+        body:
+          type: string
+        signalId:
+          oneOf:
+            - type: string
+            - type: "null"
+        createdAt:
+          type: string
+
+    CompanionCommitment:
+      type: object
+      required: [id, body, status, createdAt]
+      properties:
+        id:
+          type: integer
+        body:
+          type: string
+        status:
+          type: string
+          enum: [open, done, missed]
+        dueAt:
+          oneOf:
+            - type: string
+            - type: "null"
+        createdAt:
+          type: string
+        completedAt:
+          oneOf:
+            - type: string
+            - type: "null"
+
+    CompanionNextMove:
+      type: object
+      required: [label, detail, href, points]
+      properties:
+        label:
+          type: string
+        detail:
+          type: string
+        href:
+          type: string
+        points:
+          type: integer
+
+    CompanionSettings:
+      type: object
+      required: [persona, candor, inApp, email, sms]
+      properties:
+        persona:
+          $ref: "#/components/schemas/CompanionPersona"
+        candor:
+          type: integer
+          minimum: 1
+          maximum: 3
+        inApp:
+          type: boolean
+        email:
+          type: boolean
+        sms:
+          type: boolean
+        phone:
+          oneOf:
+            - type: string
+            - type: "null"
+
+    CompanionState:
+      type: object
+      required:
+        - personaLabel
+        - greeting
+        - read
+        - challenge
+        - nextMove
+        - readinessScore
+        - threshold
+        - eligible
+        - observations
+        - commitments
+        - unreadCount
+        - settings
+      properties:
+        personaLabel:
+          type: string
+        greeting:
+          type: string
+        read:
+          type: string
+        challenge:
+          oneOf:
+            - type: string
+            - type: "null"
+        nextMove:
+          oneOf:
+            - $ref: "#/components/schemas/CompanionNextMove"
+            - type: "null"
+        readinessScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        threshold:
+          type: integer
+          minimum: 0
+          maximum: 100
+        eligible:
+          type: boolean
+        observations:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompanionObservation"
+        commitments:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompanionCommitment"
+        unreadCount:
+          type: integer
+          minimum: 0
+        settings:
+          $ref: "#/components/schemas/CompanionSettings"
+
+    CompanionSayInput:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 2000
+
+    CompanionTurn:
+      type: object
+      required: [role, content, createdAt]
+      properties:
+        role:
+          type: string
+          enum: [user, echo]
+        content:
+          type: string
+        createdAt:
+          type: string
+
+    CompanionSayResult:
+      type: object
+      required: [answer, followUp, grounding, isFallback]
+      properties:
+        answer:
+          type: string
+        followUp:
+          type: string
+        grounding:
+          type: array
+          items:
+            type: string
+        isFallback:
+          type: boolean
+        commitment:
+          oneOf:
+            - $ref: "#/components/schemas/CompanionCommitment"
+            - type: "null"
+
+    CompanionReviewInput:
+      type: object
+      required: [text, direction]
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        direction:
+          type: string
+          enum: [sending, received]
+
+    CompanionReviewResult:
+      type: object
+      required: [verdict, strengths, risks, suggestion, isFallback]
+      properties:
+        verdict:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        risks:
+          type: array
+          items:
+            type: string
+        suggestion:
+          type: string
+        isFallback:
+          type: boolean
+
+    CompanionNotification:
+      type: object
+      required: [id, source, kind, title, body, read, createdAt]
+      properties:
+        id:
+          type: integer
+        source:
+          type: string
+        kind:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        ctaHref:
+          oneOf:
+            - type: string
+            - type: "null"
+        ctaLabel:
+          oneOf:
+            - type: string
+            - type: "null"
+        read:
+          type: boolean
+        createdAt:
+          type: string
+
+    CompanionNotificationList:
+      type: object
+      required: [notifications, unreadCount]
+      properties:
+        notifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompanionNotification"
+        unreadCount:
+          type: integer
+          minimum: 0
+
+    CompanionMarkReadInput:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+
+    CompanionUnreadCount:
+      type: object
+      required: [unreadCount]
+      properties:
+        unreadCount:
+          type: integer
+          minimum: 0
+
+    CompanionSettingsInput:
+      type: object
+      properties:
+        persona:
+          $ref: "#/components/schemas/CompanionPersona"
+        candor:
+          type: integer
+          minimum: 1
+          maximum: 3
+        inApp:
+          type: boolean
+        email:
+          type: boolean
+        sms:
+          type: boolean
+        phone:
+          oneOf:
+            - type: string
+            - type: "null"
 
     PostDateOutcome:
       type: string

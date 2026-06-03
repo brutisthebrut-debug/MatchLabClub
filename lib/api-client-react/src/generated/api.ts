@@ -59,11 +59,24 @@ import type {
   CoachFollowUpRecorded,
   CoachFollowUpStats,
   CoachFollowUpTimeline,
+  CompanionCommitment,
+  CompanionMarkReadInput,
+  CompanionNotificationList,
+  CompanionReviewInput,
+  CompanionReviewResult,
+  CompanionSayInput,
+  CompanionSayResult,
+  CompanionSettings,
+  CompanionSettingsInput,
+  CompanionState,
+  CompanionUnreadCount,
   CompassRead,
   CompassReadInput,
   CompassReadList,
   CompassScreenshotExtractResult,
   CompassSignalContext,
+  CompleteCompanionCommitment401,
+  CompleteCompanionCommitment404,
   CorrectAuditSourceApp400,
   CorrectAuditSourceApp404,
   CorrectSourceAppInput,
@@ -93,6 +106,9 @@ import type {
   DeleteWellnessAnswerResult,
   DeleteWellnessTag200,
   DigestPreferencesState,
+  DismissCompanionObservation200,
+  DismissCompanionObservation401,
+  DismissCompanionObservation404,
   EchoMatchRead,
   EmailInsight,
   EmailInsightAnalysis,
@@ -108,6 +124,7 @@ import type {
   GeoipRefreshResult,
   GetAiFallbackRateParams,
   GetAuditReportVersion404,
+  GetCompanion401,
   GetFounderFunnelParams,
   GetFounderReferralsParams,
   GetMirrorPortrait401,
@@ -125,11 +142,13 @@ import type {
   LifePulseRecent,
   ListAuditReportVersions404,
   ListAuditsParams,
+  ListCompanionNotifications401,
   ListExpiringTrashedAuditsParams,
   ListJournalEntriesParams,
   ListPostDateNotesParams,
   ListWellnessAnswersParams,
   LogoutSuccess,
+  MarkCompanionNotificationsRead401,
   MatchExternalReadInput,
   MatchExternalReadResult,
   MatchPoolIneligible,
@@ -170,7 +189,11 @@ import type {
   RehearsalTurnInput,
   RehearsalTurnResult,
   RestoreAllTrashResult,
+  ReviewMessageWithCompanion400,
+  ReviewMessageWithCompanion401,
   RevokeSessionsResult,
+  SayToCompanion400,
+  SayToCompanion401,
   ScreenshotAuditInput,
   ScreenshotAuditReport,
   ScreenshotExtractInput,
@@ -184,6 +207,8 @@ import type {
   TrustLedger,
   UnregisterPushTokenParams,
   UnregisterPushTokenResult,
+  UpdateCompanionSettings400,
+  UpdateCompanionSettings401,
   UserAchievements,
   UserJourneySummary,
   WaitlistEntry,
@@ -7498,6 +7523,613 @@ export const useAskMirror = <TError = ErrorType<AskMirror400 | AskMirror401>,
         TContext
       > => {
       return useMutation(getAskMirrorMutationOptions(options));
+    }
+
+export const getGetCompanionUrl = () => {
+
+
+
+
+  return `/api/me/companion`
+}
+
+/**
+ * Returns Echo's current read on the signed-in user: a persona-voiced
+greeting, the honest read, the single next move, an optional challenge,
+Echo's recent self-made observations, open commitments it is holding the
+user to, the unread notification count, and the user's persona/candor
+and channel settings. Deterministic and always non-empty. Requires auth.
+
+ * @summary The current state of Echo, the persistent companion
+ */
+export const getCompanion = async ( options?: RequestInit): Promise<CompanionState> => {
+
+  return customFetch<CompanionState>(getGetCompanionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCompanionQueryKey = () => {
+    return [
+    `/api/me/companion`
+    ] as const;
+    }
+
+
+export const getGetCompanionQueryOptions = <TData = Awaited<ReturnType<typeof getCompanion>>, TError = ErrorType<GetCompanion401>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCompanion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCompanionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCompanion>>> = ({ signal }) => getCompanion({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCompanion>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCompanionQueryResult = NonNullable<Awaited<ReturnType<typeof getCompanion>>>
+export type GetCompanionQueryError = ErrorType<GetCompanion401>
+
+
+/**
+ * @summary The current state of Echo, the persistent companion
+ */
+
+export function useGetCompanion<TData = Awaited<ReturnType<typeof getCompanion>>, TError = ErrorType<GetCompanion401>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCompanion>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCompanionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSayToCompanionUrl = () => {
+
+
+
+
+  return `/api/me/companion/say`
+}
+
+/**
+ * Persists the user's message and Echo's reply to the durable thread. The
+deterministic baseline always answers; when the account has granted
+content consent, Claude shapes a warmer, persona-voiced reply from
+derived signal coverage only (never raw content). If Echo detects a
+commitment ("I'll text her back tonight") it records it to follow up on.
+Requires auth.
+
+ * @summary Say something to Echo and get an honest reply
+ */
+export const sayToCompanion = async (companionSayInput: CompanionSayInput, options?: RequestInit): Promise<CompanionSayResult> => {
+
+  return customFetch<CompanionSayResult>(getSayToCompanionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      companionSayInput,)
+  }
+);}
+
+
+
+
+export const getSayToCompanionMutationOptions = <TError = ErrorType<SayToCompanion400 | SayToCompanion401>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sayToCompanion>>, TError,{data: BodyType<CompanionSayInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sayToCompanion>>, TError,{data: BodyType<CompanionSayInput>}, TContext> => {
+
+const mutationKey = ['sayToCompanion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sayToCompanion>>, {data: BodyType<CompanionSayInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  sayToCompanion(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SayToCompanionMutationResult = NonNullable<Awaited<ReturnType<typeof sayToCompanion>>>
+    export type SayToCompanionMutationBody = BodyType<CompanionSayInput>
+    export type SayToCompanionMutationError = ErrorType<SayToCompanion400 | SayToCompanion401>
+
+    /**
+ * @summary Say something to Echo and get an honest reply
+ */
+export const useSayToCompanion = <TError = ErrorType<SayToCompanion400 | SayToCompanion401>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sayToCompanion>>, TError,{data: BodyType<CompanionSayInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sayToCompanion>>,
+        TError,
+        {data: BodyType<CompanionSayInput>},
+        TContext
+      > => {
+      return useMutation(getSayToCompanionMutationOptions(options));
+    }
+
+export const getReviewMessageWithCompanionUrl = () => {
+
+
+
+
+  return `/api/me/companion/review`
+}
+
+/**
+ * The user shares one message they are about to send or just received and
+Echo reacts honestly. The deterministic review is the baseline; when the
+account has granted content consent, Claude sharpens it. The message is
+consent-gated before any model sees it and is never stored. Requires auth.
+
+ * @summary Ask Echo for an honest read on a message
+ */
+export const reviewMessageWithCompanion = async (companionReviewInput: CompanionReviewInput, options?: RequestInit): Promise<CompanionReviewResult> => {
+
+  return customFetch<CompanionReviewResult>(getReviewMessageWithCompanionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      companionReviewInput,)
+  }
+);}
+
+
+
+
+export const getReviewMessageWithCompanionMutationOptions = <TError = ErrorType<ReviewMessageWithCompanion400 | ReviewMessageWithCompanion401>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewMessageWithCompanion>>, TError,{data: BodyType<CompanionReviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewMessageWithCompanion>>, TError,{data: BodyType<CompanionReviewInput>}, TContext> => {
+
+const mutationKey = ['reviewMessageWithCompanion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewMessageWithCompanion>>, {data: BodyType<CompanionReviewInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  reviewMessageWithCompanion(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewMessageWithCompanionMutationResult = NonNullable<Awaited<ReturnType<typeof reviewMessageWithCompanion>>>
+    export type ReviewMessageWithCompanionMutationBody = BodyType<CompanionReviewInput>
+    export type ReviewMessageWithCompanionMutationError = ErrorType<ReviewMessageWithCompanion400 | ReviewMessageWithCompanion401>
+
+    /**
+ * @summary Ask Echo for an honest read on a message
+ */
+export const useReviewMessageWithCompanion = <TError = ErrorType<ReviewMessageWithCompanion400 | ReviewMessageWithCompanion401>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewMessageWithCompanion>>, TError,{data: BodyType<CompanionReviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reviewMessageWithCompanion>>,
+        TError,
+        {data: BodyType<CompanionReviewInput>},
+        TContext
+      > => {
+      return useMutation(getReviewMessageWithCompanionMutationOptions(options));
+    }
+
+export const getListCompanionNotificationsUrl = () => {
+
+
+
+
+  return `/api/me/companion/notifications`
+}
+
+/**
+ * Returns the most recent notifications Echo has surfaced for the user
+(proactive nudges, commitment follow-ups, system notes), newest first.
+Requires auth.
+
+ * @summary Echo's in-app notification feed
+ */
+export const listCompanionNotifications = async ( options?: RequestInit): Promise<CompanionNotificationList> => {
+
+  return customFetch<CompanionNotificationList>(getListCompanionNotificationsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCompanionNotificationsQueryKey = () => {
+    return [
+    `/api/me/companion/notifications`
+    ] as const;
+    }
+
+
+export const getListCompanionNotificationsQueryOptions = <TData = Awaited<ReturnType<typeof listCompanionNotifications>>, TError = ErrorType<ListCompanionNotifications401>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCompanionNotifications>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCompanionNotificationsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCompanionNotifications>>> = ({ signal }) => listCompanionNotifications({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCompanionNotifications>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCompanionNotificationsQueryResult = NonNullable<Awaited<ReturnType<typeof listCompanionNotifications>>>
+export type ListCompanionNotificationsQueryError = ErrorType<ListCompanionNotifications401>
+
+
+/**
+ * @summary Echo's in-app notification feed
+ */
+
+export function useListCompanionNotifications<TData = Awaited<ReturnType<typeof listCompanionNotifications>>, TError = ErrorType<ListCompanionNotifications401>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCompanionNotifications>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCompanionNotificationsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getMarkCompanionNotificationsReadUrl = () => {
+
+
+
+
+  return `/api/me/companion/notifications/read`
+}
+
+/**
+ * Marks the given notification ids as read, or all of them when no ids are
+supplied. Returns the new unread count. Requires auth.
+
+ * @summary Mark Echo notifications as read
+ */
+export const markCompanionNotificationsRead = async (companionMarkReadInput: CompanionMarkReadInput, options?: RequestInit): Promise<CompanionUnreadCount> => {
+
+  return customFetch<CompanionUnreadCount>(getMarkCompanionNotificationsReadUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      companionMarkReadInput,)
+  }
+);}
+
+
+
+
+export const getMarkCompanionNotificationsReadMutationOptions = <TError = ErrorType<MarkCompanionNotificationsRead401>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markCompanionNotificationsRead>>, TError,{data: BodyType<CompanionMarkReadInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof markCompanionNotificationsRead>>, TError,{data: BodyType<CompanionMarkReadInput>}, TContext> => {
+
+const mutationKey = ['markCompanionNotificationsRead'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markCompanionNotificationsRead>>, {data: BodyType<CompanionMarkReadInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  markCompanionNotificationsRead(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkCompanionNotificationsReadMutationResult = NonNullable<Awaited<ReturnType<typeof markCompanionNotificationsRead>>>
+    export type MarkCompanionNotificationsReadMutationBody = BodyType<CompanionMarkReadInput>
+    export type MarkCompanionNotificationsReadMutationError = ErrorType<MarkCompanionNotificationsRead401>
+
+    /**
+ * @summary Mark Echo notifications as read
+ */
+export const useMarkCompanionNotificationsRead = <TError = ErrorType<MarkCompanionNotificationsRead401>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markCompanionNotificationsRead>>, TError,{data: BodyType<CompanionMarkReadInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof markCompanionNotificationsRead>>,
+        TError,
+        {data: BodyType<CompanionMarkReadInput>},
+        TContext
+      > => {
+      return useMutation(getMarkCompanionNotificationsReadMutationOptions(options));
+    }
+
+export const getUpdateCompanionSettingsUrl = () => {
+
+
+
+
+  return `/api/me/companion/settings`
+}
+
+/**
+ * Sets how Echo sounds (persona), how blunt it is (candor 1 to 3), and how
+it is allowed to reach the user off-screen (in-app, email, SMS with an
+explicit phone number and opt-in). Requires auth.
+
+ * @summary Update Echo's persona, candor, and channel preferences
+ */
+export const updateCompanionSettings = async (companionSettingsInput: CompanionSettingsInput, options?: RequestInit): Promise<CompanionSettings> => {
+
+  return customFetch<CompanionSettings>(getUpdateCompanionSettingsUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      companionSettingsInput,)
+  }
+);}
+
+
+
+
+export const getUpdateCompanionSettingsMutationOptions = <TError = ErrorType<UpdateCompanionSettings400 | UpdateCompanionSettings401>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCompanionSettings>>, TError,{data: BodyType<CompanionSettingsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateCompanionSettings>>, TError,{data: BodyType<CompanionSettingsInput>}, TContext> => {
+
+const mutationKey = ['updateCompanionSettings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCompanionSettings>>, {data: BodyType<CompanionSettingsInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateCompanionSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCompanionSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateCompanionSettings>>>
+    export type UpdateCompanionSettingsMutationBody = BodyType<CompanionSettingsInput>
+    export type UpdateCompanionSettingsMutationError = ErrorType<UpdateCompanionSettings400 | UpdateCompanionSettings401>
+
+    /**
+ * @summary Update Echo's persona, candor, and channel preferences
+ */
+export const useUpdateCompanionSettings = <TError = ErrorType<UpdateCompanionSettings400 | UpdateCompanionSettings401>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCompanionSettings>>, TError,{data: BodyType<CompanionSettingsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateCompanionSettings>>,
+        TError,
+        {data: BodyType<CompanionSettingsInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateCompanionSettingsMutationOptions(options));
+    }
+
+export const getCompleteCompanionCommitmentUrl = (id: number,) => {
+
+
+
+
+  return `/api/me/companion/commitments/${id}/done`
+}
+
+/**
+ * @summary Mark a commitment Echo is tracking as done
+ */
+export const completeCompanionCommitment = async (id: number, options?: RequestInit): Promise<CompanionCommitment> => {
+
+  return customFetch<CompanionCommitment>(getCompleteCompanionCommitmentUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCompleteCompanionCommitmentMutationOptions = <TError = ErrorType<CompleteCompanionCommitment401 | CompleteCompanionCommitment404>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeCompanionCommitment>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof completeCompanionCommitment>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['completeCompanionCommitment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeCompanionCommitment>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  completeCompanionCommitment(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompleteCompanionCommitmentMutationResult = NonNullable<Awaited<ReturnType<typeof completeCompanionCommitment>>>
+
+    export type CompleteCompanionCommitmentMutationError = ErrorType<CompleteCompanionCommitment401 | CompleteCompanionCommitment404>
+
+    /**
+ * @summary Mark a commitment Echo is tracking as done
+ */
+export const useCompleteCompanionCommitment = <TError = ErrorType<CompleteCompanionCommitment401 | CompleteCompanionCommitment404>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeCompanionCommitment>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof completeCompanionCommitment>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getCompleteCompanionCommitmentMutationOptions(options));
+    }
+
+export const getDismissCompanionObservationUrl = (id: number,) => {
+
+
+
+
+  return `/api/me/companion/observations/${id}/dismiss`
+}
+
+/**
+ * @summary Dismiss one of Echo's observations
+ */
+export const dismissCompanionObservation = async (id: number, options?: RequestInit): Promise<DismissCompanionObservation200> => {
+
+  return customFetch<DismissCompanionObservation200>(getDismissCompanionObservationUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getDismissCompanionObservationMutationOptions = <TError = ErrorType<DismissCompanionObservation401 | DismissCompanionObservation404>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dismissCompanionObservation>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof dismissCompanionObservation>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['dismissCompanionObservation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dismissCompanionObservation>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  dismissCompanionObservation(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DismissCompanionObservationMutationResult = NonNullable<Awaited<ReturnType<typeof dismissCompanionObservation>>>
+
+    export type DismissCompanionObservationMutationError = ErrorType<DismissCompanionObservation401 | DismissCompanionObservation404>
+
+    /**
+ * @summary Dismiss one of Echo's observations
+ */
+export const useDismissCompanionObservation = <TError = ErrorType<DismissCompanionObservation401 | DismissCompanionObservation404>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dismissCompanionObservation>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof dismissCompanionObservation>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDismissCompanionObservationMutationOptions(options));
     }
 
 export const getListInsightsUrl = () => {

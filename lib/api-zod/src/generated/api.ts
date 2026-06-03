@@ -3569,6 +3569,238 @@ export const AskMirrorResponse = zod.object({
 
 
 /**
+ * Returns Echo's current read on the signed-in user: a persona-voiced
+greeting, the honest read, the single next move, an optional challenge,
+Echo's recent self-made observations, open commitments it is holding the
+user to, the unread notification count, and the user's persona/candor
+and channel settings. Deterministic and always non-empty. Requires auth.
+
+ * @summary The current state of Echo, the persistent companion
+ */
+export const getCompanionResponseReadinessScoreMin = 0;
+export const getCompanionResponseReadinessScoreMax = 100;
+
+export const getCompanionResponseThresholdMin = 0;
+export const getCompanionResponseThresholdMax = 100;
+
+export const getCompanionResponseUnreadCountMin = 0;
+
+export const getCompanionResponseSettingsCandorMax = 3;
+
+
+
+export const GetCompanionResponse = zod.object({
+  "personaLabel": zod.string(),
+  "greeting": zod.string(),
+  "read": zod.string(),
+  "challenge": zod.union([zod.string(),zod.null()]),
+  "nextMove": zod.union([zod.object({
+  "label": zod.string(),
+  "detail": zod.string(),
+  "href": zod.string(),
+  "points": zod.number()
+}),zod.null()]),
+  "readinessScore": zod.number().min(getCompanionResponseReadinessScoreMin).max(getCompanionResponseReadinessScoreMax),
+  "threshold": zod.number().min(getCompanionResponseThresholdMin).max(getCompanionResponseThresholdMax),
+  "eligible": zod.boolean(),
+  "observations": zod.array(zod.object({
+  "id": zod.number(),
+  "kind": zod.string(),
+  "severity": zod.enum(['praise', 'note', 'challenge']),
+  "body": zod.string(),
+  "signalId": zod.union([zod.string(),zod.null()]).optional(),
+  "createdAt": zod.string()
+})),
+  "commitments": zod.array(zod.object({
+  "id": zod.number(),
+  "body": zod.string(),
+  "status": zod.enum(['open', 'done', 'missed']),
+  "dueAt": zod.union([zod.string(),zod.null()]).optional(),
+  "createdAt": zod.string(),
+  "completedAt": zod.union([zod.string(),zod.null()]).optional()
+})),
+  "unreadCount": zod.number().min(getCompanionResponseUnreadCountMin),
+  "settings": zod.object({
+  "persona": zod.enum(['best_friend', 'tough_coach', 'witty_sibling', 'calm_mentor']),
+  "candor": zod.number().min(1).max(getCompanionResponseSettingsCandorMax),
+  "inApp": zod.boolean(),
+  "email": zod.boolean(),
+  "sms": zod.boolean(),
+  "phone": zod.union([zod.string(),zod.null()]).optional()
+})
+})
+
+
+/**
+ * Persists the user's message and Echo's reply to the durable thread. The
+deterministic baseline always answers; when the account has granted
+content consent, Claude shapes a warmer, persona-voiced reply from
+derived signal coverage only (never raw content). If Echo detects a
+commitment ("I'll text her back tonight") it records it to follow up on.
+Requires auth.
+
+ * @summary Say something to Echo and get an honest reply
+ */
+export const sayToCompanionBodyMessageMax = 2000;
+
+
+
+export const SayToCompanionBody = zod.object({
+  "message": zod.string().min(1).max(sayToCompanionBodyMessageMax)
+})
+
+export const SayToCompanionResponse = zod.object({
+  "answer": zod.string(),
+  "followUp": zod.string(),
+  "grounding": zod.array(zod.string()),
+  "isFallback": zod.boolean(),
+  "commitment": zod.union([zod.object({
+  "id": zod.number(),
+  "body": zod.string(),
+  "status": zod.enum(['open', 'done', 'missed']),
+  "dueAt": zod.union([zod.string(),zod.null()]).optional(),
+  "createdAt": zod.string(),
+  "completedAt": zod.union([zod.string(),zod.null()]).optional()
+}),zod.null()]).optional()
+})
+
+
+/**
+ * The user shares one message they are about to send or just received and
+Echo reacts honestly. The deterministic review is the baseline; when the
+account has granted content consent, Claude sharpens it. The message is
+consent-gated before any model sees it and is never stored. Requires auth.
+
+ * @summary Ask Echo for an honest read on a message
+ */
+export const reviewMessageWithCompanionBodyTextMax = 4000;
+
+
+
+export const ReviewMessageWithCompanionBody = zod.object({
+  "text": zod.string().min(1).max(reviewMessageWithCompanionBodyTextMax),
+  "direction": zod.enum(['sending', 'received'])
+})
+
+export const ReviewMessageWithCompanionResponse = zod.object({
+  "verdict": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "risks": zod.array(zod.string()),
+  "suggestion": zod.string(),
+  "isFallback": zod.boolean()
+})
+
+
+/**
+ * Returns the most recent notifications Echo has surfaced for the user
+(proactive nudges, commitment follow-ups, system notes), newest first.
+Requires auth.
+
+ * @summary Echo's in-app notification feed
+ */
+export const listCompanionNotificationsResponseUnreadCountMin = 0;
+
+
+
+export const ListCompanionNotificationsResponse = zod.object({
+  "notifications": zod.array(zod.object({
+  "id": zod.number(),
+  "source": zod.string(),
+  "kind": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "ctaHref": zod.union([zod.string(),zod.null()]).optional(),
+  "ctaLabel": zod.union([zod.string(),zod.null()]).optional(),
+  "read": zod.boolean(),
+  "createdAt": zod.string()
+})),
+  "unreadCount": zod.number().min(listCompanionNotificationsResponseUnreadCountMin)
+})
+
+
+/**
+ * Marks the given notification ids as read, or all of them when no ids are
+supplied. Returns the new unread count. Requires auth.
+
+ * @summary Mark Echo notifications as read
+ */
+export const MarkCompanionNotificationsReadBody = zod.object({
+  "ids": zod.array(zod.number()).optional()
+})
+
+export const markCompanionNotificationsReadResponseUnreadCountMin = 0;
+
+
+
+export const MarkCompanionNotificationsReadResponse = zod.object({
+  "unreadCount": zod.number().min(markCompanionNotificationsReadResponseUnreadCountMin)
+})
+
+
+/**
+ * Sets how Echo sounds (persona), how blunt it is (candor 1 to 3), and how
+it is allowed to reach the user off-screen (in-app, email, SMS with an
+explicit phone number and opt-in). Requires auth.
+
+ * @summary Update Echo's persona, candor, and channel preferences
+ */
+export const updateCompanionSettingsBodyCandorMax = 3;
+
+
+
+export const UpdateCompanionSettingsBody = zod.object({
+  "persona": zod.enum(['best_friend', 'tough_coach', 'witty_sibling', 'calm_mentor']).optional(),
+  "candor": zod.number().min(1).max(updateCompanionSettingsBodyCandorMax).optional(),
+  "inApp": zod.boolean().optional(),
+  "email": zod.boolean().optional(),
+  "sms": zod.boolean().optional(),
+  "phone": zod.union([zod.string(),zod.null()]).optional()
+})
+
+export const updateCompanionSettingsResponseCandorMax = 3;
+
+
+
+export const UpdateCompanionSettingsResponse = zod.object({
+  "persona": zod.enum(['best_friend', 'tough_coach', 'witty_sibling', 'calm_mentor']),
+  "candor": zod.number().min(1).max(updateCompanionSettingsResponseCandorMax),
+  "inApp": zod.boolean(),
+  "email": zod.boolean(),
+  "sms": zod.boolean(),
+  "phone": zod.union([zod.string(),zod.null()]).optional()
+})
+
+
+/**
+ * @summary Mark a commitment Echo is tracking as done
+ */
+export const CompleteCompanionCommitmentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const CompleteCompanionCommitmentResponse = zod.object({
+  "id": zod.number(),
+  "body": zod.string(),
+  "status": zod.enum(['open', 'done', 'missed']),
+  "dueAt": zod.union([zod.string(),zod.null()]).optional(),
+  "createdAt": zod.string(),
+  "completedAt": zod.union([zod.string(),zod.null()]).optional()
+})
+
+
+/**
+ * @summary Dismiss one of Echo's observations
+ */
+export const DismissCompanionObservationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DismissCompanionObservationResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
  * @summary List email insight imports
  */
 export const ListInsightsResponseItem = zod.object({

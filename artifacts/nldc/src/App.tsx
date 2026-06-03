@@ -29,6 +29,7 @@ import ShebangsPartner from "@/pages/ShebangsPartner";
 import Blueprint from "@/pages/Blueprint";
 import MirrorProfile from "@/pages/MirrorProfile";
 import YourMirror from "@/pages/YourMirror";
+import Echo from "@/pages/Echo";
 import HowItWorks from "@/pages/HowItWorks";
 import Archetype from "@/pages/Archetype";
 import Reflection from "@/pages/Reflection";
@@ -208,6 +209,7 @@ function Router() {
       <Route path="/blueprint" component={Blueprint} />
       <Route path="/mirror" component={MirrorProfile} />
       <Route path="/your-mirror" component={YourMirror} />
+      <Route path="/echo" component={Echo} />
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/mirror/journal" component={JournalPage} />
       <Route path="/mirror/dates" component={DatesPage} />

@@ -32,6 +32,12 @@ import {
   matchingReadinessSnapshotsTable,
   matchingNudgeStateTable,
   mirrorDigestPrefsTable,
+  companionStateTable,
+  companionMessagesTable,
+  companionObservationsTable,
+  companionCommitmentsTable,
+  companionNotificationsTable,
+  companionChannelPrefsTable,
 } from "@workspace/db";
 import {
   ExportMyDataResponse,
@@ -647,6 +653,27 @@ router.delete("/account", async (req, res): Promise<void> => {
     db.delete(loginNotificationsTable).where(eq(loginNotificationsTable.userId, userId)),
   ]);
 
+  // Echo companion surfaces: the evolving model of the user, the conversation
+  // thread, Echo's own observations, the commitments it tracks, its in-app
+  // notification feed, and channel preferences (including any phone number for
+  // SMS). All first-party personal data; wiped with the account.
+  await Promise.all([
+    db.delete(companionStateTable).where(eq(companionStateTable.userId, userId)),
+    db.delete(companionMessagesTable).where(eq(companionMessagesTable.userId, userId)),
+    db
+      .delete(companionObservationsTable)
+      .where(eq(companionObservationsTable.userId, userId)),
+    db
+      .delete(companionCommitmentsTable)
+      .where(eq(companionCommitmentsTable.userId, userId)),
+    db
+      .delete(companionNotificationsTable)
+      .where(eq(companionNotificationsTable.userId, userId)),
+    db
+      .delete(companionChannelPrefsTable)
+      .where(eq(companionChannelPrefsTable.userId, userId)),
+  ]);
+
   // Delete every active session belonging to this user (session JSONB
   // payload stores `user.id`).
   await db
@@ -982,6 +1009,45 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .where(eq(aiUsageCountersTable.userId, userId))
         .returning({ userId: aiUsageCountersTable.userId });
       tables["ai_usage_counters"] = aiUsageDel.length;
+
+      // Echo companion surfaces have NO FK to users.id (same rationale as the
+      // matching tables). Explicit wipe: state, thread, observations,
+      // commitments, notification feed, and channel prefs (incl. phone number).
+      const companionStateDel = await tx
+        .delete(companionStateTable)
+        .where(eq(companionStateTable.userId, userId))
+        .returning({ userId: companionStateTable.userId });
+      tables["companion_state"] = companionStateDel.length;
+
+      const companionMessagesDel = await tx
+        .delete(companionMessagesTable)
+        .where(eq(companionMessagesTable.userId, userId))
+        .returning({ id: companionMessagesTable.id });
+      tables["companion_messages"] = companionMessagesDel.length;
+
+      const companionObsDel = await tx
+        .delete(companionObservationsTable)
+        .where(eq(companionObservationsTable.userId, userId))
+        .returning({ id: companionObservationsTable.id });
+      tables["companion_observations"] = companionObsDel.length;
+
+      const companionCommitDel = await tx
+        .delete(companionCommitmentsTable)
+        .where(eq(companionCommitmentsTable.userId, userId))
+        .returning({ id: companionCommitmentsTable.id });
+      tables["companion_commitments"] = companionCommitDel.length;
+
+      const companionNotifDel = await tx
+        .delete(companionNotificationsTable)
+        .where(eq(companionNotificationsTable.userId, userId))
+        .returning({ id: companionNotificationsTable.id });
+      tables["companion_notifications"] = companionNotifDel.length;
+
+      const companionPrefsDel = await tx
+        .delete(companionChannelPrefsTable)
+        .where(eq(companionChannelPrefsTable.userId, userId))
+        .returning({ userId: companionChannelPrefsTable.userId });
+      tables["companion_channel_prefs"] = companionPrefsDel.length;
 
       // ── Finally the user row itself ───────────────────────────────────
       const userDel = await tx

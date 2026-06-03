@@ -93,6 +93,22 @@ export const mirrorDigestSchema = z.object({
 
 export type MirrorDigestAiOutput = z.infer<typeof mirrorDigestSchema>;
 
+export const echoReplySchema = z.object({
+  answer: z.string().trim().min(1),
+  followUp: z.string().trim().default(""),
+});
+
+export type EchoReplyAiOutput = z.infer<typeof echoReplySchema>;
+
+export const echoReviewSchema = z.object({
+  verdict: z.string().trim().min(1),
+  strengths: z.array(z.string().trim().min(1)).max(8).default([]),
+  risks: z.array(z.string().trim().min(1)).max(8).default([]),
+  suggestion: z.string().trim().min(1),
+});
+
+export type EchoReviewAiOutput = z.infer<typeof echoReviewSchema>;
+
 export const echoMatchReadSchema = z.object({
   headline: z.string().trim().min(1),
   reading: z.array(z.string().trim().min(1)).min(1),
@@ -128,6 +144,8 @@ export const aiToolSchemas = {
   "Your Mirror": mirrorAskSchema,
   "Mirror Digest": mirrorDigestSchema,
   "Echo Match Read": echoMatchReadSchema,
+  Echo: echoReplySchema,
+  "Echo Review": echoReviewSchema,
 } as const;
 
 export type AiToolName = keyof typeof aiToolSchemas;

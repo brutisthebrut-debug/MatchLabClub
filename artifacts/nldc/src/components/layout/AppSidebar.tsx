@@ -99,6 +99,7 @@ type NavSection = {
 // model of you that everything feeds. Every prior route is preserved, only
 // regrouped behind the journey and progressive disclosure. No page is orphaned.
 const OVERVIEW: NavLink[] = [
+  { name: "Echo", href: "/echo", icon: Sparkles },
   { name: "Your Mirror", href: "/your-mirror", icon: Eye },
   { name: "Home", href: "/me", icon: Brain },
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },

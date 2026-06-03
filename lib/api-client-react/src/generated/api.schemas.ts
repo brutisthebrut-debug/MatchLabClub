@@ -1795,6 +1795,191 @@ export interface MirrorAskResult {
   isFallback: boolean;
 }
 
+export type CompanionPersona = typeof CompanionPersona[keyof typeof CompanionPersona];
+
+
+export const CompanionPersona = {
+  best_friend: 'best_friend',
+  tough_coach: 'tough_coach',
+  witty_sibling: 'witty_sibling',
+  calm_mentor: 'calm_mentor',
+} as const;
+
+export type CompanionObservationSeverity = typeof CompanionObservationSeverity[keyof typeof CompanionObservationSeverity];
+
+
+export const CompanionObservationSeverity = {
+  praise: 'praise',
+  note: 'note',
+  challenge: 'challenge',
+} as const;
+
+export interface CompanionObservation {
+  id: number;
+  kind: string;
+  severity: CompanionObservationSeverity;
+  body: string;
+  signalId?: string | null;
+  createdAt: string;
+}
+
+export type CompanionCommitmentStatus = typeof CompanionCommitmentStatus[keyof typeof CompanionCommitmentStatus];
+
+
+export const CompanionCommitmentStatus = {
+  open: 'open',
+  done: 'done',
+  missed: 'missed',
+} as const;
+
+export interface CompanionCommitment {
+  id: number;
+  body: string;
+  status: CompanionCommitmentStatus;
+  dueAt?: string | null;
+  createdAt: string;
+  completedAt?: string | null;
+}
+
+export interface CompanionNextMove {
+  label: string;
+  detail: string;
+  href: string;
+  points: number;
+}
+
+export interface CompanionSettings {
+  persona: CompanionPersona;
+  /**
+     * @minimum 1
+     * @maximum 3
+     */
+  candor: number;
+  inApp: boolean;
+  email: boolean;
+  sms: boolean;
+  phone?: string | null;
+}
+
+export interface CompanionState {
+  personaLabel: string;
+  greeting: string;
+  read: string;
+  challenge: string | null;
+  nextMove: CompanionNextMove | null;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  readinessScore: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  threshold: number;
+  eligible: boolean;
+  observations: CompanionObservation[];
+  commitments: CompanionCommitment[];
+  /** @minimum 0 */
+  unreadCount: number;
+  settings: CompanionSettings;
+}
+
+export interface CompanionSayInput {
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  message: string;
+}
+
+export type CompanionTurnRole = typeof CompanionTurnRole[keyof typeof CompanionTurnRole];
+
+
+export const CompanionTurnRole = {
+  user: 'user',
+  echo: 'echo',
+} as const;
+
+export interface CompanionTurn {
+  role: CompanionTurnRole;
+  content: string;
+  createdAt: string;
+}
+
+export interface CompanionSayResult {
+  answer: string;
+  followUp: string;
+  grounding: string[];
+  isFallback: boolean;
+  commitment?: CompanionCommitment | null;
+}
+
+export type CompanionReviewInputDirection = typeof CompanionReviewInputDirection[keyof typeof CompanionReviewInputDirection];
+
+
+export const CompanionReviewInputDirection = {
+  sending: 'sending',
+  received: 'received',
+} as const;
+
+export interface CompanionReviewInput {
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  text: string;
+  direction: CompanionReviewInputDirection;
+}
+
+export interface CompanionReviewResult {
+  verdict: string;
+  strengths: string[];
+  risks: string[];
+  suggestion: string;
+  isFallback: boolean;
+}
+
+export interface CompanionNotification {
+  id: number;
+  source: string;
+  kind: string;
+  title: string;
+  body: string;
+  ctaHref?: string | null;
+  ctaLabel?: string | null;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface CompanionNotificationList {
+  notifications: CompanionNotification[];
+  /** @minimum 0 */
+  unreadCount: number;
+}
+
+export interface CompanionMarkReadInput {
+  ids?: number[];
+}
+
+export interface CompanionUnreadCount {
+  /** @minimum 0 */
+  unreadCount: number;
+}
+
+export interface CompanionSettingsInput {
+  persona?: CompanionPersona;
+  /**
+     * @minimum 1
+     * @maximum 3
+     */
+  candor?: number;
+  inApp?: boolean;
+  email?: boolean;
+  sms?: boolean;
+  phone?: string | null;
+}
+
 export interface JournalEntryInput {
   /**
      * Optional curated prompt the entry answers. Null = freeform.
@@ -3691,6 +3876,62 @@ export type AskMirror400 = {
 };
 
 export type AskMirror401 = {
+  error?: string;
+};
+
+export type GetCompanion401 = {
+  error?: string;
+};
+
+export type SayToCompanion400 = {
+  error?: string;
+};
+
+export type SayToCompanion401 = {
+  error?: string;
+};
+
+export type ReviewMessageWithCompanion400 = {
+  error?: string;
+};
+
+export type ReviewMessageWithCompanion401 = {
+  error?: string;
+};
+
+export type ListCompanionNotifications401 = {
+  error?: string;
+};
+
+export type MarkCompanionNotificationsRead401 = {
+  error?: string;
+};
+
+export type UpdateCompanionSettings400 = {
+  error?: string;
+};
+
+export type UpdateCompanionSettings401 = {
+  error?: string;
+};
+
+export type CompleteCompanionCommitment401 = {
+  error?: string;
+};
+
+export type CompleteCompanionCommitment404 = {
+  error?: string;
+};
+
+export type DismissCompanionObservation200 = {
+  ok: boolean;
+};
+
+export type DismissCompanionObservation401 = {
+  error?: string;
+};
+
+export type DismissCompanionObservation404 = {
   error?: string;
 };
 

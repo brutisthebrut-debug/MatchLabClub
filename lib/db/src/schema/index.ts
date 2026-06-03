@@ -39,3 +39,10 @@ export * from "./mirror_digest_prefs";
 export * from "./founder_brain";
 
 export * from "./journey_events";
+
+export * from "./companion_state";
+export * from "./companion_messages";
+export * from "./companion_observations";
+export * from "./companion_commitments";
+export * from "./companion_notifications";
+export * from "./companion_channel_prefs";

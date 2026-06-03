@@ -29,6 +29,11 @@ Two layers. The deterministic engine (`aiEngine.ts`) runs on every account by de
 - Optional env: `BENCHMARK_MIN_COHORT` — minimum number of people in a goal cohort before `/me/matching/benchmarks` will return anonymized per-lane percentiles; below this the endpoint reports `available: false` so no small-cohort comparison can leak (default 8, floored at 2).
 - Optional env: `AUTO_PROPOSAL_ENABLED` — turns on the background auto-proposal sweep that mints internal match proposals for eligible members. OFF unless set to a truthy value (`1`/`true`/`yes`/`on`); when off, matching is only minted on-demand by the discover route.
 - Optional env: `AUTO_PROPOSAL_INTERVAL_HOURS` — how often the auto-proposal sweep runs, in hours, when `AUTO_PROPOSAL_ENABLED` is on (default 6).
+- Optional env: `COMPANION_NUDGE_ENABLED` — turns on Echo's background proactivity sweep that writes proactive notifications (readiness dip, match waiting, gone quiet, missed commitment) to each engaged user's Echo feed and fans them out to opted-in off-site channels. OFF unless set to a truthy value (`1`/`true`/`yes`/`on`); when off, Echo only responds on demand.
+- Optional env: `COMPANION_NUDGE_INTERVAL_HOURS` — how often the companion nudge sweep runs, in hours, when `COMPANION_NUDGE_ENABLED` is on (default 12).
+- Optional env: `COMPANION_NUDGE_COOLDOWN_HOURS` — min hours between two nudges of the same kind for the same user, deduped against their own feed so repeated sweeps never spam (default 72).
+- Optional env: `COMPANION_NUDGE_QUIET_DAYS` — days of silence (no Echo messages) before Echo treats a user as "gone quiet" (default 7).
+- Optional env: `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER` — Twilio credentials for Echo SMS delivery. When any is unset (or the optional `twilio` package is not installed), `sms.ts` logs the message and reports `transport: "log"` instead of sending, mirroring `mailer.ts`. Echo only ever texts users who explicitly opted into SMS and supplied a number.
 
 > Operational runbooks (Sentry setup, monthly GeoIP refresh, Stripe payment-link creation + webhook/reconciliation) live in `OPERATIONS.md`. The summaries below stay here; the step-by-step procedures moved there to keep this file scannable.
 
