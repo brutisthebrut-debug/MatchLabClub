@@ -252,6 +252,37 @@ describe("buildReaction", () => {
     expect(r.nowSee).toMatch(/finally read/i);
   });
 
+  it("attributes an outcomes rise to what the user logged about real dates", () => {
+    const before = makePortrait(emptyBreakdown(), 30);
+    const after = makePortrait(breakdownWith({ postDate: 60 }), 40);
+    const r = buildReaction({
+      portrait: after,
+      previousScore: before.readinessScore,
+      previousCoverageByKey: coverageOf(before),
+      persona: "best_friend",
+      candor: 2,
+    });
+    expect(r.tone).toBe("rise");
+    expect(r.lanesMoved[0]!.key).toBe("postDate");
+    expect(r.nowSee).toMatch(/dates actually (go|went)/i);
+    expect(r.nowSee).not.toMatch(/post-date notes/i);
+  });
+
+  it("does not use the dates copy when another lane moved more than post-date", () => {
+    const before = makePortrait(emptyBreakdown(), 30);
+    const after = makePortrait(breakdownWith({ wellness: 80, postDate: 30 }), 42);
+    const r = buildReaction({
+      portrait: after,
+      previousScore: before.readinessScore,
+      previousCoverageByKey: coverageOf(before),
+      persona: "best_friend",
+      candor: 2,
+    });
+    expect(r.lanesMoved[0]!.key).toBe("wellness");
+    expect(r.nowSee).not.toMatch(/dates actually (go|went)/i);
+    expect(r.nowSee).toMatch(/finally read/i);
+  });
+
   it("celebrates crossing the matching threshold and exposes eligibility", () => {
     const before = makePortrait(breakdownWith({ wellness: 40 }), 45);
     const after = makePortrait(breakdownWith({ wellness: 80, compass: 70 }), 55);

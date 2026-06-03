@@ -369,6 +369,14 @@ function reactionNowSee(
       : "The picture of you just got a little sharper.";
   }
   const lane = top.label.toLowerCase();
+  // Post-date notes are the outcome lane that feeds the learning loop. When that
+  // is what moved, name it for what it is: the person telling Echo how real
+  // dates actually went, not just another signal getting a little clearer.
+  if (top.key === "postDate") {
+    return top.from <= 0
+      ? "Now that you have started telling me how your dates actually go, I can read what fits you in person, not just on paper."
+      : "Because you told me how those dates actually went, I can read what fits you in person a little better than I could a moment ago.";
+  }
   if (top.from <= 0) {
     return `Because of that, I can finally read your ${lane} instead of guessing at it.`;
   }
