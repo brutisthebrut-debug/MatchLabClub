@@ -1,5 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
+import { absoluteUrl, DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight, Clock, Award, Compass, Search, Target, Zap, HeartHandshake, Eye, BookOpen, UserCircle, Rocket, Gift, Map, Anchor, Shield, MessagesSquare } from "lucide-react";
@@ -48,8 +49,10 @@ const FEATURED_QUIZ_SLUG = "attachment-style";
 
 export default function Quizzes() {
   useMeta(
-    "Quiz Lab · MatchLab Club",
+    "Quiz Lab",
     "Short, honest quizzes that read your dating pattern in 60–90 seconds. No signup needed. Each one feeds your dating second-brain.",
+    absoluteUrl(DEFAULT_OG_IMAGE),
+    { canonicalUrl: absoluteUrl("/quizzes") },
   );
 
   const { user } = useAuth();

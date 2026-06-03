@@ -2,6 +2,7 @@ import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
+import { absoluteUrl, DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,7 +23,12 @@ const INTERESTS = ["Profile audit", "Message coaching", "Full dating reset", "Mo
 type WaitlistEntry = { id: number; email: string; firstName: string; position: number; createdAt: string };
 
 export default function Waitlist() {
-  useMeta("Early Access Waitlist. MatchLab Club", "Join the MatchLab Club waitlist. Early access to the limited launch cohort, lifetime founding-member pricing, and priority support.");
+  useMeta(
+    "Early Access Waitlist",
+    "Join the MatchLab Club waitlist. Early access to the limited launch cohort, lifetime founding-member pricing, and priority support.",
+    absoluteUrl(DEFAULT_OG_IMAGE),
+    { canonicalUrl: absoluteUrl("/waitlist") },
+  );
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [source, setSource] = useState("");

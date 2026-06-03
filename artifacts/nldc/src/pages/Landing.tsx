@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { motion, useScroll, useTransform, animate } from "framer-motion";
 import { useMeta } from "@/hooks/useMeta";
+import { absoluteUrl, DEFAULT_OG_IMAGE } from "@/lib/seo";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 40 },
@@ -117,6 +118,8 @@ export default function Landing() {
   useMeta(
     "MatchLab Club: A second brain for your dating life",
     "Feed your real signals into one engine. Build your match readiness score. Earn introductions to people you would never find on your own.",
+    absoluteUrl(DEFAULT_OG_IMAGE),
+    { canonicalUrl: absoluteUrl("/") },
   );
 
   const { scrollYProgress } = useScroll();

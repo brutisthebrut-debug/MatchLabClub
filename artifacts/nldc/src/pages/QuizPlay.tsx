@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
+import { absoluteUrl, DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
@@ -83,6 +84,8 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
   useMeta(
     quiz ? `${quiz.title} · Quiz Lab` : "Quiz",
     quiz ? quiz.pitch : "MatchLab Quiz Lab",
+    absoluteUrl(DEFAULT_OG_IMAGE),
+    { canonicalUrl: absoluteUrl(`/quizzes/${slug}`) },
   );
 
   const { isAuthenticated } = useAuth();

@@ -1,5 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
+import { absoluteUrl } from "@/lib/seo";
 import { Shield, Eye, Lock, Trash2, Mail, ExternalLink } from "lucide-react";
 
 const Section = ({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) => (
@@ -17,7 +18,9 @@ const Section = ({ icon: Icon, title, children }: { icon: React.ElementType; tit
 export default function Privacy() {
   useMeta(
   "Privacy Policy",
-  "How MatchLab Club handles your data, what we collect, why, and your rights. Plain English, no legal jargon."
+  "How MatchLab Club handles your data, what we collect, why, and your rights. Plain English, no legal jargon.",
+  undefined,
+  { canonicalUrl: absoluteUrl("/privacy") },
   );
 
   return (

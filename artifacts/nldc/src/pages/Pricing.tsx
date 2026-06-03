@@ -1,6 +1,7 @@
 import { withAlpha } from "@/lib/brandColor";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
+import { absoluteUrl, DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
@@ -133,7 +134,12 @@ const fadeUp = (delay = 0) => ({
 });
 
 export default function Pricing() {
-  useMeta("Pricing: Free, $97 & $197 Coaching", "Three ways to feed the engine that turns your real signals into real matches. Start free with the Signal Check, go deeper with the Dating Reset, or get founder-curated intros with Wingman.");
+  useMeta(
+    "Pricing: Free, $97 & $197 Coaching",
+    "Three ways to feed the engine that turns your real signals into real matches. Start free with the Signal Check, go deeper with the Dating Reset, or get founder-curated intros with Wingman.",
+    absoluteUrl(DEFAULT_OG_IMAGE),
+    { canonicalUrl: absoluteUrl("/pricing") },
+  );
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {

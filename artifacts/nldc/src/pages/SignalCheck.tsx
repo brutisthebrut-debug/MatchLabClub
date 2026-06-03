@@ -1,6 +1,7 @@
 import { withAlpha } from "@/lib/brandColor";
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { absoluteUrl, DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -104,7 +105,12 @@ function AnimatedScore({ target, color }: { target: number; color: string }) {
 }
 
 export default function SignalCheck() {
-  useMeta("Free 3-Min Signal Check", "Paste your dating bio and get your Signal Strength score, profile category, #1 improvement, and a rewritten line, free, instant, no account needed.");
+  useMeta(
+    "Free 3-Min Signal Check",
+    "Paste your dating bio and get your Signal Strength score, profile category, #1 improvement, and a rewritten line, free, instant, no account needed.",
+    absoluteUrl(DEFAULT_OG_IMAGE),
+    { canonicalUrl: absoluteUrl("/signal-check") },
+  );
   const [firstName, setFirstName] = useState("");
   const [bio, setBio] = useState("");
   const [goal, setGoal] = useState("");

@@ -1,5 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
+import { absoluteUrl } from "@/lib/seo";
 import { FileText, Heart, Star, AlertCircle, Ban, Mail, X, Sparkles } from "lucide-react";
 
 const Section = ({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) => (
@@ -17,7 +18,9 @@ const Section = ({ icon: Icon, title, children }: { icon: React.ElementType; tit
 export default function Terms() {
   useMeta(
   "Terms of Service",
-  "MatchLab Club terms of service, plain English, no surprises."
+  "MatchLab Club terms of service, plain English, no surprises.",
+  undefined,
+  { canonicalUrl: absoluteUrl("/terms") },
   );
 
   return (

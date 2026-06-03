@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { useMeta } from "@/hooks/useMeta";
+import { absoluteUrl, DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { useAuth } from "@workspace/replit-auth-web";
 import {
   useGetMirrorPortrait,
@@ -306,6 +307,8 @@ export default function HowItWorks() {
   useMeta(
     "How It Works: From your signals to real matches",
     "See the whole machine end to end. Feed your real signals, watch Your Mirror understand you, climb your Match Readiness, and earn introductions to people near you.",
+    absoluteUrl(DEFAULT_OG_IMAGE),
+    { canonicalUrl: absoluteUrl("/how-it-works") },
   );
 
   const { isAuthenticated } = useAuth();
