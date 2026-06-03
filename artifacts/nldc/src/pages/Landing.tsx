@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { withAlpha } from "@/lib/brandColor";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import {
   Flame, Lock, LayoutGrid, Zap, Eye, MessageSquare, Trophy, Activity,
   LockKeyhole
 } from "lucide-react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, animate } from "framer-motion";
 import { useMeta } from "@/hooks/useMeta";
 
 const fadeUp = (delay = 0) => ({
@@ -34,6 +34,85 @@ const staggerItem = {
   transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }
 };
 
+function Counter({ to, duration = 2.2 }: { to: number; duration?: number }) {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    const controls = animate(0, to, {
+      duration,
+      delay: 0.6,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: (v) => setVal(Math.round(v)),
+    });
+    return () => controls.stop();
+  }, [to, duration]);
+  return <>{val}</>;
+}
+
+const SAMPLE_LANES: { label: string; value: number; color: string }[] = [
+  { label: "Profile signal", value: 82, color: "hsl(var(--brand-indigo))" },
+  { label: "Conversation", value: 74, color: "hsl(var(--brand-pink))" },
+  { label: "Lifestyle rhythm", value: 63, color: "hsl(var(--brand-teal))" },
+  { label: "Wellness base", value: 55, color: "hsl(var(--brand-green))" },
+];
+
+function LiveReadCard() {
+  return (
+    <div className="glass-elevated rounded-[2rem] border border-[hsl(248_62%_52%/0.3)] p-7 md:p-8 shadow-2xl relative overflow-hidden glow-violet">
+      <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full bg-[hsl(326_100%_59%/0.18)] blur-3xl pointer-events-none" />
+      <div className="flex items-center justify-between mb-7 relative z-10">
+        <div className="flex items-center gap-2.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-[hsl(142_55%_60%)] animate-pulse shadow-[0_0_8px_hsl(142_55%_60%)]" />
+          <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/70">Sample read</span>
+        </div>
+        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/70 px-2.5 py-1 rounded-full border border-foreground/10">live demo</span>
+      </div>
+
+      <div className="flex items-end gap-3 mb-2 relative z-10">
+        <span className="font-serif font-bold leading-none gradient-text tabular-nums text-7xl md:text-8xl">
+          <Counter to={78} />
+        </span>
+        <span className="text-2xl font-bold text-muted-foreground mb-2 tabular-nums">/100</span>
+      </div>
+      <p className="text-sm font-bold uppercase tracking-[0.18em] text-[hsl(248_62%_52%)] mb-6 relative z-10">Match readiness</p>
+
+      <div className="h-2.5 rounded-full bg-foreground/10 overflow-hidden mb-8 relative z-10">
+        <motion.div
+          className="h-full rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B]"
+          initial={{ width: 0 }}
+          animate={{ width: "78%" }}
+          transition={{ duration: 2.2, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        />
+      </div>
+
+      <div className="space-y-4 relative z-10">
+        {SAMPLE_LANES.map((lane, i) => (
+          <div key={lane.label}>
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-sm font-semibold text-foreground/80">{lane.label}</span>
+              <span className="text-sm font-bold tabular-nums" style={{ color: lane.color }}>{lane.value}</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-foreground/10 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: lane.color }}
+                initial={{ width: 0 }}
+                animate={{ width: `${lane.value}%` }}
+                transition={{ duration: 1.4, delay: 0.8 + i * 0.15, ease: [0.16, 1, 0.3, 1] }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-8 pt-6 border-t border-foreground/10 relative z-10">
+        <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+          <span className="text-foreground font-bold">This is a demo read.</span> Yours starts climbing the moment you run your first Signal Check.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function Landing() {
   useMeta(
     "MatchLab Club: A second brain for your dating life",
@@ -47,65 +126,203 @@ export default function Landing() {
   return (
     <AppLayout>
       {/* 1. HERO SECTION */}
-      <section className="relative mesh-bg overflow-hidden pt-20 md:pt-32 pb-32 md:pb-48 min-h-[100dvh] flex flex-col justify-center">
+      <section className="relative mesh-bg overflow-hidden pt-28 md:pt-32 pb-24 md:pb-36 min-h-[100dvh] flex flex-col justify-center">
         <motion.div style={{ y: abstractParallax }} className="absolute inset-0 pointer-events-none">
-          <div className="orb orb-violet absolute w-[800px] h-[800px] -top-60 -right-60 opacity-60" />
-          <div className="orb orb-gold absolute w-[600px] h-[600px] top-[40%] -left-40 opacity-40" />
-          <div className="orb orb-plum absolute w-[500px] h-[500px] bottom-0 left-1/4 opacity-50" />
+          <div className="orb orb-violet absolute w-[900px] h-[900px] -top-72 -right-72 opacity-70" />
+          <div className="orb orb-gold absolute w-[700px] h-[700px] top-[35%] -left-52 opacity-50" />
+          <div className="orb orb-plum absolute w-[600px] h-[600px] bottom-0 left-1/4 opacity-50" />
         </motion.div>
 
-        <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
-          <motion.div style={{ y: heroParallax }} className="max-w-4xl mx-auto text-center w-full">
-            <motion.div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full glass-elevated border border-[hsl(248_62%_52%/0.3)] mb-12 shadow-sm" {...fadeUp(0.1)}>
-              <span className="w-2.5 h-2.5 rounded-full bg-[hsl(142_55%_60%)] animate-pulse shadow-[0_0_8px_hsl(142_55%_60%)]" />
-              <span className="text-sm font-semibold tracking-wider text-foreground/80 uppercase">Private beta underway</span>
-            </motion.div>
+        {/* ghost wordmark behind everything */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden" aria-hidden="true">
+          <span
+            className="font-serif font-bold italic text-foreground/[0.025] dark:text-foreground/[0.045] leading-none whitespace-nowrap select-none"
+            style={{ fontSize: "clamp(8rem, 28vw, 26rem)" }}
+          >
+            readable
+          </span>
+        </div>
 
-            <motion.h1
-              className="text-5xl sm:text-6xl md:text-7xl lg:text-[7rem] font-serif font-bold tracking-tight leading-[1.05] mb-8"
-              {...fadeUp(0.2)}
-            >
-              <span className="text-foreground">One machine.</span>{" "}
-              <br className="hidden md:block" />
-              <span className="gradient-text italic pr-2">Better introductions.</span>
-            </motion.h1>
+        {/* machine grid overlay, masked to fade at edges */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          aria-hidden="true"
+          style={{
+            backgroundImage:
+              "linear-gradient(hsl(248 62% 52% / 0.06) 1px, transparent 1px), linear-gradient(90deg, hsl(248 62% 52% / 0.06) 1px, transparent 1px)",
+            backgroundSize: "64px 64px",
+            maskImage: "radial-gradient(ellipse 85% 60% at 50% 42%, black, transparent 78%)",
+            WebkitMaskImage: "radial-gradient(ellipse 85% 60% at 50% 42%, black, transparent 78%)",
+          }}
+        />
 
-            <motion.p
-              className="text-lg md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-12 font-medium"
-              {...fadeUp(0.3)}
-            >
-              A second brain for your dating life. Everything you do here feeds a single engine that learns who you are, tracks your readiness, and works toward introducing you to people you actually want to meet.
-            </motion.p>
+        <div className="container mx-auto px-4 relative z-10">
+          {/* giant logo crown */}
+          <motion.div className="flex justify-center mb-8 md:mb-10" {...fadeUp(0)}>
+            <motion.img
+              src="/matchlab-logo.png"
+              alt="MatchLab Club"
+              className="h-28 sm:h-36 md:h-44 w-auto"
+              style={{
+                filter:
+                  "drop-shadow(0 8px 40px hsl(326 100% 60% / 0.45)) drop-shadow(0 0 60px hsl(248 75% 60% / 0.4))",
+              }}
+              animate={{ y: [0, -12, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </motion.div>
 
-            <motion.div className="flex flex-col items-center gap-6" {...fadeUp(0.4)}>
-              <Button
-                asChild
-                size="lg"
-                className="rounded-full font-bold h-16 md:h-20 px-10 md:px-14 text-lg md:text-xl bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 glow-pulse text-white shadow-[0_8px_40px_hsl(248_62%_52%/0.5)] hover:scale-[1.02] transition-transform"
+          <div className="grid lg:grid-cols-12 gap-12 lg:gap-10 items-center max-w-7xl mx-auto">
+            {/* LEFT: the human pitch */}
+            <div className="lg:col-span-7 text-center lg:text-left">
+              <motion.div
+                className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass-elevated border border-[hsl(326_100%_59%/0.4)] mb-8 shadow-sm"
+                {...fadeUp(0.1)}
               >
-                <Link href="/signal-check">Get your free Signal Check <ArrowRight className="ml-3 h-6 w-6" /></Link>
-              </Button>
+                <span className="w-2.5 h-2.5 rounded-full bg-[hsl(326_100%_59%)] animate-pulse shadow-[0_0_10px_hsl(326_100%_59%)]" />
+                <span className="text-xs sm:text-sm font-bold tracking-[0.18em] text-foreground/80 uppercase">
+                  Private beta · the machine is reading
+                </span>
+              </motion.div>
 
-              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-semibold text-muted-foreground mt-2">
-                <span className="inline-flex items-center gap-2"><Clock className="w-4 h-4 text-[hsl(248_62%_52%)]" /> 3 minutes</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 hidden md:block" />
-                <span className="inline-flex items-center gap-2"><Shield className="w-4 h-4 text-[hsl(142_55%_50%)]" /> No account required</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 hidden md:block" />
-                <span className="inline-flex items-center gap-2"><Lock className="w-4 h-4 text-[hsl(326_100%_59%)]" /> Private by design</span>
-              </div>
+              <motion.h1
+                className="font-serif font-bold tracking-tight leading-[0.95] mb-6 text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem]"
+                {...fadeUp(0.2)}
+              >
+                <span className="text-foreground">You are more</span>{" "}
+                <span className="gradient-text italic pr-1">readable</span>
+                <br className="hidden sm:block" />
+                <span className="text-foreground">than the apps let on.</span>
+              </motion.h1>
 
-              <motion.div {...fadeUp(0.5)} className="mt-8">
+              <motion.p
+                className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.3em] text-[hsl(248_62%_52%)] mb-7 tabular-nums"
+                {...fadeUp(0.28)}
+              >
+                // reads the whole signal, not the thumb-stop
+              </motion.p>
+
+              <motion.p
+                className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed mb-10 font-medium"
+                {...fadeUp(0.34)}
+              >
+                Every app reduces you to a few photos and a half-second swipe. MatchLab is the second brain underneath: feed it your real signals, watch one readiness number climb, and earn introductions to people you would never find on your own.
+              </motion.p>
+
+              <motion.div className="flex flex-col sm:flex-row items-center lg:items-start gap-5" {...fadeUp(0.42)}>
+                <Button
+                  asChild
+                  size="lg"
+                  className="rounded-full font-bold h-16 md:h-[4.5rem] px-10 md:px-12 text-lg md:text-xl bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 glow-pulse text-white shadow-[0_8px_40px_hsl(248_62%_52%/0.5)] hover:scale-[1.03] transition-transform w-full sm:w-auto"
+                >
+                  <Link href="/signal-check">Read me now <ArrowRight className="ml-3 h-6 w-6" /></Link>
+                </Button>
                 <Link
                   href="/how-it-works"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass border border-[hsl(248_62%_52%/0.25)] hover:border-[hsl(248_62%_52%/0.6)] hover:bg-[hsl(248_62%_52%/0.08)] transition-all group text-sm font-semibold text-muted-foreground hover:text-foreground"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass border border-[hsl(248_62%_52%/0.25)] hover:border-[hsl(248_62%_52%/0.6)] hover:bg-[hsl(248_62%_52%/0.08)] transition-all group text-sm font-bold text-muted-foreground hover:text-foreground"
                 >
                   <Brain className="w-4 h-4 text-[hsl(248_62%_52%)]" />
-                  See how the machine works, end to end
+                  How the machine works
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </motion.div>
+
+              <motion.div
+                className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-3 text-sm font-semibold text-muted-foreground mt-8"
+                {...fadeUp(0.5)}
+              >
+                <span className="inline-flex items-center gap-2"><Clock className="w-4 h-4 text-[hsl(248_62%_52%)]" /> 3 minutes</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
+                <span className="inline-flex items-center gap-2"><Shield className="w-4 h-4 text-[hsl(142_55%_50%)]" /> No account required</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
+                <span className="inline-flex items-center gap-2"><Lock className="w-4 h-4 text-[hsl(326_100%_59%)]" /> Private by design</span>
+              </motion.div>
+            </div>
+
+            {/* RIGHT: the machine readout */}
+            <motion.div
+              className="lg:col-span-5 w-full max-w-md mx-auto lg:max-w-none"
+              initial={{ opacity: 0, y: 40, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <LiveReadCard />
             </motion.div>
-          </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* 1.5 THE INTERRUPT */}
+      <section
+        className="relative overflow-hidden py-28 md:py-40"
+        style={{ background: "linear-gradient(160deg, #131234 0%, #1d1147 55%, #2a0f3d 100%)" }}
+      >
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="orb orb-violet absolute w-[700px] h-[700px] -top-40 -left-40 opacity-40" />
+          <div className="orb orb-rose absolute w-[600px] h-[600px] -bottom-52 -right-24 opacity-40" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-5xl mx-auto text-center">
+            <motion.p
+              className="text-xs sm:text-sm font-bold uppercase tracking-[0.3em] text-[hsl(326_100%_72%)] mb-8"
+              {...fadeUp(0.05)}
+            >
+              The uncomfortable truth
+            </motion.p>
+            <motion.h2
+              className="font-serif font-bold leading-[1.02] tracking-tight text-white text-4xl sm:text-5xl md:text-6xl lg:text-7xl mb-10"
+              {...fadeUp(0.12)}
+            >
+              The apps were never built <br className="hidden md:block" />
+              to get you <span className="italic" style={{ color: "#FF6FC4" }}>chosen.</span>
+            </motion.h2>
+            <motion.p
+              className="text-lg md:text-2xl text-white/80 max-w-3xl mx-auto leading-relaxed font-medium mb-16"
+              {...fadeUp(0.2)}
+            >
+              They are built to keep you swiping. Every day you stay average is a day they keep you scrolling. MatchLab flips it: we read the full signal you already give off, then quietly make you the person other people stop on.
+            </motion.p>
+
+            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto text-left">
+              <motion.div
+                className="rounded-[2rem] p-8 border border-white/10 bg-white/[0.03]"
+                {...fadeUp(0.26)}
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/55 mb-5">What the apps see</p>
+                <ul className="space-y-3">
+                  {["Six photos", "A one-line bio", "A half-second swipe"].map((x) => (
+                    <li key={x} className="flex items-center gap-3 text-white/65 font-medium text-lg line-through decoration-white/40">
+                      <Eye className="w-5 h-5 flex-shrink-0 text-white/45" /> {x}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+              <motion.div
+                className="rounded-[2rem] p-8 border border-[hsl(326_100%_72%/0.4)]"
+                style={{ background: "linear-gradient(160deg, hsl(248 62% 52% / 0.25), hsl(326 100% 59% / 0.15))" }}
+                {...fadeUp(0.32)}
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[hsl(326_100%_80%)] mb-5">What the machine reads</p>
+                <ul className="space-y-3">
+                  {["Your real conversation patterns", "Your lifestyle and rhythm", "Your readiness, climbing over time"].map((x) => (
+                    <li key={x} className="flex items-center gap-3 text-white font-semibold text-lg">
+                      <Zap className="w-5 h-5 flex-shrink-0 text-[hsl(326_100%_75%)]" /> {x}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            </div>
+
+            <motion.div className="mt-16" {...fadeUp(0.4)}>
+              <Button
+                asChild
+                size="lg"
+                className="rounded-full font-bold h-16 px-12 text-lg bg-white text-[#131234] hover:bg-white/90 hover:scale-[1.03] transition-all shadow-2xl"
+              >
+                <Link href="/signal-check">Become the one they stop on <ArrowRight className="ml-3 h-5 w-5" /></Link>
+              </Button>
+            </motion.div>
+          </div>
         </div>
       </section>
 

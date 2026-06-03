@@ -39,14 +39,14 @@ export function Navbar() {
       }`}
       ref={navRef}
     >
-      <div className="container mx-auto px-4 md:px-6 h-20 md:h-24 flex items-center justify-between">
+      <div className="container mx-auto px-4 md:px-6 h-24 md:h-28 flex items-center justify-between">
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 flex-shrink-0 group" onClick={closeAll}>
           <img
             src="/matchlab-logo.png"
             alt="MatchLab Club"
-            className="h-16 md:h-20 w-auto transition-transform group-hover:scale-[1.04]"
+            className="h-20 md:h-24 w-auto transition-transform group-hover:scale-[1.04]"
             style={{ filter: "drop-shadow(0 2px 14px hsl(326 100% 60% / 0.45)) drop-shadow(0 0 18px hsl(248 75% 60% / 0.35))" }}
           />
           <div className="hidden sm:flex flex-col leading-tight">
