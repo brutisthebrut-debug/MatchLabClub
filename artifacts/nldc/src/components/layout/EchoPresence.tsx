@@ -153,9 +153,11 @@ function ReactionCard({
             <span className="text-2xl font-bold tabular-nums text-foreground">
               <CountUp from={reaction.fromScore} to={reaction.toScore} />
             </span>
-            <span className={`text-xs font-semibold ${accent.text}`}>
-              {reaction.delta > 0 ? `+${reaction.delta}` : reaction.delta}
-            </span>
+            {reaction.delta !== 0 && (
+              <span className={`text-xs font-semibold ${accent.text}`}>
+                {reaction.delta > 0 ? `+${reaction.delta}` : reaction.delta}
+              </span>
+            )}
             <span className="text-[11px] text-muted-foreground">
               readiness
             </span>
