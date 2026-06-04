@@ -137,4 +137,14 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   externalCalibration: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  cosmicProfile: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  relocationOpen: number;
 }

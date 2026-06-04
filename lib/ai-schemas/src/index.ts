@@ -124,6 +124,13 @@ export const echoPulseSchema = z.object({
 
 export type EchoPulseAiOutput = z.infer<typeof echoPulseSchema>;
 
+export const cosmicReadingSchema = z.object({
+  headline: z.string().trim().min(1),
+  lines: z.array(z.string().trim().min(1)).min(1).max(6),
+});
+
+export type CosmicReadingAiOutput = z.infer<typeof cosmicReadingSchema>;
+
 export function parseAiJson<T>(
   schema: z.ZodType<T>,
   raw: string,
@@ -154,6 +161,7 @@ export const aiToolSchemas = {
   Echo: echoReplySchema,
   "Echo Review": echoReviewSchema,
   "Echo Pulse": echoPulseSchema,
+  "Cosmic Compass": cosmicReadingSchema,
 } as const;
 
 export type AiToolName = keyof typeof aiToolSchemas;

@@ -64,11 +64,13 @@ describe("signal registry", () => {
     // 2.60. The scenario reels lane (0.06) brings the raw total to 2.66. The
     // predict-yourself self-awareness lane (0.05) brings the raw total to 2.71. The
     // time-capsule lane (0.04) brings the raw total to 2.75. The wingman
-    // external-calibration lane (0.05) brings the raw total to 2.80. Each
-    // normalized weight is its raw weight divided by the raw-weight
-    // total. The relative proportions between every signal are preserved exactly;
-    // adding contributors never forces a manual re-balance.
-    const total = 2.8;
+    // external-calibration lane (0.05) brings the raw total to 2.80. The cosmic
+    // profile lane (0.04) brings the raw total to 2.84. The relocation-openness
+    // lane (0.02) brings the raw total to 2.86. Each normalized weight is its raw
+    // weight divided by the raw-weight total. The relative proportions between
+    // every signal are preserved exactly; adding contributors never forces a
+    // manual re-balance.
+    const total = 2.86;
     const w = normalizedWeights();
     expect(w.wellness).toBeCloseTo(0.22 / total, 6);
     expect(w.compass).toBeCloseTo(0.2 / total, 6);
@@ -102,6 +104,8 @@ describe("signal registry", () => {
     expect(w.selfAwareness).toBeCloseTo(0.05 / total, 6);
     expect(w.timeCapsule).toBeCloseTo(0.04 / total, 6);
     expect(w.externalCalibration).toBeCloseTo(0.05 / total, 6);
+    expect(w.cosmicProfile).toBeCloseTo(0.04 / total, 6);
+    expect(w.relocationOpen).toBeCloseTo(0.02 / total, 6);
   });
 
   it("auto-normalizes when a new contributor is added, never breaking the sum", () => {
@@ -201,9 +205,10 @@ describe("proposeWeightAdjustments (the breathing layer)", () => {
     });
     const sum = adj.reduce((a, b) => a + b.adjustedWeight, 0);
     // adjustedWeight is rounded to 4 decimals for display, so summing across all
-    // contributors can drift in the 4th decimal. The underlying re-normalization
-    // is exact; assert to 3 decimals to allow for that rounding.
-    expect(sum).toBeCloseTo(1, 3);
+    // contributors can drift in the low decimals as the lane count grows. The
+    // underlying re-normalization is exact; assert to 2 decimals to allow for
+    // that accumulated rounding.
+    expect(sum).toBeCloseTo(1, 2);
     for (const a of adj) {
       // No signal moves more than ~30% of its default in either direction.
       expect(a.adjustedWeight).toBeLessThanOrEqual(a.defaultWeight * 1.3 + 0.01);

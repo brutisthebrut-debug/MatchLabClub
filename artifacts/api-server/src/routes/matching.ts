@@ -10,6 +10,8 @@ import {
   compatibilityReadsTable,
   postDateNotesTable,
   matchingReadinessSnapshotsTable,
+  cosmicChartsTable,
+  type CosmicPlacements,
 } from "@workspace/db";
 import {
   UpdateMatchingPreferencesBody,
@@ -37,6 +39,8 @@ import {
   type OutcomeSignal,
 } from "../lib/signalRegistry";
 import { collectSignalCounts, collectSignalRecency } from "../lib/signalCounts";
+import { loveLineCityKeys } from "../lib/astrocartography";
+import { synastryResonance } from "../lib/cosmic";
 import { computeActivityStreak, type ActivityStreak } from "../lib/streak";
 import { loadActivityDays } from "../lib/activityDays";
 import {
@@ -97,7 +101,10 @@ function serializeMembership(row: PoolRow) {
   };
 }
 
-function serializeProposal(row: ProposalRow) {
+function serializeProposal(
+  row: ProposalRow,
+  resonance?: { score: number; note: string } | null,
+) {
   return {
     id: row.id,
     userId: row.userId,
@@ -106,9 +113,60 @@ function serializeProposal(row: ProposalRow) {
     compatibilityScore: row.compatibilityScore,
     summary: row.summary ?? null,
     status: row.status,
+    cosmicResonance: resonance ? resonance.score : null,
+    cosmicResonanceNote: resonance ? resonance.note : null,
     createdAt: toIso(row.createdAt),
     updatedAt: toIso(row.updatedAt),
   };
+}
+
+// Batch-loads derived chart placements for a set of users. Used only to garnish
+// proposals with a playful "cosmic resonance"; this never touches the real
+// compatibility score or any gate. Users without a chart are simply absent.
+async function loadCosmicPlacementsMap(
+  userIds: string[],
+): Promise<Map<string, CosmicPlacements>> {
+  const out = new Map<string, CosmicPlacements>();
+  if (userIds.length === 0) return out;
+  const rows = await db
+    .select({
+      userId: cosmicChartsTable.userId,
+      placements: cosmicChartsTable.placements,
+    })
+    .from(cosmicChartsTable)
+    .where(inArray(cosmicChartsTable.userId, userIds));
+  for (const row of rows) {
+    if (row.userId && row.placements) out.set(row.userId, row.placements);
+  }
+  return out;
+}
+
+// Given the viewer's proposals, computes the playful resonance garnish for each
+// one where both the viewer and the proposed person have a chart. Returns a map
+// keyed by proposal id so the serializer can attach it without re-querying.
+async function resonanceForProposals(
+  viewerId: string,
+  rows: ProposalRow[],
+): Promise<Map<string, { score: number; note: string }>> {
+  const out = new Map<string, { score: number; note: string }>();
+  const otherIds = Array.from(
+    new Set(
+      rows
+        .map((r) => r.proposedToUserId)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  );
+  if (otherIds.length === 0) return out;
+  const placements = await loadCosmicPlacementsMap([viewerId, ...otherIds]);
+  const mine = placements.get(viewerId);
+  if (!mine) return out;
+  for (const row of rows) {
+    if (!row.proposedToUserId) continue;
+    const theirs = placements.get(row.proposedToUserId);
+    if (!theirs) continue;
+    out.set(row.id, synastryResonance(mine, theirs));
+  }
+  return out;
 }
 
 async function loadPreferences(userId: string): Promise<PreferencesRow | null> {
@@ -1109,7 +1167,8 @@ router.get("/me/matching/proposals", async (req, res): Promise<void> => {
     .where(eq(matchProposalsTable.userId, req.user.id))
     .orderBy(desc(matchProposalsTable.createdAt))
     .limit(50);
-  res.json(rows.map(serializeProposal));
+  const resonance = await resonanceForProposals(req.user.id, rows);
+  res.json(rows.map((r) => serializeProposal(r, resonance.get(r.id) ?? null)));
 });
 
 function coerceEchoMatchReadAi(value: unknown): {
@@ -1406,11 +1465,56 @@ async function loadLatestAuditDemographics(
   return out;
 }
 
+// Cosmic relocation openness per user: whether they opted in, and the canonical
+// gazetteer keys of their astrocartography love-line cities. Only members who
+// opted in get their love lines computed (it is a relocation-widening signal, so
+// it is irrelevant otherwise). The love-line keys are derived geometry from the
+// birth moment; the raw birth details never leave this compute, only city keys.
+async function loadCosmicRelocation(
+  userIds: string[],
+): Promise<Map<string, { relocationOpen: boolean; loveLineCities: string[] }>> {
+  const out = new Map<
+    string,
+    { relocationOpen: boolean; loveLineCities: string[] }
+  >();
+  if (userIds.length === 0) return out;
+  const rows = await db
+    .select({
+      userId: cosmicChartsTable.userId,
+      relocationOpen: cosmicChartsTable.relocationOpen,
+      birthDate: cosmicChartsTable.birthDate,
+      birthTime: cosmicChartsTable.birthTime,
+      birthPlace: cosmicChartsTable.birthPlace,
+      birthLat: cosmicChartsTable.birthLat,
+      birthLng: cosmicChartsTable.birthLng,
+    })
+    .from(cosmicChartsTable)
+    .where(inArray(cosmicChartsTable.userId, userIds));
+  for (const row of rows) {
+    if (!row.userId) continue;
+    const loveLineCities = row.relocationOpen
+      ? loveLineCityKeys({
+          birthDate: row.birthDate,
+          birthTime: row.birthTime ?? null,
+          birthPlace: row.birthPlace,
+          birthLat: row.birthLat,
+          birthLng: row.birthLng,
+        })
+      : [];
+    out.set(row.userId, {
+      relocationOpen: row.relocationOpen,
+      loveLineCities,
+    });
+  }
+  return out;
+}
+
 // Assemble the engine's view of one member: preferences, computed readiness, and
 // best-available demographics. Everything here is aggregate, never raw content.
 async function buildMatchCandidate(
   userId: string,
   demographics: { age: number | null; gender: string | null } | undefined,
+  cosmic?: { relocationOpen: boolean; loveLineCities: string[] },
 ): Promise<MatchCandidate> {
   const [prefs, readiness] = await Promise.all([
     loadPreferences(userId),
@@ -1427,6 +1531,8 @@ async function buildMatchCandidate(
       cityHint: prefs?.cityHint ?? null,
       radiusMiles:
         prefs?.distanceKm != null ? prefs.distanceKm * MILES_PER_KM : null,
+      relocationOpen: cosmic?.relocationOpen ?? false,
+      loveLineCities: cosmic?.loveLineCities ?? [],
     },
     readinessScore: readiness.score,
     breakdown: readiness.breakdown as unknown as Record<string, number>,
@@ -1477,10 +1583,20 @@ export async function mintInternalProposalsForMember(
   const freshIds = otherUserIds.filter((id) => !alreadyPaired.has(id));
   if (freshIds.length === 0) return 0;
 
-  const demographics = await loadLatestAuditDemographics([userId, ...freshIds]);
-  const me = await buildMatchCandidate(userId, demographics.get(userId));
+  const allIds = [userId, ...freshIds];
+  const [demographics, cosmic] = await Promise.all([
+    loadLatestAuditDemographics(allIds),
+    loadCosmicRelocation(allIds),
+  ]);
+  const me = await buildMatchCandidate(
+    userId,
+    demographics.get(userId),
+    cosmic.get(userId),
+  );
   const others = await Promise.all(
-    freshIds.map((id) => buildMatchCandidate(id, demographics.get(id))),
+    freshIds.map((id) =>
+      buildMatchCandidate(id, demographics.get(id), cosmic.get(id)),
+    ),
   );
   const ranked = rankCandidates(me, others, MAX_NEW_PROPOSALS);
   if (ranked.length === 0) return 0;
@@ -1552,7 +1668,8 @@ router.post("/me/matching/discover", async (req, res): Promise<void> => {
     .where(eq(matchProposalsTable.userId, userId))
     .orderBy(desc(matchProposalsTable.createdAt))
     .limit(50);
-  res.json(rows.map(serializeProposal));
+  const resonance = await resonanceForProposals(userId, rows);
+  res.json(rows.map((r) => serializeProposal(r, resonance.get(r.id) ?? null)));
 });
 
 export default router;

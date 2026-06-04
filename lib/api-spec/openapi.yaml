@@ -4096,6 +4096,262 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/cosmic:
+    get:
+      tags: [Matching]
+      operationId: getCosmicChart
+      summary: Get the signed-in user's Cosmic Compass chart
+      description: |
+        Returns the caller's saved birth chart with its deterministically
+        computed placements, derived soft trait priors, and the always-on
+        deterministic reading. Returns 404 when no chart has been built yet.
+        Raw birth details never leave the server beyond the local compute.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The saved chart.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CosmicChart'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: No chart yet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+    post:
+      tags: [Matching]
+      operationId: saveCosmicChart
+      summary: Build and save a Cosmic Compass chart
+      description: |
+        Computes a birth chart deterministically from birth date, time, and
+        place, with no external calls. Saving again replaces the chart in place,
+        since a person has one birth moment. Birth time is optional: without it
+        we return a sun-only read rather than guess a rising sign.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CosmicChartInput'
+      responses:
+        '201':
+          description: The saved chart.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CosmicChart'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+  /me/cosmic/reaction:
+    post:
+      tags: [Matching]
+      operationId: saveCosmicReaction
+      summary: Record how the chart read landed
+      description: |
+        Records whether the read felt like the user, partly, or not at all. This
+        reaction is the honest calibration signal of the Cosmic Compass: what a
+        person recognises in a mirror is real self-knowledge, regardless of
+        whether the stars mean anything. Requires an existing chart.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CosmicReactionInput'
+      responses:
+        '200':
+          description: The updated chart.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CosmicChart'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: No chart to react to.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+  /me/cosmic/reading:
+    post:
+      tags: [Matching]
+      operationId: getCosmicReading
+      summary: Get a deeper Cosmic Compass reading
+      description: |
+        Returns the deterministic reading always, and layers an optional Claude
+        synthesis on top when the deep AI lane is on and the daily cap allows.
+        Only derived placements are sent to Claude, never raw birth details.
+        Falls back to the deterministic reading on consent-off, cap, or failure.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The reading.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CosmicReading'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: No chart yet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+  /me/cosmic/lines:
+    get:
+      tags: [Matching]
+      operationId: getCosmicLines
+      summary: Get the user's astrocartography lines and love-line cities
+      description: |
+        Returns the planetary meridian lines (MC and IC) derived from the saved
+        birth moment, plus the known metros nearest a warmth or growth line, and
+        the current relocation-openness flag. These are real lines of constant
+        longitude; we do not fake the curved horizon lines. Returns a sun-only
+        mode with empty lines when no birth time was given. Returns 404 when no
+        chart has been built yet. Raw birth details never leave the server.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The astrocartography lines and ranked cities.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CosmicLines'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: No chart yet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+  /me/cosmic/relocation:
+    post:
+      tags: [Matching]
+      operationId: setCosmicRelocation
+      summary: Set whether the user is open to relocation-based matching
+      description: |
+        Turns the relocation-openness flag on or off. When on, the user's
+        love-line cities widen who discovery can pair them with; it never
+        narrows or gates a match. Requires an existing chart. The flag is a
+        preference, not content, and a trust-ledger purge flips it back off.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CosmicRelocationInput'
+      responses:
+        '200':
+          description: The updated relocation state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CosmicRelocationState'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: No chart yet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+  /me/cosmic/weather:
+    get:
+      tags: [Matching]
+      operationId: getCosmicWeather
+      summary: Get the user's daily cosmic weather card
+      description: |
+        Returns a playful, star-flavoured wrapper around the user's single most
+        valuable real readiness nudge. The honest action and its detail travel
+        underneath unchanged, so the star language never replaces the real step
+        it points at. Requires an existing chart. Returns 404 when no chart has
+        been built yet. Only derived placements and the real action are used.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The daily cosmic weather card.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CosmicWeather'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: No chart yet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
   /me/would-you-rather:
     get:
       tags: [Matching]
@@ -8722,7 +8978,7 @@ components:
 
     MatchProposal:
       type: object
-      required: [id, userId, proposedToUserId, source, compatibilityScore, summary, status, createdAt, updatedAt]
+      required: [id, userId, proposedToUserId, source, compatibilityScore, summary, status, cosmicResonance, cosmicResonanceNote, createdAt, updatedAt]
       properties:
         id:
           type: string
@@ -8743,6 +8999,14 @@ components:
         status:
           type: string
           enum: [proposed, user_yes, user_no, mutual_yes, expired, completed]
+        cosmicResonance:
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 100
+          description: A playful, bounded resonance garnish (0 to 100). Null when either person has no chart. Never feeds the real compatibility score or any gate.
+        cosmicResonanceNote:
+          type: [string, 'null']
+          description: A short, light note for the resonance garnish. Null when either person has no chart.
         createdAt:
           type: string
           format: date-time
@@ -8835,9 +9099,250 @@ components:
         summary:
           type: [string, 'null']
 
+    CosmicPlacement:
+      type: object
+      required: [sign, degree]
+      properties:
+        sign:
+          type: string
+        degree:
+          type: number
+    CosmicPlacements:
+      type: object
+      required: [mode, sun, moon, rising, midheaven, bodies, traits, elements, modalities]
+      properties:
+        mode:
+          type: string
+          enum: [full, sunOnly]
+        sun:
+          $ref: '#/components/schemas/CosmicPlacement'
+        moon:
+          oneOf:
+            - $ref: '#/components/schemas/CosmicPlacement'
+            - type: 'null'
+        rising:
+          oneOf:
+            - $ref: '#/components/schemas/CosmicPlacement'
+            - type: 'null'
+        midheaven:
+          oneOf:
+            - type: object
+              required: [sign]
+              properties:
+                sign:
+                  type: string
+            - type: 'null'
+        bodies:
+          type: array
+          items:
+            type: object
+            required: [body, sign]
+            properties:
+              body:
+                type: string
+              sign:
+                type: string
+        traits:
+          type: object
+          required: [novelty, stability, expression, depth]
+          properties:
+            novelty:
+              type: number
+            stability:
+              type: number
+            expression:
+              type: number
+            depth:
+              type: number
+        elements:
+          type: object
+          required: [fire, earth, air, water]
+          properties:
+            fire:
+              type: number
+            earth:
+              type: number
+            air:
+              type: number
+            water:
+              type: number
+        modalities:
+          type: object
+          required: [cardinal, fixed, mutable]
+          properties:
+            cardinal:
+              type: number
+            fixed:
+              type: number
+            mutable:
+              type: number
+    CosmicReading:
+      type: object
+      required: [headline, lines, topTrait, source]
+      properties:
+        headline:
+          type: string
+        lines:
+          type: array
+          items:
+            type: string
+        topTrait:
+          type: string
+        source:
+          type: string
+          enum: [deterministic, claude]
+        deep:
+          type: ['object', 'null']
+          description: Optional Claude synthesis layered on top. Null when the deep AI lane is off or unavailable.
+          required: [headline, lines]
+          properties:
+            headline:
+              type: string
+            lines:
+              type: array
+              items:
+                type: string
+    CosmicChart:
+      type: object
+      required: [birthDate, birthTime, birthPlace, birthLat, birthLng, placements, reaction, reading]
+      properties:
+        birthDate:
+          type: string
+        birthTime:
+          type: [string, 'null']
+        birthPlace:
+          type: string
+        birthLat:
+          type: number
+        birthLng:
+          type: number
+        placements:
+          $ref: '#/components/schemas/CosmicPlacements'
+        reaction:
+          type: [string, 'null']
+        reading:
+          $ref: '#/components/schemas/CosmicReading'
+    CosmicChartInput:
+      type: object
+      required: [birthDate, birthPlace, birthLat, birthLng]
+      properties:
+        birthDate:
+          type: string
+          description: ISO date, YYYY-MM-DD.
+        birthTime:
+          type: [string, 'null']
+          description: HH:MM 24h, or null when the user does not know their birth time.
+        birthPlace:
+          type: string
+          maxLength: 160
+        birthLat:
+          type: number
+          minimum: -90
+          maximum: 90
+        birthLng:
+          type: number
+          minimum: -180
+          maximum: 180
+    CosmicReactionInput:
+      type: object
+      required: [reaction]
+      properties:
+        reaction:
+          type: string
+          enum: [resonant, mixed, off]
+    CosmicLine:
+      type: object
+      required: [body, bodyLabel, angle, lng, meaning]
+      properties:
+        body:
+          type: string
+          description: Lowercase body key, e.g. venus.
+        bodyLabel:
+          type: string
+        angle:
+          type: string
+          enum: [MC, IC]
+        lng:
+          type: number
+          description: Longitude where this meridian line falls, in [-180, 180).
+        meaning:
+          type: string
+    CosmicLoveLineCity:
+      type: object
+      required: [key, label, lat, lng, body, bodyLabel, angle, distanceMiles]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        body:
+          type: string
+        bodyLabel:
+          type: string
+        angle:
+          type: string
+          enum: [MC, IC]
+        distanceMiles:
+          type: integer
+    CosmicLines:
+      type: object
+      required: [mode, lines, loveLineCities, relocationOpen]
+      properties:
+        mode:
+          type: string
+          enum: [full, sunOnly]
+          description: Lines are only computed in full mode (a birth time was given).
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/CosmicLine'
+        loveLineCities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CosmicLoveLineCity'
+        relocationOpen:
+          type: boolean
+    CosmicRelocationInput:
+      type: object
+      required: [open]
+      properties:
+        open:
+          type: boolean
+    CosmicRelocationState:
+      type: object
+      required: [relocationOpen]
+      properties:
+        relocationOpen:
+          type: boolean
+    CosmicWeatherAction:
+      type: object
+      required: [label, detail, href]
+      properties:
+        label:
+          type: string
+        detail:
+          type: string
+        href:
+          type: string
+    CosmicWeather:
+      type: object
+      required: [headline, reframe, action]
+      properties:
+        headline:
+          type: string
+        reframe:
+          type: string
+        action:
+          oneOf:
+            - $ref: '#/components/schemas/CosmicWeatherAction'
+            - type: 'null'
     MatchReadinessBreakdown:
       type: object
-      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse, taste, lifestyle, quizzes, receipts, music, vitality, curiosity, film, reading, wyr, consistency, scenarioReels, selfAwareness, timeCapsule, externalCalibration]
+      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse, taste, lifestyle, quizzes, receipts, music, vitality, curiosity, film, reading, wyr, consistency, scenarioReels, selfAwareness, timeCapsule, externalCalibration, cosmicProfile, relocationOpen]
       properties:
         compass:
           type: integer
@@ -8940,6 +9445,14 @@ components:
           minimum: 0
           maximum: 100
         externalCalibration:
+          type: integer
+          minimum: 0
+          maximum: 100
+        cosmicProfile:
+          type: integer
+          minimum: 0
+          maximum: 100
+        relocationOpen:
           type: integer
           minimum: 0
           maximum: 100

@@ -82,6 +82,14 @@ import type {
   CorrectAuditSourceApp404,
   CorrectSourceAppInput,
   CorrectSourceAppResult,
+  CosmicChart,
+  CosmicChartInput,
+  CosmicLines,
+  CosmicReactionInput,
+  CosmicReading,
+  CosmicRelocationInput,
+  CosmicRelocationState,
+  CosmicWeather,
   CreateInstagramPasteInput,
   CreateInstagramPasteResult,
   CreateQuizResultInput,
@@ -11306,6 +11314,558 @@ export const useDeleteDatingWin = <TError = ErrorType<AuthErrorEnvelope>,
       > => {
       return useMutation(getDeleteDatingWinMutationOptions(options));
     }
+
+export const getGetCosmicChartUrl = () => {
+
+
+
+
+  return `/api/me/cosmic`
+}
+
+/**
+ * Returns the caller's saved birth chart with its deterministically
+computed placements, derived soft trait priors, and the always-on
+deterministic reading. Returns 404 when no chart has been built yet.
+Raw birth details never leave the server beyond the local compute.
+
+ * @summary Get the signed-in user's Cosmic Compass chart
+ */
+export const getCosmicChart = async ( options?: RequestInit): Promise<CosmicChart> => {
+
+  return customFetch<CosmicChart>(getGetCosmicChartUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCosmicChartQueryKey = () => {
+    return [
+    `/api/me/cosmic`
+    ] as const;
+    }
+
+
+export const getGetCosmicChartQueryOptions = <TData = Awaited<ReturnType<typeof getCosmicChart>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCosmicChart>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCosmicChartQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCosmicChart>>> = ({ signal }) => getCosmicChart({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCosmicChart>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCosmicChartQueryResult = NonNullable<Awaited<ReturnType<typeof getCosmicChart>>>
+export type GetCosmicChartQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the signed-in user's Cosmic Compass chart
+ */
+
+export function useGetCosmicChart<TData = Awaited<ReturnType<typeof getCosmicChart>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCosmicChart>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCosmicChartQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSaveCosmicChartUrl = () => {
+
+
+
+
+  return `/api/me/cosmic`
+}
+
+/**
+ * Computes a birth chart deterministically from birth date, time, and
+place, with no external calls. Saving again replaces the chart in place,
+since a person has one birth moment. Birth time is optional: without it
+we return a sun-only read rather than guess a rising sign.
+
+ * @summary Build and save a Cosmic Compass chart
+ */
+export const saveCosmicChart = async (cosmicChartInput: CosmicChartInput, options?: RequestInit): Promise<CosmicChart> => {
+
+  return customFetch<CosmicChart>(getSaveCosmicChartUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      cosmicChartInput,)
+  }
+);}
+
+
+
+
+export const getSaveCosmicChartMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCosmicChart>>, TError,{data: BodyType<CosmicChartInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveCosmicChart>>, TError,{data: BodyType<CosmicChartInput>}, TContext> => {
+
+const mutationKey = ['saveCosmicChart'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveCosmicChart>>, {data: BodyType<CosmicChartInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveCosmicChart(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveCosmicChartMutationResult = NonNullable<Awaited<ReturnType<typeof saveCosmicChart>>>
+    export type SaveCosmicChartMutationBody = BodyType<CosmicChartInput>
+    export type SaveCosmicChartMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Build and save a Cosmic Compass chart
+ */
+export const useSaveCosmicChart = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCosmicChart>>, TError,{data: BodyType<CosmicChartInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveCosmicChart>>,
+        TError,
+        {data: BodyType<CosmicChartInput>},
+        TContext
+      > => {
+      return useMutation(getSaveCosmicChartMutationOptions(options));
+    }
+
+export const getSaveCosmicReactionUrl = () => {
+
+
+
+
+  return `/api/me/cosmic/reaction`
+}
+
+/**
+ * Records whether the read felt like the user, partly, or not at all. This
+reaction is the honest calibration signal of the Cosmic Compass: what a
+person recognises in a mirror is real self-knowledge, regardless of
+whether the stars mean anything. Requires an existing chart.
+
+ * @summary Record how the chart read landed
+ */
+export const saveCosmicReaction = async (cosmicReactionInput: CosmicReactionInput, options?: RequestInit): Promise<CosmicChart> => {
+
+  return customFetch<CosmicChart>(getSaveCosmicReactionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      cosmicReactionInput,)
+  }
+);}
+
+
+
+
+export const getSaveCosmicReactionMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCosmicReaction>>, TError,{data: BodyType<CosmicReactionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveCosmicReaction>>, TError,{data: BodyType<CosmicReactionInput>}, TContext> => {
+
+const mutationKey = ['saveCosmicReaction'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveCosmicReaction>>, {data: BodyType<CosmicReactionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveCosmicReaction(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveCosmicReactionMutationResult = NonNullable<Awaited<ReturnType<typeof saveCosmicReaction>>>
+    export type SaveCosmicReactionMutationBody = BodyType<CosmicReactionInput>
+    export type SaveCosmicReactionMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Record how the chart read landed
+ */
+export const useSaveCosmicReaction = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCosmicReaction>>, TError,{data: BodyType<CosmicReactionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveCosmicReaction>>,
+        TError,
+        {data: BodyType<CosmicReactionInput>},
+        TContext
+      > => {
+      return useMutation(getSaveCosmicReactionMutationOptions(options));
+    }
+
+export const getGetCosmicReadingUrl = () => {
+
+
+
+
+  return `/api/me/cosmic/reading`
+}
+
+/**
+ * Returns the deterministic reading always, and layers an optional Claude
+synthesis on top when the deep AI lane is on and the daily cap allows.
+Only derived placements are sent to Claude, never raw birth details.
+Falls back to the deterministic reading on consent-off, cap, or failure.
+
+ * @summary Get a deeper Cosmic Compass reading
+ */
+export const getCosmicReading = async ( options?: RequestInit): Promise<CosmicReading> => {
+
+  return customFetch<CosmicReading>(getGetCosmicReadingUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getGetCosmicReadingMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getCosmicReading>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof getCosmicReading>>, TError,void, TContext> => {
+
+const mutationKey = ['getCosmicReading'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getCosmicReading>>, void> = () => {
+
+
+          return  getCosmicReading(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GetCosmicReadingMutationResult = NonNullable<Awaited<ReturnType<typeof getCosmicReading>>>
+
+    export type GetCosmicReadingMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Get a deeper Cosmic Compass reading
+ */
+export const useGetCosmicReading = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getCosmicReading>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof getCosmicReading>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getGetCosmicReadingMutationOptions(options));
+    }
+
+export const getGetCosmicLinesUrl = () => {
+
+
+
+
+  return `/api/me/cosmic/lines`
+}
+
+/**
+ * Returns the planetary meridian lines (MC and IC) derived from the saved
+birth moment, plus the known metros nearest a warmth or growth line, and
+the current relocation-openness flag. These are real lines of constant
+longitude; we do not fake the curved horizon lines. Returns a sun-only
+mode with empty lines when no birth time was given. Returns 404 when no
+chart has been built yet. Raw birth details never leave the server.
+
+ * @summary Get the user's astrocartography lines and love-line cities
+ */
+export const getCosmicLines = async ( options?: RequestInit): Promise<CosmicLines> => {
+
+  return customFetch<CosmicLines>(getGetCosmicLinesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCosmicLinesQueryKey = () => {
+    return [
+    `/api/me/cosmic/lines`
+    ] as const;
+    }
+
+
+export const getGetCosmicLinesQueryOptions = <TData = Awaited<ReturnType<typeof getCosmicLines>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCosmicLines>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCosmicLinesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCosmicLines>>> = ({ signal }) => getCosmicLines({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCosmicLines>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCosmicLinesQueryResult = NonNullable<Awaited<ReturnType<typeof getCosmicLines>>>
+export type GetCosmicLinesQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the user's astrocartography lines and love-line cities
+ */
+
+export function useGetCosmicLines<TData = Awaited<ReturnType<typeof getCosmicLines>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCosmicLines>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCosmicLinesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSetCosmicRelocationUrl = () => {
+
+
+
+
+  return `/api/me/cosmic/relocation`
+}
+
+/**
+ * Turns the relocation-openness flag on or off. When on, the user's
+love-line cities widen who discovery can pair them with; it never
+narrows or gates a match. Requires an existing chart. The flag is a
+preference, not content, and a trust-ledger purge flips it back off.
+
+ * @summary Set whether the user is open to relocation-based matching
+ */
+export const setCosmicRelocation = async (cosmicRelocationInput: CosmicRelocationInput, options?: RequestInit): Promise<CosmicRelocationState> => {
+
+  return customFetch<CosmicRelocationState>(getSetCosmicRelocationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      cosmicRelocationInput,)
+  }
+);}
+
+
+
+
+export const getSetCosmicRelocationMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCosmicRelocation>>, TError,{data: BodyType<CosmicRelocationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setCosmicRelocation>>, TError,{data: BodyType<CosmicRelocationInput>}, TContext> => {
+
+const mutationKey = ['setCosmicRelocation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setCosmicRelocation>>, {data: BodyType<CosmicRelocationInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setCosmicRelocation(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetCosmicRelocationMutationResult = NonNullable<Awaited<ReturnType<typeof setCosmicRelocation>>>
+    export type SetCosmicRelocationMutationBody = BodyType<CosmicRelocationInput>
+    export type SetCosmicRelocationMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Set whether the user is open to relocation-based matching
+ */
+export const useSetCosmicRelocation = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCosmicRelocation>>, TError,{data: BodyType<CosmicRelocationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setCosmicRelocation>>,
+        TError,
+        {data: BodyType<CosmicRelocationInput>},
+        TContext
+      > => {
+      return useMutation(getSetCosmicRelocationMutationOptions(options));
+    }
+
+export const getGetCosmicWeatherUrl = () => {
+
+
+
+
+  return `/api/me/cosmic/weather`
+}
+
+/**
+ * Returns a playful, star-flavoured wrapper around the user's single most
+valuable real readiness nudge. The honest action and its detail travel
+underneath unchanged, so the star language never replaces the real step
+it points at. Requires an existing chart. Returns 404 when no chart has
+been built yet. Only derived placements and the real action are used.
+
+ * @summary Get the user's daily cosmic weather card
+ */
+export const getCosmicWeather = async ( options?: RequestInit): Promise<CosmicWeather> => {
+
+  return customFetch<CosmicWeather>(getGetCosmicWeatherUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCosmicWeatherQueryKey = () => {
+    return [
+    `/api/me/cosmic/weather`
+    ] as const;
+    }
+
+
+export const getGetCosmicWeatherQueryOptions = <TData = Awaited<ReturnType<typeof getCosmicWeather>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCosmicWeather>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCosmicWeatherQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCosmicWeather>>> = ({ signal }) => getCosmicWeather({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCosmicWeather>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCosmicWeatherQueryResult = NonNullable<Awaited<ReturnType<typeof getCosmicWeather>>>
+export type GetCosmicWeatherQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the user's daily cosmic weather card
+ */
+
+export function useGetCosmicWeather<TData = Awaited<ReturnType<typeof getCosmicWeather>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCosmicWeather>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCosmicWeatherQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetWouldYouRatherAnswersUrl = () => {
 

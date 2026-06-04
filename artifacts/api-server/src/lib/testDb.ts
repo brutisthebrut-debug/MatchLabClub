@@ -215,6 +215,16 @@ stores.time_capsules = {
   nextId: 1,
   defaults: { userId: null, anonymousClaimToken: null },
 };
+stores.cosmic_charts = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    userId: null,
+    anonymousClaimToken: null,
+    reaction: null,
+    relocationOpen: false,
+  },
+};
 ensureStore("leads");
 ensureStore("waitlist");
 ensureStore("purchase_interest");
@@ -238,6 +248,7 @@ export const wyrAnswersTable = makeTable("wyr_answers");
 export const scenarioResponsesTable = makeTable("scenario_responses");
 export const predictionResponsesTable = makeTable("prediction_responses");
 export const timeCapsulesTable = makeTable("time_capsules");
+export const cosmicChartsTable = makeTable("cosmic_charts");
 ensureStore("compatibility_reads");
 export const compatibilityReadsTable = makeTable("compatibility_reads");
 ensureStore("journal_entries");

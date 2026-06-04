@@ -185,6 +185,7 @@ const SECTIONS: NavSection[] = [
     more: [
       { name: "This or That", href: "/this-or-that", icon: Shuffle },
       { name: "Would You Rather", href: "/games/would-you-rather", icon: Scale },
+      { name: "Cosmic Compass", href: "/cosmic", icon: Sparkles },
       { name: "Scenario reels", href: "/games/scenarios", icon: Clapperboard },
       { name: "Predict yourself", href: "/games/predict", icon: Target },
       { name: "Time capsule", href: "/games/time-capsule", icon: Mail },

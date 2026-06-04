@@ -22,6 +22,18 @@ export interface MatchProposal {
   /** @nullable */
   summary: string | null;
   status: MatchProposalStatus;
+  /**
+     * A playful, bounded resonance garnish (0 to 100). Null when either person has no chart. Never feeds the real compatibility score or any gate.
+     * @minimum 0
+     * @maximum 100
+     * @nullable
+     */
+  cosmicResonance: number | null;
+  /**
+     * A short, light note for the resonance garnish. Null when either person has no chart.
+     * @nullable
+     */
+  cosmicResonanceNote: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

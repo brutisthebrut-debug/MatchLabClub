@@ -1,0 +1,1 @@
+ALTER TABLE "cosmic_charts" ADD COLUMN "relocation_open" boolean DEFAULT false NOT NULL;

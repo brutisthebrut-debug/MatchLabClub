@@ -304,6 +304,8 @@ export default function Matching() {
     selfAwareness: 0,
     timeCapsule: 0,
     externalCalibration: 0,
+    cosmicProfile: 0,
+    relocationOpen: 0,
   };
   const nextActions = state.data?.nextActions ?? [];
   const history = state.data?.history ?? [];
@@ -1240,6 +1242,29 @@ export default function Matching() {
                       value={p.compatibilityScore}
                       className="h-2 mb-3"
                     />
+                    {p.cosmicResonance != null && (
+                      <div
+                        className="flex items-start gap-2 rounded-xl border border-foreground/10 bg-foreground/[0.02] px-3 py-2 mb-3"
+                        data-testid={`proposal-resonance-${p.id}`}
+                      >
+                        <Sparkles
+                          className="w-4 h-4 mt-0.5 text-[hsl(270_70%_60%)] shrink-0"
+                          aria-hidden="true"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-semibold text-foreground">
+                            Cosmic resonance {p.cosmicResonance}
+                          </span>
+                          {p.cosmicResonanceNote
+                            ? `. ${p.cosmicResonanceNote}`
+                            : ""}
+                          <span className="block mt-0.5 opacity-70">
+                            For fun. The real read is the compatibility score
+                            above.
+                          </span>
+                        </p>
+                      </div>
+                    )}
                     {p.summary && (
                       <p className="text-sm text-muted-foreground mb-3">
                         {p.summary}

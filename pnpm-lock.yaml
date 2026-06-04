@@ -220,6 +220,9 @@ importers:
       '@workspace/integrations-anthropic-ai':
         specifier: workspace:*
         version: link:../../lib/integrations-anthropic-ai
+      circular-natal-horoscope-js:
+        specifier: ^1.1.0
+        version: 1.1.0
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -319,7 +322,7 @@ importers:
         version: 3.1.0
       vitest:
         specifier: ^4.1.6
-        version: 4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.6.2)(jsdom@29.1.1(@noble/hashes@1.8.0))(vite@7.3.3(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4))
+        version: 4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.6.2)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0))(lightningcss@1.32.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4)
 
   artifacts/mockup-sandbox:
     devDependencies:
@@ -722,7 +725,7 @@ importers:
         version: 7.3.3(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4)
       vitest:
         specifier: ^4.1.6
-        version: 4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.6.2)(jsdom@29.1.1(@noble/hashes@1.8.0))(vite@7.3.3(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4))
+        version: 4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.6.2)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0))(lightningcss@1.32.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4)
       wouter:
         specifier: ^3.3.5
         version: 3.9.0(react@19.1.0)
@@ -909,7 +912,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.6
-        version: 4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.6.2)(jsdom@29.1.1(@noble/hashes@1.8.0))(vite@7.3.3(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4))
+        version: 4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.6.2)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0))(lightningcss@1.32.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4)
       zod:
         specifier: 'catalog:'
         version: 3.25.76
@@ -3713,6 +3716,9 @@ packages:
     resolution: {integrity: sha512-NIxF55hv4nSqQswkAeiOi1r83xy8JldOFDTWiug55KBu9Jnblncd2U6ViHmYgHf01TPZS77NJBhBMKdWj9HQMQ==}
     engines: {node: '>=8'}
 
+  circular-natal-horoscope-js@1.1.0:
+    resolution: {integrity: sha512-MsOrwRa6pgDpv9tgnhB7sKhjQcWInSW0DnbF9XFnByKLFBJGHyLZOZGBS3JBDUvL1Ot+8eotqWMx9D3VxpkqxA==}
+
   cjs-module-lexer@2.2.0:
     resolution: {integrity: sha512-4bHTS2YuzUvtoLjdy+98ykbNB5jS0+07EvFNXerqZQJ89F7DI6ET7OQo/HJuW6K0aVsKA9hj9/RVb2kQVOrPDQ==}
 
@@ -5601,6 +5607,12 @@ packages:
   module-details-from-path@1.0.4:
     resolution: {integrity: sha512-EGWKgxALGMgzvxYF1UyGTy0HXX/2vHLkw6+NvDKW2jypWbHpjQuj4UMcqQWXHERJhVGKikolT06G3bcKe4fi7w==}
 
+  moment-timezone@0.5.48:
+    resolution: {integrity: sha512-f22b8LV1gbTO2ms2j2z13MuPogNoh5UzxL3nzNAYKGraILnbGc9NEE6dyiiiLv46DGRb8A4kg8UKWLjPthxBHw==}
+
+  moment@2.30.1:
+    resolution: {integrity: sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==}
+
   motion-dom@12.38.0:
     resolution: {integrity: sha512-pdkHLD8QYRp8VfiNLb8xIBJis1byQ9gPT3Jnh2jqfFtAsWUA3dEepDlsWe/xMpO8McV+VdpKVcp+E+TGJEtOoA==}
 
@@ -6984,6 +6996,9 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  tz-lookup@6.1.25:
+    resolution: {integrity: sha512-fFewT9o1uDzsW1QnUU1ValqaihFnwiUiiHr1S79/fxOzKXYYvX+EHeRnpvQJ9B3Qg67wPXT6QF2Esc4pFOrvLg==}
+
   ua-parser-js@1.0.41:
     resolution: {integrity: sha512-LbBDqdIC5s8iROCUjMbW1f5dJQTEFB1+KO9ogbvlb3nm9n4YHa5p4KTvFPWvh2Hs8gZMBuiB1/8+pdfe/tDPug==}
     hasBin: true
@@ -7166,7 +7181,6 @@ packages:
       '@vitest/ui': 4.1.6
       happy-dom: '*'
       jsdom: '*'
-      vite: ^6.0.0 || ^7.0.0 || ^8.0.0
     peerDependenciesMeta:
       '@edge-runtime/vm':
         optional: true
@@ -10782,6 +10796,12 @@ snapshots:
 
   ci-info@3.9.0: {}
 
+  circular-natal-horoscope-js@1.1.0:
+    dependencies:
+      moment: 2.30.1
+      moment-timezone: 0.5.48
+      tz-lookup: 6.1.25
+
   cjs-module-lexer@2.2.0: {}
 
   class-variance-authority@0.7.1:
@@ -12847,6 +12867,12 @@ snapshots:
 
   module-details-from-path@1.0.4: {}
 
+  moment-timezone@0.5.48:
+    dependencies:
+      moment: 2.30.1
+
+  moment@2.30.1: {}
+
   motion-dom@12.38.0:
     dependencies:
       motion-utils: 12.36.0
@@ -14290,6 +14316,8 @@ snapshots:
 
   typescript@5.9.3: {}
 
+  tz-lookup@6.1.25: {}
+
   ua-parser-js@1.0.41: {}
 
   uc.micro@2.1.0: {}
@@ -14425,7 +14453,7 @@ snapshots:
       tsx: 4.21.0
       yaml: 2.8.4
 
-  vitest@4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.6.2)(jsdom@29.1.1(@noble/hashes@1.8.0))(vite@7.3.3(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4)):
+  vitest@4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.6.2)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0))(lightningcss@1.32.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4):
     dependencies:
       '@vitest/expect': 4.1.6
       '@vitest/mocker': 4.1.6(vite@7.3.3(@types/node@25.6.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.8.4))
@@ -14452,7 +14480,17 @@ snapshots:
       '@types/node': 25.6.2
       jsdom: 29.1.1(@noble/hashes@1.8.0)
     transitivePeerDependencies:
+      - jiti
+      - less
+      - lightningcss
       - msw
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - terser
+      - tsx
+      - yaml
 
   vlq@1.0.1: {}
 

@@ -4673,6 +4673,12 @@ export const getMatchingStateResponseReadinessBreakdownTimeCapsuleMax = 100;
 export const getMatchingStateResponseReadinessBreakdownExternalCalibrationMin = 0;
 export const getMatchingStateResponseReadinessBreakdownExternalCalibrationMax = 100;
 
+export const getMatchingStateResponseReadinessBreakdownCosmicProfileMin = 0;
+export const getMatchingStateResponseReadinessBreakdownCosmicProfileMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownRelocationOpenMin = 0;
+export const getMatchingStateResponseReadinessBreakdownRelocationOpenMax = 100;
+
 export const getMatchingStateResponseReadinessThresholdMin = 0;
 export const getMatchingStateResponseReadinessThresholdMax = 100;
 
@@ -4755,7 +4761,9 @@ export const GetMatchingStateResponse = zod.object({
   "scenarioReels": zod.number().min(getMatchingStateResponseReadinessBreakdownScenarioReelsMin).max(getMatchingStateResponseReadinessBreakdownScenarioReelsMax),
   "selfAwareness": zod.number().min(getMatchingStateResponseReadinessBreakdownSelfAwarenessMin).max(getMatchingStateResponseReadinessBreakdownSelfAwarenessMax),
   "timeCapsule": zod.number().min(getMatchingStateResponseReadinessBreakdownTimeCapsuleMin).max(getMatchingStateResponseReadinessBreakdownTimeCapsuleMax),
-  "externalCalibration": zod.number().min(getMatchingStateResponseReadinessBreakdownExternalCalibrationMin).max(getMatchingStateResponseReadinessBreakdownExternalCalibrationMax)
+  "externalCalibration": zod.number().min(getMatchingStateResponseReadinessBreakdownExternalCalibrationMin).max(getMatchingStateResponseReadinessBreakdownExternalCalibrationMax),
+  "cosmicProfile": zod.number().min(getMatchingStateResponseReadinessBreakdownCosmicProfileMin).max(getMatchingStateResponseReadinessBreakdownCosmicProfileMax),
+  "relocationOpen": zod.number().min(getMatchingStateResponseReadinessBreakdownRelocationOpenMin).max(getMatchingStateResponseReadinessBreakdownRelocationOpenMax)
 })
 }),
   "eligible": zod.boolean().describe('True when readiness.score is at or above readinessThreshold. The client uses this to gate the pool opt-in switch.'),
@@ -5176,6 +5184,289 @@ export const DeleteDatingWinHeader = zod.object({
 
 
 /**
+ * Returns the caller's saved birth chart with its deterministically
+computed placements, derived soft trait priors, and the always-on
+deterministic reading. Returns 404 when no chart has been built yet.
+Raw birth details never leave the server beyond the local compute.
+
+ * @summary Get the signed-in user's Cosmic Compass chart
+ */
+export const GetCosmicChartHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetCosmicChartResponse = zod.object({
+  "birthDate": zod.string(),
+  "birthTime": zod.string().nullable(),
+  "birthPlace": zod.string(),
+  "birthLat": zod.number(),
+  "birthLng": zod.number(),
+  "placements": zod.object({
+  "mode": zod.enum(['full', 'sunOnly']),
+  "sun": zod.object({
+  "sign": zod.string(),
+  "degree": zod.number()
+}),
+  "moon": zod.union([zod.object({
+  "sign": zod.string(),
+  "degree": zod.number()
+}),zod.null()]),
+  "rising": zod.union([zod.object({
+  "sign": zod.string(),
+  "degree": zod.number()
+}),zod.null()]),
+  "midheaven": zod.union([zod.object({
+  "sign": zod.string()
+}),zod.null()]),
+  "bodies": zod.array(zod.object({
+  "body": zod.string(),
+  "sign": zod.string()
+})),
+  "traits": zod.object({
+  "novelty": zod.number(),
+  "stability": zod.number(),
+  "expression": zod.number(),
+  "depth": zod.number()
+}),
+  "elements": zod.object({
+  "fire": zod.number(),
+  "earth": zod.number(),
+  "air": zod.number(),
+  "water": zod.number()
+}),
+  "modalities": zod.object({
+  "cardinal": zod.number(),
+  "fixed": zod.number(),
+  "mutable": zod.number()
+})
+}),
+  "reaction": zod.string().nullable(),
+  "reading": zod.object({
+  "headline": zod.string(),
+  "lines": zod.array(zod.string()),
+  "topTrait": zod.string(),
+  "source": zod.enum(['deterministic', 'claude']),
+  "deep": zod.object({
+  "headline": zod.string(),
+  "lines": zod.array(zod.string())
+}).nullish().describe('Optional Claude synthesis layered on top. Null when the deep AI lane is off or unavailable.')
+})
+})
+
+
+/**
+ * Computes a birth chart deterministically from birth date, time, and
+place, with no external calls. Saving again replaces the chart in place,
+since a person has one birth moment. Birth time is optional: without it
+we return a sun-only read rather than guess a rising sign.
+
+ * @summary Build and save a Cosmic Compass chart
+ */
+export const SaveCosmicChartHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const saveCosmicChartBodyBirthPlaceMax = 160;
+
+export const saveCosmicChartBodyBirthLatMin = -90;
+export const saveCosmicChartBodyBirthLatMax = 90;
+
+export const saveCosmicChartBodyBirthLngMin = -180;
+export const saveCosmicChartBodyBirthLngMax = 180;
+
+
+
+export const SaveCosmicChartBody = zod.object({
+  "birthDate": zod.string().describe('ISO date, YYYY-MM-DD.'),
+  "birthTime": zod.string().nullish().describe('HH:MM 24h, or null when the user does not know their birth time.'),
+  "birthPlace": zod.string().max(saveCosmicChartBodyBirthPlaceMax),
+  "birthLat": zod.number().min(saveCosmicChartBodyBirthLatMin).max(saveCosmicChartBodyBirthLatMax),
+  "birthLng": zod.number().min(saveCosmicChartBodyBirthLngMin).max(saveCosmicChartBodyBirthLngMax)
+})
+
+
+/**
+ * Records whether the read felt like the user, partly, or not at all. This
+reaction is the honest calibration signal of the Cosmic Compass: what a
+person recognises in a mirror is real self-knowledge, regardless of
+whether the stars mean anything. Requires an existing chart.
+
+ * @summary Record how the chart read landed
+ */
+export const SaveCosmicReactionHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const SaveCosmicReactionBody = zod.object({
+  "reaction": zod.enum(['resonant', 'mixed', 'off'])
+})
+
+export const SaveCosmicReactionResponse = zod.object({
+  "birthDate": zod.string(),
+  "birthTime": zod.string().nullable(),
+  "birthPlace": zod.string(),
+  "birthLat": zod.number(),
+  "birthLng": zod.number(),
+  "placements": zod.object({
+  "mode": zod.enum(['full', 'sunOnly']),
+  "sun": zod.object({
+  "sign": zod.string(),
+  "degree": zod.number()
+}),
+  "moon": zod.union([zod.object({
+  "sign": zod.string(),
+  "degree": zod.number()
+}),zod.null()]),
+  "rising": zod.union([zod.object({
+  "sign": zod.string(),
+  "degree": zod.number()
+}),zod.null()]),
+  "midheaven": zod.union([zod.object({
+  "sign": zod.string()
+}),zod.null()]),
+  "bodies": zod.array(zod.object({
+  "body": zod.string(),
+  "sign": zod.string()
+})),
+  "traits": zod.object({
+  "novelty": zod.number(),
+  "stability": zod.number(),
+  "expression": zod.number(),
+  "depth": zod.number()
+}),
+  "elements": zod.object({
+  "fire": zod.number(),
+  "earth": zod.number(),
+  "air": zod.number(),
+  "water": zod.number()
+}),
+  "modalities": zod.object({
+  "cardinal": zod.number(),
+  "fixed": zod.number(),
+  "mutable": zod.number()
+})
+}),
+  "reaction": zod.string().nullable(),
+  "reading": zod.object({
+  "headline": zod.string(),
+  "lines": zod.array(zod.string()),
+  "topTrait": zod.string(),
+  "source": zod.enum(['deterministic', 'claude']),
+  "deep": zod.object({
+  "headline": zod.string(),
+  "lines": zod.array(zod.string())
+}).nullish().describe('Optional Claude synthesis layered on top. Null when the deep AI lane is off or unavailable.')
+})
+})
+
+
+/**
+ * Returns the deterministic reading always, and layers an optional Claude
+synthesis on top when the deep AI lane is on and the daily cap allows.
+Only derived placements are sent to Claude, never raw birth details.
+Falls back to the deterministic reading on consent-off, cap, or failure.
+
+ * @summary Get a deeper Cosmic Compass reading
+ */
+export const GetCosmicReadingHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetCosmicReadingResponse = zod.object({
+  "headline": zod.string(),
+  "lines": zod.array(zod.string()),
+  "topTrait": zod.string(),
+  "source": zod.enum(['deterministic', 'claude']),
+  "deep": zod.object({
+  "headline": zod.string(),
+  "lines": zod.array(zod.string())
+}).nullish().describe('Optional Claude synthesis layered on top. Null when the deep AI lane is off or unavailable.')
+})
+
+
+/**
+ * Returns the planetary meridian lines (MC and IC) derived from the saved
+birth moment, plus the known metros nearest a warmth or growth line, and
+the current relocation-openness flag. These are real lines of constant
+longitude; we do not fake the curved horizon lines. Returns a sun-only
+mode with empty lines when no birth time was given. Returns 404 when no
+chart has been built yet. Raw birth details never leave the server.
+
+ * @summary Get the user's astrocartography lines and love-line cities
+ */
+export const GetCosmicLinesHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetCosmicLinesResponse = zod.object({
+  "mode": zod.enum(['full', 'sunOnly']).describe('Lines are only computed in full mode (a birth time was given).'),
+  "lines": zod.array(zod.object({
+  "body": zod.string().describe('Lowercase body key, e.g. venus.'),
+  "bodyLabel": zod.string(),
+  "angle": zod.enum(['MC', 'IC']),
+  "lng": zod.number().describe('Longitude where this meridian line falls, in [-180, 180).'),
+  "meaning": zod.string()
+})),
+  "loveLineCities": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "lat": zod.number(),
+  "lng": zod.number(),
+  "body": zod.string(),
+  "bodyLabel": zod.string(),
+  "angle": zod.enum(['MC', 'IC']),
+  "distanceMiles": zod.number()
+})),
+  "relocationOpen": zod.boolean()
+})
+
+
+/**
+ * Turns the relocation-openness flag on or off. When on, the user's
+love-line cities widen who discovery can pair them with; it never
+narrows or gates a match. Requires an existing chart. The flag is a
+preference, not content, and a trust-ledger purge flips it back off.
+
+ * @summary Set whether the user is open to relocation-based matching
+ */
+export const SetCosmicRelocationHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const SetCosmicRelocationBody = zod.object({
+  "open": zod.boolean()
+})
+
+export const SetCosmicRelocationResponse = zod.object({
+  "relocationOpen": zod.boolean()
+})
+
+
+/**
+ * Returns a playful, star-flavoured wrapper around the user's single most
+valuable real readiness nudge. The honest action and its detail travel
+underneath unchanged, so the star language never replaces the real step
+it points at. Requires an existing chart. Returns 404 when no chart has
+been built yet. Only derived placements and the real action are used.
+
+ * @summary Get the user's daily cosmic weather card
+ */
+export const GetCosmicWeatherHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetCosmicWeatherResponse = zod.object({
+  "headline": zod.string(),
+  "reframe": zod.string(),
+  "action": zod.union([zod.object({
+  "label": zod.string(),
+  "detail": zod.string(),
+  "href": zod.string()
+}),zod.null()])
+})
+
+
+/**
  * Returns the caller's answers to the Would You Rather deck, newest first.
 Each answer records only which side was chosen, never any free text.
 Distinct prompts answered feed matching readiness as a low-weight signal.
@@ -5571,6 +5862,9 @@ export const GetMatchingProposalsHeader = zod.object({
 export const getMatchingProposalsResponseCompatibilityScoreMin = 0;
 export const getMatchingProposalsResponseCompatibilityScoreMax = 100;
 
+export const getMatchingProposalsResponseCosmicResonanceMin = 0;
+export const getMatchingProposalsResponseCosmicResonanceMax = 100;
+
 
 
 export const GetMatchingProposalsResponseItem = zod.object({
@@ -5581,6 +5875,8 @@ export const GetMatchingProposalsResponseItem = zod.object({
   "compatibilityScore": zod.number().min(getMatchingProposalsResponseCompatibilityScoreMin).max(getMatchingProposalsResponseCompatibilityScoreMax),
   "summary": zod.string().nullable(),
   "status": zod.enum(['proposed', 'user_yes', 'user_no', 'mutual_yes', 'expired', 'completed']),
+  "cosmicResonance": zod.number().min(getMatchingProposalsResponseCosmicResonanceMin).max(getMatchingProposalsResponseCosmicResonanceMax).nullable().describe('A playful, bounded resonance garnish (0 to 100). Null when either person has no chart. Never feeds the real compatibility score or any gate.'),
+  "cosmicResonanceNote": zod.string().nullable().describe('A short, light note for the resonance garnish. Null when either person has no chart.'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -5605,6 +5901,9 @@ export const DiscoverMatchesHeader = zod.object({
 export const discoverMatchesResponseCompatibilityScoreMin = 0;
 export const discoverMatchesResponseCompatibilityScoreMax = 100;
 
+export const discoverMatchesResponseCosmicResonanceMin = 0;
+export const discoverMatchesResponseCosmicResonanceMax = 100;
+
 
 
 export const DiscoverMatchesResponseItem = zod.object({
@@ -5615,6 +5914,8 @@ export const DiscoverMatchesResponseItem = zod.object({
   "compatibilityScore": zod.number().min(discoverMatchesResponseCompatibilityScoreMin).max(discoverMatchesResponseCompatibilityScoreMax),
   "summary": zod.string().nullable(),
   "status": zod.enum(['proposed', 'user_yes', 'user_no', 'mutual_yes', 'expired', 'completed']),
+  "cosmicResonance": zod.number().min(discoverMatchesResponseCosmicResonanceMin).max(discoverMatchesResponseCosmicResonanceMax).nullable().describe('A playful, bounded resonance garnish (0 to 100). Null when either person has no chart. Never feeds the real compatibility score or any gate.'),
+  "cosmicResonanceNote": zod.string().nullable().describe('A short, light note for the resonance garnish. Null when either person has no chart.'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -5681,6 +5982,9 @@ export const RespondToMatchProposalBody = zod.object({
 export const respondToMatchProposalResponseCompatibilityScoreMin = 0;
 export const respondToMatchProposalResponseCompatibilityScoreMax = 100;
 
+export const respondToMatchProposalResponseCosmicResonanceMin = 0;
+export const respondToMatchProposalResponseCosmicResonanceMax = 100;
+
 
 
 export const RespondToMatchProposalResponse = zod.object({
@@ -5691,6 +5995,8 @@ export const RespondToMatchProposalResponse = zod.object({
   "compatibilityScore": zod.number().min(respondToMatchProposalResponseCompatibilityScoreMin).max(respondToMatchProposalResponseCompatibilityScoreMax),
   "summary": zod.string().nullable(),
   "status": zod.enum(['proposed', 'user_yes', 'user_no', 'mutual_yes', 'expired', 'completed']),
+  "cosmicResonance": zod.number().min(respondToMatchProposalResponseCosmicResonanceMin).max(respondToMatchProposalResponseCosmicResonanceMax).nullable().describe('A playful, bounded resonance garnish (0 to 100). Null when either person has no chart. Never feeds the real compatibility score or any gate.'),
+  "cosmicResonanceNote": zod.string().nullable().describe('A short, light note for the resonance garnish. Null when either person has no chart.'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })

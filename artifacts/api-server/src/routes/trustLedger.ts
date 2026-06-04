@@ -20,6 +20,7 @@ import {
   wingmanInvitesTable,
   wingmanAnswersTable,
   wingmanSelfRatingsTable,
+  cosmicChartsTable,
 } from "@workspace/db";
 import {
   GetTrustLedgerResponse,
@@ -334,6 +335,50 @@ const FIRST_PARTY_SOURCES: Record<
           .returning({ userId: wingmanSelfRatingsTable.userId }),
       ]);
       return invites.length + answers.length + self.length;
+    },
+  },
+  // Cosmic Compass: one birth chart per person. Purging removes the chart and
+  // its derived placements outright, which also clears the stored reaction.
+  cosmicProfile: {
+    countStored: (client, userId) =>
+      countBy(client, cosmicChartsTable, eq(cosmicChartsTable.userId, userId)),
+    purge: async (tx, userId) => {
+      const rows = await tx
+        .delete(cosmicChartsTable)
+        .where(eq(cosmicChartsTable.userId, userId))
+        .returning({ id: cosmicChartsTable.id });
+      return rows.length;
+    },
+  },
+  // Relocation openness: a single per-chart preference plus the love-line cities
+  // we derive from it. Purging turns the flag back off so the lane drops to zero;
+  // the chart itself is owned and purged by the cosmicProfile source above, so we
+  // never delete the chart here, only clear the opt-in.
+  relocationOpen: {
+    countStored: async (client, userId) => {
+      const rows = await client
+        .select({ id: cosmicChartsTable.id })
+        .from(cosmicChartsTable)
+        .where(
+          and(
+            eq(cosmicChartsTable.userId, userId),
+            eq(cosmicChartsTable.relocationOpen, true),
+          ),
+        );
+      return rows.length;
+    },
+    purge: async (tx, userId) => {
+      const rows = await tx
+        .update(cosmicChartsTable)
+        .set({ relocationOpen: false })
+        .where(
+          and(
+            eq(cosmicChartsTable.userId, userId),
+            eq(cosmicChartsTable.relocationOpen, true),
+          ),
+        )
+        .returning({ id: cosmicChartsTable.id });
+      return rows.length;
     },
   },
   // Consistency is a derived meta-signal with no table of its own: the streak and

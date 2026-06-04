@@ -26,6 +26,7 @@ import {
   predictionResponsesTable,
   timeCapsulesTable,
   wingmanAnswersTable,
+  cosmicChartsTable,
 } from "@workspace/db";
 import {
   SIGNAL_REGISTRY,
@@ -193,6 +194,25 @@ export async function collectSignalCounts(
     .slice(0, 10);
   const activeDays14 = (await loadActivityDays(userId, since14)).length;
 
+  // Cosmic Compass: one chart per person, so this is not a row count. The honest
+  // signal is engagement with the mirror: one facet for having built a chart,
+  // one more for having told us whether the read landed. We read only whether a
+  // reaction exists, never the raw birth details, which never leave the compute.
+  const cosmicRows = await db
+    .select({
+      reaction: cosmicChartsTable.reaction,
+      relocationOpen: cosmicChartsTable.relocationOpen,
+    })
+    .from(cosmicChartsTable)
+    .where(eq(cosmicChartsTable.userId, userId))
+    .limit(1);
+  const cosmicFacets =
+    cosmicRows.length === 0 ? 0 : cosmicRows[0]?.reaction ? 2 : 1;
+  // Relocation openness is a single preference facet, not a row count: one if
+  // they opted in, zero otherwise. The chart itself feeds the cosmicProfile lane.
+  const relocationFacets =
+    cosmicRows.length > 0 && cosmicRows[0]?.relocationOpen ? 1 : 0;
+
   // First-party counts: each comes from a bespoke query against a dedicated
   // table above, keyed here by the contributor's countKey.
   const counts = {
@@ -210,6 +230,8 @@ export async function collectSignalCounts(
     predictionsAnswered: predictionCount,
     capsulesWritten: capsuleCount,
     wingmanPerspectives: wingmanCount,
+    cosmicFacets,
+    relocationFacets,
   } as SignalCounts;
 
   // Import-backed counts, derived from the registry's data-source descriptors so

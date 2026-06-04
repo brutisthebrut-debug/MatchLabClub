@@ -50,6 +50,8 @@ export interface ReadinessBreakdown {
   selfAwareness: number;
   timeCapsule: number;
   externalCalibration: number;
+  cosmicProfile: number;
+  relocationOpen: number;
 }
 
 /** Raw counts pulled from the database for each contributor. */
@@ -194,6 +196,19 @@ export interface SignalCounts {
   predictionsAnswered: number;
   /** Notes the user has written to a future partner. */
   capsulesWritten: number;
+  /**
+   * Cosmic Compass facets engaged: their birth chart saved, plus whether they
+   * told us how the read landed. The reaction is the honest signal here, since
+   * astrology is a mirror and what a person recognises in themselves is real
+   * self-knowledge regardless of whether the stars mean anything.
+   */
+  cosmicFacets: number;
+  /**
+   * Relocation openness: one facet for telling us they are open to relocating
+   * for the right person. This is a preference, not content; it only widens the
+   * geography discovery can pair them across.
+   */
+  relocationFacets: number;
   /**
    * Outside perspectives gathered through the Wingman loop: distinct friends who
    * answered an invite about the user. Seeing yourself through people who know
@@ -1420,6 +1435,72 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       neverTouched: [
         "Who said what, since answers are only ever shown aggregated",
         "Any free text, since friends only ever submit 1-5 scores",
+      ],
+    },
+  },
+  {
+    id: "cosmicProfile",
+    countKey: "cosmicFacets",
+    dataSource: { kind: "firstParty" },
+    label: "Cosmic Compass",
+    dimensions: [
+      "how they see themselves",
+      "what they recognise and reject in a mirror",
+    ],
+    weight: 0.04,
+    confidence: 0.35,
+    normalize: { kind: "count", denominator: 2 },
+    describe: (c) =>
+      `Has built a Cosmic Compass read and reacted to it, covering ${c}% of that lane. Astrology is treated as a mirror, not a verdict: what they say lands or does not is a soft read on how they see themselves, weighted gently and never used to gate a match.`,
+    action: {
+      label: "Open your Cosmic Compass",
+      detail:
+        "Build your birth chart, then tell us what lands and what does not. The honest part is what you recognise in yourself, and that sharpens who we match you with.",
+      href: "/cosmic",
+    },
+    trust: {
+      origin: "The birth chart you build and how you react to the read.",
+      noun: "cosmic read",
+      seen: [
+        "The placements computed from your birth date, time, and place",
+        "Whether the read felt like you, partly you, or not you",
+      ],
+      neverTouched: [
+        "Your raw birth details are never sent to any outside AI, only the derived placements",
+        "The read is never treated as destiny or used to gate or override a match",
+      ],
+    },
+  },
+  {
+    id: "relocationOpen",
+    countKey: "relocationFacets",
+    dataSource: { kind: "firstParty" },
+    label: "Relocation openness",
+    dimensions: [
+      "how far they will go for the right person",
+      "openness to meeting beyond their home city",
+    ],
+    weight: 0.02,
+    confidence: 0.4,
+    normalize: { kind: "count", denominator: 1 },
+    describe: (c) =>
+      `Has said they are open to relocating for the right person, covering ${c}% of that lane. This only widens the geography we can match them across; it never narrows it and never gates a match.`,
+    action: {
+      label: "Set your relocation openness",
+      detail:
+        "Turn this on in your Cosmic Compass to let discovery reach people near the places your chart leans toward, not just your home city.",
+      href: "/cosmic",
+    },
+    trust: {
+      origin: "A single toggle in your Cosmic Compass.",
+      noun: "preference",
+      seen: [
+        "Whether you are open to relocating for the right person",
+        "The love-line cities we derive from your chart to widen your matches",
+      ],
+      neverTouched: [
+        "Your real-time location is never tracked; this is only the openness you choose to share",
+        "It only widens who we can match you with, never narrows or gates it",
       ],
     },
   },

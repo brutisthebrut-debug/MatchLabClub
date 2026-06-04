@@ -11,6 +11,7 @@ import {
   Film,
   Flame,
   Footprints,
+  Globe,
   Heart,
   HelpCircle,
   History,
@@ -263,6 +264,24 @@ export const BREAKDOWN_ROWS = [
     href: "/wingman",
     cta: "Ask a friend",
     icon: Users,
+  },
+  {
+    key: "cosmicProfile",
+    label: "Cosmic Compass",
+    blurb:
+      "A birth chart read as a mirror, not a verdict. What you recognise and reject in it is a soft, gently weighted read on how you see yourself.",
+    href: "/cosmic",
+    cta: "Open your compass",
+    icon: Sparkles,
+  },
+  {
+    key: "relocationOpen",
+    label: "Open to meeting further afield",
+    blurb:
+      "Telling us you are open to people beyond your usual radius lets matching gently widen toward your love-line cities. It only ever adds matches, never narrows them.",
+    href: "/cosmic",
+    cta: "Set your openness",
+    icon: Globe,
   },
 ] satisfies readonly BreakdownRow[];
 

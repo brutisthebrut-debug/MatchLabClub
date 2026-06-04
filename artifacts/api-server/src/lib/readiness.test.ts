@@ -54,6 +54,8 @@ describe("computeBreakdown", () => {
       selfAwareness: 0,
       timeCapsule: 0,
       externalCalibration: 0,
+      cosmicProfile: 0,
+      relocationOpen: 0,
     });
     expect(scoreFromBreakdown(b)).toBe(0);
   });
@@ -92,6 +94,8 @@ describe("computeBreakdown", () => {
       predictionsAnswered: 50,
       capsulesWritten: 50,
       wingmanPerspectives: 50,
+      cosmicFacets: 2,
+      relocationFacets: 1,
     });
     expect(b).toEqual({
       compass: 100,
@@ -126,6 +130,8 @@ describe("computeBreakdown", () => {
       selfAwareness: 100,
       timeCapsule: 100,
       externalCalibration: 100,
+      cosmicProfile: 100,
+      relocationOpen: 100,
     });
     expect(scoreFromBreakdown(b)).toBe(100);
   });

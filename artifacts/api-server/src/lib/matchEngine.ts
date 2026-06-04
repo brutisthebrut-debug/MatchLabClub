@@ -11,7 +11,7 @@
 // scoreCompatibility(b, a), because both members see the same compatibility
 // number on the same proposed pair.
 
-import { proximityBetween } from "./geo";
+import { proximityBetween, canonicalizeCity } from "./geo";
 
 export interface MatchCandidate {
   userId: string;
@@ -30,6 +30,18 @@ export interface MatchCandidate {
      * DEFAULT_RADIUS_MILES so an unset preference still respects a sane bound.
      */
     radiusMiles?: number | null;
+    /**
+     * Whether this member opted into relocation-based matching (Cosmic Compass).
+     * When true, their `loveLineCities` can bridge the radius gate. Absent/false
+     * leaves the gate exactly as it was.
+     */
+    relocationOpen?: boolean;
+    /**
+     * Canonical gazetteer keys of this member's astrocartography love-line
+     * cities. Only consulted when `relocationOpen` is true. Empty/absent leaves
+     * the gate unchanged.
+     */
+    loveLineCities?: string[];
   };
   /** Readiness score 0-100. */
   readinessScore: number;
@@ -151,6 +163,11 @@ function agePrefAdmits(
 // radius, the gate passes (we only hard-filter on a preference a member actually
 // expressed; the graded proximity component still nudges the score).
 export function radiusGatePasses(a: MatchCandidate, b: MatchCandidate): boolean {
+  // Relocation-openness bridge: a member who opted into relocation can reach
+  // anyone living in one of their astrocartography love-line cities, even past
+  // their radius cap. This only ever WIDENS the gate and is symmetric (either
+  // side opting in is enough), so pairs the old gate already passed still pass.
+  if (loveLineBridges(a, b) || loveLineBridges(b, a)) return true;
   const prox = proximityBetween(a.prefs.cityHint, b.prefs.cityHint);
   if (prox.distanceMiles == null) return true;
   const radii = [a.prefs.radiusMiles, b.prefs.radiusMiles].filter(
@@ -158,6 +175,22 @@ export function radiusGatePasses(a: MatchCandidate, b: MatchCandidate): boolean 
   );
   if (radii.length === 0) return true;
   return prox.distanceMiles <= Math.min(...radii);
+}
+
+// True when `mover` opted into relocation and `other` lives in one of `mover`'s
+// love-line cities. Love-line cities are canonical gazetteer keys, so we
+// canonicalize the other member's city hint before comparing. Anything missing
+// (no opt-in, no cities, unresolvable city) returns false and changes nothing.
+function loveLineBridges(
+  mover: MatchCandidate,
+  other: MatchCandidate,
+): boolean {
+  if (!mover.prefs.relocationOpen) return false;
+  const cities = mover.prefs.loveLineCities;
+  if (!cities || cities.length === 0) return false;
+  const target = canonicalizeCity(other.prefs.cityHint);
+  if (target.length === 0) return false;
+  return cities.includes(target);
 }
 
 /**

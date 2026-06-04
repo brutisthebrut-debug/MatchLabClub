@@ -3098,6 +3098,18 @@ export interface MatchProposal {
   /** @nullable */
   summary: string | null;
   status: MatchProposalStatus;
+  /**
+     * A playful, bounded resonance garnish (0 to 100). Null when either person has no chart. Never feeds the real compatibility score or any gate.
+     * @minimum 0
+     * @maximum 100
+     * @nullable
+     */
+  cosmicResonance: number | null;
+  /**
+     * A short, light note for the resonance garnish. Null when either person has no chart.
+     * @nullable
+     */
+  cosmicResonanceNote: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -3170,6 +3182,213 @@ export interface MatchExternalReadResult {
   frictions: string[];
   /** @nullable */
   summary: string | null;
+}
+
+export interface CosmicPlacement {
+  sign: string;
+  degree: number;
+}
+
+export type CosmicPlacementsMode = typeof CosmicPlacementsMode[keyof typeof CosmicPlacementsMode];
+
+
+export const CosmicPlacementsMode = {
+  full: 'full',
+  sunOnly: 'sunOnly',
+} as const;
+
+export type CosmicPlacementsMidheaven = {
+  sign: string;
+} | null;
+
+export type CosmicPlacementsBodiesItem = {
+  body: string;
+  sign: string;
+};
+
+export type CosmicPlacementsTraits = {
+  novelty: number;
+  stability: number;
+  expression: number;
+  depth: number;
+};
+
+export type CosmicPlacementsElements = {
+  fire: number;
+  earth: number;
+  air: number;
+  water: number;
+};
+
+export type CosmicPlacementsModalities = {
+  cardinal: number;
+  fixed: number;
+  mutable: number;
+};
+
+export interface CosmicPlacements {
+  mode: CosmicPlacementsMode;
+  sun: CosmicPlacement;
+  moon: CosmicPlacement | null;
+  rising: CosmicPlacement | null;
+  midheaven: CosmicPlacementsMidheaven;
+  bodies: CosmicPlacementsBodiesItem[];
+  traits: CosmicPlacementsTraits;
+  elements: CosmicPlacementsElements;
+  modalities: CosmicPlacementsModalities;
+}
+
+export type CosmicReadingSource = typeof CosmicReadingSource[keyof typeof CosmicReadingSource];
+
+
+export const CosmicReadingSource = {
+  deterministic: 'deterministic',
+  claude: 'claude',
+} as const;
+
+/**
+ * Optional Claude synthesis layered on top. Null when the deep AI lane is off or unavailable.
+ * @nullable
+ */
+export type CosmicReadingDeep = {
+  headline: string;
+  lines: string[];
+} | null;
+
+export interface CosmicReading {
+  headline: string;
+  lines: string[];
+  topTrait: string;
+  source: CosmicReadingSource;
+  /**
+     * Optional Claude synthesis layered on top. Null when the deep AI lane is off or unavailable.
+     * @nullable
+     */
+  deep?: CosmicReadingDeep;
+}
+
+export interface CosmicChart {
+  birthDate: string;
+  /** @nullable */
+  birthTime: string | null;
+  birthPlace: string;
+  birthLat: number;
+  birthLng: number;
+  placements: CosmicPlacements;
+  /** @nullable */
+  reaction: string | null;
+  reading: CosmicReading;
+}
+
+export interface CosmicChartInput {
+  /** ISO date, YYYY-MM-DD. */
+  birthDate: string;
+  /**
+     * HH:MM 24h, or null when the user does not know their birth time.
+     * @nullable
+     */
+  birthTime?: string | null;
+  /** @maxLength 160 */
+  birthPlace: string;
+  /**
+     * @minimum -90
+     * @maximum 90
+     */
+  birthLat: number;
+  /**
+     * @minimum -180
+     * @maximum 180
+     */
+  birthLng: number;
+}
+
+export type CosmicReactionInputReaction = typeof CosmicReactionInputReaction[keyof typeof CosmicReactionInputReaction];
+
+
+export const CosmicReactionInputReaction = {
+  resonant: 'resonant',
+  mixed: 'mixed',
+  off: 'off',
+} as const;
+
+export interface CosmicReactionInput {
+  reaction: CosmicReactionInputReaction;
+}
+
+export type CosmicLineAngle = typeof CosmicLineAngle[keyof typeof CosmicLineAngle];
+
+
+export const CosmicLineAngle = {
+  MC: 'MC',
+  IC: 'IC',
+} as const;
+
+export interface CosmicLine {
+  /** Lowercase body key, e.g. venus. */
+  body: string;
+  bodyLabel: string;
+  angle: CosmicLineAngle;
+  /** Longitude where this meridian line falls, in [-180, 180). */
+  lng: number;
+  meaning: string;
+}
+
+export type CosmicLoveLineCityAngle = typeof CosmicLoveLineCityAngle[keyof typeof CosmicLoveLineCityAngle];
+
+
+export const CosmicLoveLineCityAngle = {
+  MC: 'MC',
+  IC: 'IC',
+} as const;
+
+export interface CosmicLoveLineCity {
+  key: string;
+  label: string;
+  lat: number;
+  lng: number;
+  body: string;
+  bodyLabel: string;
+  angle: CosmicLoveLineCityAngle;
+  distanceMiles: number;
+}
+
+/**
+ * Lines are only computed in full mode (a birth time was given).
+ */
+export type CosmicLinesMode = typeof CosmicLinesMode[keyof typeof CosmicLinesMode];
+
+
+export const CosmicLinesMode = {
+  full: 'full',
+  sunOnly: 'sunOnly',
+} as const;
+
+export interface CosmicLines {
+  /** Lines are only computed in full mode (a birth time was given). */
+  mode: CosmicLinesMode;
+  lines: CosmicLine[];
+  loveLineCities: CosmicLoveLineCity[];
+  relocationOpen: boolean;
+}
+
+export interface CosmicRelocationInput {
+  open: boolean;
+}
+
+export interface CosmicRelocationState {
+  relocationOpen: boolean;
+}
+
+export interface CosmicWeatherAction {
+  label: string;
+  detail: string;
+  href: string;
+}
+
+export interface CosmicWeather {
+  headline: string;
+  reframe: string;
+  action: CosmicWeatherAction | null;
 }
 
 export interface MatchReadinessBreakdown {
@@ -3303,6 +3522,16 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   externalCalibration: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  cosmicProfile: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  relocationOpen: number;
 }
 
 export interface MatchReadiness {

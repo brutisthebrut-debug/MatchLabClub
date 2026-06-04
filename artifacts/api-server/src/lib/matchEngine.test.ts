@@ -347,6 +347,110 @@ describe("gatesPass", () => {
     });
     expect(gatesPass(a, b)).toBe(true);
   });
+
+  it("blocks a far pair when neither opted into relocation", () => {
+    const ny = candidate({
+      userId: "ny",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "New York",
+        radiusMiles: 50,
+      },
+    });
+    const sf = candidate({
+      userId: "sf",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "San Francisco",
+        radiusMiles: 50,
+      },
+    });
+    expect(gatesPass(ny, sf)).toBe(false);
+  });
+
+  it("bridges a far pair when one opted in and the other lives on a love line", () => {
+    const ny = candidate({
+      userId: "ny",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "New York",
+        radiusMiles: 50,
+        relocationOpen: true,
+        loveLineCities: ["san francisco"],
+      },
+    });
+    const sf = candidate({
+      userId: "sf",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "San Francisco",
+        radiusMiles: 50,
+      },
+    });
+    expect(gatesPass(ny, sf)).toBe(true);
+    // Symmetric: the order of the pair does not matter.
+    expect(gatesPass(sf, ny)).toBe(true);
+  });
+
+  it("does not bridge when the opted-in side's love lines miss the other city", () => {
+    const ny = candidate({
+      userId: "ny",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "New York",
+        radiusMiles: 50,
+        relocationOpen: true,
+        loveLineCities: ["denver"],
+      },
+    });
+    const sf = candidate({
+      userId: "sf",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "San Francisco",
+        radiusMiles: 50,
+      },
+    });
+    expect(gatesPass(ny, sf)).toBe(false);
+  });
+
+  it("does not bridge when love lines are set but relocation is off", () => {
+    const ny = candidate({
+      userId: "ny",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "New York",
+        radiusMiles: 50,
+        relocationOpen: false,
+        loveLineCities: ["san francisco"],
+      },
+    });
+    const sf = candidate({
+      userId: "sf",
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "San Francisco",
+        radiusMiles: 50,
+      },
+    });
+    expect(gatesPass(ny, sf)).toBe(false);
+  });
 });
 
 describe("rankCandidates", () => {

@@ -179,6 +179,23 @@ export function geocodeCity(raw: string | null | undefined): GeoPoint | null {
   return GAZETTEER[key] ?? null;
 }
 
+/**
+ * The bundled gazetteer as a flat list of canonical-key plus coordinates. Used
+ * by the astrocartography layer to rank known metros against a chart's planetary
+ * lines. Read-only; the same coarse city centers used everywhere else.
+ */
+export function gazetteerEntries(): { key: string; point: GeoPoint }[] {
+  return Object.entries(GAZETTEER).map(([key, point]) => ({ key, point }));
+}
+
+/** Title-case a canonical gazetteer key for display, e.g. "san francisco" -> "San Francisco". */
+export function titleCaseCity(key: string): string {
+  return key
+    .split(" ")
+    .map((w) => (w.length === 0 ? w : w[0]!.toUpperCase() + w.slice(1)))
+    .join(" ");
+}
+
 /** Great-circle distance in miles between two points (haversine). */
 export function haversineMiles(a: GeoPoint, b: GeoPoint): number {
   const R = 3958.7613; // Earth radius in miles.

@@ -37,6 +37,7 @@ export * from "./scenario_responses";
 export * from "./prediction_responses";
 export * from "./time_capsules";
 export * from "./wingman";
+export * from "./cosmic_charts";
 export * from "./matching_readiness_snapshots";
 export * from "./matching_nudge_state";
 export * from "./mirror_digest_prefs";
