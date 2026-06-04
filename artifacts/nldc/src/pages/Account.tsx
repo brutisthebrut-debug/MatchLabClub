@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { BlockedMembersSection } from "@/components/safety/BlockedMembersSection";
 import { useAutoRefreshPref } from "@/lib/autoRefreshPref";
 import { useTrashReminderPref } from "@/lib/trashReminderPref";
 import { useCopyDurationPref, type CopyDuration, COPY_DURATION_LABELS } from "@/lib/copyDurationPref";
@@ -582,6 +583,9 @@ export default function Account() {
                 </div>
               </div>
             </motion.div>
+
+            {/* Blocked members */}
+            <BlockedMembersSection />
 
             {/* Data ownership */}
             <motion.div variants={itemVariants} className="glass rounded-[2rem] p-8 md:p-10 space-y-6 border border-border/50 shadow-sm">

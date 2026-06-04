@@ -21,7 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 
 // The closed set of reasons, mirroring SAFETY_REASONS on the server. Kept short
 // and plain so the picker is fast and the founder review list reads clearly.
-const REASONS: { value: string; label: string }[] = [
+export const REASONS: { value: string; label: string }[] = [
   { value: "fake_profile", label: "Fake profile" },
   { value: "harassment", label: "Harassment" },
   { value: "inappropriate", label: "Inappropriate content" },
@@ -30,6 +30,13 @@ const REASONS: { value: string; label: string }[] = [
   { value: "safety", label: "Safety concern" },
   { value: "other", label: "Something else" },
 ];
+
+// Human-readable label for a stored block reason. Unknown or null reasons fall
+// back to a neutral phrase so the blocked-members list always reads cleanly.
+export function reasonLabel(reason: string | null | undefined): string {
+  if (!reason) return "No reason given";
+  return REASONS.find((r) => r.value === reason)?.label ?? "Other";
+}
 
 type Mode = "report" | "block";
 
