@@ -17,6 +17,30 @@ import cookieParser from "cookie-parser";
 import request from "supertest";
 import crypto from "crypto";
 
+const stripeMock = vi.hoisted(() => ({
+  connected: true,
+  createResult: {
+    id: "vs_test_123",
+    client_secret: "vs_secret_abc",
+    url: "https://verify.stripe.test/vs_test_123",
+  } as { id: string; client_secret: string | null; url: string | null },
+  retrieveResult: null as unknown,
+  webhookEvent: null as unknown,
+}));
+
+vi.mock("../lib/stripeClient", () => ({
+  isStripeConnected: vi.fn(async () => stripeMock.connected),
+  getUncachableStripeClient: vi.fn(async () => ({
+    identity: {
+      verificationSessions: {
+        create: vi.fn(async () => stripeMock.createResult),
+        retrieve: vi.fn(async () => stripeMock.retrieveResult),
+      },
+    },
+  })),
+  constructStripeEvent: vi.fn(async () => stripeMock.webhookEvent),
+}));
+
 vi.mock("@workspace/db", async () => await import("../lib/testDb"));
 vi.mock("drizzle-orm", async () => {
   const actual = (await vi.importActual("drizzle-orm")) as Record<
@@ -179,5 +203,160 @@ describe("phone verification flow (log transport fallback)", () => {
       .post("/api/me/verification/phone/check")
       .send({ phone: PHONE, code: "123456" });
     expect(check.status).toBe(401);
+  });
+});
+
+describe("ID verification (Stripe Identity, mocked)", () => {
+  beforeEach(() => {
+    stripeMock.connected = true;
+    stripeMock.retrieveResult = null;
+    stripeMock.webhookEvent = null;
+  });
+
+  it("id/start returns configured:false when Stripe is not connected", async () => {
+    const idUser = `id-${crypto.randomBytes(6).toString("hex")}`;
+    testApp.setUser({ id: idUser });
+    stripeMock.connected = false;
+    const res = await request(testApp.app).post(
+      "/api/me/verification/id/start",
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.configured).toBe(false);
+    expect(res.body.clientSecret).toBeNull();
+    expect(res.body.url).toBeNull();
+  });
+
+  it("id/start creates a session and returns the client secret and url", async () => {
+    const idUser = `id-${crypto.randomBytes(6).toString("hex")}`;
+    testApp.setUser({ id: idUser });
+    const res = await request(testApp.app).post(
+      "/api/me/verification/id/start",
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.configured).toBe(true);
+    expect(res.body.clientSecret).toBe(stripeMock.createResult.client_secret);
+    expect(res.body.url).toBe(stripeMock.createResult.url);
+  });
+
+  it("id/refresh captures a verified result, deriving over-18 and bumping tiers", async () => {
+    const idUser = `id-${crypto.randomBytes(6).toString("hex")}`;
+    testApp.setUser({ id: idUser });
+
+    // Start to persist our provider reference (the session id).
+    const start = await request(testApp.app).post(
+      "/api/me/verification/id/start",
+    );
+    expect(start.status).toBe(200);
+
+    // Stripe now reports the session as verified, with a DOB that is over 18.
+    stripeMock.retrieveResult = {
+      id: stripeMock.createResult.id,
+      status: "verified",
+      metadata: { userId: idUser },
+      verified_outputs: { dob: { day: 1, month: 1, year: 1990 } },
+    };
+
+    const refresh = await request(testApp.app).post(
+      "/api/me/verification/id/refresh",
+    );
+    expect(refresh.status).toBe(200);
+    expect(refresh.body.configured).toBe(true);
+    expect(refresh.body.verification.idVerified).toBe(true);
+    expect(refresh.body.verification.ageOver18).toBe(true);
+    expect(refresh.body.verification.isVerified).toBe(true);
+    expect(refresh.body.verification.verifiedTiers).toBe(1);
+    expect(typeof refresh.body.verification.idVerifiedAt).toBe("string");
+  });
+
+  it("id/refresh does not flag over-18 for a date of birth under 18", async () => {
+    const idUser = `id-${crypto.randomBytes(6).toString("hex")}`;
+    testApp.setUser({ id: idUser });
+    await request(testApp.app).post("/api/me/verification/id/start");
+
+    const recentYear = new Date().getFullYear() - 5;
+    stripeMock.retrieveResult = {
+      id: stripeMock.createResult.id,
+      status: "verified",
+      metadata: { userId: idUser },
+      verified_outputs: { dob: { day: 1, month: 1, year: recentYear } },
+    };
+
+    const refresh = await request(testApp.app).post(
+      "/api/me/verification/id/refresh",
+    );
+    expect(refresh.status).toBe(200);
+    expect(refresh.body.verification.idVerified).toBe(true);
+    expect(refresh.body.verification.ageOver18).toBe(false);
+  });
+
+  it("id/refresh returns configured:false and unchanged state when Stripe is off", async () => {
+    const idUser = `id-${crypto.randomBytes(6).toString("hex")}`;
+    testApp.setUser({ id: idUser });
+    stripeMock.connected = false;
+    const res = await request(testApp.app).post(
+      "/api/me/verification/id/refresh",
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.configured).toBe(false);
+    expect(res.body.verification.idVerified).toBe(false);
+  });
+
+  it("webhook re-retrieves the session to read DOB and stores the result", async () => {
+    const idUser = `id-${crypto.randomBytes(6).toString("hex")}`;
+
+    // The webhook payload itself never carries verified_outputs, so the handler
+    // must re-retrieve the session (mocked here with an over-18 DOB).
+    stripeMock.webhookEvent = {
+      type: "identity.verification_session.verified",
+      data: { object: { id: stripeMock.createResult.id } },
+    };
+    stripeMock.retrieveResult = {
+      id: stripeMock.createResult.id,
+      status: "verified",
+      metadata: { userId: idUser },
+      verified_outputs: { dob: { day: 1, month: 1, year: 1990 } },
+    };
+
+    const { handleIdentityWebhook } = await import(
+      "../lib/identityVerification"
+    );
+    const handled = await handleIdentityWebhook(
+      Buffer.from("{}"),
+      "test-signature",
+    );
+    expect(handled).toBe(true);
+
+    testApp.setUser({ id: idUser });
+    const state = await request(testApp.app).get("/api/me/verification");
+    expect(state.status).toBe(200);
+    expect(state.body.idVerified).toBe(true);
+    expect(state.body.ageOver18).toBe(true);
+  });
+
+  it("ignores non-identity webhook events so they fall through", async () => {
+    stripeMock.webhookEvent = {
+      type: "checkout.session.completed",
+      data: { object: { id: "cs_test_1" } },
+    };
+    const { handleIdentityWebhook } = await import(
+      "../lib/identityVerification"
+    );
+    const handled = await handleIdentityWebhook(
+      Buffer.from("{}"),
+      "test-signature",
+    );
+    expect(handled).toBe(false);
+  });
+
+  it("rejects unauthenticated id/start and id/refresh with 401", async () => {
+    testApp.setUser(null);
+    const start = await request(testApp.app).post(
+      "/api/me/verification/id/start",
+    );
+    expect(start.status).toBe(401);
+    const refresh = await request(testApp.app).post(
+      "/api/me/verification/id/refresh",
+    );
+    expect(refresh.status).toBe(401);
   });
 });

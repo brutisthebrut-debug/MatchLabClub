@@ -5492,6 +5492,9 @@ export const getVerificationResponseVerifiedTiersMin = 0;
 export const GetVerificationResponse = zod.object({
   "phoneVerified": zod.boolean().describe('Whether a phone number has cleared a verification check.'),
   "phoneVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the phone check cleared, or null.'),
+  "idVerified": zod.boolean().describe('Whether a government ID has cleared a Stripe Identity check.'),
+  "idVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the government ID check cleared, or null.'),
+  "ageOver18": zod.boolean().describe('True when the ID check confirmed the holder is 18 or older.'),
   "verifiedTiers": zod.number().min(getVerificationResponseVerifiedTiersMin).describe('How many verification tiers the user has cleared.'),
   "tierTotal": zod.number().min(1).describe('Total tiers the climb can reach (phone, selfie, ID).'),
   "isVerified": zod.boolean().describe('True when at least one tier has cleared; drives the badge.')
@@ -5562,7 +5565,63 @@ export const CheckPhoneVerificationResponse = zod.object({
   "verification": zod.object({
   "phoneVerified": zod.boolean().describe('Whether a phone number has cleared a verification check.'),
   "phoneVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the phone check cleared, or null.'),
+  "idVerified": zod.boolean().describe('Whether a government ID has cleared a Stripe Identity check.'),
+  "idVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the government ID check cleared, or null.'),
+  "ageOver18": zod.boolean().describe('True when the ID check confirmed the holder is 18 or older.'),
   "verifiedTiers": zod.number().min(checkPhoneVerificationResponseVerificationVerifiedTiersMin).describe('How many verification tiers the user has cleared.'),
+  "tierTotal": zod.number().min(1).describe('Total tiers the climb can reach (phone, selfie, ID).'),
+  "isVerified": zod.boolean().describe('True when at least one tier has cleared; drives the badge.')
+})
+})
+
+
+/**
+ * Creates a Stripe Identity verification session for the highest-trust,
+opt-in premium tier. Stripe collects and holds the document; we store
+only the session id as a provider reference and, once it clears, only
+the pass and over-18 result, never the document or image. Safe when
+Stripe is not connected: it returns configured:false so the page can
+explain the tier is coming, rather than erroring.
+
+ * @summary Start a government ID and age check via Stripe Identity
+ */
+export const StartIdVerificationHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const StartIdVerificationResponse = zod.object({
+  "configured": zod.boolean().describe('False when Stripe is not connected; the tier is then coming soon.'),
+  "clientSecret": zod.union([zod.string(),zod.null()]).describe('Client secret for Stripe\'s embedded modal flow, or null.'),
+  "url": zod.union([zod.string(),zod.null()]).describe('Hosted URL for the redirect flow, or null.')
+})
+
+
+/**
+ * Polls Stripe for the outcome of the user's outstanding Identity session
+and captures the result. The webhook captures the same outcome on its
+own; this gives the frontend an on-demand path right after the hosted
+flow returns. Returns the updated verification state.
+
+ * @summary Poll Stripe for the latest ID verification status
+ */
+export const RefreshIdVerificationHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const refreshIdVerificationResponseVerificationVerifiedTiersMin = 0;
+
+
+
+
+export const RefreshIdVerificationResponse = zod.object({
+  "configured": zod.boolean().describe('False when Stripe is not connected; verification is unchanged.'),
+  "verification": zod.object({
+  "phoneVerified": zod.boolean().describe('Whether a phone number has cleared a verification check.'),
+  "phoneVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the phone check cleared, or null.'),
+  "idVerified": zod.boolean().describe('Whether a government ID has cleared a Stripe Identity check.'),
+  "idVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the government ID check cleared, or null.'),
+  "ageOver18": zod.boolean().describe('True when the ID check confirmed the holder is 18 or older.'),
+  "verifiedTiers": zod.number().min(refreshIdVerificationResponseVerificationVerifiedTiersMin).describe('How many verification tiers the user has cleared.'),
   "tierTotal": zod.number().min(1).describe('Total tiers the climb can reach (phone, selfie, ID).'),
   "isVerified": zod.boolean().describe('True when at least one tier has cleared; drives the badge.')
 })

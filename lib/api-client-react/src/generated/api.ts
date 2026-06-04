@@ -139,6 +139,8 @@ import type {
   GetMirrorPortrait401,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
+  IdentityVerificationResult,
+  IdentityVerificationStartResult,
   ImportSource,
   ImportSourceList,
   InsightsRollup,
@@ -12107,6 +12109,158 @@ export const useCheckPhoneVerification = <TError = ErrorType<AuthErrorEnvelope>,
         TContext
       > => {
       return useMutation(getCheckPhoneVerificationMutationOptions(options));
+    }
+
+export const getStartIdVerificationUrl = () => {
+
+
+
+
+  return `/api/me/verification/id/start`
+}
+
+/**
+ * Creates a Stripe Identity verification session for the highest-trust,
+opt-in premium tier. Stripe collects and holds the document; we store
+only the session id as a provider reference and, once it clears, only
+the pass and over-18 result, never the document or image. Safe when
+Stripe is not connected: it returns configured:false so the page can
+explain the tier is coming, rather than erroring.
+
+ * @summary Start a government ID and age check via Stripe Identity
+ */
+export const startIdVerification = async ( options?: RequestInit): Promise<IdentityVerificationStartResult> => {
+
+  return customFetch<IdentityVerificationStartResult>(getStartIdVerificationUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getStartIdVerificationMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startIdVerification>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startIdVerification>>, TError,void, TContext> => {
+
+const mutationKey = ['startIdVerification'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startIdVerification>>, void> = () => {
+
+
+          return  startIdVerification(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartIdVerificationMutationResult = NonNullable<Awaited<ReturnType<typeof startIdVerification>>>
+
+    export type StartIdVerificationMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Start a government ID and age check via Stripe Identity
+ */
+export const useStartIdVerification = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startIdVerification>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof startIdVerification>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getStartIdVerificationMutationOptions(options));
+    }
+
+export const getRefreshIdVerificationUrl = () => {
+
+
+
+
+  return `/api/me/verification/id/refresh`
+}
+
+/**
+ * Polls Stripe for the outcome of the user's outstanding Identity session
+and captures the result. The webhook captures the same outcome on its
+own; this gives the frontend an on-demand path right after the hosted
+flow returns. Returns the updated verification state.
+
+ * @summary Poll Stripe for the latest ID verification status
+ */
+export const refreshIdVerification = async ( options?: RequestInit): Promise<IdentityVerificationResult> => {
+
+  return customFetch<IdentityVerificationResult>(getRefreshIdVerificationUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRefreshIdVerificationMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshIdVerification>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof refreshIdVerification>>, TError,void, TContext> => {
+
+const mutationKey = ['refreshIdVerification'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof refreshIdVerification>>, void> = () => {
+
+
+          return  refreshIdVerification(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RefreshIdVerificationMutationResult = NonNullable<Awaited<ReturnType<typeof refreshIdVerification>>>
+
+    export type RefreshIdVerificationMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Poll Stripe for the latest ID verification status
+ */
+export const useRefreshIdVerification = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshIdVerification>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof refreshIdVerification>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRefreshIdVerificationMutationOptions(options));
     }
 
 export const getGetWouldYouRatherAnswersUrl = () => {

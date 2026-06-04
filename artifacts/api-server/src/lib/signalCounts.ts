@@ -219,11 +219,16 @@ export async function collectSignalCounts(
   // never the phone number or any document, so this lane reflects earned trust
   // without ever holding identifying data.
   const verificationRows = await db
-    .select({ phoneVerified: userVerificationsTable.phoneVerified })
+    .select({
+      phoneVerified: userVerificationsTable.phoneVerified,
+      idVerified: userVerificationsTable.idVerified,
+    })
     .from(userVerificationsTable)
     .where(eq(userVerificationsTable.userId, userId))
     .limit(1);
-  const verificationFacets = verificationRows[0]?.phoneVerified ? 1 : 0;
+  const verificationFacets =
+    (verificationRows[0]?.phoneVerified ? 1 : 0) +
+    (verificationRows[0]?.idVerified ? 1 : 0);
 
   // First-party counts: each comes from a bespoke query against a dedicated
   // table above, keyed here by the contributor's countKey.

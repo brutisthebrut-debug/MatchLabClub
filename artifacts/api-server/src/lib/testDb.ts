@@ -233,6 +233,10 @@ stores.user_verifications = {
     anonymousClaimToken: null,
     phoneVerified: false,
     phoneVerifiedAt: null,
+    idVerified: false,
+    idVerifiedAt: null,
+    ageOver18: false,
+    stripeVerificationSessionId: null,
   },
 };
 ensureStore("leads");

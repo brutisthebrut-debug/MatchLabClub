@@ -11,6 +11,12 @@ export interface UserVerification {
   phoneVerified: boolean;
   /** ISO timestamp the phone check cleared, or null. */
   phoneVerifiedAt: string | null;
+  /** Whether a government ID has cleared a Stripe Identity check. */
+  idVerified: boolean;
+  /** ISO timestamp the government ID check cleared, or null. */
+  idVerifiedAt: string | null;
+  /** True when the ID check confirmed the holder is 18 or older. */
+  ageOver18: boolean;
   /**
      * How many verification tiers the user has cleared.
      * @minimum 0

@@ -6,6 +6,7 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { authMiddleware } from "./middlewares/authMiddleware";
 import { WebhookHandlers } from "./lib/webhookHandlers";
+import { handleIdentityWebhook } from "./lib/identityVerification";
 
 /**
  * Build the set of origins that are trusted for credentialed CORS requests.
@@ -113,7 +114,16 @@ app.post(
     }
     try {
       const sig = Array.isArray(signature) ? signature[0]! : signature;
-      await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+      // Stripe Identity events are not synced resources, so capture them here
+      // first; everything else flows to the managed sync handler. Both verify
+      // the signature against the same webhook secret.
+      const handledIdentity = await handleIdentityWebhook(
+        req.body as Buffer,
+        sig,
+      );
+      if (!handledIdentity) {
+        await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+      }
       res.status(200).json({ received: true });
     } catch (err) {
       req.log.error({ err }, "Stripe webhook processing failed");

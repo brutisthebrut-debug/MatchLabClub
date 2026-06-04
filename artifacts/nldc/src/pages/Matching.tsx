@@ -6,8 +6,10 @@ import {
   ArrowRight,
   Brain,
   Calendar,
+  CalendarCheck,
   Compass,
   Heart,
+  IdCard,
   MapPin,
   Share2,
   ShieldCheck,
@@ -242,6 +244,8 @@ export default function Matching() {
     },
   });
   const isVerified = verificationQuery.data?.isVerified ?? false;
+  const idVerified = verificationQuery.data?.idVerified ?? false;
+  const ageOver18 = verificationQuery.data?.ageOver18 ?? false;
 
   // Local form state, hydrated from server when prefs land.
   const [ageMin, setAgeMin] = useState<number>(25);
@@ -599,6 +603,21 @@ export default function Matching() {
                         <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
                         Verify to rank higher
                       </Link>
+                    )}
+                    {idVerified && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-bold text-emerald-400">
+                        <IdCard className="w-3.5 h-3.5" aria-hidden="true" />
+                        ID verified
+                      </span>
+                    )}
+                    {ageOver18 && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-bold text-emerald-400">
+                        <CalendarCheck
+                          className="w-3.5 h-3.5"
+                          aria-hidden="true"
+                        />
+                        18+
+                      </span>
                     )}
                   </div>
                   <CardDescription>

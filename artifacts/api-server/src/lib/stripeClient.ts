@@ -97,6 +97,21 @@ export async function getUncachableStripeClient(): Promise<Stripe> {
 }
 
 /**
+ * Verify and construct a Stripe webhook event from the raw payload and
+ * signature. Returns null when no webhook secret is configured (so callers can
+ * fall back to other processing). Throws when the signature does not verify.
+ */
+export async function constructStripeEvent(
+  payload: Buffer,
+  signature: string,
+): Promise<Stripe.Event | null> {
+  const { secretKey, webhookSecret } = await getStripeCredentials();
+  if (!webhookSecret) return null;
+  const stripe = new Stripe(secretKey);
+  return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+}
+
+/**
  * Returns a fresh StripeSync instance for webhook processing and data sync.
  * Not cached: fetches credentials on every call so rotated keys are picked up.
  */

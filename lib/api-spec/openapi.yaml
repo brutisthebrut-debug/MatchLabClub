@@ -4457,6 +4457,72 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
+  /me/verification/id/start:
+    post:
+      tags: [Auth]
+      operationId: startIdVerification
+      summary: Start a government ID and age check via Stripe Identity
+      description: |
+        Creates a Stripe Identity verification session for the highest-trust,
+        opt-in premium tier. Stripe collects and holds the document; we store
+        only the session id as a provider reference and, once it clears, only
+        the pass and over-18 result, never the document or image. Safe when
+        Stripe is not connected: it returns configured:false so the page can
+        explain the tier is coming, rather than erroring.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The session was created, or Stripe is not configured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityVerificationStartResult'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '502':
+          description: Stripe could not start the session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+  /me/verification/id/refresh:
+    post:
+      tags: [Auth]
+      operationId: refreshIdVerification
+      summary: Poll Stripe for the latest ID verification status
+      description: |
+        Polls Stripe for the outcome of the user's outstanding Identity session
+        and captures the result. The webhook captures the same outcome on its
+        own; this gives the frontend an on-demand path right after the hosted
+        flow returns. Returns the updated verification state.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The updated verification state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityVerificationResult'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '502':
+          description: Stripe could not return the session status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
 
   /me/would-you-rather:
     get:
@@ -10107,7 +10173,7 @@ components:
 
     UserVerification:
       type: object
-      required: [phoneVerified, phoneVerifiedAt, verifiedTiers, tierTotal, isVerified]
+      required: [phoneVerified, phoneVerifiedAt, idVerified, idVerifiedAt, ageOver18, verifiedTiers, tierTotal, isVerified]
       properties:
         phoneVerified:
           type: boolean
@@ -10117,6 +10183,17 @@ components:
             - type: string
             - type: 'null'
           description: ISO timestamp the phone check cleared, or null.
+        idVerified:
+          type: boolean
+          description: Whether a government ID has cleared a Stripe Identity check.
+        idVerifiedAt:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: ISO timestamp the government ID check cleared, or null.
+        ageOver18:
+          type: boolean
+          description: True when the ID check confirmed the holder is 18 or older.
         verifiedTiers:
           type: integer
           minimum: 0
@@ -10128,6 +10205,34 @@ components:
         isVerified:
           type: boolean
           description: True when at least one tier has cleared; drives the badge.
+
+    IdentityVerificationStartResult:
+      type: object
+      required: [configured, clientSecret, url]
+      properties:
+        configured:
+          type: boolean
+          description: False when Stripe is not connected; the tier is then coming soon.
+        clientSecret:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Client secret for Stripe's embedded modal flow, or null.
+        url:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Hosted URL for the redirect flow, or null.
+
+    IdentityVerificationResult:
+      type: object
+      required: [configured, verification]
+      properties:
+        configured:
+          type: boolean
+          description: False when Stripe is not connected; verification is unchanged.
+        verification:
+          $ref: '#/components/schemas/UserVerification'
 
     PhoneVerificationStartInput:
       type: object

@@ -3959,6 +3959,12 @@ export interface UserVerification {
   phoneVerified: boolean;
   /** ISO timestamp the phone check cleared, or null. */
   phoneVerifiedAt: string | null;
+  /** Whether a government ID has cleared a Stripe Identity check. */
+  idVerified: boolean;
+  /** ISO timestamp the government ID check cleared, or null. */
+  idVerifiedAt: string | null;
+  /** True when the ID check confirmed the holder is 18 or older. */
+  ageOver18: boolean;
   /**
      * How many verification tiers the user has cleared.
      * @minimum 0
@@ -3971,6 +3977,21 @@ export interface UserVerification {
   tierTotal: number;
   /** True when at least one tier has cleared; drives the badge. */
   isVerified: boolean;
+}
+
+export interface IdentityVerificationStartResult {
+  /** False when Stripe is not connected; the tier is then coming soon. */
+  configured: boolean;
+  /** Client secret for Stripe's embedded modal flow, or null. */
+  clientSecret: string | null;
+  /** Hosted URL for the redirect flow, or null. */
+  url: string | null;
+}
+
+export interface IdentityVerificationResult {
+  /** False when Stripe is not connected; verification is unchanged. */
+  configured: boolean;
+  verification: UserVerification;
 }
 
 export interface PhoneVerificationStartInput {

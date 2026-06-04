@@ -33,6 +33,24 @@ export const userVerificationsTable = pgTable(
     phoneVerified: boolean("phone_verified").notNull().default(false),
     /** When the phone check cleared. Null until it does. */
     phoneVerifiedAt: timestamp("phone_verified_at"),
+    /**
+     * True once a government ID cleared a Stripe Identity check. Stripe holds the
+     * document; we keep only this boolean and the moment it cleared.
+     */
+    idVerified: boolean("id_verified").notNull().default(false),
+    /** When the government ID check cleared. Null until it does. */
+    idVerifiedAt: timestamp("id_verified_at"),
+    /**
+     * True when the Stripe Identity check confirmed the holder is 18 or older.
+     * Derived from the document date of birth inside Stripe's verified outputs and
+     * then discarded: we store only this boolean, never the date of birth itself.
+     */
+    ageOver18: boolean("age_over_18").notNull().default(false),
+    /**
+     * The Stripe Identity VerificationSession id, our provider reference for the
+     * ID check. It points at Stripe's record; no document or image lives here.
+     */
+    stripeVerificationSessionId: varchar("stripe_verification_session_id"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

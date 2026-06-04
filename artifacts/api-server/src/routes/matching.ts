@@ -1523,12 +1523,14 @@ async function loadVerificationStatus(
     .select({
       userId: userVerificationsTable.userId,
       phoneVerified: userVerificationsTable.phoneVerified,
+      idVerified: userVerificationsTable.idVerified,
     })
     .from(userVerificationsTable)
     .where(inArray(userVerificationsTable.userId, userIds));
   for (const row of rows) {
     if (!row.userId) continue;
-    out.set(row.userId, Boolean(row.phoneVerified));
+    // Any cleared tier (phone or government ID) earns the soft ranking nudge.
+    out.set(row.userId, Boolean(row.phoneVerified) || Boolean(row.idVerified));
   }
   return out;
 }

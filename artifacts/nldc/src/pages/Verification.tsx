@@ -11,6 +11,10 @@ import {
   Lock,
   ArrowRight,
   TrendingUp,
+  Eye,
+  EyeOff,
+  CalendarCheck,
+  RefreshCw,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -34,6 +38,8 @@ import {
   getGetVerificationQueryKey,
   useStartPhoneVerification,
   useCheckPhoneVerification,
+  useStartIdVerification,
+  useRefreshIdVerification,
   getGetMatchingStateQueryKey,
   type UserVerification,
 } from "@workspace/api-client-react";
@@ -53,6 +59,9 @@ const fadeUp = (delay = 0) => ({
 const DEMO_VERIFICATION: UserVerification = {
   phoneVerified: false,
   phoneVerifiedAt: null,
+  idVerified: false,
+  idVerifiedAt: null,
+  ageOver18: false,
   verifiedTiers: 0,
   tierTotal: 3,
   isVerified: false,
@@ -83,10 +92,11 @@ const TIERS: Tier[] = [
   },
   {
     id: "id",
-    name: "Government ID",
+    name: "Government ID and age",
     icon: IdCard,
-    blurb: "An optional ID check for the top trust tier. Coming later.",
-    status: "building",
+    blurb:
+      "An optional premium check that confirms a real ID and that you are 18 or older. The top trust tier.",
+    status: "live",
   },
 ];
 
@@ -157,6 +167,9 @@ export default function Verification() {
 
   const startPhone = useStartPhoneVerification();
   const checkPhone = useCheckPhoneVerification();
+  const startId = useStartIdVerification();
+  const refreshId = useRefreshIdVerification();
+  const [idUnavailable, setIdUnavailable] = useState(false);
   const climb = useReadinessClimb({ enabled: isAuthenticated });
 
   const [phone, setPhone] = useState("");
@@ -214,6 +227,82 @@ export default function Verification() {
         },
       },
     );
+  };
+
+  const startIdCheck = () => {
+    if (isDemo) {
+      toast({
+        title: "Sign in to verify",
+        description: "Create a free account to start your ID check.",
+      });
+      return;
+    }
+    if (startId.isPending) return;
+    startId.mutate(undefined, {
+      onSuccess: (res) => {
+        if (!res.configured) {
+          setIdUnavailable(true);
+          toast({
+            title: "ID check is warming up",
+            description:
+              "This premium tier is not switched on yet. Your other tiers still count.",
+          });
+          return;
+        }
+        setIdUnavailable(false);
+        trackEvent("verification_id_start", {});
+        if (res.url) {
+          window.location.href = res.url;
+        } else {
+          toast({
+            title: "Could not open the ID check",
+            description: "Please try again in a moment.",
+            variant: "destructive",
+          });
+        }
+      },
+      onError: () => {
+        toast({
+          title: "Could not start the ID check",
+          description: "Please try again in a moment.",
+          variant: "destructive",
+        });
+      },
+    });
+  };
+
+  const refreshIdStatus = () => {
+    if (isDemo || refreshId.isPending) return;
+    climb.snapshot();
+    refreshId.mutate(undefined, {
+      onSuccess: (res) => {
+        if (!res.configured) {
+          setIdUnavailable(true);
+          return;
+        }
+        invalidate();
+        if (res.verification.idVerified) {
+          trackEvent("verification_id_verified", {});
+          toast({
+            title: "ID verified",
+            description: "You reached the top trust tier.",
+          });
+        } else {
+          toast({
+            title: "Not cleared yet",
+            description:
+              "If you just finished, give it a moment and refresh again.",
+          });
+        }
+      },
+      onError: () => {
+        toast({
+          title: "Could not check status",
+          description: "Please try again in a moment.",
+          variant: "destructive",
+        });
+      },
+    });
   };
 
   const confirmCode = () => {
@@ -306,7 +395,10 @@ export default function Verification() {
                 <TierRow
                   key={tier.id}
                   tier={tier}
-                  cleared={tier.id === "phone" && verification.phoneVerified}
+                  cleared={
+                    (tier.id === "phone" && verification.phoneVerified) ||
+                    (tier.id === "id" && verification.idVerified)
+                  }
                 />
               ))}
             </CardContent>
@@ -397,6 +489,104 @@ export default function Verification() {
                       disabled={checkPhone.isPending}
                     >
                       Use a different number
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div {...fadeUp(0.13)}>
+          <Card className="glass border-white/8">
+            <CardHeader>
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="font-serif text-2xl flex items-center gap-2">
+                  <IdCard className="w-5 h-5 text-primary" />
+                  Government ID and age
+                </CardTitle>
+                <span className="inline-flex items-center rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-primary">
+                  Premium
+                </span>
+              </div>
+              <CardDescription>
+                The top trust tier. A quick photo of a government ID confirms a
+                real person and that you are 18 or older. About $1.50 per check.
+                Optional, and never a gate.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {verification.idVerified ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                    <Check className="w-5 h-5 text-emerald-400 shrink-0" />
+                    <p className="text-sm text-foreground">
+                      Your ID is verified. This is the highest trust tier and it
+                      counts toward your matching boost.
+                    </p>
+                  </div>
+                  {verification.ageOver18 && (
+                    <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 px-3 py-1.5 text-sm font-bold text-emerald-400">
+                      <CalendarCheck className="w-4 h-4" />
+                      18+ confirmed
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 space-y-2">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <Eye className="w-4 h-4 text-primary" />
+                        What we will see
+                      </div>
+                      <ul className="space-y-1.5 text-xs text-muted-foreground">
+                        <li>That a government ID passed the check.</li>
+                        <li>That you are 18 or older.</li>
+                        <li>The date the check cleared.</li>
+                      </ul>
+                    </div>
+                    <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 space-y-2">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <EyeOff className="w-4 h-4 text-primary" />
+                        What we will never touch
+                      </div>
+                      <ul className="space-y-1.5 text-xs text-muted-foreground">
+                        <li>The document image or scan.</li>
+                        <li>Your ID number or full date of birth.</li>
+                        <li>Your address or any field on the document.</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    The check runs with Stripe Identity. Stripe collects and
+                    holds the document; we receive only the pass and over-18
+                    result, never the document itself.
+                  </p>
+                  {idUnavailable && (
+                    <div className="flex items-center gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
+                      <Lock className="w-5 h-5 text-amber-400 shrink-0" />
+                      <p className="text-sm text-foreground">
+                        The ID tier is not switched on yet. Your phone and other
+                        tiers still count toward your boost.
+                      </p>
+                    </div>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      onClick={startIdCheck}
+                      disabled={startId.isPending}
+                    >
+                      {startId.isPending ? "Opening..." : "Start ID check"}
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={refreshIdStatus}
+                      disabled={refreshId.isPending}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      {refreshId.isPending ? "Checking..." : "Refresh status"}
                     </Button>
                   </div>
                 </div>
