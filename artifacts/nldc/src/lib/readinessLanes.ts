@@ -20,6 +20,7 @@ import {
   MessageCircle,
   Music2,
   Scale,
+  ShieldCheck,
   Sparkles,
   Target,
   Trophy,
@@ -282,6 +283,15 @@ export const BREAKDOWN_ROWS = [
     href: "/cosmic",
     cta: "Set your openness",
     icon: Globe,
+  },
+  {
+    key: "verification",
+    label: "Verified profile",
+    blurb:
+      "Confirming a real phone, selfie, or ID earns a trust badge. Verified profiles rank higher in matching, as a boost and never a gate.",
+    href: "/verification",
+    cta: "Get verified",
+    icon: ShieldCheck,
   },
 ] satisfies readonly BreakdownRow[];
 

@@ -4679,6 +4679,9 @@ export const getMatchingStateResponseReadinessBreakdownCosmicProfileMax = 100;
 export const getMatchingStateResponseReadinessBreakdownRelocationOpenMin = 0;
 export const getMatchingStateResponseReadinessBreakdownRelocationOpenMax = 100;
 
+export const getMatchingStateResponseReadinessBreakdownVerificationMin = 0;
+export const getMatchingStateResponseReadinessBreakdownVerificationMax = 100;
+
 export const getMatchingStateResponseReadinessThresholdMin = 0;
 export const getMatchingStateResponseReadinessThresholdMax = 100;
 
@@ -4763,7 +4766,8 @@ export const GetMatchingStateResponse = zod.object({
   "timeCapsule": zod.number().min(getMatchingStateResponseReadinessBreakdownTimeCapsuleMin).max(getMatchingStateResponseReadinessBreakdownTimeCapsuleMax),
   "externalCalibration": zod.number().min(getMatchingStateResponseReadinessBreakdownExternalCalibrationMin).max(getMatchingStateResponseReadinessBreakdownExternalCalibrationMax),
   "cosmicProfile": zod.number().min(getMatchingStateResponseReadinessBreakdownCosmicProfileMin).max(getMatchingStateResponseReadinessBreakdownCosmicProfileMax),
-  "relocationOpen": zod.number().min(getMatchingStateResponseReadinessBreakdownRelocationOpenMin).max(getMatchingStateResponseReadinessBreakdownRelocationOpenMax)
+  "relocationOpen": zod.number().min(getMatchingStateResponseReadinessBreakdownRelocationOpenMin).max(getMatchingStateResponseReadinessBreakdownRelocationOpenMax),
+  "verification": zod.number().min(getMatchingStateResponseReadinessBreakdownVerificationMin).max(getMatchingStateResponseReadinessBreakdownVerificationMax)
 })
 }),
   "eligible": zod.boolean().describe('True when readiness.score is at or above readinessThreshold. The client uses this to gate the pool opt-in switch.'),
@@ -5463,6 +5467,105 @@ export const GetCosmicWeatherResponse = zod.object({
   "detail": zod.string(),
   "href": zod.string()
 }),zod.null()])
+})
+
+
+/**
+ * Returns which verification tiers the caller has cleared. Verification is
+soft throughout the product: a verified member ranks a little higher and
+wears a badge, but it never gates a match and is never required. We store
+only the result of each check, never the phone number, code, or any
+document. Anonymous callers are rejected with 401; the frontend shows a
+sample view instead.
+
+ * @summary Get the signed-in user's Trust & Safety verification state
+ */
+export const GetVerificationHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const getVerificationResponseVerifiedTiersMin = 0;
+
+
+
+
+export const GetVerificationResponse = zod.object({
+  "phoneVerified": zod.boolean().describe('Whether a phone number has cleared a verification check.'),
+  "phoneVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the phone check cleared, or null.'),
+  "verifiedTiers": zod.number().min(getVerificationResponseVerifiedTiersMin).describe('How many verification tiers the user has cleared.'),
+  "tierTotal": zod.number().min(1).describe('Total tiers the climb can reach (phone, selfie, ID).'),
+  "isVerified": zod.boolean().describe('True when at least one tier has cleared; drives the badge.')
+})
+
+
+/**
+ * Dispatches a one-time code to the supplied phone number through Twilio
+Verify. Twilio generates, sends, rate-limits, and later checks the code,
+so the number and the code never persist on our side. When Twilio Verify
+is not configured the code is logged instead of texted so the flow works
+identically in development.
+
+ * @summary Send a one-time code to verify a phone number
+ */
+export const StartPhoneVerificationHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const startPhoneVerificationBodyPhoneMin = 5;
+export const startPhoneVerificationBodyPhoneMax = 32;
+
+
+
+export const StartPhoneVerificationBody = zod.object({
+  "phone": zod.string().min(startPhoneVerificationBodyPhoneMin).max(startPhoneVerificationBodyPhoneMax).describe('Phone number in E.164 form, e.g. \"+14155550123\".')
+})
+
+export const StartPhoneVerificationResponse = zod.object({
+  "sent": zod.boolean(),
+  "transport": zod.enum(['twilio', 'log'])
+})
+
+
+/**
+ * Checks the one-time code against the live challenge. On success we record
+only that a phone cleared a check (a boolean plus the moment it cleared);
+the number and code are never stored. Returns the updated verification
+state so the caller can reflect the badge immediately.
+
+ * @summary Confirm a phone verification code
+ */
+export const CheckPhoneVerificationHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const checkPhoneVerificationBodyPhoneMin = 5;
+export const checkPhoneVerificationBodyPhoneMax = 32;
+
+export const checkPhoneVerificationBodyCodeMin = 4;
+export const checkPhoneVerificationBodyCodeMax = 10;
+
+
+
+export const CheckPhoneVerificationBody = zod.object({
+  "phone": zod.string().min(checkPhoneVerificationBodyPhoneMin).max(checkPhoneVerificationBodyPhoneMax),
+  "code": zod.string().min(checkPhoneVerificationBodyCodeMin).max(checkPhoneVerificationBodyCodeMax)
+})
+
+export const checkPhoneVerificationResponseVerificationVerifiedTiersMin = 0;
+
+
+
+
+export const CheckPhoneVerificationResponse = zod.object({
+  "verified": zod.boolean(),
+  "transport": zod.enum(['twilio', 'log']),
+  "verification": zod.object({
+  "phoneVerified": zod.boolean().describe('Whether a phone number has cleared a verification check.'),
+  "phoneVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the phone check cleared, or null.'),
+  "verifiedTiers": zod.number().min(checkPhoneVerificationResponseVerificationVerifiedTiersMin).describe('How many verification tiers the user has cleared.'),
+  "tierTotal": zod.number().min(1).describe('Total tiers the climb can reach (phone, selfie, ID).'),
+  "isVerified": zod.boolean().describe('True when at least one tier has cleared; drives the badge.')
+})
 })
 
 

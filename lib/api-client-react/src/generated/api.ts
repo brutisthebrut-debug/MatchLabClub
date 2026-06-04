@@ -181,6 +181,10 @@ import type {
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
   MySessionsResponse,
+  PhoneVerificationCheckInput,
+  PhoneVerificationCheckResult,
+  PhoneVerificationStartInput,
+  PhoneVerificationStartResult,
   PhotoLabRankInput,
   PhotoLabRankResult,
   PostDateNote,
@@ -227,6 +231,7 @@ import type {
   UpdateCompanionSettings401,
   UserAchievements,
   UserJourneySummary,
+  UserVerification,
   WaitlistEntry,
   WaitlistInput,
   WaitlistStats,
@@ -11866,6 +11871,243 @@ export function useGetCosmicWeather<TData = Awaited<ReturnType<typeof getCosmicW
 
 
 
+
+export const getGetVerificationUrl = () => {
+
+
+
+
+  return `/api/me/verification`
+}
+
+/**
+ * Returns which verification tiers the caller has cleared. Verification is
+soft throughout the product: a verified member ranks a little higher and
+wears a badge, but it never gates a match and is never required. We store
+only the result of each check, never the phone number, code, or any
+document. Anonymous callers are rejected with 401; the frontend shows a
+sample view instead.
+
+ * @summary Get the signed-in user's Trust & Safety verification state
+ */
+export const getVerification = async ( options?: RequestInit): Promise<UserVerification> => {
+
+  return customFetch<UserVerification>(getGetVerificationUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVerificationQueryKey = () => {
+    return [
+    `/api/me/verification`
+    ] as const;
+    }
+
+
+export const getGetVerificationQueryOptions = <TData = Awaited<ReturnType<typeof getVerification>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVerification>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVerificationQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVerification>>> = ({ signal }) => getVerification({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVerification>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetVerificationQueryResult = NonNullable<Awaited<ReturnType<typeof getVerification>>>
+export type GetVerificationQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the signed-in user's Trust & Safety verification state
+ */
+
+export function useGetVerification<TData = Awaited<ReturnType<typeof getVerification>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVerification>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetVerificationQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getStartPhoneVerificationUrl = () => {
+
+
+
+
+  return `/api/me/verification/phone/start`
+}
+
+/**
+ * Dispatches a one-time code to the supplied phone number through Twilio
+Verify. Twilio generates, sends, rate-limits, and later checks the code,
+so the number and the code never persist on our side. When Twilio Verify
+is not configured the code is logged instead of texted so the flow works
+identically in development.
+
+ * @summary Send a one-time code to verify a phone number
+ */
+export const startPhoneVerification = async (phoneVerificationStartInput: PhoneVerificationStartInput, options?: RequestInit): Promise<PhoneVerificationStartResult> => {
+
+  return customFetch<PhoneVerificationStartResult>(getStartPhoneVerificationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      phoneVerificationStartInput,)
+  }
+);}
+
+
+
+
+export const getStartPhoneVerificationMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startPhoneVerification>>, TError,{data: BodyType<PhoneVerificationStartInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startPhoneVerification>>, TError,{data: BodyType<PhoneVerificationStartInput>}, TContext> => {
+
+const mutationKey = ['startPhoneVerification'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startPhoneVerification>>, {data: BodyType<PhoneVerificationStartInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  startPhoneVerification(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartPhoneVerificationMutationResult = NonNullable<Awaited<ReturnType<typeof startPhoneVerification>>>
+    export type StartPhoneVerificationMutationBody = BodyType<PhoneVerificationStartInput>
+    export type StartPhoneVerificationMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Send a one-time code to verify a phone number
+ */
+export const useStartPhoneVerification = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startPhoneVerification>>, TError,{data: BodyType<PhoneVerificationStartInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof startPhoneVerification>>,
+        TError,
+        {data: BodyType<PhoneVerificationStartInput>},
+        TContext
+      > => {
+      return useMutation(getStartPhoneVerificationMutationOptions(options));
+    }
+
+export const getCheckPhoneVerificationUrl = () => {
+
+
+
+
+  return `/api/me/verification/phone/check`
+}
+
+/**
+ * Checks the one-time code against the live challenge. On success we record
+only that a phone cleared a check (a boolean plus the moment it cleared);
+the number and code are never stored. Returns the updated verification
+state so the caller can reflect the badge immediately.
+
+ * @summary Confirm a phone verification code
+ */
+export const checkPhoneVerification = async (phoneVerificationCheckInput: PhoneVerificationCheckInput, options?: RequestInit): Promise<PhoneVerificationCheckResult> => {
+
+  return customFetch<PhoneVerificationCheckResult>(getCheckPhoneVerificationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      phoneVerificationCheckInput,)
+  }
+);}
+
+
+
+
+export const getCheckPhoneVerificationMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkPhoneVerification>>, TError,{data: BodyType<PhoneVerificationCheckInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkPhoneVerification>>, TError,{data: BodyType<PhoneVerificationCheckInput>}, TContext> => {
+
+const mutationKey = ['checkPhoneVerification'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkPhoneVerification>>, {data: BodyType<PhoneVerificationCheckInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  checkPhoneVerification(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CheckPhoneVerificationMutationResult = NonNullable<Awaited<ReturnType<typeof checkPhoneVerification>>>
+    export type CheckPhoneVerificationMutationBody = BodyType<PhoneVerificationCheckInput>
+    export type CheckPhoneVerificationMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Confirm a phone verification code
+ */
+export const useCheckPhoneVerification = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkPhoneVerification>>, TError,{data: BodyType<PhoneVerificationCheckInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof checkPhoneVerification>>,
+        TError,
+        {data: BodyType<PhoneVerificationCheckInput>},
+        TContext
+      > => {
+      return useMutation(getCheckPhoneVerificationMutationOptions(options));
+    }
 
 export const getGetWouldYouRatherAnswersUrl = () => {
 

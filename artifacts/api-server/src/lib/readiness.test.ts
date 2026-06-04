@@ -56,6 +56,7 @@ describe("computeBreakdown", () => {
       externalCalibration: 0,
       cosmicProfile: 0,
       relocationOpen: 0,
+      verification: 0,
     });
     expect(scoreFromBreakdown(b)).toBe(0);
   });
@@ -96,6 +97,7 @@ describe("computeBreakdown", () => {
       wingmanPerspectives: 50,
       cosmicFacets: 2,
       relocationFacets: 1,
+      verificationFacets: 3,
     });
     expect(b).toEqual({
       compass: 100,
@@ -132,6 +134,7 @@ describe("computeBreakdown", () => {
       externalCalibration: 100,
       cosmicProfile: 100,
       relocationOpen: 100,
+      verification: 100,
     });
     expect(scoreFromBreakdown(b)).toBe(100);
   });

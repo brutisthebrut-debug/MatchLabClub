@@ -10,6 +10,7 @@ import {
   Heart,
   MapPin,
   Share2,
+  ShieldCheck,
   Sparkles,
   TrendingUp,
   Trophy,
@@ -56,6 +57,8 @@ import { BREAKDOWN_ROWS } from "@/lib/readinessLanes";
 import {
   useGetMatchingState,
   getGetMatchingStateQueryKey,
+  useGetVerification,
+  getGetVerificationQueryKey,
   useUpdateMatchingPreferences,
   useUpdateMatchingPoolMembership,
   useCreateMatchingExternalRead,
@@ -231,6 +234,15 @@ export default function Matching() {
     },
   });
 
+  const verificationQuery = useGetVerification({
+    query: {
+      queryKey: getGetVerificationQueryKey(),
+      enabled: isAuthenticated,
+      retry: false,
+    },
+  });
+  const isVerified = verificationQuery.data?.isVerified ?? false;
+
   // Local form state, hydrated from server when prefs land.
   const [ageMin, setAgeMin] = useState<number>(25);
   const [ageMax, setAgeMax] = useState<number>(45);
@@ -306,6 +318,7 @@ export default function Matching() {
     externalCalibration: 0,
     cosmicProfile: 0,
     relocationOpen: 0,
+    verification: 0,
   };
   const nextActions = state.data?.nextActions ?? [];
   const history = state.data?.history ?? [];
@@ -571,7 +584,23 @@ export default function Matching() {
             <CardHeader>
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div>
-                  <CardTitle className="text-2xl">Match readiness</CardTitle>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <CardTitle className="text-2xl">Match readiness</CardTitle>
+                    {isVerified ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-bold text-emerald-400">
+                        <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
+                        Verified
+                      </span>
+                    ) : (
+                      <Link
+                        href="/verification"
+                        className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
+                        Verify to rank higher
+                      </Link>
+                    )}
+                  </div>
                   <CardDescription>
                     The deeper your signals, the better the match.
                   </CardDescription>

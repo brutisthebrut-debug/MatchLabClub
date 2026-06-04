@@ -147,4 +147,9 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   relocationOpen: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  verification: number;
 }

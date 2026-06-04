@@ -52,6 +52,7 @@ export interface ReadinessBreakdown {
   externalCalibration: number;
   cosmicProfile: number;
   relocationOpen: number;
+  verification: number;
 }
 
 /** Raw counts pulled from the database for each contributor. */
@@ -216,6 +217,13 @@ export interface SignalCounts {
    * each friend ever submits only five 1-5 scores, never any free text.
    */
   wingmanPerspectives: number;
+  /**
+   * Trust & Safety verification tiers cleared (phone, and later selfie and
+   * government ID). We store only that a check passed, never the phone number or
+   * any document. Verification is soft: it ranks a verified member a little
+   * higher and earns a badge, but it never gates a match and is never required.
+   */
+  verificationFacets: number;
 }
 
 /**
@@ -1501,6 +1509,39 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       neverTouched: [
         "Your real-time location is never tracked; this is only the openness you choose to share",
         "It only widens who we can match you with, never narrows or gates it",
+      ],
+    },
+  },
+  {
+    id: "verification",
+    countKey: "verificationFacets",
+    dataSource: { kind: "firstParty" },
+    label: "Verification",
+    dimensions: [
+      "that they are a real, reachable person",
+      "the trust they have earned through verified identity",
+    ],
+    weight: 0.04,
+    confidence: 0.45,
+    normalize: { kind: "count", denominator: 3 },
+    describe: (c) =>
+      `Has cleared identity verification, covering ${c}% of that lane (phone, and later a selfie and a government ID). Verification is treated as earned trust, not a requirement: a verified member ranks a little higher and wears a badge, but it never gates a match and is never required to be matched.`,
+    action: {
+      label: "Verify yourself",
+      detail:
+        "Confirm your phone number to earn a verified badge and rank a little higher with people who care about safety. It is always optional and never required to match.",
+      href: "/verification",
+    },
+    trust: {
+      origin: "The verification checks you choose to clear.",
+      noun: "verification",
+      seen: [
+        "Which verification tiers you have cleared (phone, selfie, ID)",
+        "The moment each check cleared",
+      ],
+      neverTouched: [
+        "Your phone number, the one-time code, and any photo or document are never stored; only the fact that a check passed",
+        "Verification only ever ranks you higher; it never gates, narrows, or is required for a match",
       ],
     },
   },

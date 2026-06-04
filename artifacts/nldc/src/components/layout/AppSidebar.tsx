@@ -179,6 +179,7 @@ const SECTIONS: NavSection[] = [
     label: "Feed your data",
     primary: [
       { name: "Connection Center", href: "/connections", icon: Plug },
+      { name: "Get Verified", href: "/verification", icon: ShieldCheck },
       { name: "Wellness Center", href: "/wellness", icon: Heart },
       { name: "Imports", href: "/imports", icon: Download },
     ],

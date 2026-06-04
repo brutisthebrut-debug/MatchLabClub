@@ -109,6 +109,7 @@ const QuizPlay = lazy(() => import("@/pages/QuizPlay"));
 const SelfHub = lazy(() => import("@/pages/SelfHub"));
 const Matching = lazy(() => import("@/pages/Matching"));
 const MatchPath = lazy(() => import("@/pages/MatchPath"));
+const Verification = lazy(() => import("@/pages/Verification"));
 const ShareCard = lazy(() => import("@/pages/ShareCard"));
 const Milestones = lazy(() => import("@/pages/Milestones"));
 const Onboarding = lazy(() => import("@/pages/Onboarding"));
@@ -261,6 +262,7 @@ function Router() {
         <Route path="/onboarding" component={Onboarding} />
         <Route path="/matching" component={Matching} />
         <Route path="/match-path" component={MatchPath} />
+        <Route path="/verification" component={Verification} />
         <Route path="/share-card" component={ShareCard} />
         <Route path="/milestones" component={Milestones} />
         <Route path="/account" component={Account} />

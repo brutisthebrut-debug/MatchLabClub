@@ -27,6 +27,7 @@ import {
   timeCapsulesTable,
   wingmanAnswersTable,
   cosmicChartsTable,
+  userVerificationsTable,
 } from "@workspace/db";
 import {
   SIGNAL_REGISTRY,
@@ -212,6 +213,17 @@ export async function collectSignalCounts(
   // they opted in, zero otherwise. The chart itself feeds the cosmicProfile lane.
   const relocationFacets =
     cosmicRows.length > 0 && cosmicRows[0]?.relocationOpen ? 1 : 0;
+
+  // Verification: how many Trust & Safety tiers the user has cleared. We read
+  // only the result booleans (phone today; selfie and government ID later),
+  // never the phone number or any document, so this lane reflects earned trust
+  // without ever holding identifying data.
+  const verificationRows = await db
+    .select({ phoneVerified: userVerificationsTable.phoneVerified })
+    .from(userVerificationsTable)
+    .where(eq(userVerificationsTable.userId, userId))
+    .limit(1);
+  const verificationFacets = verificationRows[0]?.phoneVerified ? 1 : 0;
 
   // First-party counts: each comes from a bespoke query against a dedicated
   // table above, keyed here by the contributor's countKey.

@@ -66,11 +66,12 @@ describe("signal registry", () => {
     // time-capsule lane (0.04) brings the raw total to 2.75. The wingman
     // external-calibration lane (0.05) brings the raw total to 2.80. The cosmic
     // profile lane (0.04) brings the raw total to 2.84. The relocation-openness
-    // lane (0.02) brings the raw total to 2.86. Each normalized weight is its raw
-    // weight divided by the raw-weight total. The relative proportions between
-    // every signal are preserved exactly; adding contributors never forces a
-    // manual re-balance.
-    const total = 2.86;
+    // lane (0.02) brings the raw total to 2.86. The verification lane (0.04)
+    // brings the raw total to 2.90. Each normalized weight is its raw weight
+    // divided by the raw-weight total. The relative proportions between every
+    // signal are preserved exactly; adding contributors never forces a manual
+    // re-balance.
+    const total = 2.9;
     const w = normalizedWeights();
     expect(w.wellness).toBeCloseTo(0.22 / total, 6);
     expect(w.compass).toBeCloseTo(0.2 / total, 6);

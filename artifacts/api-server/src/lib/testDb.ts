@@ -225,6 +225,16 @@ stores.cosmic_charts = {
     relocationOpen: false,
   },
 };
+stores.user_verifications = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    userId: null,
+    anonymousClaimToken: null,
+    phoneVerified: false,
+    phoneVerifiedAt: null,
+  },
+};
 ensureStore("leads");
 ensureStore("waitlist");
 ensureStore("purchase_interest");
@@ -249,6 +259,7 @@ export const scenarioResponsesTable = makeTable("scenario_responses");
 export const predictionResponsesTable = makeTable("prediction_responses");
 export const timeCapsulesTable = makeTable("time_capsules");
 export const cosmicChartsTable = makeTable("cosmic_charts");
+export const userVerificationsTable = makeTable("user_verifications");
 ensureStore("compatibility_reads");
 export const compatibilityReadsTable = makeTable("compatibility_reads");
 ensureStore("journal_entries");

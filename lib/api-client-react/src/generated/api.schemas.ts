@@ -3532,6 +3532,11 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   relocationOpen: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  verification: number;
 }
 
 export interface MatchReadiness {
@@ -3947,6 +3952,74 @@ export interface DatingWinInput {
      * @maxLength 2000
      */
   body: string;
+}
+
+export interface UserVerification {
+  /** Whether a phone number has cleared a verification check. */
+  phoneVerified: boolean;
+  /** ISO timestamp the phone check cleared, or null. */
+  phoneVerifiedAt: string | null;
+  /**
+     * How many verification tiers the user has cleared.
+     * @minimum 0
+     */
+  verifiedTiers: number;
+  /**
+     * Total tiers the climb can reach (phone, selfie, ID).
+     * @minimum 1
+     */
+  tierTotal: number;
+  /** True when at least one tier has cleared; drives the badge. */
+  isVerified: boolean;
+}
+
+export interface PhoneVerificationStartInput {
+  /**
+     * Phone number in E.164 form, e.g. "+14155550123".
+     * @minLength 5
+     * @maxLength 32
+     */
+  phone: string;
+}
+
+export type PhoneVerificationStartResultTransport = typeof PhoneVerificationStartResultTransport[keyof typeof PhoneVerificationStartResultTransport];
+
+
+export const PhoneVerificationStartResultTransport = {
+  twilio: 'twilio',
+  log: 'log',
+} as const;
+
+export interface PhoneVerificationStartResult {
+  sent: boolean;
+  transport: PhoneVerificationStartResultTransport;
+}
+
+export interface PhoneVerificationCheckInput {
+  /**
+     * @minLength 5
+     * @maxLength 32
+     */
+  phone: string;
+  /**
+     * @minLength 4
+     * @maxLength 10
+     */
+  code: string;
+}
+
+export type PhoneVerificationCheckResultTransport = typeof PhoneVerificationCheckResultTransport[keyof typeof PhoneVerificationCheckResultTransport];
+
+
+export const PhoneVerificationCheckResultTransport = {
+  twilio: 'twilio',
+  log: 'log',
+} as const;
+
+export interface PhoneVerificationCheckResult {
+  verified: boolean;
+  transport: PhoneVerificationCheckResultTransport;
+  verification: UserVerification;
 }
 
 export type WyrAnswerChoice = typeof WyrAnswerChoice[keyof typeof WyrAnswerChoice];

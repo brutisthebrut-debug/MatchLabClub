@@ -47,6 +47,13 @@ export interface MatchCandidate {
   readinessScore: number;
   /** Per-lane readiness coverage, laneId -> 0-100. */
   breakdown: Record<string, number>;
+  /**
+   * Whether this member has cleared Trust & Safety verification (phone today).
+   * Soft only: it nudges a verified pair's score up a touch so verified members
+   * surface a little higher, but it is NEVER a gate. An unverified member is
+   * matched exactly as before; verification widens trust, never narrows reach.
+   */
+  isVerified?: boolean;
 }
 
 export interface CompatibilityResult {
@@ -265,7 +272,19 @@ export function scoreCompatibility(
     WEIGHTS.sharedDepth * sharedDepth +
     WEIGHTS.readinessSimilarity * readinessSimilarity +
     WEIGHTS.readinessDepth * readinessDepth;
-  const score = Math.max(0, Math.min(100, Math.round(blend * 100)));
+  // Soft verification nudge: each verified side adds a small symmetric bonus, so
+  // a verified pair ranks a little higher than an otherwise-identical unverified
+  // pair. This is NOT a gate (gatesPass never reads verification) and it can only
+  // raise a score, never lower it, so an unverified member is matched exactly as
+  // before. Symmetric in a and b, and clamped, so the invariant holds.
+  const VERIFIED_BONUS_PER_SIDE = 0.02;
+  const verifiedBonus =
+    ((a.isVerified ? 1 : 0) + (b.isVerified ? 1 : 0)) *
+    VERIFIED_BONUS_PER_SIDE;
+  const score = Math.max(
+    0,
+    Math.min(100, Math.round((blend + verifiedBonus) * 100)),
+  );
 
   const reasons: string[] = [];
   if (prox.distanceMiles != null) {

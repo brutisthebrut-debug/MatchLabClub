@@ -4352,6 +4352,112 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
+  /me/verification:
+    get:
+      tags: [Auth]
+      operationId: getVerification
+      summary: Get the signed-in user's Trust & Safety verification state
+      description: |
+        Returns which verification tiers the caller has cleared. Verification is
+        soft throughout the product: a verified member ranks a little higher and
+        wears a badge, but it never gates a match and is never required. We store
+        only the result of each check, never the phone number, code, or any
+        document. Anonymous callers are rejected with 401; the frontend shows a
+        sample view instead.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The caller's verification state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserVerification'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+  /me/verification/phone/start:
+    post:
+      tags: [Auth]
+      operationId: startPhoneVerification
+      summary: Send a one-time code to verify a phone number
+      description: |
+        Dispatches a one-time code to the supplied phone number through Twilio
+        Verify. Twilio generates, sends, rate-limits, and later checks the code,
+        so the number and the code never persist on our side. When Twilio Verify
+        is not configured the code is logged instead of texted so the flow works
+        identically in development.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneVerificationStartInput'
+      responses:
+        '200':
+          description: The code was dispatched (or logged).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhoneVerificationStartResult'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+  /me/verification/phone/check:
+    post:
+      tags: [Auth]
+      operationId: checkPhoneVerification
+      summary: Confirm a phone verification code
+      description: |
+        Checks the one-time code against the live challenge. On success we record
+        only that a phone cleared a check (a boolean plus the moment it cleared);
+        the number and code are never stored. Returns the updated verification
+        state so the caller can reflect the badge immediately.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneVerificationCheckInput'
+      responses:
+        '200':
+          description: The check result and updated verification state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhoneVerificationCheckResult'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/would-you-rather:
     get:
       tags: [Matching]
@@ -9342,7 +9448,7 @@ components:
             - type: 'null'
     MatchReadinessBreakdown:
       type: object
-      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse, taste, lifestyle, quizzes, receipts, music, vitality, curiosity, film, reading, wyr, consistency, scenarioReels, selfAwareness, timeCapsule, externalCalibration, cosmicProfile, relocationOpen]
+      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse, taste, lifestyle, quizzes, receipts, music, vitality, curiosity, film, reading, wyr, consistency, scenarioReels, selfAwareness, timeCapsule, externalCalibration, cosmicProfile, relocationOpen, verification]
       properties:
         compass:
           type: integer
@@ -9453,6 +9559,10 @@ components:
           minimum: 0
           maximum: 100
         relocationOpen:
+          type: integer
+          minimum: 0
+          maximum: 100
+        verification:
           type: integer
           minimum: 0
           maximum: 100
@@ -9994,6 +10104,75 @@ components:
           type: string
           minLength: 1
           maxLength: 2000
+
+    UserVerification:
+      type: object
+      required: [phoneVerified, phoneVerifiedAt, verifiedTiers, tierTotal, isVerified]
+      properties:
+        phoneVerified:
+          type: boolean
+          description: Whether a phone number has cleared a verification check.
+        phoneVerifiedAt:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: ISO timestamp the phone check cleared, or null.
+        verifiedTiers:
+          type: integer
+          minimum: 0
+          description: How many verification tiers the user has cleared.
+        tierTotal:
+          type: integer
+          minimum: 1
+          description: Total tiers the climb can reach (phone, selfie, ID).
+        isVerified:
+          type: boolean
+          description: True when at least one tier has cleared; drives the badge.
+
+    PhoneVerificationStartInput:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+          minLength: 5
+          maxLength: 32
+          description: Phone number in E.164 form, e.g. "+14155550123".
+
+    PhoneVerificationStartResult:
+      type: object
+      required: [sent, transport]
+      properties:
+        sent:
+          type: boolean
+        transport:
+          type: string
+          enum: [twilio, log]
+
+    PhoneVerificationCheckInput:
+      type: object
+      required: [phone, code]
+      properties:
+        phone:
+          type: string
+          minLength: 5
+          maxLength: 32
+        code:
+          type: string
+          minLength: 4
+          maxLength: 10
+
+    PhoneVerificationCheckResult:
+      type: object
+      required: [verified, transport, verification]
+      properties:
+        verified:
+          type: boolean
+        transport:
+          type: string
+          enum: [twilio, log]
+        verification:
+          $ref: '#/components/schemas/UserVerification'
 
     WyrAnswer:
       type: object

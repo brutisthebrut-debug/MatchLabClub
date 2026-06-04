@@ -125,6 +125,40 @@ describe("scoreCompatibility", () => {
     );
     expect(reasons.some((r) => r.includes("profile audit"))).toBe(true);
   });
+
+  it("nudges a verified pair higher without ever gating", () => {
+    const base = {
+      age: 30,
+      gender: "woman",
+      readinessScore: 70,
+      breakdown: { compass: 80, journal: 60 },
+      prefs: {
+        ageMin: null,
+        ageMax: null,
+        genderPreference: null,
+        cityHint: "Austin",
+      },
+    };
+    const aPlain = candidate({ ...base, userId: "a" });
+    const bPlain = candidate({ ...base, userId: "b" });
+    const aVer = candidate({ ...base, userId: "a", isVerified: true });
+    const bVer = candidate({ ...base, userId: "b", isVerified: true });
+
+    const plain = scoreCompatibility(aPlain, bPlain).score;
+    const oneSide = scoreCompatibility(aVer, bPlain).score;
+    const bothSides = scoreCompatibility(aVer, bVer).score;
+
+    // Verification only ever raises the score, and more verified sides ranks higher.
+    expect(oneSide).toBeGreaterThanOrEqual(plain);
+    expect(bothSides).toBeGreaterThanOrEqual(oneSide);
+    expect(bothSides).toBeGreaterThan(plain);
+
+    // The nudge is symmetric and never changes whether a pair is matchable.
+    expect(scoreCompatibility(aVer, bPlain).score).toBe(
+      scoreCompatibility(bPlain, aVer).score,
+    );
+    expect(gatesPass(aPlain, bPlain)).toBe(gatesPass(aVer, bVer));
+  });
 });
 
 describe("gatesPass", () => {

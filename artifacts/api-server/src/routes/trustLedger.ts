@@ -21,6 +21,7 @@ import {
   wingmanAnswersTable,
   wingmanSelfRatingsTable,
   cosmicChartsTable,
+  userVerificationsTable,
 } from "@workspace/db";
 import {
   GetTrustLedgerResponse,
@@ -378,6 +379,25 @@ const FIRST_PARTY_SOURCES: Record<
           ),
         )
         .returning({ id: cosmicChartsTable.id });
+      return rows.length;
+    },
+  },
+  // Verification: the Trust & Safety result row. We only ever stored that a
+  // check passed (a boolean and the moment it cleared), never the phone number
+  // or any document, so purging deletes the row outright and the lane drops to
+  // zero. One toggle removes all verification standing.
+  verification: {
+    countStored: (client, userId) =>
+      countBy(
+        client,
+        userVerificationsTable,
+        eq(userVerificationsTable.userId, userId),
+      ),
+    purge: async (tx, userId) => {
+      const rows = await tx
+        .delete(userVerificationsTable)
+        .where(eq(userVerificationsTable.userId, userId))
+        .returning({ id: userVerificationsTable.id });
       return rows.length;
     },
   },
