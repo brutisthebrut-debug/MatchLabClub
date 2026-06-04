@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import {
   db,
   usersTable,
@@ -11,6 +11,8 @@ import {
   auditsTable,
   messageCoachingSessionsTable,
   lifePulsesTable,
+  userReportsTable,
+  userBlocksTable,
 } from "@workspace/db";
 
 /**
@@ -84,6 +86,22 @@ async function clearTestUserSignals(userId: string): Promise<void> {
       .delete(messageCoachingSessionsTable)
       .where(eq(messageCoachingSessionsTable.userId, userId)),
     db.delete(lifePulsesTable).where(eq(lifePulsesTable.userId, userId)),
+    db
+      .delete(userReportsTable)
+      .where(
+        or(
+          eq(userReportsTable.reporterUserId, userId),
+          eq(userReportsTable.reportedUserId, userId),
+        ),
+      ),
+    db
+      .delete(userBlocksTable)
+      .where(
+        or(
+          eq(userBlocksTable.blockerUserId, userId),
+          eq(userBlocksTable.blockedUserId, userId),
+        ),
+      ),
   ]);
 }
 

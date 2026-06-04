@@ -23,6 +23,7 @@ const Wizard = lazy(() => import("@/pages/Wizard"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Report = lazy(() => import("@/pages/Report"));
 const Coach = lazy(() => import("@/pages/Coach"));
+const DateSafety = lazy(() => import("@/pages/DateSafety"));
 const RehearsalRoom = lazy(() => import("@/pages/RehearsalRoom"));
 const Insights = lazy(() => import("@/pages/Insights"));
 const Integrations = lazy(() => import("@/pages/Integrations"));
@@ -188,6 +189,7 @@ function Router() {
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/report/:id" component={Report} />
         <Route path="/coach" component={Coach} />
+        <Route path="/date-safety" component={DateSafety} />
         <Route path="/rehearsal" component={RehearsalRoom} />
         <Route path="/insights" component={Insights} />
         <Route path="/integrations" component={Integrations} />

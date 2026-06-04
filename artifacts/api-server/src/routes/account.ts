@@ -38,6 +38,8 @@ import {
   companionCommitmentsTable,
   companionNotificationsTable,
   companionChannelPrefsTable,
+  userReportsTable,
+  userBlocksTable,
 } from "@workspace/db";
 import {
   ExportMyDataResponse,
@@ -672,6 +674,28 @@ router.delete("/account", async (req, res): Promise<void> => {
     db
       .delete(companionChannelPrefsTable)
       .where(eq(companionChannelPrefsTable.userId, userId)),
+  ]);
+
+  // Trust & Safety records: reports the user filed or received, and blocks in
+  // either direction. These are not readiness signals, but they are still
+  // user-scoped first-party data, so they go with the account.
+  await Promise.all([
+    db
+      .delete(userReportsTable)
+      .where(
+        or(
+          eq(userReportsTable.reporterUserId, userId),
+          eq(userReportsTable.reportedUserId, userId),
+        ),
+      ),
+    db
+      .delete(userBlocksTable)
+      .where(
+        or(
+          eq(userBlocksTable.blockerUserId, userId),
+          eq(userBlocksTable.blockedUserId, userId),
+        ),
+      ),
   ]);
 
   // Delete every active session belonging to this user (session JSONB

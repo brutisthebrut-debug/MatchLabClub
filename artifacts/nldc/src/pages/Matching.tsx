@@ -46,6 +46,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { ReportBlockMenu } from "@/components/safety/ReportBlockMenu";
 import {
   Select,
   SelectContent,
@@ -1290,9 +1291,22 @@ export default function Matching() {
                           {meta.label}
                         </Badge>
                       </div>
-                      <span className="text-lg font-bold">
-                        {p.compatibilityScore}%
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-lg font-bold">
+                          {p.compatibilityScore}%
+                        </span>
+                        {p.proposedToUserId && (
+                          <ReportBlockMenu
+                            targetUserId={p.proposedToUserId}
+                            context="match"
+                            onBlocked={() =>
+                              queryClient.invalidateQueries({
+                                queryKey: getGetMatchingProposalsQueryKey(),
+                              })
+                            }
+                          />
+                        )}
+                      </div>
                     </div>
                     <Progress
                       value={p.compatibilityScore}

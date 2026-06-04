@@ -17,3 +17,4 @@
 - [Token consume + Orval integers](token-consume-and-orval-integers.md) — single-use stamp+dependent-write must share one tx; Orval emits zod.number() (no .int()) for integer bodies, guard at route; new testDb tables need store+makeTable registration.
 - [Background sweep founder toggles](background-sweep-toggles.md) — gate the scheduled tick (not the sweep fn) on a DB control seeded from the env flag; keeps on-demand/test direct calls ungated; fire immediate tick on enable.
 - [Selfie tier has no deterministic fallback](selfie-tier-no-deterministic-fallback.md) — face-likeness has no aiEngine equivalent; the honest fallback awards no tier, only a live Claude "consistent" verdict does.
+- [Hand-written route vs OpenAPI path drift](route-spec-path-drift.md) — server route path must match the spec exactly; a collection GET sharing an item POST path (singular/plural drift) silently 404s the generated client; new tables a route mutates must be registered in testDb.

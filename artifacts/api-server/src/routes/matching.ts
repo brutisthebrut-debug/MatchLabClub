@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import {
   db,
   usersTable,
@@ -12,6 +12,7 @@ import {
   matchingReadinessSnapshotsTable,
   cosmicChartsTable,
   userVerificationsTable,
+  userBlocksTable,
   type CosmicPlacements,
 } from "@workspace/db";
 import {
@@ -1579,19 +1580,56 @@ async function buildMatchCandidate(
 // and mints mutual internal proposals. Returns how many new matches were minted.
 // Idempotent by construction: the partial unique index on internal
 // (userId, proposedToUserId) pairs + ON CONFLICT DO NOTHING drop re-proposals.
+// All user ids the given member has a block relationship with, in EITHER
+// direction (they blocked the other, or the other blocked them). Matching is a
+// hard, symmetric gate: a block from either side removes the pair from the
+// candidate pool entirely, so neither person can ever be proposed the other.
+export async function loadBlockedUserIds(
+  userId: string,
+): Promise<Set<string>> {
+  const rows = await db
+    .select({
+      blockerUserId: userBlocksTable.blockerUserId,
+      blockedUserId: userBlocksTable.blockedUserId,
+    })
+    .from(userBlocksTable)
+    .where(
+      or(
+        eq(userBlocksTable.blockerUserId, userId),
+        eq(userBlocksTable.blockedUserId, userId),
+      ),
+    );
+  const blocked = new Set<string>();
+  for (const row of rows) {
+    if (row.blockerUserId && row.blockerUserId !== userId) {
+      blocked.add(row.blockerUserId);
+    }
+    if (row.blockedUserId && row.blockedUserId !== userId) {
+      blocked.add(row.blockedUserId);
+    }
+  }
+  return blocked;
+}
+
 export async function mintInternalProposalsForMember(
   userId: string,
 ): Promise<number> {
   // Eligible counterparts are other members actively in the pool. concierge_only
   // (Wingman, founder-curated) is intentionally left out of automated pairing.
-  const memberRows = await db
-    .select({ userId: matchPoolMembershipTable.userId })
-    .from(matchPoolMembershipTable)
-    .where(inArray(matchPoolMembershipTable.status, ["building", "ready"]))
-    .limit(MAX_DISCOVER_CANDIDATES + 1);
+  const [memberRows, blockedIds] = await Promise.all([
+    db
+      .select({ userId: matchPoolMembershipTable.userId })
+      .from(matchPoolMembershipTable)
+      .where(inArray(matchPoolMembershipTable.status, ["building", "ready"]))
+      .limit(MAX_DISCOVER_CANDIDATES + 1),
+    loadBlockedUserIds(userId),
+  ]);
   const otherUserIds = memberRows
     .map((r) => r.userId)
-    .filter((id): id is string => Boolean(id) && id !== userId)
+    .filter(
+      (id): id is string =>
+        Boolean(id) && id !== userId && !blockedIds.has(id),
+    )
     .slice(0, MAX_DISCOVER_CANDIDATES);
 
   // Existing internal pairings (either direction) so we never double-propose.

@@ -8,7 +8,12 @@ import {
   ExtractMessageScreenshotBody,
   ExtractMessageScreenshotResponse,
 } from "@workspace/api-zod";
-import { generateMessageCoaching, type MessageCoachingOutput } from "../lib/aiEngine";
+import {
+  generateMessageCoaching,
+  analyzeScamSignals,
+  type MessageCoachingOutput,
+  type ScamCheckOutput,
+} from "../lib/aiEngine";
 import { generate } from "../lib/aiService";
 import { getOrCreateAnonClaimToken, getAnonClaimToken } from "../lib/anonClaimToken";
 import { extractChatFromScreenshot } from "../lib/ocr";
@@ -200,11 +205,76 @@ router.post("/messages/:id/coach", async (req, res): Promise<void> => {
     }
   }
 
+  // Romance-scam screen. The deterministic engine runs on every coach request
+  // with no key, no external call, and no rate limit, so the warning is always
+  // present. When the deep AI lane is on, Claude is layered on for a read
+  // specific to this thread; any failure, missing consent, or cap hit silently
+  // keeps the deterministic result. The Claude pass only runs when the
+  // deterministic screen already saw something worth a closer look, so a clean
+  // thread never burns a credit.
+  const deterministicSafety: ScamCheckOutput = analyzeScamSignals({
+    conversationText: session.conversationContext,
+    yourLastMessage: session.yourLastMessage,
+  });
+  let safety: ScamCheckOutput = deterministicSafety;
+  if (userId && deterministicSafety.risk !== "none") {
+    const safetySystem = [
+      "You are the MatchLab Club safety check. A user pasted a real dating-app",
+      "conversation. Decide whether the OTHER person shows signs of a romance",
+      "scam (asking for money, gift cards, or crypto; pushing to move off the",
+      "app fast; an unverifiable far-away persona; avoiding video; very early",
+      "intense affection; a manufactured emergency tied to a request).",
+      "",
+      "Be calm and non-accusatory. Most matches are not scammers. Never accuse;",
+      "describe what you notice and what to do. Return JSON only, no prose, no",
+      "code fences, matching this shape exactly:",
+      '{ "risk": "none | low | elevated",',
+      '  "signals": ["short, specific things you noticed, or empty"],',
+      '  "advice": "two or three calm sentences on how to stay safe" }',
+      "",
+      "Voice rules: no em dashes. No filler words like 'unlock', 'leverage',",
+      "'elevate', 'dive in', or 'in today's world'. Sound human.",
+    ].join("\n");
+    const safetyUser = [
+      `Conversation so far:\n${session.conversationContext}`,
+      `The user's most recent message:\n${session.yourLastMessage}`,
+    ].join("\n\n");
+    try {
+      const aiSafety = await generate(
+        {
+          provider: "anthropic",
+          system: safetySystem,
+          user: safetyUser,
+          expectJson: true,
+          requireContentConsent: true,
+          userId,
+          context: { toolName: "Safety Check" },
+          maxTokens: 600,
+        },
+        "",
+      );
+      if (!aiSafety.isFallback && aiSafety.validated && aiSafety.output) {
+        safety = JSON.parse(aiSafety.output) as ScamCheckOutput;
+      } else if (aiSafety.fallbackReason) {
+        req.log.info(
+          { sessionId: id, fallbackReason: aiSafety.fallbackReason },
+          "safety check fell back to deterministic baseline",
+        );
+      }
+    } catch (err) {
+      safety = deterministicSafety;
+      req.log.warn(
+        { err, sessionId: id },
+        "safety deep-AI lane threw; using deterministic baseline",
+      );
+    }
+  }
+
   await db.update(messageCoachingSessionsTable)
     .set({ status: "complete" })
     .where(eq(messageCoachingSessionsTable.id, id));
 
-  res.json(CoachMessageResponse.parse({ sessionId: id, ...coaching }));
+  res.json(CoachMessageResponse.parse({ sessionId: id, ...coaching, safety }));
 });
 
 export default router;

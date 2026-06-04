@@ -28,6 +28,8 @@ import {
   lifePulsesTable,
   founderCurationTable,
   matchingReadinessSnapshotsTable,
+  userReportsTable,
+  REPORT_STATUSES,
 } from "@workspace/db";
 import {
   loadBrainControls,
@@ -2649,6 +2651,85 @@ router.get(
           .from(founderCurationTable)
           .orderBy(desc(founderCurationTable.updatedAt));
     res.json({ curation: rows });
+  },
+);
+
+// Trust & Safety review queue. Member reports are queued here and never
+// auto-act on the reported account; the founder triages each one. Reads are
+// scoped to founder-only via requireFounder.
+router.get("/founder/reports", requireFounder, async (req, res): Promise<void> => {
+  const statusRaw = typeof req.query.status === "string" ? req.query.status : "";
+  const allowed = new Set(REPORT_STATUSES as readonly string[]);
+  const rows = allowed.has(statusRaw)
+    ? await db
+        .select()
+        .from(userReportsTable)
+        .where(eq(userReportsTable.status, statusRaw))
+        .orderBy(desc(userReportsTable.createdAt))
+    : await db
+        .select()
+        .from(userReportsTable)
+        .orderBy(desc(userReportsTable.createdAt));
+
+  res.json({
+    reports: rows.map((r) => ({
+      id: r.id,
+      reporterUserId: r.reporterUserId,
+      reportedUserId: r.reportedUserId,
+      reason: r.reason,
+      context: r.context,
+      note: r.note,
+      status: r.status,
+      createdAt: r.createdAt.toISOString(),
+      reviewedAt: r.reviewedAt ? r.reviewedAt.toISOString() : null,
+    })),
+  });
+});
+
+router.patch(
+  "/founder/reports/:id/status",
+  requireFounder,
+  async (req, res): Promise<void> => {
+    const idRaw = Array.isArray(req.params.id)
+      ? (req.params.id[0] ?? "")
+      : (req.params.id ?? "");
+    const id = Number.parseInt(idRaw, 10);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: "A valid report id is required." });
+      return;
+    }
+    const statusRaw = typeof req.body?.status === "string" ? req.body.status : "";
+    const allowed = new Set(REPORT_STATUSES as readonly string[]);
+    if (!allowed.has(statusRaw)) {
+      res.status(400).json({
+        error: `Status must be one of: ${REPORT_STATUSES.join(", ")}.`,
+      });
+      return;
+    }
+
+    const reviewedAt = statusRaw === "open" ? null : new Date();
+    const updated = await db
+      .update(userReportsTable)
+      .set({ status: statusRaw, reviewedAt })
+      .where(eq(userReportsTable.id, id))
+      .returning();
+
+    if (updated.length === 0) {
+      res.status(404).json({ error: `No report with id ${id}.` });
+      return;
+    }
+    const r = updated[0]!;
+    res.json({
+      id: r.id,
+      reporterUserId: r.reporterUserId,
+      reportedUserId: r.reportedUserId,
+      reason: r.reason,
+      context: r.context,
+      note: r.note,
+      status: r.status,
+      createdAt: r.createdAt.toISOString(),
+      reviewedAt: r.reviewedAt ? r.reviewedAt.toISOString() : null,
+    });
   },
 );
 

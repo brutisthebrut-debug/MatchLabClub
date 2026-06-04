@@ -289,6 +289,199 @@ export interface MessageCoachingOutput {
   coachTip: string;
 }
 
+export type ScamRiskLevel = "none" | "low" | "elevated";
+
+export interface ScamCheckOutput {
+  risk: ScamRiskLevel;
+  signals: string[];
+  advice: string;
+}
+
+// Deterministic, always-on romance-scam screen. Runs locally with no external
+// call and no stored state, so it never costs a Claude credit and is never
+// rate-limited. It reads only the conversation text the user already pasted for
+// coaching and looks for well-documented scam patterns (asks for money, a fast
+// push off the app, an unverifiable far-away persona, refusal to video, very
+// early love-bombing, manufactured urgency). The copy is calm and
+// non-accusatory by design: most matches are not scammers, and the goal is to
+// help the user stay alert, not to accuse the other person.
+const SCAM_PATTERN_GROUPS: {
+  key: string;
+  weight: "financial" | "category";
+  signal: string;
+  terms: string[];
+}[] = [
+  {
+    key: "money",
+    weight: "financial",
+    signal: "There is talk of money, gift cards, crypto, or an investment.",
+    terms: [
+      "money",
+      "wire ",
+      "wire transfer",
+      "western union",
+      "gift card",
+      "itunes card",
+      "steam card",
+      "google play card",
+      "bitcoin",
+      "crypto",
+      " btc ",
+      "ethereum",
+      "investment",
+      "invest in",
+      "trading",
+      "forex",
+      "send funds",
+      "send cash",
+      "loan",
+      "paypal",
+      "cash app",
+      "venmo",
+      "zelle",
+      "deposit",
+      "customs fee",
+      "clearance fee",
+      "visa fee",
+      "western",
+      "money gram",
+      "moneygram",
+    ],
+  },
+  {
+    key: "offsite",
+    weight: "category",
+    signal:
+      "They want to move the chat off the app quickly (another messaging service or your number).",
+    terms: [
+      "whatsapp",
+      "telegram",
+      "kik",
+      "hangouts",
+      "signal app",
+      "text me at",
+      "my number is",
+      "give me your number",
+      "send your number",
+      "email me at",
+      "off this app",
+      "off the app",
+    ],
+  },
+  {
+    key: "persona",
+    weight: "category",
+    signal:
+      "The persona is far away and hard to verify (overseas posting, deployment, or working abroad).",
+    terms: [
+      "oil rig",
+      "deployed",
+      "deployment",
+      "military base",
+      "i am a soldier",
+      "overseas",
+      "contract abroad",
+      "working abroad",
+      "widower",
+      "engineer abroad",
+      "un mission",
+      "peacekeeping",
+      "stationed",
+    ],
+  },
+  {
+    key: "novideo",
+    weight: "category",
+    signal: "They keep avoiding a video call or meeting in person.",
+    terms: [
+      "can't video",
+      "cant video",
+      "no video call",
+      "camera is broken",
+      "camera broken",
+      "phone is broken",
+      "bad connection",
+      "can't meet",
+      "cant meet",
+      "never meet",
+    ],
+  },
+  {
+    key: "lovebomb",
+    weight: "category",
+    signal: "There is very fast, intense affection this early in talking.",
+    terms: [
+      "soulmate",
+      "you are my destiny",
+      "god brought us",
+      "i love you",
+      "marry you",
+      "spend my life with you",
+      "my queen",
+      "my king",
+      "future wife",
+      "future husband",
+    ],
+  },
+  {
+    key: "urgency",
+    weight: "category",
+    signal: "There is an urgent emergency tied to a request for help.",
+    terms: [
+      "emergency",
+      "urgent",
+      "i am stuck",
+      "stranded",
+      "in the hospital",
+      "need your help now",
+      "help me please",
+      "as soon as possible",
+      "asap",
+      "right away",
+    ],
+  },
+];
+
+export function analyzeScamSignals(input: {
+  conversationText: string;
+  yourLastMessage?: string;
+}): ScamCheckOutput {
+  const haystack = `${input.conversationText ?? ""}\n${input.yourLastMessage ?? ""}`
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+
+  const signals: string[] = [];
+  let hasFinancial = false;
+  let categoryHits = 0;
+
+  for (const group of SCAM_PATTERN_GROUPS) {
+    const matched = group.terms.some((term) => haystack.includes(term));
+    if (!matched) continue;
+    signals.push(group.signal);
+    if (group.weight === "financial") hasFinancial = true;
+    else categoryHits += 1;
+  }
+
+  let risk: ScamRiskLevel = "none";
+  if (hasFinancial) risk = "elevated";
+  else if (categoryHits >= 2) risk = "elevated";
+  else if (categoryHits === 1) risk = "low";
+
+  let advice: string;
+  if (risk === "elevated") {
+    advice =
+      "Some of this matches common romance-scam patterns. Slow down before sending money, gift cards, or crypto to anyone you have not met, and try a live video call. If they resist verifying who they are, treat that as a real warning sign.";
+  } else if (risk === "low") {
+    advice =
+      "One thing here is worth keeping an eye on. Stay on the app for now, suggest a short video call when it feels right, and never send money to someone you have not met in person.";
+  } else {
+    advice =
+      "Nothing here matches the usual scam patterns. Keep the basics in mind anyway: stay on the app until you trust them, and never send money to a match you have not met.";
+  }
+
+  return { risk, signals, advice };
+}
+
 export interface EmailInsightOutput {
   communicationPatterns: { pattern: string; frequency: string; impact: string }[];
   attachmentStyle: string;

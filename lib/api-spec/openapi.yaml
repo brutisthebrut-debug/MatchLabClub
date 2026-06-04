@@ -2466,6 +2466,167 @@ paths:
                   error:
                     type: string
 
+  /me/safety/report:
+    post:
+      operationId: reportUser
+      tags: [Auth]
+      summary: Report another member for a Trust & Safety concern
+      description: |
+        Files a report against another member. The report is queued for founder
+        review and never auto-acts. Reporting someone does not block them; the
+        client should offer block as a separate step.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportUserInput"
+      responses:
+        "201":
+          description: The report was filed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportAck"
+        "401":
+          description: Not authenticated.
+
+  /me/safety/block:
+    post:
+      operationId: blockUser
+      tags: [Auth]
+      summary: Block another member
+      description: |
+        Blocks another member. Blocking is a hard, symmetric gate in the matching
+        engine: once a block exists in either direction, neither person can be
+        proposed the other. Any existing internal match proposals between the two
+        are removed. Blocking is idempotent.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlockUserInput"
+      responses:
+        "201":
+          description: The block was created (or already existed).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SafetyBlock"
+        "401":
+          description: Not authenticated.
+    get:
+      operationId: listSafetyBlocks
+      tags: [Auth]
+      summary: List the members the caller has blocked
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        "200":
+          description: The caller's active blocks.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SafetyBlockList"
+        "401":
+          description: Not authenticated.
+
+  /me/safety/block/{blockedUserId}:
+    delete:
+      operationId: unblockUser
+      tags: [Auth]
+      summary: Remove a block (undo)
+      parameters:
+        - name: blockedUserId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        "200":
+          description: The block was removed (or did not exist).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnblockAck"
+        "401":
+          description: Not authenticated.
+
+  /founder/reports:
+    get:
+      operationId: getFounderReports
+      tags: [founder]
+      summary: List member reports for founder review
+      description: |
+        Returns Trust & Safety reports for the founder review queue, newest
+        first. Requires founder key.
+      parameters:
+        - name: x-founder-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [open, reviewed, dismissed]
+      responses:
+        "200":
+          description: The report queue.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListFounderReportsResponse"
+        "401":
+          description: Missing or invalid founder key.
+
+  /founder/reports/{id}/status:
+    patch:
+      operationId: updateFounderReportStatus
+      tags: [founder]
+      summary: Update the review status of a member report
+      description: Requires founder key.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: x-founder-key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateReportStatusInput"
+      responses:
+        "200":
+          description: The updated report.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FounderReport"
+        "401":
+          description: Missing or invalid founder key.
+        "404":
+          description: Report not found.
+
   /coach/follow-ups:
     post:
       operationId: recordCoachFollowUp
@@ -6010,7 +6171,7 @@ components:
 
     MessageCoachingResponse:
       type: object
-      required: [sessionId, analysis, suggestedReplies, tone, redFlags, coachTip]
+      required: [sessionId, analysis, suggestedReplies, tone, redFlags, coachTip, safety]
       properties:
         sessionId:
           type: integer
@@ -6028,6 +6189,129 @@ components:
             type: string
         coachTip:
           type: string
+        safety:
+          $ref: "#/components/schemas/SafetyCheck"
+
+    SafetyCheck:
+      type: object
+      description: |
+        Romance-scam screen for the coached conversation. The deterministic
+        engine produces this on every coach request; the deep AI lane refines it
+        when consent is on. risk is none, low, or elevated.
+      required: [risk, signals, advice]
+      properties:
+        risk:
+          type: string
+          enum: [none, low, elevated]
+        signals:
+          type: array
+          items:
+            type: string
+        advice:
+          type: string
+
+    ReportUserInput:
+      type: object
+      required: [reportedUserId, reason]
+      properties:
+        reportedUserId:
+          type: string
+        reason:
+          type: string
+          enum: [fake_profile, harassment, inappropriate, scam, underage, safety, other]
+        context:
+          type: ["string", "null"]
+          enum: [match, conversation, profile, null]
+        note:
+          type: ["string", "null"]
+          maxLength: 1000
+
+    ReportAck:
+      type: object
+      required: [ok, reportId]
+      properties:
+        ok:
+          type: boolean
+        reportId:
+          type: integer
+
+    BlockUserInput:
+      type: object
+      required: [blockedUserId]
+      properties:
+        blockedUserId:
+          type: string
+        reason:
+          type: ["string", "null"]
+          enum: [fake_profile, harassment, inappropriate, scam, underage, safety, other, null]
+
+    SafetyBlock:
+      type: object
+      required: [blockedUserId, reason, createdAt]
+      properties:
+        blockedUserId:
+          type: string
+        reason:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    SafetyBlockList:
+      type: object
+      required: [blocks]
+      properties:
+        blocks:
+          type: array
+          items:
+            $ref: "#/components/schemas/SafetyBlock"
+
+    UnblockAck:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+
+    FounderReport:
+      type: object
+      required: [id, reporterUserId, reportedUserId, reason, context, note, status, createdAt, reviewedAt]
+      properties:
+        id:
+          type: integer
+        reporterUserId:
+          type: string
+        reportedUserId:
+          type: string
+        reason:
+          type: string
+        context:
+          type: ["string", "null"]
+        note:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [open, reviewed, dismissed]
+        createdAt:
+          type: string
+        reviewedAt:
+          type: ["string", "null"]
+
+    ListFounderReportsResponse:
+      type: object
+      required: [reports]
+      properties:
+        reports:
+          type: array
+          items:
+            $ref: "#/components/schemas/FounderReport"
+
+    UpdateReportStatusInput:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [open, reviewed, dismissed]
 
     RehearsalTurn:
       type: object

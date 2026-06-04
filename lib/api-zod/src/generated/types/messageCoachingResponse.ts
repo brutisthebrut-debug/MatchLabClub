@@ -5,6 +5,7 @@
  * MatchLab Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { SafetyCheck } from './safetyCheck';
 import type { SuggestedReply } from './suggestedReply';
 
 export interface MessageCoachingResponse {
@@ -14,4 +15,5 @@ export interface MessageCoachingResponse {
   tone: string;
   redFlags: string[];
   coachTip: string;
+  safety: SafetyCheck;
 }

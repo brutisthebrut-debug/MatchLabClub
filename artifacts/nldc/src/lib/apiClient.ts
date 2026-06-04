@@ -382,6 +382,40 @@ export const getEchoUserSignals = (founderKey: string, email: string) =>
     founderKey,
   );
 
+export interface FounderReport {
+  id: number;
+  reporterUserId: string;
+  reportedUserId: string;
+  reason: string;
+  context: string | null;
+  note: string | null;
+  status: "open" | "reviewed" | "dismissed";
+  createdAt: string;
+  reviewedAt: string | null;
+}
+
+export interface FounderReportsResponse {
+  reports: FounderReport[];
+}
+
+export const getFounderReports = (
+  founderKey: string,
+  status?: "open" | "reviewed" | "dismissed",
+) => {
+  const qs = status ? `?status=${encodeURIComponent(status)}` : "";
+  return founderJson<FounderReportsResponse>(`/founder/reports${qs}`, founderKey);
+};
+
+export const updateFounderReportStatus = (
+  founderKey: string,
+  id: number,
+  status: "open" | "reviewed" | "dismissed",
+) =>
+  founderJson<FounderReport>(`/founder/reports/${id}/status`, founderKey, {
+    method: "PATCH",
+    body: { status },
+  });
+
 export const setMatchingProposalStatus = (
   founderKey: string,
   id: string,

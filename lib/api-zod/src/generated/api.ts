@@ -3271,7 +3271,12 @@ export const CoachMessageResponse = zod.object({
 })),
   "tone": zod.string(),
   "redFlags": zod.array(zod.string()),
-  "coachTip": zod.string()
+  "coachTip": zod.string(),
+  "safety": zod.object({
+  "risk": zod.enum(['none', 'low', 'elevated']),
+  "signals": zod.array(zod.string()),
+  "advice": zod.string()
+}).describe('Romance-scam screen for the coached conversation. The deterministic\nengine produces this on every coach request; the deep AI lane refines it\nwhen consent is on. risk is none, low, or elevated.\n')
 })
 
 
@@ -3296,6 +3301,137 @@ export const ExtractMessageScreenshotResponse = zod.object({
   "speaker": zod.enum(['them', 'you']).describe('Who sent this message — \"them\" for the match, \"you\" for the user.'),
   "text": zod.string().describe('The message text for this turn.')
 })).describe('Ordered list of inferred speaker turns extracted from the screenshot.\nSpeaker attribution is a heuristic (noise-boundary alternation) and may\nneed user correction — the client should offer a way to flip misattributed turns.\n')
+})
+
+
+/**
+ * Files a report against another member. The report is queued for founder
+review and never auto-acts. Reporting someone does not block them; the
+client should offer block as a separate step.
+
+ * @summary Report another member for a Trust & Safety concern
+ */
+export const ReportUserHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const reportUserBodyNoteMax = 1000;
+
+
+
+export const ReportUserBody = zod.object({
+  "reportedUserId": zod.string(),
+  "reason": zod.enum(['fake_profile', 'harassment', 'inappropriate', 'scam', 'underage', 'safety', 'other']),
+  "context": zod.union([zod.literal('match'),zod.literal('conversation'),zod.literal('profile'),zod.literal(null)]).nullish(),
+  "note": zod.string().max(reportUserBodyNoteMax).nullish()
+})
+
+
+/**
+ * Blocks another member. Blocking is a hard, symmetric gate in the matching
+engine: once a block exists in either direction, neither person can be
+proposed the other. Any existing internal match proposals between the two
+are removed. Blocking is idempotent.
+
+ * @summary Block another member
+ */
+export const BlockUserHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const BlockUserBody = zod.object({
+  "blockedUserId": zod.string(),
+  "reason": zod.union([zod.literal('fake_profile'),zod.literal('harassment'),zod.literal('inappropriate'),zod.literal('scam'),zod.literal('underage'),zod.literal('safety'),zod.literal('other'),zod.literal(null)]).nullish()
+})
+
+
+/**
+ * @summary List the members the caller has blocked
+ */
+export const ListSafetyBlocksHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const ListSafetyBlocksResponse = zod.object({
+  "blocks": zod.array(zod.object({
+  "blockedUserId": zod.string(),
+  "reason": zod.string().nullable(),
+  "createdAt": zod.string()
+}))
+})
+
+
+/**
+ * @summary Remove a block (undo)
+ */
+export const UnblockUserParams = zod.object({
+  "blockedUserId": zod.coerce.string()
+})
+
+export const UnblockUserHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const UnblockUserResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * Returns Trust & Safety reports for the founder review queue, newest
+first. Requires founder key.
+
+ * @summary List member reports for founder review
+ */
+export const GetFounderReportsQueryParams = zod.object({
+  "status": zod.enum(['open', 'reviewed', 'dismissed']).optional()
+})
+
+export const GetFounderReportsHeader = zod.object({
+  "x-founder-key": zod.string()
+})
+
+export const GetFounderReportsResponse = zod.object({
+  "reports": zod.array(zod.object({
+  "id": zod.number(),
+  "reporterUserId": zod.string(),
+  "reportedUserId": zod.string(),
+  "reason": zod.string(),
+  "context": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "status": zod.enum(['open', 'reviewed', 'dismissed']),
+  "createdAt": zod.string(),
+  "reviewedAt": zod.string().nullable()
+}))
+})
+
+
+/**
+ * Requires founder key.
+ * @summary Update the review status of a member report
+ */
+export const UpdateFounderReportStatusParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateFounderReportStatusHeader = zod.object({
+  "x-founder-key": zod.string()
+})
+
+export const UpdateFounderReportStatusBody = zod.object({
+  "status": zod.enum(['open', 'reviewed', 'dismissed'])
+})
+
+export const UpdateFounderReportStatusResponse = zod.object({
+  "id": zod.number(),
+  "reporterUserId": zod.string(),
+  "reportedUserId": zod.string(),
+  "reason": zod.string(),
+  "context": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "status": zod.enum(['open', 'reviewed', 'dismissed']),
+  "createdAt": zod.string(),
+  "reviewedAt": zod.string().nullable()
 })
 
 

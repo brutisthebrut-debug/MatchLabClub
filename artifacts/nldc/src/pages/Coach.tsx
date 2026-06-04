@@ -27,7 +27,7 @@ import type { CoachFollowUpInputAnswer } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
-import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Sparkles, Send, Upload, X, AlertCircle, Moon, Clock, Minus, Sunrise, TrendingDown, TrendingUp } from "lucide-react";
+import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Sparkles, Send, Upload, X, AlertCircle, Moon, Clock, Minus, Sunrise, TrendingDown, TrendingUp, ShieldAlert } from "lucide-react";
 import { ShareButton } from "@/components/echo/ShareButton";
 import {
   useCoachNudgePrefs,
@@ -50,12 +50,19 @@ function detectAppFromText(text: string): SourceApp | null {
   return null;
 }
 
+type SafetyCheckResult = {
+  risk: "none" | "low" | "elevated";
+  signals: string[];
+  advice: string;
+};
+
 type CoachingResult = {
   analysis: string;
   suggestedReplies: { style: string; text: string; rationale: string }[];
   tone: string;
   redFlags: string[];
   coachTip: string;
+  safety?: SafetyCheckResult;
 };
 
 const DEMO_RESULT: CoachingResult = {
@@ -68,6 +75,7 @@ const DEMO_RESULT: CoachingResult = {
   tone: "Light and playful, this is working. Both sides are engaged.",
   redFlags: ["'I've been meaning to' is a non-answer, shows interest but gives them nothing to respond to", "Staying in app too long after real rapport builds reduces date conversion significantly"],
   coachTip: "You have everything you need here. After 5–7 messages of real rapport, it's time to ask. The best conversations end with plans, not more conversation.",
+  safety: { risk: "none", signals: [], advice: "Nothing here reads as a romance-scam pattern. Keep trusting your read." },
 };
 
 const DEMO_SESSION = {
@@ -1039,6 +1047,50 @@ export default function Coach() {
   </div>
   </>
   )}
+  </div>
+  )}
+
+  {/* Romance-scam safety screen (deterministic always-on, refined by the deep AI lane) */}
+  {showResult.safety && showResult.safety.risk !== "none" && (
+  <div
+  className="rounded-3xl p-6 border mb-5"
+  style={
+  showResult.safety.risk === "elevated"
+  ? { background: "hsl(var(--brand-rose) / 0.08)", borderColor: "hsl(var(--brand-rose) / 0.3)" }
+  : { background: "hsl(43 65% 52% / 0.07)", borderColor: "hsl(43 65% 52% / 0.25)" }
+  }
+  data-testid="card-safety-check"
+  >
+  <div className="flex items-center gap-2 mb-3">
+  <ShieldAlert
+  className="w-5 h-5"
+  style={{ color: showResult.safety.risk === "elevated" ? "hsl(var(--brand-rose))" : "hsl(43 65% 60%)" }}
+  />
+  <p className="font-semibold text-foreground text-sm">
+  {showResult.safety.risk === "elevated" ? "Safety check: take this slowly" : "Safety check: a couple of things to watch"}
+  </p>
+  </div>
+  {showResult.safety.signals.length > 0 && (
+  <ul className="space-y-2 mb-3">
+  {showResult.safety.signals.map((s, i) => (
+  <li key={i} className="text-sm text-muted-foreground flex items-start gap-2.5">
+  <span
+  className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
+  style={{ background: showResult.safety!.risk === "elevated" ? "hsl(var(--brand-rose))" : "hsl(43 65% 60%)" }}
+  />
+  {s}
+  </li>
+  ))}
+  </ul>
+  )}
+  <p className="text-sm text-foreground/85 leading-relaxed">{showResult.safety.advice}</p>
+  <a
+  href="/date-safety"
+  className="inline-flex items-center gap-1.5 text-xs font-medium mt-3 text-[hsl(248_62%_62%)] hover:underline"
+  data-testid="link-date-safety"
+  >
+  See the date-safety basics
+  </a>
   </div>
   )}
 

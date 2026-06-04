@@ -48,6 +48,7 @@ import type {
   AuthErrorEnvelope,
   AuthUserEnvelope,
   BeginBrowserLoginParams,
+  BlockUserInput,
   BulkDeleteAuditsInput,
   BulkDeleteAuditsResult,
   CalendarImportBody,
@@ -130,12 +131,14 @@ import type {
   ExtractScreenshot400,
   FounderFunnelSummary,
   FounderReferralsSummary,
+  FounderReport,
   GeoipRefreshResult,
   GetAiFallbackRateParams,
   GetAuditReportVersion404,
   GetCompanion401,
   GetFounderFunnelParams,
   GetFounderReferralsParams,
+  GetFounderReportsParams,
   GetMirrorPortrait401,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
@@ -155,6 +158,7 @@ import type {
   ListAuditsParams,
   ListCompanionNotifications401,
   ListExpiringTrashedAuditsParams,
+  ListFounderReportsResponse,
   ListJournalEntriesParams,
   ListPostDateNotesParams,
   ListWellnessAnswersParams,
@@ -206,10 +210,14 @@ import type {
   RehearsalTurn400,
   RehearsalTurnInput,
   RehearsalTurnResult,
+  ReportAck,
+  ReportUserInput,
   RestoreAllTrashResult,
   ReviewMessageWithCompanion400,
   ReviewMessageWithCompanion401,
   RevokeSessionsResult,
+  SafetyBlock,
+  SafetyBlockList,
   SayToCompanion400,
   SayToCompanion401,
   ScenarioResponse,
@@ -229,10 +237,12 @@ import type {
   TrashPurgeHeartbeat,
   TrashPurgeResult,
   TrustLedger,
+  UnblockAck,
   UnregisterPushTokenParams,
   UnregisterPushTokenResult,
   UpdateCompanionSettings400,
   UpdateCompanionSettings401,
+  UpdateReportStatusInput,
   UserAchievements,
   UserJourneySummary,
   UserVerification,
@@ -7008,6 +7018,464 @@ export const useExtractMessageScreenshot = <TError = ErrorType<ExtractMessageScr
         TContext
       > => {
       return useMutation(getExtractMessageScreenshotMutationOptions(options));
+    }
+
+export const getReportUserUrl = () => {
+
+
+
+
+  return `/api/me/safety/report`
+}
+
+/**
+ * Files a report against another member. The report is queued for founder
+review and never auto-acts. Reporting someone does not block them; the
+client should offer block as a separate step.
+
+ * @summary Report another member for a Trust & Safety concern
+ */
+export const reportUser = async (reportUserInput: ReportUserInput, options?: RequestInit): Promise<ReportAck> => {
+
+  return customFetch<ReportAck>(getReportUserUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      reportUserInput,)
+  }
+);}
+
+
+
+
+export const getReportUserMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportUser>>, TError,{data: BodyType<ReportUserInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reportUser>>, TError,{data: BodyType<ReportUserInput>}, TContext> => {
+
+const mutationKey = ['reportUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reportUser>>, {data: BodyType<ReportUserInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  reportUser(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReportUserMutationResult = NonNullable<Awaited<ReturnType<typeof reportUser>>>
+    export type ReportUserMutationBody = BodyType<ReportUserInput>
+    export type ReportUserMutationError = ErrorType<void>
+
+    /**
+ * @summary Report another member for a Trust & Safety concern
+ */
+export const useReportUser = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportUser>>, TError,{data: BodyType<ReportUserInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reportUser>>,
+        TError,
+        {data: BodyType<ReportUserInput>},
+        TContext
+      > => {
+      return useMutation(getReportUserMutationOptions(options));
+    }
+
+export const getBlockUserUrl = () => {
+
+
+
+
+  return `/api/me/safety/block`
+}
+
+/**
+ * Blocks another member. Blocking is a hard, symmetric gate in the matching
+engine: once a block exists in either direction, neither person can be
+proposed the other. Any existing internal match proposals between the two
+are removed. Blocking is idempotent.
+
+ * @summary Block another member
+ */
+export const blockUser = async (blockUserInput: BlockUserInput, options?: RequestInit): Promise<SafetyBlock> => {
+
+  return customFetch<SafetyBlock>(getBlockUserUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      blockUserInput,)
+  }
+);}
+
+
+
+
+export const getBlockUserMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof blockUser>>, TError,{data: BodyType<BlockUserInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof blockUser>>, TError,{data: BodyType<BlockUserInput>}, TContext> => {
+
+const mutationKey = ['blockUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof blockUser>>, {data: BodyType<BlockUserInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  blockUser(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BlockUserMutationResult = NonNullable<Awaited<ReturnType<typeof blockUser>>>
+    export type BlockUserMutationBody = BodyType<BlockUserInput>
+    export type BlockUserMutationError = ErrorType<void>
+
+    /**
+ * @summary Block another member
+ */
+export const useBlockUser = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof blockUser>>, TError,{data: BodyType<BlockUserInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof blockUser>>,
+        TError,
+        {data: BodyType<BlockUserInput>},
+        TContext
+      > => {
+      return useMutation(getBlockUserMutationOptions(options));
+    }
+
+export const getListSafetyBlocksUrl = () => {
+
+
+
+
+  return `/api/me/safety/block`
+}
+
+/**
+ * @summary List the members the caller has blocked
+ */
+export const listSafetyBlocks = async ( options?: RequestInit): Promise<SafetyBlockList> => {
+
+  return customFetch<SafetyBlockList>(getListSafetyBlocksUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSafetyBlocksQueryKey = () => {
+    return [
+    `/api/me/safety/block`
+    ] as const;
+    }
+
+
+export const getListSafetyBlocksQueryOptions = <TData = Awaited<ReturnType<typeof listSafetyBlocks>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSafetyBlocks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSafetyBlocksQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSafetyBlocks>>> = ({ signal }) => listSafetyBlocks({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSafetyBlocks>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSafetyBlocksQueryResult = NonNullable<Awaited<ReturnType<typeof listSafetyBlocks>>>
+export type ListSafetyBlocksQueryError = ErrorType<void>
+
+
+/**
+ * @summary List the members the caller has blocked
+ */
+
+export function useListSafetyBlocks<TData = Awaited<ReturnType<typeof listSafetyBlocks>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSafetyBlocks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSafetyBlocksQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUnblockUserUrl = (blockedUserId: string,) => {
+
+
+
+
+  return `/api/me/safety/block/${blockedUserId}`
+}
+
+/**
+ * @summary Remove a block (undo)
+ */
+export const unblockUser = async (blockedUserId: string, options?: RequestInit): Promise<UnblockAck> => {
+
+  return customFetch<UnblockAck>(getUnblockUserUrl(blockedUserId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getUnblockUserMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unblockUser>>, TError,{blockedUserId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unblockUser>>, TError,{blockedUserId: string}, TContext> => {
+
+const mutationKey = ['unblockUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unblockUser>>, {blockedUserId: string}> = (props) => {
+          const {blockedUserId} = props ?? {};
+
+          return  unblockUser(blockedUserId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnblockUserMutationResult = NonNullable<Awaited<ReturnType<typeof unblockUser>>>
+
+    export type UnblockUserMutationError = ErrorType<void>
+
+    /**
+ * @summary Remove a block (undo)
+ */
+export const useUnblockUser = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unblockUser>>, TError,{blockedUserId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unblockUser>>,
+        TError,
+        {blockedUserId: string},
+        TContext
+      > => {
+      return useMutation(getUnblockUserMutationOptions(options));
+    }
+
+export const getGetFounderReportsUrl = (params?: GetFounderReportsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/founder/reports?${stringifiedParams}` : `/api/founder/reports`
+}
+
+/**
+ * Returns Trust & Safety reports for the founder review queue, newest
+first. Requires founder key.
+
+ * @summary List member reports for founder review
+ */
+export const getFounderReports = async (params?: GetFounderReportsParams, options?: RequestInit): Promise<ListFounderReportsResponse> => {
+
+  return customFetch<ListFounderReportsResponse>(getGetFounderReportsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFounderReportsQueryKey = (params?: GetFounderReportsParams,) => {
+    return [
+    `/api/founder/reports`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetFounderReportsQueryOptions = <TData = Awaited<ReturnType<typeof getFounderReports>>, TError = ErrorType<void>>(params?: GetFounderReportsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFounderReports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFounderReportsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFounderReports>>> = ({ signal }) => getFounderReports(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFounderReports>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFounderReportsQueryResult = NonNullable<Awaited<ReturnType<typeof getFounderReports>>>
+export type GetFounderReportsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List member reports for founder review
+ */
+
+export function useGetFounderReports<TData = Awaited<ReturnType<typeof getFounderReports>>, TError = ErrorType<void>>(
+ params?: GetFounderReportsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFounderReports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFounderReportsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateFounderReportStatusUrl = (id: number,) => {
+
+
+
+
+  return `/api/founder/reports/${id}/status`
+}
+
+/**
+ * Requires founder key.
+ * @summary Update the review status of a member report
+ */
+export const updateFounderReportStatus = async (id: number,
+    updateReportStatusInput: UpdateReportStatusInput, options?: RequestInit): Promise<FounderReport> => {
+
+  return customFetch<FounderReport>(getUpdateFounderReportStatusUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateReportStatusInput,)
+  }
+);}
+
+
+
+
+export const getUpdateFounderReportStatusMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateFounderReportStatus>>, TError,{id: number;data: BodyType<UpdateReportStatusInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateFounderReportStatus>>, TError,{id: number;data: BodyType<UpdateReportStatusInput>}, TContext> => {
+
+const mutationKey = ['updateFounderReportStatus'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateFounderReportStatus>>, {id: number;data: BodyType<UpdateReportStatusInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateFounderReportStatus(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateFounderReportStatusMutationResult = NonNullable<Awaited<ReturnType<typeof updateFounderReportStatus>>>
+    export type UpdateFounderReportStatusMutationBody = BodyType<UpdateReportStatusInput>
+    export type UpdateFounderReportStatusMutationError = ErrorType<void>
+
+    /**
+ * @summary Update the review status of a member report
+ */
+export const useUpdateFounderReportStatus = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateFounderReportStatus>>, TError,{id: number;data: BodyType<UpdateReportStatusInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateFounderReportStatus>>,
+        TError,
+        {id: number;data: BodyType<UpdateReportStatusInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateFounderReportStatusMutationOptions(options));
     }
 
 export const getRecordCoachFollowUpUrl = () => {

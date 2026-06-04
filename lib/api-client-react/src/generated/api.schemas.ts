@@ -667,6 +667,27 @@ export interface SuggestedReply {
   rationale: string;
 }
 
+export type SafetyCheckRisk = typeof SafetyCheckRisk[keyof typeof SafetyCheckRisk];
+
+
+export const SafetyCheckRisk = {
+  none: 'none',
+  low: 'low',
+  elevated: 'elevated',
+} as const;
+
+/**
+ * Romance-scam screen for the coached conversation. The deterministic
+engine produces this on every coach request; the deep AI lane refines it
+when consent is on. risk is none, low, or elevated.
+
+ */
+export interface SafetyCheck {
+  risk: SafetyCheckRisk;
+  signals: string[];
+  advice: string;
+}
+
 export interface MessageCoachingResponse {
   sessionId: number;
   analysis: string;
@@ -674,6 +695,127 @@ export interface MessageCoachingResponse {
   tone: string;
   redFlags: string[];
   coachTip: string;
+  safety: SafetyCheck;
+}
+
+export type ReportUserInputReason = typeof ReportUserInputReason[keyof typeof ReportUserInputReason];
+
+
+export const ReportUserInputReason = {
+  fake_profile: 'fake_profile',
+  harassment: 'harassment',
+  inappropriate: 'inappropriate',
+  scam: 'scam',
+  underage: 'underage',
+  safety: 'safety',
+  other: 'other',
+} as const;
+
+/**
+ * @nullable
+ */
+export type ReportUserInputContext = typeof ReportUserInputContext[keyof typeof ReportUserInputContext] | null;
+
+
+export const ReportUserInputContext = {
+  match: 'match',
+  conversation: 'conversation',
+  profile: 'profile',
+} as const;
+
+export interface ReportUserInput {
+  reportedUserId: string;
+  reason: ReportUserInputReason;
+  /** @nullable */
+  context?: ReportUserInputContext;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  note?: string | null;
+}
+
+export interface ReportAck {
+  ok: boolean;
+  reportId: number;
+}
+
+/**
+ * @nullable
+ */
+export type BlockUserInputReason = typeof BlockUserInputReason[keyof typeof BlockUserInputReason] | null;
+
+
+export const BlockUserInputReason = {
+  fake_profile: 'fake_profile',
+  harassment: 'harassment',
+  inappropriate: 'inappropriate',
+  scam: 'scam',
+  underage: 'underage',
+  safety: 'safety',
+  other: 'other',
+} as const;
+
+export interface BlockUserInput {
+  blockedUserId: string;
+  /** @nullable */
+  reason?: BlockUserInputReason;
+}
+
+export interface SafetyBlock {
+  blockedUserId: string;
+  /** @nullable */
+  reason: string | null;
+  createdAt: string;
+}
+
+export interface SafetyBlockList {
+  blocks: SafetyBlock[];
+}
+
+export interface UnblockAck {
+  ok: boolean;
+}
+
+export type FounderReportStatus = typeof FounderReportStatus[keyof typeof FounderReportStatus];
+
+
+export const FounderReportStatus = {
+  open: 'open',
+  reviewed: 'reviewed',
+  dismissed: 'dismissed',
+} as const;
+
+export interface FounderReport {
+  id: number;
+  reporterUserId: string;
+  reportedUserId: string;
+  reason: string;
+  /** @nullable */
+  context: string | null;
+  /** @nullable */
+  note: string | null;
+  status: FounderReportStatus;
+  createdAt: string;
+  /** @nullable */
+  reviewedAt: string | null;
+}
+
+export interface ListFounderReportsResponse {
+  reports: FounderReport[];
+}
+
+export type UpdateReportStatusInputStatus = typeof UpdateReportStatusInputStatus[keyof typeof UpdateReportStatusInputStatus];
+
+
+export const UpdateReportStatusInputStatus = {
+  open: 'open',
+  reviewed: 'reviewed',
+  dismissed: 'dismissed',
+} as const;
+
+export interface UpdateReportStatusInput {
+  status: UpdateReportStatusInputStatus;
 }
 
 export type RehearsalTurnRole = typeof RehearsalTurnRole[keyof typeof RehearsalTurnRole];
@@ -4515,6 +4657,19 @@ export type AuditFromScreenshot400 = {
 export type ExtractMessageScreenshot400 = {
   error?: string;
 };
+
+export type GetFounderReportsParams = {
+status?: GetFounderReportsStatus;
+};
+
+export type GetFounderReportsStatus = typeof GetFounderReportsStatus[keyof typeof GetFounderReportsStatus];
+
+
+export const GetFounderReportsStatus = {
+  open: 'open',
+  reviewed: 'reviewed',
+  dismissed: 'dismissed',
+} as const;
 
 export type RehearsalTurn400 = {
   error?: string;

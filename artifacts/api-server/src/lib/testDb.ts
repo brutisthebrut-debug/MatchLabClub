@@ -241,6 +241,28 @@ stores.user_verifications = {
     stripeVerificationSessionId: null,
   },
 };
+stores.user_reports = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    reporterUserId: null,
+    reportedUserId: null,
+    reason: null,
+    context: null,
+    note: null,
+    status: "open",
+    reviewedAt: null,
+  },
+};
+stores.user_blocks = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    blockerUserId: null,
+    blockedUserId: null,
+    reason: null,
+  },
+};
 ensureStore("leads");
 ensureStore("waitlist");
 ensureStore("purchase_interest");
@@ -266,6 +288,10 @@ export const predictionResponsesTable = makeTable("prediction_responses");
 export const timeCapsulesTable = makeTable("time_capsules");
 export const cosmicChartsTable = makeTable("cosmic_charts");
 export const userVerificationsTable = makeTable("user_verifications");
+export const userReportsTable = makeTable("user_reports");
+export const userBlocksTable = makeTable("user_blocks");
+ensureStore("match_proposals");
+export const matchProposalsTable = makeTable("match_proposals");
 ensureStore("compatibility_reads");
 export const compatibilityReadsTable = makeTable("compatibility_reads");
 ensureStore("journal_entries");

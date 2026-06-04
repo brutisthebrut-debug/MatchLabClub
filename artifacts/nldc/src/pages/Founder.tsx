@@ -11,6 +11,7 @@ import {
   getAlertSettings, updateAlertSettings, resetAlertSettings,
   getMatchingQueue, getMatchingPool, setMatchingProposalStatus, addMatchingProposalNote,
   getReferralAttribution, getEchoUserSignals, getFounderFunnel, getJourneyEvents,
+  getFounderReports, updateFounderReportStatus, type FounderReport,
   getBrainControls, updateBrainControls, resetBrainControls, getBrainMap,
   getReweighting, getReweightingImpact, getCuration, saveCuration,
   type BrainControls, type BrainControlsResponse, type BrainMapResponse,
@@ -32,7 +33,7 @@ import {
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
 import { useListAudits, useGetWaitlistStats, useGetCoachFollowUpTimeline, useGetFounderReferrals } from "@workspace/api-client-react";
-import { Lock, LogOut, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock, Share2, Heart, MapPin, Brain, SlidersHorizontal, RotateCcw, ThumbsUp, ThumbsDown, Activity, Save, Gauge, TrendingUp } from "lucide-react";
+import { Lock, LogOut, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock, Share2, Heart, MapPin, Brain, SlidersHorizontal, RotateCcw, ThumbsUp, ThumbsDown, Activity, Save, Gauge, TrendingUp, ShieldAlert } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
 import { EchoPlaybookPanel } from "@/components/founder/EchoPlaybookPanel";
 import {
@@ -4009,7 +4010,172 @@ function LockedView({ onSubmit }: { onSubmit: (key: string) => void }) {
   );
 }
 
-type Tab = "overview" | "leads" | "audits" | "purchases" | "waitlist" | "emails" | "testing" | "ocr-mismatches" | "referrals" | "matching" | "brain";
+function SafetyReportsPanel({ founderKey, refreshKey }: { founderKey: string; refreshKey: number }) {
+  const [reports, setReports] = useState<FounderReport[]>([]);
+  const [filter, setFilter] = useState<"open" | "reviewed" | "dismissed" | "all">("open");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<number | null>(null);
+  const [reload, setReload] = useState(0);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    getFounderReports(founderKey, filter === "all" ? undefined : filter)
+      .then((res) => setReports(res.reports))
+      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load reports"))
+      .finally(() => setLoading(false));
+  }, [founderKey, filter, refreshKey, reload]);
+
+  const setStatus = async (id: number, status: "open" | "reviewed" | "dismissed") => {
+    setBusyId(id);
+    try {
+      await updateFounderReportStatus(founderKey, id, status);
+      setReload((k) => k + 1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update report");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const FILTERS: { id: typeof filter; label: string }[] = [
+    { id: "open", label: "Open" },
+    { id: "reviewed", label: "Reviewed" },
+    { id: "dismissed", label: "Dismissed" },
+    { id: "all", label: "All" },
+  ];
+
+  return (
+    <div className="space-y-6" data-testid="safety-tab">
+      <div className="glass rounded-2xl p-6 space-y-5">
+        <div className="flex items-start gap-3">
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-[hsl(var(--brand-rose)/0.12)] border border-[hsl(var(--brand-rose)/0.35)]">
+            <ShieldAlert className="w-5 h-5 text-[hsl(var(--brand-rose))]" />
+          </div>
+          <div>
+            <h2 className="font-serif text-lg font-bold text-foreground">Trust &amp; Safety reports</h2>
+            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+              Member reports queued for review. Nothing acts on an account automatically. Mark each one reviewed or dismissed once you have triaged it.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-1 flex-wrap">
+          {FILTERS.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                filter === f.id
+                  ? "bg-[hsl(248_62%_52%/0.2)] text-[hsl(248_62%_62%)] border border-[hsl(248_62%_52%/0.3)]"
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+              }`}
+              data-testid={`safety-filter-${f.id}`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {error && (
+          <p className="flex items-start gap-2 text-sm text-[hsl(var(--brand-rose))]">
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+            {error}
+          </p>
+        )}
+
+        {loading ? (
+          <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" /> Loading reports…
+          </p>
+        ) : reports.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No reports in this view.</p>
+        ) : (
+          <div className="space-y-3">
+            {reports.map((r) => (
+              <div
+                key={r.id}
+                className="rounded-xl border border-white/5 bg-white/[0.02] p-4 space-y-2"
+                data-testid={`safety-report-${r.id}`}
+              >
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-[hsl(var(--brand-rose)/0.15)] text-[hsl(var(--brand-rose))]">
+                      {r.reason.replace(/_/g, " ")}
+                    </span>
+                    {r.context && (
+                      <span className="px-2 py-0.5 rounded-md text-xs text-muted-foreground bg-white/5">
+                        {r.context}
+                      </span>
+                    )}
+                    <span
+                      className={`px-2 py-0.5 rounded-md text-xs font-medium ${
+                        r.status === "open"
+                          ? "bg-[hsl(43_65%_52%/0.15)] text-[hsl(43_65%_62%)]"
+                          : r.status === "reviewed"
+                            ? "bg-[hsl(142_55%_50%/0.15)] text-[hsl(142_55%_60%)]"
+                            : "bg-white/5 text-muted-foreground"
+                      }`}
+                    >
+                      {r.status}
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground/70">
+                    {new Date(r.createdAt).toLocaleString()}
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground/80 space-y-0.5">
+                  <p>Reporter: <span className="text-foreground/70 font-mono">{r.reporterUserId}</span></p>
+                  <p>Reported: <span className="text-foreground/70 font-mono">{r.reportedUserId}</span></p>
+                </div>
+                {r.note && (
+                  <p className="text-sm text-foreground/80 leading-relaxed border-l-2 border-white/10 pl-3">
+                    {r.note}
+                  </p>
+                )}
+                <div className="flex gap-2 pt-1">
+                  {r.status !== "reviewed" && (
+                    <button
+                      onClick={() => setStatus(r.id, "reviewed")}
+                      disabled={busyId === r.id}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[hsl(142_55%_50%/0.12)] text-[hsl(142_55%_60%)] hover:bg-[hsl(142_55%_50%/0.2)] transition-colors disabled:opacity-50"
+                      data-testid={`safety-mark-reviewed-${r.id}`}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Mark reviewed
+                    </button>
+                  )}
+                  {r.status !== "dismissed" && (
+                    <button
+                      onClick={() => setStatus(r.id, "dismissed")}
+                      disabled={busyId === r.id}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors disabled:opacity-50"
+                      data-testid={`safety-dismiss-${r.id}`}
+                    >
+                      <XCircle className="w-3.5 h-3.5" /> Dismiss
+                    </button>
+                  )}
+                  {r.status !== "open" && (
+                    <button
+                      onClick={() => setStatus(r.id, "open")}
+                      disabled={busyId === r.id}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors disabled:opacity-50"
+                      data-testid={`safety-reopen-${r.id}`}
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" /> Reopen
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+type Tab = "overview" | "leads" | "audits" | "purchases" | "waitlist" | "emails" | "testing" | "ocr-mismatches" | "referrals" | "matching" | "safety" | "brain";
 
 
 function Dashboard({ onSignOut }: { onSignOut: () => void }) {
@@ -4043,6 +4209,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   { id: "ocr-mismatches", label: "OCR Mismatches", icon: ScanLine },
   { id: "referrals", label: "Referrals", icon: Share2 },
   { id: "matching", label: "Matching", icon: Heart },
+  { id: "safety", label: "Safety", icon: ShieldAlert },
   { id: "brain", label: "Brain", icon: Brain },
   ];
 
@@ -4254,6 +4421,8 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   <PoolReadyPanel founderKey={FOUNDER_KEY} refreshKey={refreshKey} />
   </div>
   )}
+
+  {tab === "safety" && <SafetyReportsPanel founderKey={FOUNDER_KEY} refreshKey={refreshKey} />}
 
   {tab === "brain" && <BrainTab founderKey={FOUNDER_KEY} refreshKey={refreshKey} />}
 

@@ -131,6 +131,16 @@ export const cosmicReadingSchema = z.object({
 
 export type CosmicReadingAiOutput = z.infer<typeof cosmicReadingSchema>;
 
+export const SCAM_RISK_LEVELS = ["none", "low", "elevated"] as const;
+
+export const scamCheckSchema = z.object({
+  risk: z.enum(SCAM_RISK_LEVELS),
+  signals: z.array(z.string().trim().min(1)).max(10),
+  advice: z.string().trim().min(1),
+});
+
+export type ScamCheckAiOutput = z.infer<typeof scamCheckSchema>;
+
 export function parseAiJson<T>(
   schema: z.ZodType<T>,
   raw: string,
@@ -162,6 +172,7 @@ export const aiToolSchemas = {
   "Echo Review": echoReviewSchema,
   "Echo Pulse": echoPulseSchema,
   "Cosmic Compass": cosmicReadingSchema,
+  "Safety Check": scamCheckSchema,
 } as const;
 
 export type AiToolName = keyof typeof aiToolSchemas;
