@@ -34,6 +34,15 @@ export const userVerificationsTable = pgTable(
     /** When the phone check cleared. Null until it does. */
     phoneVerifiedAt: timestamp("phone_verified_at"),
     /**
+     * True once a selfie looked consistent with the member's profile photos under
+     * the opt-in Claude vision check. This is a SOFT consistency signal, never a
+     * liveness or identity proof. The selfie and the photos are read in the moment
+     * and never stored; we keep only this boolean and the moment it cleared.
+     */
+    selfieVerified: boolean("selfie_verified").notNull().default(false),
+    /** When the selfie consistency check cleared. Null until it does. */
+    selfieVerifiedAt: timestamp("selfie_verified_at"),
+    /**
      * True once a government ID cleared a Stripe Identity check. Stripe holds the
      * document; we keep only this boolean and the moment it cleared.
      */

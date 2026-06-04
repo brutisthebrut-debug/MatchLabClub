@@ -1523,14 +1523,20 @@ async function loadVerificationStatus(
     .select({
       userId: userVerificationsTable.userId,
       phoneVerified: userVerificationsTable.phoneVerified,
+      selfieVerified: userVerificationsTable.selfieVerified,
       idVerified: userVerificationsTable.idVerified,
     })
     .from(userVerificationsTable)
     .where(inArray(userVerificationsTable.userId, userIds));
   for (const row of rows) {
     if (!row.userId) continue;
-    // Any cleared tier (phone or government ID) earns the soft ranking nudge.
-    out.set(row.userId, Boolean(row.phoneVerified) || Boolean(row.idVerified));
+    // Any cleared tier (phone, selfie, or government ID) earns the soft nudge.
+    out.set(
+      row.userId,
+      Boolean(row.phoneVerified) ||
+        Boolean(row.selfieVerified) ||
+        Boolean(row.idVerified),
+    );
   }
   return out;
 }

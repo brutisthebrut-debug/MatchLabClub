@@ -218,6 +218,8 @@ import type {
   ScreenshotAuditReport,
   ScreenshotExtractInput,
   ScreenshotExtractResult,
+  SelfieVerificationCheckInput,
+  SelfieVerificationResult,
   SetAiContentConsentInput,
   SetDigestPreferencesInput,
   SignalMap,
@@ -12261,6 +12263,87 @@ export const useRefreshIdVerification = <TError = ErrorType<AuthErrorEnvelope>,
         TContext
       > => {
       return useMutation(getRefreshIdVerificationMutationOptions(options));
+    }
+
+export const getCheckSelfieVerificationUrl = () => {
+
+
+
+
+  return `/api/me/verification/selfie/check`
+}
+
+/**
+ * Compares a just-taken selfie against the member's profile photos using
+the opt-in Claude vision lane and returns a soft consistency verdict. This
+is the anti-catfish tier between phone and government ID. It is a soft
+consistency check, never a liveness or identity proof. The selfie and the
+photos are read in the moment and never stored; only the result, the
+moment it cleared, and the tier are persisted. The Claude read is opt-in
+behind ai_content_consent and the daily cap; when consent is off, the cap
+is hit, or the call fails, the response falls back to an honest verdict
+that never awards the tier. A "consistent" verdict awards the selfie tier.
+
+ * @summary Run a soft selfie photo-match consistency check
+ */
+export const checkSelfieVerification = async (selfieVerificationCheckInput: SelfieVerificationCheckInput, options?: RequestInit): Promise<SelfieVerificationResult> => {
+
+  return customFetch<SelfieVerificationResult>(getCheckSelfieVerificationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      selfieVerificationCheckInput,)
+  }
+);}
+
+
+
+
+export const getCheckSelfieVerificationMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkSelfieVerification>>, TError,{data: BodyType<SelfieVerificationCheckInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkSelfieVerification>>, TError,{data: BodyType<SelfieVerificationCheckInput>}, TContext> => {
+
+const mutationKey = ['checkSelfieVerification'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkSelfieVerification>>, {data: BodyType<SelfieVerificationCheckInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  checkSelfieVerification(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CheckSelfieVerificationMutationResult = NonNullable<Awaited<ReturnType<typeof checkSelfieVerification>>>
+    export type CheckSelfieVerificationMutationBody = BodyType<SelfieVerificationCheckInput>
+    export type CheckSelfieVerificationMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Run a soft selfie photo-match consistency check
+ */
+export const useCheckSelfieVerification = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkSelfieVerification>>, TError,{data: BodyType<SelfieVerificationCheckInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof checkSelfieVerification>>,
+        TError,
+        {data: BodyType<SelfieVerificationCheckInput>},
+        TContext
+      > => {
+      return useMutation(getCheckSelfieVerificationMutationOptions(options));
     }
 
 export const getGetWouldYouRatherAnswersUrl = () => {

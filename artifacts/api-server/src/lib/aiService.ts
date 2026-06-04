@@ -1126,5 +1126,194 @@ export async function comparePhotosVision(
   }
 }
 
+// Selfie / photo-match verification: an opt-in anti-catfish consistency check.
+// Claude vision compares a just-taken selfie against the member's profile photos
+// and reports only whether they plausibly show the same person. This is a SOFT
+// consistency signal, never a liveness or identity proof. Every image is read in
+// the moment and never stored, consent-gated and capped exactly like the other
+// vision tools, sent in ONE Anthropic call (one daily-cap increment).
+export interface SelfieVisionImage {
+  imageBase64: string;
+  imageMediaType?: string | null;
+}
+
+export interface CompareSelfieVisionOptions {
+  selfie: SelfieVisionImage;
+  profilePhotos: SelfieVisionImage[];
+  userId?: string;
+}
+
+export interface SelfieMatch {
+  verdict: "consistent" | "inconsistent" | "unclear";
+  reason: string;
+}
+
+export interface CompareSelfieVisionResult {
+  analysis: SelfieMatch | null;
+  mode: AiMode;
+  isFallback: boolean;
+  durationMs: number;
+  fallbackReason?: GenerateResult["fallbackReason"];
+}
+
+const MAX_SELFIE_PROFILE_PHOTOS = 5;
+
+const selfieMatchSchema = z.object({
+  verdict: z.enum(["consistent", "inconsistent", "unclear"]),
+  reason: z.string().trim().min(1).max(600),
+});
+
+function recordSelfieMetric(
+  mode: AiMode,
+  isFallback: boolean,
+  durationMs: number,
+  error: string | null,
+): void {
+  db.insert(aiRequestMetricsTable)
+    .values({
+      toolName: "selfie_vision",
+      mode,
+      model: DEFAULT_ANTHROPIC_MODEL,
+      attempts: 1,
+      validated: null,
+      isFallback,
+      durationMs,
+      error,
+    })
+    .catch((err) => {
+      logger.warn(
+        { err: err instanceof Error ? err.message : String(err) },
+        "Failed to record selfie_vision metric",
+      );
+    });
+}
+
+const SELFIE_VISION_SYSTEM = [
+  "You are the MatchLab Club photo-match assistant performing a SOFT anti-catfish consistency check.",
+  "You are given a selfie a member just took, followed by the profile photos they use. Judge only whether the selfie plausibly shows the same person as the profile photos.",
+  "This is a consistency check, NOT proof of liveness, identity, or that the photos are recent or real. Never claim certainty, never claim to verify identity, never claim to detect spoofing or deepfakes.",
+  "Judge only what you can see (face shape, features, hair, overall likeness). Never comment on race, body weight, attractiveness, or anything demeaning. Never claim to be human.",
+  'Use verdict "consistent" only when the selfie clearly looks like the same person as the profile photos. Use "inconsistent" when they clearly look like different people. Use "unclear" when you cannot tell, including when faces are obscured, there is no usable face, or the photos are ambiguous.',
+  "Keep the reason short, plain, and kind, and frame it as a soft observation, not a ruling.",
+  "Respond with VALID JSON only, no prose, no code fences, matching this shape:",
+  '{"verdict": "consistent"|"inconsistent"|"unclear", "reason": string}',
+].join("\n");
+
+export async function compareSelfieVision(
+  opts: CompareSelfieVisionOptions,
+): Promise<CompareSelfieVisionResult> {
+  const start = Date.now();
+  const miss = (
+    fallbackReason: GenerateResult["fallbackReason"],
+    mode: AiMode = "fallback",
+  ): CompareSelfieVisionResult => {
+    const durationMs = Date.now() - start;
+    recordSelfieMetric(mode, true, durationMs, fallbackReason ?? null);
+    return { analysis: null, mode, isFallback: true, durationMs, fallbackReason };
+  };
+
+  const selfie = {
+    cleaned: stripImageDataUrlPrefix(opts.selfie.imageBase64.trim()),
+    mediaType: detectImageMediaType(
+      opts.selfie.imageBase64,
+      opts.selfie.imageMediaType,
+    ),
+  };
+  const profilePhotos = (opts.profilePhotos ?? [])
+    .map((p) => ({
+      cleaned: stripImageDataUrlPrefix(p.imageBase64.trim()),
+      mediaType: detectImageMediaType(p.imageBase64, p.imageMediaType),
+    }))
+    .filter((p) => p.cleaned.length > 0)
+    .slice(0, MAX_SELFIE_PROFILE_PHOTOS);
+  if (!selfie.cleaned || profilePhotos.length === 0) {
+    return miss("model_error");
+  }
+
+  // Consent gate FIRST, never ship raw images to a hosted model without it.
+  if (!(await consentCheck(opts.userId))) {
+    return miss("consent_required");
+  }
+  // One daily-cap increment for the whole comparison.
+  const cap = await checkAndIncrementDailyCap(opts.userId ?? null, "anthropic");
+  if (!cap.allowed) {
+    return miss("daily_cap_exceeded");
+  }
+  const client = await getAnthropicClient();
+  if (!client) {
+    return miss("no_client");
+  }
+
+  const content: Array<
+    | { type: "text"; text: string }
+    | {
+        type: "image";
+        source: { type: "base64"; media_type: string; data: string };
+      }
+  > = [];
+  content.push({ type: "text", text: "Selfie just taken by the member:" });
+  content.push({
+    type: "image",
+    source: { type: "base64", media_type: selfie.mediaType, data: selfie.cleaned },
+  });
+  profilePhotos.forEach((p, i) => {
+    content.push({ type: "text", text: `Profile photo ${i + 1}:` });
+    content.push({
+      type: "image",
+      source: { type: "base64", media_type: p.mediaType, data: p.cleaned },
+    });
+  });
+  content.push({
+    type: "text",
+    text: "Does the selfie plausibly show the same person as the profile photos? Return JSON only.",
+  });
+
+  try {
+    const response = await client.messages.create(
+      {
+        model: DEFAULT_ANTHROPIC_MODEL,
+        max_tokens: 512,
+        system: SELFIE_VISION_SYSTEM,
+        messages: [{ role: "user", content }],
+      },
+      { timeout: PROVIDER_CALL_TIMEOUT_MS },
+    );
+    const block = response.content.find((b) => b.type === "text");
+    const text = (block?.text ?? "").trim();
+    const parsed = parseStructured<unknown>(text, null);
+    if (!parsed.ok) {
+      logger.warn(
+        { rawPreview: text.slice(0, 200) },
+        "selfie_vision: non-JSON response",
+      );
+      return miss("schema_validation_failed", "setup-needed");
+    }
+    const validated = selfieMatchSchema.safeParse(parsed.value);
+    if (!validated.success) {
+      logger.warn(
+        { err: validated.error.message },
+        "selfie_vision: schema validation failed",
+      );
+      return miss("schema_validation_failed", "setup-needed");
+    }
+    const durationMs = Date.now() - start;
+    recordSelfieMetric("live", false, durationMs, null);
+    return {
+      analysis: validated.data,
+      mode: "live",
+      isFallback: false,
+      durationMs,
+    };
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Unknown Anthropic vision error";
+    logger.warn(
+      { err: message },
+      "selfie_vision call failed; falling back to honest no-result",
+    );
+    return miss("model_error", "setup-needed");
+  }
+}
+
 /** Re-export so callers can construct ad-hoc schemas if needed. */
 export { z };

@@ -4524,6 +4524,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/verification/selfie/check:
+    post:
+      tags: [Auth]
+      operationId: checkSelfieVerification
+      summary: Run a soft selfie photo-match consistency check
+      description: |
+        Compares a just-taken selfie against the member's profile photos using
+        the opt-in Claude vision lane and returns a soft consistency verdict. This
+        is the anti-catfish tier between phone and government ID. It is a soft
+        consistency check, never a liveness or identity proof. The selfie and the
+        photos are read in the moment and never stored; only the result, the
+        moment it cleared, and the tier are persisted. The Claude read is opt-in
+        behind ai_content_consent and the daily cap; when consent is off, the cap
+        is hit, or the call fails, the response falls back to an honest verdict
+        that never awards the tier. A "consistent" verdict awards the selfie tier.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelfieVerificationCheckInput'
+      responses:
+        '200':
+          description: The consistency verdict and updated verification state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelfieVerificationResult'
+        '400':
+          description: Invalid payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/would-you-rather:
     get:
       tags: [Matching]
@@ -10173,7 +10217,7 @@ components:
 
     UserVerification:
       type: object
-      required: [phoneVerified, phoneVerifiedAt, idVerified, idVerifiedAt, ageOver18, verifiedTiers, tierTotal, isVerified]
+      required: [phoneVerified, phoneVerifiedAt, selfieVerified, selfieVerifiedAt, idVerified, idVerifiedAt, ageOver18, verifiedTiers, tierTotal, isVerified]
       properties:
         phoneVerified:
           type: boolean
@@ -10183,6 +10227,17 @@ components:
             - type: string
             - type: 'null'
           description: ISO timestamp the phone check cleared, or null.
+        selfieVerified:
+          type: boolean
+          description: >-
+            Whether a selfie looked consistent with the member's profile photos
+            under the opt-in soft consistency check. Never a liveness or identity
+            proof; the images are read in the moment and never stored.
+        selfieVerifiedAt:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: ISO timestamp the selfie consistency check cleared, or null.
         idVerified:
           type: boolean
           description: Whether a government ID has cleared a Stripe Identity check.
@@ -10231,6 +10286,65 @@ components:
         configured:
           type: boolean
           description: False when Stripe is not connected; verification is unchanged.
+        verification:
+          $ref: '#/components/schemas/UserVerification'
+
+    SelfieVerificationImage:
+      type: object
+      required: [imageBase64]
+      properties:
+        imageBase64:
+          type: string
+          minLength: 1
+          description: >-
+            Base64-encoded image bytes, with or without a data URL prefix. Read
+            in the moment for the consistency check and never stored.
+        imageMediaType:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Optional MIME type hint, e.g. "image/jpeg".
+
+    SelfieVerificationCheckInput:
+      type: object
+      required: [selfie, profilePhotos]
+      properties:
+        selfie:
+          $ref: '#/components/schemas/SelfieVerificationImage'
+        profilePhotos:
+          type: array
+          minItems: 1
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/SelfieVerificationImage'
+          description: The profile photos to compare the selfie against, read in the moment.
+
+    SelfieVerificationResult:
+      type: object
+      required: [verdict, reason, mode, fallbackReason, verification]
+      properties:
+        verdict:
+          type: string
+          enum: [consistent, inconsistent, unclear]
+          description: >-
+            Soft consistency outcome. "consistent" looks like the same person and
+            awards the tier; "inconsistent" looks like a different person; "unclear"
+            could not tell. Never a liveness or identity proof.
+        reason:
+          type: string
+          description: A short, plain-language explanation of the verdict.
+        mode:
+          type: string
+          enum: [live, fallback]
+          description: >-
+            "live" when the Claude vision check ran; "fallback" when consent was
+            off, the daily cap was hit, or the call could not run. Fallback never
+            awards the tier.
+        fallbackReason:
+          oneOf:
+            - type: string
+            - type: 'null'
+          description: Why the check fell back, or null when it ran live.
         verification:
           $ref: '#/components/schemas/UserVerification'
 

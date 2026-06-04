@@ -221,6 +221,7 @@ export async function collectSignalCounts(
   const verificationRows = await db
     .select({
       phoneVerified: userVerificationsTable.phoneVerified,
+      selfieVerified: userVerificationsTable.selfieVerified,
       idVerified: userVerificationsTable.idVerified,
     })
     .from(userVerificationsTable)
@@ -228,6 +229,7 @@ export async function collectSignalCounts(
     .limit(1);
   const verificationFacets =
     (verificationRows[0]?.phoneVerified ? 1 : 0) +
+    (verificationRows[0]?.selfieVerified ? 1 : 0) +
     (verificationRows[0]?.idVerified ? 1 : 0);
 
   // First-party counts: each comes from a bespoke query against a dedicated

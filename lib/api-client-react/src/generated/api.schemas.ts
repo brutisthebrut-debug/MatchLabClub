@@ -3959,6 +3959,10 @@ export interface UserVerification {
   phoneVerified: boolean;
   /** ISO timestamp the phone check cleared, or null. */
   phoneVerifiedAt: string | null;
+  /** Whether a selfie looked consistent with the member's profile photos under the opt-in soft consistency check. Never a liveness or identity proof; the images are read in the moment and never stored. */
+  selfieVerified: boolean;
+  /** ISO timestamp the selfie consistency check cleared, or null. */
+  selfieVerifiedAt: string | null;
   /** Whether a government ID has cleared a Stripe Identity check. */
   idVerified: boolean;
   /** ISO timestamp the government ID check cleared, or null. */
@@ -3991,6 +3995,61 @@ export interface IdentityVerificationStartResult {
 export interface IdentityVerificationResult {
   /** False when Stripe is not connected; verification is unchanged. */
   configured: boolean;
+  verification: UserVerification;
+}
+
+export interface SelfieVerificationImage {
+  /**
+     * Base64-encoded image bytes, with or without a data URL prefix. Read in the moment for the consistency check and never stored.
+     * @minLength 1
+     */
+  imageBase64: string;
+  /** Optional MIME type hint, e.g. "image/jpeg". */
+  imageMediaType?: string | null;
+}
+
+export interface SelfieVerificationCheckInput {
+  selfie: SelfieVerificationImage;
+  /**
+     * The profile photos to compare the selfie against, read in the moment.
+     * @minItems 1
+     * @maxItems 5
+     */
+  profilePhotos: SelfieVerificationImage[];
+}
+
+/**
+ * Soft consistency outcome. "consistent" looks like the same person and awards the tier; "inconsistent" looks like a different person; "unclear" could not tell. Never a liveness or identity proof.
+ */
+export type SelfieVerificationResultVerdict = typeof SelfieVerificationResultVerdict[keyof typeof SelfieVerificationResultVerdict];
+
+
+export const SelfieVerificationResultVerdict = {
+  consistent: 'consistent',
+  inconsistent: 'inconsistent',
+  unclear: 'unclear',
+} as const;
+
+/**
+ * "live" when the Claude vision check ran; "fallback" when consent was off, the daily cap was hit, or the call could not run. Fallback never awards the tier.
+ */
+export type SelfieVerificationResultMode = typeof SelfieVerificationResultMode[keyof typeof SelfieVerificationResultMode];
+
+
+export const SelfieVerificationResultMode = {
+  live: 'live',
+  fallback: 'fallback',
+} as const;
+
+export interface SelfieVerificationResult {
+  /** Soft consistency outcome. "consistent" looks like the same person and awards the tier; "inconsistent" looks like a different person; "unclear" could not tell. Never a liveness or identity proof. */
+  verdict: SelfieVerificationResultVerdict;
+  /** A short, plain-language explanation of the verdict. */
+  reason: string;
+  /** "live" when the Claude vision check ran; "fallback" when consent was off, the daily cap was hit, or the call could not run. Fallback never awards the tier. */
+  mode: SelfieVerificationResultMode;
+  /** Why the check fell back, or null when it ran live. */
+  fallbackReason: string | null;
   verification: UserVerification;
 }
 

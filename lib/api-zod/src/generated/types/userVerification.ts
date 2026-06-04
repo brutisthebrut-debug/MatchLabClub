@@ -11,6 +11,10 @@ export interface UserVerification {
   phoneVerified: boolean;
   /** ISO timestamp the phone check cleared, or null. */
   phoneVerifiedAt: string | null;
+  /** Whether a selfie looked consistent with the member's profile photos under the opt-in soft consistency check. Never a liveness or identity proof; the images are read in the moment and never stored. */
+  selfieVerified: boolean;
+  /** ISO timestamp the selfie consistency check cleared, or null. */
+  selfieVerifiedAt: string | null;
   /** Whether a government ID has cleared a Stripe Identity check. */
   idVerified: boolean;
   /** ISO timestamp the government ID check cleared, or null. */

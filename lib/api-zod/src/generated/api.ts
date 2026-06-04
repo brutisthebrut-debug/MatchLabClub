@@ -5492,6 +5492,8 @@ export const getVerificationResponseVerifiedTiersMin = 0;
 export const GetVerificationResponse = zod.object({
   "phoneVerified": zod.boolean().describe('Whether a phone number has cleared a verification check.'),
   "phoneVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the phone check cleared, or null.'),
+  "selfieVerified": zod.boolean().describe('Whether a selfie looked consistent with the member\'s profile photos under the opt-in soft consistency check. Never a liveness or identity proof; the images are read in the moment and never stored.'),
+  "selfieVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the selfie consistency check cleared, or null.'),
   "idVerified": zod.boolean().describe('Whether a government ID has cleared a Stripe Identity check.'),
   "idVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the government ID check cleared, or null.'),
   "ageOver18": zod.boolean().describe('True when the ID check confirmed the holder is 18 or older.'),
@@ -5565,6 +5567,8 @@ export const CheckPhoneVerificationResponse = zod.object({
   "verification": zod.object({
   "phoneVerified": zod.boolean().describe('Whether a phone number has cleared a verification check.'),
   "phoneVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the phone check cleared, or null.'),
+  "selfieVerified": zod.boolean().describe('Whether a selfie looked consistent with the member\'s profile photos under the opt-in soft consistency check. Never a liveness or identity proof; the images are read in the moment and never stored.'),
+  "selfieVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the selfie consistency check cleared, or null.'),
   "idVerified": zod.boolean().describe('Whether a government ID has cleared a Stripe Identity check.'),
   "idVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the government ID check cleared, or null.'),
   "ageOver18": zod.boolean().describe('True when the ID check confirmed the holder is 18 or older.'),
@@ -5618,10 +5622,71 @@ export const RefreshIdVerificationResponse = zod.object({
   "verification": zod.object({
   "phoneVerified": zod.boolean().describe('Whether a phone number has cleared a verification check.'),
   "phoneVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the phone check cleared, or null.'),
+  "selfieVerified": zod.boolean().describe('Whether a selfie looked consistent with the member\'s profile photos under the opt-in soft consistency check. Never a liveness or identity proof; the images are read in the moment and never stored.'),
+  "selfieVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the selfie consistency check cleared, or null.'),
   "idVerified": zod.boolean().describe('Whether a government ID has cleared a Stripe Identity check.'),
   "idVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the government ID check cleared, or null.'),
   "ageOver18": zod.boolean().describe('True when the ID check confirmed the holder is 18 or older.'),
   "verifiedTiers": zod.number().min(refreshIdVerificationResponseVerificationVerifiedTiersMin).describe('How many verification tiers the user has cleared.'),
+  "tierTotal": zod.number().min(1).describe('Total tiers the climb can reach (phone, selfie, ID).'),
+  "isVerified": zod.boolean().describe('True when at least one tier has cleared; drives the badge.')
+})
+})
+
+
+/**
+ * Compares a just-taken selfie against the member's profile photos using
+the opt-in Claude vision lane and returns a soft consistency verdict. This
+is the anti-catfish tier between phone and government ID. It is a soft
+consistency check, never a liveness or identity proof. The selfie and the
+photos are read in the moment and never stored; only the result, the
+moment it cleared, and the tier are persisted. The Claude read is opt-in
+behind ai_content_consent and the daily cap; when consent is off, the cap
+is hit, or the call fails, the response falls back to an honest verdict
+that never awards the tier. A "consistent" verdict awards the selfie tier.
+
+ * @summary Run a soft selfie photo-match consistency check
+ */
+export const CheckSelfieVerificationHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+
+
+export const checkSelfieVerificationBodyProfilePhotosMax = 5;
+
+
+
+export const CheckSelfieVerificationBody = zod.object({
+  "selfie": zod.object({
+  "imageBase64": zod.string().min(1).describe('Base64-encoded image bytes, with or without a data URL prefix. Read in the moment for the consistency check and never stored.'),
+  "imageMediaType": zod.union([zod.string(),zod.null()]).optional().describe('Optional MIME type hint, e.g. \"image\/jpeg\".')
+}),
+  "profilePhotos": zod.array(zod.object({
+  "imageBase64": zod.string().min(1).describe('Base64-encoded image bytes, with or without a data URL prefix. Read in the moment for the consistency check and never stored.'),
+  "imageMediaType": zod.union([zod.string(),zod.null()]).optional().describe('Optional MIME type hint, e.g. \"image\/jpeg\".')
+})).min(1).max(checkSelfieVerificationBodyProfilePhotosMax).describe('The profile photos to compare the selfie against, read in the moment.')
+})
+
+export const checkSelfieVerificationResponseVerificationVerifiedTiersMin = 0;
+
+
+
+
+export const CheckSelfieVerificationResponse = zod.object({
+  "verdict": zod.enum(['consistent', 'inconsistent', 'unclear']).describe('Soft consistency outcome. \"consistent\" looks like the same person and awards the tier; \"inconsistent\" looks like a different person; \"unclear\" could not tell. Never a liveness or identity proof.'),
+  "reason": zod.string().describe('A short, plain-language explanation of the verdict.'),
+  "mode": zod.enum(['live', 'fallback']).describe('\"live\" when the Claude vision check ran; \"fallback\" when consent was off, the daily cap was hit, or the call could not run. Fallback never awards the tier.'),
+  "fallbackReason": zod.union([zod.string(),zod.null()]).describe('Why the check fell back, or null when it ran live.'),
+  "verification": zod.object({
+  "phoneVerified": zod.boolean().describe('Whether a phone number has cleared a verification check.'),
+  "phoneVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the phone check cleared, or null.'),
+  "selfieVerified": zod.boolean().describe('Whether a selfie looked consistent with the member\'s profile photos under the opt-in soft consistency check. Never a liveness or identity proof; the images are read in the moment and never stored.'),
+  "selfieVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the selfie consistency check cleared, or null.'),
+  "idVerified": zod.boolean().describe('Whether a government ID has cleared a Stripe Identity check.'),
+  "idVerifiedAt": zod.union([zod.string(),zod.null()]).describe('ISO timestamp the government ID check cleared, or null.'),
+  "ageOver18": zod.boolean().describe('True when the ID check confirmed the holder is 18 or older.'),
+  "verifiedTiers": zod.number().min(checkSelfieVerificationResponseVerificationVerifiedTiersMin).describe('How many verification tiers the user has cleared.'),
   "tierTotal": zod.number().min(1).describe('Total tiers the climb can reach (phone, selfie, ID).'),
   "isVerified": zod.boolean().describe('True when at least one tier has cleared; drives the badge.')
 })

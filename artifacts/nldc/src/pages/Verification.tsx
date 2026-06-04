@@ -40,6 +40,7 @@ import {
   useCheckPhoneVerification,
   useStartIdVerification,
   useRefreshIdVerification,
+  useCheckSelfieVerification,
   getGetMatchingStateQueryKey,
   type UserVerification,
 } from "@workspace/api-client-react";
@@ -59,6 +60,8 @@ const fadeUp = (delay = 0) => ({
 const DEMO_VERIFICATION: UserVerification = {
   phoneVerified: false,
   phoneVerifiedAt: null,
+  selfieVerified: false,
+  selfieVerifiedAt: null,
   idVerified: false,
   idVerifiedAt: null,
   ageOver18: false,
@@ -66,6 +69,24 @@ const DEMO_VERIFICATION: UserVerification = {
   tierTotal: 3,
   isVerified: false,
 };
+
+const MAX_SELFIE_PROFILE_PHOTOS = 5;
+
+// Read a picked file into a bare base64 string (no data URL prefix). The bytes
+// are only ever held in memory for the in-the-moment check and never uploaded
+// or stored anywhere.
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      const comma = result.indexOf(",");
+      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("read failed"));
+    reader.readAsDataURL(file);
+  });
+}
 
 type Tier = {
   id: string;
@@ -87,8 +108,9 @@ const TIERS: Tier[] = [
     id: "selfie",
     name: "Selfie match",
     icon: ScanFace,
-    blurb: "A live selfie check, matched to your photos. Coming next.",
-    status: "building",
+    blurb:
+      "A quick selfie, compared to your profile photos for a soft consistency check. Never a liveness or identity proof.",
+    status: "live",
   },
   {
     id: "id",
@@ -169,6 +191,7 @@ export default function Verification() {
   const checkPhone = useCheckPhoneVerification();
   const startId = useStartIdVerification();
   const refreshId = useRefreshIdVerification();
+  const checkSelfie = useCheckSelfieVerification();
   const [idUnavailable, setIdUnavailable] = useState(false);
   const climb = useReadinessClimb({ enabled: isAuthenticated });
 
@@ -176,6 +199,14 @@ export default function Verification() {
   const [code, setCode] = useState("");
   const [step, setStep] = useState<"enter" | "confirm">("enter");
   const [devHint, setDevHint] = useState<string | null>(null);
+
+  const [selfieFile, setSelfieFile] = useState<File | null>(null);
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  const [selfieResult, setSelfieResult] = useState<{
+    verdict: "consistent" | "inconsistent" | "unclear";
+    reason: string;
+    mode: "live" | "fallback";
+  } | null>(null);
 
   const invalidate = () => {
     void queryClient.invalidateQueries({
@@ -341,6 +372,83 @@ export default function Verification() {
     );
   };
 
+  const runSelfieCheck = async () => {
+    if (isDemo) {
+      toast({
+        title: "Sign in to verify",
+        description: "Create a free account to run the photo-match check.",
+      });
+      return;
+    }
+    if (checkSelfie.isPending) return;
+    if (!selfieFile || photoFiles.length === 0) {
+      toast({
+        title: "Add your photos first",
+        description: "Pick a selfie and at least one profile photo to compare.",
+        variant: "destructive",
+      });
+      return;
+    }
+    let selfieBase64: string;
+    let profileBase64: string[];
+    try {
+      selfieBase64 = await fileToBase64(selfieFile);
+      profileBase64 = await Promise.all(
+        photoFiles.slice(0, MAX_SELFIE_PROFILE_PHOTOS).map(fileToBase64),
+      );
+    } catch {
+      toast({
+        title: "Could not read your photos",
+        description: "Please pick the images again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    climb.snapshot();
+    checkSelfie.mutate(
+      {
+        data: {
+          selfie: { imageBase64: selfieBase64 },
+          profilePhotos: profileBase64.map((imageBase64) => ({ imageBase64 })),
+        },
+      },
+      {
+        onSuccess: (res) => {
+          setSelfieResult({
+            verdict: res.verdict,
+            reason: res.reason,
+            mode: res.mode,
+          });
+          if (res.verdict === "consistent" && res.mode === "live") {
+            invalidate();
+            trackEvent("verification_selfie_verified", {});
+            toast({
+              title: "Photo checked",
+              description: "Your selfie looked consistent with your photos.",
+            });
+          } else if (res.mode === "fallback") {
+            toast({
+              title: "Check could not run",
+              description: res.reason,
+            });
+          } else {
+            toast({
+              title: "Not a clear match",
+              description: res.reason,
+            });
+          }
+        },
+        onError: () => {
+          toast({
+            title: "Could not run the check",
+            description: "Please try again in a moment.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
+
   return (
     <AppLayout>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8">
@@ -397,6 +505,7 @@ export default function Verification() {
                   tier={tier}
                   cleared={
                     (tier.id === "phone" && verification.phoneVerified) ||
+                    (tier.id === "selfie" && verification.selfieVerified) ||
                     (tier.id === "id" && verification.idVerified)
                   }
                 />
@@ -492,6 +601,140 @@ export default function Verification() {
                     </Button>
                   </div>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div {...fadeUp(0.12)}>
+          <Card className="glass border-white/8">
+            <CardHeader>
+              <CardTitle className="font-serif text-2xl flex items-center gap-2">
+                <ScanFace className="w-5 h-5 text-primary" />
+                Selfie photo match
+              </CardTitle>
+              <CardDescription>
+                A quick selfie, compared to your profile photos for a soft
+                consistency check. This is a friendly anti-catfish step, never a
+                liveness or identity proof, and never a gate. Your photos are
+                read in the moment and never stored.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {verification.selfieVerified ? (
+                <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                  <Check className="w-5 h-5 text-emerald-400 shrink-0" />
+                  <p className="text-sm text-foreground">
+                    Photo checked. Your selfie looked consistent with your
+                    photos, and this tier counts toward your matching boost. You
+                    can run it again any time.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <Eye className="w-4 h-4 text-primary" />
+                      What we will see
+                    </div>
+                    <ul className="space-y-1.5 text-xs text-muted-foreground">
+                      <li>Whether the selfie looks like the same person.</li>
+                      <li>A short, plain note on the result.</li>
+                      <li>The date the check cleared.</li>
+                    </ul>
+                  </div>
+                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <EyeOff className="w-4 h-4 text-primary" />
+                      What we will never touch
+                    </div>
+                    <ul className="space-y-1.5 text-xs text-muted-foreground">
+                      <li>The selfie or photo images, kept or stored.</li>
+                      <li>Any claim of identity, liveness, or proof.</li>
+                      <li>Your face data for anything but this check.</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {!verification.selfieVerified && (
+                <>
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="selfie">Your selfie</Label>
+                      <Input
+                        id="selfie"
+                        type="file"
+                        accept="image/*"
+                        capture="user"
+                        onChange={(e) =>
+                          setSelfieFile(e.target.files?.[0] ?? null)
+                        }
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="profile-photos">
+                        Your profile photos (up to {MAX_SELFIE_PROFILE_PHOTOS})
+                      </Label>
+                      <Input
+                        id="profile-photos"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(e) =>
+                          setPhotoFiles(
+                            e.target.files ? Array.from(e.target.files) : [],
+                          )
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Pick the same photos you use on your profile.
+                      </p>
+                    </div>
+                  </div>
+
+                  {selfieResult && (
+                    <div
+                      className={`flex items-start gap-3 rounded-2xl border p-4 ${
+                        selfieResult.verdict === "consistent" &&
+                        selfieResult.mode === "live"
+                          ? "border-emerald-500/20 bg-emerald-500/10"
+                          : "border-amber-500/20 bg-amber-500/10"
+                      }`}
+                    >
+                      {selfieResult.verdict === "consistent" &&
+                      selfieResult.mode === "live" ? (
+                        <Check className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                      ) : (
+                        <ScanFace className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                      )}
+                      <p className="text-sm text-foreground">
+                        {selfieResult.reason}
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-muted-foreground">
+                    The match runs in the deep AI lane. Turn it on in your{" "}
+                    <Link
+                      href="/account"
+                      className="text-primary font-medium hover:underline"
+                    >
+                      account
+                    </Link>{" "}
+                    first. If it is off or unavailable, we tell you honestly and
+                    award no tier.
+                  </p>
+
+                  <Button
+                    onClick={() => void runSelfieCheck()}
+                    disabled={checkSelfie.isPending}
+                    className="w-full sm:w-auto"
+                  >
+                    {checkSelfie.isPending ? "Checking..." : "Run photo match"}
+                    <ScanFace className="w-4 h-4 ml-1" />
+                  </Button>
+                </>
               )}
             </CardContent>
           </Card>

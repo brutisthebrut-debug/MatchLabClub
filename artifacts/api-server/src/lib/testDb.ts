@@ -233,6 +233,8 @@ stores.user_verifications = {
     anonymousClaimToken: null,
     phoneVerified: false,
     phoneVerifiedAt: null,
+    selfieVerified: false,
+    selfieVerifiedAt: null,
     idVerified: false,
     idVerifiedAt: null,
     ageOver18: false,

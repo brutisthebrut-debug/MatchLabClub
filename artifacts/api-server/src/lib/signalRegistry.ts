@@ -1525,11 +1525,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.45,
     normalize: { kind: "count", denominator: 3 },
     describe: (c) =>
-      `Has cleared identity verification, covering ${c}% of that lane (a phone check and an optional government ID and age check, with a selfie tier to come). Verification is treated as earned trust, not a requirement: a verified member ranks a little higher and wears a badge, but it never gates a match and is never required to be matched.`,
+      `Has cleared identity verification, covering ${c}% of that lane (a phone check, an optional selfie photo-match check, and an optional government ID and age check). Verification is treated as earned trust, not a requirement: a verified member ranks a little higher and wears a badge, but it never gates a match and is never required to be matched.`,
     action: {
       label: "Verify yourself",
       detail:
-        "Confirm your phone number, and optionally add a government ID and age check, to earn a verified badge and rank a little higher with people who care about safety. It is always optional and never required to match.",
+        "Confirm your phone number, add a selfie photo-match check, or optionally a government ID and age check, to earn a verified badge and rank a little higher with people who care about safety. It is always optional and never required to match.",
       href: "/verification",
     },
     trust: {

@@ -10,6 +10,7 @@ import {
   Compass,
   Heart,
   IdCard,
+  ScanFace,
   MapPin,
   Share2,
   ShieldCheck,
@@ -244,6 +245,7 @@ export default function Matching() {
     },
   });
   const isVerified = verificationQuery.data?.isVerified ?? false;
+  const selfieVerified = verificationQuery.data?.selfieVerified ?? false;
   const idVerified = verificationQuery.data?.idVerified ?? false;
   const ageOver18 = verificationQuery.data?.ageOver18 ?? false;
 
@@ -603,6 +605,12 @@ export default function Matching() {
                         <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
                         Verify to rank higher
                       </Link>
+                    )}
+                    {selfieVerified && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-bold text-emerald-400">
+                        <ScanFace className="w-3.5 h-3.5" aria-hidden="true" />
+                        Photo checked
+                      </span>
                     )}
                     {idVerified && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-bold text-emerald-400">

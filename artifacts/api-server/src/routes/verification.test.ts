@@ -41,6 +41,14 @@ vi.mock("../lib/stripeClient", () => ({
   constructStripeEvent: vi.fn(async () => stripeMock.webhookEvent),
 }));
 
+const selfieMock = vi.hoisted(() => ({
+  result: null as unknown,
+}));
+
+vi.mock("../lib/aiService", () => ({
+  compareSelfieVision: vi.fn(async () => selfieMock.result),
+}));
+
 vi.mock("@workspace/db", async () => await import("../lib/testDb"));
 vi.mock("drizzle-orm", async () => {
   const actual = (await vi.importActual("drizzle-orm")) as Record<
@@ -358,5 +366,116 @@ describe("ID verification (Stripe Identity, mocked)", () => {
       "/api/me/verification/id/refresh",
     );
     expect(refresh.status).toBe(401);
+  });
+});
+
+describe("selfie verification (Claude vision, mocked)", () => {
+  const SELFIE_BODY = {
+    selfie: { imageBase64: "selfie-bytes" },
+    profilePhotos: [{ imageBase64: "photo-bytes" }],
+  };
+
+  it("rejects unauthenticated callers with 401", async () => {
+    testApp.setUser(null);
+    const res = await request(testApp.app)
+      .post("/api/me/verification/selfie/check")
+      .send(SELFIE_BODY);
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects a payload with no profile photos with 400", async () => {
+    const user = `selfie-${crypto.randomBytes(6).toString("hex")}`;
+    testApp.setUser({ id: user });
+    const res = await request(testApp.app)
+      .post("/api/me/verification/selfie/check")
+      .send({ selfie: { imageBase64: "x" }, profilePhotos: [] });
+    expect(res.status).toBe(400);
+  });
+
+  it("awards the selfie tier on a live consistent verdict", async () => {
+    const user = `selfie-${crypto.randomBytes(6).toString("hex")}`;
+    testApp.setUser({ id: user });
+    selfieMock.result = {
+      analysis: { verdict: "consistent", reason: "Looks like the same person." },
+      mode: "anthropic",
+      isFallback: false,
+      durationMs: 5,
+    };
+    const res = await request(testApp.app)
+      .post("/api/me/verification/selfie/check")
+      .send(SELFIE_BODY);
+    expect(res.status).toBe(200);
+    expect(res.body.verdict).toBe("consistent");
+    expect(res.body.mode).toBe("live");
+    expect(res.body.verification.selfieVerified).toBe(true);
+    expect(res.body.verification.isVerified).toBe(true);
+    expect(res.body.verification.verifiedTiers).toBe(1);
+    expect(typeof res.body.verification.selfieVerifiedAt).toBe("string");
+
+    // The state endpoint now reflects the cleared selfie tier.
+    const state = await request(testApp.app).get("/api/me/verification");
+    expect(state.body.selfieVerified).toBe(true);
+  });
+
+  it("does not award the tier on a live inconsistent verdict", async () => {
+    const user = `selfie-${crypto.randomBytes(6).toString("hex")}`;
+    testApp.setUser({ id: user });
+    selfieMock.result = {
+      analysis: {
+        verdict: "inconsistent",
+        reason: "These look like different people.",
+      },
+      mode: "anthropic",
+      isFallback: false,
+      durationMs: 5,
+    };
+    const res = await request(testApp.app)
+      .post("/api/me/verification/selfie/check")
+      .send(SELFIE_BODY);
+    expect(res.status).toBe(200);
+    expect(res.body.verdict).toBe("inconsistent");
+    expect(res.body.mode).toBe("live");
+    expect(res.body.verification.selfieVerified).toBe(false);
+    expect(res.body.verification.verifiedTiers).toBe(0);
+  });
+
+  it("falls back honestly with no tier when consent is off", async () => {
+    const user = `selfie-${crypto.randomBytes(6).toString("hex")}`;
+    testApp.setUser({ id: user });
+    selfieMock.result = {
+      analysis: null,
+      mode: "fallback",
+      isFallback: true,
+      durationMs: 1,
+      fallbackReason: "consent_required",
+    };
+    const res = await request(testApp.app)
+      .post("/api/me/verification/selfie/check")
+      .send(SELFIE_BODY);
+    expect(res.status).toBe(200);
+    expect(res.body.verdict).toBe("unclear");
+    expect(res.body.mode).toBe("fallback");
+    expect(res.body.fallbackReason).toBe("consent_required");
+    expect(res.body.verification.selfieVerified).toBe(false);
+    expect(res.body.verification.verifiedTiers).toBe(0);
+  });
+
+  it("falls back honestly with no tier when the daily cap is hit", async () => {
+    const user = `selfie-${crypto.randomBytes(6).toString("hex")}`;
+    testApp.setUser({ id: user });
+    selfieMock.result = {
+      analysis: null,
+      mode: "fallback",
+      isFallback: true,
+      durationMs: 1,
+      fallbackReason: "daily_cap_exceeded",
+    };
+    const res = await request(testApp.app)
+      .post("/api/me/verification/selfie/check")
+      .send(SELFIE_BODY);
+    expect(res.status).toBe(200);
+    expect(res.body.verdict).toBe("unclear");
+    expect(res.body.mode).toBe("fallback");
+    expect(res.body.verification.selfieVerified).toBe(false);
   });
 });
