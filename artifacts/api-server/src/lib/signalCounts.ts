@@ -244,6 +244,7 @@ export async function collectSignalCounts(
     wingmanPerspectives: wingmanCount,
     cosmicFacets,
     relocationFacets,
+    verificationFacets,
   } as SignalCounts;
 
   // Import-backed counts, derived from the registry's data-source descriptors so
