@@ -25,3 +25,15 @@ and the copy must say so. Keep the verdict strictly: only `verdict ===
 SOFT consistency signal, never identity/liveness/spoof proof, and never a gate.
 Images are read in the moment and never stored; persist only the result boolean
 and the timestamp.
+
+**No persisted photo source exists (do not "harden" by storing photos):** dating
+profile photos are NEVER stored anywhere in this product. The photo critique
+flows (`photoLab.ts`, `audits.ts`, `comparePhotosVision`/`analyzeProfilePhotos`
+in `aiService.ts`) all take `imageBase64` from the request body in the moment.
+The selfie check deliberately mirrors that pattern: client supplies selfie +
+profile photos in one request, both read in the moment, nothing stored. A
+reviewer may flag "the selfie should be compared against the user's STORED
+profile photos, fetched server-side, so it can't be gamed" — that is impossible
+here and would break the product's #1 privacy promise. The integrity tradeoff is
+intentional: this is a soft, labeled, never-a-gate signal, not identity proof.
+Do not add server-side photo fetching/storage to satisfy that critique.
