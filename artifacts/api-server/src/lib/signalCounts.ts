@@ -215,9 +215,9 @@ export async function collectSignalCounts(
     cosmicRows.length > 0 && cosmicRows[0]?.relocationOpen ? 1 : 0;
 
   // Verification: how many Trust & Safety tiers the user has cleared. We read
-  // only the result booleans (phone today; selfie and government ID later),
-  // never the phone number or any document, so this lane reflects earned trust
-  // without ever holding identifying data.
+  // only the result booleans (phone, selfie photo match, and government ID),
+  // never the phone number, the photos, or any document, so this lane reflects
+  // earned trust without ever holding identifying data.
   const verificationRows = await db
     .select({
       phoneVerified: userVerificationsTable.phoneVerified,

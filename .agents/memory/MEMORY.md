@@ -16,3 +16,4 @@
 - [Boot guards escape the api unit suite](boot-guards-escape-unit-suite.md) — module-top throws (trustLedger purge-handler check) only run when index.ts boots; green unit tests can ship a crash-on-boot. Every firstParty lane needs a purge handler.
 - [Token consume + Orval integers](token-consume-and-orval-integers.md) — single-use stamp+dependent-write must share one tx; Orval emits zod.number() (no .int()) for integer bodies, guard at route; new testDb tables need store+makeTable registration.
 - [Background sweep founder toggles](background-sweep-toggles.md) — gate the scheduled tick (not the sweep fn) on a DB control seeded from the env flag; keeps on-demand/test direct calls ungated; fire immediate tick on enable.
+- [Selfie tier has no deterministic fallback](selfie-tier-no-deterministic-fallback.md) — face-likeness has no aiEngine equivalent; the honest fallback awards no tier, only a live Claude "consistent" verdict does.

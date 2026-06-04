@@ -439,6 +439,28 @@ describe("selfie verification (Claude vision, mocked)", () => {
     expect(res.body.verification.verifiedTiers).toBe(0);
   });
 
+  it("does not award the tier on a live unclear verdict", async () => {
+    const user = `selfie-${crypto.randomBytes(6).toString("hex")}`;
+    testApp.setUser({ id: user });
+    selfieMock.result = {
+      analysis: {
+        verdict: "unclear",
+        reason: "The face is hard to make out, so this is not a clear match.",
+      },
+      mode: "anthropic",
+      isFallback: false,
+      durationMs: 5,
+    };
+    const res = await request(testApp.app)
+      .post("/api/me/verification/selfie/check")
+      .send(SELFIE_BODY);
+    expect(res.status).toBe(200);
+    expect(res.body.verdict).toBe("unclear");
+    expect(res.body.mode).toBe("live");
+    expect(res.body.verification.selfieVerified).toBe(false);
+    expect(res.body.verification.verifiedTiers).toBe(0);
+  });
+
   it("falls back honestly with no tier when consent is off", async () => {
     const user = `selfie-${crypto.randomBytes(6).toString("hex")}`;
     testApp.setUser({ id: user });
