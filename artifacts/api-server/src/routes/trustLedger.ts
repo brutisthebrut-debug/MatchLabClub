@@ -13,6 +13,13 @@ import {
   auditReportVersionsTable,
   messageCoachingSessionsTable,
   lifePulsesTable,
+  wyrAnswersTable,
+  scenarioResponsesTable,
+  predictionResponsesTable,
+  timeCapsulesTable,
+  wingmanInvitesTable,
+  wingmanAnswersTable,
+  wingmanSelfRatingsTable,
 } from "@workspace/db";
 import {
   GetTrustLedgerResponse,
@@ -249,6 +256,96 @@ const FIRST_PARTY_SOURCES: Record<
         .returning({ id: lifePulsesTable.id });
       return rows.length;
     },
+  },
+  // The daily games each store their own answers under the user's id; the ledger
+  // shows and purges each independently. countStored and purge target exactly
+  // the same rows so held/purgeable can never drift from what a delete removes.
+  wyr: {
+    countStored: (client, userId) =>
+      countBy(client, wyrAnswersTable, eq(wyrAnswersTable.userId, userId)),
+    purge: async (tx, userId) => {
+      const rows = await tx
+        .delete(wyrAnswersTable)
+        .where(eq(wyrAnswersTable.userId, userId))
+        .returning({ id: wyrAnswersTable.id });
+      return rows.length;
+    },
+  },
+  scenarioReels: {
+    countStored: (client, userId) =>
+      countBy(client, scenarioResponsesTable, eq(scenarioResponsesTable.userId, userId)),
+    purge: async (tx, userId) => {
+      const rows = await tx
+        .delete(scenarioResponsesTable)
+        .where(eq(scenarioResponsesTable.userId, userId))
+        .returning({ id: scenarioResponsesTable.id });
+      return rows.length;
+    },
+  },
+  selfAwareness: {
+    countStored: (client, userId) =>
+      countBy(client, predictionResponsesTable, eq(predictionResponsesTable.userId, userId)),
+    purge: async (tx, userId) => {
+      const rows = await tx
+        .delete(predictionResponsesTable)
+        .where(eq(predictionResponsesTable.userId, userId))
+        .returning({ id: predictionResponsesTable.id });
+      return rows.length;
+    },
+  },
+  timeCapsule: {
+    countStored: (client, userId) =>
+      countBy(client, timeCapsulesTable, eq(timeCapsulesTable.userId, userId)),
+    purge: async (tx, userId) => {
+      const rows = await tx
+        .delete(timeCapsulesTable)
+        .where(eq(timeCapsulesTable.userId, userId))
+        .returning({ id: timeCapsulesTable.id });
+      return rows.length;
+    },
+  },
+  // The wingman footprint spans three tables: the owner's invites, the friend
+  // answers about the owner (denormalized by owner userId), and the owner's own
+  // self-rating. A purge removes all three so no outside-perspective data is left
+  // behind, and countStored sums the same three so the count matches the delete.
+  // Parallel deletes on one tx mirror the wellness handler above.
+  externalCalibration: {
+    countStored: async (client, userId) => {
+      const [invites, answers, self] = await Promise.all([
+        countBy(client, wingmanInvitesTable, eq(wingmanInvitesTable.userId, userId)),
+        countBy(client, wingmanAnswersTable, eq(wingmanAnswersTable.userId, userId)),
+        countBy(client, wingmanSelfRatingsTable, eq(wingmanSelfRatingsTable.userId, userId)),
+      ]);
+      return invites + answers + self;
+    },
+    purge: async (tx, userId) => {
+      const [invites, answers, self] = await Promise.all([
+        tx
+          .delete(wingmanInvitesTable)
+          .where(eq(wingmanInvitesTable.userId, userId))
+          .returning({ id: wingmanInvitesTable.id }),
+        tx
+          .delete(wingmanAnswersTable)
+          .where(eq(wingmanAnswersTable.userId, userId))
+          .returning({ id: wingmanAnswersTable.id }),
+        tx
+          .delete(wingmanSelfRatingsTable)
+          .where(eq(wingmanSelfRatingsTable.userId, userId))
+          .returning({ userId: wingmanSelfRatingsTable.userId }),
+      ]);
+      return invites.length + answers.length + self.length;
+    },
+  },
+  // Consistency is a derived meta-signal with no table of its own: the streak and
+  // the consistency lane are recomputed from the calendar days a user was active
+  // across every other source (see activityDays.ts). There is nothing uniquely
+  // stored to purge, so this reports zero and removes nothing; clearing the
+  // underlying sources is what lowers consistency. The handler exists so the
+  // boot guard is satisfied and the ledger lists the lane honestly (held:false)
+  // rather than 404-ing on a delete.
+  consistency: {
+    countStored: async () => 0,
+    purge: async () => 0,
   },
 };
 

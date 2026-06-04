@@ -203,6 +203,18 @@ stores.wingman_self_ratings = {
   nextId: 1,
   defaults: {},
 };
+stores.wyr_answers = {
+  rows: [],
+  nextId: 1,
+  defaults: { userId: null, anonymousClaimToken: null },
+};
+ensureStore("scenario_responses");
+ensureStore("prediction_responses");
+stores.time_capsules = {
+  rows: [],
+  nextId: 1,
+  defaults: { userId: null, anonymousClaimToken: null },
+};
 ensureStore("leads");
 ensureStore("waitlist");
 ensureStore("purchase_interest");
@@ -222,6 +234,10 @@ export const lifePulsesTable = makeTable("life_pulses");
 export const wingmanInvitesTable = makeTable("wingman_invites");
 export const wingmanAnswersTable = makeTable("wingman_answers");
 export const wingmanSelfRatingsTable = makeTable("wingman_self_ratings");
+export const wyrAnswersTable = makeTable("wyr_answers");
+export const scenarioResponsesTable = makeTable("scenario_responses");
+export const predictionResponsesTable = makeTable("prediction_responses");
+export const timeCapsulesTable = makeTable("time_capsules");
 ensureStore("compatibility_reads");
 export const compatibilityReadsTable = makeTable("compatibility_reads");
 ensureStore("journal_entries");
@@ -701,9 +717,10 @@ class UpdateChain extends AsyncChain<Row[]> {
   }
 }
 
-class DeleteChain extends AsyncChain<void> {
+class DeleteChain extends AsyncChain<Row[]> {
   private tableName: string;
   private filters: Pred[] = [];
+  private returningSpec: Record<string, ColumnRef> | true | null = null;
   constructor(tableName: string) {
     super();
     this.tableName = tableName;
@@ -712,9 +729,34 @@ class DeleteChain extends AsyncChain<void> {
     if (typeof pred === "function") this.filters.push(pred);
     return this;
   }
-  protected execute(): void {
+  returning(spec?: Record<string, ColumnRef>): this {
+    this.returningSpec = spec ?? true;
+    return this;
+  }
+  // Mirrors real drizzle: a delete removes matching rows and, when `.returning()`
+  // is chained, hands them back (projected if a column spec is given). Awaiting a
+  // delete without `.returning()` yields the removed rows too, which callers that
+  // ignore the result simply discard.
+  protected execute(): Row[] {
     const store = ensureStore(this.tableName);
-    store.rows = store.rows.filter((r) => !this.filters.every((p) => p(r)));
+    const removed: Row[] = [];
+    store.rows = store.rows.filter((r) => {
+      const matches = this.filters.every((p) => p(r));
+      if (matches) removed.push(r);
+      return !matches;
+    });
+    if (this.returningSpec === null || this.returningSpec === true) {
+      return removed;
+    }
+    return removed.map((row) => {
+      const projected: Row = {};
+      for (const [outKey, ref] of Object.entries(
+        this.returningSpec as Record<string, ColumnRef>,
+      )) {
+        projected[outKey] = row[ref.__col];
+      }
+      return projected;
+    });
   }
 }
 
