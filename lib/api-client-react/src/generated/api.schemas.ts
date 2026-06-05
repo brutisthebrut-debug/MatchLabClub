@@ -3643,6 +3643,16 @@ export interface MatchReadinessBreakdown {
      * @minimum 0
      * @maximum 100
      */
+  dailySpark: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  flags: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
   consistency: number;
   /**
      * @minimum 0
@@ -4273,6 +4283,38 @@ export interface WyrAnswerInput {
      */
   promptId: string;
   choice: WyrAnswerInputChoice;
+}
+
+export interface DailySparkAnswer {
+  questionId: string;
+  choice: string;
+  createdAt: string;
+}
+
+export interface DailySparkAnswerInput {
+  /**
+     * @minLength 1
+     * @maxLength 64
+     */
+  questionId: string;
+  /**
+     * @minLength 1
+     * @maxLength 64
+     */
+  choice: string;
+}
+
+export interface FlagsState {
+  bringFlags: string[];
+  seekFlags: string[];
+  updatedAt?: string | null;
+}
+
+export interface FlagsInput {
+  /** @maxItems 50 */
+  bringFlags: string[];
+  /** @maxItems 50 */
+  seekFlags: string[];
 }
 
 export interface ScenarioResponse {

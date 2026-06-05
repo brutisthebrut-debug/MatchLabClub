@@ -4792,6 +4792,133 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/daily-spark:
+    get:
+      tags: [Matching]
+      operationId: getDailySparkAnswers
+      summary: List the signed-in user's Daily Spark answers
+      description: |
+        Returns the caller's answers to the Daily Spark deck, newest first. Each
+        answer records only which option was chosen, never any free text. The
+        client computes today's question and the current streak from these. Distinct
+        questions answered feed matching readiness as a low-weight signal.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: List of answers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DailySparkAnswer'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+    post:
+      tags: [Matching]
+      operationId: createDailySparkAnswer
+      summary: Record a Daily Spark answer
+      description: |
+        Records the option chosen for one question. Answering the same question
+        again updates the choice in place, so the distinct-question count stays
+        honest.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DailySparkAnswerInput'
+      responses:
+        '201':
+          description: The recorded answer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailySparkAnswer'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/flags:
+    get:
+      tags: [Matching]
+      operationId: getFlagSelection
+      summary: Get the signed-in user's green and red flag selection
+      description: |
+        Returns the caller's flag selection: the green flags they bring and the
+        ones they look for, as stable flag ids only, never any free text. Returns
+        empty lists when nothing has been picked yet. Distinct flags named feed
+        matching readiness as a low-weight standards signal.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The current flag selection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagsState'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+    put:
+      tags: [Matching]
+      operationId: putFlagSelection
+      summary: Replace the signed-in user's flag selection
+      description: |
+        Replaces the caller's flag selection in place with the two lists provided.
+        Stores only the stable flag ids chosen, never any free text.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlagsInput'
+      responses:
+        '200':
+          description: The saved flag selection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagsState'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/scenarios:
     get:
       tags: [Matching]
@@ -9842,7 +9969,7 @@ components:
             - type: 'null'
     MatchReadinessBreakdown:
       type: object
-      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse, taste, lifestyle, quizzes, receipts, music, vitality, curiosity, film, reading, wyr, consistency, scenarioReels, selfAwareness, timeCapsule, externalCalibration, cosmicProfile, relocationOpen, verification]
+      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse, taste, lifestyle, quizzes, receipts, music, vitality, curiosity, film, reading, wyr, dailySpark, flags, consistency, scenarioReels, selfAwareness, timeCapsule, externalCalibration, cosmicProfile, relocationOpen, verification]
       properties:
         compass:
           type: integer
@@ -9925,6 +10052,14 @@ components:
           minimum: 0
           maximum: 100
         wyr:
+          type: integer
+          minimum: 0
+          maximum: 100
+        dailySpark:
+          type: integer
+          minimum: 0
+          maximum: 100
+        flags:
           type: integer
           minimum: 0
           maximum: 100
@@ -10700,6 +10835,65 @@ components:
         choice:
           type: string
           enum: [a, b]
+
+    DailySparkAnswer:
+      type: object
+      required: [questionId, choice, createdAt]
+      properties:
+        questionId:
+          type: string
+        choice:
+          type: string
+        createdAt:
+          type: string
+
+    DailySparkAnswerInput:
+      type: object
+      required: [questionId, choice]
+      properties:
+        questionId:
+          type: string
+          minLength: 1
+          maxLength: 64
+        choice:
+          type: string
+          minLength: 1
+          maxLength: 64
+
+    FlagsState:
+      type: object
+      required: [bringFlags, seekFlags]
+      properties:
+        bringFlags:
+          type: array
+          items:
+            type: string
+        seekFlags:
+          type: array
+          items:
+            type: string
+        updatedAt:
+          type: string
+          nullable: true
+
+    FlagsInput:
+      type: object
+      required: [bringFlags, seekFlags]
+      properties:
+        bringFlags:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+            minLength: 1
+            maxLength: 64
+        seekFlags:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+            minLength: 1
+            maxLength: 64
 
     ScenarioResponse:
       type: object

@@ -78,6 +78,7 @@ import {
   Shuffle,
   Scale,
   Mic,
+  Flag,
 } from "lucide-react";
 
 type NavLink = {
@@ -187,6 +188,8 @@ const SECTIONS: NavSection[] = [
     more: [
       { name: "This or That", href: "/this-or-that", icon: Shuffle },
       { name: "Would You Rather", href: "/games/would-you-rather", icon: Scale },
+      { name: "Daily Spark", href: "/games/daily-spark", icon: Sparkles },
+      { name: "Green and red flags", href: "/flags", icon: Flag },
       { name: "Cosmic Compass", href: "/cosmic", icon: Sparkles },
       { name: "Scenario reels", href: "/games/scenarios", icon: Clapperboard },
       { name: "Predict yourself", href: "/games/predict", icon: Target },

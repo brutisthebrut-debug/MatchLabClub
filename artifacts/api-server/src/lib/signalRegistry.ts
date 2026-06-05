@@ -45,6 +45,8 @@ export interface ReadinessBreakdown {
   preferences: number;
   voice: number;
   wyr: number;
+  dailySpark: number;
+  flags: number;
   consistency: number;
   scenarioReels: number;
   selfAwareness: number;
@@ -75,6 +77,19 @@ export interface SignalCounts {
    * stored, never any free text.
    */
   wyrAnswered: number;
+  /**
+   * Distinct Daily Spark questions answered. One small reflective question a day
+   * builds a habit and a steady read on how someone thinks about connection;
+   * only which option was chosen is stored, never any free text.
+   */
+  dailySparkAnswered: number;
+  /**
+   * Distinct flags the user has named across both lists (the green flags they
+   * bring and the ones they look for). Naming what you offer and what you need
+   * is a read on standards and self-awareness; only the chosen flag ids are
+   * stored, never any free text.
+   */
+  flagItems: number;
   /**
    * Events in the most recent pasted calendar (.ics) import. A fuller calendar
    * reads as a fuller life outside dating; only the derived count is used here,
@@ -1293,6 +1308,73 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       neverTouched: [
         "Anything beyond the two choices we offer",
         "Any free text, since the game never asks for any",
+      ],
+    },
+  },
+  {
+    id: "dailySpark",
+    countKey: "dailySparkAnswered",
+    dataSource: { kind: "firstParty" },
+    label: "Daily Spark",
+    dimensions: [
+      "how they think about connection",
+      "what they value day to day",
+    ],
+    weight: 0.06,
+    confidence: 0.5,
+    normalize: { kind: "count", denominator: 14 },
+    decayHalfLifeDays: 60,
+    describe: (c) =>
+      `Has answered enough Daily Spark questions to cover ${c}% of that lane, a steady read built one small choice at a time on how they actually think about connection.`,
+    action: {
+      label: "Answer today's Spark",
+      detail:
+        "One small question a day. It takes a few seconds and the picture of you keeps filling in.",
+      href: "/games/daily-spark",
+    },
+    trust: {
+      origin: "The Daily Spark questions you answer.",
+      noun: "answer",
+      seen: [
+        "Which option you picked on each question",
+        "How many distinct questions you have answered",
+      ],
+      neverTouched: [
+        "Anything beyond the options we offer",
+        "Any free text, since the game never asks for any",
+      ],
+    },
+  },
+  {
+    id: "flags",
+    countKey: "flagItems",
+    dataSource: { kind: "firstParty" },
+    label: "Green and red flags",
+    dimensions: [
+      "their standards and dealbreakers",
+      "what they bring to a relationship",
+    ],
+    weight: 0.07,
+    confidence: 0.6,
+    normalize: { kind: "count", denominator: 12 },
+    describe: (c) =>
+      `Has named enough of their flags to cover ${c}% of that lane, a clear read on the standards they hold and what they know they bring, in their own picks.`,
+    action: {
+      label: "Pick your flags",
+      detail:
+        "Name the green flags you bring and the ones you look for. It sharpens who you get matched with.",
+      href: "/flags",
+    },
+    trust: {
+      origin: "The flags you pick for what you bring and what you look for.",
+      noun: "flag",
+      seen: [
+        "Which flags you selected from the list",
+        "How many distinct flags you have named",
+      ],
+      neverTouched: [
+        "Anything beyond the flags we offer",
+        "Any free text, since the picker never asks for any",
       ],
     },
   },

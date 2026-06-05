@@ -9,6 +9,7 @@ import {
   Compass,
   Download,
   Film,
+  Flag,
   Flame,
   Footprints,
   Globe,
@@ -220,6 +221,24 @@ export const BREAKDOWN_ROWS = [
     href: "/games/would-you-rather",
     cta: "Answer today's tradeoff",
     icon: Scale,
+  },
+  {
+    key: "dailySpark",
+    label: "Daily Spark",
+    blurb:
+      "One small question a day, answered in your own pace, reveals how you actually move through dating over time.",
+    href: "/games/daily-spark",
+    cta: "Answer today's spark",
+    icon: Sparkles,
+  },
+  {
+    key: "flags",
+    label: "Green and red flags",
+    blurb:
+      "Naming what you bring and what you look for is its own read on your standards and self-awareness.",
+    href: "/flags",
+    cta: "Pick your flags",
+    icon: Flag,
   },
   {
     key: "consistency",

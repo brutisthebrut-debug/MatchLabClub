@@ -116,6 +116,16 @@ export interface MatchReadinessBreakdown {
      * @minimum 0
      * @maximum 100
      */
+  dailySpark: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  flags: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
   consistency: number;
   /**
      * @minimum 0

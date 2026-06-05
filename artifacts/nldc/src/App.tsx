@@ -89,6 +89,8 @@ const DataVault = lazy(() => import("@/pages/DataVault"));
 const Imports = lazy(() => import("@/pages/Imports"));
 const DatingWinsLog = lazy(() => import("@/pages/DatingWinsLog"));
 const WouldYouRather = lazy(() => import("@/pages/WouldYouRather"));
+const DailySpark = lazy(() => import("@/pages/DailySpark"));
+const Flags = lazy(() => import("@/pages/Flags"));
 const Cosmic = lazy(() => import("@/pages/Cosmic"));
 const Scenarios = lazy(() => import("@/pages/Scenarios"));
 const PredictYourself = lazy(() => import("@/pages/PredictYourself"));
@@ -276,6 +278,8 @@ function Router() {
         <Route path="/imports" component={Imports} />
         <Route path="/progress/wins" component={DatingWinsLog} />
         <Route path="/games/would-you-rather" component={WouldYouRather} />
+        <Route path="/games/daily-spark" component={DailySpark} />
+        <Route path="/flags" component={Flags} />
         <Route path="/cosmic" component={Cosmic} />
         <Route path="/games/scenarios" component={Scenarios} />
         <Route path="/games/predict" component={PredictYourself} />

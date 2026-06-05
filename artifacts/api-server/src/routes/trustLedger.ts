@@ -14,6 +14,8 @@ import {
   messageCoachingSessionsTable,
   lifePulsesTable,
   wyrAnswersTable,
+  dailySparkAnswersTable,
+  flagSelectionsTable,
   scenarioResponsesTable,
   predictionResponsesTable,
   timeCapsulesTable,
@@ -270,6 +272,31 @@ const FIRST_PARTY_SOURCES: Record<
         .delete(wyrAnswersTable)
         .where(eq(wyrAnswersTable.userId, userId))
         .returning({ id: wyrAnswersTable.id });
+      return rows.length;
+    },
+  },
+  dailySpark: {
+    countStored: (client, userId) =>
+      countBy(client, dailySparkAnswersTable, eq(dailySparkAnswersTable.userId, userId)),
+    purge: async (tx, userId) => {
+      const rows = await tx
+        .delete(dailySparkAnswersTable)
+        .where(eq(dailySparkAnswersTable.userId, userId))
+        .returning({ id: dailySparkAnswersTable.id });
+      return rows.length;
+    },
+  },
+  // Flags accumulate in one row per user. The user-facing unit is the flag, but
+  // the stored unit is the single selection row, so countStored reports the row
+  // count (0 or 1) and purge removes that row outright, clearing both lists.
+  flags: {
+    countStored: (client, userId) =>
+      countBy(client, flagSelectionsTable, eq(flagSelectionsTable.userId, userId)),
+    purge: async (tx, userId) => {
+      const rows = await tx
+        .delete(flagSelectionsTable)
+        .where(eq(flagSelectionsTable.userId, userId))
+        .returning({ id: flagSelectionsTable.id });
       return rows.length;
     },
   },

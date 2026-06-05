@@ -208,6 +208,21 @@ stores.wyr_answers = {
   nextId: 1,
   defaults: { userId: null, anonymousClaimToken: null },
 };
+stores.daily_spark_answers = {
+  rows: [],
+  nextId: 1,
+  defaults: { userId: null, anonymousClaimToken: null },
+};
+stores.flag_selections = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    userId: null,
+    anonymousClaimToken: null,
+    bringFlags: [],
+    seekFlags: [],
+  },
+};
 ensureStore("scenario_responses");
 ensureStore("prediction_responses");
 stores.time_capsules = {
@@ -283,6 +298,8 @@ export const wingmanInvitesTable = makeTable("wingman_invites");
 export const wingmanAnswersTable = makeTable("wingman_answers");
 export const wingmanSelfRatingsTable = makeTable("wingman_self_ratings");
 export const wyrAnswersTable = makeTable("wyr_answers");
+export const dailySparkAnswersTable = makeTable("daily_spark_answers");
+export const flagSelectionsTable = makeTable("flag_selections");
 export const scenarioResponsesTable = makeTable("scenario_responses");
 export const predictionResponsesTable = makeTable("prediction_responses");
 export const timeCapsulesTable = makeTable("time_capsules");

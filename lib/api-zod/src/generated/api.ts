@@ -4794,6 +4794,12 @@ export const getMatchingStateResponseReadinessBreakdownReadingMax = 100;
 export const getMatchingStateResponseReadinessBreakdownWyrMin = 0;
 export const getMatchingStateResponseReadinessBreakdownWyrMax = 100;
 
+export const getMatchingStateResponseReadinessBreakdownDailySparkMin = 0;
+export const getMatchingStateResponseReadinessBreakdownDailySparkMax = 100;
+
+export const getMatchingStateResponseReadinessBreakdownFlagsMin = 0;
+export const getMatchingStateResponseReadinessBreakdownFlagsMax = 100;
+
 export const getMatchingStateResponseReadinessBreakdownConsistencyMin = 0;
 export const getMatchingStateResponseReadinessBreakdownConsistencyMax = 100;
 
@@ -4896,6 +4902,8 @@ export const GetMatchingStateResponse = zod.object({
   "film": zod.number().min(getMatchingStateResponseReadinessBreakdownFilmMin).max(getMatchingStateResponseReadinessBreakdownFilmMax),
   "reading": zod.number().min(getMatchingStateResponseReadinessBreakdownReadingMin).max(getMatchingStateResponseReadinessBreakdownReadingMax),
   "wyr": zod.number().min(getMatchingStateResponseReadinessBreakdownWyrMin).max(getMatchingStateResponseReadinessBreakdownWyrMax),
+  "dailySpark": zod.number().min(getMatchingStateResponseReadinessBreakdownDailySparkMin).max(getMatchingStateResponseReadinessBreakdownDailySparkMax),
+  "flags": zod.number().min(getMatchingStateResponseReadinessBreakdownFlagsMin).max(getMatchingStateResponseReadinessBreakdownFlagsMax),
   "consistency": zod.number().min(getMatchingStateResponseReadinessBreakdownConsistencyMin).max(getMatchingStateResponseReadinessBreakdownConsistencyMax),
   "scenarioReels": zod.number().min(getMatchingStateResponseReadinessBreakdownScenarioReelsMin).max(getMatchingStateResponseReadinessBreakdownScenarioReelsMax),
   "selfAwareness": zod.number().min(getMatchingStateResponseReadinessBreakdownSelfAwarenessMin).max(getMatchingStateResponseReadinessBreakdownSelfAwarenessMax),
@@ -5865,6 +5873,100 @@ export const createWouldYouRatherAnswerBodyPromptIdMax = 64;
 export const CreateWouldYouRatherAnswerBody = zod.object({
   "promptId": zod.string().min(1).max(createWouldYouRatherAnswerBodyPromptIdMax),
   "choice": zod.enum(['a', 'b'])
+})
+
+
+/**
+ * Returns the caller's answers to the Daily Spark deck, newest first. Each
+answer records only which option was chosen, never any free text. The
+client computes today's question and the current streak from these. Distinct
+questions answered feed matching readiness as a low-weight signal.
+
+ * @summary List the signed-in user's Daily Spark answers
+ */
+export const GetDailySparkAnswersHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetDailySparkAnswersResponseItem = zod.object({
+  "questionId": zod.string(),
+  "choice": zod.string(),
+  "createdAt": zod.string()
+})
+export const GetDailySparkAnswersResponse = zod.array(GetDailySparkAnswersResponseItem)
+
+
+/**
+ * Records the option chosen for one question. Answering the same question
+again updates the choice in place, so the distinct-question count stays
+honest.
+
+ * @summary Record a Daily Spark answer
+ */
+export const CreateDailySparkAnswerHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const createDailySparkAnswerBodyQuestionIdMax = 64;
+
+export const createDailySparkAnswerBodyChoiceMax = 64;
+
+
+
+export const CreateDailySparkAnswerBody = zod.object({
+  "questionId": zod.string().min(1).max(createDailySparkAnswerBodyQuestionIdMax),
+  "choice": zod.string().min(1).max(createDailySparkAnswerBodyChoiceMax)
+})
+
+
+/**
+ * Returns the caller's flag selection: the green flags they bring and the
+ones they look for, as stable flag ids only, never any free text. Returns
+empty lists when nothing has been picked yet. Distinct flags named feed
+matching readiness as a low-weight standards signal.
+
+ * @summary Get the signed-in user's green and red flag selection
+ */
+export const GetFlagSelectionHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetFlagSelectionResponse = zod.object({
+  "bringFlags": zod.array(zod.string()),
+  "seekFlags": zod.array(zod.string()),
+  "updatedAt": zod.string().nullish()
+})
+
+
+/**
+ * Replaces the caller's flag selection in place with the two lists provided.
+Stores only the stable flag ids chosen, never any free text.
+
+ * @summary Replace the signed-in user's flag selection
+ */
+export const PutFlagSelectionHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const putFlagSelectionBodyBringFlagsItemMax = 64;
+
+export const putFlagSelectionBodyBringFlagsMax = 50;
+
+export const putFlagSelectionBodySeekFlagsItemMax = 64;
+
+export const putFlagSelectionBodySeekFlagsMax = 50;
+
+
+
+export const PutFlagSelectionBody = zod.object({
+  "bringFlags": zod.array(zod.string().min(1).max(putFlagSelectionBodyBringFlagsItemMax)).max(putFlagSelectionBodyBringFlagsMax),
+  "seekFlags": zod.array(zod.string().min(1).max(putFlagSelectionBodySeekFlagsItemMax)).max(putFlagSelectionBodySeekFlagsMax)
+})
+
+export const PutFlagSelectionResponse = zod.object({
+  "bringFlags": zod.array(zod.string()),
+  "seekFlags": zod.array(zod.string()),
+  "updatedAt": zod.string().nullish()
 })
 
 

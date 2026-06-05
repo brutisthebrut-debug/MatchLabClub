@@ -1367,6 +1367,115 @@ const ICK_RADAR: Quiz = {
   },
 };
 
+// ── Quiz: Your Growth Edge ───────────────────────────────────────────────────
+const GROWTH_EDGE: Quiz = {
+  slug: "growth-edge",
+  title: "What's your dating growth edge?",
+  pitch: "The one pattern that, if you worked on it, would change your dating life most. Five honest questions to name yours.",
+  durationSec: 90,
+  emoji: "🌿",
+  feeds: ["growth.edge", "self.awareness", "patterns.recognition"],
+  questions: [
+    {
+      q: "The pattern you fall into most when you really like someone is...",
+      options: [
+        { label: "I start doing too much, fast, before they have earned it", scores: { overGiver: 2, pleaser: 1 }, wellness: { questionId: "growth.pattern.likeness", dimension: "growth", category: "patterns", questionText: "What is your default pattern when you really like someone?", answer: "I over-give early, before the other person has earned it." } },
+        { label: "I pull my real feelings back so I don't look too keen", scores: { guarded: 2 }, wellness: { questionId: "growth.pattern.likeness", dimension: "growth", category: "patterns", questionText: "What is your default pattern when you really like someone?", answer: "I hide my real feelings to avoid looking too interested." } },
+        { label: "I want them more the less available they seem", scores: { chaser: 2 }, wellness: { questionId: "growth.pattern.likeness", dimension: "growth", category: "patterns", questionText: "What is your default pattern when you really like someone?", answer: "I am most drawn to people who feel out of reach." } },
+        { label: "I get excited, then somehow let it cool without deciding to", scores: { drifter: 2 }, wellness: { questionId: "growth.pattern.likeness", dimension: "growth", category: "patterns", questionText: "What is your default pattern when you really like someone?", answer: "I let promising connections fade without a real decision." } },
+        { label: "I become whatever I think they want me to be", scores: { pleaser: 2, overGiver: 1 }, wellness: { questionId: "growth.pattern.likeness", dimension: "growth", category: "patterns", questionText: "What is your default pattern when you really like someone?", answer: "I shapeshift into what I think the other person wants." } },
+      ],
+    },
+    {
+      q: "When something bothers you early in dating, you tend to...",
+      options: [
+        { label: "Say nothing and quietly file it away", scores: { guarded: 2 } },
+        { label: "Talk myself out of it so I stay easy to be with", scores: { pleaser: 2 } },
+        { label: "Work harder to fix the mood myself", scores: { overGiver: 2 } },
+        { label: "Push for reassurance until it settles", scores: { chaser: 2 } },
+        { label: "Let it ride and slowly lose interest instead", scores: { drifter: 2 } },
+      ],
+    },
+    {
+      q: "Honestly, the people you chase hardest are usually...",
+      options: [
+        { label: "A little out of reach, and that is the pull", scores: { chaser: 2 }, wellness: { questionId: "growth.attraction.pull", dimension: "growth", category: "attraction", questionText: "Who are you most drawn to pursue?", answer: "People who feel slightly unavailable." } },
+        { label: "People who let me take care of them", scores: { overGiver: 2 }, wellness: { questionId: "growth.attraction.pull", dimension: "growth", category: "attraction", questionText: "Who are you most drawn to pursue?", answer: "People who let me do the caretaking." } },
+        { label: "Safe enough that I never have to fully open up", scores: { guarded: 2 }, wellness: { questionId: "growth.attraction.pull", dimension: "growth", category: "attraction", questionText: "Who are you most drawn to pursue?", answer: "People safe enough that I never have to be vulnerable." } },
+        { label: "Whoever seems to like me first", scores: { pleaser: 2 } },
+        { label: "Whoever is easy, until easy gets boring", scores: { drifter: 2 } },
+      ],
+    },
+    {
+      q: "When a connection ends, the version of you that you regret is the one who...",
+      options: [
+        { label: "Gave far more than I got and called it love", scores: { overGiver: 2 } },
+        { label: "Never let them actually see me", scores: { guarded: 2 } },
+        { label: "Hung on long after I knew", scores: { chaser: 2 } },
+        { label: "Shrunk myself to keep the peace", scores: { pleaser: 2 } },
+        { label: "Went quiet instead of being honest", scores: { drifter: 2 } },
+      ],
+    },
+    {
+      q: "If one thing changed in how you date, the biggest unlock would be...",
+      options: [
+        { label: "Letting someone in before I am certain", scores: { guarded: 2 }, wellness: { questionId: "growth.unlock", dimension: "growth", category: "edge", questionText: "What would change your dating life most if you worked on it?", answer: "Letting people in before I feel certain." } },
+        { label: "Letting myself receive without earning it", scores: { overGiver: 2 }, wellness: { questionId: "growth.unlock", dimension: "growth", category: "edge", questionText: "What would change your dating life most if you worked on it?", answer: "Receiving care without feeling I have to earn it." } },
+        { label: "Wanting people who actually want me back", scores: { chaser: 2 }, wellness: { questionId: "growth.unlock", dimension: "growth", category: "edge", questionText: "What would change your dating life most if you worked on it?", answer: "Wanting people who are available and want me back." } },
+        { label: "Staying present when things get real", scores: { drifter: 2 }, wellness: { questionId: "growth.unlock", dimension: "growth", category: "edge", questionText: "What would change your dating life most if you worked on it?", answer: "Staying present instead of drifting when it gets real." } },
+        { label: "Telling the truth about what I want", scores: { pleaser: 2 }, wellness: { questionId: "growth.unlock", dimension: "growth", category: "edge", questionText: "What would change your dating life most if you worked on it?", answer: "Being honest about what I actually want." } },
+      ],
+    },
+  ],
+  archetypes: {
+    overGiver: {
+      name: "The Over-Giver",
+      emoji: "🎁",
+      tagline: "You love by pouring out. Your growth edge is letting yourself receive without earning it first.",
+      insight: "You show up early and generously, which makes people feel cared for fast. The cost is a quiet scoreboard where you give far more than you get and call the imbalance love. The work is not giving less, it is letting someone prove they will meet you before you empty yourself out.",
+      nextStep: "On your next few dates, give a little less than your instinct says and watch who steps toward you anyway.",
+      cta: { label: "Map this in Your Mirror", href: "/your-mirror" },
+      color: "326 70% 64%",
+    },
+    guarded: {
+      name: "The Guarded One",
+      emoji: "🛡️",
+      tagline: "You protect yourself well. Your growth edge is letting someone in before you are certain.",
+      insight: "You keep your real feelings back until safety is proven, which spares you a lot of small hurts. The trade is that the people who could love you never quite get to meet you. Vulnerability shared a beat earlier than feels comfortable is usually what turns interest into closeness.",
+      nextStep: "Pick one real thing you would normally hold back and say it out loud on your next date.",
+      cta: { label: "Check where you stand", href: "/me" },
+      color: "210 55% 60%",
+    },
+    chaser: {
+      name: "The Chaser",
+      emoji: "🏃",
+      tagline: "Distance reads as desire to you. Your growth edge is wanting people who actually want you back.",
+      insight: "You feel most alive when someone is a little out of reach, so availability can register as boring even when it is exactly what you say you want. The pattern is not romance, it is a nervous system that confuses uncertainty for chemistry. Steadiness is not the absence of spark, it is the ground real spark grows on.",
+      nextStep: "Next time someone is clearly into you, stay curious instead of cooling off. The calm is the point.",
+      cta: { label: "Work it through in Your Mirror", href: "/your-mirror" },
+      color: "8 75% 62%",
+    },
+    drifter: {
+      name: "The Drifter",
+      emoji: "🍃",
+      tagline: "You start strong, then let things fade. Your growth edge is staying present when it gets real.",
+      insight: "You get genuinely excited at the start, then somehow let promising connections cool without ever deciding to. Often that drift is avoidance wearing a calm face, a way to leave without the hard conversation. Naming the pull to fade, instead of acting on it, is what keeps a good thing alive.",
+      nextStep: "When you next feel a connection starting to drift, say one honest sentence about it rather than going quiet.",
+      cta: { label: "Log a post-date debrief", href: "/copilot/debrief" },
+      color: "150 45% 52%",
+    },
+    pleaser: {
+      name: "The Pleaser",
+      emoji: "🪞",
+      tagline: "You are easy to be with by design. Your growth edge is telling the truth about what you want.",
+      insight: "You read the room and become the version of you that is easiest to like, which makes early dating smooth and you well-liked. The cost is that nobody is actually choosing you, they are choosing the shape you took for them. Your real preferences are not too much, they are the thing that lets the right person pick the real you.",
+      nextStep: "State one genuine preference this week, even a small one, instead of saying you don't mind.",
+      cta: { label: "Clarify what you want", href: "/quizzes/boundary-blueprint" },
+      color: "275 50% 64%",
+    },
+  },
+};
+
 export const QUIZZES: Quiz[] = [
   LOVE_PACE,
   CONFLICT_INSTINCT,
@@ -1381,6 +1490,7 @@ export const QUIZZES: Quiz[] = [
   READINESS_CHECK,
   MONEY_IN_LOVE,
   ICK_RADAR,
+  GROWTH_EDGE,
 ];
 
 /**

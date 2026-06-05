@@ -99,6 +99,8 @@ import type {
   CreateSourcePasteResult,
   CreateVoiceIntroInput,
   CreateVoiceIntroResult,
+  DailySparkAnswer,
+  DailySparkAnswerInput,
   DatingProfile,
   DatingProfileInput,
   DatingProfileUpdate,
@@ -129,6 +131,8 @@ import type {
   ExpiringTrashedAudits,
   ExtractMessageScreenshot400,
   ExtractScreenshot400,
+  FlagsInput,
+  FlagsState,
   FounderFunnelSummary,
   FounderReferralsSummary,
   FounderReport,
@@ -12967,6 +12971,319 @@ export const useCreateWouldYouRatherAnswer = <TError = ErrorType<AuthErrorEnvelo
         TContext
       > => {
       return useMutation(getCreateWouldYouRatherAnswerMutationOptions(options));
+    }
+
+export const getGetDailySparkAnswersUrl = () => {
+
+
+
+
+  return `/api/me/daily-spark`
+}
+
+/**
+ * Returns the caller's answers to the Daily Spark deck, newest first. Each
+answer records only which option was chosen, never any free text. The
+client computes today's question and the current streak from these. Distinct
+questions answered feed matching readiness as a low-weight signal.
+
+ * @summary List the signed-in user's Daily Spark answers
+ */
+export const getDailySparkAnswers = async ( options?: RequestInit): Promise<DailySparkAnswer[]> => {
+
+  return customFetch<DailySparkAnswer[]>(getGetDailySparkAnswersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDailySparkAnswersQueryKey = () => {
+    return [
+    `/api/me/daily-spark`
+    ] as const;
+    }
+
+
+export const getGetDailySparkAnswersQueryOptions = <TData = Awaited<ReturnType<typeof getDailySparkAnswers>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDailySparkAnswers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDailySparkAnswersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDailySparkAnswers>>> = ({ signal }) => getDailySparkAnswers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDailySparkAnswers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDailySparkAnswersQueryResult = NonNullable<Awaited<ReturnType<typeof getDailySparkAnswers>>>
+export type GetDailySparkAnswersQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary List the signed-in user's Daily Spark answers
+ */
+
+export function useGetDailySparkAnswers<TData = Awaited<ReturnType<typeof getDailySparkAnswers>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDailySparkAnswers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDailySparkAnswersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateDailySparkAnswerUrl = () => {
+
+
+
+
+  return `/api/me/daily-spark`
+}
+
+/**
+ * Records the option chosen for one question. Answering the same question
+again updates the choice in place, so the distinct-question count stays
+honest.
+
+ * @summary Record a Daily Spark answer
+ */
+export const createDailySparkAnswer = async (dailySparkAnswerInput: DailySparkAnswerInput, options?: RequestInit): Promise<DailySparkAnswer> => {
+
+  return customFetch<DailySparkAnswer>(getCreateDailySparkAnswerUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      dailySparkAnswerInput,)
+  }
+);}
+
+
+
+
+export const getCreateDailySparkAnswerMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDailySparkAnswer>>, TError,{data: BodyType<DailySparkAnswerInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDailySparkAnswer>>, TError,{data: BodyType<DailySparkAnswerInput>}, TContext> => {
+
+const mutationKey = ['createDailySparkAnswer'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDailySparkAnswer>>, {data: BodyType<DailySparkAnswerInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createDailySparkAnswer(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDailySparkAnswerMutationResult = NonNullable<Awaited<ReturnType<typeof createDailySparkAnswer>>>
+    export type CreateDailySparkAnswerMutationBody = BodyType<DailySparkAnswerInput>
+    export type CreateDailySparkAnswerMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Record a Daily Spark answer
+ */
+export const useCreateDailySparkAnswer = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDailySparkAnswer>>, TError,{data: BodyType<DailySparkAnswerInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createDailySparkAnswer>>,
+        TError,
+        {data: BodyType<DailySparkAnswerInput>},
+        TContext
+      > => {
+      return useMutation(getCreateDailySparkAnswerMutationOptions(options));
+    }
+
+export const getGetFlagSelectionUrl = () => {
+
+
+
+
+  return `/api/me/flags`
+}
+
+/**
+ * Returns the caller's flag selection: the green flags they bring and the
+ones they look for, as stable flag ids only, never any free text. Returns
+empty lists when nothing has been picked yet. Distinct flags named feed
+matching readiness as a low-weight standards signal.
+
+ * @summary Get the signed-in user's green and red flag selection
+ */
+export const getFlagSelection = async ( options?: RequestInit): Promise<FlagsState> => {
+
+  return customFetch<FlagsState>(getGetFlagSelectionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFlagSelectionQueryKey = () => {
+    return [
+    `/api/me/flags`
+    ] as const;
+    }
+
+
+export const getGetFlagSelectionQueryOptions = <TData = Awaited<ReturnType<typeof getFlagSelection>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFlagSelection>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFlagSelectionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFlagSelection>>> = ({ signal }) => getFlagSelection({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFlagSelection>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFlagSelectionQueryResult = NonNullable<Awaited<ReturnType<typeof getFlagSelection>>>
+export type GetFlagSelectionQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the signed-in user's green and red flag selection
+ */
+
+export function useGetFlagSelection<TData = Awaited<ReturnType<typeof getFlagSelection>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFlagSelection>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFlagSelectionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getPutFlagSelectionUrl = () => {
+
+
+
+
+  return `/api/me/flags`
+}
+
+/**
+ * Replaces the caller's flag selection in place with the two lists provided.
+Stores only the stable flag ids chosen, never any free text.
+
+ * @summary Replace the signed-in user's flag selection
+ */
+export const putFlagSelection = async (flagsInput: FlagsInput, options?: RequestInit): Promise<FlagsState> => {
+
+  return customFetch<FlagsState>(getPutFlagSelectionUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      flagsInput,)
+  }
+);}
+
+
+
+
+export const getPutFlagSelectionMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putFlagSelection>>, TError,{data: BodyType<FlagsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof putFlagSelection>>, TError,{data: BodyType<FlagsInput>}, TContext> => {
+
+const mutationKey = ['putFlagSelection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putFlagSelection>>, {data: BodyType<FlagsInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  putFlagSelection(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutFlagSelectionMutationResult = NonNullable<Awaited<ReturnType<typeof putFlagSelection>>>
+    export type PutFlagSelectionMutationBody = BodyType<FlagsInput>
+    export type PutFlagSelectionMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Replace the signed-in user's flag selection
+ */
+export const usePutFlagSelection = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putFlagSelection>>, TError,{data: BodyType<FlagsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof putFlagSelection>>,
+        TError,
+        {data: BodyType<FlagsInput>},
+        TContext
+      > => {
+      return useMutation(getPutFlagSelectionMutationOptions(options));
     }
 
 export const getGetScenarioResponsesUrl = () => {

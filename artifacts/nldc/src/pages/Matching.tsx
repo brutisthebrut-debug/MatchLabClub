@@ -318,6 +318,8 @@ export default function Matching() {
     preferences: 0,
     voice: 0,
     wyr: 0,
+    dailySpark: 0,
+    flags: 0,
     consistency: 0,
     scenarioReels: 0,
     selfAwareness: 0,

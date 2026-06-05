@@ -33,6 +33,8 @@ export * from "./ai_usage_counters";
 export * from "./matching";
 export * from "./dating_wins";
 export * from "./wyr_answers";
+export * from "./daily_spark_answers";
+export * from "./flag_selections";
 export * from "./scenario_responses";
 export * from "./prediction_responses";
 export * from "./time_capsules";

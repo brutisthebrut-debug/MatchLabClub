@@ -22,6 +22,8 @@ import {
   messageCoachingSessionsTable,
   lifePulsesTable,
   wyrAnswersTable,
+  dailySparkAnswersTable,
+  flagSelectionsTable,
   scenarioResponsesTable,
   predictionResponsesTable,
   timeCapsulesTable,
@@ -147,6 +149,38 @@ export async function collectSignalCounts(
     .where(eq(wyrAnswersTable.userId, userId));
   const wyrCount = Number(wyrRows[0]?.count ?? 0);
 
+  // Daily Spark answers. One small reflective question a day, answered across
+  // days rather than in a burst, builds a steady read on how someone thinks
+  // about connection. One row per (user, question), so count(*) is the
+  // distinct-question count. We store only the option chosen, never any text.
+  const dailySparkRows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(dailySparkAnswersTable)
+    .where(eq(dailySparkAnswersTable.userId, userId));
+  const dailySparkCount = Number(dailySparkRows[0]?.count ?? 0);
+
+  // Green and red flags. The selection accumulates in a single row per user, two
+  // arrays of flag ids (what they bring, what they look for). The signal is how
+  // many distinct flags they have named across both lists; we read only the
+  // count of chosen ids here, never any free text.
+  const flagRows = await db
+    .select({
+      bringFlags: flagSelectionsTable.bringFlags,
+      seekFlags: flagSelectionsTable.seekFlags,
+    })
+    .from(flagSelectionsTable)
+    .where(eq(flagSelectionsTable.userId, userId))
+    .limit(1);
+  const flagItems = (() => {
+    const row = flagRows[0];
+    if (!row) return 0;
+    const ids = new Set<string>([
+      ...(row.bringFlags ?? []),
+      ...(row.seekFlags ?? []),
+    ]);
+    return ids.size;
+  })();
+
   // Scenario reels: distinct "what would you do" scenarios responded to. One row
   // per (user, scenario) via the unique index, so a plain count is the distinct
   // count. We store only the option chosen, never any free text.
@@ -244,6 +278,8 @@ export async function collectSignalCounts(
     coaching: coachingCount,
     lifePulse: lifePulseCount,
     wyrAnswered: wyrCount,
+    dailySparkAnswered: dailySparkCount,
+    flagItems,
     activeDays14,
     scenariosPlayed: scenarioCount,
     predictionsAnswered: predictionCount,
