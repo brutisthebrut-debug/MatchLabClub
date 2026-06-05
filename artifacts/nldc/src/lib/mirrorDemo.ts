@@ -114,14 +114,14 @@ export const DEMO_SIGNAL_MAP: SignalMap = {
   totalLanes: 15,
   topBlindSpot: {
     id: "hingeImport",
-    label: "Hinge import",
+    label: "Dating app import",
     coverage: 0,
     weightPercent: 8,
     confidence: 70,
     dimensions: ["real-world dating behavior", "texting style"],
     hasSignal: false,
     action: {
-      label: "Import your Hinge data",
+      label: "Import your dating app data",
       detail: "One export fills a whole signal lane at once.",
       href: "/imports",
     },
@@ -199,14 +199,14 @@ export const DEMO_SIGNAL_MAP: SignalMap = {
     },
     {
       id: "hingeImport",
-      label: "Hinge import",
+      label: "Dating app import",
       coverage: 0,
       weightPercent: 8,
       confidence: 70,
       dimensions: ["real-world dating behavior", "texting style"],
       hasSignal: false,
       action: {
-        label: "Import your Hinge data",
+        label: "Import your dating app data",
         detail: "One export fills a whole signal lane at once.",
         href: "/imports",
       },

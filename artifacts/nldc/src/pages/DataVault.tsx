@@ -398,7 +398,7 @@ function DeleteAccountCard() {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground">Delete my account</p>
           <p className="text-xs text-muted-foreground/70 mt-1 leading-relaxed">
-            This removes everything we have on you. Audits, coaching sessions, journal entries, wellness answers, compass reads, Hinge imports, the lot. This cannot be undone.
+            This removes everything we have on you. Audits, coaching sessions, journal entries, wellness answers, compass reads, dating app imports, the lot. This cannot be undone.
           </p>
           <div className="mt-4">
             <Button

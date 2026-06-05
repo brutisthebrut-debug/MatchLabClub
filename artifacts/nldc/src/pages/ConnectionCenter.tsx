@@ -77,14 +77,14 @@ type Connector = {
 const LIVE: Connector[] = [
   {
     id: "hinge-zip",
-    title: "Hinge GDPR ZIP",
+    title: "Dating app data export",
     icon: Flame,
     color: "hsl(348 75% 60%)",
     blurb:
-      "Drop in the ZIP from Hinge (Settings, Download My Data). We read your prompts, likes, and matches and build a pattern map you can actually use.",
+      "Drop in the data export ZIP from Hinge, Tinder, or Bumble (Settings, Download My Data). We read your prompts, likes, and matches and build a pattern map you can actually use.",
     returns: "A pattern read of how you write, who you like, and where your tempo drops off.",
-    cta: { href: "/imports", label: "Open Hinge import" },
-    readiness: "Fills the Hinge import lane of your Match Readiness in a single drop.",
+    cta: { href: "/imports", label: "Open dating app import" },
+    readiness: "Fills the dating app import lane of your Match Readiness in a single drop.",
   },
   {
     id: "instagram-paste",

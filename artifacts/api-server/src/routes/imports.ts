@@ -10,10 +10,12 @@ import {
 } from "../lib/anonClaimToken";
 import { parseCalendarIcs } from "../lib/calendarParser";
 import {
-  runHingeAiRead,
+  runImportAiRead,
+  importAppLabel,
   type HingeParsedSummary,
   type DerivedStats,
 } from "../lib/importEnrichment";
+import { parseTinderZip, parseBumbleZip } from "../lib/datingImports";
 
 const router: IRouter = Router();
 
@@ -286,93 +288,9 @@ function parseIdParam(raw: string | string[] | undefined): number | null {
   return Number.isFinite(id) && id > 0 ? id : null;
 }
 
-router.post(
-  "/imports/hinge",
-  (req, res, next) => {
-    upload.single("file")(req, res, (err: unknown) => {
-      if (err) {
-        if (err instanceof multer.MulterError) {
-          if (err.code === "LIMIT_FILE_SIZE") {
-            res.status(413).json({ error: "File too large. 50MB maximum." });
-            return;
-          }
-          res.status(400).json({ error: err.message });
-          return;
-        }
-        const msg = err instanceof Error ? err.message : "upload_failed";
-        if (msg === "invalid_mime") {
-          res.status(415).json({
-            error: "Only .zip uploads are accepted for Hinge data exports.",
-          });
-          return;
-        }
-        res.status(400).json({ error: msg });
-        return;
-      }
-      next();
-    });
-  },
-  async (req: Request, res: Response): Promise<void> => {
-    const file = req.file;
-    if (!file || !file.buffer || file.size === 0) {
-      res.status(400).json({ error: "No file uploaded." });
-      return;
-    }
-
-    let summary: HingeParsedSummary;
-    try {
-      summary = await parseHingeZip(file.buffer, file.originalname ?? null);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "parse_failed";
-      if (msg === "invalid_zip") {
-        res.status(400).json({
-          error:
-            "That file does not look like a valid ZIP. Upload the original export from Hinge without unzipping it first.",
-        });
-        return;
-      }
-      res.status(400).json({ error: msg });
-      return;
-    }
-
-    const userId = req.user?.id;
-    const anonToken = userId ? null : getOrCreateAnonClaimToken(req, res);
-
-    const [inserted] = await db
-      .insert(importedSourcesTable)
-      .values({
-        userId: userId ?? null,
-        anonymousClaimToken: anonToken,
-        source: "hinge",
-        status: "pending",
-        originalFilename: file.originalname ?? null,
-        parsedSummary: summary as unknown as Record<string, unknown>,
-      })
-      .returning();
-
-    req.log.info(
-      {
-        userId: userId ?? null,
-        importId: inserted?.id,
-        matches: summary.counts.matches,
-        conversations: summary.counts.conversations,
-      },
-      "Captured Hinge GDPR import",
-    );
-
-    res.status(201).json(serialize(inserted!));
-
-    if (userId && inserted?.id) {
-      setImmediate(() => {
-        void runHingeAiRead({
-          importId: inserted.id,
-          userId,
-          summary,
-        });
-      });
-    }
-  },
-);
+// The parametrized dating-app import route (`POST /imports/:app`) is registered
+// AFTER the calendar route below so that "/imports/calendar" matches its own
+// handler first instead of being captured as `:app`.
 
 const CalendarImportInput = z.object({
   icsContent: z.string().min(1).max(2_000_000),
@@ -429,6 +347,120 @@ router.post(
     );
 
     res.status(201).json(serialize(inserted!));
+  },
+);
+
+/**
+ * Parsers keyed by the `:app` path segment. The keys double as the route
+ * allowlist: a `:app` value with no parser here is rejected as unknown. Each
+ * parser returns the same summary shape, so downstream enrichment and the
+ * frontend are app-agnostic.
+ */
+const IMPORT_PARSERS: Record<
+  string,
+  (buffer: Buffer, originalFilename: string | null) => Promise<HingeParsedSummary>
+> = {
+  hinge: parseHingeZip,
+  tinder: parseTinderZip,
+  bumble: parseBumbleZip,
+};
+
+router.post(
+  "/imports/:app",
+  (req, res, next) => {
+    upload.single("file")(req, res, (err: unknown) => {
+      if (err) {
+        if (err instanceof multer.MulterError) {
+          if (err.code === "LIMIT_FILE_SIZE") {
+            res.status(413).json({ error: "File too large. 50MB maximum." });
+            return;
+          }
+          res.status(400).json({ error: err.message });
+          return;
+        }
+        const msg = err instanceof Error ? err.message : "upload_failed";
+        if (msg === "invalid_mime") {
+          res.status(415).json({
+            error: "Only .zip uploads are accepted for dating app data exports.",
+          });
+          return;
+        }
+        res.status(400).json({ error: msg });
+        return;
+      }
+      next();
+    });
+  },
+  async (req: Request, res: Response): Promise<void> => {
+    const app = Array.isArray(req.params.app)
+      ? req.params.app[0]
+      : req.params.app;
+    const parser = app ? IMPORT_PARSERS[app] : undefined;
+    if (!app || !parser) {
+      res.status(404).json({ error: "Unknown import source." });
+      return;
+    }
+
+    const file = req.file;
+    if (!file || !file.buffer || file.size === 0) {
+      res.status(400).json({ error: "No file uploaded." });
+      return;
+    }
+
+    const label = importAppLabel(app);
+    let summary: HingeParsedSummary;
+    try {
+      summary = await parser(file.buffer, file.originalname ?? null);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "parse_failed";
+      if (msg === "invalid_zip") {
+        res.status(400).json({
+          error: `That file does not look like a valid ZIP. Upload the original export from ${label} without unzipping it first.`,
+        });
+        return;
+      }
+      res.status(400).json({ error: msg });
+      return;
+    }
+
+    const userId = req.user?.id;
+    const anonToken = userId ? null : getOrCreateAnonClaimToken(req, res);
+
+    const [inserted] = await db
+      .insert(importedSourcesTable)
+      .values({
+        userId: userId ?? null,
+        anonymousClaimToken: anonToken,
+        source: app,
+        status: "pending",
+        originalFilename: file.originalname ?? null,
+        parsedSummary: summary as unknown as Record<string, unknown>,
+      })
+      .returning();
+
+    req.log.info(
+      {
+        userId: userId ?? null,
+        importId: inserted?.id,
+        app,
+        matches: summary.counts.matches,
+        conversations: summary.counts.conversations,
+      },
+      "Captured dating app data import",
+    );
+
+    res.status(201).json(serialize(inserted!));
+
+    if (userId && inserted?.id) {
+      setImmediate(() => {
+        void runImportAiRead({
+          app,
+          importId: inserted.id,
+          userId,
+          summary,
+        });
+      });
+    }
   },
 );
 

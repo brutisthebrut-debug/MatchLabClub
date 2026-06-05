@@ -269,9 +269,31 @@ export type SignalNormalizer =
  * allowed to write. The endpoint derives its allowlist from these entries, so a
  * new paste connector needs no route allowlist edit.
  */
+/**
+ * Dating-app data exports we can parse into the shared import summary shape.
+ * One list drives the import route allowlist, the recovery sweep's enrichable
+ * set, and the `sources` of the dating-app import lane below, so adding an app
+ * is a single-line change.
+ */
+export const DATING_APP_IMPORT_SOURCES = ["hinge", "tinder", "bumble"] as const;
+
 export type SignalDataSource =
   | { kind: "firstParty" }
-  | { kind: "importRows"; source: string; capture?: "paste" }
+  | {
+      kind: "importRows";
+      /**
+       * Primary source key (kept for back-compat and as the single-source
+       * default). When `sources` is set, counts are summed across all of them.
+       */
+      source: string;
+      /**
+       * Optional set of `imported_sources.source` values that all feed this one
+       * lane. Lets a single lane (such as dating-app imports) count Hinge,
+       * Tinder, and Bumble together without one entry per app.
+       */
+      sources?: readonly string[];
+      capture?: "paste";
+    }
   | {
       kind: "importSummaryCount";
       source: string;
@@ -398,31 +420,39 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     },
   },
   {
+    // Lane id and countKey stay `hingeImport` for back-compat (they are part of
+    // the readiness breakdown contract and the generated client). The lane is no
+    // longer Hinge-only: it counts any dating-app export (Hinge, Tinder, Bumble)
+    // via the `sources` list, and the user-facing copy is app-agnostic.
     id: "hingeImport",
     countKey: "hingeImport",
-    dataSource: { kind: "importRows", source: "hinge" },
-    label: "Hinge import",
+    dataSource: {
+      kind: "importRows",
+      source: "hinge",
+      sources: DATING_APP_IMPORT_SOURCES,
+    },
+    label: "Dating app import",
     dimensions: ["real-world dating behavior", "texting style"],
     weight: 0.16,
     confidence: 0.7,
     normalize: { kind: "binary" },
     decayHalfLifeDays: 180,
     describe: () =>
-      `Imported their Hinge history, so we can see how they actually talk and behave on a dating app, not just how they describe themselves.`,
+      `Imported their dating app history, so we can see how they actually talk and behave on a dating app, not just how they describe themselves.`,
     action: {
-      label: "Import your Hinge data",
-      detail: "One export fills a whole signal lane at once.",
+      label: "Import your dating app data",
+      detail: "One export from Hinge, Tinder, or Bumble fills a whole signal lane at once.",
       href: "/imports",
     },
     trust: {
-      origin: "The Hinge data export you upload yourself.",
+      origin: "The dating app data export you upload yourself.",
       noun: "import",
       seen: [
         "Patterns in how you talk and behave on the app",
         "That you imported an export, used to fill the lane",
       ],
       neverTouched: [
-        "Your Hinge login or any live account access",
+        "Your dating app login or any live account access",
         "Anything from the export you did not upload",
       ],
     },

@@ -78,6 +78,45 @@ interface ImportRow {
 
 const MAX_BYTES = 50 * 1024 * 1024;
 
+const DATING_APPS = [
+  { key: "hinge", label: "Hinge" },
+  { key: "tinder", label: "Tinder" },
+  { key: "bumble", label: "Bumble" },
+] as const;
+
+type DatingAppKey = (typeof DATING_APPS)[number]["key"];
+
+const APP_LABELS: Record<string, string> = {
+  hinge: "Hinge",
+  tinder: "Tinder",
+  bumble: "Bumble",
+};
+
+function appLabel(source: string): string {
+  return APP_LABELS[source] ?? source;
+}
+
+const DOWNLOAD_STEPS: Record<DatingAppKey, string[]> = {
+  hinge: [
+    "Open the Hinge app.",
+    "Settings, then Download My Data.",
+    "You'll receive an email with a ZIP file in 24 to 48 hours.",
+    "Drag the ZIP here. No need to unzip first.",
+  ],
+  tinder: [
+    "Open Tinder and go to Settings.",
+    "Find Download My Data and request a copy.",
+    "Tinder emails a download link, usually within a few days.",
+    "Download the ZIP and drag it here. No need to unzip first.",
+  ],
+  bumble: [
+    "Email a data request through Bumble Settings, Contact and FAQ.",
+    "Ask for a copy of your account data under privacy options.",
+    "Bumble sends your data back by email.",
+    "Drag the ZIP or archive here. No need to unzip first.",
+  ],
+};
+
 function formatDate(iso: string | null | undefined): string {
   if (!iso) return "Unknown";
   const d = new Date(iso);
@@ -217,8 +256,8 @@ function SummaryView({ row }: { row: ImportRow }) {
           )}
           <ShareButton
             surface="hinge-import"
-            title="Echo read my Hinge history"
-            text="I uploaded my Hinge export to MatchLab. Here's what Echo saw."
+            title="Echo read my dating history"
+            text="I uploaded my dating app export to MatchLab. Here's what Echo saw."
             path="/imports"
             variant="pill"
           />
@@ -253,7 +292,7 @@ function SummaryView({ row }: { row: ImportRow }) {
 export default function Imports() {
   useMeta(
     "Import your dating data",
-    "Bring in your Hinge export and other history so the machine understands your patterns and matches you better.",
+    "Bring in your Hinge, Tinder, or Bumble export and other history so the machine understands your patterns and matches you better.",
   );
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -265,6 +304,7 @@ export default function Imports() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [pollExhausted, setPollExhausted] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [selectedApp, setSelectedApp] = useState<DatingAppKey>("hinge");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollTimerRef = useRef<number | null>(null);
   const pollStartRef = useRef<number>(0);
@@ -333,7 +373,7 @@ export default function Imports() {
     if (!file.name.toLowerCase().endsWith(".zip")) {
       toast({
         title: "ZIP files only",
-        description: "Upload the original .zip from your Hinge export, no need to unzip it first.",
+        description: `Upload the original .zip from your ${appLabel(selectedApp)} export, no need to unzip it first.`,
         variant: "destructive",
       });
       return;
@@ -355,7 +395,7 @@ export default function Imports() {
     setActiveId(null);
 
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/imports/hinge");
+    xhr.open("POST", `/api/imports/${selectedApp}`);
     xhr.withCredentials = true;
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) {
@@ -489,8 +529,9 @@ export default function Imports() {
             Bring your history into the light.
           </h1>
           <p className="text-muted-foreground max-w-2xl">
-            Drop your Hinge GDPR export or paste your calendar. We'll show you what your
-            patterns and your weekly rhythm actually say about you.
+            Drop your Hinge, Tinder, or Bumble data export or paste your calendar.
+            We'll show you what your patterns and your weekly rhythm actually say
+            about you.
           </p>
         </section>
 
@@ -502,11 +543,35 @@ export default function Imports() {
           >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FileArchive className="w-5 h-5" /> Hinge
+                <FileArchive className="w-5 h-5" /> Dating app export
               </CardTitle>
-              <p className="text-xs text-muted-foreground">Live. Drop your ZIP.</p>
+              <p className="text-xs text-muted-foreground">
+                Live for Hinge, Tinder, and Bumble. Drop your ZIP.
+              </p>
             </CardHeader>
             <CardContent>
+              <div
+                className="grid grid-cols-3 gap-1.5 mb-3"
+                role="tablist"
+                aria-label="Choose your dating app"
+              >
+                {DATING_APPS.map((app) => (
+                  <Button
+                    key={app.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={selectedApp === app.key}
+                    variant={selectedApp === app.key ? "default" : "secondary"}
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => setSelectedApp(app.key)}
+                    disabled={uploading}
+                    data-testid={`select-app-${app.key}`}
+                  >
+                    {app.label}
+                  </Button>
+                ))}
+              </div>
               <div
                 role="button"
                 tabIndex={0}
@@ -593,14 +658,13 @@ export default function Imports() {
           <Accordion type="single" collapsible className="border border-white/10 rounded-2xl">
             <AccordionItem value="how" className="border-none">
               <AccordionTrigger className="px-5">
-                How to download your Hinge data
+                How to download your {appLabel(selectedApp)} data
               </AccordionTrigger>
               <AccordionContent className="px-5 pb-5">
                 <ol className="list-decimal list-inside space-y-2 text-sm">
-                  <li>Open the Hinge app.</li>
-                  <li>Settings, then Download My Data.</li>
-                  <li>You'll receive an email with a ZIP file in 24 to 48 hours.</li>
-                  <li>Drag the ZIP here. No need to unzip first.</li>
+                  {DOWNLOAD_STEPS[selectedApp].map((step, i) => (
+                    <li key={i}>{step}</li>
+                  ))}
                 </ol>
               </AccordionContent>
             </AccordionItem>
@@ -627,7 +691,7 @@ export default function Imports() {
           <h2 className="text-xl font-semibold">Past imports</h2>
           {imports.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No imports yet. Upload your first Hinge export above.
+              No imports yet. Upload your first dating app export above.
             </p>
           ) : (
             <div className="space-y-3">
@@ -643,8 +707,10 @@ export default function Imports() {
                           onClick={() => setExpandedId(expanded ? null : row.id)}
                           data-testid={`import-row-${row.id}`}
                         >
-                          <div className="font-medium capitalize">
-                            {row.source} export
+                          <div className="font-medium">
+                            {row.source === "calendar-ics"
+                              ? "Calendar import"
+                              : `${appLabel(row.source)} export`}
                             <span className="text-xs text-muted-foreground ml-2">
                               {row.originalFilename ?? "uploaded.zip"}
                             </span>

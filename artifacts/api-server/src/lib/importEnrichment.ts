@@ -23,6 +23,7 @@ import { extractAndValidateJson } from "@workspace/ai-schemas";
 import { generate, type GenerateResult } from "./aiService";
 import { retryWhile } from "./retry";
 import { logger } from "./logger";
+import { DATING_APP_IMPORT_SOURCES } from "./signalRegistry";
 
 /** Bounded retry budget for a single enrichment row's model call. */
 const ENRICH_ATTEMPTS = 3;
@@ -122,14 +123,29 @@ export const HingeAiReadSchema = z.object({
 });
 export type HingeAiRead = z.infer<typeof HingeAiReadSchema>;
 
-function buildHingeUserPrompt(summary: HingeParsedSummary): string {
+/** Human-facing name for a dating-app import source key. */
+export function importAppLabel(app: string): string {
+  switch (app) {
+    case "hinge":
+      return "Hinge";
+    case "tinder":
+      return "Tinder";
+    case "bumble":
+      return "Bumble";
+    default:
+      return app.charAt(0).toUpperCase() + app.slice(1);
+  }
+}
+
+function buildImportUserPrompt(app: string, summary: HingeParsedSummary): string {
+  const label = importAppLabel(app);
   const d = summary.derivedStats;
   const span =
     d.oldestMatchAt && d.newestMatchAt
       ? `from ${d.oldestMatchAt.slice(0, 10)} to ${d.newestMatchAt.slice(0, 10)}`
       : "with no datestamped activity we could read";
   return [
-    "Read this person's Hinge history summary and give a narrative read of their dating patterns. The numbers below are all you have. No raw messages were shared.",
+    `Read this person's ${label} history summary and give a narrative read of their dating patterns. The numbers below are all you have. No raw messages were shared.`,
     "",
     `Total matches: ${d.totalMatches}`,
     `Total conversations started: ${d.totalConversations}`,
@@ -154,7 +170,9 @@ function buildHingeUserPrompt(summary: HingeParsedSummary): string {
  * Strip our own enrichment annotations back out of a stored summary so a
  * recovery re-run starts from the clean parsed numbers.
  */
-function cleanHingeSummary(stored: Record<string, unknown>): HingeParsedSummary {
+export function cleanImportSummary(
+  stored: Record<string, unknown>,
+): HingeParsedSummary {
   const { aiRead, aiError, aiRetryCount, ...rest } =
     stored as Record<string, unknown> & {
       aiRead?: unknown;
@@ -167,18 +185,20 @@ function cleanHingeSummary(stored: Record<string, unknown>): HingeParsedSummary 
   return rest as unknown as HingeParsedSummary;
 }
 
-export async function runHingeAiRead(args: {
+export async function runImportAiRead(args: {
+  app: string;
   importId: number;
   userId: string;
   summary: HingeParsedSummary;
   retryCount?: number;
 }): Promise<void> {
-  const { importId, userId, summary } = args;
+  const { app, importId, userId, summary } = args;
   const retryCount = args.retryCount ?? 0;
+  const label = importAppLabel(app);
   const system = buildEchoSystemPrompt(
-    "Read a person's Hinge GDPR export summary and give them a narrative read of their dating patterns. Return JSON only, no prose, no code fences.",
+    `Read a person's ${label} data export summary and give them a narrative read of their dating patterns. Return JSON only, no prose, no code fences.`,
   );
-  const user = buildHingeUserPrompt(summary);
+  const user = buildImportUserPrompt(app, summary);
 
   const markFallback = async (reason: string): Promise<void> => {
     await db
@@ -244,8 +264,9 @@ export async function runHingeAiRead(args: {
       {
         err: err instanceof Error ? err.message : String(err),
         importId,
+        app,
       },
-      "Hinge AI read enrichment failed",
+      "Import AI read enrichment failed",
     );
     await markFallback(
       err instanceof Error ? err.message : "unknown_error",
@@ -729,15 +750,16 @@ export async function reenrichImportRow(
 ): Promise<"reenriched" | "skipped"> {
   if (!row.userId || !row.parsedSummary) return "skipped";
 
-  if (row.source === "hinge") {
+  if ((DATING_APP_IMPORT_SOURCES as readonly string[]).includes(row.source)) {
     const retryCount =
       typeof row.parsedSummary.aiRetryCount === "number"
         ? row.parsedSummary.aiRetryCount
         : 0;
-    await runHingeAiRead({
+    await runImportAiRead({
+      app: row.source,
       importId: row.id,
       userId: row.userId,
-      summary: cleanHingeSummary(row.parsedSummary),
+      summary: cleanImportSummary(row.parsedSummary),
       retryCount,
     });
     return "reenriched";

@@ -339,7 +339,14 @@ export async function collectSignalCounts(
   for (const contributor of SIGNAL_REGISTRY) {
     const ds = contributor.dataSource;
     if (ds.kind === "importRows") {
-      counts[contributor.countKey] = importRowsBySource.get(ds.source) ?? 0;
+      // A lane may aggregate several import sources (e.g. dating-app imports
+      // count Hinge + Tinder + Bumble). Sum across `sources` when set, else use
+      // the single `source`.
+      const keys = ds.sources ?? [ds.source];
+      counts[contributor.countKey] = keys.reduce(
+        (sum, key) => sum + (importRowsBySource.get(key) ?? 0),
+        0,
+      );
     } else if (ds.kind === "importSummaryCount") {
       counts[contributor.countKey] = await latestSummaryCount(
         ds.source,
@@ -467,7 +474,14 @@ export async function collectSignalRecency(
   for (const c of decaying) {
     const ds = c.dataSource;
     if (ds.kind === "importRows" || ds.kind === "importSummaryCount") {
-      out[c.id] = ageDaysFrom(importLatest.get(ds.source) ?? null);
+      // For multi-source lanes, recency is the most recent activity across all
+      // of its sources (smallest age = most recent timestamp).
+      const keys =
+        ds.kind === "importRows" ? (ds.sources ?? [ds.source]) : [ds.source];
+      const ages = keys
+        .map((key) => ageDaysFrom(importLatest.get(key) ?? null))
+        .filter((age): age is number => age !== null);
+      out[c.id] = ages.length > 0 ? Math.min(...ages) : null;
     } else {
       out[c.id] = ageDaysFrom(firstParty[c.id as string] ?? null);
     }

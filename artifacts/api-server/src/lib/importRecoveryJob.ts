@@ -37,9 +37,12 @@ import { db, importedSourcesTable } from "@workspace/db";
 import { logger } from "./logger";
 import { recordJobHeartbeat } from "./jobHeartbeat";
 import { reenrichImportRow, MAX_ENRICH_RETRIES } from "./importEnrichment";
+import { DATING_APP_IMPORT_SOURCES } from "./signalRegistry";
 
 const IMPORT_RECOVERY_JOB = "import_recovery";
-const ENRICHABLE_SOURCES = ["hinge", "instagram-paste"];
+const ENRICHABLE_SOURCES = [...DATING_APP_IMPORT_SOURCES, "instagram-paste"];
+/** Import sources whose AI read can land in a recoverable `fallback` state. */
+const FALLBACK_RECOVERABLE_SOURCES = new Set<string>(DATING_APP_IMPORT_SOURCES);
 
 /** Reasons a `fallback` row will never improve on re-run. */
 const TERMINAL_FALLBACK_REASONS = new Set([
@@ -88,9 +91,10 @@ export function shouldRecoverRow(
   }
 
   if (row.status === "fallback") {
-    // Only Hinge can land in fallback; Instagram always completes with a
-    // deterministic read. Guard by source anyway for clarity.
-    if (row.source !== "hinge") return false;
+    // Only dating-app imports (Hinge, Tinder, Bumble) can land in fallback;
+    // Instagram always completes with a deterministic read. Guard by source
+    // anyway for clarity.
+    if (!FALLBACK_RECOVERABLE_SOURCES.has(row.source)) return false;
     const summary = row.parsedSummary ?? {};
     const reason =
       typeof summary.aiError === "string" ? summary.aiError : "unknown";
@@ -161,7 +165,9 @@ export async function recoverStuckImports(options?: {
             ),
             and(
               eq(importedSourcesTable.status, "fallback"),
-              eq(importedSourcesTable.source, "hinge"),
+              inArray(importedSourcesTable.source, [
+                ...FALLBACK_RECOVERABLE_SOURCES,
+              ]),
               // Match shouldRecoverRow's cooldown source so the batch is not
               // starved by rows that are still inside their cooldown window.
               sql`coalesce(${importedSourcesTable.processedAt}, ${importedSourcesTable.uploadedAt}) < ${fallbackCutoff}`,

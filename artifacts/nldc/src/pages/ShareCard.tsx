@@ -48,7 +48,7 @@ const fadeUp = (delay = 0) => ({
 const LANE_LABELS: Record<string, string> = {
   compass: "Compass reads",
   wellness: "Wellness map",
-  hingeImport: "Hinge import",
+  hingeImport: "Dating app import",
   calendar: "Calendar rhythm",
   audits: "Profile audits",
   coaching: "Message coaching",

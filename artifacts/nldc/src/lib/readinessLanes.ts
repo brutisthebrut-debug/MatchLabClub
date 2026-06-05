@@ -61,10 +61,11 @@ export const BREAKDOWN_ROWS = [
   },
   {
     key: "hingeImport",
-    label: "Hinge import",
-    blurb: "A Hinge export tells us how you swipe and who swipes back.",
+    label: "Dating app import",
+    blurb:
+      "A Hinge, Tinder, or Bumble export tells us how you swipe and who swipes back.",
     href: "/imports",
-    cta: "Import Hinge data",
+    cta: "Import dating app data",
     icon: Download,
   },
   {
