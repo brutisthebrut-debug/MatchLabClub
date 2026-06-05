@@ -6339,10 +6339,25 @@ components:
 
     ReportUserInput:
       type: object
-      required: [reportedUserId, reason]
+      required: [reason]
+      description: |
+        A safety report. For a report about another platform member, set
+        reportedUserId and leave subjectType as "member". For an off-platform
+        report filed from the message coach (the person lives on Hinge/Tinder/
+        Bumble and has no account here), set subjectType to "off_platform",
+        omit reportedUserId, and use externalApp/externalLabel for context.
       properties:
         reportedUserId:
-          type: string
+          type: ["string", "null"]
+        subjectType:
+          type: ["string", "null"]
+          enum: [member, off_platform, null]
+        externalApp:
+          type: ["string", "null"]
+          maxLength: 120
+        externalLabel:
+          type: ["string", "null"]
+          maxLength: 120
         reason:
           type: string
           enum: [fake_profile, harassment, inappropriate, scam, underage, safety, other]
@@ -6401,14 +6416,21 @@ components:
 
     FounderReport:
       type: object
-      required: [id, reporterUserId, reportedUserId, reason, context, note, status, createdAt, reviewedAt]
+      required: [id, reporterUserId, reportedUserId, subjectType, externalApp, externalLabel, reason, context, note, status, createdAt, reviewedAt]
       properties:
         id:
           type: integer
         reporterUserId:
           type: string
         reportedUserId:
+          type: ["string", "null"]
+        subjectType:
           type: string
+          enum: [member, off_platform]
+        externalApp:
+          type: ["string", "null"]
+        externalLabel:
+          type: ["string", "null"]
         reason:
           type: string
         context:

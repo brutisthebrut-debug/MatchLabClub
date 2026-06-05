@@ -3315,16 +3315,23 @@ export const ReportUserHeader = zod.object({
   "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
 })
 
+export const reportUserBodyExternalAppMax = 120;
+
+export const reportUserBodyExternalLabelMax = 120;
+
 export const reportUserBodyNoteMax = 1000;
 
 
 
 export const ReportUserBody = zod.object({
-  "reportedUserId": zod.string(),
+  "reportedUserId": zod.string().nullish(),
+  "subjectType": zod.union([zod.literal('member'),zod.literal('off_platform'),zod.literal(null)]).nullish(),
+  "externalApp": zod.string().max(reportUserBodyExternalAppMax).nullish(),
+  "externalLabel": zod.string().max(reportUserBodyExternalLabelMax).nullish(),
   "reason": zod.enum(['fake_profile', 'harassment', 'inappropriate', 'scam', 'underage', 'safety', 'other']),
   "context": zod.union([zod.literal('match'),zod.literal('conversation'),zod.literal('profile'),zod.literal(null)]).nullish(),
   "note": zod.string().max(reportUserBodyNoteMax).nullish()
-})
+}).describe('A safety report. For a report about another platform member, set\nreportedUserId and leave subjectType as \"member\". For an off-platform\nreport filed from the message coach (the person lives on Hinge\/Tinder\/\nBumble and has no account here), set subjectType to \"off_platform\",\nomit reportedUserId, and use externalApp\/externalLabel for context.\n')
 
 
 /**
@@ -3395,7 +3402,10 @@ export const GetFounderReportsResponse = zod.object({
   "reports": zod.array(zod.object({
   "id": zod.number(),
   "reporterUserId": zod.string(),
-  "reportedUserId": zod.string(),
+  "reportedUserId": zod.string().nullable(),
+  "subjectType": zod.enum(['member', 'off_platform']),
+  "externalApp": zod.string().nullable(),
+  "externalLabel": zod.string().nullable(),
   "reason": zod.string(),
   "context": zod.string().nullable(),
   "note": zod.string().nullable(),
@@ -3425,7 +3435,10 @@ export const UpdateFounderReportStatusBody = zod.object({
 export const UpdateFounderReportStatusResponse = zod.object({
   "id": zod.number(),
   "reporterUserId": zod.string(),
-  "reportedUserId": zod.string(),
+  "reportedUserId": zod.string().nullable(),
+  "subjectType": zod.enum(['member', 'off_platform']),
+  "externalApp": zod.string().nullable(),
+  "externalLabel": zod.string().nullable(),
   "reason": zod.string(),
   "context": zod.string().nullable(),
   "note": zod.string().nullable(),

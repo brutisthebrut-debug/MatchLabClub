@@ -29,6 +29,7 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { MessageSquare, Loader2, Copy, Check, AlertTriangle, Lightbulb, Sparkles, Send, Upload, X, AlertCircle, Moon, Clock, Minus, Sunrise, TrendingDown, TrendingUp, ShieldAlert } from "lucide-react";
 import { ShareButton } from "@/components/echo/ShareButton";
+import { ReportConversationButton } from "@/components/safety/ReportConversationButton";
 import {
   useCoachNudgePrefs,
   buildWebSnoozeChips,
@@ -1084,6 +1085,7 @@ export default function Coach() {
   </ul>
   )}
   <p className="text-sm text-foreground/85 leading-relaxed">{showResult.safety.advice}</p>
+  <div className="flex items-center flex-wrap gap-y-1 mt-1">
   <a
   href="/date-safety"
   className="inline-flex items-center gap-1.5 text-xs font-medium mt-3 text-[hsl(248_62%_62%)] hover:underline"
@@ -1091,6 +1093,13 @@ export default function Coach() {
   >
   See the date-safety basics
   </a>
+  <ReportConversationButton
+  sourceApp={result ? resultApp : (DEMO_SESSION.sourceApp as string)}
+  matchName={result ? matchName : (DEMO_SESSION.matchName as string)}
+  signals={showResult.safety.signals}
+  risk={showResult.safety.risk}
+  />
+  </div>
   </div>
   )}
 

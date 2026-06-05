@@ -31,7 +31,46 @@ router.post("/me/safety/report", async (req, res): Promise<void> => {
   }
 
   const reporterUserId = req.user.id;
-  const { reportedUserId, reason, context, note } = parsed.data;
+  const {
+    reportedUserId,
+    subjectType,
+    externalApp,
+    externalLabel,
+    reason,
+    context,
+    note,
+  } = parsed.data;
+
+  const isOffPlatform = subjectType === "off_platform";
+
+  if (isOffPlatform) {
+    // Off-platform reports name no platform account. They come from the message
+    // coach, where the other person lives on Hinge/Tinder/Bumble. We keep only
+    // the derived context (app + label + note), never the raw conversation.
+    const [row] = await db
+      .insert(userReportsTable)
+      .values({
+        reporterUserId,
+        reportedUserId: null,
+        subjectType: "off_platform",
+        externalApp: externalApp ?? null,
+        externalLabel: externalLabel ?? null,
+        reason,
+        context: context ?? "conversation",
+        note: note ?? null,
+      })
+      .returning({ id: userReportsTable.id });
+
+    res.status(201).json({ ok: true, reportId: row.id });
+    return;
+  }
+
+  if (!reportedUserId) {
+    res
+      .status(400)
+      .json({ error: "A reported member is required for a member report" });
+    return;
+  }
 
   if (reportedUserId === reporterUserId) {
     res.status(400).json({ error: "You cannot report yourself" });
@@ -43,6 +82,7 @@ router.post("/me/safety/report", async (req, res): Promise<void> => {
     .values({
       reporterUserId,
       reportedUserId,
+      subjectType: "member",
       reason,
       context: context ?? null,
       note: note ?? null,

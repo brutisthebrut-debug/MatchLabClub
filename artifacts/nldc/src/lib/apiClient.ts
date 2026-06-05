@@ -385,7 +385,10 @@ export const getEchoUserSignals = (founderKey: string, email: string) =>
 export interface FounderReport {
   id: number;
   reporterUserId: string;
-  reportedUserId: string;
+  reportedUserId: string | null;
+  subjectType: "member" | "off_platform";
+  externalApp: string | null;
+  externalLabel: string | null;
   reason: string;
   context: string | null;
   note: string | null;

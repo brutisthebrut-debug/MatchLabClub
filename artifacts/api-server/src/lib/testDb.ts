@@ -262,6 +262,9 @@ stores.user_reports = {
   defaults: {
     reporterUserId: null,
     reportedUserId: null,
+    subjectType: "member",
+    externalApp: null,
+    externalLabel: null,
     reason: null,
     context: null,
     note: null,

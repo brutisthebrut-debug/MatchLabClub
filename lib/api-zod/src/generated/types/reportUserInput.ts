@@ -7,9 +7,31 @@
  */
 import type { ReportUserInputContext } from './reportUserInputContext';
 import type { ReportUserInputReason } from './reportUserInputReason';
+import type { ReportUserInputSubjectType } from './reportUserInputSubjectType';
 
+/**
+ * A safety report. For a report about another platform member, set
+reportedUserId and leave subjectType as "member". For an off-platform
+report filed from the message coach (the person lives on Hinge/Tinder/
+Bumble and has no account here), set subjectType to "off_platform",
+omit reportedUserId, and use externalApp/externalLabel for context.
+
+ */
 export interface ReportUserInput {
-  reportedUserId: string;
+  /** @nullable */
+  reportedUserId?: string | null;
+  /** @nullable */
+  subjectType?: ReportUserInputSubjectType;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  externalApp?: string | null;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  externalLabel?: string | null;
   reason: ReportUserInputReason;
   /** @nullable */
   context?: ReportUserInputContext;

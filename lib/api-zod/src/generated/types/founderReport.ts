@@ -6,11 +6,18 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { FounderReportStatus } from './founderReportStatus';
+import type { FounderReportSubjectType } from './founderReportSubjectType';
 
 export interface FounderReport {
   id: number;
   reporterUserId: string;
-  reportedUserId: string;
+  /** @nullable */
+  reportedUserId: string | null;
+  subjectType: FounderReportSubjectType;
+  /** @nullable */
+  externalApp: string | null;
+  /** @nullable */
+  externalLabel: string | null;
   reason: string;
   /** @nullable */
   context: string | null;

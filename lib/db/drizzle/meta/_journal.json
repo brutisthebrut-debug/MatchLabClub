@@ -232,6 +232,13 @@
       "when": 1780647396987,
       "tag": "0032_minor_havok",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1780685691955,
+      "tag": "0033_sour_redwing",
+      "breakpoints": true
     }
   ]
 }

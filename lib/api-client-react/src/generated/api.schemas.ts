@@ -698,6 +698,17 @@ export interface MessageCoachingResponse {
   safety: SafetyCheck;
 }
 
+/**
+ * @nullable
+ */
+export type ReportUserInputSubjectType = typeof ReportUserInputSubjectType[keyof typeof ReportUserInputSubjectType] | null;
+
+
+export const ReportUserInputSubjectType = {
+  member: 'member',
+  off_platform: 'off_platform',
+} as const;
+
 export type ReportUserInputReason = typeof ReportUserInputReason[keyof typeof ReportUserInputReason];
 
 
@@ -723,8 +734,29 @@ export const ReportUserInputContext = {
   profile: 'profile',
 } as const;
 
+/**
+ * A safety report. For a report about another platform member, set
+reportedUserId and leave subjectType as "member". For an off-platform
+report filed from the message coach (the person lives on Hinge/Tinder/
+Bumble and has no account here), set subjectType to "off_platform",
+omit reportedUserId, and use externalApp/externalLabel for context.
+
+ */
 export interface ReportUserInput {
-  reportedUserId: string;
+  /** @nullable */
+  reportedUserId?: string | null;
+  /** @nullable */
+  subjectType?: ReportUserInputSubjectType;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  externalApp?: string | null;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  externalLabel?: string | null;
   reason: ReportUserInputReason;
   /** @nullable */
   context?: ReportUserInputContext;
@@ -777,6 +809,14 @@ export interface UnblockAck {
   ok: boolean;
 }
 
+export type FounderReportSubjectType = typeof FounderReportSubjectType[keyof typeof FounderReportSubjectType];
+
+
+export const FounderReportSubjectType = {
+  member: 'member',
+  off_platform: 'off_platform',
+} as const;
+
 export type FounderReportStatus = typeof FounderReportStatus[keyof typeof FounderReportStatus];
 
 
@@ -789,7 +829,13 @@ export const FounderReportStatus = {
 export interface FounderReport {
   id: number;
   reporterUserId: string;
-  reportedUserId: string;
+  /** @nullable */
+  reportedUserId: string | null;
+  subjectType: FounderReportSubjectType;
+  /** @nullable */
+  externalApp: string | null;
+  /** @nullable */
+  externalLabel: string | null;
   reason: string;
   /** @nullable */
   context: string | null;

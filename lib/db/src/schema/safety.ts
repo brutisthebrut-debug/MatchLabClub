@@ -34,6 +34,13 @@ export type SafetyReason = (typeof SAFETY_REASONS)[number];
 // Where in the product the action was taken, so the founder can see context.
 export const SAFETY_CONTEXTS = ["match", "conversation", "profile"] as const;
 
+// Who a report is about. "member" reports name another platform account
+// (reportedUserId is set). "off_platform" reports come from the message coach,
+// where the person being discussed lives on Hinge/Tinder/Bumble and has no
+// account here, so reportedUserId is null and externalApp/externalLabel carry
+// the only identifying context.
+export const REPORT_SUBJECT_TYPES = ["member", "off_platform"] as const;
+
 export const REPORT_STATUSES = ["open", "reviewed", "dismissed"] as const;
 
 export const userReportsTable = pgTable(
@@ -41,7 +48,14 @@ export const userReportsTable = pgTable(
   {
     id: serial("id").primaryKey(),
     reporterUserId: varchar("reporter_user_id").notNull(),
-    reportedUserId: varchar("reported_user_id").notNull(),
+    // Null for off-platform reports filed from the message coach. Present for
+    // reports about a real platform member.
+    reportedUserId: varchar("reported_user_id"),
+    subjectType: varchar("subject_type").notNull().default("member"),
+    // Off-platform context only: the dating app the conversation happened on and
+    // the name the reporter gave the other person. Never the raw conversation.
+    externalApp: varchar("external_app"),
+    externalLabel: varchar("external_label"),
     reason: varchar("reason").notNull(),
     context: varchar("context"),
     note: varchar("note", { length: 1000 }),
@@ -80,6 +94,10 @@ export const userBlocksTable = pgTable(
 
 export const insertUserReportSchema = createInsertSchema(userReportsTable, {
   reason: z.enum(SAFETY_REASONS),
+  reportedUserId: z.string().nullish(),
+  subjectType: z.enum(REPORT_SUBJECT_TYPES).nullish(),
+  externalApp: z.string().trim().max(120).nullish(),
+  externalLabel: z.string().trim().max(120).nullish(),
   context: z.enum(SAFETY_CONTEXTS).nullish(),
   note: z.string().trim().max(1000).nullish(),
 }).omit({

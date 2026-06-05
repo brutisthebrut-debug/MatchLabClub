@@ -129,6 +129,63 @@ describe("POST /api/me/safety/report", () => {
     expect(res.body.ok).toBe(true);
     expect(typeof res.body.reportId).toBe("number");
   });
+
+  it("400s on a member report with no reported member", async () => {
+    testApp.setUser({ id: USER_A });
+    const res = await request(testApp.app)
+      .post("/api/me/safety/report")
+      .send({ reason: "harassment" });
+    expect(res.status).toBe(400);
+  });
+
+  it("files an off-platform conversation report with no reportedUserId", async () => {
+    testApp.setUser({ id: USER_A });
+    const res = await request(testApp.app)
+      .post("/api/me/safety/report")
+      .send({
+        subjectType: "off_platform",
+        reason: "scam",
+        context: "conversation",
+        externalApp: "Hinge",
+        externalLabel: "Alex",
+        note: "Coach flagged an elevated romance-scam pattern.",
+      });
+    expect(res.status).toBe(201);
+    expect(res.body.ok).toBe(true);
+    expect(typeof res.body.reportId).toBe("number");
+  });
+
+  it("stores off-platform reports with no platform member, app, and label", async () => {
+    testApp.setUser({ id: USER_A });
+    const { dumpTable } = await import("../lib/testDb");
+    await request(testApp.app)
+      .post("/api/me/safety/report")
+      .send({
+        subjectType: "off_platform",
+        reason: "scam",
+        externalApp: "Tinder",
+        externalLabel: "Jordan",
+      });
+    const rows = (
+      dumpTable("user_reports") as Array<{
+        reporterUserId: string;
+        reportedUserId: string | null;
+        subjectType: string;
+        externalApp: string | null;
+        externalLabel: string | null;
+        context: string | null;
+      }>
+    ).filter(
+      (r) => r.reporterUserId === USER_A && r.subjectType === "off_platform",
+    );
+    expect(rows.length).toBeGreaterThanOrEqual(1);
+    const last = rows[rows.length - 1];
+    expect(last.reportedUserId).toBeNull();
+    expect(last.externalApp).toBe("Tinder");
+    expect(last.externalLabel).toBe("Jordan");
+    // Context defaults to "conversation" for off-platform reports.
+    expect(last.context).toBe("conversation");
+  });
 });
 
 describe("safety block / list / unblock", () => {

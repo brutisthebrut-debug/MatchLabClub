@@ -4109,6 +4109,11 @@ function SafetyReportsPanel({ founderKey, refreshKey }: { founderKey: string; re
                         {r.context}
                       </span>
                     )}
+                    {r.subjectType === "off_platform" && (
+                      <span className="px-2 py-0.5 rounded-md text-xs font-medium text-[hsl(43_65%_62%)] bg-[hsl(43_65%_52%/0.15)]">
+                        off-platform
+                      </span>
+                    )}
                     <span
                       className={`px-2 py-0.5 rounded-md text-xs font-medium ${
                         r.status === "open"
@@ -4127,7 +4132,17 @@ function SafetyReportsPanel({ founderKey, refreshKey }: { founderKey: string; re
                 </div>
                 <div className="text-xs text-muted-foreground/80 space-y-0.5">
                   <p>Reporter: <span className="text-foreground/70 font-mono">{r.reporterUserId}</span></p>
-                  <p>Reported: <span className="text-foreground/70 font-mono">{r.reportedUserId}</span></p>
+                  {r.subjectType === "off_platform" ? (
+                    <p>
+                      About:{" "}
+                      <span className="text-foreground/70">
+                        {r.externalLabel || "an off-platform person"}
+                        {r.externalApp ? ` on ${r.externalApp}` : ""}
+                      </span>
+                    </p>
+                  ) : (
+                    <p>Reported: <span className="text-foreground/70 font-mono">{r.reportedUserId}</span></p>
+                  )}
                 </div>
                 {r.note && (
                   <p className="text-sm text-foreground/80 leading-relaxed border-l-2 border-white/10 pl-3">
