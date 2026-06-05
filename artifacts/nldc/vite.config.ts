@@ -50,9 +50,13 @@ export default defineConfig({
           // Keep heavy vendor libs in their own chunks so no single asset
           // exceeds the 2 MB per-resource rendering cap Google applies to
           // public pages during crawl.
-          if (id.includes("node_modules/recharts") || id.includes("node_modules/d3")) {
-            return "vendor-charts";
-          }
+          //
+          // NOTE: recharts/d3 are intentionally NOT split into their own chunk.
+          // They circularly reference other third-party modules, and isolating
+          // them produced a cross-chunk temporal-dead-zone crash in the minified
+          // production build ("Cannot access 'Lp' before initialization") that
+          // white-screened the whole app. Letting them fall through to
+          // vendor-misc co-locates the cycle in one chunk and avoids the TDZ.
           if (id.includes("node_modules/framer-motion")) {
             return "vendor-motion";
           }
