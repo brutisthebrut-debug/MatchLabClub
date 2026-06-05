@@ -51,7 +51,7 @@ export function Navbar() {
           />
           <div className="hidden sm:flex flex-col leading-tight">
             <span className="font-serif font-bold text-lg md:text-xl text-foreground tracking-tight">
-              MatchLab<span className="gradient-text">.</span>
+              MatchLab
             </span>
             <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">Club</span>
           </div>
