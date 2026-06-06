@@ -31,6 +31,8 @@ export * from "./imported_sources";
 export * from "./referrals";
 export * from "./ai_usage_counters";
 export * from "./matching";
+export * from "./match_connections";
+export * from "./profile_photos";
 export * from "./dating_wins";
 export * from "./wyr_answers";
 export * from "./daily_spark_answers";

@@ -40,6 +40,9 @@ import {
   companionChannelPrefsTable,
   userReportsTable,
   userBlocksTable,
+  matchConnectionsTable,
+  connectionMessagesTable,
+  profilePhotosTable,
 } from "@workspace/db";
 import {
   ExportMyDataResponse,
@@ -698,6 +701,35 @@ router.delete("/account", async (req, res): Promise<void> => {
       ),
   ]);
 
+  // Match connections and their message threads. A connection belongs to two
+  // members, so we first delete every message in any connection this user is a
+  // party to (including the counterpart's messages, which would otherwise be
+  // orphaned), then delete the connection rows themselves.
+  const ownConnections = await db
+    .select({ id: matchConnectionsTable.id })
+    .from(matchConnectionsTable)
+    .where(
+      or(
+        eq(matchConnectionsTable.userLowId, userId),
+        eq(matchConnectionsTable.userHighId, userId),
+      ),
+    );
+  if (ownConnections.length > 0) {
+    const connectionIds = ownConnections.map((c) => c.id);
+    await db
+      .delete(connectionMessagesTable)
+      .where(inArray(connectionMessagesTable.connectionId, connectionIds));
+    await db
+      .delete(matchConnectionsTable)
+      .where(inArray(matchConnectionsTable.id, connectionIds));
+  }
+
+  // Profile photo rows. We store only the object path, never the bytes; the
+  // stored objects are best-effort purged separately, the rows go here.
+  await db
+    .delete(profilePhotosTable)
+    .where(eq(profilePhotosTable.userId, userId));
+
   // Delete every active session belonging to this user (session JSONB
   // payload stores `user.id`).
   await db
@@ -1024,6 +1056,43 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         )
         .returning({ id: matchProposalsTable.id });
       tables["match_proposals"] = matchProposalsDel.length;
+
+      // Match connections + their message threads. Same two-step wipe as the
+      // live delete: clear all messages in any connection this user is a party
+      // to, then the connection rows. Counterpart messages would otherwise be
+      // orphaned, so they go too.
+      const ownConnRows = await tx
+        .select({ id: matchConnectionsTable.id })
+        .from(matchConnectionsTable)
+        .where(
+          or(
+            eq(matchConnectionsTable.userLowId, userId),
+            eq(matchConnectionsTable.userHighId, userId),
+          ),
+        );
+      if (ownConnRows.length > 0) {
+        const connIds = ownConnRows.map((c) => c.id);
+        const msgDel = await tx
+          .delete(connectionMessagesTable)
+          .where(inArray(connectionMessagesTable.connectionId, connIds))
+          .returning({ id: connectionMessagesTable.id });
+        tables["connection_messages"] = msgDel.length;
+        const connDel = await tx
+          .delete(matchConnectionsTable)
+          .where(inArray(matchConnectionsTable.id, connIds))
+          .returning({ id: matchConnectionsTable.id });
+        tables["match_connections"] = connDel.length;
+      } else {
+        tables["connection_messages"] = 0;
+        tables["match_connections"] = 0;
+      }
+
+      // Profile photo rows (object bytes are purged best-effort elsewhere).
+      const photosDel = await tx
+        .delete(profilePhotosTable)
+        .where(eq(profilePhotosTable.userId, userId))
+        .returning({ id: profilePhotosTable.id });
+      tables["profile_photos"] = photosDel.length;
 
       // ai_usage_counters has NO FK to users.id (so anon traffic can bucket
       // under a sentinel without FK violations). That means user deletes do

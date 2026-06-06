@@ -81,6 +81,9 @@ const Sessions = lazy(() => import("@/pages/Sessions"));
 const Quiz = lazy(() => import("@/pages/Quiz"));
 const Gallery = lazy(() => import("@/pages/Gallery"));
 const ConnectionCenter = lazy(() => import("@/pages/ConnectionCenter"));
+const Matches = lazy(() => import("@/pages/Matches"));
+const MatchThread = lazy(() => import("@/pages/MatchThread"));
+const MatchPhotos = lazy(() => import("@/pages/MatchPhotos"));
 const SourcePaste = lazy(() => import("@/pages/SourcePaste"));
 const ThisOrThat = lazy(() => import("@/pages/ThisOrThat"));
 const VoiceIntro = lazy(() => import("@/pages/VoiceIntro"));
@@ -274,6 +277,9 @@ function Router() {
         <Route path="/quiz" component={Quiz} />
         <Route path="/gallery" component={Gallery} />
         <Route path="/connections" component={ConnectionCenter} />
+        <Route path="/matches" component={Matches} />
+        <Route path="/matches/:id" component={MatchThread} />
+        <Route path="/photos" component={MatchPhotos} />
         <Route path="/vault" component={DataVault} />
         <Route path="/imports" component={Imports} />
         <Route path="/progress/wins" component={DatingWinsLog} />

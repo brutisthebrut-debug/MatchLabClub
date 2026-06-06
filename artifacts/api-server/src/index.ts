@@ -23,6 +23,7 @@ import { startMatchingNudgeJob } from "./lib/matchingNudgeJob";
 import { startMirrorDigestJob } from "./lib/mirrorDigestJob";
 import { startImportRecoveryJob } from "./lib/importRecoveryJob";
 import { startAutoProposalJob } from "./lib/autoProposalJob";
+import { startProposalExpiryJob } from "./lib/proposalExpiryJob";
 import { startCompanionNudgeJob } from "./lib/companionNudgeJob";
 import { initStripe } from "./lib/initStripe";
 
@@ -61,6 +62,7 @@ app.listen(port, (err) => {
   startMirrorDigestJob();
   startImportRecoveryJob();
   startAutoProposalJob();
+  startProposalExpiryJob();
   startCompanionNudgeJob();
   refreshLearnedRulesCache().catch((err) =>
     logger.warn({ err }, "Initial OCR learned-rules load failed"),

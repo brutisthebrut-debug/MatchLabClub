@@ -175,6 +175,8 @@ function RootLayoutNav() {
         <Stack.Screen name="compass" options={{ title: "Compatibility Compass" }} />
         <Stack.Screen name="imports" options={{ title: "Imports" }} />
         <Stack.Screen name="mirror" options={{ title: "Your Mirror" }} />
+        <Stack.Screen name="connections" options={{ title: "Conversations" }} />
+        <Stack.Screen name="messages/[id]" options={{ title: "Conversation" }} />
       </Stack>
     </AuthProvider>
   );

@@ -3337,6 +3337,159 @@ export interface MatchProposalResponseInput {
   interested: boolean;
 }
 
+export interface OkResult {
+  ok: boolean;
+}
+
+export interface ErrorEnvelope {
+  error: string;
+}
+
+export interface UploadUrlRequest {
+  /**
+     * Original file name.
+     * @minLength 1
+     */
+  name: string;
+  /**
+     * File size in bytes.
+     * @minimum 1
+     */
+  size: number;
+  /**
+     * MIME type of the file (e.g. `image/jpeg`).
+     * @minLength 1
+     */
+  contentType: string;
+}
+
+export interface UploadUrlResponse {
+  /** Presigned GCS URL for PUT upload. */
+  uploadURL: string;
+  /** Normalized object path (e.g. `/objects/uploads/uuid`). Store this in your database. */
+  objectPath: string;
+  metadata?: UploadUrlRequest;
+}
+
+export interface ProfilePhoto {
+  id: number;
+  /** Relative serving URL for the photo. */
+  url: string;
+  ordinal: number;
+  createdAt: string;
+}
+
+export interface AddProfilePhotoInput {
+  /** The presigned upload URL the photo was PUT to, or its object path. */
+  uploadURL: string;
+}
+
+export interface ReorderPhotosInput {
+  orderedIds: number[];
+}
+
+export interface RevealConsentInput {
+  revealConsent: boolean;
+}
+
+export interface RevealConsentState {
+  revealConsent: boolean;
+}
+
+export type ConnectionStatus = typeof ConnectionStatus[keyof typeof ConnectionStatus];
+
+
+export const ConnectionStatus = {
+  active: 'active',
+  closed: 'closed',
+} as const;
+
+/**
+ * @nullable
+ */
+export type ConnectionClosedReason = typeof ConnectionClosedReason[keyof typeof ConnectionClosedReason] | null;
+
+
+export const ConnectionClosedReason = {
+  unmatch: 'unmatch',
+  block: 'block',
+  report: 'report',
+} as const;
+
+export interface Connection {
+  id: string;
+  counterpartUserId: string;
+  status: ConnectionStatus;
+  /** @nullable */
+  closedReason?: ConnectionClosedReason;
+  closedByYou: boolean;
+  unreadCount: number;
+  createdAt: string;
+  /** @nullable */
+  lastMessageAt: string | null;
+  /** @nullable */
+  lastMessagePreview: string | null;
+}
+
+export interface ConnectionMessage {
+  id: string;
+  connectionId: string;
+  senderUserId: string;
+  body: string;
+  /** True when the signed-in user sent this message. */
+  mine: boolean;
+  createdAt: string;
+  /** @nullable */
+  readAt: string | null;
+}
+
+export interface SendMessageInput {
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  body: string;
+}
+
+export type ReportConnectionInputReason = typeof ReportConnectionInputReason[keyof typeof ReportConnectionInputReason];
+
+
+export const ReportConnectionInputReason = {
+  fake_profile: 'fake_profile',
+  harassment: 'harassment',
+  inappropriate: 'inappropriate',
+  scam: 'scam',
+  underage: 'underage',
+  safety: 'safety',
+  other: 'other',
+} as const;
+
+export interface ReportConnectionInput {
+  reason: ReportConnectionInputReason;
+  /** @maxLength 4000 */
+  note?: string;
+}
+
+export interface RevealPrompt {
+  prompt: string;
+  answer: string;
+}
+
+export interface RevealCard {
+  counterpartUserId: string;
+  /** True when the counterpart turned reveal consent on. When false, name and photos are withheld. */
+  revealed: boolean;
+  /** @nullable */
+  displayName: string | null;
+  /** Relative serving URLs, empty when not revealed. */
+  photos: string[];
+  prompts: RevealPrompt[];
+  /** Aggregate readiness phrasing, never raw signals. */
+  readinessSummary: string;
+  /** Aggregate values phrasing, never raw signals. */
+  valuesSummary: string;
+}
+
 export type MatchExternalReadInputSource = typeof MatchExternalReadInputSource[keyof typeof MatchExternalReadInputSource];
 
 
@@ -3891,6 +4044,8 @@ export interface ActivityStreak {
 export interface MatchingState {
   preferences: MatchPreferences | null;
   poolStatus: MatchingStatePoolStatus;
+  /** Whether the member lets a mutual match see their reveal card (name + photos). Off by default; never gates being matched. */
+  revealConsent?: boolean;
   /** @nullable */
   tier: MatchingStateTier;
   readiness: MatchReadiness;

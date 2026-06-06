@@ -209,6 +209,8 @@ const SECTIONS: NavSection[] = [
     primary: [
       { name: "What it takes", href: "/match-path", icon: Target },
       { name: "Matching", href: "/matching", icon: HeartHandshake, badge: "Beta" },
+      { name: "Conversations", href: "/matches", icon: MessageCircle },
+      { name: "Match photos", href: "/photos", icon: ImageUp },
       { name: "Future Connections", href: "/future-connections", icon: Users },
       { name: "Date Safety", href: "/date-safety", icon: ShieldAlert },
     ],

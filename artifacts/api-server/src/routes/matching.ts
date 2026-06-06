@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { z } from "zod/v4";
 import {
   db,
   usersTable,
@@ -58,6 +59,7 @@ import {
   rankCandidates,
   type MatchCandidate,
 } from "../lib/matchEngine";
+import { ensureConnection, notifyNewMatch } from "../lib/matchConnections";
 
 async function loadUserTier(userId: string): Promise<string | null> {
   const rows = await db
@@ -813,6 +815,7 @@ router.get("/me/matching/state", async (req, res): Promise<void> => {
   res.json({
     preferences: prefs ? serializePreferences(prefs) : null,
     poolStatus: membership?.status ?? "off",
+    revealConsent: membership?.revealConsent ?? false,
     tier,
     readiness,
     eligible,
@@ -961,6 +964,39 @@ router.put("/me/matching/pool-membership", async (req, res): Promise<void> => {
     })
     .returning();
   res.json(serializeMembership(row!));
+});
+
+const RevealConsentBody = z.object({ revealConsent: z.boolean() });
+
+// PUT /me/matching/reveal-consent — toggle whether a mutual match may see the
+// member's curated reveal card (name + photos + a few prompts). Off by default.
+// This never gates being matched, only what a counterpart sees after the match.
+router.put("/me/matching/reveal-consent", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
+  const parsed = RevealConsentBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const userId = req.user.id;
+  const now = new Date();
+  const [row] = await db
+    .insert(matchPoolMembershipTable)
+    .values({
+      userId,
+      status: "off",
+      revealConsent: parsed.data.revealConsent,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: matchPoolMembershipTable.userId,
+      set: { revealConsent: parsed.data.revealConsent, updatedAt: now },
+    })
+    .returning();
+  res.json({ revealConsent: row?.revealConsent ?? parsed.data.revealConsent });
 });
 
 // Deterministic baseline used as fallback when Anthropic isn't available
@@ -1420,6 +1456,21 @@ router.put(
           userId,
           props: { step: "mutual_yes", proposalId: updated.id },
         });
+        // Open the real conversation for the pair. Idempotent on the ordered
+        // pair, so the second side flipping to yes never creates a duplicate.
+        // Only the creating call fires the "it's a match" notification.
+        try {
+          const { connection, created } = await ensureConnection(
+            updated.userId,
+            updated.proposedToUserId,
+          );
+          if (created) void notifyNewMatch(connection);
+        } catch (err) {
+          req.log.warn(
+            { err: err instanceof Error ? err.message : String(err) },
+            "Failed to open connection on mutual match",
+          );
+        }
       }
     }
     req.log.info(

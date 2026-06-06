@@ -6,6 +6,7 @@ import {
   text,
   timestamp,
   uuid,
+  boolean,
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -40,6 +41,11 @@ export const matchPoolMembershipTable = pgTable("match_pool_membership", {
   pausedReason: varchar("paused_reason"),
   // 'free' | 'reset' | 'wingman'
   tier: varchar("tier"),
+  // When true, the member has agreed to share their curated reveal card (name +
+  // photos + a few prompts) with a counterpart once they are a mutual match.
+  // Off by default: matching never exposes real identity or photos until the
+  // member opts in. Never gates being matched, only the reveal.
+  revealConsent: boolean("reveal_consent").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow()

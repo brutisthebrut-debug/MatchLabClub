@@ -5428,6 +5428,611 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /storage/uploads/request-url:
+    post:
+      tags: [Storage]
+      operationId: requestUploadUrl
+      summary: Request a presigned URL for file upload
+      description: |
+        Returns a presigned GCS URL for direct upload. The client sends JSON
+        metadata here, then uploads the file directly to the returned URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadUrlRequest'
+      responses:
+        '200':
+          description: Presigned upload URL generated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadUrlResponse'
+        '400':
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Failed to generate upload URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /storage/public-objects/{filePath}:
+    get:
+      tags: [Storage]
+      operationId: getPublicObject
+      summary: Serve a public asset from PUBLIC_OBJECT_SEARCH_PATHS
+      description: |
+        Unconditionally public. Searches PUBLIC_OBJECT_SEARCH_PATHS for the
+        given file path.
+      parameters:
+        - name: filePath
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Relative file path within the public search paths.
+      responses:
+        '200':
+          description: Object content streamed with correct Content-Type.
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: File not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Failed to serve public object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /storage/objects/{objectPath}:
+    get:
+      tags: [Storage]
+      operationId: getStorageObject
+      summary: Serve an object entity from PRIVATE_OBJECT_DIR
+      description: |
+        Serves private object entities uploaded via presigned URLs. The caller
+        must be signed in. A profile photo is readable by its owner, and by a
+        counterpart in an active connection once the owner turned reveal consent
+        on; otherwise the request is refused so private photos never leak by
+        path knowledge.
+      parameters:
+        - name: objectPath
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Object path within the private object dir.
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Object content streamed with correct Content-Type.
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: The caller may not read this object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          description: Object not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Failed to serve object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /me/photos:
+    get:
+      tags: [Photos]
+      operationId: getMyPhotos
+      summary: List the signed-in user's profile photos
+      description: |
+        Returns the caller's photos ordered by ordinal, each with a relative
+        serving URL. Anonymous callers get a 401.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The caller's photos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProfilePhoto'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+    post:
+      tags: [Photos]
+      operationId: addMyPhoto
+      summary: Record a profile photo after uploading it to storage
+      description: |
+        Persists the normalized object path returned by the storage upload flow
+        as a profile photo for the caller. Appends to the end of the order.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddProfilePhotoInput'
+      responses:
+        '201':
+          description: The created photo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilePhoto'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '409':
+          description: Maximum number of photos reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /me/photos/{id}:
+    delete:
+      tags: [Photos]
+      operationId: deleteMyPhoto
+      summary: Delete one of the signed-in user's profile photos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The remaining photos after deletion.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProfilePhoto'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Photo not found or not owned by the caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /me/photos/reorder:
+    put:
+      tags: [Photos]
+      operationId: reorderMyPhotos
+      summary: Reorder the signed-in user's profile photos
+      description: |
+        Accepts the full list of photo ids in the desired order. Photos not
+        listed keep their relative order after the listed ones.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderPhotosInput'
+      responses:
+        '200':
+          description: The reordered photos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProfilePhoto'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/matching/reveal-consent:
+    put:
+      tags: [Matching]
+      operationId: setRevealConsent
+      summary: Toggle whether the user shares their reveal card with matches
+      description: |
+        Off by default. When on, a mutual match can see the caller's curated
+        reveal card (name, photos, a few prompts). Never gates being matched.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevealConsentInput'
+      responses:
+        '200':
+          description: The updated consent state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevealConsentState'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/connections:
+    get:
+      tags: [Connections]
+      operationId: getConnections
+      summary: List the signed-in user's match conversations
+      description: |
+        Returns the caller's connections, most recently active first, each with
+        the counterpart id, unread count, and a short preview of the latest
+        message.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The caller's connections.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Connection'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /me/connections/{id}:
+    get:
+      tags: [Connections]
+      operationId: getConnection
+      summary: Get one of the signed-in user's conversations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The connection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connection'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Connection not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /me/connections/{id}/profile:
+    get:
+      tags: [Connections]
+      operationId: getConnectionProfile
+      summary: The counterpart's curated reveal card for a conversation
+      description: |
+        Returns the consented view of the other member: name and photos only if
+        they turned reveal consent on, plus an aggregate readiness and values
+        summary. Never raw signals or PII.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The reveal card.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevealCard'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Connection not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /me/connections/{id}/messages:
+    get:
+      tags: [Connections]
+      operationId: getConnectionMessages
+      summary: List the messages in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The messages, oldest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConnectionMessage'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Connection not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+    post:
+      tags: [Connections]
+      operationId: sendConnectionMessage
+      summary: Send a message in a conversation
+      description: |
+        Sends a message. The conversation must be active and the pair must not
+        be blocked. Rate-limited per sender.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageInput'
+      responses:
+        '201':
+          description: The created message.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionMessage'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Connection not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Conversation is closed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '429':
+          description: Sending too quickly.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /me/connections/{id}/read:
+    post:
+      tags: [Connections]
+      operationId: markConnectionRead
+      summary: Mark the counterpart's messages as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Read acknowledged.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResult'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Connection not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /me/connections/{id}/unmatch:
+    post:
+      tags: [Connections]
+      operationId: unmatchConnection
+      summary: End a conversation
+      description: |
+        Closes the conversation symmetrically. Once closed neither side can
+        send. A later mutual match reopens it.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The closed connection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connection'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Connection not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /me/connections/{id}/report:
+    post:
+      tags: [Connections]
+      operationId: reportConnection
+      summary: Report the counterpart and close the conversation
+      description: |
+        Files a member report about the other person and closes the thread.
+        Reporting never moves Match Readiness.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportConnectionInput'
+      responses:
+        '200':
+          description: The closed connection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connection'
+        '400':
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Connection not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
 components:
   parameters:
     AuthorizationSessionHeader:
@@ -9717,6 +10322,205 @@ components:
           type: boolean
           description: True records the user's interest (user_yes), false passes (user_no).
 
+    OkResult:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Original file name.
+        size:
+          type: integer
+          minimum: 1
+          description: File size in bytes.
+        contentType:
+          type: string
+          minLength: 1
+          description: MIME type of the file (e.g. `image/jpeg`).
+
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+          format: uri
+          description: Presigned GCS URL for PUT upload.
+        objectPath:
+          type: string
+          description: Normalized object path (e.g. `/objects/uploads/uuid`). Store this in your database.
+        metadata:
+          $ref: '#/components/schemas/UploadUrlRequest'
+
+    ProfilePhoto:
+      type: object
+      required: [id, url, ordinal, createdAt]
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
+          description: Relative serving URL for the photo.
+        ordinal:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    AddProfilePhotoInput:
+      type: object
+      required: [uploadURL]
+      properties:
+        uploadURL:
+          type: string
+          description: The presigned upload URL the photo was PUT to, or its object path.
+
+    ReorderPhotosInput:
+      type: object
+      required: [orderedIds]
+      properties:
+        orderedIds:
+          type: array
+          items:
+            type: integer
+
+    RevealConsentInput:
+      type: object
+      required: [revealConsent]
+      properties:
+        revealConsent:
+          type: boolean
+
+    RevealConsentState:
+      type: object
+      required: [revealConsent]
+      properties:
+        revealConsent:
+          type: boolean
+
+    Connection:
+      type: object
+      required: [id, counterpartUserId, status, closedByYou, unreadCount, createdAt, lastMessageAt, lastMessagePreview]
+      properties:
+        id:
+          type: string
+          format: uuid
+        counterpartUserId:
+          type: string
+        status:
+          type: string
+          enum: [active, closed]
+        closedReason:
+          type: [string, 'null']
+          enum: [unmatch, block, report, null]
+        closedByYou:
+          type: boolean
+        unreadCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        lastMessageAt:
+          type: [string, 'null']
+          format: date-time
+        lastMessagePreview:
+          type: [string, 'null']
+
+    ConnectionMessage:
+      type: object
+      required: [id, connectionId, senderUserId, body, mine, createdAt, readAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        connectionId:
+          type: string
+          format: uuid
+        senderUserId:
+          type: string
+        body:
+          type: string
+        mine:
+          type: boolean
+          description: True when the signed-in user sent this message.
+        createdAt:
+          type: string
+          format: date-time
+        readAt:
+          type: [string, 'null']
+          format: date-time
+
+    SendMessageInput:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 4000
+
+    ReportConnectionInput:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          enum: [fake_profile, harassment, inappropriate, scam, underage, safety, other]
+        note:
+          type: string
+          maxLength: 4000
+
+    RevealCard:
+      type: object
+      required: [counterpartUserId, revealed, displayName, photos, prompts, readinessSummary, valuesSummary]
+      properties:
+        counterpartUserId:
+          type: string
+        revealed:
+          type: boolean
+          description: True when the counterpart turned reveal consent on. When false, name and photos are withheld.
+        displayName:
+          type: [string, 'null']
+        photos:
+          type: array
+          items:
+            type: string
+          description: Relative serving URLs, empty when not revealed.
+        prompts:
+          type: array
+          items:
+            $ref: '#/components/schemas/RevealPrompt'
+        readinessSummary:
+          type: string
+          description: Aggregate readiness phrasing, never raw signals.
+        valuesSummary:
+          type: string
+          description: Aggregate values phrasing, never raw signals.
+
+    RevealPrompt:
+      type: object
+      required: [prompt, answer]
+      properties:
+        prompt:
+          type: string
+        answer:
+          type: string
+
     MatchExternalReadInput:
       type: object
       required: [profileText, source]
@@ -10249,6 +11053,11 @@ components:
         poolStatus:
           type: string
           enum: [off, building, ready, paused, concierge_only]
+        revealConsent:
+          type: boolean
+          description: >-
+            Whether the member lets a mutual match see their reveal card (name +
+            photos). Off by default; never gates being matched.
         tier:
           type: [string, 'null']
           enum: [free, reset, wingman, null]

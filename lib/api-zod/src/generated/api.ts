@@ -4890,6 +4890,7 @@ export const GetMatchingStateResponse = zod.object({
   "updatedAt": zod.coerce.date()
 }),zod.null()]),
   "poolStatus": zod.enum(['off', 'building', 'ready', 'paused', 'concierge_only']),
+  "revealConsent": zod.boolean().optional().describe('Whether the member lets a mutual match see their reveal card (name + photos). Off by default; never gates being matched.'),
   "tier": zod.union([zod.literal('free'),zod.literal('reset'),zod.literal('wingman'),zod.literal(null)]).nullable(),
   "readiness": zod.object({
   "score": zod.number().min(getMatchingStateResponseReadinessScoreMin).max(getMatchingStateResponseReadinessScoreMax),
@@ -6477,6 +6478,367 @@ export const RespondToMatchProposalResponse = zod.object({
   "cosmicResonanceNote": zod.string().nullable().describe('A short, light note for the resonance garnish. Null when either person has no chart.'),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * Returns a presigned GCS URL for direct upload. The client sends JSON
+metadata here, then uploads the file directly to the returned URL.
+
+ * @summary Request a presigned URL for file upload
+ */
+
+
+
+
+
+export const RequestUploadUrlBody = zod.object({
+  "name": zod.string().min(1).describe('Original file name.'),
+  "size": zod.number().min(1).describe('File size in bytes.'),
+  "contentType": zod.string().min(1).describe('MIME type of the file (e.g. `image\/jpeg`).')
+})
+
+
+
+
+
+
+export const RequestUploadUrlResponse = zod.object({
+  "uploadURL": zod.string().url().describe('Presigned GCS URL for PUT upload.'),
+  "objectPath": zod.string().describe('Normalized object path (e.g. `\/objects\/uploads\/uuid`). Store this in your database.'),
+  "metadata": zod.object({
+  "name": zod.string().min(1).describe('Original file name.'),
+  "size": zod.number().min(1).describe('File size in bytes.'),
+  "contentType": zod.string().min(1).describe('MIME type of the file (e.g. `image\/jpeg`).')
+}).optional()
+})
+
+
+/**
+ * Unconditionally public. Searches PUBLIC_OBJECT_SEARCH_PATHS for the
+given file path.
+
+ * @summary Serve a public asset from PUBLIC_OBJECT_SEARCH_PATHS
+ */
+export const GetPublicObjectParams = zod.object({
+  "filePath": zod.coerce.string().describe('Relative file path within the public search paths.')
+})
+
+
+/**
+ * Serves private object entities uploaded via presigned URLs. The caller
+must be signed in. A profile photo is readable by its owner, and by a
+counterpart in an active connection once the owner turned reveal consent
+on; otherwise the request is refused so private photos never leak by
+path knowledge.
+
+ * @summary Serve an object entity from PRIVATE_OBJECT_DIR
+ */
+export const GetStorageObjectParams = zod.object({
+  "objectPath": zod.coerce.string().describe('Object path within the private object dir.')
+})
+
+export const GetStorageObjectHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+
+/**
+ * Returns the caller's photos ordered by ordinal, each with a relative
+serving URL. Anonymous callers get a 401.
+
+ * @summary List the signed-in user's profile photos
+ */
+export const GetMyPhotosHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetMyPhotosResponseItem = zod.object({
+  "id": zod.number(),
+  "url": zod.string().describe('Relative serving URL for the photo.'),
+  "ordinal": zod.number(),
+  "createdAt": zod.coerce.date()
+})
+export const GetMyPhotosResponse = zod.array(GetMyPhotosResponseItem)
+
+
+/**
+ * Persists the normalized object path returned by the storage upload flow
+as a profile photo for the caller. Appends to the end of the order.
+
+ * @summary Record a profile photo after uploading it to storage
+ */
+export const AddMyPhotoHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const AddMyPhotoBody = zod.object({
+  "uploadURL": zod.string().describe('The presigned upload URL the photo was PUT to, or its object path.')
+})
+
+
+/**
+ * @summary Delete one of the signed-in user's profile photos
+ */
+export const DeleteMyPhotoParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteMyPhotoHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const DeleteMyPhotoResponseItem = zod.object({
+  "id": zod.number(),
+  "url": zod.string().describe('Relative serving URL for the photo.'),
+  "ordinal": zod.number(),
+  "createdAt": zod.coerce.date()
+})
+export const DeleteMyPhotoResponse = zod.array(DeleteMyPhotoResponseItem)
+
+
+/**
+ * Accepts the full list of photo ids in the desired order. Photos not
+listed keep their relative order after the listed ones.
+
+ * @summary Reorder the signed-in user's profile photos
+ */
+export const ReorderMyPhotosHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const ReorderMyPhotosBody = zod.object({
+  "orderedIds": zod.array(zod.number())
+})
+
+export const ReorderMyPhotosResponseItem = zod.object({
+  "id": zod.number(),
+  "url": zod.string().describe('Relative serving URL for the photo.'),
+  "ordinal": zod.number(),
+  "createdAt": zod.coerce.date()
+})
+export const ReorderMyPhotosResponse = zod.array(ReorderMyPhotosResponseItem)
+
+
+/**
+ * Off by default. When on, a mutual match can see the caller's curated
+reveal card (name, photos, a few prompts). Never gates being matched.
+
+ * @summary Toggle whether the user shares their reveal card with matches
+ */
+export const SetRevealConsentHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const SetRevealConsentBody = zod.object({
+  "revealConsent": zod.boolean()
+})
+
+export const SetRevealConsentResponse = zod.object({
+  "revealConsent": zod.boolean()
+})
+
+
+/**
+ * Returns the caller's connections, most recently active first, each with
+the counterpart id, unread count, and a short preview of the latest
+message.
+
+ * @summary List the signed-in user's match conversations
+ */
+export const GetConnectionsHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetConnectionsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "counterpartUserId": zod.string(),
+  "status": zod.enum(['active', 'closed']),
+  "closedReason": zod.union([zod.literal('unmatch'),zod.literal('block'),zod.literal('report'),zod.literal(null)]).nullish(),
+  "closedByYou": zod.boolean(),
+  "unreadCount": zod.number(),
+  "createdAt": zod.coerce.date(),
+  "lastMessageAt": zod.coerce.date().nullable(),
+  "lastMessagePreview": zod.string().nullable()
+})
+export const GetConnectionsResponse = zod.array(GetConnectionsResponseItem)
+
+
+/**
+ * @summary Get one of the signed-in user's conversations
+ */
+export const GetConnectionParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const GetConnectionHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetConnectionResponse = zod.object({
+  "id": zod.string().uuid(),
+  "counterpartUserId": zod.string(),
+  "status": zod.enum(['active', 'closed']),
+  "closedReason": zod.union([zod.literal('unmatch'),zod.literal('block'),zod.literal('report'),zod.literal(null)]).nullish(),
+  "closedByYou": zod.boolean(),
+  "unreadCount": zod.number(),
+  "createdAt": zod.coerce.date(),
+  "lastMessageAt": zod.coerce.date().nullable(),
+  "lastMessagePreview": zod.string().nullable()
+})
+
+
+/**
+ * Returns the consented view of the other member: name and photos only if
+they turned reveal consent on, plus an aggregate readiness and values
+summary. Never raw signals or PII.
+
+ * @summary The counterpart's curated reveal card for a conversation
+ */
+export const GetConnectionProfileParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const GetConnectionProfileHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetConnectionProfileResponse = zod.object({
+  "counterpartUserId": zod.string(),
+  "revealed": zod.boolean().describe('True when the counterpart turned reveal consent on. When false, name and photos are withheld.'),
+  "displayName": zod.string().nullable(),
+  "photos": zod.array(zod.string()).describe('Relative serving URLs, empty when not revealed.'),
+  "prompts": zod.array(zod.object({
+  "prompt": zod.string(),
+  "answer": zod.string()
+})),
+  "readinessSummary": zod.string().describe('Aggregate readiness phrasing, never raw signals.'),
+  "valuesSummary": zod.string().describe('Aggregate values phrasing, never raw signals.')
+})
+
+
+/**
+ * @summary List the messages in a conversation
+ */
+export const GetConnectionMessagesParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const GetConnectionMessagesHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetConnectionMessagesResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "connectionId": zod.string().uuid(),
+  "senderUserId": zod.string(),
+  "body": zod.string(),
+  "mine": zod.boolean().describe('True when the signed-in user sent this message.'),
+  "createdAt": zod.coerce.date(),
+  "readAt": zod.coerce.date().nullable()
+})
+export const GetConnectionMessagesResponse = zod.array(GetConnectionMessagesResponseItem)
+
+
+/**
+ * Sends a message. The conversation must be active and the pair must not
+be blocked. Rate-limited per sender.
+
+ * @summary Send a message in a conversation
+ */
+export const SendConnectionMessageParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const SendConnectionMessageHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const sendConnectionMessageBodyBodyMax = 4000;
+
+
+
+export const SendConnectionMessageBody = zod.object({
+  "body": zod.string().min(1).max(sendConnectionMessageBodyBodyMax)
+})
+
+
+/**
+ * @summary Mark the counterpart's messages as read
+ */
+export const MarkConnectionReadParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const MarkConnectionReadHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const MarkConnectionReadResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * Closes the conversation symmetrically. Once closed neither side can
+send. A later mutual match reopens it.
+
+ * @summary End a conversation
+ */
+export const UnmatchConnectionParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const UnmatchConnectionHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const UnmatchConnectionResponse = zod.object({
+  "id": zod.string().uuid(),
+  "counterpartUserId": zod.string(),
+  "status": zod.enum(['active', 'closed']),
+  "closedReason": zod.union([zod.literal('unmatch'),zod.literal('block'),zod.literal('report'),zod.literal(null)]).nullish(),
+  "closedByYou": zod.boolean(),
+  "unreadCount": zod.number(),
+  "createdAt": zod.coerce.date(),
+  "lastMessageAt": zod.coerce.date().nullable(),
+  "lastMessagePreview": zod.string().nullable()
+})
+
+
+/**
+ * Files a member report about the other person and closes the thread.
+Reporting never moves Match Readiness.
+
+ * @summary Report the counterpart and close the conversation
+ */
+export const ReportConnectionParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const ReportConnectionHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const reportConnectionBodyNoteMax = 4000;
+
+
+
+export const ReportConnectionBody = zod.object({
+  "reason": zod.enum(['fake_profile', 'harassment', 'inappropriate', 'scam', 'underage', 'safety', 'other']),
+  "note": zod.string().max(reportConnectionBodyNoteMax).optional()
+})
+
+export const ReportConnectionResponse = zod.object({
+  "id": zod.string().uuid(),
+  "counterpartUserId": zod.string(),
+  "status": zod.enum(['active', 'closed']),
+  "closedReason": zod.union([zod.literal('unmatch'),zod.literal('block'),zod.literal('report'),zod.literal(null)]).nullish(),
+  "closedByYou": zod.boolean(),
+  "unreadCount": zod.number(),
+  "createdAt": zod.coerce.date(),
+  "lastMessageAt": zod.coerce.date().nullable(),
+  "lastMessagePreview": zod.string().nullable()
 })
 
 

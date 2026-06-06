@@ -19,6 +19,8 @@ import type { ReadinessNextAction } from './readinessNextAction';
 export interface MatchingState {
   preferences: MatchPreferences | null;
   poolStatus: MatchingStatePoolStatus;
+  /** Whether the member lets a mutual match see their reveal card (name + photos). Off by default; never gates being matched. */
+  revealConsent?: boolean;
   /** @nullable */
   tier: MatchingStateTier;
   readiness: MatchReadiness;

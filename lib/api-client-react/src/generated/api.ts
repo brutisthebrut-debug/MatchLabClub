@@ -22,6 +22,7 @@ import type {
 import type {
   AccountExport,
   AccountSummary,
+  AddProfilePhotoInput,
   AddReceiptsInput,
   AiContentConsentState,
   AiEnhanceInput,
@@ -79,6 +80,8 @@ import type {
   CompassSignalContext,
   CompleteCompanionCommitment401,
   CompleteCompanionCommitment404,
+  Connection,
+  ConnectionMessage,
   CorrectAuditSourceApp400,
   CorrectAuditSourceApp404,
   CorrectSourceAppInput,
@@ -128,6 +131,7 @@ import type {
   EmailMyDataExportResult,
   EmptyTrashResult,
   EngineMeta,
+  ErrorEnvelope,
   ExpiringTrashedAudits,
   ExtractMessageScreenshot400,
   ExtractScreenshot400,
@@ -191,6 +195,7 @@ import type {
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
   MySessionsResponse,
+  OkResult,
   PhoneVerificationCheckInput,
   PhoneVerificationCheckResult,
   PhoneVerificationStartInput,
@@ -203,6 +208,7 @@ import type {
   PostDateNotePatch,
   PredictionResponse,
   PredictionResponseInput,
+  ProfilePhoto,
   ProfileRewrite,
   PulseCompanion401,
   PurgeTrustSourceResult,
@@ -214,9 +220,14 @@ import type {
   RehearsalTurn400,
   RehearsalTurnInput,
   RehearsalTurnResult,
+  ReorderPhotosInput,
   ReportAck,
+  ReportConnectionInput,
   ReportUserInput,
   RestoreAllTrashResult,
+  RevealCard,
+  RevealConsentInput,
+  RevealConsentState,
   ReviewMessageWithCompanion400,
   ReviewMessageWithCompanion401,
   RevokeSessionsResult,
@@ -232,6 +243,7 @@ import type {
   ScreenshotExtractResult,
   SelfieVerificationCheckInput,
   SelfieVerificationResult,
+  SendMessageInput,
   SetAiContentConsentInput,
   SetDigestPreferencesInput,
   SignalMap,
@@ -247,6 +259,8 @@ import type {
   UpdateCompanionSettings400,
   UpdateCompanionSettings401,
   UpdateReportStatusInput,
+  UploadUrlRequest,
+  UploadUrlResponse,
   UserAchievements,
   UserJourneySummary,
   UserVerification,
@@ -14458,5 +14472,1223 @@ export const useRespondToMatchProposal = <TError = ErrorType<AuthErrorEnvelope>,
         TContext
       > => {
       return useMutation(getRespondToMatchProposalMutationOptions(options));
+    }
+
+export const getRequestUploadUrlUrl = () => {
+
+
+
+
+  return `/api/storage/uploads/request-url`
+}
+
+/**
+ * Returns a presigned GCS URL for direct upload. The client sends JSON
+metadata here, then uploads the file directly to the returned URL.
+
+ * @summary Request a presigned URL for file upload
+ */
+export const requestUploadUrl = async (uploadUrlRequest: UploadUrlRequest, options?: RequestInit): Promise<UploadUrlResponse> => {
+
+  return customFetch<UploadUrlResponse>(getRequestUploadUrlUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      uploadUrlRequest,)
+  }
+);}
+
+
+
+
+export const getRequestUploadUrlMutationOptions = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestUploadUrl>>, TError,{data: BodyType<UploadUrlRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof requestUploadUrl>>, TError,{data: BodyType<UploadUrlRequest>}, TContext> => {
+
+const mutationKey = ['requestUploadUrl'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof requestUploadUrl>>, {data: BodyType<UploadUrlRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  requestUploadUrl(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RequestUploadUrlMutationResult = NonNullable<Awaited<ReturnType<typeof requestUploadUrl>>>
+    export type RequestUploadUrlMutationBody = BodyType<UploadUrlRequest>
+    export type RequestUploadUrlMutationError = ErrorType<ErrorEnvelope>
+
+    /**
+ * @summary Request a presigned URL for file upload
+ */
+export const useRequestUploadUrl = <TError = ErrorType<ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestUploadUrl>>, TError,{data: BodyType<UploadUrlRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof requestUploadUrl>>,
+        TError,
+        {data: BodyType<UploadUrlRequest>},
+        TContext
+      > => {
+      return useMutation(getRequestUploadUrlMutationOptions(options));
+    }
+
+export const getGetPublicObjectUrl = (filePath: string,) => {
+
+
+
+
+  return `/api/storage/public-objects/${filePath}`
+}
+
+/**
+ * Unconditionally public. Searches PUBLIC_OBJECT_SEARCH_PATHS for the
+given file path.
+
+ * @summary Serve a public asset from PUBLIC_OBJECT_SEARCH_PATHS
+ */
+export const getPublicObject = async (filePath: string, options?: RequestInit): Promise<Blob> => {
+
+  return customFetch<Blob>(getGetPublicObjectUrl(filePath),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublicObjectQueryKey = (filePath: string,) => {
+    return [
+    `/api/storage/public-objects/${filePath}`
+    ] as const;
+    }
+
+
+export const getGetPublicObjectQueryOptions = <TData = Awaited<ReturnType<typeof getPublicObject>>, TError = ErrorType<ErrorEnvelope>>(filePath: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublicObject>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicObjectQueryKey(filePath);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicObject>>> = ({ signal }) => getPublicObject(filePath, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(filePath), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicObject>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPublicObjectQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicObject>>>
+export type GetPublicObjectQueryError = ErrorType<ErrorEnvelope>
+
+
+/**
+ * @summary Serve a public asset from PUBLIC_OBJECT_SEARCH_PATHS
+ */
+
+export function useGetPublicObject<TData = Awaited<ReturnType<typeof getPublicObject>>, TError = ErrorType<ErrorEnvelope>>(
+ filePath: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublicObject>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPublicObjectQueryOptions(filePath,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetStorageObjectUrl = (objectPath: string,) => {
+
+
+
+
+  return `/api/storage/objects/${objectPath}`
+}
+
+/**
+ * Serves private object entities uploaded via presigned URLs. The caller
+must be signed in. A profile photo is readable by its owner, and by a
+counterpart in an active connection once the owner turned reveal consent
+on; otherwise the request is refused so private photos never leak by
+path knowledge.
+
+ * @summary Serve an object entity from PRIVATE_OBJECT_DIR
+ */
+export const getStorageObject = async (objectPath: string, options?: RequestInit): Promise<Blob> => {
+
+  return customFetch<Blob>(getGetStorageObjectUrl(objectPath),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStorageObjectQueryKey = (objectPath: string,) => {
+    return [
+    `/api/storage/objects/${objectPath}`
+    ] as const;
+    }
+
+
+export const getGetStorageObjectQueryOptions = <TData = Awaited<ReturnType<typeof getStorageObject>>, TError = ErrorType<ErrorEnvelope>>(objectPath: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStorageObject>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStorageObjectQueryKey(objectPath);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStorageObject>>> = ({ signal }) => getStorageObject(objectPath, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(objectPath), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStorageObject>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetStorageObjectQueryResult = NonNullable<Awaited<ReturnType<typeof getStorageObject>>>
+export type GetStorageObjectQueryError = ErrorType<ErrorEnvelope>
+
+
+/**
+ * @summary Serve an object entity from PRIVATE_OBJECT_DIR
+ */
+
+export function useGetStorageObject<TData = Awaited<ReturnType<typeof getStorageObject>>, TError = ErrorType<ErrorEnvelope>>(
+ objectPath: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStorageObject>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetStorageObjectQueryOptions(objectPath,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetMyPhotosUrl = () => {
+
+
+
+
+  return `/api/me/photos`
+}
+
+/**
+ * Returns the caller's photos ordered by ordinal, each with a relative
+serving URL. Anonymous callers get a 401.
+
+ * @summary List the signed-in user's profile photos
+ */
+export const getMyPhotos = async ( options?: RequestInit): Promise<ProfilePhoto[]> => {
+
+  return customFetch<ProfilePhoto[]>(getGetMyPhotosUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyPhotosQueryKey = () => {
+    return [
+    `/api/me/photos`
+    ] as const;
+    }
+
+
+export const getGetMyPhotosQueryOptions = <TData = Awaited<ReturnType<typeof getMyPhotos>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyPhotos>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyPhotosQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyPhotos>>> = ({ signal }) => getMyPhotos({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyPhotos>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyPhotosQueryResult = NonNullable<Awaited<ReturnType<typeof getMyPhotos>>>
+export type GetMyPhotosQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary List the signed-in user's profile photos
+ */
+
+export function useGetMyPhotos<TData = Awaited<ReturnType<typeof getMyPhotos>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyPhotos>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyPhotosQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAddMyPhotoUrl = () => {
+
+
+
+
+  return `/api/me/photos`
+}
+
+/**
+ * Persists the normalized object path returned by the storage upload flow
+as a profile photo for the caller. Appends to the end of the order.
+
+ * @summary Record a profile photo after uploading it to storage
+ */
+export const addMyPhoto = async (addProfilePhotoInput: AddProfilePhotoInput, options?: RequestInit): Promise<ProfilePhoto> => {
+
+  return customFetch<ProfilePhoto>(getAddMyPhotoUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      addProfilePhotoInput,)
+  }
+);}
+
+
+
+
+export const getAddMyPhotoMutationOptions = <TError = ErrorType<ErrorEnvelope | AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addMyPhoto>>, TError,{data: BodyType<AddProfilePhotoInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addMyPhoto>>, TError,{data: BodyType<AddProfilePhotoInput>}, TContext> => {
+
+const mutationKey = ['addMyPhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addMyPhoto>>, {data: BodyType<AddProfilePhotoInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  addMyPhoto(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddMyPhotoMutationResult = NonNullable<Awaited<ReturnType<typeof addMyPhoto>>>
+    export type AddMyPhotoMutationBody = BodyType<AddProfilePhotoInput>
+    export type AddMyPhotoMutationError = ErrorType<ErrorEnvelope | AuthErrorEnvelope>
+
+    /**
+ * @summary Record a profile photo after uploading it to storage
+ */
+export const useAddMyPhoto = <TError = ErrorType<ErrorEnvelope | AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addMyPhoto>>, TError,{data: BodyType<AddProfilePhotoInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addMyPhoto>>,
+        TError,
+        {data: BodyType<AddProfilePhotoInput>},
+        TContext
+      > => {
+      return useMutation(getAddMyPhotoMutationOptions(options));
+    }
+
+export const getDeleteMyPhotoUrl = (id: number,) => {
+
+
+
+
+  return `/api/me/photos/${id}`
+}
+
+/**
+ * @summary Delete one of the signed-in user's profile photos
+ */
+export const deleteMyPhoto = async (id: number, options?: RequestInit): Promise<ProfilePhoto[]> => {
+
+  return customFetch<ProfilePhoto[]>(getDeleteMyPhotoUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteMyPhotoMutationOptions = <TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyPhoto>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMyPhoto>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteMyPhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMyPhoto>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteMyPhoto(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMyPhotoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMyPhoto>>>
+
+    export type DeleteMyPhotoMutationError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>
+
+    /**
+ * @summary Delete one of the signed-in user's profile photos
+ */
+export const useDeleteMyPhoto = <TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyPhoto>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMyPhoto>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteMyPhotoMutationOptions(options));
+    }
+
+export const getReorderMyPhotosUrl = () => {
+
+
+
+
+  return `/api/me/photos/reorder`
+}
+
+/**
+ * Accepts the full list of photo ids in the desired order. Photos not
+listed keep their relative order after the listed ones.
+
+ * @summary Reorder the signed-in user's profile photos
+ */
+export const reorderMyPhotos = async (reorderPhotosInput: ReorderPhotosInput, options?: RequestInit): Promise<ProfilePhoto[]> => {
+
+  return customFetch<ProfilePhoto[]>(getReorderMyPhotosUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      reorderPhotosInput,)
+  }
+);}
+
+
+
+
+export const getReorderMyPhotosMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorderMyPhotos>>, TError,{data: BodyType<ReorderPhotosInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reorderMyPhotos>>, TError,{data: BodyType<ReorderPhotosInput>}, TContext> => {
+
+const mutationKey = ['reorderMyPhotos'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reorderMyPhotos>>, {data: BodyType<ReorderPhotosInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  reorderMyPhotos(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReorderMyPhotosMutationResult = NonNullable<Awaited<ReturnType<typeof reorderMyPhotos>>>
+    export type ReorderMyPhotosMutationBody = BodyType<ReorderPhotosInput>
+    export type ReorderMyPhotosMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Reorder the signed-in user's profile photos
+ */
+export const useReorderMyPhotos = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorderMyPhotos>>, TError,{data: BodyType<ReorderPhotosInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reorderMyPhotos>>,
+        TError,
+        {data: BodyType<ReorderPhotosInput>},
+        TContext
+      > => {
+      return useMutation(getReorderMyPhotosMutationOptions(options));
+    }
+
+export const getSetRevealConsentUrl = () => {
+
+
+
+
+  return `/api/me/matching/reveal-consent`
+}
+
+/**
+ * Off by default. When on, a mutual match can see the caller's curated
+reveal card (name, photos, a few prompts). Never gates being matched.
+
+ * @summary Toggle whether the user shares their reveal card with matches
+ */
+export const setRevealConsent = async (revealConsentInput: RevealConsentInput, options?: RequestInit): Promise<RevealConsentState> => {
+
+  return customFetch<RevealConsentState>(getSetRevealConsentUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      revealConsentInput,)
+  }
+);}
+
+
+
+
+export const getSetRevealConsentMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setRevealConsent>>, TError,{data: BodyType<RevealConsentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setRevealConsent>>, TError,{data: BodyType<RevealConsentInput>}, TContext> => {
+
+const mutationKey = ['setRevealConsent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setRevealConsent>>, {data: BodyType<RevealConsentInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setRevealConsent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetRevealConsentMutationResult = NonNullable<Awaited<ReturnType<typeof setRevealConsent>>>
+    export type SetRevealConsentMutationBody = BodyType<RevealConsentInput>
+    export type SetRevealConsentMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Toggle whether the user shares their reveal card with matches
+ */
+export const useSetRevealConsent = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setRevealConsent>>, TError,{data: BodyType<RevealConsentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setRevealConsent>>,
+        TError,
+        {data: BodyType<RevealConsentInput>},
+        TContext
+      > => {
+      return useMutation(getSetRevealConsentMutationOptions(options));
+    }
+
+export const getGetConnectionsUrl = () => {
+
+
+
+
+  return `/api/me/connections`
+}
+
+/**
+ * Returns the caller's connections, most recently active first, each with
+the counterpart id, unread count, and a short preview of the latest
+message.
+
+ * @summary List the signed-in user's match conversations
+ */
+export const getConnections = async ( options?: RequestInit): Promise<Connection[]> => {
+
+  return customFetch<Connection[]>(getGetConnectionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetConnectionsQueryKey = () => {
+    return [
+    `/api/me/connections`
+    ] as const;
+    }
+
+
+export const getGetConnectionsQueryOptions = <TData = Awaited<ReturnType<typeof getConnections>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConnections>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetConnectionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getConnections>>> = ({ signal }) => getConnections({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getConnections>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetConnectionsQueryResult = NonNullable<Awaited<ReturnType<typeof getConnections>>>
+export type GetConnectionsQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary List the signed-in user's match conversations
+ */
+
+export function useGetConnections<TData = Awaited<ReturnType<typeof getConnections>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConnections>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetConnectionsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetConnectionUrl = (id: string,) => {
+
+
+
+
+  return `/api/me/connections/${id}`
+}
+
+/**
+ * @summary Get one of the signed-in user's conversations
+ */
+export const getConnection = async (id: string, options?: RequestInit): Promise<Connection> => {
+
+  return customFetch<Connection>(getGetConnectionUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetConnectionQueryKey = (id: string,) => {
+    return [
+    `/api/me/connections/${id}`
+    ] as const;
+    }
+
+
+export const getGetConnectionQueryOptions = <TData = Awaited<ReturnType<typeof getConnection>>, TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConnection>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetConnectionQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getConnection>>> = ({ signal }) => getConnection(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getConnection>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetConnectionQueryResult = NonNullable<Awaited<ReturnType<typeof getConnection>>>
+export type GetConnectionQueryError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>
+
+
+/**
+ * @summary Get one of the signed-in user's conversations
+ */
+
+export function useGetConnection<TData = Awaited<ReturnType<typeof getConnection>>, TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConnection>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetConnectionQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetConnectionProfileUrl = (id: string,) => {
+
+
+
+
+  return `/api/me/connections/${id}/profile`
+}
+
+/**
+ * Returns the consented view of the other member: name and photos only if
+they turned reveal consent on, plus an aggregate readiness and values
+summary. Never raw signals or PII.
+
+ * @summary The counterpart's curated reveal card for a conversation
+ */
+export const getConnectionProfile = async (id: string, options?: RequestInit): Promise<RevealCard> => {
+
+  return customFetch<RevealCard>(getGetConnectionProfileUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetConnectionProfileQueryKey = (id: string,) => {
+    return [
+    `/api/me/connections/${id}/profile`
+    ] as const;
+    }
+
+
+export const getGetConnectionProfileQueryOptions = <TData = Awaited<ReturnType<typeof getConnectionProfile>>, TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConnectionProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetConnectionProfileQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getConnectionProfile>>> = ({ signal }) => getConnectionProfile(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getConnectionProfile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetConnectionProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getConnectionProfile>>>
+export type GetConnectionProfileQueryError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>
+
+
+/**
+ * @summary The counterpart's curated reveal card for a conversation
+ */
+
+export function useGetConnectionProfile<TData = Awaited<ReturnType<typeof getConnectionProfile>>, TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConnectionProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetConnectionProfileQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetConnectionMessagesUrl = (id: string,) => {
+
+
+
+
+  return `/api/me/connections/${id}/messages`
+}
+
+/**
+ * @summary List the messages in a conversation
+ */
+export const getConnectionMessages = async (id: string, options?: RequestInit): Promise<ConnectionMessage[]> => {
+
+  return customFetch<ConnectionMessage[]>(getGetConnectionMessagesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetConnectionMessagesQueryKey = (id: string,) => {
+    return [
+    `/api/me/connections/${id}/messages`
+    ] as const;
+    }
+
+
+export const getGetConnectionMessagesQueryOptions = <TData = Awaited<ReturnType<typeof getConnectionMessages>>, TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConnectionMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetConnectionMessagesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getConnectionMessages>>> = ({ signal }) => getConnectionMessages(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getConnectionMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetConnectionMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof getConnectionMessages>>>
+export type GetConnectionMessagesQueryError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>
+
+
+/**
+ * @summary List the messages in a conversation
+ */
+
+export function useGetConnectionMessages<TData = Awaited<ReturnType<typeof getConnectionMessages>>, TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConnectionMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetConnectionMessagesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSendConnectionMessageUrl = (id: string,) => {
+
+
+
+
+  return `/api/me/connections/${id}/messages`
+}
+
+/**
+ * Sends a message. The conversation must be active and the pair must not
+be blocked. Rate-limited per sender.
+
+ * @summary Send a message in a conversation
+ */
+export const sendConnectionMessage = async (id: string,
+    sendMessageInput: SendMessageInput, options?: RequestInit): Promise<ConnectionMessage> => {
+
+  return customFetch<ConnectionMessage>(getSendConnectionMessageUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      sendMessageInput,)
+  }
+);}
+
+
+
+
+export const getSendConnectionMessageMutationOptions = <TError = ErrorType<ErrorEnvelope | AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendConnectionMessage>>, TError,{id: string;data: BodyType<SendMessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendConnectionMessage>>, TError,{id: string;data: BodyType<SendMessageInput>}, TContext> => {
+
+const mutationKey = ['sendConnectionMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendConnectionMessage>>, {id: string;data: BodyType<SendMessageInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  sendConnectionMessage(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendConnectionMessageMutationResult = NonNullable<Awaited<ReturnType<typeof sendConnectionMessage>>>
+    export type SendConnectionMessageMutationBody = BodyType<SendMessageInput>
+    export type SendConnectionMessageMutationError = ErrorType<ErrorEnvelope | AuthErrorEnvelope>
+
+    /**
+ * @summary Send a message in a conversation
+ */
+export const useSendConnectionMessage = <TError = ErrorType<ErrorEnvelope | AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendConnectionMessage>>, TError,{id: string;data: BodyType<SendMessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendConnectionMessage>>,
+        TError,
+        {id: string;data: BodyType<SendMessageInput>},
+        TContext
+      > => {
+      return useMutation(getSendConnectionMessageMutationOptions(options));
+    }
+
+export const getMarkConnectionReadUrl = (id: string,) => {
+
+
+
+
+  return `/api/me/connections/${id}/read`
+}
+
+/**
+ * @summary Mark the counterpart's messages as read
+ */
+export const markConnectionRead = async (id: string, options?: RequestInit): Promise<OkResult> => {
+
+  return customFetch<OkResult>(getMarkConnectionReadUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getMarkConnectionReadMutationOptions = <TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markConnectionRead>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof markConnectionRead>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['markConnectionRead'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markConnectionRead>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  markConnectionRead(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkConnectionReadMutationResult = NonNullable<Awaited<ReturnType<typeof markConnectionRead>>>
+
+    export type MarkConnectionReadMutationError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>
+
+    /**
+ * @summary Mark the counterpart's messages as read
+ */
+export const useMarkConnectionRead = <TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markConnectionRead>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof markConnectionRead>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getMarkConnectionReadMutationOptions(options));
+    }
+
+export const getUnmatchConnectionUrl = (id: string,) => {
+
+
+
+
+  return `/api/me/connections/${id}/unmatch`
+}
+
+/**
+ * Closes the conversation symmetrically. Once closed neither side can
+send. A later mutual match reopens it.
+
+ * @summary End a conversation
+ */
+export const unmatchConnection = async (id: string, options?: RequestInit): Promise<Connection> => {
+
+  return customFetch<Connection>(getUnmatchConnectionUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getUnmatchConnectionMutationOptions = <TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unmatchConnection>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unmatchConnection>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['unmatchConnection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unmatchConnection>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  unmatchConnection(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnmatchConnectionMutationResult = NonNullable<Awaited<ReturnType<typeof unmatchConnection>>>
+
+    export type UnmatchConnectionMutationError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>
+
+    /**
+ * @summary End a conversation
+ */
+export const useUnmatchConnection = <TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unmatchConnection>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unmatchConnection>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getUnmatchConnectionMutationOptions(options));
+    }
+
+export const getReportConnectionUrl = (id: string,) => {
+
+
+
+
+  return `/api/me/connections/${id}/report`
+}
+
+/**
+ * Files a member report about the other person and closes the thread.
+Reporting never moves Match Readiness.
+
+ * @summary Report the counterpart and close the conversation
+ */
+export const reportConnection = async (id: string,
+    reportConnectionInput: ReportConnectionInput, options?: RequestInit): Promise<Connection> => {
+
+  return customFetch<Connection>(getReportConnectionUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      reportConnectionInput,)
+  }
+);}
+
+
+
+
+export const getReportConnectionMutationOptions = <TError = ErrorType<ErrorEnvelope | AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportConnection>>, TError,{id: string;data: BodyType<ReportConnectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reportConnection>>, TError,{id: string;data: BodyType<ReportConnectionInput>}, TContext> => {
+
+const mutationKey = ['reportConnection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reportConnection>>, {id: string;data: BodyType<ReportConnectionInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  reportConnection(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReportConnectionMutationResult = NonNullable<Awaited<ReturnType<typeof reportConnection>>>
+    export type ReportConnectionMutationBody = BodyType<ReportConnectionInput>
+    export type ReportConnectionMutationError = ErrorType<ErrorEnvelope | AuthErrorEnvelope>
+
+    /**
+ * @summary Report the counterpart and close the conversation
+ */
+export const useReportConnection = <TError = ErrorType<ErrorEnvelope | AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportConnection>>, TError,{id: string;data: BodyType<ReportConnectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reportConnection>>,
+        TError,
+        {id: string;data: BodyType<ReportConnectionInput>},
+        TContext
+      > => {
+      return useMutation(getReportConnectionMutationOptions(options));
     }
 

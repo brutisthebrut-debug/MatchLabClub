@@ -1,0 +1,539 @@
+import { useEffect, useRef, useState } from "react";
+import { Link, useRoute } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import {
+  ArrowLeft,
+  Flag,
+  Heart,
+  Send,
+  Shield,
+  UserX,
+} from "lucide-react";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { useMeta } from "@/hooks/useMeta";
+import { useAuth } from "@workspace/replit-auth-web";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import {
+  useGetConnection,
+  getGetConnectionQueryKey,
+  useGetConnectionMessages,
+  getGetConnectionMessagesQueryKey,
+  useGetConnectionProfile,
+  getGetConnectionProfileQueryKey,
+  useSendConnectionMessage,
+  useMarkConnectionRead,
+  useUnmatchConnection,
+  useReportConnection,
+  getGetConnectionsQueryKey,
+  type ConnectionMessage,
+  type ReportConnectionInputReason,
+} from "@workspace/api-client-react";
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  transition: {
+    duration: 0.4,
+    delay,
+    ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+  },
+});
+
+// Relative serving URLs (e.g. "storage/objects/<id>") are served by the API,
+// which lives under /api. Absolute or already-rooted URLs are passed through.
+function photoSrc(url: string): string {
+  if (url.startsWith("http") || url.startsWith("/")) return url;
+  return `/api/${url}`;
+}
+
+const REPORT_REASONS: { value: ReportConnectionInputReason; label: string }[] = [
+  { value: "harassment", label: "Harassment or abuse" },
+  { value: "inappropriate", label: "Inappropriate content" },
+  { value: "fake_profile", label: "Fake profile" },
+  { value: "scam", label: "Scam or spam" },
+  { value: "safety", label: "Safety concern" },
+  { value: "underage", label: "Looks underage" },
+  { value: "other", label: "Something else" },
+];
+
+const DEMO_MESSAGES: ConnectionMessage[] = [
+  {
+    id: "d1",
+    connectionId: "demo",
+    senderUserId: "them",
+    body: "Hey, glad we matched. Your readiness profile is impressive.",
+    mine: false,
+    createdAt: new Date(Date.now() - 5_400_000).toISOString(),
+    readAt: new Date().toISOString(),
+  },
+  {
+    id: "d2",
+    connectionId: "demo",
+    senderUserId: "me",
+    body: "Thank you. Yours too. What is your ideal weekend?",
+    mine: true,
+    createdAt: new Date(Date.now() - 3_600_000).toISOString(),
+    readAt: new Date().toISOString(),
+  },
+];
+
+export default function MatchThread() {
+  const [, params] = useRoute("/matches/:id");
+  const id = params?.id ?? "";
+  useMeta("Conversation", "Your conversation with a mutual match.");
+
+  const { isAuthenticated, login } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const isDemo = !isAuthenticated;
+
+  const [draft, setDraft] = useState("");
+  const [showReveal, setShowReveal] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] =
+    useState<ReportConnectionInputReason>("harassment");
+  const endRef = useRef<HTMLDivElement>(null);
+
+  const connectionQuery = useGetConnection(id, {
+    query: {
+      queryKey: getGetConnectionQueryKey(id),
+      enabled: isAuthenticated && id.length > 0,
+      retry: false,
+    },
+  });
+  const messagesQuery = useGetConnectionMessages(id, {
+    query: {
+      queryKey: getGetConnectionMessagesQueryKey(id),
+      enabled: isAuthenticated && id.length > 0,
+      retry: false,
+      refetchInterval: 15_000,
+    },
+  });
+  const profileQuery = useGetConnectionProfile(id, {
+    query: {
+      queryKey: getGetConnectionProfileQueryKey(id),
+      enabled: isAuthenticated && id.length > 0 && showReveal,
+      retry: false,
+    },
+  });
+
+  const sendMessage = useSendConnectionMessage();
+  const markRead = useMarkConnectionRead();
+  const unmatch = useUnmatchConnection();
+  const report = useReportConnection();
+
+  const connection = connectionQuery.data ?? null;
+  const messages = isDemo ? DEMO_MESSAGES : (messagesQuery.data ?? []);
+  const closed = connection?.status === "closed";
+
+  // Mark the thread read on open and whenever new inbound messages arrive.
+  useEffect(() => {
+    if (isDemo || !id || !connection) return;
+    if (messages.some((m) => !m.mine && m.readAt === null)) {
+      markRead.mutate(
+        { id },
+        {
+          onSuccess: () => {
+            void queryClient.invalidateQueries({
+              queryKey: getGetConnectionsQueryKey(),
+            });
+          },
+        },
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDemo, id, connection, messages.length]);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages.length]);
+
+  const invalidateThread = () => {
+    void queryClient.invalidateQueries({
+      queryKey: getGetConnectionMessagesQueryKey(id),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: getGetConnectionQueryKey(id),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: getGetConnectionsQueryKey(),
+    });
+  };
+
+  const handleSend = () => {
+    const body = draft.trim();
+    if (isDemo || !body || sendMessage.isPending || closed) return;
+    sendMessage.mutate(
+      { id, data: { body } },
+      {
+        onSuccess: () => {
+          setDraft("");
+          invalidateThread();
+        },
+        onError: () => {
+          toast({ title: "Couldn't send that message. Try again." });
+        },
+      },
+    );
+  };
+
+  const handleUnmatch = () => {
+    if (isDemo) return;
+    unmatch.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          invalidateThread();
+          toast({ title: "You unmatched. This conversation is now closed." });
+        },
+      },
+    );
+  };
+
+  const handleReport = () => {
+    if (isDemo) return;
+    report.mutate(
+      { id, data: { reason: reportReason } },
+      {
+        onSuccess: () => {
+          setReportOpen(false);
+          invalidateThread();
+          toast({
+            title: "Report sent.",
+            description:
+              "We closed this conversation and our team will review it.",
+          });
+        },
+      },
+    );
+  };
+
+  if (isDemo) {
+    return (
+      <AppLayout>
+        <div className="min-h-screen mesh-bg py-10 px-4">
+          <div className="max-w-2xl mx-auto relative z-10">
+            <Link
+              href="/matches"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6"
+            >
+              <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+              Back to matches
+            </Link>
+            <div
+              className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4"
+              data-testid="banner-thread-sample"
+            >
+              <p className="text-sm text-muted-foreground">
+                This is a sample conversation. Sign in to talk to your real
+                matches.
+              </p>
+              <Button
+                onClick={() => login()}
+                size="sm"
+                className="rounded-full"
+                data-testid="button-thread-signin"
+              >
+                Sign in
+              </Button>
+            </div>
+            <div className="glass border border-white/10 rounded-2xl p-4 space-y-3">
+              {DEMO_MESSAGES.map((m) => (
+                <Bubble key={m.id} message={m} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (!connectionQuery.isLoading && !connection) {
+    return (
+      <AppLayout>
+        <div className="min-h-screen mesh-bg py-10 px-4">
+          <div className="max-w-2xl mx-auto relative z-10 text-center pt-16">
+            <p className="text-sm text-muted-foreground mb-4">
+              This conversation could not be found.
+            </p>
+            <Link href="/matches">
+              <Button size="sm" className="rounded-full">
+                Back to matches
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  const reveal = profileQuery.data;
+
+  return (
+    <AppLayout>
+      <div className="min-h-screen mesh-bg py-8 px-4">
+        <div className="orb orb-indigo fixed w-[360px] h-[360px] -top-20 right-0 opacity-20 pointer-events-none" />
+        <div className="max-w-2xl mx-auto relative z-10">
+          <div className="flex items-center justify-between mb-5">
+            <Link
+              href="/matches"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+              data-testid="link-back-matches"
+            >
+              <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+              Matches
+            </Link>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full text-xs"
+                onClick={() => setShowReveal((v) => !v)}
+                data-testid="button-toggle-reveal"
+              >
+                {showReveal ? "Hide profile" : "View profile"}
+              </Button>
+              {!closed && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full text-xs text-muted-foreground"
+                  onClick={handleUnmatch}
+                  disabled={unmatch.isPending}
+                  data-testid="button-unmatch"
+                >
+                  <UserX className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
+                  Unmatch
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full text-xs text-[hsl(350_80%_72%)]"
+                onClick={() => setReportOpen((v) => !v)}
+                data-testid="button-open-report"
+              >
+                <Flag className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
+                Report
+              </Button>
+            </div>
+          </div>
+
+          {closed && (
+            <div
+              className="mb-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-muted-foreground"
+              data-testid="banner-thread-closed"
+            >
+              This conversation is closed
+              {connection?.closedReason
+                ? ` (${connection.closedReason})`
+                : ""}
+              . You can no longer send messages here.
+            </div>
+          )}
+
+          {reportOpen && (
+            <motion.div
+              {...fadeUp(0)}
+              className="mb-4 glass border border-[hsl(350_70%_60%/0.25)] rounded-2xl p-4"
+              data-testid="panel-report"
+            >
+              <p className="text-sm font-semibold text-foreground mb-1">
+                Report this match
+              </p>
+              <p className="text-xs text-muted-foreground/70 mb-3">
+                We will close the conversation and our team will review it.
+                Reporting never affects your Match Readiness.
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <Select
+                  value={reportReason}
+                  onValueChange={(v) =>
+                    setReportReason(v as ReportConnectionInputReason)
+                  }
+                >
+                  <SelectTrigger
+                    className="w-56 rounded-full"
+                    data-testid="select-report-reason"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {REPORT_REASONS.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>
+                        {r.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  className="rounded-full"
+                  onClick={handleReport}
+                  disabled={report.isPending}
+                  data-testid="button-submit-report"
+                >
+                  Send report
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {showReveal && (
+            <motion.div
+              {...fadeUp(0)}
+              className="mb-4 glass border border-white/10 rounded-2xl p-5"
+              data-testid="panel-reveal"
+            >
+              {profileQuery.isLoading ? (
+                <p className="text-sm text-muted-foreground/60">
+                  Loading profile...
+                </p>
+              ) : reveal ? (
+                <div>
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(245_58%_62%)] to-[hsl(326_100%_62%)] flex items-center justify-center">
+                      <Heart className="w-4 h-4 text-white" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {reveal.revealed && reveal.displayName
+                          ? reveal.displayName
+                          : "Your match"}
+                      </p>
+                      {!reveal.revealed && (
+                        <Badge variant="secondary" className="text-[10px] mt-0.5">
+                          Name and photos hidden until they opt in
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  {reveal.revealed && reveal.photos.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      {reveal.photos.slice(0, 6).map((p, i) => (
+                        <img
+                          key={i}
+                          src={photoSrc(p)}
+                          alt="Match photo"
+                          className="aspect-square w-full rounded-xl object-cover"
+                          data-testid={`reveal-photo-${i}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground/80 leading-relaxed mb-1">
+                    {reveal.readinessSummary}
+                  </p>
+                  <p className="text-xs text-muted-foreground/60 leading-relaxed">
+                    {reveal.valuesSummary}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground/60">
+                  Profile is not available yet.
+                </p>
+              )}
+            </motion.div>
+          )}
+
+          <div
+            className="glass border border-white/10 rounded-2xl p-4 min-h-[320px] flex flex-col"
+            data-testid="thread-messages"
+          >
+            <div className="flex-1 space-y-3">
+              {messagesQuery.isLoading ? (
+                <p className="text-sm text-muted-foreground/60">
+                  Loading conversation...
+                </p>
+              ) : messages.length === 0 ? (
+                <div className="text-center py-12">
+                  <Heart
+                    className="w-7 h-7 text-muted-foreground/30 mx-auto mb-3"
+                    aria-hidden="true"
+                  />
+                  <p className="text-sm text-muted-foreground/70">
+                    You matched. Send the first message.
+                  </p>
+                </div>
+              ) : (
+                messages.map((m) => <Bubble key={m.id} message={m} />)
+              )}
+              <div ref={endRef} />
+            </div>
+          </div>
+
+          {!closed && (
+            <div className="mt-3 flex items-end gap-2">
+              <Textarea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder="Write a message..."
+                rows={2}
+                maxLength={4000}
+                className="resize-none rounded-2xl"
+                data-testid="input-message"
+              />
+              <Button
+                onClick={handleSend}
+                disabled={sendMessage.isPending || draft.trim().length === 0}
+                className="rounded-full h-11 w-11 p-0 flex-shrink-0"
+                data-testid="button-send-message"
+                aria-label="Send message"
+              >
+                <Send className="w-4 h-4" aria-hidden="true" />
+              </Button>
+            </div>
+          )}
+
+          <div className="mt-5 flex items-start gap-2.5">
+            <Shield
+              className="w-4 h-4 text-muted-foreground/30 flex-shrink-0 mt-0.5"
+              aria-hidden="true"
+            />
+            <p className="text-[11px] text-muted-foreground/45 leading-relaxed">
+              Keep the conversation here until you trust each other. Never send
+              money. You can unmatch or report at any time, and a report always
+              closes the thread.
+            </p>
+          </div>
+        </div>
+      </div>
+    </AppLayout>
+  );
+}
+
+function Bubble({ message }: { message: ConnectionMessage }) {
+  return (
+    <div
+      className={`flex ${message.mine ? "justify-end" : "justify-start"}`}
+      data-testid={`message-${message.mine ? "mine" : "theirs"}`}
+    >
+      <div
+        className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
+          message.mine
+            ? "bg-gradient-to-br from-[hsl(245_58%_62%)] to-[hsl(280_50%_60%)] text-white"
+            : "bg-white/[0.06] text-foreground border border-white/8"
+        }`}
+      >
+        {message.body}
+      </div>
+    </div>
+  );
+}
