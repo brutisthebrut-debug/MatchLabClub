@@ -236,6 +236,15 @@ describe("connection messaging", () => {
       .where(eq(userReportsTable.reporterUserId, USER_A));
     expect(reports.length).toBe(1);
     expect(reports[0]!.reportedUserId).toBe(USER_B);
+
+    // Reporting also blocks: the reporter is now block-paired with the
+    // counterpart, so the matching engine can never re-pair or reopen them.
+    const blocks = await db
+      .select()
+      .from(userBlocksTable)
+      .where(eq(userBlocksTable.blockerUserId, USER_A));
+    expect(blocks.length).toBe(1);
+    expect(blocks[0]!.blockedUserId).toBe(USER_B);
   });
 });
 

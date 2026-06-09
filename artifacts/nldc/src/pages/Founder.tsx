@@ -4753,7 +4753,7 @@ function BrainTab({ founderKey, refreshKey }: { founderKey: string; refreshKey: 
         <div className="mt-6 pt-6 border-t border-white/10">
           <span className="text-sm font-medium text-foreground">Background automation</span>
           <p className="text-xs text-muted-foreground mt-0.5 mb-3">
-            Turn the scheduled sweeps on or off live, no redeploy. Auto-proposal mints internal matches for ready members on a schedule (on-demand matching still works either way). Echo proactivity writes proactive nudges to engaged users and fans them out to their opted-in channels. SMS delivery additionally needs the Twilio credentials set.
+            Turn the scheduled sweeps on or off live, no redeploy. Auto-proposal mints internal matches for ready members on a schedule (on-demand matching still works either way). Echo proactivity writes proactive nudges to engaged users and fans them out to their opted-in channels. SMS delivery additionally needs the Twilio credentials set. Proposal expiry retires stale, unanswered match proposals so the pool stays fresh.
           </p>
           <div className="space-y-2">
             {([
@@ -4768,6 +4768,12 @@ function BrainTab({ founderKey, refreshKey }: { founderKey: string; refreshKey: 
                 title: "Echo proactivity sweep",
                 desc: "Writes proactive nudges and fans them out to opted-in channels.",
                 value: draft.companionNudgeEnabled,
+              },
+              {
+                key: "proposalExpiryEnabled" as const,
+                title: "Proposal expiry sweep",
+                desc: "Expires stale, unanswered match proposals so discover stops resurfacing them.",
+                value: draft.proposalExpiryEnabled,
               },
             ]).map((row) => (
               <div

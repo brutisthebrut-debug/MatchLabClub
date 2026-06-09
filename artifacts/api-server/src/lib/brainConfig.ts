@@ -104,6 +104,14 @@ export interface BrainControls {
    */
   companionNudgeEnabled: boolean;
   /**
+   * Whether the background proposal-expiry sweep runs (moves stale, unanswered
+   * match proposals to "expired" so discover stops resurfacing them). Toggled
+   * live from the control center; PROPOSAL_EXPIRY_ENABLED only seeds the default.
+   * Off by default. The sweep window stays env-tunable
+   * (PROPOSAL_EXPIRY_MAX_AGE_DAYS).
+   */
+  proposalExpiryEnabled: boolean;
+  /**
    * Founder weight overrides, RAW weights keyed by signal id. Partial: any
    * signal not present falls back to its registry default. Null = no overrides.
    */
@@ -193,6 +201,7 @@ export function defaultControls(): BrainControls {
     decayMode: "hold",
     autoProposalEnabled: envTruthy("AUTO_PROPOSAL_ENABLED"),
     companionNudgeEnabled: envTruthy("COMPANION_NUDGE_ENABLED"),
+    proposalExpiryEnabled: envTruthy("PROPOSAL_EXPIRY_ENABLED"),
     signalWeightOverrides: null,
     connectorToggles: {},
   };
@@ -264,6 +273,10 @@ export function coerceControls(raw: unknown): BrainControls {
       typeof v.companionNudgeEnabled === "boolean"
         ? v.companionNudgeEnabled
         : base.companionNudgeEnabled,
+    proposalExpiryEnabled:
+      typeof v.proposalExpiryEnabled === "boolean"
+        ? v.proposalExpiryEnabled
+        : base.proposalExpiryEnabled,
     signalWeightOverrides: overrides,
     connectorToggles: toggles,
   };

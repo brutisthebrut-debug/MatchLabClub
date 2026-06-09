@@ -9,6 +9,7 @@ import {
 } from "@workspace/db";
 import { logger } from "./logger";
 import { sendExpoPushNotifications, isValidExpoPushToken } from "./expoPush";
+import { pairIsBlocked } from "./userBlocks";
 
 // Create (or fetch) the single connection for a mutual pair. Idempotent: the
 // partial unique index on the ordered (low, high) pair means concurrent
@@ -40,8 +41,14 @@ export async function ensureConnection(
       ),
     )
     .limit(1);
-  // A previously closed connection is reopened when the pair matches again.
+  // A previously closed connection is reopened when the pair matches again,
+  // unless a block now stands between them (a report also blocks). The matching
+  // engine already drops blocked pairs from the pool, so a fresh mutual_yes
+  // should not reach here; this keeps the safety rule local and explicit.
   if (existing[0] && existing[0].status !== "active") {
+    if (await pairIsBlocked(pair.userLowId, pair.userHighId)) {
+      return { connection: existing[0], created: false };
+    }
     const [reopened] = await db
       .update(matchConnectionsTable)
       .set({ status: "active", closedReason: null, closedByUserId: null })

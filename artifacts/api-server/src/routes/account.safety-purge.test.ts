@@ -133,3 +133,47 @@ describe("DELETE /api/account purges safety records", () => {
     expect(blocksLeft.length).toBe(0);
   });
 });
+
+describe("POST /api/me/account/delete purges safety records", () => {
+  it("removes the user's reports and blocks in both directions", async () => {
+    const email = `${USER}@example.com`;
+    await db.insert(usersTable).values({ id: USER, email });
+
+    await db.insert(userReportsTable).values([
+      { reporterUserId: USER, reportedUserId: OTHER, reason: "harassment" },
+      { reporterUserId: OTHER, reportedUserId: USER, reason: "scam" },
+    ]);
+    await db.insert(userBlocksTable).values([
+      { blockerUserId: USER, blockedUserId: OTHER, reason: "harassment" },
+      { blockerUserId: OTHER, blockedUserId: USER, reason: "other" },
+    ]);
+
+    testApp.setUser({ id: USER });
+    const res = await request(testApp.app)
+      .post("/api/me/account/delete")
+      .send({ confirmation: email });
+    expect(res.status).toBe(200);
+
+    const reportsLeft = await db
+      .select({ id: userReportsTable.id })
+      .from(userReportsTable)
+      .where(
+        or(
+          eq(userReportsTable.reporterUserId, USER),
+          eq(userReportsTable.reportedUserId, USER),
+        ),
+      );
+    const blocksLeft = await db
+      .select({ id: userBlocksTable.id })
+      .from(userBlocksTable)
+      .where(
+        or(
+          eq(userBlocksTable.blockerUserId, USER),
+          eq(userBlocksTable.blockedUserId, USER),
+        ),
+      );
+
+    expect(reportsLeft.length).toBe(0);
+    expect(blocksLeft.length).toBe(0);
+  });
+});

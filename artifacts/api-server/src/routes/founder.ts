@@ -84,6 +84,7 @@ import { KNOWN_JOB_NAMES, getStaleThresholdMs } from "../lib/jobHeartbeat";
 import { runGeoipUpdate } from "../lib/geoipUpdateJob";
 import { autoProposalTick } from "../lib/autoProposalJob";
 import { companionNudgeTick } from "../lib/companionNudgeJob";
+import { proposalExpiryTick } from "../lib/proposalExpiryJob";
 import {
   DEFAULT_REBREACH_COOLDOWN_MINUTES,
   getEnvRebreachCooldownMinutes,
@@ -2256,6 +2257,7 @@ const BrainControlsPatch = z.object({
   decayMode: z.enum(["hold", "applied"]).optional(),
   autoProposalEnabled: z.boolean().optional(),
   companionNudgeEnabled: z.boolean().optional(),
+  proposalExpiryEnabled: z.boolean().optional(),
   signalWeightOverrides: z.record(z.string(), z.number().min(0)).nullable().optional(),
   connectorToggles: z.record(z.string(), z.boolean()).optional(),
 });
@@ -2276,6 +2278,7 @@ router.put(
     // and idempotent even if the sweep was already running.
     if (parsed.data.autoProposalEnabled === true) void autoProposalTick();
     if (parsed.data.companionNudgeEnabled === true) void companionNudgeTick();
+    if (parsed.data.proposalExpiryEnabled === true) void proposalExpiryTick();
     res.json(serializeControls(controls, true));
   },
 );

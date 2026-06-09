@@ -2,6 +2,7 @@ import { and, eq, inArray, lt } from "drizzle-orm";
 import { db, matchProposalsTable, jobHeartbeatsTable } from "@workspace/db";
 import { logger } from "./logger";
 import { recordJobHeartbeat, getStaleThresholdMs } from "./jobHeartbeat";
+import { loadBrainControls } from "./brainConfig";
 
 const PROPOSAL_EXPIRY_JOB = "proposal_expiry";
 
@@ -77,9 +78,22 @@ export async function runProposalExpirySweep(options?: {
 
 let scheduledTimer: NodeJS.Timeout | null = null;
 
+// One scheduled tick. The timer always runs; whether a sweep actually fires is
+// gated on the live founder control (seeded from PROPOSAL_EXPIRY_ENABLED), so
+// the founder can flip proposal expiry on or off from the control center with no
+// redeploy. The sweep itself stays ungated so direct and test callers are never
+// blocked.
 export async function proposalExpiryTick(): Promise<void> {
-  if (!isProposalExpiryEnabled()) return;
-  await runProposalExpirySweep();
+  try {
+    const controls = await loadBrainControls();
+    if (!controls.proposalExpiryEnabled) return;
+    await runProposalExpirySweep();
+  } catch (err) {
+    logger.warn(
+      { err: err instanceof Error ? err.message : String(err) },
+      "Proposal expiry tick failed to read controls; skipping this run",
+    );
+  }
 }
 
 export function startProposalExpiryJob(): void {
@@ -90,13 +104,6 @@ export function startProposalExpiryJob(): void {
   );
   const intervalMs = intervalHours * 60 * 60 * 1000;
 
-  if (!isProposalExpiryEnabled()) {
-    logger.info(
-      "Proposal expiry job disabled (set PROPOSAL_EXPIRY_ENABLED=true to enable)",
-    );
-    return;
-  }
-
   void proposalExpiryTick();
 
   scheduledTimer = setInterval(() => {
@@ -104,7 +111,10 @@ export function startProposalExpiryJob(): void {
   }, intervalMs);
   if (typeof scheduledTimer.unref === "function") scheduledTimer.unref();
 
-  logger.info({ intervalHours, maxAgeDays: DEFAULT_MAX_AGE_DAYS }, "Started proposal expiry job");
+  logger.info(
+    { intervalHours, maxAgeDays: DEFAULT_MAX_AGE_DAYS },
+    "Started proposal expiry job (gated by founder control)",
+  );
 }
 
 export function stopProposalExpiryJob(): void {

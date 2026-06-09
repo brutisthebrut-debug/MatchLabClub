@@ -17,6 +17,7 @@ import {
 } from "@workspace/db";
 import { z } from "zod/v4";
 import { notifyNewMessage } from "../lib/matchConnections";
+import { blockUserPair } from "../lib/userBlocks";
 import { computeReadiness } from "./matching";
 
 const router: IRouter = Router();
@@ -392,6 +393,10 @@ router.post(
       context: "conversation",
       note: parsed.data.note ?? null,
     });
+    // Reporting also blocks: the reporter never gets re-paired with this person.
+    // The block is a hard, symmetric gate in the matching engine and clears any
+    // internal proposals between the two, so the thread cannot reopen later.
+    await blockUserPair(userId, counterpart, `report:${parsed.data.reason}`);
     const [updated] = await db
       .update(matchConnectionsTable)
       .set({ status: "closed", closedReason: "report", closedByUserId: userId })

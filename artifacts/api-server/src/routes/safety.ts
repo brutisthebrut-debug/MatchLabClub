@@ -1,10 +1,9 @@
 import { Router, type IRouter } from "express";
-import { and, eq, or, desc } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 import {
   db,
   userReportsTable,
   userBlocksTable,
-  matchProposalsTable,
 } from "@workspace/db";
 import {
   ReportUserBody,
@@ -12,6 +11,7 @@ import {
   ListSafetyBlocksResponse,
   UnblockUserResponse,
 } from "@workspace/api-zod";
+import { blockUserPair } from "../lib/userBlocks";
 
 const router: IRouter = Router();
 
@@ -117,28 +117,9 @@ router.post("/me/safety/block", async (req, res): Promise<void> => {
     return;
   }
 
-  await db
-    .insert(userBlocksTable)
-    .values({ blockerUserId, blockedUserId, reason: reason ?? null })
-    .onConflictDoNothing({
-      target: [userBlocksTable.blockerUserId, userBlocksTable.blockedUserId],
-    });
-
-  // Remove any internal proposals between the two, in either direction.
-  await db
-    .delete(matchProposalsTable)
-    .where(
-      or(
-        and(
-          eq(matchProposalsTable.userId, blockerUserId),
-          eq(matchProposalsTable.proposedToUserId, blockedUserId),
-        ),
-        and(
-          eq(matchProposalsTable.userId, blockedUserId),
-          eq(matchProposalsTable.proposedToUserId, blockerUserId),
-        ),
-      ),
-    );
+  // Persist the block and clear any internal proposals between the two in both
+  // directions (shared with the report-and-block path in connections.ts).
+  await blockUserPair(blockerUserId, blockedUserId, reason ?? null);
 
   const [row] = await db
     .select({

@@ -1057,6 +1057,31 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .returning({ id: matchProposalsTable.id });
       tables["match_proposals"] = matchProposalsDel.length;
 
+      // Trust & Safety records: reports the user filed or received, and blocks
+      // in either direction. Mirrors the live delete so both GDPR paths wipe
+      // every table, including the block rows the report-and-block flow writes.
+      const reportsDel = await tx
+        .delete(userReportsTable)
+        .where(
+          or(
+            eq(userReportsTable.reporterUserId, userId),
+            eq(userReportsTable.reportedUserId, userId),
+          ),
+        )
+        .returning({ id: userReportsTable.id });
+      tables["user_reports"] = reportsDel.length;
+
+      const blocksDel = await tx
+        .delete(userBlocksTable)
+        .where(
+          or(
+            eq(userBlocksTable.blockerUserId, userId),
+            eq(userBlocksTable.blockedUserId, userId),
+          ),
+        )
+        .returning({ id: userBlocksTable.id });
+      tables["user_blocks"] = blocksDel.length;
+
       // Match connections + their message threads. Same two-step wipe as the
       // live delete: clear all messages in any connection this user is a party
       // to, then the connection rows. Counterpart messages would otherwise be

@@ -924,6 +924,7 @@ export interface BrainControls {
   decayMode: ScoringMode;
   autoProposalEnabled: boolean;
   companionNudgeEnabled: boolean;
+  proposalExpiryEnabled: boolean;
   signalWeightOverrides: Record<string, number> | null;
   connectorToggles: Record<string, boolean>;
 }
