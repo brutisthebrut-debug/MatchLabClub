@@ -1,12 +1,14 @@
 ---
-name: Private object-serving route ships open
-description: The /storage/objects template route has auth/ACL commented out by default; private uploads leak by path unless you enforce a domain access check.
+name: Private object-serving route (scaffold ships open; closed here)
+description: The /storage/objects template route ships with auth/ACL commented out. This app has closed it; keep that pattern for any new private object type.
 ---
 
-The object-storage scaffold's `GET /storage/objects/*` route (artifacts/api-server/src/routes/storage.ts) ships with its auth + ACL block commented out as an "example". As written it streams any object to anyone who knows the path. Object keys are unguessable UUIDs, so it is a path-knowledge leak rather than enumeration, but it still fails any real privacy promise.
+The object-storage scaffold's `GET /storage/objects/*` route (artifacts/api-server/src/routes/storage.ts) ships from the template with its auth + ACL block commented out as an "example", which would stream any object to anyone who knows the path. Object keys are unguessable UUIDs, so it is a path-knowledge leak rather than enumeration, but it still fails any real privacy promise.
 
-**Rule:** any feature that stores PRIVATE objects through this route (profile photos, receipts, etc.) MUST enforce, in the route, both: (1) `req.user?.id` present (401 otherwise), and (2) a domain access check before streaming. Use the generic ACL (`canAccessObjectEntity`, covers owner + public + explicit grants) AND a feature-specific DB check that mirrors that feature's own consent/visibility gate.
+**Current state in this repo: CLOSED.** The route now (1) 401s when `req.user?.id` is absent, (2) runs the generic ACL (`canAccessObjectEntity`, owner + explicit grants), and (3) falls through to a feature-specific check (`canViewStoredObject` / the consented-match photo-reveal gate), returning 403 otherwise. Do NOT reopen it. If a future memory or reviewer claims this route "ships open", verify against the live file first; that claim is stale.
 
-**Why:** the GCS-metadata ACL group system (`objectAcl.ts`) has NO implemented `ObjectAccessGroupType` cases, so cross-user grants (e.g. a matched counterpart viewing reveal-card photos) cannot be expressed as ACL rules — they throw. The owner case works via ACL metadata, but every cross-user grant must be DB-driven.
+**Rule for any NEW private object type added through this route:** keep the same two-layer gate: ACL for owner/explicit grants, plus a DB check that mirrors that feature's own consent/visibility rule.
 
-**How to apply (profile photos here):** allow read if viewer is the owner, else if there is an ACTIVE `match_connections` row for the ordered pair AND the owner's `match_pool_membership.reveal_consent` is true. This mirrors the reveal-card endpoint in `routes/connections.ts` exactly, so a photo is viewable in chat precisely when it is allowed on the reveal card and never otherwise. Keep the OpenAPI entry's 401/403 + session params in sync when you turn the gate on.
+**Why the DB layer is required:** the GCS-metadata ACL group system (`objectAcl.ts`) has NO implemented `ObjectAccessGroupType` cases, so cross-user grants (e.g. a matched counterpart viewing reveal-card photos) cannot be expressed as ACL rules and must be DB-driven. The owner case works via ACL metadata; every cross-user grant does not.
+
+**How profile photos do it (the reference pattern):** allow read if viewer is the owner, else if there is an ACTIVE `match_connections` row for the ordered pair AND the owner's `match_pool_membership.reveal_consent` is true, mirroring the reveal-card endpoint in `routes/connections.ts` exactly. Keep the OpenAPI entry's 401/403 + session params in sync with the route.
