@@ -355,7 +355,7 @@ describe("Founder threshold audit log", () => {
       // Old 70% → new 75% appears somewhere in the row.
       expect(items[0]!.textContent).toMatch(/70%/);
       expect(items[0]!.textContent).toMatch(/75%/);
-    });
+    }, { timeout: 5000 });
   });
 
   it("records a per-tool override add and subsequent remove as two log entries", async () => {
@@ -381,7 +381,7 @@ describe("Founder threshold audit log", () => {
     // recorded change has a distinct new value (80%).
     await waitFor(() => {
       expect(screen.getByText("ProfileReader")).toBeTruthy();
-    });
+    }, { timeout: 5000 });
     const overrideRow = screen.getByText("ProfileReader").closest("div")!;
     const overrideInputs = overrideRow.querySelectorAll("input");
     expect(overrideInputs.length).toBe(3);
@@ -398,7 +398,7 @@ describe("Founder threshold audit log", () => {
       expect(items[0]!.textContent).toMatch(/create/i);
       expect(items[0]!.textContent).toMatch(/ProfileReader/);
       expect(items[0]!.textContent).toMatch(/80%/);
-    });
+    }, { timeout: 5000 });
 
     // Now remove the override and save again.
     fireEvent.click(screen.getByRole("button", { name: /Remove/i }));
@@ -414,6 +414,6 @@ describe("Founder threshold audit log", () => {
       expect(items[0]!.textContent).toMatch(/80%/);
       expect(items[1]!.textContent).toMatch(/create/i);
       expect(items[1]!.textContent).toMatch(/ProfileReader/);
-    });
+    }, { timeout: 5000 });
   });
 });

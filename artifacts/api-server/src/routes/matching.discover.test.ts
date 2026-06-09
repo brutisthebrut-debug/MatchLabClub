@@ -184,25 +184,30 @@ describe("POST /me/matching/discover", () => {
     const first = await request(testApp.app).post("/api/me/matching/discover");
     expect(first.status).toBe(200);
     expect(Array.isArray(first.body)).toBe(true);
+    // Scope to the A->B pair: the pool is a shared table and sibling test files
+    // seed their own ready members, which can legitimately match these fixtures
+    // when no radius is set. Idempotency is a property of the pair, guarded by
+    // the partial unique index, so a pair-scoped count stays deterministic.
     const internalForA = first.body.filter(
-      (p: { source: string }) => p.source === "internal",
+      (p: { source: string; proposedToUserId: string }) =>
+        p.source === "internal" && p.proposedToUserId === USER_B,
     );
     expect(internalForA.length).toBe(1);
-    expect(internalForA[0].proposedToUserId).toBe(USER_B);
 
     // The mirror row exists for B too.
     const bRows = await db
       .select()
       .from(matchProposalsTable)
       .where(eq(matchProposalsTable.userId, USER_B));
-    expect(bRows.length).toBe(1);
-    expect(bRows[0]?.proposedToUserId).toBe(USER_A);
+    const bToA = bRows.filter((r) => r.proposedToUserId === USER_A);
+    expect(bToA.length).toBe(1);
 
     // Running again must not duplicate the pair.
     const second = await request(testApp.app).post("/api/me/matching/discover");
     expect(second.status).toBe(200);
     const internalAfter = second.body.filter(
-      (p: { source: string }) => p.source === "internal",
+      (p: { source: string; proposedToUserId: string }) =>
+        p.source === "internal" && p.proposedToUserId === USER_B,
     );
     expect(internalAfter.length).toBe(1);
   });
@@ -234,8 +239,9 @@ describe("POST /me/matching/discover", () => {
       .select()
       .from(matchProposalsTable)
       .where(eq(matchProposalsTable.userId, USER_B));
-    const aProposal = aRows[0]!;
-    const bProposal = bRows[0]!;
+    // Pick the A<->B pair explicitly; sibling files can add unrelated rows.
+    const aProposal = aRows.find((r) => r.proposedToUserId === USER_B)!;
+    const bProposal = bRows.find((r) => r.proposedToUserId === USER_A)!;
 
     // A says yes first: stays user_yes, no match yet.
     testApp.setUser({ id: USER_A });

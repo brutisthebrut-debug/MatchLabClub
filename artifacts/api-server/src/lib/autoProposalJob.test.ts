@@ -119,6 +119,12 @@ describe("runAutoProposalSweep", () => {
     });
     expect(first).toBeGreaterThan(0);
 
+    // Scope every assertion to the A<->B pair. The match pool is one shared
+    // Postgres table and sibling test files seed their own ready members; when
+    // no radius is set those members can legitimately match our fixtures, so a
+    // raw per-user count is non-deterministic under parallel runs. Idempotency
+    // is a property of the pair, and the partial unique index guarantees it
+    // stays single.
     const aRows = await db
       .select()
       .from(matchProposalsTable)
@@ -127,10 +133,10 @@ describe("runAutoProposalSweep", () => {
       .select()
       .from(matchProposalsTable)
       .where(eq(matchProposalsTable.userId, USER_B));
-    expect(aRows.length).toBe(1);
-    expect(aRows[0]?.proposedToUserId).toBe(USER_B);
-    expect(bRows.length).toBe(1);
-    expect(bRows[0]?.proposedToUserId).toBe(USER_A);
+    const aToB = aRows.filter((r) => r.proposedToUserId === USER_B);
+    const bToA = bRows.filter((r) => r.proposedToUserId === USER_A);
+    expect(aToB.length).toBe(1);
+    expect(bToA.length).toBe(1);
 
     // A second sweep must not create duplicate pairs. Scope it to our fixture
     // users so the count is deterministic under a shared test database.
@@ -143,7 +149,8 @@ describe("runAutoProposalSweep", () => {
       .select()
       .from(matchProposalsTable)
       .where(eq(matchProposalsTable.userId, USER_A));
-    expect(aAfter.length).toBe(1);
+    const aAfterToB = aAfter.filter((r) => r.proposedToUserId === USER_B);
+    expect(aAfterToB.length).toBe(1);
   });
 
   it("respects the radius hard filter: far members are never paired", async () => {
