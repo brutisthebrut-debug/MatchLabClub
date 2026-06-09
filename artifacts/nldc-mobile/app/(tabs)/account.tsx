@@ -1,8 +1,8 @@
 import { Feather } from "@expo/vector-icons";
 import {
-  deleteMyAccount,
   exportMyData,
   getExportMyDataQueryKey,
+  useDeleteMyAccount,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import * as FileSystem from "expo-file-system";
@@ -115,6 +115,8 @@ export default function AccountScreen() {
     logout,
   } = useAuth();
 
+  const deleteAccount = useDeleteMyAccount();
+
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -194,7 +196,7 @@ export default function AccountScreen() {
     setBanner(null);
     setIsDeleting(true);
     try {
-      await deleteMyAccount();
+      await deleteAccount.mutateAsync();
       // Tear down every cached query, the user is signed out and any
       // user-scoped data should not survive in memory.
       queryClient.clear();

@@ -76,20 +76,52 @@ describe("coerceControls", () => {
     expect(c.connectorToggles).toEqual({ plaid: false, spotify: true });
   });
 
-  it("defaults background sweeps off and only honors explicit booleans", () => {
-    const base = defaultControls();
-    expect(base.autoProposalEnabled).toBe(false);
-    expect(base.companionNudgeEnabled).toBe(false);
-    // Missing fields fall back to the env-seeded default, not coerced to false.
-    const missing = coerceControls({ readinessThreshold: 50 });
-    expect(missing.autoProposalEnabled).toBe(base.autoProposalEnabled);
-    expect(missing.companionNudgeEnabled).toBe(base.companionNudgeEnabled);
-    // Explicit booleans are respected; non-booleans fall back to the default.
-    expect(coerceControls({ autoProposalEnabled: true }).autoProposalEnabled).toBe(true);
-    expect(coerceControls({ companionNudgeEnabled: true }).companionNudgeEnabled).toBe(true);
-    expect(coerceControls({ autoProposalEnabled: "yes" }).autoProposalEnabled).toBe(
-      base.autoProposalEnabled,
-    );
+  it("defaults matching automation on and Echo off, honoring explicit booleans", () => {
+    // defaultControls reads env seeds; clear them so the test asserts the
+    // baked-in defaults regardless of the ambient environment.
+    const saved = {
+      auto: process.env.AUTO_PROPOSAL_ENABLED,
+      expiry: process.env.PROPOSAL_EXPIRY_ENABLED,
+      nudge: process.env.MATCHING_NUDGE_ENABLED,
+      echo: process.env.COMPANION_NUDGE_ENABLED,
+    };
+    delete process.env.AUTO_PROPOSAL_ENABLED;
+    delete process.env.PROPOSAL_EXPIRY_ENABLED;
+    delete process.env.MATCHING_NUDGE_ENABLED;
+    delete process.env.COMPANION_NUDGE_ENABLED;
+    try {
+      const base = defaultControls();
+      // Matching automation (auto-proposal, expiry, re-engagement nudge) ships
+      // on so the founder's "turn matching on" decision holds with no env or
+      // stored row. Echo proactivity stays off until the founder opts in.
+      expect(base.autoProposalEnabled).toBe(true);
+      expect(base.proposalExpiryEnabled).toBe(true);
+      expect(base.matchingNudgeEnabled).toBe(true);
+      expect(base.companionNudgeEnabled).toBe(false);
+      // An explicit falsy env value turns a default-on sweep off.
+      process.env.AUTO_PROPOSAL_ENABLED = "false";
+      expect(defaultControls().autoProposalEnabled).toBe(false);
+      delete process.env.AUTO_PROPOSAL_ENABLED;
+      // Missing stored fields fall back to the seeded default, not coerced false.
+      const missing = coerceControls({ readinessThreshold: 50 });
+      expect(missing.autoProposalEnabled).toBe(true);
+      expect(missing.companionNudgeEnabled).toBe(false);
+      expect(missing.matchingNudgeEnabled).toBe(true);
+      // Explicit booleans are respected; non-booleans fall back to the default.
+      expect(coerceControls({ autoProposalEnabled: false }).autoProposalEnabled).toBe(false);
+      expect(coerceControls({ companionNudgeEnabled: true }).companionNudgeEnabled).toBe(true);
+      expect(coerceControls({ matchingNudgeEnabled: false }).matchingNudgeEnabled).toBe(false);
+      expect(coerceControls({ autoProposalEnabled: "yes" }).autoProposalEnabled).toBe(true);
+    } finally {
+      const restore = (k: string, v: string | undefined) => {
+        if (v === undefined) delete process.env[k];
+        else process.env[k] = v;
+      };
+      restore("AUTO_PROPOSAL_ENABLED", saved.auto);
+      restore("PROPOSAL_EXPIRY_ENABLED", saved.expiry);
+      restore("MATCHING_NUDGE_ENABLED", saved.nudge);
+      restore("COMPANION_NUDGE_ENABLED", saved.echo);
+    }
   });
 
   it("accepts hold, shadow, and applied reweighting modes, rejecting others", () => {

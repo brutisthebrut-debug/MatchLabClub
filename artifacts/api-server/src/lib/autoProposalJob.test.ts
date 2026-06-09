@@ -9,7 +9,7 @@ import {
   matchPoolMembershipTable,
   matchProposalsTable,
 } from "@workspace/db";
-import { runAutoProposalSweep, isAutoProposalEnabled } from "./autoProposalJob";
+import { runAutoProposalSweep } from "./autoProposalJob";
 
 const suffix = crypto.randomBytes(6).toString("hex");
 const USER_A = `auto-a-${suffix}`;
@@ -91,22 +91,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await cleanup();
   await pool.end();
-});
-
-describe("isAutoProposalEnabled", () => {
-  it("is off by default and on only for truthy values", () => {
-    const prev = process.env.AUTO_PROPOSAL_ENABLED;
-    delete process.env.AUTO_PROPOSAL_ENABLED;
-    expect(isAutoProposalEnabled()).toBe(false);
-    process.env.AUTO_PROPOSAL_ENABLED = "false";
-    expect(isAutoProposalEnabled()).toBe(false);
-    process.env.AUTO_PROPOSAL_ENABLED = "1";
-    expect(isAutoProposalEnabled()).toBe(true);
-    process.env.AUTO_PROPOSAL_ENABLED = "true";
-    expect(isAutoProposalEnabled()).toBe(true);
-    if (prev === undefined) delete process.env.AUTO_PROPOSAL_ENABLED;
-    else process.env.AUTO_PROPOSAL_ENABLED = prev;
-  });
 });
 
 describe("runAutoProposalSweep", () => {

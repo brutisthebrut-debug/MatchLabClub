@@ -71,6 +71,7 @@ import { ClimbCard } from "@/components/climb/ClimbCard";
 import { ShareButton } from "@/components/echo/ShareButton";
 import { DEMO_PORTRAIT, DEMO_SIGNAL_MAP } from "@/lib/mirrorDemo";
 import { SignalDensityMap } from "@/components/SignalDensityMap";
+import { SampleDataBadge } from "@/components/SampleDataBadge";
 
 const WELLNESS_DIMENSION_COUNT = 18;
 
@@ -410,12 +411,7 @@ function InsightStream({
           <div className="flex items-center gap-3 flex-wrap mb-2">
             <h3 className="font-serif text-2xl font-bold text-foreground">Recent activity</h3>
             {isDemo && (
-              <span
-                className="text-[9px] font-bold uppercase tracking-widest text-rose-600 bg-rose-500/10 border border-rose-500/20 rounded-full px-2.5 py-1"
-                data-testid="insight-stream-sample"
-              >
-                Sample view
-              </span>
+              <SampleDataBadge label="Sample view" tone="rose" size="xs" testId="insight-stream-sample" />
             )}
           </div>
           <p className="text-sm font-medium text-muted-foreground leading-relaxed">
@@ -828,9 +824,7 @@ export default function SelfHub() {
                       {shownPortrait.coveragePercent}% of you mapped
                     </span>
                     {isDemoPortrait && (
-                      <span className="px-2.5 py-1 bg-rose-500/10 text-rose-600 text-[10px] font-bold uppercase tracking-widest rounded-full border border-rose-500/20">
-                        Sample view
-                      </span>
+                      <SampleDataBadge label="Sample view" tone="rose" size="xs" />
                     )}
                   </div>
                   <p className="font-serif text-xl md:text-2xl font-bold text-foreground leading-snug mb-3" data-testid="mirror-hero-headline">

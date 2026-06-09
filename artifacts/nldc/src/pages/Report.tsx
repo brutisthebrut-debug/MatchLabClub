@@ -14,11 +14,12 @@ import { useGetAudit, useGenerateAuditReport, useGetEngineMeta, useListAuditRepo
 import {
   CheckCircle, XCircle, AlertCircle, ArrowRight, Copy, Check,
   Trophy, Calendar, Eye, Sparkles, MessageSquare, Camera,
-  TrendingUp, Lightbulb, Heart, Zap, RefreshCw, History, ChevronDown, ChevronUp, GitCompare, CheckSquare, Square, Lock, Activity,
+  TrendingUp, Lightbulb, Heart, Zap, RefreshCw, History, ChevronDown, ChevronUp, GitCompare, CheckSquare, Square, Activity,
   ArrowUp, ArrowDown, Plus, Minus
 } from "lucide-react";
 import { CompareVersionsDialog } from "@/components/CompareVersionsDialog";
 import { ShareButton } from "@/components/echo/ShareButton";
+import { SampleDataBadge } from "@/components/SampleDataBadge";
 
 type ChangeSummary = {
   scoreDelta: number;
@@ -428,6 +429,7 @@ export default function Report() {
   }
 
   const r: ReportShape = (report ?? (auditId ? null : DEMO_REPORT) ?? DEMO_REPORT) as ReportShape;
+  const isSampleReport = r === DEMO_REPORT;
   const changeSummary: ChangeSummary | null =
     (report as unknown as { changeSummary?: ChangeSummary | null } | null)
       ?.changeSummary ??
@@ -505,7 +507,7 @@ export default function Report() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              {auditId ? (
+              {auditId && (
                 <Button
                   onClick={regenerate}
                   disabled={regenerating}
@@ -516,11 +518,9 @@ export default function Report() {
                   <RefreshCw className={`w-4 h-4 mr-2 ${regenerating ? "animate-spin" : ""}`} />
                   {regenerating ? "Regenerating..." : "Regenerate"}
                 </Button>
-              ) : (
-                <div className="bg-[hsl(248_62%_52%/0.15)] text-[hsl(248_62%_65%)] border border-[hsl(248_62%_52%/0.3)] px-4 py-2 rounded-full text-xs font-bold tracking-wider flex items-center gap-2">
-                  <Lock className="w-3.5 h-3.5" />
-                  Demo Mode
-                </div>
+              )}
+              {isSampleReport && (
+                <SampleDataBadge label="Sample report" size="md" testId="badge-sample-report" />
               )}
               {audit?.previousReport ? (
                 <Button

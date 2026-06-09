@@ -85,6 +85,7 @@ import { runGeoipUpdate } from "../lib/geoipUpdateJob";
 import { autoProposalTick } from "../lib/autoProposalJob";
 import { companionNudgeTick } from "../lib/companionNudgeJob";
 import { proposalExpiryTick } from "../lib/proposalExpiryJob";
+import { matchingNudgeTick } from "../lib/matchingNudgeJob";
 import {
   DEFAULT_REBREACH_COOLDOWN_MINUTES,
   getEnvRebreachCooldownMinutes,
@@ -2258,6 +2259,7 @@ const BrainControlsPatch = z.object({
   autoProposalEnabled: z.boolean().optional(),
   companionNudgeEnabled: z.boolean().optional(),
   proposalExpiryEnabled: z.boolean().optional(),
+  matchingNudgeEnabled: z.boolean().optional(),
   signalWeightOverrides: z.record(z.string(), z.number().min(0)).nullable().optional(),
   connectorToggles: z.record(z.string(), z.boolean()).optional(),
 });
@@ -2279,6 +2281,7 @@ router.put(
     if (parsed.data.autoProposalEnabled === true) void autoProposalTick();
     if (parsed.data.companionNudgeEnabled === true) void companionNudgeTick();
     if (parsed.data.proposalExpiryEnabled === true) void proposalExpiryTick();
+    if (parsed.data.matchingNudgeEnabled === true) void matchingNudgeTick();
     res.json(serializeControls(controls, true));
   },
 );

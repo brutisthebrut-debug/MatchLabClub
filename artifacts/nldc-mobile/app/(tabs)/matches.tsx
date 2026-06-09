@@ -654,6 +654,32 @@ export default function MatchesScreen() {
         />
 
         <Pressable
+          testID="matches-open-matching"
+          accessibilityRole="button"
+          accessibilityLabel="Open your match track"
+          onPress={() => router.push("/matching" as never)}
+          style={({ pressed }) => [
+            styles.matchLink,
+            {
+              borderColor: colors.primary,
+              backgroundColor: `${colors.primary}1A`,
+              opacity: pressed ? 0.7 : 1,
+            },
+          ]}
+        >
+          <Feather name="heart" size={14} color={colors.primary} />
+          <Text style={[styles.matchLinkText, { color: colors.foreground }]}>
+            Match readiness and your match track
+          </Text>
+          <Feather
+            name="chevron-right"
+            size={14}
+            color={colors.primary}
+            style={{ marginLeft: "auto" }}
+          />
+        </Pressable>
+
+        <Pressable
           accessibilityRole="button"
           accessibilityLabel="Open recently deleted matches"
           onPress={() => router.push("/trash" as never)}
@@ -1535,6 +1561,17 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { paddingHorizontal: 20, gap: 14 },
   controls: { gap: 10 },
+  matchLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: 12,
+  },
+  matchLinkText: { fontSize: 14, fontWeight: "700" },
   trashLink: {
     flexDirection: "row",
     alignItems: "center",

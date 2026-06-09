@@ -925,6 +925,7 @@ export interface BrainControls {
   autoProposalEnabled: boolean;
   companionNudgeEnabled: boolean;
   proposalExpiryEnabled: boolean;
+  matchingNudgeEnabled: boolean;
   signalWeightOverrides: Record<string, number> | null;
   connectorToggles: Record<string, boolean>;
 }

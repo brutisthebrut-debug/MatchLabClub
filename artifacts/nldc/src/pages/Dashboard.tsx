@@ -54,6 +54,7 @@ import {
   type ListAuditsParams,
 } from "@workspace/api-client-react";
 import { ReadinessDeltaCard } from "@/components/ReadinessDeltaCard";
+import { SampleDataBadge } from "@/components/SampleDataBadge";
 import { MatchBenchmarkCard } from "@/components/MatchBenchmarkCard";
 import { useAuth } from "@workspace/replit-auth-web";
 import {
@@ -1137,7 +1138,7 @@ export default function Dashboard() {
                         <span className="text-sm font-bold tracking-widest uppercase text-muted-foreground/70">Grade</span>
                       </div>
                       
-                      {!hasRealAudits && <span className="mt-4 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-bold uppercase tracking-wider text-muted-foreground">Sample Data</span>}
+                      {!hasRealAudits && <SampleDataBadge className="mt-4" testId="badge-sample-dashboard-score" />}
                       
                       {scoreDelta > 0 && (
                         <div className="flex items-center gap-2 mt-4 px-4 py-2 rounded-full bg-[hsl(142_55%_45%/0.15)] border border-[hsl(142_55%_45%/0.3)] shadow-[0_0_15px_hsl(142_55%_45%/0.2)]">
@@ -1162,7 +1163,7 @@ export default function Dashboard() {
                         </h2>
                         <p className="text-sm text-muted-foreground mt-1 font-medium">Your score trajectory over time</p>
                       </div>
-                      {showDemo && <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-bold uppercase tracking-wider text-muted-foreground">Sample</span>}
+                      {showDemo && <SampleDataBadge label="Sample" testId="badge-sample-dashboard-chart" />}
                     </div>
                     
                     <div className="flex-1 min-h-[160px] relative z-10 w-full">

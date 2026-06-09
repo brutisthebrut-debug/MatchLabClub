@@ -19,14 +19,6 @@ function readPositiveNumberEnv(name: string, fallback: number): number {
   return parsed;
 }
 
-// The job is OFF by default. It only runs when AUTO_PROPOSAL_ENABLED is set to a
-// truthy value ("1", "true", "yes"). This keeps automated pairing dark until we
-// explicitly choose to turn it on, exactly like the rest of the matching roadmap.
-export function isAutoProposalEnabled(): boolean {
-  const raw = (process.env.AUTO_PROPOSAL_ENABLED ?? "").trim().toLowerCase();
-  return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
-}
-
 // One sweep: for every live pool member, mint any fresh internal proposals. The
 // minting itself is idempotent (mirror rows + partial unique index), so running
 // the sweep repeatedly never creates duplicates. Returns the total new matches

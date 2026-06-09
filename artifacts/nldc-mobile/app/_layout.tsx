@@ -177,6 +177,7 @@ function RootLayoutNav() {
         <Stack.Screen name="mirror" options={{ title: "Your Mirror" }} />
         <Stack.Screen name="connections" options={{ title: "Conversations" }} />
         <Stack.Screen name="messages/[id]" options={{ title: "Conversation" }} />
+        <Stack.Screen name="matching" options={{ title: "Match" }} />
       </Stack>
     </AuthProvider>
   );

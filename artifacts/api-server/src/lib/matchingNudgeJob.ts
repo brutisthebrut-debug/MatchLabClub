@@ -4,11 +4,12 @@ import {
   pushTokensTable,
   matchingReadinessSnapshotsTable,
   matchingNudgeStateTable,
+  jobHeartbeatsTable,
 } from "@workspace/db";
 import { logger } from "./logger";
-import { recordJobHeartbeat } from "./jobHeartbeat";
+import { recordJobHeartbeat, getStaleThresholdMs } from "./jobHeartbeat";
 import { sendExpoPushNotifications, isValidExpoPushToken } from "./expoPush";
-import { effectiveReadinessThreshold } from "./brainConfig";
+import { effectiveReadinessThreshold, loadBrainControls } from "./brainConfig";
 
 const MATCHING_NUDGE_JOB = "matching_nudge";
 const DEFAULT_INTERVAL_HOURS = 24;
@@ -21,12 +22,6 @@ function readPositiveNumberEnv(name: string, fallback: number): number {
   const parsed = Number(raw);
   if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
   return parsed;
-}
-
-function nudgeEnabled(): boolean {
-  const raw = process.env["MATCHING_NUDGE_ENABLED"];
-  if (!raw) return false;
-  return ["1", "true", "yes", "on"].includes(raw.trim().toLowerCase());
 }
 
 async function readinessThreshold(): Promise<number> {
@@ -193,29 +188,43 @@ export async function sendMatchingNudges(options?: {
 
 let scheduledTimer: NodeJS.Timeout | null = null;
 
+// One scheduled tick. The timer always runs; whether a nudge sweep actually
+// fires is gated on the live founder control (seeded from MATCHING_NUDGE_ENABLED),
+// so the founder can flip re-engagement nudges on or off from the control center
+// with no redeploy. The sweep itself stays ungated so direct and test callers are
+// never blocked.
+export async function matchingNudgeTick(): Promise<void> {
+  try {
+    const controls = await loadBrainControls();
+    if (!controls.matchingNudgeEnabled) return;
+    await sendMatchingNudges();
+  } catch (err) {
+    logger.warn(
+      { err: err instanceof Error ? err.message : String(err) },
+      "Matching nudge tick failed to read controls; skipping this run",
+    );
+  }
+}
+
 export function startMatchingNudgeJob(): void {
   if (scheduledTimer) return;
-  if (!nudgeEnabled()) {
-    logger.info(
-      "Matching nudge job disabled (set MATCHING_NUDGE_ENABLED=true to enable)",
-    );
-    return;
-  }
-
   const intervalHours = readPositiveNumberEnv(
     "MATCHING_NUDGE_INTERVAL_HOURS",
     DEFAULT_INTERVAL_HOURS,
   );
   const intervalMs = intervalHours * 60 * 60 * 1000;
 
-  void sendMatchingNudges();
+  void matchingNudgeTick();
 
   scheduledTimer = setInterval(() => {
-    void sendMatchingNudges();
+    void matchingNudgeTick();
   }, intervalMs);
   if (typeof scheduledTimer.unref === "function") scheduledTimer.unref();
 
-  logger.info({ intervalHours }, "Started matching nudge job");
+  logger.info(
+    { intervalHours },
+    "Started matching nudge job (gated by founder control)",
+  );
 }
 
 export function stopMatchingNudgeJob(): void {
@@ -223,4 +232,21 @@ export function stopMatchingNudgeJob(): void {
     clearInterval(scheduledTimer);
     scheduledTimer = null;
   }
+}
+
+export function getMatchingNudgeStaleThresholdMs(): number {
+  return getStaleThresholdMs(MATCHING_NUDGE_JOB);
+}
+
+export async function getMatchingNudgeHeartbeat(): Promise<Date | null> {
+  const rows = await db
+    .select({ lastSuccessAt: jobHeartbeatsTable.lastSuccessAt })
+    .from(jobHeartbeatsTable)
+    .where(eq(jobHeartbeatsTable.jobName, MATCHING_NUDGE_JOB))
+    .limit(1);
+  const row = rows[0];
+  if (!row) return null;
+  return row.lastSuccessAt instanceof Date
+    ? row.lastSuccessAt
+    : new Date(row.lastSuccessAt as unknown as string);
 }

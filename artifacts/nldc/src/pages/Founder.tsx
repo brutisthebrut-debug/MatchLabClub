@@ -4753,7 +4753,7 @@ function BrainTab({ founderKey, refreshKey }: { founderKey: string; refreshKey: 
         <div className="mt-6 pt-6 border-t border-white/10">
           <span className="text-sm font-medium text-foreground">Background automation</span>
           <p className="text-xs text-muted-foreground mt-0.5 mb-3">
-            Turn the scheduled sweeps on or off live, no redeploy. Auto-proposal mints internal matches for ready members on a schedule (on-demand matching still works either way). Echo proactivity writes proactive nudges to engaged users and fans them out to their opted-in channels. SMS delivery additionally needs the Twilio credentials set. Proposal expiry retires stale, unanswered match proposals so the pool stays fresh.
+            Turn the scheduled sweeps on or off live, no redeploy. Auto-proposal mints internal matches for ready members on a schedule (on-demand matching still works either way). Echo proactivity writes proactive nudges to engaged users and fans them out to their opted-in channels. SMS delivery additionally needs the Twilio credentials set. Proposal expiry retires stale, unanswered match proposals so the pool stays fresh. Re-engagement nudges reach members who have stalled just below the match threshold and point them at their next readiness step.
           </p>
           <div className="space-y-2">
             {([
@@ -4774,6 +4774,12 @@ function BrainTab({ founderKey, refreshKey }: { founderKey: string; refreshKey: 
                 title: "Proposal expiry sweep",
                 desc: "Expires stale, unanswered match proposals so discover stops resurfacing them.",
                 value: draft.proposalExpiryEnabled,
+              },
+              {
+                key: "matchingNudgeEnabled" as const,
+                title: "Re-engagement nudge sweep",
+                desc: "Pushes members stalled just below the match threshold toward their next readiness step.",
+                value: draft.matchingNudgeEnabled,
               },
             ]).map((row) => (
               <div

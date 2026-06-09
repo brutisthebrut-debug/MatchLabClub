@@ -107,7 +107,7 @@ const OVERVIEW: NavLink[] = [
   { name: "Echo", href: "/echo", icon: Sparkles },
   { name: "Your Mirror", href: "/your-mirror", icon: Eye },
   { name: "Home", href: "/me", icon: Brain },
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Audit history", href: "/dashboard", icon: LayoutDashboard },
 ];
 
 const SECTIONS: NavSection[] = [
@@ -226,7 +226,7 @@ const SECTIONS: NavSection[] = [
     ],
     more: [
       { name: "Pricing", href: "/pricing", icon: Tag },
-      { name: "Journal", href: "/blog", icon: Newspaper },
+      { name: "Blog", href: "/blog", icon: Newspaper },
       { name: "Roadmap", href: "/roadmap", icon: MapIcon },
       { name: "Before & After", href: "/gallery", icon: Images },
       { name: "Early Access", href: "/waitlist", icon: Ticket },
@@ -283,6 +283,38 @@ function NavRow({
           {link.badge}
         </span>
       )}
+    </Link>
+  );
+}
+
+function NextBestAction({ onNavigate }: { onNavigate: () => void }) {
+  const { isAuthenticated } = useAuth();
+  const { data } = useGetMatchingState({
+    query: {
+      queryKey: getGetMatchingStateQueryKey(),
+      enabled: isAuthenticated,
+    },
+  });
+  const action = data?.nextActions?.[0];
+  if (!action) return null;
+
+  return (
+    <Link
+      href={action.href}
+      onClick={onNavigate}
+      className="block rounded-xl border border-[hsl(248_62%_52%/0.2)] bg-[hsl(248_62%_52%/0.06)] px-3 py-2.5 transition-colors hover:bg-[hsl(248_62%_52%/0.1)]"
+      data-testid="sidebar-next-best-action"
+    >
+      <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[hsl(248_62%_52%)]">
+        <Target className="h-3.5 w-3.5" aria-hidden="true" />
+        Do this next
+      </span>
+      <p className="mt-1 truncate text-sm font-semibold text-foreground">
+        {action.label}
+      </p>
+      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+        {action.detail}
+      </p>
     </Link>
   );
 }
@@ -394,6 +426,9 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
 
       {/* Scrollable nav */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
+        <div className="pb-2">
+          <NextBestAction onNavigate={onNavigate} />
+        </div>
         <div className="pb-2">
           <ClimbSummary onNavigate={onNavigate} />
         </div>

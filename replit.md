@@ -26,7 +26,7 @@ Two layers. The deterministic engine (`aiEngine.ts`) runs on every account by de
 - Reliability emails: `AI_RELIABILITY_REBREACH_COOLDOWN_MINUTES`.
 - Audit trash purge job: `AUDIT_TRASH_RETENTION_DAYS`, `AUDIT_TRASH_PURGE_INTERVAL_HOURS`.
 - Matching: `BENCHMARK_MIN_COHORT` (min cohort before benchmarks return, else `available:false`), `MATCHING_REWEIGHT_MIN_OUTCOMES` (outcome-learning confidence floor; also tunable from the founder control center).
-- Auto-proposal sweep: `AUTO_PROPOSAL_ENABLED` (seeds the founder-dashboard toggle, which is the live source of truth), `AUTO_PROPOSAL_INTERVAL_HOURS`.
+- Matching automation (auto-proposal, proposal expiry, re-engagement nudge): `AUTO_PROPOSAL_ENABLED` / `PROPOSAL_EXPIRY_ENABLED` / `MATCHING_NUDGE_ENABLED` each seed their founder-dashboard toggle (the live source of truth) and now default ON when unset (the founder turned matching automation on); set one to `0`/`false`/`no`/`off` to seed it off. Intervals/tuning: `AUTO_PROPOSAL_INTERVAL_HOURS`; `PROPOSAL_EXPIRY_INTERVAL_HOURS`, `PROPOSAL_EXPIRY_MAX_AGE_DAYS`; `MATCHING_NUDGE_INTERVAL_HOURS`, `MATCHING_NUDGE_COOLDOWN_HOURS`. A founder_brain_config row that predates a toggle inherits the new default for any field it omits, but an explicitly stored `false` still wins, so flip those in the prod control center if needed.
 - Echo proactivity: `COMPANION_NUDGE_ENABLED` (seeds the founder-dashboard toggle, the live source of truth), `COMPANION_NUDGE_INTERVAL_HOURS`, `COMPANION_NUDGE_COOLDOWN_HOURS`, `COMPANION_NUDGE_QUIET_DAYS`.
 - Echo SMS (Twilio): `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER` — logs instead of sending when unset; only texts users who opted in.
 

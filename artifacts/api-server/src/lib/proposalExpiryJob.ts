@@ -24,14 +24,6 @@ function readPositiveNumberEnv(name: string, fallback: number): number {
   return parsed;
 }
 
-// The job is OFF by default, matching the rest of the matching roadmap. It only
-// sweeps when PROPOSAL_EXPIRY_ENABLED is truthy; otherwise it logs and no-ops so
-// the behavior is observable without silently mutating data.
-export function isProposalExpiryEnabled(): boolean {
-  const raw = (process.env.PROPOSAL_EXPIRY_ENABLED ?? "").trim().toLowerCase();
-  return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
-}
-
 // One sweep: expire every open proposal whose last update predates the cutoff.
 // Keyed on updatedAt so a proposal a member recently said yes/no to (waiting on
 // the other side) gets the full window from that action, not from creation.

@@ -92,8 +92,8 @@ export interface BrainControls {
    * Whether the background auto-proposal sweep runs (mints internal match
    * proposals for eligible members on a schedule). The founder flips this from
    * the control center with no redeploy; the AUTO_PROPOSAL_ENABLED env var only
-   * seeds the default. Off by default. On-demand minting via the discover route
-   * is unaffected either way.
+   * seeds the default. On by default (the founder turned matching automation
+   * on). On-demand minting via the discover route is unaffected either way.
    */
   autoProposalEnabled: boolean;
   /**
@@ -107,10 +107,18 @@ export interface BrainControls {
    * Whether the background proposal-expiry sweep runs (moves stale, unanswered
    * match proposals to "expired" so discover stops resurfacing them). Toggled
    * live from the control center; PROPOSAL_EXPIRY_ENABLED only seeds the default.
-   * Off by default. The sweep window stays env-tunable
+   * On by default (matching automation). The sweep window stays env-tunable
    * (PROPOSAL_EXPIRY_MAX_AGE_DAYS).
    */
   proposalExpiryEnabled: boolean;
+  /**
+   * Whether the background matching-nudge sweep runs (sends a push to engaged
+   * members who have stalled just below the match threshold, nudging them toward
+   * the next readiness step). Toggled live from the control center;
+   * MATCHING_NUDGE_ENABLED only seeds the default. On by default; rate-limited
+   * per member via matching_nudge_state so it never spams.
+   */
+  matchingNudgeEnabled: boolean;
   /**
    * Founder weight overrides, RAW weights keyed by signal id. Partial: any
    * signal not present falls back to its registry default. Null = no overrides.
@@ -179,12 +187,23 @@ function envReweightMinOutcomes(): number {
   return Math.max(2, Math.min(1000, Math.round(raw)));
 }
 
-// Truthy env flag parser, shared by the background-sweep defaults below. Mirrors
-// isAutoProposalEnabled / isCompanionNudgeEnabled in the job files so the env var
-// keeps working as the seed default once the founder toggle is the live source.
+// Truthy env flag parser for sweeps that stay OFF until explicitly enabled
+// (Echo proactivity). An unset or non-truthy value reads as false. The founder
+// control center is the live source of truth; this only seeds the default.
 function envTruthy(name: string): boolean {
   const raw = (process.env[name] ?? "").trim().toLowerCase();
   return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
+}
+
+// Seed parser for sweeps that default ON (matching automation). An unset env var
+// reads as true; only an explicit falsy value ("0", "false", "no", "off") turns
+// it off. The founder control center stays the live source of truth either way.
+function envBoolDefaultTrue(name: string): boolean {
+  const raw = process.env[name];
+  if (raw === undefined) return true;
+  const v = raw.trim().toLowerCase();
+  if (v === "") return true;
+  return !(v === "0" || v === "false" || v === "no" || v === "off");
 }
 
 export function defaultControls(): BrainControls {
@@ -199,9 +218,10 @@ export function defaultControls(): BrainControls {
     reweightingMinOutcomes: envReweightMinOutcomes(),
     confidenceWeighting: "hold",
     decayMode: "hold",
-    autoProposalEnabled: envTruthy("AUTO_PROPOSAL_ENABLED"),
+    autoProposalEnabled: envBoolDefaultTrue("AUTO_PROPOSAL_ENABLED"),
     companionNudgeEnabled: envTruthy("COMPANION_NUDGE_ENABLED"),
-    proposalExpiryEnabled: envTruthy("PROPOSAL_EXPIRY_ENABLED"),
+    proposalExpiryEnabled: envBoolDefaultTrue("PROPOSAL_EXPIRY_ENABLED"),
+    matchingNudgeEnabled: envBoolDefaultTrue("MATCHING_NUDGE_ENABLED"),
     signalWeightOverrides: null,
     connectorToggles: {},
   };
@@ -277,6 +297,10 @@ export function coerceControls(raw: unknown): BrainControls {
       typeof v.proposalExpiryEnabled === "boolean"
         ? v.proposalExpiryEnabled
         : base.proposalExpiryEnabled,
+    matchingNudgeEnabled:
+      typeof v.matchingNudgeEnabled === "boolean"
+        ? v.matchingNudgeEnabled
+        : base.matchingNudgeEnabled,
     signalWeightOverrides: overrides,
     connectorToggles: toggles,
   };

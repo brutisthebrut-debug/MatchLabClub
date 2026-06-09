@@ -303,6 +303,10 @@ vi.mock("@/lib/autoRefreshPref", () => ({
 
 vi.mock("@workspace/api-client-react", () => ({
   deleteMyAccount: vi.fn(async () => {}),
+  useDeleteMyAccount: () => ({
+    mutateAsync: vi.fn(async () => {}),
+    isPending: false,
+  }),
   exportMyData: vi.fn(async () => ({})),
   getExportMyDataQueryKey: () => ["export-my-data"],
   setAuthTokenGetter: vi.fn(),

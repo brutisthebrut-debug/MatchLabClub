@@ -23,6 +23,11 @@ export const KNOWN_JOB_NAMES: readonly string[] = [
   "handoff_redemption_cleanup",
   "import_recovery",
   "ocr_learning",
+  // Matching automation sweeps, on by default (seeded from their env flags and
+  // toggled live from the founder control center).
+  "auto_proposal",
+  "proposal_expiry",
+  "matching_nudge",
 ];
 
 export function getStaleThresholdMs(jobName: string): number {

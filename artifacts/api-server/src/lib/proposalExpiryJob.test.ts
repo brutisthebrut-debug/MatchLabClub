@@ -5,7 +5,6 @@ import { db, pool, matchProposalsTable } from "@workspace/db";
 import {
   runProposalExpirySweep,
   proposalExpiryTick,
-  isProposalExpiryEnabled,
 } from "./proposalExpiryJob";
 import { saveBrainControls, resetBrainControls } from "./brainConfig";
 
@@ -66,22 +65,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await cleanup();
   await pool.end();
-});
-
-describe("isProposalExpiryEnabled", () => {
-  it("is off by default and on only for truthy values", () => {
-    const prev = process.env.PROPOSAL_EXPIRY_ENABLED;
-    delete process.env.PROPOSAL_EXPIRY_ENABLED;
-    expect(isProposalExpiryEnabled()).toBe(false);
-    process.env.PROPOSAL_EXPIRY_ENABLED = "false";
-    expect(isProposalExpiryEnabled()).toBe(false);
-    process.env.PROPOSAL_EXPIRY_ENABLED = "1";
-    expect(isProposalExpiryEnabled()).toBe(true);
-    process.env.PROPOSAL_EXPIRY_ENABLED = "true";
-    expect(isProposalExpiryEnabled()).toBe(true);
-    if (prev === undefined) delete process.env.PROPOSAL_EXPIRY_ENABLED;
-    else process.env.PROPOSAL_EXPIRY_ENABLED = prev;
-  });
 });
 
 describe("runProposalExpirySweep", () => {
