@@ -3601,6 +3601,34 @@ export interface ConnectionStarters {
   mode: ConnectionStartersMode;
 }
 
+export interface DateIdea {
+  /** A short name for the date idea. */
+  title: string;
+  /** One or two lines on what the date is and why it suits this pair, in a real human voice. */
+  description: string;
+  /** A coarse bucket for the idea, e.g. coffee, food, outdoors, culture, active, low-key. */
+  category: string;
+}
+
+/**
+ * Which lane produced these ideas. "ai" only when the deep AI lane was used.
+ */
+export type ConnectionDateIdeasMode = typeof ConnectionDateIdeasMode[keyof typeof ConnectionDateIdeasMode];
+
+
+export const ConnectionDateIdeasMode = {
+  deterministic: 'deterministic',
+  ai: 'ai',
+} as const;
+
+export interface ConnectionDateIdeas {
+  ideas: DateIdea[];
+  /** Which lane produced these ideas. "ai" only when the deep AI lane was used. */
+  mode: ConnectionDateIdeasMode;
+  /** Reveal-safe phrasing for where the ideas are pitched. Names the counterpart's city only when they revealed it or both gave the same city, otherwise stays on the signed-in user's own area or "near both of you". */
+  locationLabel: string;
+}
+
 export type MatchExternalReadInputSource = typeof MatchExternalReadInputSource[keyof typeof MatchExternalReadInputSource];
 
 

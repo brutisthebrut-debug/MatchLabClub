@@ -5955,6 +5955,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
+  /me/connections/{id}/date-ideas:
+    post:
+      tags: [Connections]
+      operationId: suggestConnectionDateIdeas
+      summary: Date ideas for a connected pair
+      description: |
+        A short set of date ideas for the signed-in user and this match, sized to
+        where both people are. Location phrasing is reveal-safe: the counterpart's
+        city is only named when they turned reveal consent on or both people gave
+        the same city, otherwise the copy stays on the signed-in user's own area
+        and "near both of you". User-initiated (a POST), so it only spends the deep
+        AI lane when the user asks for ideas. Hybrid: a deterministic baseline of
+        category templates always runs, with the deep AI lane layered on when the
+        account opted in. A maps provider can be dropped in later without changing
+        this contract; until then ideas are template-based, never invented venues.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The date ideas.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionDateIdeas'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Connection not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
   /me/connections/{id}/messages:
     get:
       tags: [Connections]
@@ -10822,6 +10866,36 @@ components:
           type: string
           enum: [deterministic, ai]
           description: Which lane produced these openers. "ai" only when the deep AI lane was used.
+
+    DateIdea:
+      type: object
+      required: [title, description, category]
+      properties:
+        title:
+          type: string
+          description: A short name for the date idea.
+        description:
+          type: string
+          description: One or two lines on what the date is and why it suits this pair, in a real human voice.
+        category:
+          type: string
+          description: A coarse bucket for the idea, e.g. coffee, food, outdoors, culture, active, low-key.
+
+    ConnectionDateIdeas:
+      type: object
+      required: [ideas, mode, locationLabel]
+      properties:
+        ideas:
+          type: array
+          items:
+            $ref: '#/components/schemas/DateIdea'
+        mode:
+          type: string
+          enum: [deterministic, ai]
+          description: Which lane produced these ideas. "ai" only when the deep AI lane was used.
+        locationLabel:
+          type: string
+          description: Reveal-safe phrasing for where the ideas are pitched. Names the counterpart's city only when they revealed it or both gave the same city, otherwise stays on the signed-in user's own area or "near both of you".
 
     MatchExternalReadInput:
       type: object

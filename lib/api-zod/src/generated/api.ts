@@ -6908,6 +6908,38 @@ export const GetConnectionStartersResponse = zod.object({
 
 
 /**
+ * A short set of date ideas for the signed-in user and this match, sized to
+where both people are. Location phrasing is reveal-safe: the counterpart's
+city is only named when they turned reveal consent on or both people gave
+the same city, otherwise the copy stays on the signed-in user's own area
+and "near both of you". User-initiated (a POST), so it only spends the deep
+AI lane when the user asks for ideas. Hybrid: a deterministic baseline of
+category templates always runs, with the deep AI lane layered on when the
+account opted in. A maps provider can be dropped in later without changing
+this contract; until then ideas are template-based, never invented venues.
+
+ * @summary Date ideas for a connected pair
+ */
+export const SuggestConnectionDateIdeasParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const SuggestConnectionDateIdeasHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const SuggestConnectionDateIdeasResponse = zod.object({
+  "ideas": zod.array(zod.object({
+  "title": zod.string().describe('A short name for the date idea.'),
+  "description": zod.string().describe('One or two lines on what the date is and why it suits this pair, in a real human voice.'),
+  "category": zod.string().describe('A coarse bucket for the idea, e.g. coffee, food, outdoors, culture, active, low-key.')
+})),
+  "mode": zod.enum(['deterministic', 'ai']).describe('Which lane produced these ideas. \"ai\" only when the deep AI lane was used.'),
+  "locationLabel": zod.string().describe('Reveal-safe phrasing for where the ideas are pitched. Names the counterpart\'s city only when they revealed it or both gave the same city, otherwise stays on the signed-in user\'s own area or \"near both of you\".')
+})
+
+
+/**
  * @summary List the messages in a conversation
  */
 export const GetConnectionMessagesParams = zod.object({

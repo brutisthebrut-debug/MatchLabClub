@@ -81,6 +81,7 @@ import type {
   CompleteCompanionCommitment401,
   CompleteCompanionCommitment404,
   Connection,
+  ConnectionDateIdeas,
   ConnectionMessage,
   ConnectionStarters,
   CorrectAuditSourceApp400,
@@ -15778,6 +15779,86 @@ export function useGetConnectionStarters<TData = Awaited<ReturnType<typeof getCo
 
 
 
+
+export const getSuggestConnectionDateIdeasUrl = (id: string,) => {
+
+
+
+
+  return `/api/me/connections/${id}/date-ideas`
+}
+
+/**
+ * A short set of date ideas for the signed-in user and this match, sized to
+where both people are. Location phrasing is reveal-safe: the counterpart's
+city is only named when they turned reveal consent on or both people gave
+the same city, otherwise the copy stays on the signed-in user's own area
+and "near both of you". User-initiated (a POST), so it only spends the deep
+AI lane when the user asks for ideas. Hybrid: a deterministic baseline of
+category templates always runs, with the deep AI lane layered on when the
+account opted in. A maps provider can be dropped in later without changing
+this contract; until then ideas are template-based, never invented venues.
+
+ * @summary Date ideas for a connected pair
+ */
+export const suggestConnectionDateIdeas = async (id: string, options?: RequestInit): Promise<ConnectionDateIdeas> => {
+
+  return customFetch<ConnectionDateIdeas>(getSuggestConnectionDateIdeasUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getSuggestConnectionDateIdeasMutationOptions = <TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suggestConnectionDateIdeas>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof suggestConnectionDateIdeas>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['suggestConnectionDateIdeas'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof suggestConnectionDateIdeas>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  suggestConnectionDateIdeas(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SuggestConnectionDateIdeasMutationResult = NonNullable<Awaited<ReturnType<typeof suggestConnectionDateIdeas>>>
+
+    export type SuggestConnectionDateIdeasMutationError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>
+
+    /**
+ * @summary Date ideas for a connected pair
+ */
+export const useSuggestConnectionDateIdeas = <TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof suggestConnectionDateIdeas>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof suggestConnectionDateIdeas>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getSuggestConnectionDateIdeasMutationOptions(options));
+    }
 
 export const getGetConnectionMessagesUrl = (id: string,) => {
 

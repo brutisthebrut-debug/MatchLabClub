@@ -7,6 +7,7 @@
 import { SIGNAL_REGISTRY, type ReadinessBreakdown } from "./signalRegistry";
 import type { ReadinessNextAction, OutcomeInsight } from "./readiness";
 import { WELLNESS_DIMENSIONS, WELLNESS_QUESTION_BANK } from "./wellnessQuestionBank";
+import type { PlaceSuggestion } from "./placesProvider";
 
 export const ENGINE_VERSION = "2026-05-22";
 
@@ -944,6 +945,94 @@ export function generateConnectionStarters(
       },
     ],
   };
+}
+
+// Reveal-safe context for date-idea generation. `locationLabel` is already the
+// reveal-safe phrasing built by the route (the single city-leak chokepoint): it
+// names the counterpart's city only when they revealed it or both gave the same
+// city, otherwise it stays on the user's own area or "near both of you". The
+// compatibility score is the symmetric pair score (context only, never quoted in
+// copy). `places` carries real venues ONLY when a maps provider is configured;
+// it is null today, and the deterministic baseline never invents venue names.
+export interface ConnectionDateIdeaContext {
+  locationLabel: string;
+  compatibilityScore: number | null;
+  places: PlaceSuggestion[] | null;
+}
+
+export interface DateIdeaSuggestion {
+  title: string;
+  description: string;
+  category: string;
+}
+
+export interface ConnectionDateIdeasOutput {
+  ideas: DateIdeaSuggestion[];
+}
+
+// Always-on deterministic baseline: a short set of date ideas sized to where
+// both people are. Voice rules apply (no em dashes, no emojis, no filler words).
+// Returns five ideas, always non-empty, so the endpoint never degrades. Venue
+// names are only ever woven in from `ctx.places` (a real provider), never made up.
+export function generateDateIdeas(
+  ctx: ConnectionDateIdeaContext,
+): ConnectionDateIdeasOutput {
+  const where = ctx.locationLabel.trim().length > 0
+    ? ctx.locationLabel.trim()
+    : "near both of you";
+  const score = ctx.compatibilityScore;
+  const strong = typeof score === "number" && score >= 70;
+
+  const venue = (category: string): string | null => {
+    if (!ctx.places || ctx.places.length === 0) return null;
+    const hit = ctx.places.find(
+      (p) => p.category.toLowerCase() === category.toLowerCase(),
+    );
+    return hit?.name?.trim() || null;
+  };
+
+  const coffeeVenue = venue("coffee");
+  const foodVenue = venue("food");
+
+  const ideas: DateIdeaSuggestion[] = [
+    {
+      title: "Coffee and a walk",
+      description: coffeeVenue
+        ? `Meet for coffee at ${coffeeVenue} ${where} and take a slow walk after. Low pressure, easy to keep going if it clicks.`
+        : `Meet for coffee ${where} and take a slow walk after. Low pressure, easy to leave early or keep going, and it leaves room for a real conversation.`,
+      category: "coffee",
+    },
+    {
+      title: "Shared plates dinner",
+      description: foodVenue
+        ? `Grab a table at ${foodVenue} ${where} and order a few small plates to share. Trying things together is its own easy icebreaker.`
+        : `Pick a spot ${where} with small plates so you can try a few things and compare notes. Ordering together is its own little icebreaker.`,
+      category: "food",
+    },
+    {
+      title: "Something outdoors",
+      description: `Find a park or an easy trail ${where} and spend an hour outside. Walking side by side takes the pressure off and tends to loosen people up.`,
+      category: "outdoors",
+    },
+    {
+      title: "A bit of culture",
+      description: `Catch a gallery, a market, or a matinee ${where}. Having things to react to means you never run out of things to say.`,
+      category: "culture",
+    },
+    strong
+      ? {
+          title: "Aim a little higher",
+          description: `You two line up well on paper, so it is fair to be more ambitious: a class, a tasting, or a small adventure ${where} that you would both remember.`,
+          category: "active",
+        }
+      : {
+          title: "Low-key game night out",
+          description: `Hit an arcade, a bar with board games, or mini golf ${where}. A little friendly competition keeps things light and easy.`,
+          category: "low-key",
+        },
+  ];
+
+  return { ideas };
 }
 
 type InsightSource = "Hinge" | "Bumble" | "Tinder" | "iMessage" | "Email";
