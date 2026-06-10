@@ -5914,6 +5914,47 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
+  /me/connections/{id}/starters:
+    get:
+      tags: [Connections]
+      operationId: getConnectionStarters
+      summary: Conversation openers for a connection
+      description: |
+        Three opener suggestions for the signed-in user to send. Generated only
+        from reveal-safe aggregate fields (readiness phrasing, the aggregate match
+        summary, the compatibility score, and the counterpart's display name when
+        they turned reveal consent on). Never raw signals, lane breakdowns, or PII.
+        Hybrid: a deterministic baseline always runs, with the deep AI lane layered
+        on when the account opted in.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The opener suggestions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionStarters'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: Connection not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
   /me/connections/{id}/messages:
     get:
       tags: [Connections]
@@ -10716,7 +10757,7 @@ components:
 
     RevealCard:
       type: object
-      required: [counterpartUserId, revealed, displayName, photos, prompts, readinessSummary, valuesSummary]
+      required: [counterpartUserId, revealed, displayName, photos, prompts, readinessSummary, valuesSummary, compatibilityScore, matchSummary]
       properties:
         counterpartUserId:
           type: string
@@ -10740,6 +10781,14 @@ components:
         valuesSummary:
           type: string
           description: Aggregate values phrasing, never raw signals.
+        compatibilityScore:
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 100
+          description: Symmetric match compatibility score for this pair, or null when no internal proposal exists. Never a per-lane breakdown.
+        matchSummary:
+          type: [string, 'null']
+          description: Aggregate match summary phrasing (coarse distance only), never counterpart breakdown or PII. Null when no internal proposal exists.
 
     RevealPrompt:
       type: object
@@ -10749,6 +10798,30 @@ components:
           type: string
         answer:
           type: string
+
+    ConnectionStarter:
+      type: object
+      required: [text, rationale]
+      properties:
+        text:
+          type: string
+          description: An opener the signed-in user could send, in a real human voice.
+        rationale:
+          type: string
+          description: One line on why this opener fits this match.
+
+    ConnectionStarters:
+      type: object
+      required: [starters, mode]
+      properties:
+        starters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectionStarter'
+        mode:
+          type: string
+          enum: [deterministic, ai]
+          description: Which lane produced these openers. "ai" only when the deep AI lane was used.
 
     MatchExternalReadInput:
       type: object

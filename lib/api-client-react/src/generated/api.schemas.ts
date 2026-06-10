@@ -3563,6 +3563,42 @@ export interface RevealCard {
   readinessSummary: string;
   /** Aggregate values phrasing, never raw signals. */
   valuesSummary: string;
+  /**
+     * Symmetric match compatibility score for this pair, or null when no internal proposal exists. Never a per-lane breakdown.
+     * @minimum 0
+     * @maximum 100
+     * @nullable
+     */
+  compatibilityScore: number | null;
+  /**
+     * Aggregate match summary phrasing (coarse distance only), never counterpart breakdown or PII. Null when no internal proposal exists.
+     * @nullable
+     */
+  matchSummary: string | null;
+}
+
+export interface ConnectionStarter {
+  /** An opener the signed-in user could send, in a real human voice. */
+  text: string;
+  /** One line on why this opener fits this match. */
+  rationale: string;
+}
+
+/**
+ * Which lane produced these openers. "ai" only when the deep AI lane was used.
+ */
+export type ConnectionStartersMode = typeof ConnectionStartersMode[keyof typeof ConnectionStartersMode];
+
+
+export const ConnectionStartersMode = {
+  deterministic: 'deterministic',
+  ai: 'ai',
+} as const;
+
+export interface ConnectionStarters {
+  starters: ConnectionStarter[];
+  /** Which lane produced these openers. "ai" only when the deep AI lane was used. */
+  mode: ConnectionStartersMode;
 }
 
 export type MatchExternalReadInputSource = typeof MatchExternalReadInputSource[keyof typeof MatchExternalReadInputSource];

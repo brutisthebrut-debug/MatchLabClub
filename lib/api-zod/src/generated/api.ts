@@ -6859,6 +6859,11 @@ export const GetConnectionProfileHeader = zod.object({
   "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
 })
 
+export const getConnectionProfileResponseCompatibilityScoreMin = 0;
+export const getConnectionProfileResponseCompatibilityScoreMax = 100;
+
+
+
 export const GetConnectionProfileResponse = zod.object({
   "counterpartUserId": zod.string(),
   "revealed": zod.boolean().describe('True when the counterpart turned reveal consent on. When false, name and photos are withheld.'),
@@ -6869,7 +6874,36 @@ export const GetConnectionProfileResponse = zod.object({
   "answer": zod.string()
 })),
   "readinessSummary": zod.string().describe('Aggregate readiness phrasing, never raw signals.'),
-  "valuesSummary": zod.string().describe('Aggregate values phrasing, never raw signals.')
+  "valuesSummary": zod.string().describe('Aggregate values phrasing, never raw signals.'),
+  "compatibilityScore": zod.number().min(getConnectionProfileResponseCompatibilityScoreMin).max(getConnectionProfileResponseCompatibilityScoreMax).nullable().describe('Symmetric match compatibility score for this pair, or null when no internal proposal exists. Never a per-lane breakdown.'),
+  "matchSummary": zod.string().nullable().describe('Aggregate match summary phrasing (coarse distance only), never counterpart breakdown or PII. Null when no internal proposal exists.')
+})
+
+
+/**
+ * Three opener suggestions for the signed-in user to send. Generated only
+from reveal-safe aggregate fields (readiness phrasing, the aggregate match
+summary, the compatibility score, and the counterpart's display name when
+they turned reveal consent on). Never raw signals, lane breakdowns, or PII.
+Hybrid: a deterministic baseline always runs, with the deep AI lane layered
+on when the account opted in.
+
+ * @summary Conversation openers for a connection
+ */
+export const GetConnectionStartersParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const GetConnectionStartersHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetConnectionStartersResponse = zod.object({
+  "starters": zod.array(zod.object({
+  "text": zod.string().describe('An opener the signed-in user could send, in a real human voice.'),
+  "rationale": zod.string().describe('One line on why this opener fits this match.')
+})),
+  "mode": zod.enum(['deterministic', 'ai']).describe('Which lane produced these openers. \"ai\" only when the deep AI lane was used.')
 })
 
 

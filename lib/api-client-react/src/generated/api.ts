@@ -82,6 +82,7 @@ import type {
   CompleteCompanionCommitment404,
   Connection,
   ConnectionMessage,
+  ConnectionStarters,
   CorrectAuditSourceApp400,
   CorrectAuditSourceApp404,
   CorrectSourceAppInput,
@@ -15682,6 +15683,90 @@ export function useGetConnectionProfile<TData = Awaited<ReturnType<typeof getCon
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetConnectionProfileQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetConnectionStartersUrl = (id: string,) => {
+
+
+
+
+  return `/api/me/connections/${id}/starters`
+}
+
+/**
+ * Three opener suggestions for the signed-in user to send. Generated only
+from reveal-safe aggregate fields (readiness phrasing, the aggregate match
+summary, the compatibility score, and the counterpart's display name when
+they turned reveal consent on). Never raw signals, lane breakdowns, or PII.
+Hybrid: a deterministic baseline always runs, with the deep AI lane layered
+on when the account opted in.
+
+ * @summary Conversation openers for a connection
+ */
+export const getConnectionStarters = async (id: string, options?: RequestInit): Promise<ConnectionStarters> => {
+
+  return customFetch<ConnectionStarters>(getGetConnectionStartersUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetConnectionStartersQueryKey = (id: string,) => {
+    return [
+    `/api/me/connections/${id}/starters`
+    ] as const;
+    }
+
+
+export const getGetConnectionStartersQueryOptions = <TData = Awaited<ReturnType<typeof getConnectionStarters>>, TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConnectionStarters>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetConnectionStartersQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getConnectionStarters>>> = ({ signal }) => getConnectionStarters(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getConnectionStarters>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetConnectionStartersQueryResult = NonNullable<Awaited<ReturnType<typeof getConnectionStarters>>>
+export type GetConnectionStartersQueryError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>
+
+
+/**
+ * @summary Conversation openers for a connection
+ */
+
+export function useGetConnectionStarters<TData = Awaited<ReturnType<typeof getConnectionStarters>>, TError = ErrorType<AuthErrorEnvelope | ErrorEnvelope>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConnectionStarters>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetConnectionStartersQueryOptions(id,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

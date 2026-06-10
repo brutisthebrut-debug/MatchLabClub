@@ -883,6 +883,69 @@ export function generateMessageCoaching(params: {
   };
 }
 
+// Reveal-safe context for opener generation. Everything here is aggregate or
+// consented: the readiness PHRASE (never raw lanes), the aggregate match summary
+// (coarse distance only), the symmetric compatibility score, and the
+// counterpart's first name ONLY when they turned reveal consent on. No raw
+// signals, no PII, no per-lane breakdown ever reaches this object.
+export interface ConnectionStarterContext {
+  revealed: boolean;
+  displayName: string | null;
+  compatibilityScore: number | null;
+  matchSummary: string | null;
+  readinessSummary: string;
+}
+
+export interface ConnectionStarterSuggestion {
+  text: string;
+  rationale: string;
+}
+
+export interface ConnectionStartersOutput {
+  starters: ConnectionStarterSuggestion[];
+}
+
+// Always-on deterministic baseline: three openers the signed-in user can send a
+// brand new match. Voice rules apply (no em dashes, no emojis, no filler words).
+// Returns exactly three, always non-empty, so the endpoint never degrades.
+export function generateConnectionStarters(
+  ctx: ConnectionStarterContext,
+): ConnectionStartersOutput {
+  const name = ctx.revealed && ctx.displayName ? ctx.displayName.trim() : null;
+  const greet = name ? `Hey ${name}` : "Hey there";
+  const score = ctx.compatibilityScore;
+  const strong = typeof score === "number" && score >= 70;
+
+  const warm = strong
+    ? `${greet}. On paper we line up pretty well, so I'd rather hear it from you: what is something you are genuinely into right now that you could talk about for an hour?`
+    : `${greet}. Glad we matched. What is something you are genuinely into right now that you could talk about for an hour?`;
+
+  const curious = `${greet}, real question to kick us off: are you more of a plan-the-weekend person or a see-where-the-day-goes person?`;
+
+  const playful = `Quick one to break the ice: give me your most defensible hot take. Could be food, could be movies, I want to hear it.`;
+
+  return {
+    starters: [
+      {
+        text: warm,
+        rationale: strong
+          ? "Opens warm and names the strong match without leaning on it, then hands them an easy question they will want to answer."
+          : "Opens with warmth and hands them an easy, open question instead of a flat hello.",
+      },
+      {
+        text: curious,
+        rationale:
+          "A light either-or is simple to answer and quietly tells you how they like to spend their time.",
+      },
+      {
+        text: playful,
+        rationale:
+          "Playful and low stakes, it sparks a real reply rather than a one-word hello.",
+      },
+    ],
+  };
+}
+
 type InsightSource = "Hinge" | "Bumble" | "Tinder" | "iMessage" | "Email";
 
 function normalizeInsightSource(raw?: string | null): InsightSource | null {

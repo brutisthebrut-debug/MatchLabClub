@@ -17,6 +17,7 @@ import {
   matchConnectionsTable,
   connectionMessagesTable,
   matchPoolMembershipTable,
+  matchProposalsTable,
   userBlocksTable,
   userReportsTable,
   orderConnectionPair,
@@ -81,6 +82,12 @@ async function cleanup(): Promise<void> {
     await db
       .delete(matchPoolMembershipTable)
       .where(eq(matchPoolMembershipTable.userId, u));
+    await db
+      .delete(matchProposalsTable)
+      .where(eq(matchProposalsTable.userId, u));
+    await db
+      .delete(matchProposalsTable)
+      .where(eq(matchProposalsTable.proposedToUserId, u));
     await db
       .delete(userBlocksTable)
       .where(eq(userBlocksTable.blockerUserId, u));
@@ -289,5 +296,108 @@ describe("reveal card consent gate", () => {
     expect(shown.status).toBe(200);
     expect(shown.body.revealed).toBe(true);
     expect(shown.body.displayName).toBe("Robin");
+  });
+});
+
+describe("compatibility score on the profile", () => {
+  it("is null when no internal proposal exists for the pair", async () => {
+    const id = await makeConnection();
+    testApp.setUser({ id: USER_A });
+    const res = await request(testApp.app).get(
+      `/api/me/connections/${id}/profile`,
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.compatibilityScore).toBeNull();
+    expect(res.body.matchSummary).toBeNull();
+  });
+
+  it("surfaces the symmetric score and aggregate summary from the proposal", async () => {
+    const id = await makeConnection();
+    await db.insert(matchProposalsTable).values([
+      {
+        userId: USER_A,
+        proposedToUserId: USER_B,
+        source: "internal",
+        compatibilityScore: 84,
+        summary: "Strong overall fit, about 8 miles apart.",
+        status: "mutual_yes",
+      },
+      {
+        userId: USER_B,
+        proposedToUserId: USER_A,
+        source: "internal",
+        compatibilityScore: 84,
+        summary: "Strong overall fit, about 8 miles apart.",
+        status: "mutual_yes",
+      },
+    ]);
+    testApp.setUser({ id: USER_A });
+    const res = await request(testApp.app).get(
+      `/api/me/connections/${id}/profile`,
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.compatibilityScore).toBe(84);
+    expect(res.body.matchSummary).toBe("Strong overall fit, about 8 miles apart.");
+  });
+
+  it("falls back to the counterpart's mirrored row when the viewer's is absent", async () => {
+    const id = await makeConnection();
+    // Only the counterpart's direction exists; the symmetric score should still
+    // resolve for the viewer.
+    await db.insert(matchProposalsTable).values({
+      userId: USER_B,
+      proposedToUserId: USER_A,
+      source: "internal",
+      compatibilityScore: 61,
+      summary: "Promising fit, worth a real conversation.",
+      status: "proposed",
+    });
+    testApp.setUser({ id: USER_A });
+    const res = await request(testApp.app).get(
+      `/api/me/connections/${id}/profile`,
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.compatibilityScore).toBe(61);
+    expect(res.body.matchSummary).toBe("Promising fit, worth a real conversation.");
+  });
+});
+
+describe("connection conversation starters", () => {
+  it("requires auth", async () => {
+    const id = await makeConnection();
+    testApp.setUser(null);
+    const res = await request(testApp.app).get(
+      `/api/me/connections/${id}/starters`,
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it("404s for someone outside the connection", async () => {
+    const id = await makeConnection();
+    testApp.setUser({ id: `conn-outsider-${suffix}` });
+    const res = await request(testApp.app).get(
+      `/api/me/connections/${id}/starters`,
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("always returns three deterministic openers when the deep AI lane is off", async () => {
+    const id = await makeConnection();
+    testApp.setUser({ id: USER_A });
+    const res = await request(testApp.app).get(
+      `/api/me/connections/${id}/starters`,
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.mode).toBe("deterministic");
+    expect(Array.isArray(res.body.starters)).toBe(true);
+    expect(res.body.starters).toHaveLength(3);
+    for (const s of res.body.starters) {
+      expect(typeof s.text).toBe("string");
+      expect(s.text.length).toBeGreaterThan(0);
+      expect(typeof s.rationale).toBe("string");
+      expect(s.rationale.length).toBeGreaterThan(0);
+      // Voice rule: no em dashes anywhere in user-facing copy.
+      expect(s.text).not.toContain("\u2014");
+    }
   });
 });

@@ -8,6 +8,7 @@ import {
   Heart,
   Send,
   Shield,
+  Sparkles,
   UserX,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -31,12 +32,15 @@ import {
   getGetConnectionMessagesQueryKey,
   useGetConnectionProfile,
   getGetConnectionProfileQueryKey,
+  useGetConnectionStarters,
+  getGetConnectionStartersQueryKey,
   useSendConnectionMessage,
   useMarkConnectionRead,
   useUnmatchConnection,
   useReportConnection,
   getGetConnectionsQueryKey,
   type ConnectionMessage,
+  type ConnectionStarter,
   type ReportConnectionInputReason,
 } from "@workspace/api-client-react";
 
@@ -66,6 +70,35 @@ const REPORT_REASONS: { value: ReportConnectionInputReason; label: string }[] = 
   { value: "underage", label: "Looks underage" },
   { value: "other", label: "Something else" },
 ];
+
+// Demo compatibility + openers so the page never looks empty for signed-out
+// visitors. The real values come from the API once you sign in.
+const DEMO_COMPATIBILITY = {
+  score: 82,
+  summary: "Strong overall fit, and you are about 8 miles apart.",
+};
+
+const DEMO_STARTERS: ConnectionStarter[] = [
+  {
+    text: "Hey there. Glad we matched. What is something you are genuinely into right now that you could talk about for an hour?",
+    rationale: "Opens with warmth and an easy, open question.",
+  },
+  {
+    text: "Real question to kick us off: are you more of a plan-the-weekend person or a see-where-the-day-goes person?",
+    rationale: "A light either-or is simple to answer.",
+  },
+  {
+    text: "Quick one to break the ice: give me your most defensible hot take. Could be food, could be movies.",
+    rationale: "Playful and low stakes, it sparks a real reply.",
+  },
+];
+
+// 70+ reads as a strong fit, 40-69 as forming, below that as early days.
+function scoreLabel(score: number): string {
+  if (score >= 70) return "looks strong";
+  if (score >= 40) return "is forming";
+  return "is early";
+}
 
 const DEMO_MESSAGES: ConnectionMessage[] = [
   {
@@ -120,10 +153,31 @@ export default function MatchThread() {
       refetchInterval: 15_000,
     },
   });
+  // Profile loads eagerly (not gated on the reveal toggle) so the compatibility
+  // score shows up front. The server still withholds name and photos until the
+  // counterpart turns reveal consent on; only the symmetric score and aggregate
+  // summary come through pre-reveal.
   const profileQuery = useGetConnectionProfile(id, {
     query: {
       queryKey: getGetConnectionProfileQueryKey(id),
-      enabled: isAuthenticated && id.length > 0 && showReveal,
+      enabled: isAuthenticated && id.length > 0,
+      retry: false,
+    },
+  });
+  // Starters only render on an active thread with no messages yet (see the
+  // StartersCard gate below), so we only fetch them under that exact condition.
+  // Firing eagerly on every thread open would burn a Claude daily-cap token for
+  // consent-on users on a card that never shows (closed threads, ongoing chats).
+  const startersQuery = useGetConnectionStarters(id, {
+    query: {
+      queryKey: getGetConnectionStartersQueryKey(id),
+      enabled:
+        isAuthenticated &&
+        id.length > 0 &&
+        connectionQuery.isSuccess &&
+        connectionQuery.data?.status !== "closed" &&
+        messagesQuery.isSuccess &&
+        (messagesQuery.data?.length ?? 0) === 0,
       retry: false,
     },
   });
@@ -136,6 +190,9 @@ export default function MatchThread() {
   const connection = connectionQuery.data ?? null;
   const messages = isDemo ? DEMO_MESSAGES : (messagesQuery.data ?? []);
   const closed = connection?.status === "closed";
+  const starters = isDemo
+    ? DEMO_STARTERS
+    : (startersQuery.data?.starters ?? []);
 
   // Mark the thread read on open and whenever new inbound messages arrive.
   useEffect(() => {
@@ -248,6 +305,10 @@ export default function MatchThread() {
                 Sign in
               </Button>
             </div>
+            <CompatibilityCard
+              score={DEMO_COMPATIBILITY.score}
+              summary={DEMO_COMPATIBILITY.summary}
+            />
             <div className="glass border border-white/10 rounded-2xl p-4 space-y-3">
               {DEMO_MESSAGES.map((m) => (
                 <Bubble key={m.id} message={m} />
@@ -329,6 +390,13 @@ export default function MatchThread() {
               </Button>
             </div>
           </div>
+
+          {reveal?.compatibilityScore != null && (
+            <CompatibilityCard
+              score={reveal.compatibilityScore}
+              summary={reveal.matchSummary}
+            />
+          )}
 
           {closed && (
             <div
@@ -447,6 +515,10 @@ export default function MatchThread() {
             </motion.div>
           )}
 
+          {!closed && messages.length === 0 && starters.length > 0 && (
+            <StartersCard starters={starters} onPick={setDraft} />
+          )}
+
           <div
             className="glass border border-white/10 rounded-2xl p-4 min-h-[320px] flex flex-col"
             data-testid="thread-messages"
@@ -516,6 +588,88 @@ export default function MatchThread() {
         </div>
       </div>
     </AppLayout>
+  );
+}
+
+// Symmetric compatibility, shown up front. The score and aggregate summary are
+// reveal-safe; name and photos stay behind the reveal toggle and server gate.
+function CompatibilityCard({
+  score,
+  summary,
+}: {
+  score: number;
+  summary: string | null;
+}) {
+  return (
+    <motion.div
+      {...fadeUp(0)}
+      className="mb-4 glass border border-white/10 rounded-2xl p-4 flex items-center gap-3.5"
+      data-testid="card-compatibility"
+    >
+      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[hsl(245_58%_62%)] to-[hsl(326_100%_62%)] flex items-center justify-center flex-shrink-0">
+        <span
+          className="text-lg font-bold text-white"
+          data-testid="text-compatibility-score"
+        >
+          {score}
+        </span>
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-foreground">
+          Compatibility {scoreLabel(score)}
+        </p>
+        <p className="text-xs text-muted-foreground/70 leading-relaxed">
+          {summary ??
+            "How your readiness and values line up. The more you both share, the sharper this gets."}
+        </p>
+      </div>
+    </motion.div>
+  );
+}
+
+// Cold-start openers the user can drop into the composer and edit before sending.
+function StartersCard({
+  starters,
+  onPick,
+}: {
+  starters: ConnectionStarter[];
+  onPick: (text: string) => void;
+}) {
+  return (
+    <motion.div
+      {...fadeUp(0.05)}
+      className="mb-4 glass border border-white/10 rounded-2xl p-4"
+      data-testid="card-starters"
+    >
+      <div className="flex items-center gap-2 mb-1.5">
+        <Sparkles
+          className="w-4 h-4 text-[hsl(326_100%_70%)]"
+          aria-hidden="true"
+        />
+        <p className="text-sm font-semibold text-foreground">
+          Openers to break the ice
+        </p>
+      </div>
+      <p className="text-xs text-muted-foreground/60 mb-3">
+        Tap one to drop it in, then make it yours before you send.
+      </p>
+      <div className="space-y-2">
+        {starters.map((s, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => onPick(s.text)}
+            className="w-full text-left rounded-xl border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] p-3 transition-colors"
+            data-testid={`button-starter-${i}`}
+          >
+            <p className="text-sm text-foreground leading-relaxed">{s.text}</p>
+            <p className="text-[11px] text-muted-foreground/50 mt-1">
+              {s.rationale}
+            </p>
+          </button>
+        ))}
+      </div>
+    </motion.div>
   );
 }
 

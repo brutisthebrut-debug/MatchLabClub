@@ -20,4 +20,16 @@ export interface RevealCard {
   readinessSummary: string;
   /** Aggregate values phrasing, never raw signals. */
   valuesSummary: string;
+  /**
+     * Symmetric match compatibility score for this pair, or null when no internal proposal exists. Never a per-lane breakdown.
+     * @minimum 0
+     * @maximum 100
+     * @nullable
+     */
+  compatibilityScore: number | null;
+  /**
+     * Aggregate match summary phrasing (coarse distance only), never counterpart breakdown or PII. Null when no internal proposal exists.
+     * @nullable
+     */
+  matchSummary: string | null;
 }

@@ -5,6 +5,7 @@ import {
   matchConnectionsTable,
   connectionMessagesTable,
   matchPoolMembershipTable,
+  matchProposalsTable,
   profilePhotosTable,
   usersTable,
   userBlocksTable,
@@ -19,6 +20,8 @@ import { z } from "zod/v4";
 import { notifyNewMessage } from "../lib/matchConnections";
 import { blockUserPair } from "../lib/userBlocks";
 import { computeReadiness } from "./matching";
+import { generateConnectionStarters } from "../lib/aiEngine";
+import { generate } from "../lib/aiService";
 
 const router: IRouter = Router();
 
@@ -430,6 +433,52 @@ function readinessPhrase(score: number): string {
   return "Early in the readiness climb and putting in the work.";
 }
 
+// Symmetric compatibility for a connected pair. Internal proposals are mirrored
+// (one ordered row per member, sharing the same score and summary), so we read
+// the viewer's row first and fall back to the counterpart's. Status is
+// intentionally not filtered: a live connection may sit on any proposal status.
+// Returns null when no internal proposal exists (e.g. a reopened or
+// concierge-made connection), so callers expose null rather than a fake score.
+async function loadPairCompatibility(
+  me: string,
+  counterpart: string,
+): Promise<{ compatibilityScore: number; matchSummary: string | null } | null> {
+  const cols = {
+    score: matchProposalsTable.compatibilityScore,
+    summary: matchProposalsTable.summary,
+  };
+  const mine = await db
+    .select(cols)
+    .from(matchProposalsTable)
+    .where(
+      and(
+        eq(matchProposalsTable.source, "internal"),
+        eq(matchProposalsTable.userId, me),
+        eq(matchProposalsTable.proposedToUserId, counterpart),
+      ),
+    )
+    .orderBy(desc(matchProposalsTable.createdAt))
+    .limit(1);
+  const row =
+    mine[0] ??
+    (
+      await db
+        .select(cols)
+        .from(matchProposalsTable)
+        .where(
+          and(
+            eq(matchProposalsTable.source, "internal"),
+            eq(matchProposalsTable.userId, counterpart),
+            eq(matchProposalsTable.proposedToUserId, me),
+          ),
+        )
+        .orderBy(desc(matchProposalsTable.createdAt))
+        .limit(1)
+    )[0];
+  if (!row) return null;
+  return { compatibilityScore: row.score, matchSummary: row.summary ?? null };
+}
+
 // GET /me/connections/:id/profile — the counterpart's curated reveal card. Name
 // and photos appear only when the counterpart turned reveal consent on. The
 // readiness and values lines are aggregate phrasing derived from their signal
@@ -478,6 +527,7 @@ router.get(
     }
 
     const readiness = await computeReadiness(counterpart);
+    const pair = await loadPairCompatibility(userId, counterpart);
 
     res.json({
       counterpartUserId: counterpart,
@@ -488,7 +538,153 @@ router.get(
       readinessSummary: readinessPhrase(readiness.score),
       valuesSummary:
         "Values come through in how this person shows up across the lanes they have shared. The more you talk, the clearer the fit.",
+      compatibilityScore: pair?.compatibilityScore ?? null,
+      matchSummary: pair?.matchSummary ?? null,
     });
+  },
+);
+
+// GET /me/connections/:id/starters — three openers the signed-in user can send.
+// Built ONLY from reveal-safe aggregate fields: the readiness phrase, the
+// aggregate match summary, the compatibility score, and the counterpart's
+// display name when they turned reveal consent on. Never raw signals, lane
+// breakdowns, or PII. Hybrid: the deterministic baseline always runs; the deep
+// AI lane is layered on when the account opted in, and any failure, missing
+// consent, or cap hit silently keeps the deterministic openers.
+router.get(
+  "/me/connections/:id/starters",
+  async (req: Request, res: Response): Promise<void> => {
+    if (!req.user?.id) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    const userId = req.user.id;
+    const connection = await loadConnectionForUser(
+      String(req.params.id ?? ""),
+      userId,
+    );
+    if (!connection) {
+      res.status(404).json({ error: "Connection not found" });
+      return;
+    }
+    const counterpart = counterpartOf(connection, userId);
+
+    const [membership] = await db
+      .select({ revealConsent: matchPoolMembershipTable.revealConsent })
+      .from(matchPoolMembershipTable)
+      .where(eq(matchPoolMembershipTable.userId, counterpart))
+      .limit(1);
+    const revealed = membership?.revealConsent === true;
+
+    let displayName: string | null = null;
+    if (revealed) {
+      const [user] = await db
+        .select({ firstName: usersTable.firstName })
+        .from(usersTable)
+        .where(eq(usersTable.id, counterpart))
+        .limit(1);
+      displayName = user?.firstName?.trim() || null;
+    }
+
+    const readiness = await computeReadiness(counterpart);
+    const pair = await loadPairCompatibility(userId, counterpart);
+
+    // One shared, reveal-safe context object feeds BOTH the deterministic
+    // generator and the Claude prompt, so there is a single leak chokepoint.
+    const ctx = {
+      revealed,
+      displayName,
+      compatibilityScore: pair?.compatibilityScore ?? null,
+      matchSummary: pair?.matchSummary ?? null,
+      readinessSummary: readinessPhrase(readiness.score),
+    };
+
+    const deterministic = generateConnectionStarters(ctx);
+    let starters = deterministic.starters;
+    let mode: "deterministic" | "ai" = "deterministic";
+
+    try {
+      const system = [
+        "You are Echo, the MatchLab Club connection coach. The signed-in user just",
+        "matched with someone and wants three openers to start the conversation. You",
+        "are given ONLY aggregate, consented details about the match. Use only what is",
+        "provided. Never invent facts about the other person, never reference anything",
+        "not listed, and never mention scores or internal metrics inside the opener text.",
+        "",
+        "Return JSON only. No prose, no code fences. Match this shape exactly:",
+        '{ "starters": [ { "text": "the actual opener the user could send, in a real human voice", "rationale": "one line on why this opener fits" } ] }',
+        "",
+        "Give exactly 3 starters, each a different angle (warm, curious, light). Every",
+        "opener must be something a real person would send a brand new match. Keep them",
+        "short.",
+        "Voice rules: no em dashes. No emojis. No filler words like 'unlock', 'leverage',",
+        "'seamless', 'elevate', 'transformative', 'game-changer', 'cutting-edge', 'dive",
+        "in', 'buckle up', or 'in today's world'. Vary sentence length. Sound human.",
+      ].join("\n");
+
+      const userContent = [
+        ctx.displayName
+          ? `Match first name: ${ctx.displayName}`
+          : "Match name: not revealed yet, do not invent one",
+        ctx.compatibilityScore != null
+          ? `Compatibility score (0 to 100, context only, never quote it back): ${ctx.compatibilityScore}`
+          : "Compatibility score: not available",
+        ctx.matchSummary ? `Aggregate match summary: ${ctx.matchSummary}` : null,
+        `Readiness phrasing for the match: ${ctx.readinessSummary}`,
+      ]
+        .filter((line): line is string => Boolean(line))
+        .join("\n");
+
+      const aiResult = await generate(
+        {
+          provider: "anthropic",
+          system,
+          user: userContent,
+          expectJson: true,
+          requireContentConsent: true,
+          userId,
+          context: { toolName: "Conversation Starters" },
+          maxTokens: 800,
+        },
+        "",
+      );
+
+      if (!aiResult.isFallback && aiResult.validated && aiResult.output) {
+        const parsed = JSON.parse(aiResult.output) as {
+          starters?: { text?: unknown; rationale?: unknown }[];
+        };
+        const clean = Array.isArray(parsed.starters)
+          ? parsed.starters
+              .map((s) => ({
+                text: String(s?.text ?? "").trim(),
+                rationale: String(s?.rationale ?? "").trim(),
+              }))
+              .filter((s) => s.text.length > 0 && s.rationale.length > 0)
+              .slice(0, 3)
+          : [];
+        if (clean.length === 3) {
+          starters = clean;
+          mode = "ai";
+        }
+      } else if (aiResult.fallbackReason) {
+        req.log.info(
+          {
+            connectionId: connection.id,
+            fallbackReason: aiResult.fallbackReason,
+          },
+          "starters fell back to deterministic baseline",
+        );
+      }
+    } catch (err) {
+      starters = deterministic.starters;
+      mode = "deterministic";
+      req.log.warn(
+        { err, connectionId: connection.id },
+        "starters deep-AI lane threw; using deterministic baseline",
+      );
+    }
+
+    res.json({ starters, mode });
   },
 );
 
