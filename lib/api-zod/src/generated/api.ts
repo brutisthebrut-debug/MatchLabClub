@@ -1824,6 +1824,162 @@ export const DeleteWellnessAnswerResponse = zod.object({
 
 
 /**
+ * @summary Today's single wellness question plus the user's answer streak
+ */
+export const GetWellnessDailyHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetWellnessDailyResponse = zod.object({
+  "question": zod.union([zod.object({
+  "questionId": zod.string(),
+  "dimension": zod.string(),
+  "dimensionLabel": zod.string(),
+  "questionText": zod.string()
+}),zod.null()]).describe('Today\'s question, picked deterministically (least-covered dimension\nfirst). Null only when every bank question has been answered.\n'),
+  "answeredToday": zod.boolean(),
+  "streak": zod.object({
+  "current": zod.number(),
+  "longest": zod.number(),
+  "activeToday": zod.boolean(),
+  "daysActiveLast14": zod.number()
+}),
+  "dimensionsCovered": zod.number(),
+  "dimensionsTotal": zod.number(),
+  "bankAnswered": zod.number(),
+  "bankTotal": zod.number()
+})
+
+
+/**
+ * @summary Pending passive wellness inferences awaiting confirm or dismiss
+ */
+export const ListWellnessInferencesHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const ListWellnessInferencesResponse = zod.object({
+  "inferences": zod.array(zod.object({
+  "id": zod.number(),
+  "dimension": zod.string(),
+  "inferredQuestionId": zod.string(),
+  "questionText": zod.string(),
+  "suggestedAnswer": zod.string(),
+  "sourceKind": zod.string(),
+  "rationale": zod.string().nullish(),
+  "mode": zod.string().describe('Which engine produced it, \"deterministic\" or \"anthropic\".'),
+  "status": zod.string().describe('pending | confirmed | dismissed'),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Scan the user's own writing for confirm-before-write wellness inferences
+ */
+export const GenerateWellnessInferencesHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GenerateWellnessInferencesResponse = zod.object({
+  "created": zod.number().describe('How many new pending inferences were written this run.'),
+  "mode": zod.string(),
+  "inferences": zod.array(zod.object({
+  "id": zod.number(),
+  "dimension": zod.string(),
+  "inferredQuestionId": zod.string(),
+  "questionText": zod.string(),
+  "suggestedAnswer": zod.string(),
+  "sourceKind": zod.string(),
+  "rationale": zod.string().nullish(),
+  "mode": zod.string().describe('Which engine produced it, \"deterministic\" or \"anthropic\".'),
+  "status": zod.string().describe('pending | confirmed | dismissed'),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Confirm an inference, writing it through as a normal wellness answer
+ */
+export const ConfirmWellnessInferenceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ConfirmWellnessInferenceHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const confirmWellnessInferenceBodyAnswerMax = 5000;
+
+
+
+export const ConfirmWellnessInferenceBody = zod.object({
+  "answer": zod.string().min(1).max(confirmWellnessInferenceBodyAnswerMax).optional().describe('Optional edited answer; defaults to the suggested answer.')
+})
+
+export const ConfirmWellnessInferenceResponse = zod.object({
+  "confirmed": zod.boolean(),
+  "answer": zod.object({
+  "id": zod.number(),
+  "questionId": zod.string(),
+  "dimension": zod.string(),
+  "category": zod.string().nullish(),
+  "questionText": zod.string(),
+  "answer": zod.string(),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']),
+  "deletedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}),
+  "inference": zod.object({
+  "id": zod.number(),
+  "dimension": zod.string(),
+  "inferredQuestionId": zod.string(),
+  "questionText": zod.string(),
+  "suggestedAnswer": zod.string(),
+  "sourceKind": zod.string(),
+  "rationale": zod.string().nullish(),
+  "mode": zod.string().describe('Which engine produced it, \"deterministic\" or \"anthropic\".'),
+  "status": zod.string().describe('pending | confirmed | dismissed'),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+})
+
+
+/**
+ * @summary Dismiss an inference so it is never re-surfaced
+ */
+export const DismissWellnessInferenceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DismissWellnessInferenceHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const DismissWellnessInferenceResponse = zod.object({
+  "dismissed": zod.boolean(),
+  "inference": zod.object({
+  "id": zod.number(),
+  "dimension": zod.string(),
+  "inferredQuestionId": zod.string(),
+  "questionText": zod.string(),
+  "suggestedAnswer": zod.string(),
+  "sourceKind": zod.string(),
+  "rationale": zod.string().nullish(),
+  "mode": zod.string().describe('Which engine produced it, \"deterministic\" or \"anthropic\".'),
+  "status": zod.string().describe('pending | confirmed | dismissed'),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+})
+
+
+/**
  * @summary List compatibility insight tags for current user
  */
 export const ListWellnessTagsHeader = zod.object({

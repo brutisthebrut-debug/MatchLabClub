@@ -3,6 +3,8 @@ import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workspace/replit-auth-web";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { SignalOfTheDay } from "@/components/SignalOfTheDay";
+import { WellnessInferences } from "@/components/WellnessInferences";
 import {
   useGetCompanion,
   getGetCompanionQueryKey,
@@ -160,6 +162,10 @@ export default function Echo() {
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-6">
+          <SignalOfTheDay />
+
+          <WellnessInferences />
+
           {/* Echo's current read */}
           <section className="rounded-2xl border border-foreground/10 bg-gradient-to-br from-[hsl(248_62%_52%/0.05)] to-[hsl(326_100%_60%/0.05)] p-5">
             <p className="text-sm text-foreground">{data.greeting}</p>

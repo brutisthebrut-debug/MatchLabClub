@@ -6,6 +6,7 @@
 // flagged as stale on the client so the user can re-run with the latest.
 import { SIGNAL_REGISTRY, type ReadinessBreakdown } from "./signalRegistry";
 import type { ReadinessNextAction, OutcomeInsight } from "./readiness";
+import { WELLNESS_DIMENSIONS, WELLNESS_QUESTION_BANK } from "./wellnessQuestionBank";
 
 export const ENGINE_VERSION = "2026-05-22";
 
@@ -2534,4 +2535,121 @@ export function answerMirrorQuestion(
     grounding: dedupe(knownLabels),
     followUp: "What do you know about me so far?",
   };
+}
+
+// ── Passive wellness inference (deterministic baseline) ──────────────────────
+//
+// Reads a user's own free text (journal entries, audit bios/prompts, message
+// coach threads) and proposes short, per-dimension wellness reflections. This
+// is the always-on baseline behind the confirm-before-write inference flow:
+// nothing here is ever written as a real signal, it only surfaces candidates a
+// user can confirm or dismiss. No external calls, no keys, fully deterministic.
+
+export interface WellnessSource {
+  /** "journal" | "audit" | "coach" */
+  kind: string;
+  text: string;
+}
+
+export interface WellnessInferenceCandidate {
+  dimension: string;
+  questionText: string;
+  suggestedAnswer: string;
+  sourceKind: string;
+  rationale: string;
+}
+
+// Compact keyword map per wellness dimension. A dimension is "noticed" when one
+// of its keywords appears in the user's writing. Kept intentionally small and
+// specific so the baseline stays high-signal rather than matching everything.
+const DIMENSION_KEYWORDS: Record<string, string[]> = {
+  emotional: ["feel", "feeling", "anxious", "anxiety", "stressed", "overwhelmed", "calm", "mood", "happy", "sad", "vulnerable", "lonely"],
+  physical: ["gym", "run", "running", "workout", "exercise", "hike", "sleep", "tired", "energy", "yoga", "health", "walk"],
+  social: ["friends", "party", "hang out", "social", "introvert", "extrovert", "people", "group", "alone"],
+  intellectual: ["read", "reading", "book", "learn", "learning", "curious", "podcast", "study", "idea"],
+  spiritual: ["faith", "meditate", "meditation", "pray", "prayer", "meaning", "purpose", "spiritual", "grateful", "gratitude"],
+  occupational: ["work", "job", "career", "boss", "project", "deadline", "office", "business"],
+  financial: ["money", "budget", "save", "saving", "spend", "debt", "rent", "finances", "paycheck", "invest"],
+  environmental: ["apartment", "neighborhood", "moved", "nature", "outdoors", "my place", "my space"],
+  communication: ["text", "texting", "call", "talk", "conversation", "listen", "express"],
+  conflict: ["argue", "argument", "fight", "disagree", "tension", "conflict", "angry"],
+  boundaries: ["boundary", "boundaries", "limit", "said no", "protect my", "my time"],
+  affection: ["hug", "touch", "cuddle", "affection", "love language", "quality time"],
+  intimacy: ["closeness", "intimate", "intimacy", "connection", "trust", "feel safe"],
+  lifestyle: ["weekend", "routine", "morning person", "night owl", "habit", "schedule", "ritual"],
+  future_vision: ["future", "goal", "dream", "five years", "vision", "someday", "long term"],
+  values: ["value", "believe", "belief", "integrity", "honesty", "principle", "stand for"],
+  family: ["family", "mom", "dad", "parents", "sister", "brother", "kids", "children", "siblings"],
+  culture: ["culture", "tradition", "heritage", "background", "religion", "holiday", "roots"],
+};
+
+const CANONICAL_DIMENSION_QUESTION: Record<string, string> = Object.fromEntries(
+  WELLNESS_DIMENSIONS.map((dim) => [
+    dim,
+    WELLNESS_QUESTION_BANK.find((q) => q.dimension === dim)?.questionText ??
+      `What matters to you when it comes to ${dim.replace(/_/g, " ")}?`,
+  ]),
+);
+
+function splitSentences(text: string): string[] {
+  return text
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+function tidySnippet(sentence: string): string {
+  let s = sentence.replace(/\s+/g, " ").trim();
+  if (s.length > 280) s = `${s.slice(0, 277).trimEnd()}...`;
+  if (s.length > 0) s = s[0]!.toUpperCase() + s.slice(1);
+  return s;
+}
+
+/**
+ * Deterministically extract at most one candidate per dimension from the given
+ * sources, capped overall. Sources are scanned in order, so an earlier source
+ * (e.g. journal) wins the attribution when the same dimension appears twice.
+ */
+export function inferWellnessSignals(input: {
+  sources: WellnessSource[];
+  maxCandidates?: number;
+}): WellnessInferenceCandidate[] {
+  const maxCandidates = input.maxCandidates ?? 6;
+  const captured = new Map<string, WellnessInferenceCandidate>();
+
+  for (const source of input.sources) {
+    const text = (source.text ?? "").trim();
+    if (!text) continue;
+    const sentences = splitSentences(text);
+    if (sentences.length === 0) continue;
+
+    for (const dimension of WELLNESS_DIMENSIONS) {
+      if (captured.has(dimension)) continue;
+      const keywords = DIMENSION_KEYWORDS[dimension] ?? [];
+      let matchSentence: string | null = null;
+      for (const sentence of sentences) {
+        const lower = sentence.toLowerCase();
+        if (keywords.some((kw) => lower.includes(kw))) {
+          matchSentence = sentence;
+          break;
+        }
+      }
+      if (!matchSentence) continue;
+      const suggestedAnswer = tidySnippet(matchSentence);
+      if (suggestedAnswer.length < 8) continue;
+      captured.set(dimension, {
+        dimension,
+        questionText: CANONICAL_DIMENSION_QUESTION[dimension]!,
+        suggestedAnswer,
+        sourceKind: source.kind,
+        rationale: `Noticed in your ${source.kind === "audit" ? "profile" : source.kind} writing.`,
+      });
+    }
+  }
+
+  // Stable order by dimension, then cap.
+  return WELLNESS_DIMENSIONS.flatMap((dim) => {
+    const c = captured.get(dim);
+    return c ? [c] : [];
+  }).slice(0, maxCandidates);
 }

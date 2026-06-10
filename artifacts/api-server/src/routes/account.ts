@@ -15,6 +15,7 @@ import {
   journalEntriesTable,
   postDateNotesTable,
   wellnessAnswersTable,
+  wellnessInferencesTable,
   wellnessTagsTable,
   compatibilityReadsTable,
   importedSourcesTable,
@@ -650,6 +651,7 @@ router.delete("/account", async (req, res): Promise<void> => {
   // strand the rest.
   await Promise.all([
     db.delete(wellnessAnswersTable).where(eq(wellnessAnswersTable.userId, userId)),
+    db.delete(wellnessInferencesTable).where(eq(wellnessInferencesTable.userId, userId)),
     db.delete(wellnessTagsTable).where(eq(wellnessTagsTable.userId, userId)),
     db.delete(compatibilityReadsTable).where(eq(compatibilityReadsTable.userId, userId)),
     db.delete(importedSourcesTable).where(eq(importedSourcesTable.userId, userId)),
@@ -951,6 +953,12 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .where(eq(wellnessTagsTable.userId, userId))
         .returning({ id: wellnessTagsTable.id });
       tables["wellness_tags"] = wellnessTagDel.length;
+
+      const wellnessInferenceDel = await tx
+        .delete(wellnessInferencesTable)
+        .where(eq(wellnessInferencesTable.userId, userId))
+        .returning({ id: wellnessInferencesTable.id });
+      tables["wellness_inferences"] = wellnessInferenceDel.length;
 
       const compassDel = await tx
         .delete(compatibilityReadsTable)

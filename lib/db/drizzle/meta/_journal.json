@@ -253,6 +253,13 @@
       "when": 1780711746882,
       "tag": "0035_fantastic_scourge",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1781055967947,
+      "tag": "0036_funny_tag",
+      "breakpoints": true
     }
   ]
 }

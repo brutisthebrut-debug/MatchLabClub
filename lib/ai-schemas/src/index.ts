@@ -141,6 +141,20 @@ export const scamCheckSchema = z.object({
 
 export type ScamCheckAiOutput = z.infer<typeof scamCheckSchema>;
 
+export const wellnessInferenceSchema = z.object({
+  inferences: z
+    .array(
+      z.object({
+        dimension: z.string().trim().min(1),
+        suggestedAnswer: z.string().trim().min(1).max(400),
+        rationale: z.string().trim().default(""),
+      }),
+    )
+    .max(12),
+});
+
+export type WellnessInferenceAiOutput = z.infer<typeof wellnessInferenceSchema>;
+
 export function parseAiJson<T>(
   schema: z.ZodType<T>,
   raw: string,
@@ -173,6 +187,7 @@ export const aiToolSchemas = {
   "Echo Pulse": echoPulseSchema,
   "Cosmic Compass": cosmicReadingSchema,
   "Safety Check": scamCheckSchema,
+  "Wellness Inference": wellnessInferenceSchema,
 } as const;
 
 export type AiToolName = keyof typeof aiToolSchemas;

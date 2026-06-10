@@ -1610,6 +1610,102 @@ paths:
         "404":
           description: Not found
 
+  /wellness/daily:
+    get:
+      operationId: getWellnessDaily
+      tags: [wellness]
+      summary: Today's single wellness question plus the user's answer streak
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        "200":
+          description: Daily wellness question and streak
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessDaily"
+
+  /me/wellness/inferences:
+    get:
+      operationId: listWellnessInferences
+      tags: [wellness]
+      summary: Pending passive wellness inferences awaiting confirm or dismiss
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        "200":
+          description: Pending inferences for the signed-in user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessInferenceList"
+
+  /me/wellness/inferences/generate:
+    post:
+      operationId: generateWellnessInferences
+      tags: [wellness]
+      summary: Scan the user's own writing for confirm-before-write wellness inferences
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        "200":
+          description: Newly created count plus all pending inferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessInferenceGenerateResult"
+
+  /me/wellness/inferences/{id}/confirm:
+    post:
+      operationId: confirmWellnessInference
+      tags: [wellness]
+      summary: Confirm an inference, writing it through as a normal wellness answer
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WellnessInferenceConfirmInput"
+      responses:
+        "200":
+          description: Inference confirmed and written through to a wellness answer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessInferenceConfirmResult"
+
+  /me/wellness/inferences/{id}/dismiss:
+    post:
+      operationId: dismissWellnessInference
+      tags: [wellness]
+      summary: Dismiss an inference so it is never re-surfaced
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Inference dismissed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessInferenceDismissResult"
+
   /wellness/tags:
     get:
       operationId: listWellnessTags
@@ -9264,6 +9360,139 @@ components:
             $ref: "#/components/schemas/WellnessAnswer"
         total:
           type: integer
+
+    WellnessStreak:
+      type: object
+      required: [current, longest, activeToday, daysActiveLast14]
+      properties:
+        current:
+          type: integer
+        longest:
+          type: integer
+        activeToday:
+          type: boolean
+        daysActiveLast14:
+          type: integer
+
+    WellnessDailyQuestion:
+      type: object
+      required: [questionId, dimension, dimensionLabel, questionText]
+      properties:
+        questionId:
+          type: string
+        dimension:
+          type: string
+        dimensionLabel:
+          type: string
+        questionText:
+          type: string
+
+    WellnessDaily:
+      type: object
+      required: [question, answeredToday, streak, dimensionsCovered, dimensionsTotal, bankAnswered, bankTotal]
+      properties:
+        question:
+          oneOf:
+            - $ref: "#/components/schemas/WellnessDailyQuestion"
+            - type: "null"
+          description: |
+            Today's question, picked deterministically (least-covered dimension
+            first). Null only when every bank question has been answered.
+        answeredToday:
+          type: boolean
+        streak:
+          $ref: "#/components/schemas/WellnessStreak"
+        dimensionsCovered:
+          type: integer
+        dimensionsTotal:
+          type: integer
+        bankAnswered:
+          type: integer
+        bankTotal:
+          type: integer
+
+    WellnessInference:
+      type: object
+      required: [id, dimension, inferredQuestionId, questionText, suggestedAnswer, sourceKind, mode, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        dimension:
+          type: string
+        inferredQuestionId:
+          type: string
+        questionText:
+          type: string
+        suggestedAnswer:
+          type: string
+        sourceKind:
+          type: string
+        rationale:
+          type: [string, "null"]
+        mode:
+          type: string
+          description: Which engine produced it, "deterministic" or "anthropic".
+        status:
+          type: string
+          description: pending | confirmed | dismissed
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    WellnessInferenceList:
+      type: object
+      required: [inferences]
+      properties:
+        inferences:
+          type: array
+          items:
+            $ref: "#/components/schemas/WellnessInference"
+
+    WellnessInferenceGenerateResult:
+      type: object
+      required: [created, mode, inferences]
+      properties:
+        created:
+          type: integer
+          description: How many new pending inferences were written this run.
+        mode:
+          type: string
+        inferences:
+          type: array
+          items:
+            $ref: "#/components/schemas/WellnessInference"
+
+    WellnessInferenceConfirmInput:
+      type: object
+      properties:
+        answer:
+          type: string
+          minLength: 1
+          maxLength: 5000
+          description: Optional edited answer; defaults to the suggested answer.
+
+    WellnessInferenceConfirmResult:
+      type: object
+      required: [confirmed, answer, inference]
+      properties:
+        confirmed:
+          type: boolean
+        answer:
+          $ref: "#/components/schemas/WellnessAnswer"
+        inference:
+          $ref: "#/components/schemas/WellnessInference"
+
+    WellnessInferenceDismissResult:
+      type: object
+      required: [dismissed, inference]
+      properties:
+        dismissed:
+          type: boolean
+        inference:
+          $ref: "#/components/schemas/WellnessInference"
 
     WellnessTagInput:
       type: object

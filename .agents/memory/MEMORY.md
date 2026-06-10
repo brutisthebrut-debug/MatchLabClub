@@ -24,3 +24,5 @@
 - [Hand-written route vs OpenAPI path drift](route-spec-path-drift.md) — server route path must match the spec exactly; a collection GET sharing an item POST path (singular/plural drift) silently 404s the generated client; new tables a route mutates must be registered in testDb.
 - [Matching automation default-on](matching-automation-default-on.md) — auto-proposal/expiry/nudge default ON; Echo stays off; stored explicit false still wins in prod.
 - [Account-deletion dual path parity](account-delete-dual-path.md) — two GDPR delete paths diverge; a table wiped by one must be wiped by both, or the confirmation path orphans rows.
+- [Self-inference reads own text only](own-text-only-inference.md) — never feed two-sided columns (coach conversationContext, emailInsights pastedContent) into user self-inference; both AI lanes share one sources array.
+- [Orval body-schema naming collision](orval-body-schema-naming.md) — a requestBody schema named operationId+"Body" emits dup zod const + type (TS2308); $ref a distinctly-named schema; clean skips the types folder.

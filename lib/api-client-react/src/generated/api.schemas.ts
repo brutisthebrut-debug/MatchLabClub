@@ -2430,6 +2430,81 @@ export interface WellnessAnswerList {
   total: number;
 }
 
+export interface WellnessStreak {
+  current: number;
+  longest: number;
+  activeToday: boolean;
+  daysActiveLast14: number;
+}
+
+export interface WellnessDailyQuestion {
+  questionId: string;
+  dimension: string;
+  dimensionLabel: string;
+  questionText: string;
+}
+
+export interface WellnessDaily {
+  /** Today's question, picked deterministically (least-covered dimension
+  first). Null only when every bank question has been answered.
+   */
+  question: WellnessDailyQuestion | null;
+  answeredToday: boolean;
+  streak: WellnessStreak;
+  dimensionsCovered: number;
+  dimensionsTotal: number;
+  bankAnswered: number;
+  bankTotal: number;
+}
+
+export interface WellnessInference {
+  id: number;
+  dimension: string;
+  inferredQuestionId: string;
+  questionText: string;
+  suggestedAnswer: string;
+  sourceKind: string;
+  /** @nullable */
+  rationale?: string | null;
+  /** Which engine produced it, "deterministic" or "anthropic". */
+  mode: string;
+  /** pending | confirmed | dismissed */
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WellnessInferenceList {
+  inferences: WellnessInference[];
+}
+
+export interface WellnessInferenceGenerateResult {
+  /** How many new pending inferences were written this run. */
+  created: number;
+  mode: string;
+  inferences: WellnessInference[];
+}
+
+export interface WellnessInferenceConfirmInput {
+  /**
+     * Optional edited answer; defaults to the suggested answer.
+     * @minLength 1
+     * @maxLength 5000
+     */
+  answer?: string;
+}
+
+export interface WellnessInferenceConfirmResult {
+  confirmed: boolean;
+  answer: WellnessAnswer;
+  inference: WellnessInference;
+}
+
+export interface WellnessInferenceDismissResult {
+  dismissed: boolean;
+  inference: WellnessInference;
+}
+
 export interface WellnessTagInput {
   /**
      * @minLength 1

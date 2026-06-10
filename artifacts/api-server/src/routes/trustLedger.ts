@@ -6,6 +6,7 @@ import {
   journalEntriesTable,
   postDateNotesTable,
   wellnessAnswersTable,
+  wellnessInferencesTable,
   wellnessTagsTable,
   importedSourcesTable,
   datingWinsTable,
@@ -171,14 +172,15 @@ const FIRST_PARTY_SOURCES: Record<
   },
   wellness: {
     countStored: async (client, userId) => {
-      const [answers, tags] = await Promise.all([
+      const [answers, tags, inferences] = await Promise.all([
         countBy(client, wellnessAnswersTable, eq(wellnessAnswersTable.userId, userId)),
         countBy(client, wellnessTagsTable, eq(wellnessTagsTable.userId, userId)),
+        countBy(client, wellnessInferencesTable, eq(wellnessInferencesTable.userId, userId)),
       ]);
-      return answers + tags;
+      return answers + tags + inferences;
     },
     purge: async (tx, userId) => {
-      const [answers, tags] = await Promise.all([
+      const [answers, tags, inferences] = await Promise.all([
         tx
           .delete(wellnessAnswersTable)
           .where(eq(wellnessAnswersTable.userId, userId))
@@ -187,8 +189,12 @@ const FIRST_PARTY_SOURCES: Record<
           .delete(wellnessTagsTable)
           .where(eq(wellnessTagsTable.userId, userId))
           .returning({ id: wellnessTagsTable.id }),
+        tx
+          .delete(wellnessInferencesTable)
+          .where(eq(wellnessInferencesTable.userId, userId))
+          .returning({ id: wellnessInferencesTable.id }),
       ]);
-      return answers.length + tags.length;
+      return answers.length + tags.length + inferences.length;
     },
   },
   postDate: {

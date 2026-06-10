@@ -271,6 +271,12 @@ import type {
   WellnessAnswerInput,
   WellnessAnswerList,
   WellnessAnswerPatch,
+  WellnessDaily,
+  WellnessInferenceConfirmInput,
+  WellnessInferenceConfirmResult,
+  WellnessInferenceDismissResult,
+  WellnessInferenceGenerateResult,
+  WellnessInferenceList,
   WellnessProfile,
   WellnessTag,
   WellnessTagInput,
@@ -4371,6 +4377,372 @@ export const useDeleteWellnessAnswer = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteWellnessAnswerMutationOptions(options));
+    }
+
+export const getGetWellnessDailyUrl = () => {
+
+
+
+
+  return `/api/wellness/daily`
+}
+
+/**
+ * @summary Today's single wellness question plus the user's answer streak
+ */
+export const getWellnessDaily = async ( options?: RequestInit): Promise<WellnessDaily> => {
+
+  return customFetch<WellnessDaily>(getGetWellnessDailyUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWellnessDailyQueryKey = () => {
+    return [
+    `/api/wellness/daily`
+    ] as const;
+    }
+
+
+export const getGetWellnessDailyQueryOptions = <TData = Awaited<ReturnType<typeof getWellnessDaily>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWellnessDaily>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWellnessDailyQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWellnessDaily>>> = ({ signal }) => getWellnessDaily({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWellnessDaily>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWellnessDailyQueryResult = NonNullable<Awaited<ReturnType<typeof getWellnessDaily>>>
+export type GetWellnessDailyQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Today's single wellness question plus the user's answer streak
+ */
+
+export function useGetWellnessDaily<TData = Awaited<ReturnType<typeof getWellnessDaily>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWellnessDaily>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWellnessDailyQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListWellnessInferencesUrl = () => {
+
+
+
+
+  return `/api/me/wellness/inferences`
+}
+
+/**
+ * @summary Pending passive wellness inferences awaiting confirm or dismiss
+ */
+export const listWellnessInferences = async ( options?: RequestInit): Promise<WellnessInferenceList> => {
+
+  return customFetch<WellnessInferenceList>(getListWellnessInferencesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListWellnessInferencesQueryKey = () => {
+    return [
+    `/api/me/wellness/inferences`
+    ] as const;
+    }
+
+
+export const getListWellnessInferencesQueryOptions = <TData = Awaited<ReturnType<typeof listWellnessInferences>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWellnessInferences>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWellnessInferencesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWellnessInferences>>> = ({ signal }) => listWellnessInferences({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWellnessInferences>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListWellnessInferencesQueryResult = NonNullable<Awaited<ReturnType<typeof listWellnessInferences>>>
+export type ListWellnessInferencesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Pending passive wellness inferences awaiting confirm or dismiss
+ */
+
+export function useListWellnessInferences<TData = Awaited<ReturnType<typeof listWellnessInferences>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWellnessInferences>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListWellnessInferencesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGenerateWellnessInferencesUrl = () => {
+
+
+
+
+  return `/api/me/wellness/inferences/generate`
+}
+
+/**
+ * @summary Scan the user's own writing for confirm-before-write wellness inferences
+ */
+export const generateWellnessInferences = async ( options?: RequestInit): Promise<WellnessInferenceGenerateResult> => {
+
+  return customFetch<WellnessInferenceGenerateResult>(getGenerateWellnessInferencesUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getGenerateWellnessInferencesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateWellnessInferences>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateWellnessInferences>>, TError,void, TContext> => {
+
+const mutationKey = ['generateWellnessInferences'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateWellnessInferences>>, void> = () => {
+
+
+          return  generateWellnessInferences(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateWellnessInferencesMutationResult = NonNullable<Awaited<ReturnType<typeof generateWellnessInferences>>>
+
+    export type GenerateWellnessInferencesMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Scan the user's own writing for confirm-before-write wellness inferences
+ */
+export const useGenerateWellnessInferences = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateWellnessInferences>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof generateWellnessInferences>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getGenerateWellnessInferencesMutationOptions(options));
+    }
+
+export const getConfirmWellnessInferenceUrl = (id: number,) => {
+
+
+
+
+  return `/api/me/wellness/inferences/${id}/confirm`
+}
+
+/**
+ * @summary Confirm an inference, writing it through as a normal wellness answer
+ */
+export const confirmWellnessInference = async (id: number,
+    wellnessInferenceConfirmInput?: WellnessInferenceConfirmInput, options?: RequestInit): Promise<WellnessInferenceConfirmResult> => {
+
+  return customFetch<WellnessInferenceConfirmResult>(getConfirmWellnessInferenceUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      wellnessInferenceConfirmInput,)
+  }
+);}
+
+
+
+
+export const getConfirmWellnessInferenceMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmWellnessInference>>, TError,{id: number;data?: BodyType<WellnessInferenceConfirmInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmWellnessInference>>, TError,{id: number;data?: BodyType<WellnessInferenceConfirmInput>}, TContext> => {
+
+const mutationKey = ['confirmWellnessInference'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmWellnessInference>>, {id: number;data?: BodyType<WellnessInferenceConfirmInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  confirmWellnessInference(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfirmWellnessInferenceMutationResult = NonNullable<Awaited<ReturnType<typeof confirmWellnessInference>>>
+    export type ConfirmWellnessInferenceMutationBody = BodyType<WellnessInferenceConfirmInput> | undefined
+    export type ConfirmWellnessInferenceMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Confirm an inference, writing it through as a normal wellness answer
+ */
+export const useConfirmWellnessInference = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmWellnessInference>>, TError,{id: number;data?: BodyType<WellnessInferenceConfirmInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof confirmWellnessInference>>,
+        TError,
+        {id: number;data?: BodyType<WellnessInferenceConfirmInput>},
+        TContext
+      > => {
+      return useMutation(getConfirmWellnessInferenceMutationOptions(options));
+    }
+
+export const getDismissWellnessInferenceUrl = (id: number,) => {
+
+
+
+
+  return `/api/me/wellness/inferences/${id}/dismiss`
+}
+
+/**
+ * @summary Dismiss an inference so it is never re-surfaced
+ */
+export const dismissWellnessInference = async (id: number, options?: RequestInit): Promise<WellnessInferenceDismissResult> => {
+
+  return customFetch<WellnessInferenceDismissResult>(getDismissWellnessInferenceUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getDismissWellnessInferenceMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dismissWellnessInference>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof dismissWellnessInference>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['dismissWellnessInference'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dismissWellnessInference>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  dismissWellnessInference(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DismissWellnessInferenceMutationResult = NonNullable<Awaited<ReturnType<typeof dismissWellnessInference>>>
+
+    export type DismissWellnessInferenceMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Dismiss an inference so it is never re-surfaced
+ */
+export const useDismissWellnessInference = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dismissWellnessInference>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof dismissWellnessInference>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDismissWellnessInferenceMutationOptions(options));
     }
 
 export const getListWellnessTagsUrl = () => {

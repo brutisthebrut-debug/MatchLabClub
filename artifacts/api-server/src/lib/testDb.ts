@@ -318,6 +318,8 @@ ensureStore("journal_entries");
 export const journalEntriesTable = makeTable("journal_entries");
 ensureStore("wellness_answers");
 export const wellnessAnswersTable = makeTable("wellness_answers");
+ensureStore("wellness_inferences");
+export const wellnessInferencesTable = makeTable("wellness_inferences");
 ensureStore("imported_sources");
 export const importedSourcesTable = makeTable("imported_sources");
 ensureStore("post_date_notes");
