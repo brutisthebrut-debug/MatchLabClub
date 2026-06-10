@@ -59,7 +59,7 @@ export const PACKAGES: Package[] = [
   },
   {
     id: "messages",
-    label: "Message Lab",
+    label: "Message Tools",
     tagline: "Write better messages, connect faster",
     color: "hsl(190 55% 60%)",
     icon: MessageSquare,
@@ -82,7 +82,7 @@ export const PACKAGES: Package[] = [
   },
   {
     id: "growth",
-    label: "Progress",
+    label: "Growth Tracker",
     tagline: "Track what's actually changing over time",
     color: "hsl(var(--brand-green))",
     icon: TrendingUp,
@@ -129,7 +129,7 @@ export const PACKAGES: Package[] = [
   },
   {
     id: "trust",
-    label: "My Profile",
+    label: "Context & Trust",
     tagline: "What we know about you, and what you control",
     color: "hsl(228 30% 62%)",
     icon: Shield,

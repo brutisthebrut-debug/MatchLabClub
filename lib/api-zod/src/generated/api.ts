@@ -3541,6 +3541,39 @@ export const UnblockUserResponse = zod.object({
 
 
 /**
+ * Runs a pre-send safety check on a message the caller is about to send.
+The deterministic engine screens every request with no key and no
+external call, so the nudge is always available. When the deep AI lane
+is on and the deterministic screen already found something worth a
+closer look, Claude refines the read; any failure, missing consent, or
+daily-cap hit silently keeps the deterministic result. Nothing is
+stored. risk is none, low, or elevated.
+
+ * @summary Screen an outgoing message for romance-scam red flags before sending
+ */
+export const CheckOutgoingMessageHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const checkOutgoingMessageBodyDraftMax = 4000;
+
+export const checkOutgoingMessageBodyConversationContextMax = 8000;
+
+
+
+export const CheckOutgoingMessageBody = zod.object({
+  "draft": zod.string().min(1).max(checkOutgoingMessageBodyDraftMax),
+  "conversationContext": zod.string().max(checkOutgoingMessageBodyConversationContextMax).nullish()
+}).describe('A message the caller is about to send, plus optional conversation\ncontext the client already shows the user. Used only to screen the\ndraft for romance-scam patterns before it goes out. Nothing here is\nstored.\n')
+
+export const CheckOutgoingMessageResponse = zod.object({
+  "risk": zod.enum(['none', 'low', 'elevated']),
+  "signals": zod.array(zod.string()),
+  "advice": zod.string()
+}).describe('Romance-scam screen for the coached conversation. The deterministic\nengine produces this on every coach request; the deep AI lane refines it\nwhen consent is on. risk is none, low, or elevated.\n')
+
+
+/**
  * Returns Trust & Safety reports for the founder review queue, newest
 first. Requires founder key.
 

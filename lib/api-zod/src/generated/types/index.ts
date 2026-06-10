@@ -289,6 +289,7 @@ export * from './messageCoachingInput';
 export * from './messageCoachingResponse';
 export * from './messageCoachingSession';
 export * from './messageCoachingSessionStatus';
+export * from './messageSafetyCheckInput';
 export * from './mirrorAskInput';
 export * from './mirrorAskResult';
 export * from './mirrorBlindSpot';

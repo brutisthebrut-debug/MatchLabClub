@@ -9,6 +9,7 @@ import {
   MapPin,
   Send,
   Shield,
+  ShieldAlert,
   Sparkles,
   UserX,
 } from "lucide-react";
@@ -36,6 +37,7 @@ import {
   useGetConnectionStarters,
   getGetConnectionStartersQueryKey,
   useSuggestConnectionDateIdeas,
+  useCheckOutgoingMessage,
   useSendConnectionMessage,
   useMarkConnectionRead,
   useUnmatchConnection,
@@ -160,6 +162,7 @@ export default function MatchThread() {
   const [draft, setDraft] = useState("");
   const [showReveal, setShowReveal] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [safetyAdvice, setSafetyAdvice] = useState<string | null>(null);
   const [reportReason, setReportReason] =
     useState<ReportConnectionInputReason>("harassment");
   const endRef = useRef<HTMLDivElement>(null);
@@ -209,6 +212,7 @@ export default function MatchThread() {
   });
 
   const sendMessage = useSendConnectionMessage();
+  const checkMessage = useCheckOutgoingMessage();
   const markRead = useMarkConnectionRead();
   const unmatch = useUnmatchConnection();
   const report = useReportConnection();
@@ -254,9 +258,9 @@ export default function MatchThread() {
     });
   };
 
-  const handleSend = () => {
-    const body = draft.trim();
+  const performSend = (body: string) => {
     if (isDemo || !body || sendMessage.isPending || closed) return;
+    setSafetyAdvice(null);
     sendMessage.mutate(
       { id, data: { body } },
       {
@@ -266,6 +270,52 @@ export default function MatchThread() {
         },
         onError: () => {
           toast({ title: "Couldn't send that message. Try again." });
+        },
+      },
+    );
+  };
+
+  // Pre-send safety nudge. The deterministic engine screens every outgoing
+  // draft (plus the recent thread, which the user already sees) for
+  // romance-scam patterns. Only an elevated read pauses the send with an "are
+  // you sure?" confirm; a clean or low read sends straight through. The check
+  // is best-effort: if it errors, we never block the message.
+  const handleSend = () => {
+    const body = draft.trim();
+    if (
+      isDemo ||
+      !body ||
+      sendMessage.isPending ||
+      checkMessage.isPending ||
+      closed
+    )
+      return;
+    const recentContext = messages
+      .slice(-8)
+      .map((m) => `${m.mine ? "You" : "Them"}: ${m.body}`)
+      .join("\n")
+      .slice(0, 8000);
+    checkMessage.mutate(
+      {
+        data: {
+          draft: body,
+          conversationContext: recentContext.length > 0 ? recentContext : null,
+        },
+      },
+      {
+        onSuccess: (result) => {
+          if (result.risk === "elevated") {
+            setSafetyAdvice(
+              result.advice.trim().length > 0
+                ? result.advice
+                : "This message could be heading toward a scam. Take a moment before you send.",
+            );
+          } else {
+            performSend(body);
+          }
+        },
+        onError: () => {
+          performSend(body);
         },
       },
     );
@@ -574,11 +624,60 @@ export default function MatchThread() {
             </div>
           </div>
 
+          {safetyAdvice && (
+            <motion.div
+              {...fadeUp(0)}
+              className="mt-3 glass border border-[hsl(38_92%_60%/0.35)] rounded-2xl p-4"
+              data-testid="panel-safety-confirm"
+            >
+              <div className="flex items-start gap-2.5 mb-3">
+                <ShieldAlert
+                  className="w-4 h-4 text-[hsl(38_92%_60%)] flex-shrink-0 mt-0.5"
+                  aria-hidden="true"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-foreground mb-1">
+                    Are you sure you want to send this?
+                  </p>
+                  <p
+                    className="text-xs text-muted-foreground/80 leading-relaxed"
+                    data-testid="text-safety-advice"
+                  >
+                    {safetyAdvice}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="rounded-full"
+                  onClick={() => setSafetyAdvice(null)}
+                  data-testid="button-safety-cancel"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => performSend(draft.trim())}
+                  disabled={sendMessage.isPending || draft.trim().length === 0}
+                  data-testid="button-safety-send-anyway"
+                >
+                  Send anyway
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
           {!closed && (
             <div className="mt-3 flex items-end gap-2">
               <Textarea
                 value={draft}
-                onChange={(e) => setDraft(e.target.value)}
+                onChange={(e) => {
+                  setDraft(e.target.value);
+                  if (safetyAdvice) setSafetyAdvice(null);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -593,7 +692,11 @@ export default function MatchThread() {
               />
               <Button
                 onClick={handleSend}
-                disabled={sendMessage.isPending || draft.trim().length === 0}
+                disabled={
+                  sendMessage.isPending ||
+                  checkMessage.isPending ||
+                  draft.trim().length === 0
+                }
                 className="rounded-full h-11 w-11 p-0 flex-shrink-0"
                 data-testid="button-send-message"
                 aria-label="Send message"

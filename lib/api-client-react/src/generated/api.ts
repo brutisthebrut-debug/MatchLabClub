@@ -190,6 +190,7 @@ import type {
   MessageCoachingInput,
   MessageCoachingResponse,
   MessageCoachingSession,
+  MessageSafetyCheckInput,
   MirrorAskInput,
   MirrorAskResult,
   MirrorPortrait,
@@ -235,6 +236,7 @@ import type {
   RevokeSessionsResult,
   SafetyBlock,
   SafetyBlockList,
+  SafetyCheck,
   SayToCompanion400,
   SayToCompanion401,
   ScenarioResponse,
@@ -7708,6 +7710,85 @@ export const useUnblockUser = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getUnblockUserMutationOptions(options));
+    }
+
+export const getCheckOutgoingMessageUrl = () => {
+
+
+
+
+  return `/api/me/safety/message-check`
+}
+
+/**
+ * Runs a pre-send safety check on a message the caller is about to send.
+The deterministic engine screens every request with no key and no
+external call, so the nudge is always available. When the deep AI lane
+is on and the deterministic screen already found something worth a
+closer look, Claude refines the read; any failure, missing consent, or
+daily-cap hit silently keeps the deterministic result. Nothing is
+stored. risk is none, low, or elevated.
+
+ * @summary Screen an outgoing message for romance-scam red flags before sending
+ */
+export const checkOutgoingMessage = async (messageSafetyCheckInput: MessageSafetyCheckInput, options?: RequestInit): Promise<SafetyCheck> => {
+
+  return customFetch<SafetyCheck>(getCheckOutgoingMessageUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      messageSafetyCheckInput,)
+  }
+);}
+
+
+
+
+export const getCheckOutgoingMessageMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkOutgoingMessage>>, TError,{data: BodyType<MessageSafetyCheckInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkOutgoingMessage>>, TError,{data: BodyType<MessageSafetyCheckInput>}, TContext> => {
+
+const mutationKey = ['checkOutgoingMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkOutgoingMessage>>, {data: BodyType<MessageSafetyCheckInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  checkOutgoingMessage(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CheckOutgoingMessageMutationResult = NonNullable<Awaited<ReturnType<typeof checkOutgoingMessage>>>
+    export type CheckOutgoingMessageMutationBody = BodyType<MessageSafetyCheckInput>
+    export type CheckOutgoingMessageMutationError = ErrorType<void>
+
+    /**
+ * @summary Screen an outgoing message for romance-scam red flags before sending
+ */
+export const useCheckOutgoingMessage = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkOutgoingMessage>>, TError,{data: BodyType<MessageSafetyCheckInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof checkOutgoingMessage>>,
+        TError,
+        {data: BodyType<MessageSafetyCheckInput>},
+        TContext
+      > => {
+      return useMutation(getCheckOutgoingMessageMutationOptions(options));
     }
 
 export const getGetFounderReportsUrl = (params?: GetFounderReportsParams,) => {

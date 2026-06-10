@@ -33,7 +33,14 @@ vi.mock("drizzle-orm", async () => {
   };
 });
 
+vi.mock("../lib/aiService", () => ({
+  generate: vi.fn(),
+}));
+
 import type { AuthUser } from "@workspace/api-zod";
+import { generate } from "../lib/aiService";
+
+const generateMock = vi.mocked(generate);
 
 interface TestApp {
   app: Express;
@@ -83,6 +90,7 @@ beforeAll(async () => {
 
 let dbSnapshot: Map<string, Set<unknown>>;
 beforeEach(async () => {
+  generateMock.mockReset();
   const { snapshotTestDb } = await import("../lib/testDb");
   dbSnapshot = snapshotTestDb();
 });
@@ -251,5 +259,112 @@ describe("safety block / list / unblock", () => {
     );
     expect(again.status).toBe(200);
     expect(again.body.ok).toBe(true);
+  });
+});
+
+describe("POST /api/me/safety/message-check", () => {
+  it("401s for an anonymous caller", async () => {
+    testApp.setUser(null);
+    const res = await request(testApp.app)
+      .post("/api/me/safety/message-check")
+      .send({ draft: "Hey, want to grab coffee this weekend?" });
+    expect(res.status).toBe(401);
+    expect(generateMock).not.toHaveBeenCalled();
+  });
+
+  it("400s when the draft is missing", async () => {
+    testApp.setUser({ id: USER_A });
+    const res = await request(testApp.app)
+      .post("/api/me/safety/message-check")
+      .send({});
+    expect(res.status).toBe(400);
+  });
+
+  it("returns a clean read on a normal draft without touching the deep lane", async () => {
+    testApp.setUser({ id: USER_A });
+    const res = await request(testApp.app)
+      .post("/api/me/safety/message-check")
+      .send({ draft: "Excited for Saturday. What time works for you?" });
+    expect(res.status).toBe(200);
+    expect(res.body.risk).toBe("none");
+    expect(Array.isArray(res.body.signals)).toBe(true);
+    expect(typeof res.body.advice).toBe("string");
+    // A clean draft never reaches Claude, so it never burns a credit.
+    expect(generateMock).not.toHaveBeenCalled();
+  });
+
+  it("flags an elevated risk on a financial draft and falls back to the deterministic baseline", async () => {
+    testApp.setUser({ id: USER_A });
+    generateMock.mockResolvedValue({
+      output: "",
+      isFallback: true,
+      validated: false,
+      fallbackReason: "consent_required",
+    } as Awaited<ReturnType<typeof generate>>);
+
+    const res = await request(testApp.app)
+      .post("/api/me/safety/message-check")
+      .send({
+        draft: "Okay, I will send the gift card and wire transfer the money tonight.",
+      });
+    expect(res.status).toBe(200);
+    expect(res.body.risk).toBe("elevated");
+    expect(res.body.signals.length).toBeGreaterThan(0);
+    expect(generateMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("refines the read with the deep lane when consent is on", async () => {
+    testApp.setUser({ id: USER_A });
+    generateMock.mockResolvedValue({
+      output: JSON.stringify({
+        risk: "elevated",
+        signals: ["They are pushing you to move money before you have met."],
+        advice:
+          "Hold off on sending anything. Suggest a quick video call first, and never send money to someone you have not met in person.",
+      }),
+      isFallback: false,
+      validated: true,
+    } as Awaited<ReturnType<typeof generate>>);
+
+    const res = await request(testApp.app)
+      .post("/api/me/safety/message-check")
+      .send({
+        draft: "Sure, I can send you the bitcoin you asked for.",
+        conversationContext: "Them: I need you to invest in crypto with me.",
+      });
+    expect(res.status).toBe(200);
+    expect(res.body.risk).toBe("elevated");
+    expect(res.body.advice).toContain("video call");
+    expect(generateMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to the deterministic baseline when the deep lane throws", async () => {
+    testApp.setUser({ id: USER_A });
+    generateMock.mockRejectedValue(new Error("provider exploded"));
+
+    const res = await request(testApp.app)
+      .post("/api/me/safety/message-check")
+      .send({ draft: "I will wire the money through western union now." });
+    expect(res.status).toBe(200);
+    expect(res.body.risk).toBe("elevated");
+  });
+
+  it("never uses an em dash in the deterministic advice", async () => {
+    testApp.setUser({ id: USER_A });
+    const clean = await request(testApp.app)
+      .post("/api/me/safety/message-check")
+      .send({ draft: "Looking forward to meeting you for dinner." });
+    expect(clean.body.advice).not.toContain("\u2014");
+
+    generateMock.mockResolvedValue({
+      output: "",
+      isFallback: true,
+      validated: false,
+      fallbackReason: "consent_required",
+    } as Awaited<ReturnType<typeof generate>>);
+    const flagged = await request(testApp.app)
+      .post("/api/me/safety/message-check")
+      .send({ draft: "I will send the gift card now." });
+    expect(flagged.body.advice).not.toContain("\u2014");
   });
 });

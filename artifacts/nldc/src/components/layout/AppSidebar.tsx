@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Brain,
-  Wand2,
   Sparkles,
   MessageCircle,
   Theater,
@@ -79,6 +78,7 @@ import {
   Scale,
   Mic,
   Flag,
+  Receipt,
 } from "lucide-react";
 
 type NavLink = {
@@ -98,11 +98,14 @@ type NavSection = {
   more: NavLink[];
 };
 
-// The spine reads as a journey, top to bottom: see yourself (the Mirror),
-// build readiness (the climb, the tools, the data that feed it), then get
-// matched (the payoff), and account. Your Mirror sits at the very top as the
-// model of you that everything feeds. Every prior route is preserved, only
-// regrouped behind the journey and progressive disclosure. No page is orphaned.
+// The rail and the dashboard tell ONE story. The section labels here mirror the
+// six tracks in navigationCatalog.ts (Start Here, The Reset, Message Tools,
+// Growth Tracker, Context & Trust, Founder & Beta) so the product reads as one
+// thing, not a pile of tools. Two extra sections carry the routes the dashboard
+// catalog does not: Get Matched (the readiness payoff, never buried per the
+// north star) and Account. The ungrouped Overview keeps the daily destinations
+// one click away. Every prior route is preserved, only regrouped behind the
+// journey and progressive disclosure. No page is orphaned.
 const OVERVIEW: NavLink[] = [
   { name: "Echo", href: "/echo", icon: Sparkles },
   { name: "Your Mirror", href: "/your-mirror", icon: Eye },
@@ -112,100 +115,83 @@ const OVERVIEW: NavLink[] = [
 
 const SECTIONS: NavSection[] = [
   {
-    id: "see-yourself",
-    label: "See yourself",
+    id: "start",
+    label: "Start Here",
     primary: [
-      { name: "Mirror Profile", href: "/mirror", icon: Aperture },
-      { name: "Reflection", href: "/reflection", icon: Heart },
+      { name: "Signal Check", href: "/signal-check", icon: Activity },
+      { name: "Photo Scan", href: "/scan", icon: ImageUp },
+      { name: "Profile Reader", href: "/profile-reader", icon: ScanSearch },
+      { name: "Dating Signal Quiz", href: "/quiz", icon: ListChecks },
+    ],
+    more: [],
+  },
+  {
+    id: "reset",
+    label: "The Reset",
+    primary: [
       { name: "Blueprint", href: "/blueprint", icon: FileText },
-      { name: "Post-Date Notes", href: "/mirror/dates", icon: CalendarHeart },
+      { name: "Glow-Up Bio", href: "/glow-up", icon: Sparkles },
+      { name: "Mirror Profile", href: "/mirror", icon: Aperture },
+      { name: "Compatibility Compass", href: "/compatibility-compass", icon: Compass },
     ],
     more: [
-      { name: "Journal", href: "/mirror/journal", icon: BookOpen },
-      { name: "Style Map", href: "/style-map", icon: Grid3x3 },
       { name: "Archetype", href: "/archetype", icon: Drama },
       { name: "Connection Style", href: "/connection-style", icon: HeartHandshake },
+      { name: "Photo Lab", href: "/photo-lab", icon: Images },
+      { name: "Post-Date Notes", href: "/mirror/dates", icon: CalendarHeart },
+      { name: "Journal", href: "/mirror/journal", icon: BookOpen },
+      { name: "Before & After", href: "/gallery", icon: Images },
+      { name: "Start My Reset", href: "/copilot/reset", icon: RotateCcw },
     ],
   },
   {
-    id: "readiness",
-    label: "Build readiness",
+    id: "messages",
+    label: "Message Tools",
+    primary: [
+      { name: "Message Coach", href: "/coach", icon: MessageCircle },
+      { name: "Next Message", href: "/next-message", icon: PenLine },
+      { name: "Help Me Reply", href: "/copilot/reply", icon: Reply },
+      { name: "Flirt Coach", href: "/copilot/flirt", icon: Flame },
+      { name: "Communication Insights", href: "/insights", icon: Lightbulb },
+    ],
+    more: [
+      { name: "Style Map", href: "/style-map", icon: Grid3x3 },
+      { name: "Chemistry Lab", href: "/lab", icon: FlaskConical },
+      { name: "Wingman Studio", href: "/copilot", icon: Bot },
+      { name: "Improve My Profile", href: "/copilot/profile", icon: UserPen },
+      { name: "Rehearsal Room", href: "/rehearsal", icon: Theater },
+      { name: "Prepare For A Date", href: "/copilot/prep", icon: HeartHandshake },
+    ],
+  },
+  {
+    id: "growth",
+    label: "Growth Tracker",
     primary: [
       { name: "Readiness", href: "/progress/readiness", icon: Gauge },
       { name: "Scorecard", href: "/progress/scorecard", icon: Gauge },
       { name: "Wins Log", href: "/progress/wins", icon: Trophy },
       { name: "Milestones", href: "/milestones", icon: Trophy },
+      { name: "Weekly Plan", href: "/copilot/weekly-plan", icon: CalendarCheck },
     ],
     more: [
+      { name: "Reflection", href: "/reflection", icon: Heart },
       { name: "Timeline", href: "/progress/timeline", icon: History },
-      { name: "Share Card", href: "/share-card", icon: Share2 },
       { name: "Patterns", href: "/progress/patterns", icon: Layers },
-      { name: "Activity Feed", href: "/progress/feed", icon: Rss },
-      { name: "Follow-Up", href: "/progress/followup", icon: ListChecks },
       { name: "Experiments", href: "/progress/experiments", icon: Beaker },
-      { name: "Pattern Breaker", href: "/progress/pattern-breaker", icon: Unplug },
+      { name: "Follow-Up", href: "/progress/followup", icon: ListChecks },
+      { name: "Activity Feed", href: "/progress/feed", icon: Rss },
       { name: "Companion", href: "/progress/companion", icon: MessagesSquare },
+      { name: "Pattern Breaker", href: "/progress/pattern-breaker", icon: Unplug },
+      { name: "What Changed", href: "/copilot/what-changed", icon: LineChart },
+      { name: "Debrief", href: "/copilot/debrief", icon: ClipboardList },
+      { name: "Share Card", href: "/share-card", icon: Share2 },
       { name: "Control Center", href: "/progress/control", icon: SlidersHorizontal },
       { name: "Insights Roadmap", href: "/progress/insights-roadmap", icon: MapIcon },
     ],
   },
   {
-    id: "tools",
-    label: "Sharpen your signal",
-    primary: [
-      { name: "Signal Check", href: "/signal-check", icon: Activity },
-      { name: "Message Coach", href: "/coach", icon: MessageCircle },
-      { name: "Photo Scan", href: "/scan", icon: ImageUp },
-      { name: "Compatibility Compass", href: "/compatibility-compass", icon: Compass },
-      { name: "Wingman Studio", href: "/copilot", icon: Bot },
-    ],
-    more: [
-      { name: "Rehearsal Room", href: "/rehearsal", icon: Theater },
-      { name: "Photo Lab", href: "/photo-lab", icon: Images },
-      { name: "Glow-Up Bio", href: "/glow-up", icon: Sparkles },
-      { name: "Chemistry Lab", href: "/lab", icon: FlaskConical },
-      { name: "Profile Reader", href: "/profile-reader", icon: ScanSearch },
-      { name: "Next Message", href: "/next-message", icon: PenLine },
-      { name: "Start My Reset", href: "/copilot/reset", icon: RotateCcw },
-      { name: "Help Me Reply", href: "/copilot/reply", icon: Reply },
-      { name: "Improve My Profile", href: "/copilot/profile", icon: UserPen },
-      { name: "Debrief", href: "/copilot/debrief", icon: ClipboardList },
-      { name: "Weekly Plan", href: "/copilot/weekly-plan", icon: CalendarCheck },
-      { name: "Prepare For A Date", href: "/copilot/prep", icon: HeartHandshake },
-      { name: "Flirt Coach", href: "/copilot/flirt", icon: Flame },
-      { name: "What Changed", href: "/copilot/what-changed", icon: LineChart },
-    ],
-  },
-  {
-    id: "connections",
-    label: "Feed your data",
-    primary: [
-      { name: "Connection Center", href: "/connections", icon: Plug },
-      { name: "Get Verified", href: "/verification", icon: ShieldCheck },
-      { name: "Wellness Center", href: "/wellness", icon: Heart },
-      { name: "Imports", href: "/imports", icon: Download },
-    ],
-    more: [
-      { name: "This or That", href: "/this-or-that", icon: Shuffle },
-      { name: "Would You Rather", href: "/games/would-you-rather", icon: Scale },
-      { name: "Daily Spark", href: "/games/daily-spark", icon: Sparkles },
-      { name: "Green and red flags", href: "/flags", icon: Flag },
-      { name: "Cosmic Compass", href: "/cosmic", icon: Sparkles },
-      { name: "Scenario reels", href: "/games/scenarios", icon: Clapperboard },
-      { name: "Predict yourself", href: "/games/predict", icon: Target },
-      { name: "Time capsule", href: "/games/time-capsule", icon: Mail },
-      { name: "Wingman", href: "/wingman", icon: Users },
-      { name: "Voice intro", href: "/voice-intro", icon: Mic },
-      { name: "Life Context", href: "/life-context", icon: Briefcase },
-      { name: "Communication Insights", href: "/insights", icon: Lightbulb },
-      { name: "Integrations Roadmap", href: "/integrations", icon: Network },
-      { name: "Data Vault", href: "/vault", icon: Database },
-      { name: "Privacy & Control", href: "/user-control", icon: ShieldCheck },
-    ],
-  },
-  {
     id: "matching",
-    label: "Get matched",
+    label: "Get Matched",
     primary: [
       { name: "What it takes", href: "/match-path", icon: Target },
       { name: "Matching", href: "/matching", icon: HeartHandshake, badge: "Beta" },
@@ -217,6 +203,47 @@ const SECTIONS: NavSection[] = [
     more: [],
   },
   {
+    id: "trust",
+    label: "Context & Trust",
+    primary: [
+      { name: "Connection Center", href: "/connections", icon: Plug },
+      { name: "Imports", href: "/imports", icon: Download },
+      { name: "Wellness Center", href: "/wellness", icon: Heart },
+      { name: "Data Vault", href: "/vault", icon: Database },
+      { name: "Privacy & Control", href: "/user-control", icon: ShieldCheck },
+    ],
+    more: [
+      { name: "Get Verified", href: "/verification", icon: ShieldCheck },
+      { name: "Life Context", href: "/life-context", icon: Briefcase },
+      { name: "Voice intro", href: "/voice-intro", icon: Mic },
+      { name: "Receipts Inbox", href: "/receipts", icon: Receipt },
+      { name: "This or That", href: "/this-or-that", icon: Shuffle },
+      { name: "Would You Rather", href: "/games/would-you-rather", icon: Scale },
+      { name: "Daily Spark", href: "/games/daily-spark", icon: Sparkles },
+      { name: "Green and red flags", href: "/flags", icon: Flag },
+      { name: "Cosmic Compass", href: "/cosmic", icon: Sparkles },
+      { name: "Scenario reels", href: "/games/scenarios", icon: Clapperboard },
+      { name: "Predict yourself", href: "/games/predict", icon: Target },
+      { name: "Time capsule", href: "/games/time-capsule", icon: Mail },
+      { name: "Wingman", href: "/wingman", icon: Users },
+      { name: "Integrations Roadmap", href: "/integrations", icon: Network },
+    ],
+  },
+  {
+    id: "founder",
+    label: "Founder & Beta",
+    primary: [
+      { name: "Pricing", href: "/pricing", icon: Tag },
+      { name: "Sample Report", href: "/sample-report", icon: FileText },
+      { name: "Blog", href: "/blog", icon: Newspaper },
+      { name: "Early Access", href: "/waitlist", icon: Ticket },
+      { name: "Feedback", href: "/feedback", icon: Send },
+    ],
+    more: [
+      { name: "Roadmap", href: "/roadmap", icon: MapIcon },
+    ],
+  },
+  {
     id: "account",
     label: "Account",
     primary: [
@@ -225,12 +252,6 @@ const SECTIONS: NavSection[] = [
       { name: "Trash", href: "/trash", icon: Trash2 },
     ],
     more: [
-      { name: "Pricing", href: "/pricing", icon: Tag },
-      { name: "Blog", href: "/blog", icon: Newspaper },
-      { name: "Roadmap", href: "/roadmap", icon: MapIcon },
-      { name: "Before & After", href: "/gallery", icon: Images },
-      { name: "Early Access", href: "/waitlist", icon: Ticket },
-      { name: "Feedback", href: "/feedback", icon: Send },
       { name: "Privacy", href: "/privacy", icon: Lock },
       { name: "Terms", href: "/terms", icon: FileText },
     ],
@@ -241,16 +262,39 @@ function isActiveHref(location: string, href: string) {
   return location === href || location.startsWith(href + "/");
 }
 
+// Among every link in the rail, the one whose href is the longest match for the
+// current location wins. This keeps prefix-nested routes (e.g. /mirror vs
+// /mirror/dates, or /copilot vs /copilot/weekly-plan) that now live in different
+// sections from each lighting up at once: only the single most specific
+// destination reads as active, and its section is the one that auto-opens.
+function bestMatchHref(location: string): string | null {
+  let best: string | null = null;
+  const consider = (href: string) => {
+    if (isActiveHref(location, href) && (best === null || href.length > best.length)) {
+      best = href;
+    }
+  };
+  for (const link of OVERVIEW) consider(link.href);
+  for (const section of SECTIONS) {
+    for (const link of section.primary) consider(link.href);
+    for (const link of section.more) consider(link.href);
+  }
+  return best;
+}
+
 function sectionForLocation(location: string): string | null {
+  const best = bestMatchHref(location);
+  if (best === null) return null;
   for (const section of SECTIONS) {
     const all = [...section.primary, ...section.more];
-    if (all.some((l) => isActiveHref(location, l.href))) return section.id;
+    if (all.some((l) => l.href === best)) return section.id;
   }
   return null;
 }
 
 function moreHasActive(location: string, section: NavSection) {
-  return section.more.some((l) => isActiveHref(location, l.href));
+  const best = bestMatchHref(location);
+  return best !== null && section.more.some((l) => l.href === best);
 }
 
 function NavRow({
@@ -373,6 +417,7 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const activeSection = sectionForLocation(location);
+  const activeHref = bestMatchHref(location);
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [showAll, setShowAll] = useState<Record<string, boolean>>({});
 
@@ -437,7 +482,7 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
             <NavRow
               key={link.href}
               link={link}
-              active={isActiveHref(location, link.href)}
+              active={activeHref === link.href}
               onNavigate={onNavigate}
             />
           ))}
@@ -468,7 +513,7 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
                     <NavRow
                       key={link.href}
                       link={link}
-                      active={isActiveHref(location, link.href)}
+                      active={activeHref === link.href}
                       onNavigate={onNavigate}
                     />
                   ))}
@@ -477,7 +522,7 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
                       <NavRow
                         key={link.href}
                         link={link}
-                        active={isActiveHref(location, link.href)}
+                        active={activeHref === link.href}
                         onNavigate={onNavigate}
                       />
                     ))}

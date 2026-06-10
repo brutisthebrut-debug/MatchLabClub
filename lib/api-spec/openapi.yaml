@@ -2658,6 +2658,38 @@ paths:
         "401":
           description: Not authenticated.
 
+  /me/safety/message-check:
+    post:
+      operationId: checkOutgoingMessage
+      tags: [Auth]
+      summary: Screen an outgoing message for romance-scam red flags before sending
+      description: |
+        Runs a pre-send safety check on a message the caller is about to send.
+        The deterministic engine screens every request with no key and no
+        external call, so the nudge is always available. When the deep AI lane
+        is on and the deterministic screen already found something worth a
+        closer look, Claude refines the read; any failure, missing consent, or
+        daily-cap hit silently keeps the deterministic result. Nothing is
+        stored. risk is none, low, or elevated.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageSafetyCheckInput"
+      responses:
+        "200":
+          description: The safety screen for the draft.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SafetyCheck"
+        "401":
+          description: Not authenticated.
+
   /founder/reports:
     get:
       operationId: getFounderReports
@@ -7122,6 +7154,23 @@ components:
             type: string
         advice:
           type: string
+
+    MessageSafetyCheckInput:
+      type: object
+      required: [draft]
+      description: |
+        A message the caller is about to send, plus optional conversation
+        context the client already shows the user. Used only to screen the
+        draft for romance-scam patterns before it goes out. Nothing here is
+        stored.
+      properties:
+        draft:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        conversationContext:
+          type: ["string", "null"]
+          maxLength: 8000
 
     ReportUserInput:
       type: object

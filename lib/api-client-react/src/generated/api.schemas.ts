@@ -699,6 +699,26 @@ export interface MessageCoachingResponse {
 }
 
 /**
+ * A message the caller is about to send, plus optional conversation
+context the client already shows the user. Used only to screen the
+draft for romance-scam patterns before it goes out. Nothing here is
+stored.
+
+ */
+export interface MessageSafetyCheckInput {
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  draft: string;
+  /**
+     * @maxLength 8000
+     * @nullable
+     */
+  conversationContext?: string | null;
+}
+
+/**
  * @nullable
  */
 export type ReportUserInputSubjectType = typeof ReportUserInputSubjectType[keyof typeof ReportUserInputSubjectType] | null;
