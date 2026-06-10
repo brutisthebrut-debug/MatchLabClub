@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   Flag,
   Heart,
+  MapPin,
   Send,
   Shield,
   Sparkles,
@@ -34,6 +35,7 @@ import {
   getGetConnectionProfileQueryKey,
   useGetConnectionStarters,
   getGetConnectionStartersQueryKey,
+  useSuggestConnectionDateIdeas,
   useSendConnectionMessage,
   useMarkConnectionRead,
   useUnmatchConnection,
@@ -41,6 +43,7 @@ import {
   getGetConnectionsQueryKey,
   type ConnectionMessage,
   type ConnectionStarter,
+  type DateIdea,
   type ReportConnectionInputReason,
 } from "@workspace/api-client-react";
 
@@ -90,6 +93,29 @@ const DEMO_STARTERS: ConnectionStarter[] = [
   {
     text: "Quick one to break the ice: give me your most defensible hot take. Could be food, could be movies.",
     rationale: "Playful and low stakes, it sparks a real reply.",
+  },
+];
+
+// Demo date ideas so the page never looks empty for signed-out visitors. The
+// real set comes from the API once you sign in and ask for ideas.
+const DEMO_DATE_IDEAS: DateIdea[] = [
+  {
+    title: "Coffee and a walk",
+    description:
+      "Meet for coffee near both of you and take a slow walk after. Low pressure, easy to leave early or keep going.",
+    category: "coffee",
+  },
+  {
+    title: "Shared plates dinner",
+    description:
+      "Pick a spot with small plates so you can try a few things and compare notes. Ordering together is its own little icebreaker.",
+    category: "food",
+  },
+  {
+    title: "Something outdoors",
+    description:
+      "Find a park or an easy trail and spend an hour outside. Walking side by side takes the pressure off.",
+    category: "outdoors",
   },
 ];
 
@@ -313,6 +339,9 @@ export default function MatchThread() {
               {DEMO_MESSAGES.map((m) => (
                 <Bubble key={m.id} message={m} />
               ))}
+            </div>
+            <div className="mt-4">
+              <DateIdeasCard id={id} isDemo />
             </div>
           </div>
         </div>
@@ -574,6 +603,12 @@ export default function MatchThread() {
             </div>
           )}
 
+          {!closed && (
+            <div className="mt-4">
+              <DateIdeasCard id={id} isDemo={false} />
+            </div>
+          )}
+
           <div className="mt-5 flex items-start gap-2.5">
             <Shield
               className="w-4 h-4 text-muted-foreground/30 flex-shrink-0 mt-0.5"
@@ -669,6 +704,78 @@ function StartersCard({
           </button>
         ))}
       </div>
+    </motion.div>
+  );
+}
+
+// On-demand date ideas. It is a POST mutation, so it only spends the deep AI
+// lane (for consent-on accounts) when the user actually asks. Demo mode shows a
+// fixed set immediately; the real card stays collapsed behind a button until the
+// user taps it. The location label is reveal-safe phrasing built by the server.
+function DateIdeasCard({ id, isDemo }: { id: string; isDemo: boolean }) {
+  const suggest = useSuggestConnectionDateIdeas();
+  const ideas: DateIdea[] = isDemo
+    ? DEMO_DATE_IDEAS
+    : (suggest.data?.ideas ?? []);
+  const locationLabel = isDemo
+    ? "near both of you"
+    : (suggest.data?.locationLabel ?? null);
+  const hasResult = isDemo || suggest.isSuccess;
+
+  const handleSuggest = () => {
+    if (isDemo || suggest.isPending) return;
+    suggest.mutate({ id });
+  };
+
+  return (
+    <motion.div
+      {...fadeUp(0.05)}
+      className="glass border border-white/10 rounded-2xl p-4"
+      data-testid="card-date-ideas"
+    >
+      <div className="flex items-center gap-2 mb-1.5">
+        <MapPin className="w-4 h-4 text-[hsl(326_100%_70%)]" aria-hidden="true" />
+        <p className="text-sm font-semibold text-foreground">
+          Date ideas {locationLabel ?? "near both of you"}
+        </p>
+      </div>
+      <p className="text-xs text-muted-foreground/60 mb-3">
+        A few ways to take this off the app when you are both ready.
+      </p>
+      {hasResult && ideas.length > 0 ? (
+        <div className="space-y-2">
+          {ideas.map((idea, i) => (
+            <div
+              key={i}
+              className="rounded-xl border border-white/8 bg-white/[0.03] p-3"
+              data-testid={`date-idea-${i}`}
+            >
+              <p className="text-sm text-foreground leading-relaxed">
+                {idea.title}
+              </p>
+              <p className="text-[11px] text-muted-foreground/50 mt-1 leading-relaxed">
+                {idea.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <Button
+          variant="secondary"
+          size="sm"
+          className="rounded-full"
+          onClick={handleSuggest}
+          disabled={suggest.isPending}
+          data-testid="button-suggest-date-ideas"
+        >
+          {suggest.isPending ? "Thinking..." : "Suggest date ideas"}
+        </Button>
+      )}
+      {!isDemo && suggest.isError && (
+        <p className="text-xs text-muted-foreground/50 mt-2">
+          Could not load ideas just now. Try again.
+        </p>
+      )}
     </motion.div>
   );
 }

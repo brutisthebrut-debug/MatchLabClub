@@ -18,6 +18,7 @@ import {
   connectionMessagesTable,
   matchPoolMembershipTable,
   matchProposalsTable,
+  matchPreferencesTable,
   userBlocksTable,
   userReportsTable,
   orderConnectionPair,
@@ -88,6 +89,9 @@ async function cleanup(): Promise<void> {
     await db
       .delete(matchProposalsTable)
       .where(eq(matchProposalsTable.proposedToUserId, u));
+    await db
+      .delete(matchPreferencesTable)
+      .where(eq(matchPreferencesTable.userId, u));
     await db
       .delete(userBlocksTable)
       .where(eq(userBlocksTable.blockerUserId, u));
@@ -399,5 +403,130 @@ describe("connection conversation starters", () => {
       // Voice rule: no em dashes anywhere in user-facing copy.
       expect(s.text).not.toContain("\u2014");
     }
+  });
+});
+
+async function setCity(userId: string, city: string): Promise<void> {
+  await db
+    .insert(matchPreferencesTable)
+    .values({ userId, cityHint: city })
+    .onConflictDoUpdate({
+      target: matchPreferencesTable.userId,
+      set: { cityHint: city },
+    });
+}
+
+async function setReveal(userId: string): Promise<void> {
+  await db
+    .insert(matchPoolMembershipTable)
+    .values({ userId, status: "ready", revealConsent: true })
+    .onConflictDoUpdate({
+      target: matchPoolMembershipTable.userId,
+      set: { revealConsent: true },
+    });
+}
+
+describe("connection date ideas", () => {
+  it("requires auth", async () => {
+    const id = await makeConnection();
+    testApp.setUser(null);
+    const res = await request(testApp.app).post(
+      `/api/me/connections/${id}/date-ideas`,
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it("404s for someone outside the connection", async () => {
+    const id = await makeConnection();
+    testApp.setUser({ id: `conn-outsider-${suffix}` });
+    const res = await request(testApp.app).post(
+      `/api/me/connections/${id}/date-ideas`,
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("returns deterministic ideas with voice-safe copy when the deep AI lane is off", async () => {
+    const id = await makeConnection();
+    testApp.setUser({ id: USER_A });
+    const res = await request(testApp.app).post(
+      `/api/me/connections/${id}/date-ideas`,
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.mode).toBe("deterministic");
+    expect(Array.isArray(res.body.ideas)).toBe(true);
+    expect(res.body.ideas.length).toBeGreaterThanOrEqual(3);
+    for (const idea of res.body.ideas) {
+      expect(typeof idea.title).toBe("string");
+      expect(idea.title.length).toBeGreaterThan(0);
+      expect(typeof idea.description).toBe("string");
+      expect(idea.description.length).toBeGreaterThan(0);
+      expect(typeof idea.category).toBe("string");
+      // Voice rule: no em dashes anywhere in user-facing copy.
+      expect(idea.title).not.toContain("\u2014");
+      expect(idea.description).not.toContain("\u2014");
+    }
+  });
+
+  it("never names the counterpart city when reveal is off and the cities differ", async () => {
+    const id = await makeConnection();
+    await setCity(USER_A, "Seattle");
+    await setCity(USER_B, "Austin");
+    testApp.setUser({ id: USER_A });
+    const res = await request(testApp.app).post(
+      `/api/me/connections/${id}/date-ideas`,
+    );
+    expect(res.status).toBe(200);
+    // Stays on the viewer's own city, framed for both, never the counterpart's.
+    expect(res.body.locationLabel).toBe("near you in Seattle");
+    const blob = JSON.stringify(res.body);
+    expect(blob).not.toContain("Austin");
+  });
+
+  it("names the shared city when both gave the same place, even with reveal off", async () => {
+    const id = await makeConnection();
+    await setCity(USER_A, "Austin, TX");
+    await setCity(USER_B, "austin");
+    testApp.setUser({ id: USER_A });
+    const res = await request(testApp.app).post(
+      `/api/me/connections/${id}/date-ideas`,
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.locationLabel).toBe("in Austin");
+  });
+
+  it("names the counterpart city once they turn reveal consent on", async () => {
+    const id = await makeConnection();
+    await setCity(USER_A, "Seattle");
+    await setCity(USER_B, "Austin");
+    await setReveal(USER_B);
+    testApp.setUser({ id: USER_A });
+    const res = await request(testApp.app).post(
+      `/api/me/connections/${id}/date-ideas`,
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.locationLabel).toBe("in Austin");
+  });
+
+  it("stays fully generic when neither person set a city", async () => {
+    const id = await makeConnection();
+    testApp.setUser({ id: USER_A });
+    const res = await request(testApp.app).post(
+      `/api/me/connections/${id}/date-ideas`,
+    );
+    expect(res.status).toBe(200);
+    expect(res.body.locationLabel).toBe("near both of you");
+  });
+
+  it("409s once the thread is closed so a stale tab cannot spend a token", async () => {
+    const id = await makeConnection();
+    testApp.setUser({ id: USER_A });
+    const closed = await request(testApp.app).post(
+      `/api/me/connections/${id}/unmatch`,
+    );
+    expect(closed.status).toBe(200);
+    const res = await request(testApp.app).post(
+      `/api/me/connections/${id}/date-ideas`,
+    );
+    expect(res.status).toBe(409);
   });
 });

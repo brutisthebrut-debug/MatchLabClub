@@ -6,6 +6,7 @@ import {
   connectionMessagesTable,
   matchPoolMembershipTable,
   matchProposalsTable,
+  matchPreferencesTable,
   profilePhotosTable,
   usersTable,
   userBlocksTable,
@@ -20,8 +21,10 @@ import { z } from "zod/v4";
 import { notifyNewMessage } from "../lib/matchConnections";
 import { blockUserPair } from "../lib/userBlocks";
 import { computeReadiness } from "./matching";
-import { generateConnectionStarters } from "../lib/aiEngine";
+import { generateConnectionStarters, generateDateIdeas } from "../lib/aiEngine";
 import { generate } from "../lib/aiService";
+import { canonicalizeCity, titleCaseCity } from "../lib/geo";
+import { getPlacesProvider, type PlaceSuggestion } from "../lib/placesProvider";
 
 const router: IRouter = Router();
 
@@ -685,6 +688,229 @@ router.get(
     }
 
     res.json({ starters, mode });
+  },
+);
+
+// The single city-leak chokepoint for date ideas. The counterpart's city may be
+// named ONLY when they turned reveal consent on, or when both people gave the
+// same city (so naming it reveals nothing new). Otherwise we pitch on the
+// signed-in user's OWN city (their own data, safe to name) framed as "near you",
+// or stay fully generic with "near both of you" when we have no city at all.
+// Returns an adverbial phrase that reads naturally inside the idea copy, e.g.
+// "in Austin", "near you in Seattle", "near both of you".
+function buildDateLocationLabel(opts: {
+  revealed: boolean;
+  myCity: string | null;
+  theirCity: string | null;
+  sameCity: boolean;
+}): string {
+  const { revealed, myCity, theirCity, sameCity } = opts;
+  if (revealed && theirCity && canonicalizeCity(theirCity).length > 0) {
+    return `in ${titleCaseCity(canonicalizeCity(theirCity))}`;
+  }
+  if (sameCity && myCity && canonicalizeCity(myCity).length > 0) {
+    return `in ${titleCaseCity(canonicalizeCity(myCity))}`;
+  }
+  if (myCity && canonicalizeCity(myCity).length > 0) {
+    return `near you in ${titleCaseCity(canonicalizeCity(myCity))}`;
+  }
+  return "near both of you";
+}
+
+// POST /me/connections/:id/date-ideas — a short set of date ideas sized to where
+// both people are. User-initiated (a POST), so it only spends the deep AI lane
+// when the user actually asks for ideas. Location phrasing is reveal-safe (see
+// buildDateLocationLabel: counterpart city named only when revealed or shared).
+// Hybrid: the deterministic category templates always run; the deep AI lane is
+// layered on when the account opted in, and any failure, missing consent, or cap
+// hit silently keeps the deterministic ideas. A maps provider can be wired later
+// without changing the contract; until then ideas are template-based, never
+// invented venues.
+router.post(
+  "/me/connections/:id/date-ideas",
+  async (req: Request, res: Response): Promise<void> => {
+    if (!req.user?.id) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    const userId = req.user.id;
+    const connection = await loadConnectionForUser(
+      String(req.params.id ?? ""),
+      userId,
+    );
+    if (!connection) {
+      res.status(404).json({ error: "Connection not found" });
+      return;
+    }
+    // A closed or reported thread cannot get fresh ideas; the frontend hides the
+    // card, and gating here keeps a stale tab from spending a deep-AI-lane token
+    // on a connection that is already over.
+    if (connection.status !== "active") {
+      res.status(409).json({ error: "This conversation is closed" });
+      return;
+    }
+    const counterpart = counterpartOf(connection, userId);
+
+    const [membership] = await db
+      .select({ revealConsent: matchPoolMembershipTable.revealConsent })
+      .from(matchPoolMembershipTable)
+      .where(eq(matchPoolMembershipTable.userId, counterpart))
+      .limit(1);
+    const revealed = membership?.revealConsent === true;
+
+    // Both members' free-text city hints. The counterpart's value is used ONLY
+    // to decide whether the cities match; it is never echoed back unless the
+    // reveal-safe label above is allowed to name it.
+    const [minePrefs] = await db
+      .select({ cityHint: matchPreferencesTable.cityHint })
+      .from(matchPreferencesTable)
+      .where(eq(matchPreferencesTable.userId, userId))
+      .limit(1);
+    const [theirPrefs] = await db
+      .select({ cityHint: matchPreferencesTable.cityHint })
+      .from(matchPreferencesTable)
+      .where(eq(matchPreferencesTable.userId, counterpart))
+      .limit(1);
+    const myCity = minePrefs?.cityHint?.trim() || null;
+    const theirCity = theirPrefs?.cityHint?.trim() || null;
+    const myCanon = canonicalizeCity(myCity);
+    const theirCanon = canonicalizeCity(theirCity);
+    const sameCity = myCanon.length > 0 && myCanon === theirCanon;
+
+    const locationLabel = buildDateLocationLabel({
+      revealed,
+      myCity,
+      theirCity,
+      sameCity,
+    });
+
+    const pair = await loadPairCompatibility(userId, counterpart);
+
+    // Real venues only when a maps provider is configured (null today). The
+    // provider is told a single safe city: the named city when we are allowed to
+    // name one, otherwise the user's own city. Never the counterpart's hidden
+    // city. Fail soft so a flaky provider never breaks the endpoint.
+    let places: PlaceSuggestion[] | null = null;
+    const provider = getPlacesProvider();
+    if (provider) {
+      const lookupCity =
+        revealed && theirCity ? theirCity : sameCity ? myCity : myCity;
+      if (lookupCity) {
+        try {
+          const [coffee, food] = await Promise.all([
+            provider.nearby(lookupCity, "coffee", 1),
+            provider.nearby(lookupCity, "food", 1),
+          ]);
+          const merged = [...coffee, ...food];
+          places = merged.length > 0 ? merged : null;
+        } catch (err) {
+          req.log.warn(
+            { err, connectionId: connection.id },
+            "places provider lookup failed; using template-only date ideas",
+          );
+          places = null;
+        }
+      }
+    }
+
+    // One shared, reveal-safe context object feeds BOTH the deterministic
+    // generator and the Claude prompt, so there is a single leak chokepoint.
+    const ctx = {
+      locationLabel,
+      compatibilityScore: pair?.compatibilityScore ?? null,
+      places,
+    };
+
+    const deterministic = generateDateIdeas(ctx);
+    let ideas = deterministic.ideas;
+    let mode: "deterministic" | "ai" = "deterministic";
+
+    try {
+      const system = [
+        "You are Echo, the MatchLab Club connection coach. The signed-in user matched",
+        "with someone and wants a few date ideas. You are given ONLY a reveal-safe",
+        "location label and an aggregate compatibility score. Use only what is provided.",
+        "Never invent specific venue or business names unless they are listed for you.",
+        "Never reveal or guess the other person's exact city: use the location label",
+        "exactly as written, and never quote the score inside the idea copy.",
+        "",
+        "Return JSON only. No prose, no code fences. Match this shape exactly:",
+        '{ "ideas": [ { "title": "short name", "description": "one or two lines on what the date is and why it suits this pair, in a real human voice", "category": "coffee|food|outdoors|culture|active|low-key" } ] }',
+        "",
+        "Give between 4 and 6 ideas across different categories. Each must be something",
+        "two people who just matched could realistically do. Keep them concrete but",
+        "venue-agnostic unless venues are provided.",
+        "Voice rules: no em dashes. No emojis. No filler words like 'unlock', 'leverage',",
+        "'seamless', 'elevate', 'transformative', 'game-changer', 'cutting-edge', 'dive",
+        "in', 'buckle up', or 'in today's world'. Vary sentence length. Sound human.",
+      ].join("\n");
+
+      const providedVenues =
+        places && places.length > 0
+          ? `Real venues you may name (category: name): ${places
+              .map((p) => `${p.category}: ${p.name}`)
+              .join("; ")}`
+          : "No specific venues are available, stay venue-agnostic.";
+
+      const userContent = [
+        `Location label to reuse verbatim: ${locationLabel}`,
+        ctx.compatibilityScore != null
+          ? `Compatibility score (0 to 100, context only, never quote it back): ${ctx.compatibilityScore}`
+          : "Compatibility score: not available",
+        providedVenues,
+      ].join("\n");
+
+      const aiResult = await generate(
+        {
+          provider: "anthropic",
+          system,
+          user: userContent,
+          expectJson: true,
+          requireContentConsent: true,
+          userId,
+          context: { toolName: "Date Ideas" },
+          maxTokens: 900,
+        },
+        "",
+      );
+
+      if (!aiResult.isFallback && aiResult.validated && aiResult.output) {
+        const parsed = JSON.parse(aiResult.output) as {
+          ideas?: { title?: unknown; description?: unknown; category?: unknown }[];
+        };
+        const clean = Array.isArray(parsed.ideas)
+          ? parsed.ideas
+              .map((i) => ({
+                title: String(i?.title ?? "").trim(),
+                description: String(i?.description ?? "").trim(),
+                category: String(i?.category ?? "").trim() || "low-key",
+              }))
+              .filter((i) => i.title.length > 0 && i.description.length > 0)
+              .slice(0, 6)
+          : [];
+        if (clean.length >= 3) {
+          ideas = clean;
+          mode = "ai";
+        }
+      } else if (aiResult.fallbackReason) {
+        req.log.info(
+          {
+            connectionId: connection.id,
+            fallbackReason: aiResult.fallbackReason,
+          },
+          "date ideas fell back to deterministic baseline",
+        );
+      }
+    } catch (err) {
+      ideas = deterministic.ideas;
+      mode = "deterministic";
+      req.log.warn(
+        { err, connectionId: connection.id },
+        "date ideas deep-AI lane threw; using deterministic baseline",
+      );
+    }
+
+    res.json({ ideas, mode, locationLabel });
   },
 );
 
