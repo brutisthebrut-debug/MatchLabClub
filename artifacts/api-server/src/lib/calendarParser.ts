@@ -22,8 +22,11 @@ const DAY_NAMES = [
 
 const MAX_EVENTS = 5000;
 
+/** Source strings that feed the single `calendar` readiness lane. */
+export type CalendarSource = "calendar-ics" | "google-calendar";
+
 export interface CalendarRhythmSummary {
-  source: "calendar-ics";
+  source: CalendarSource;
   counts: {
     totalEvents: number;
     timedEvents: number;
@@ -44,12 +47,22 @@ export interface CalendarRhythmSummary {
   reads: string[];
 }
 
-interface RawEvent {
+/**
+ * A single normalized calendar event. Both the .ics paste parser and the live
+ * Google Calendar sync reduce their raw inputs to this shape before the shared
+ * aggregator runs, so the derived rhythm summary is identical regardless of
+ * source. We hold only wall-clock start, whether it had a time, a short
+ * truncated title, and whether it recurs — never location, attendees, notes,
+ * or any other event content.
+ */
+export interface NormalizedCalendarEvent {
   start: Date | null;
   hasTime: boolean;
   summary: string;
   recurring: boolean;
 }
+
+type RawEvent = NormalizedCalendarEvent;
 
 /**
  * RFC 5545 line unfolding: a line that begins with a space or tab is a
@@ -141,6 +154,20 @@ export function parseCalendarIcs(raw: string): CalendarRhythmSummary {
     }
   }
 
+  return summarizeCalendarEvents(events, "calendar-ics");
+}
+
+/**
+ * Shared aggregator: turns a list of normalized events into the derived rhythm
+ * summary. Used by both the .ics paste parser above and the live Google
+ * Calendar sync, so the two paths produce an identical summary shape and feed
+ * the same `calendar` readiness lane. No raw event content is retained here
+ * beyond the directional counts and shares.
+ */
+export function summarizeCalendarEvents(
+  events: NormalizedCalendarEvent[],
+  source: CalendarSource,
+): CalendarRhythmSummary {
   const valid = events.filter((e) => e.start !== null) as (RawEvent & {
     start: Date;
   })[];
@@ -234,7 +261,7 @@ export function parseCalendarIcs(raw: string): CalendarRhythmSummary {
   }
 
   return {
-    source: "calendar-ics",
+    source,
     counts: { totalEvents, timedEvents, allDayEvents, recurringEvents },
     rhythm: {
       eventsPerWeek,

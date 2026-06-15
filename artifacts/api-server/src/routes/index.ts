@@ -49,6 +49,7 @@ import photoLabRouter from "./photoLab";
 import eventsRouter from "./events";
 import safetyRouter from "./safety";
 import careDialectRouter from "./careDialect";
+import connectorsRouter from "./connectors";
 import devAuthRouter from "./devAuth";
 import { isDevEnvironment } from "../lib/devSeed";
 
@@ -104,6 +105,7 @@ router.use(photoLabRouter);
 router.use(eventsRouter);
 router.use(safetyRouter);
 router.use(careDialectRouter);
+router.use(connectorsRouter);
 
 // Development-only test-user preview + safe test-login. Mounted only outside
 // production; the router additionally 404s every request in production as a

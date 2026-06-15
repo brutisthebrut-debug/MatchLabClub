@@ -30,6 +30,7 @@ export * from "./wellness_tags";
 export * from "./compatibility_reads";
 export * from "./care_dialect_profiles";
 export * from "./imported_sources";
+export * from "./connector_connections";
 export * from "./referrals";
 export * from "./ai_usage_counters";
 export * from "./matching";

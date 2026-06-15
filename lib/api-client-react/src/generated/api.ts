@@ -85,6 +85,7 @@ import type {
   ConnectionDateIdeas,
   ConnectionMessage,
   ConnectionStarters,
+  ConnectorsStatusResponse,
   CorrectAuditSourceApp400,
   CorrectAuditSourceApp404,
   CorrectSourceAppInput,
@@ -2064,6 +2065,92 @@ export const useSaveCareDialect = <TError = ErrorType<AuthErrorEnvelope>,
       > => {
       return useMutation(getSaveCareDialectMutationOptions(options));
     }
+
+export const getGetConnectorsUrl = () => {
+
+
+
+
+  return `/api/me/connectors`
+}
+
+/**
+ * Returns one entry per data connector the product can hold (currently the
+calendar lane's read-only Google Calendar sync), with its lifecycle
+status, last sync and last success timestamps, last error code, and the
+derived signal count it currently contributes. Only product state and
+derived counts are returned, never raw third-party content. Signed-out
+callers get a clearly-flagged demo so the page is never empty. Live
+connect, sync, and disconnect controls are founder-gated and handled by
+separate founder endpoints; this endpoint is read-only status.
+
+ * @summary List the data connectors and their live status for the signed-in user
+ */
+export const getConnectors = async ( options?: RequestInit): Promise<ConnectorsStatusResponse> => {
+
+  return customFetch<ConnectorsStatusResponse>(getGetConnectorsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetConnectorsQueryKey = () => {
+    return [
+    `/api/me/connectors`
+    ] as const;
+    }
+
+
+export const getGetConnectorsQueryOptions = <TData = Awaited<ReturnType<typeof getConnectors>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConnectors>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetConnectorsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getConnectors>>> = ({ signal }) => getConnectors({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getConnectors>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetConnectorsQueryResult = NonNullable<Awaited<ReturnType<typeof getConnectors>>>
+export type GetConnectorsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List the data connectors and their live status for the signed-in user
+ */
+
+export function useGetConnectors<TData = Awaited<ReturnType<typeof getConnectors>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConnectors>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetConnectorsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetMyReferralsUrl = () => {
 

@@ -37,8 +37,29 @@ import {
   Smartphone,
   Shuffle,
   Mic,
+  RefreshCw,
+  Loader2,
+  Unlink,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useGetConnectors,
+  getGetMatchingStateQueryKey,
+} from "@workspace/api-client-react";
+import { syncGoogleCalendar, disconnectGoogleCalendar } from "@/lib/apiClient";
+
+const FOUNDER_KEY_CLIENT =
+  (import.meta.env as Record<string, string>).VITE_FOUNDER_KEY || "nldc2024";
+
+function isFounderBrowser(): boolean {
+  try {
+    return localStorage.getItem("founder_key") === FOUNDER_KEY_CLIENT;
+  } catch {
+    return false;
+  }
+}
 
 const fadeUpVariants: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -140,12 +161,33 @@ const LIVE: Connector[] = [
     ],
     excludes: [
       "Anything you do not paste in",
-      "OAuth access to Google or Apple Calendar",
+      "The raw .ics text (we read it in the moment and keep only the derived rhythm)",
       "Any ability to create, edit, or delete events on your calendar",
     ],
     cta: { href: "/imports", label: "Open Calendar paste" },
     readiness:
       "Fills the calendar rhythm lane of your Match Readiness. A fuller week reads as a fuller life outside dating.",
+  },
+  {
+    id: "google-calendar",
+    title: "Google Calendar (read-only)",
+    icon: CalendarDays,
+    color: "hsl(248 62% 60%)",
+    blurb:
+      "A read-only sync of your calendar rhythm: how full your week tends to be and when you are usually free. We never create, edit, or delete events, and we never store the events themselves, only the derived pattern. It fills the same lane as the paste, kept fresh automatically.",
+    returns:
+      "A live read of your weekly rhythm that keeps your calendar lane current without any pasting.",
+    access: [
+      "How full your week tends to be and your free-night rhythm",
+      "Event start and end times, read in the moment to derive that rhythm",
+    ],
+    excludes: [
+      "The title, guests, notes, or location of any event",
+      "Any stored copy of your raw calendar events",
+      "Any ability to create, edit, or delete events on your calendar",
+    ],
+    readiness:
+      "Fills the same calendar rhythm lane as paste. Either path moves the meter; together they keep it current.",
   },
   {
     id: "receipts-inbox",
@@ -621,6 +663,159 @@ function StatusBadge({ status }: { status: Status }) {
   );
 }
 
+const LIVE_STATUS_META: Record<
+  string,
+  { label: string; color: string }
+> = {
+  connected: { label: "Connected", color: "hsl(142 55% 55%)" },
+  available: { label: "Not connected", color: "hsl(var(--brand-indigo))" },
+  error: { label: "Needs attention", color: "hsl(348 70% 60%)" },
+  disconnected: { label: "Disconnected", color: "hsl(43 65% 60%)" },
+};
+
+function formatSyncedAt(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+/**
+ * Live read-only status for the founder-managed Google Calendar sync. Everyone
+ * sees the honest status (read-only via the contract endpoint, with a demo
+ * fallback so the panel is never empty); only a founder browser gets the
+ * sync/disconnect controls. The derived count is the only number we surface, and
+ * the copy is explicit that raw events are never stored.
+ */
+function GoogleCalendarLivePanel() {
+  const { data, isLoading, refetch } = useGetConnectors();
+  const queryClient = useQueryClient();
+  const [busy, setBusy] = useState<null | "sync" | "disconnect">(null);
+  const [error, setError] = useState<string | null>(null);
+  const founder = isFounderBrowser();
+
+  const connector = data?.connectors.find(
+    (c) => c.provider === "google-calendar",
+  );
+  const status = connector?.status ?? "available";
+  const connected = status === "connected";
+  const meta = LIVE_STATUS_META[status] ?? LIVE_STATUS_META.available;
+  const syncedAt = formatSyncedAt(connector?.lastSyncAt ?? null);
+
+  async function run(action: "sync" | "disconnect") {
+    setBusy(action);
+    setError(null);
+    try {
+      if (action === "sync") {
+        await syncGoogleCalendar(FOUNDER_KEY_CLIENT);
+      } else {
+        await disconnectGoogleCalendar(FOUNDER_KEY_CLIENT);
+      }
+      await refetch();
+      void queryClient.invalidateQueries({
+        queryKey: getGetMatchingStateQueryKey(),
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong. Try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div
+      className="rounded-[1.25rem] border border-white/15 bg-white/30 dark:bg-black/10 px-4 py-3 flex flex-col gap-2.5 mt-1"
+      data-testid="google-calendar-live-panel"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          Live sync status
+        </span>
+        <span
+          className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+          style={{
+            background: withAlpha(meta.color, 0.12),
+            color: meta.color,
+            border: `1px solid ${withAlpha(meta.color, 0.3)}`,
+          }}
+          data-testid="google-calendar-status"
+        >
+          {connected && (
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: meta.color }}
+            />
+          )}
+          {isLoading ? "Checking" : meta.label}
+        </span>
+      </div>
+
+      {connected && connector?.derivedCount != null ? (
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Deriving your rhythm from {connector.derivedCount} calendar{" "}
+          {connector.derivedCount === 1 ? "event" : "events"}. We keep the count
+          and free-night pattern, never the events themselves.
+        </p>
+      ) : (
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Live Google sync is managed by the MatchLab team for now. You can fill
+          this lane yourself any time with calendar paste.
+        </p>
+      )}
+
+      {syncedAt && (
+        <p className="text-[11px] text-muted-foreground/70">
+          Last synced {syncedAt}
+        </p>
+      )}
+
+      {error && (
+        <p className="text-xs text-[hsl(348_70%_62%)] leading-relaxed">{error}</p>
+      )}
+
+      {founder && (
+        <div className="flex flex-wrap gap-2 pt-1">
+          <button
+            type="button"
+            onClick={() => run("sync")}
+            disabled={busy !== null}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(248_62%_55%/0.4)] text-[hsl(248_62%_60%)] hover:bg-[hsl(248_62%_55%/0.08)] disabled:opacity-50 transition-colors"
+            data-testid="button-google-calendar-sync"
+          >
+            {busy === "sync" ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="w-3.5 h-3.5" />
+            )}
+            {connected ? "Sync now" : "Connect and sync"}
+          </button>
+          {connected && (
+            <button
+              type="button"
+              onClick={() => run("disconnect")}
+              disabled={busy !== null}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(348_55%_60%/0.4)] text-[hsl(348_60%_62%)] hover:bg-[hsl(348_55%_55%/0.08)] disabled:opacity-50 transition-colors"
+              data-testid="button-google-calendar-disconnect"
+            >
+              {busy === "disconnect" ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Unlink className="w-3.5 h-3.5" />
+              )}
+              Disconnect
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ConnectorCard({
   card,
   status,
@@ -716,6 +911,8 @@ function ConnectorCard({
           </p>
         </div>
       )}
+
+      {card.id === "google-calendar" && <GoogleCalendarLivePanel />}
 
       {card.comingNote && (
         <p className="text-xs text-[hsl(var(--brand-indigo))] leading-relaxed italic px-1 mt-1">

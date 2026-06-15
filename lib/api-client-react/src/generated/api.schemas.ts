@@ -3000,6 +3000,82 @@ export interface CareDialectProfile {
 }
 
 /**
+ * Stable provider key.
+ */
+export type ConnectorStatusProvider = typeof ConnectorStatusProvider[keyof typeof ConnectorStatusProvider];
+
+
+export const ConnectorStatusProvider = {
+  'google-calendar': 'google-calendar',
+  spotify: 'spotify',
+  'instagram-oauth': 'instagram-oauth',
+} as const;
+
+/**
+ * Lifecycle of the live connection.
+ */
+export type ConnectorStatusStatus = typeof ConnectorStatusStatus[keyof typeof ConnectorStatusStatus];
+
+
+export const ConnectorStatusStatus = {
+  available: 'available',
+  connected: 'connected',
+  error: 'error',
+  disconnected: 'disconnected',
+} as const;
+
+/**
+ * One data connector's product state. Only lifecycle and derived counts are exposed here, never raw third-party content. `status` is `available` before a live connection exists, then `connected` / `error` / `disconnected`. `derivedCount` is the derived signal the connector currently contributes (e.g. calendar events read for rhythm), never the events themselves.
+ */
+export interface ConnectorStatus {
+  /** Stable provider key. */
+  provider: ConnectorStatusProvider;
+  /** The readiness lane this connector feeds. */
+  laneId: string;
+  /** Human label for the connector. */
+  label: string;
+  /** Lifecycle of the live connection. */
+  status: ConnectorStatusStatus;
+  /** True when a live connection currently holds derived signal. */
+  live: boolean;
+  /** True when the live connect/sync/disconnect controls are founder-gated. */
+  founderOnly: boolean;
+  /**
+     * Derived signal count this connector currently contributes (e.g. calendar events), never raw content. Null when not applicable.
+     * @nullable
+     */
+  derivedCount: number | null;
+  /**
+     * ISO timestamp of the last sync attempt.
+     * @nullable
+     */
+  lastSyncAt: string | null;
+  /**
+     * ISO timestamp of the last successful sync.
+     * @nullable
+     */
+  lastSuccessAt: string | null;
+  /**
+     * Machine-readable code for the last error, null when healthy.
+     * @nullable
+     */
+  lastErrorCode: string | null;
+  /** One-line summary of what this connector returns. */
+  description: string;
+}
+
+/**
+ * The signed-in user's data connectors and their live status. `isDemo` flags the signed-out demo example, which never reflects a real account.
+ */
+export interface ConnectorsStatusResponse {
+  /** ISO timestamp the status was generated. */
+  generatedAt: string;
+  /** True when this is the anon demo, not a real account's connectors. */
+  isDemo: boolean;
+  connectors: ConnectorStatus[];
+}
+
+/**
  * @nullable
  */
 export type SaveCareDialectInputSelfGive = typeof SaveCareDialectInputSelfGive[keyof typeof SaveCareDialectInputSelfGive] | null;

@@ -14,6 +14,7 @@ import {
   getFounderReports, updateFounderReportStatus, type FounderReport,
   getBrainControls, updateBrainControls, resetBrainControls, getBrainMap,
   getReweighting, getReweightingImpact, getCuration, saveCuration,
+  getFounderConnectors, type FounderConnectorsResponse,
   type BrainControls, type BrainControlsResponse, type BrainMapResponse,
   type ReweightingMode, type ReweightingResponse,
   type ReweightingImpactResponse, type CurationEntry,
@@ -4193,6 +4194,139 @@ function SafetyReportsPanel({ founderKey, refreshKey }: { founderKey: string; re
 type Tab = "overview" | "leads" | "audits" | "purchases" | "waitlist" | "emails" | "testing" | "ocr-mismatches" | "referrals" | "matching" | "safety" | "brain";
 
 
+const CONNECTOR_PROVIDER_LABELS: Record<string, string> = {
+  "google-calendar": "Google Calendar",
+};
+
+function ConnectorHealthPanel({
+  founderKey,
+  refreshKey,
+}: {
+  founderKey: string;
+  refreshKey: number;
+}) {
+  const [data, setData] = useState<FounderConnectorsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setErr(null);
+    getFounderConnectors(founderKey)
+      .then(setData)
+      .catch((e: unknown) =>
+        setErr(e instanceof Error ? e.message : "Failed to load"),
+      )
+      .finally(() => setLoading(false));
+  }, [refreshKey, founderKey]);
+
+  const totals = data?.totals;
+  const hasError = (totals?.error ?? 0) > 0;
+  const lastSync = data?.lastSyncAt
+    ? new Date(data.lastSyncAt).toLocaleString()
+    : null;
+
+  return (
+    <div
+      className="glass rounded-2xl p-6 space-y-4"
+      data-testid="connector-health-panel"
+    >
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/60 font-semibold">
+            Connector Health
+          </p>
+          <p className="text-base font-semibold text-foreground">
+            Live data sources feeding readiness
+          </p>
+        </div>
+        {loading && (
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground/60" />
+        )}
+      </div>
+
+      {err && (
+        <p className="text-xs text-red-400">Could not load connectors: {err}</p>
+      )}
+
+      {data && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <StatCard
+              label="Connected"
+              value={totals?.connected ?? 0}
+              icon={CheckCircle2}
+              color="hsl(142 55% 50%)"
+              data-testid="connector-stat-connected"
+            />
+            <StatCard
+              label="Needs attention"
+              value={totals?.error ?? 0}
+              icon={AlertTriangle}
+              color={hasError ? "hsl(348 65% 60%)" : "hsl(220 10% 55%)"}
+              data-testid="connector-stat-error"
+            />
+            <StatCard
+              label="Disconnected"
+              value={totals?.disconnected ?? 0}
+              icon={XCircle}
+              color="hsl(43 65% 52%)"
+              data-testid="connector-stat-disconnected"
+            />
+            <StatCard
+              label="Total accounts"
+              value={totals?.total ?? 0}
+              icon={Activity}
+              color="hsl(var(--brand-indigo))"
+              data-testid="connector-stat-total"
+            />
+          </div>
+
+          <p className="text-xs text-muted-foreground/70 flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5" />
+            {lastSync
+              ? `Most recent successful sync ${lastSync}`
+              : "No successful sync recorded yet"}
+          </p>
+
+          {data.providers.length > 0 ? (
+            <TableShell
+              headers={[
+                "Provider",
+                "Connected",
+                "Needs attention",
+                "Disconnected",
+                "Last sync",
+                "Last success",
+              ]}
+              rows={data.providers.map((p) => [
+                CONNECTOR_PROVIDER_LABELS[p.provider] ?? p.provider,
+                p.connected,
+                p.error,
+                p.disconnected,
+                p.lastSyncAt ? new Date(p.lastSyncAt).toLocaleString() : "-",
+                p.lastSuccessAt
+                  ? new Date(p.lastSuccessAt).toLocaleString()
+                  : "-",
+              ])}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground/70">
+              No connector accounts yet. Connect a live source from the
+              Connection Center to see health here.
+            </p>
+          )}
+
+          <p className="text-[11px] text-muted-foreground/50 leading-relaxed">
+            Aggregate product state only. This view never shows raw calendar
+            events or any user content, and reading it never triggers a sync.
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
 function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   const [tab, setTab] = useState<Tab>("overview");
   const [stats, setStats] = useState<FounderStats | null>(null);
@@ -4432,6 +4566,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   {/* Matching Review Queue */}
   {tab === "matching" && (
   <div className="space-y-6" data-testid="matching-tab">
+  <ConnectorHealthPanel founderKey={FOUNDER_KEY} refreshKey={refreshKey} />
   <ProposalsQueuePanel founderKey={FOUNDER_KEY} refreshKey={refreshKey} />
   <PoolReadyPanel founderKey={FOUNDER_KEY} refreshKey={refreshKey} />
   </div>

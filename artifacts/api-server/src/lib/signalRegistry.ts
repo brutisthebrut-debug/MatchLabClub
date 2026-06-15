@@ -305,7 +305,18 @@ export type SignalDataSource =
     }
   | {
       kind: "importSummaryCount";
+      /**
+       * Primary source key (kept as the single-source default and the source
+       * the paste path writes). When `sources` is set, the lane's count is the
+       * latest summary count across all of them (latest-wins per source).
+       */
       source: string;
+      /**
+       * Optional set of `imported_sources.source` values that all feed this one
+       * lane. Lets a single lane (such as calendar rhythm) aggregate a pasted
+       * `.ics` and a live `google-calendar` sync without a second lane.
+       */
+      sources?: readonly string[];
       summaryPath: readonly [string, string];
       capture?: "paste";
     };
@@ -563,6 +574,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     dataSource: {
       kind: "importSummaryCount",
       source: "calendar-ics",
+      sources: ["calendar-ics", "google-calendar"],
       summaryPath: ["counts", "totalEvents"],
     },
     label: "Calendar rhythm",
@@ -577,20 +589,23 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     describe: (c) =>
       `Has shared enough of their calendar to cover ${c}% of that lane, so we can see how full their week is and when they actually have room to date.`,
     action: {
-      label: "Paste your calendar",
-      detail: "Drop in your .ics export. We read your rhythm, never the raw file.",
-      href: "/imports",
+      label: "Add your calendar",
+      detail:
+        "Paste your .ics export, or connect Google Calendar read-only. We read your rhythm, never the events themselves.",
+      href: "/connections",
     },
     trust: {
-      origin: "The calendar .ics text you paste in yourself.",
+      origin:
+        "The calendar .ics text you paste in, or a read-only Google Calendar sync you turn on.",
       noun: "event",
       seen: [
         "A simple count of events, used to read your weekly rhythm",
+        "When in the week you tend to be free, never what any event is",
       ],
       neverTouched: [
-        "Anything you do not paste in",
-        "OAuth access to Google or Apple Calendar",
+        "Event titles, descriptions, locations, guests, or notes",
         "Any ability to create, edit, or delete events on your calendar",
+        "Anything outside the calendar you choose to share",
       ],
     },
   },

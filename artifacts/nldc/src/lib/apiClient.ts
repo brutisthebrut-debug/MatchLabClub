@@ -1124,3 +1124,62 @@ export const saveCuration = async (
   }
   return (await res.json()) as { curation: CurationEntry };
 };
+
+export interface ConnectorStatusItem {
+  provider: string;
+  laneId: string;
+  label: string;
+  status: "available" | "connected" | "error" | "disconnected";
+  live: boolean;
+  founderOnly: boolean;
+  derivedCount: number | null;
+  lastSyncAt: string | null;
+  lastSuccessAt: string | null;
+  lastErrorCode: string | null;
+  description: string;
+}
+
+export interface ConnectorsStatusResult {
+  generatedAt: string;
+  isDemo: boolean;
+  connectors: ConnectorStatusItem[];
+}
+
+export interface FounderConnectorProvider {
+  provider: string;
+  total: number;
+  connected: number;
+  error: number;
+  disconnected: number;
+  lastSyncAt: string | null;
+  lastSuccessAt: string | null;
+}
+
+export interface FounderConnectorsResponse {
+  generatedAt: string;
+  totals: {
+    total: number;
+    connected: number;
+    error: number;
+    disconnected: number;
+  };
+  lastSyncAt: string | null;
+  providers: FounderConnectorProvider[];
+}
+
+export const getFounderConnectors = (founderKey: string) =>
+  founderJson<FounderConnectorsResponse>("/founder/connectors", founderKey);
+
+export const syncGoogleCalendar = (founderKey: string) =>
+  founderJson<ConnectorsStatusResult>(
+    "/founder/connectors/google-calendar/sync",
+    founderKey,
+    { method: "POST" },
+  );
+
+export const disconnectGoogleCalendar = (founderKey: string) =>
+  founderJson<ConnectorsStatusResult>(
+    "/founder/connectors/google-calendar/disconnect",
+    founderKey,
+    { method: "POST" },
+  );

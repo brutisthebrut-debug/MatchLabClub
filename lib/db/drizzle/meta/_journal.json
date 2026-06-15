@@ -267,6 +267,13 @@
       "when": 1781481745670,
       "tag": "0037_daffy_proudstar",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1781552886432,
+      "tag": "0038_daffy_harry_osborn",
+      "breakpoints": true
     }
   ]
 }

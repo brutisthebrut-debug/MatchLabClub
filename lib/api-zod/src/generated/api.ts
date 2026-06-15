@@ -770,6 +770,41 @@ export const SaveCareDialectResponse = zod.object({
 
 
 /**
+ * Returns one entry per data connector the product can hold (currently the
+calendar lane's read-only Google Calendar sync), with its lifecycle
+status, last sync and last success timestamps, last error code, and the
+derived signal count it currently contributes. Only product state and
+derived counts are returned, never raw third-party content. Signed-out
+callers get a clearly-flagged demo so the page is never empty. Live
+connect, sync, and disconnect controls are founder-gated and handled by
+separate founder endpoints; this endpoint is read-only status.
+
+ * @summary List the data connectors and their live status for the signed-in user
+ */
+export const GetConnectorsHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetConnectorsResponse = zod.object({
+  "generatedAt": zod.coerce.date().describe('ISO timestamp the status was generated.'),
+  "isDemo": zod.boolean().describe('True when this is the anon demo, not a real account\'s connectors.'),
+  "connectors": zod.array(zod.object({
+  "provider": zod.enum(['google-calendar', 'spotify', 'instagram-oauth']).describe('Stable provider key.'),
+  "laneId": zod.string().describe('The readiness lane this connector feeds.'),
+  "label": zod.string().describe('Human label for the connector.'),
+  "status": zod.enum(['available', 'connected', 'error', 'disconnected']).describe('Lifecycle of the live connection.'),
+  "live": zod.boolean().describe('True when a live connection currently holds derived signal.'),
+  "founderOnly": zod.boolean().describe('True when the live connect\/sync\/disconnect controls are founder-gated.'),
+  "derivedCount": zod.number().nullable().describe('Derived signal count this connector currently contributes (e.g. calendar events), never raw content. Null when not applicable.'),
+  "lastSyncAt": zod.coerce.date().nullable().describe('ISO timestamp of the last sync attempt.'),
+  "lastSuccessAt": zod.coerce.date().nullable().describe('ISO timestamp of the last successful sync.'),
+  "lastErrorCode": zod.string().nullable().describe('Machine-readable code for the last error, null when healthy.'),
+  "description": zod.string().describe('One-line summary of what this connector returns.')
+}).describe('One data connector\'s product state. Only lifecycle and derived counts are exposed here, never raw third-party content. `status` is `available` before a live connection exists, then `connected` \/ `error` \/ `disconnected`. `derivedCount` is the derived signal the connector currently contributes (e.g. calendar events read for rhythm), never the events themselves.'))
+}).describe('The signed-in user\'s data connectors and their live status. `isDemo` flags the signed-out demo example, which never reflects a real account.')
+
+
+/**
  * Returns the authenticated user's personal invite code plus a
 privacy-respecting reflection of the people who joined from their
 invites and where each one is in the matching pool. Attribution comes

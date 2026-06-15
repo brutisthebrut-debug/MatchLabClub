@@ -10,6 +10,7 @@ vi.mock("drizzle-orm", async () => {
   return {
     ...actual,
     eq: fake.eq,
+    ne: fake.ne,
     and: fake.and,
     or: fake.or,
     isNull: fake.isNull,
@@ -165,6 +166,64 @@ describe("DELETE /api/me/trust-ledger/:id", () => {
         .where(eq(table.userId, "ledger-wm-me"));
       expect(left.length).toBe(0);
     }
+  });
+
+  it("purging the calendar lane drops every source and disconnects the live connector", async () => {
+    const { db, importedSourcesTable, connectorConnectionsTable } = await import(
+      "../lib/testDb"
+    );
+    await db.insert(importedSourcesTable).values([
+      { userId: "ledger-cal-me", source: "calendar-ics", parsedSummary: {} },
+      { userId: "ledger-cal-me", source: "google-calendar", parsedSummary: {} },
+      { userId: "ledger-cal-other", source: "google-calendar", parsedSummary: {} },
+    ]);
+    await db.insert(connectorConnectionsTable).values([
+      {
+        userId: "ledger-cal-me",
+        provider: "google-calendar",
+        laneId: "calendar",
+        source: "google-calendar",
+        status: "connected",
+        disconnectedAt: null,
+      },
+      {
+        userId: "ledger-cal-other",
+        provider: "google-calendar",
+        laneId: "calendar",
+        source: "google-calendar",
+        status: "connected",
+        disconnectedAt: null,
+      },
+    ]);
+
+    testApp.setUser({ id: "ledger-cal-me" });
+    const res = await request(testApp.app).delete("/api/me/trust-ledger/calendar");
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ success: true, id: "calendar", removed: 2 });
+
+    const mineSources = await db
+      .select({ id: importedSourcesTable.id })
+      .from(importedSourcesTable)
+      .where(eq(importedSourcesTable.userId, "ledger-cal-me"));
+    expect(mineSources.length).toBe(0);
+
+    const [mineConn] = await db
+      .select({ status: connectorConnectionsTable.status })
+      .from(connectorConnectionsTable)
+      .where(eq(connectorConnectionsTable.userId, "ledger-cal-me"));
+    expect(mineConn?.status).toBe("disconnected");
+
+    // Another user's connector and rows are untouched.
+    const [otherConn] = await db
+      .select({ status: connectorConnectionsTable.status })
+      .from(connectorConnectionsTable)
+      .where(eq(connectorConnectionsTable.userId, "ledger-cal-other"));
+    expect(otherConn?.status).toBe("connected");
+    const otherSources = await db
+      .select({ id: importedSourcesTable.id })
+      .from(importedSourcesTable)
+      .where(eq(importedSourcesTable.userId, "ledger-cal-other"));
+    expect(otherSources.length).toBe(1);
   });
 
   it("treats consistency as derived: nothing stored, nothing to purge", async () => {

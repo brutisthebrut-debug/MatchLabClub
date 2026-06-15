@@ -28,3 +28,5 @@
 - [Gate cap-consuming client queries](claude-cap-query-gating.md) — enable a query that hits a daily-capped Claude endpoint ONLY when its result will render, else page/thread opens silently drain the cap.
 - [Self-inference reads own text only](own-text-only-inference.md) — never feed two-sided columns (coach conversationContext, emailInsights pastedContent) into user self-inference; both AI lanes share one sources array.
 - [Orval body-schema naming collision](orval-body-schema-naming.md) — a requestBody schema named operationId+"Body" emits dup zod const + type (TS2308); $ref a distinctly-named schema; clean skips the types folder.
+- [Connector purge status parity](connector-purge-status-parity.md) — a live connector's row must be marked disconnected on EVERY path that purges its derived rows (disconnect + trust-ledger + both GDPR deletes), or the status endpoint lies "connected" with null count.
+- [Connector status label drift](connector-status-sync.md) — Connection Center arrays (live/building/researching) are the source of truth; Landing's duplicated connector teaser must match, reconcile both on any connector change.

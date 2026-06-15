@@ -368,9 +368,16 @@ export async function collectSignalCounts(
         0,
       );
     } else if (ds.kind === "importSummaryCount") {
-      counts[contributor.countKey] = await latestSummaryCount(
-        ds.source,
-        ds.summaryPath,
+      // A summary lane may aggregate several sources (e.g. calendar rhythm
+      // counts a pasted `.ics` plus a live `google-calendar` sync). Take the
+      // latest summary count per source (latest-wins) and sum across them.
+      const keys = ds.sources ?? [ds.source];
+      const perSource = await Promise.all(
+        keys.map((key) => latestSummaryCount(key, ds.summaryPath)),
+      );
+      counts[contributor.countKey] = perSource.reduce(
+        (sum, value) => sum + value,
+        0,
       );
     }
   }
@@ -496,8 +503,7 @@ export async function collectSignalRecency(
     if (ds.kind === "importRows" || ds.kind === "importSummaryCount") {
       // For multi-source lanes, recency is the most recent activity across all
       // of its sources (smallest age = most recent timestamp).
-      const keys =
-        ds.kind === "importRows" ? (ds.sources ?? [ds.source]) : [ds.source];
+      const keys = ds.sources ?? [ds.source];
       const ages = keys
         .map((key) => ageDaysFrom(importLatest.get(key) ?? null))
         .filter((age): age is number => age !== null);

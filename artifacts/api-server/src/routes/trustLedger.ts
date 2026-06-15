@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import {
   db,
   compatibilityReadsTable,
@@ -26,6 +26,7 @@ import {
   cosmicChartsTable,
   userVerificationsTable,
   careDialectProfilesTable,
+  connectorConnectionsTable,
 } from "@workspace/db";
 import {
   GetTrustLedgerResponse,
@@ -80,7 +81,14 @@ router.get("/me/trust-ledger", async (req, res): Promise<void> => {
       const ds = c.dataSource;
       let storedCount = 0;
       if (ds.kind === "importRows" || ds.kind === "importSummaryCount") {
-        storedCount = importStoredBySource.get(ds.source) ?? 0;
+        // Multi-source lanes (e.g. calendar rhythm = pasted `.ics` +
+        // `google-calendar`) sum stored rows across every source they hold, so
+        // the purge count matches what a purge would actually remove.
+        const keys = ds.sources ?? [ds.source];
+        storedCount = keys.reduce(
+          (sum, key) => sum + (importStoredBySource.get(key) ?? 0),
+          0,
+        );
       } else {
         storedCount = await FIRST_PARTY_SOURCES[c.id]!.countStored(db, userId);
       }
@@ -506,16 +514,44 @@ router.delete("/me/trust-ledger/:id", async (req, res): Promise<void> => {
   let removed = 0;
 
   if (ds.kind === "importRows" || ds.kind === "importSummaryCount") {
-    const rows = await db
-      .delete(importedSourcesTable)
-      .where(
-        and(
-          eq(importedSourcesTable.userId, userId),
-          eq(importedSourcesTable.source, ds.source),
-        ),
-      )
-      .returning({ id: importedSourcesTable.id });
-    removed = rows.length;
+    // Multi-source lanes (e.g. calendar rhythm = pasted `.ics` +
+    // `google-calendar`) purge every source they aggregate, so removing the
+    // lane removes all of its backing rows, not just the primary source.
+    const keys = (ds.sources ?? [ds.source]) as string[];
+    removed = await db.transaction(async (tx) => {
+      const rows = await tx
+        .delete(importedSourcesTable)
+        .where(
+          and(
+            eq(importedSourcesTable.userId, userId),
+            inArray(importedSourcesTable.source, keys),
+          ),
+        )
+        .returning({ id: importedSourcesTable.id });
+      // A live connector (e.g. Google Calendar) stores its derived rhythm as an
+      // `imported_sources` row keyed by the same string as its connector
+      // provider. Purging the lane drops those rows, so the connector must not
+      // keep claiming "connected" with nothing behind it. Mark any matching
+      // connection disconnected in the same transaction, mirroring the explicit
+      // disconnect route, so `/me/connectors` stays consistent with the ledger.
+      await tx
+        .update(connectorConnectionsTable)
+        .set({
+          status: "disconnected",
+          lastErrorCode: null,
+          derivedImportId: null,
+          disconnectedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(connectorConnectionsTable.userId, userId),
+            inArray(connectorConnectionsTable.provider, keys),
+            ne(connectorConnectionsTable.status, "disconnected"),
+          ),
+        );
+      return rows.length;
+    });
   } else {
     const source = FIRST_PARTY_SOURCES[contributor.id];
     if (!source) {

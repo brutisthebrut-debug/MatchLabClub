@@ -18,6 +18,7 @@
     "@opentelemetry/instrumentation": "^0.218.0",
     "@opentelemetry/sdk-trace-base": "^2.7.1",
     "@opentelemetry/semantic-conventions": "^1.41.1",
+    "@replit/connectors-sdk": "^0.4.1",
     "@sentry/node": "^10.54.0",
     "@workspace/ai-schemas": "workspace:*",
     "@workspace/api-zod": "workspace:*",

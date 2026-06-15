@@ -660,6 +660,31 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/connectors:
+    get:
+      tags: [Auth]
+      operationId: getConnectors
+      summary: List the data connectors and their live status for the signed-in user
+      description: |
+        Returns one entry per data connector the product can hold (currently the
+        calendar lane's read-only Google Calendar sync), with its lifecycle
+        status, last sync and last success timestamps, last error code, and the
+        derived signal count it currently contributes. Only product state and
+        derived counts are returned, never raw third-party content. Signed-out
+        callers get a clearly-flagged demo so the page is never empty. Live
+        connect, sync, and disconnect controls are founder-gated and handled by
+        separate founder endpoints; this endpoint is read-only status.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: The connector status list, or a demo example for anon callers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorsStatusResponse'
+
   /me/referrals:
     get:
       tags: [Auth]
@@ -10200,6 +10225,90 @@ components:
         updatedAt:
           type: ["string", "null"]
           format: date-time
+
+    ConnectorStatus:
+      type: object
+      description: >-
+        One data connector's product state. Only lifecycle and derived counts
+        are exposed here, never raw third-party content. `status` is `available`
+        before a live connection exists, then `connected` / `error` /
+        `disconnected`. `derivedCount` is the derived signal the connector
+        currently contributes (e.g. calendar events read for rhythm), never the
+        events themselves.
+      required:
+        - provider
+        - laneId
+        - label
+        - status
+        - live
+        - founderOnly
+        - derivedCount
+        - lastSyncAt
+        - lastSuccessAt
+        - lastErrorCode
+        - description
+      properties:
+        provider:
+          type: string
+          enum: [google-calendar, spotify, instagram-oauth]
+          description: Stable provider key.
+        laneId:
+          type: string
+          description: The readiness lane this connector feeds.
+        label:
+          type: string
+          description: Human label for the connector.
+        status:
+          type: string
+          enum: [available, connected, error, disconnected]
+          description: Lifecycle of the live connection.
+        live:
+          type: boolean
+          description: True when a live connection currently holds derived signal.
+        founderOnly:
+          type: boolean
+          description: True when the live connect/sync/disconnect controls are founder-gated.
+        derivedCount:
+          type: ["integer", "null"]
+          description: >-
+            Derived signal count this connector currently contributes (e.g.
+            calendar events), never raw content. Null when not applicable.
+        lastSyncAt:
+          type: ["string", "null"]
+          format: date-time
+          description: ISO timestamp of the last sync attempt.
+        lastSuccessAt:
+          type: ["string", "null"]
+          format: date-time
+          description: ISO timestamp of the last successful sync.
+        lastErrorCode:
+          type: ["string", "null"]
+          description: Machine-readable code for the last error, null when healthy.
+        description:
+          type: string
+          description: One-line summary of what this connector returns.
+
+    ConnectorsStatusResponse:
+      type: object
+      description: >-
+        The signed-in user's data connectors and their live status. `isDemo`
+        flags the signed-out demo example, which never reflects a real account.
+      required:
+        - generatedAt
+        - isDemo
+        - connectors
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+          description: ISO timestamp the status was generated.
+        isDemo:
+          type: boolean
+          description: True when this is the anon demo, not a real account's connectors.
+        connectors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectorStatus'
 
     CareDialectComparison:
       type: object

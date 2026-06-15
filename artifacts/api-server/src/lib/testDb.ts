@@ -336,6 +336,8 @@ ensureStore("wellness_inferences");
 export const wellnessInferencesTable = makeTable("wellness_inferences");
 ensureStore("imported_sources");
 export const importedSourcesTable = makeTable("imported_sources");
+ensureStore("connector_connections");
+export const connectorConnectionsTable = makeTable("connector_connections");
 ensureStore("post_date_notes");
 export const postDateNotesTable = makeTable("post_date_notes");
 ensureStore("dating_wins");
@@ -366,6 +368,9 @@ export type DrizzlePred = Pred;
 
 export const eq = (col: ColumnRef, val: unknown): Pred => (row) =>
   row[col.__col] === val;
+
+export const ne = (col: ColumnRef, val: unknown): Pred => (row) =>
+  row[col.__col] !== val;
 
 export const isNull = (col: ColumnRef): Pred => (row) =>
   row[col.__col] === null || row[col.__col] === undefined;
