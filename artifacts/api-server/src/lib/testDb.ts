@@ -256,6 +256,19 @@ stores.user_verifications = {
     stripeVerificationSessionId: null,
   },
 };
+stores.care_dialect_profiles = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    userId: null,
+    selfGive: null,
+    selfReceive: null,
+    testedGiveDist: null,
+    testedGiveTop: null,
+    testedReceiveDist: null,
+    testedReceiveTop: null,
+  },
+};
 stores.user_reports = {
   rows: [],
   nextId: 1,
@@ -309,6 +322,7 @@ export const timeCapsulesTable = makeTable("time_capsules");
 export const cosmicChartsTable = makeTable("cosmic_charts");
 export const userVerificationsTable = makeTable("user_verifications");
 export const userReportsTable = makeTable("user_reports");
+export const careDialectProfilesTable = makeTable("care_dialect_profiles");
 export const userBlocksTable = makeTable("user_blocks");
 ensureStore("match_proposals");
 export const matchProposalsTable = makeTable("match_proposals");

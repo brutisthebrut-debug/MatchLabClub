@@ -52,6 +52,7 @@ const StyleMap = lazy(() => import("@/pages/StyleMap"));
 const NextMessage = lazy(() => import("@/pages/NextMessage"));
 const GlowUp = lazy(() => import("@/pages/GlowUp"));
 const ConnectionStyle = lazy(() => import("@/pages/ConnectionStyle"));
+const CareDialect = lazy(() => import("@/pages/CareDialect"));
 const CompatibilityCompass = lazy(() => import("@/pages/CompatibilityCompass"));
 const ProgressTimeline = lazy(() => import("@/pages/ProgressTimeline"));
 const ProgressPatterns = lazy(() => import("@/pages/ProgressPatterns"));
@@ -238,6 +239,7 @@ function Router() {
         <Route path="/next-message" component={NextMessage} />
         <Route path="/glow-up" component={GlowUp} />
         <Route path="/connection-style" component={ConnectionStyle} />
+        <Route path="/care-dialect" component={CareDialect} />
         <Route path="/compatibility-compass" component={CompatibilityCompass} />
         {/* Progress Workspace */}
         <Route path="/progress/timeline" component={ProgressTimeline} />

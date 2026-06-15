@@ -53,6 +53,7 @@ import type {
   BulkDeleteAuditsInput,
   BulkDeleteAuditsResult,
   CalendarImportBody,
+  CareDialectProfile,
   ChatScreenshotExtractInput,
   ChatScreenshotExtractResult,
   ClaimAnonymousInput,
@@ -237,6 +238,7 @@ import type {
   SafetyBlock,
   SafetyBlockList,
   SafetyCheck,
+  SaveCareDialectInput,
   SayToCompanion400,
   SayToCompanion401,
   ScenarioResponse,
@@ -1899,6 +1901,168 @@ export const useCreateQuizResult = <TError = ErrorType<AuthErrorEnvelope>,
         TContext
       > => {
       return useMutation(getCreateQuizResultMutationOptions(options));
+    }
+
+export const getGetCareDialectUrl = () => {
+
+
+
+
+  return `/api/me/care-dialect`
+}
+
+/**
+ * Returns the user's Care Dialect profile: the give and receive dialects
+they guessed for themselves, the server-scored tested distribution and top
+key per axis, and a deterministic self-vs-tested comparison. Signed-out
+callers get a clearly-flagged demo example so the page is never empty; the
+demo never reflects any real person. Only derived data is ever returned,
+never the raw quiz answers.
+
+ * @summary Get the signed-in user's Care Dialect profile, or a demo example
+ */
+export const getCareDialect = async ( options?: RequestInit): Promise<CareDialectProfile> => {
+
+  return customFetch<CareDialectProfile>(getGetCareDialectUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCareDialectQueryKey = () => {
+    return [
+    `/api/me/care-dialect`
+    ] as const;
+    }
+
+
+export const getGetCareDialectQueryOptions = <TData = Awaited<ReturnType<typeof getCareDialect>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCareDialect>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCareDialectQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCareDialect>>> = ({ signal }) => getCareDialect({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCareDialect>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCareDialectQueryResult = NonNullable<Awaited<ReturnType<typeof getCareDialect>>>
+export type GetCareDialectQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the signed-in user's Care Dialect profile, or a demo example
+ */
+
+export function useGetCareDialect<TData = Awaited<ReturnType<typeof getCareDialect>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCareDialect>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCareDialectQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSaveCareDialectUrl = () => {
+
+
+
+
+  return `/api/me/care-dialect`
+}
+
+/**
+ * Accepts the user's self-identified give and receive dialects plus their
+per-answer dialect choices for each axis. Scoring runs server-side: the
+answers are tallied into normalized distributions and a top key per axis,
+and only that derived result is stored, one row per user, upserted on
+retake. Raw answers are never stored or sent to any prompt. Requires
+authentication; anonymous callers get 401.
+
+ * @summary Score and save the signed-in user's Care Dialect from quiz answers
+ */
+export const saveCareDialect = async (saveCareDialectInput: SaveCareDialectInput, options?: RequestInit): Promise<CareDialectProfile> => {
+
+  return customFetch<CareDialectProfile>(getSaveCareDialectUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      saveCareDialectInput,)
+  }
+);}
+
+
+
+
+export const getSaveCareDialectMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCareDialect>>, TError,{data: BodyType<SaveCareDialectInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveCareDialect>>, TError,{data: BodyType<SaveCareDialectInput>}, TContext> => {
+
+const mutationKey = ['saveCareDialect'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveCareDialect>>, {data: BodyType<SaveCareDialectInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveCareDialect(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveCareDialectMutationResult = NonNullable<Awaited<ReturnType<typeof saveCareDialect>>>
+    export type SaveCareDialectMutationBody = BodyType<SaveCareDialectInput>
+    export type SaveCareDialectMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Score and save the signed-in user's Care Dialect from quiz answers
+ */
+export const useSaveCareDialect = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCareDialect>>, TError,{data: BodyType<SaveCareDialectInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveCareDialect>>,
+        TError,
+        {data: BodyType<SaveCareDialectInput>},
+        TContext
+      > => {
+      return useMutation(getSaveCareDialectMutationOptions(options));
     }
 
 export const getGetMyReferralsUrl = () => {

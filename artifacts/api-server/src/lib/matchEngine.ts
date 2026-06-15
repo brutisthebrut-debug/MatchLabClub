@@ -12,6 +12,7 @@
 // number on the same proposed pair.
 
 import { proximityBetween, canonicalizeCity } from "./geo";
+import { CARE_DIALECT_KEYS } from "./careDialect";
 
 export interface MatchCandidate {
   userId: string;
@@ -54,6 +55,17 @@ export interface MatchCandidate {
    * matched exactly as before; verification widens trust, never narrows reach.
    */
   isVerified?: boolean;
+  /**
+   * Care Dialect distributions: how this member gives care and how they receive
+   * it, each a normalized map over the six dialect keys. Null/absent when they
+   * have not completed the Care Dialect quiz. Only the derived distributions are
+   * carried here, never raw answers, and a counterpart's dialect is never named
+   * in any reason string.
+   */
+  careDialect?: {
+    give: Record<string, number>;
+    receive: Record<string, number>;
+  } | null;
 }
 
 export interface CompatibilityResult {
@@ -227,15 +239,87 @@ function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n));
 }
 
-// Component weights. They sum to 1.0 so the blended score lands in 0-1 before we
-// scale to 0-100. Tuned so two well-developed, similarly-ready people in the
-// same area score high, and shared explorable depth matters most.
-const WEIGHTS = {
+// Component weights. Each set sums to 1.0 so the blended score lands in 0-1
+// before we scale to 0-100. Tuned so two well-developed, similarly-ready people
+// in the same area score high, and shared explorable depth matters most.
+//
+// WEIGHTS_BASE is the original blend, used whenever Care Dialect data is missing
+// on either side so a dataless pair scores EXACTLY as it did before this signal
+// existed. WEIGHTS_WITH_STYLE makes room for the styleFit component only when
+// both members have completed the quiz, shaving a little off every other
+// component so the totals still sum to 1.0.
+const WEIGHTS_BASE = {
   proximity: 0.25,
   sharedDepth: 0.3,
   readinessSimilarity: 0.2,
   readinessDepth: 0.25,
 } as const;
+
+const WEIGHTS_WITH_STYLE = {
+  proximity: 0.22,
+  sharedDepth: 0.265,
+  readinessSimilarity: 0.175,
+  readinessDepth: 0.22,
+  styleFit: 0.12,
+} as const;
+
+// Dot product of two dialect distributions over the six keys. Both are
+// normalized (values sum to ~1), so the result lands in 0-1 and peaks when one
+// person's giving lines up with the other's receiving.
+function dialectDot(
+  a: Record<string, number>,
+  b: Record<string, number>,
+): number {
+  let sum = 0;
+  for (const k of CARE_DIALECT_KEYS) sum += (a[k] ?? 0) * (b[k] ?? 0);
+  return sum;
+}
+
+// Similarity between two distributions: 1 minus half the L1 distance, so
+// identical distributions score 1 and fully disjoint ones score 0. Symmetric.
+function dialectSim(
+  a: Record<string, number>,
+  b: Record<string, number>,
+): number {
+  let l1 = 0;
+  for (const k of CARE_DIALECT_KEYS) l1 += Math.abs((a[k] ?? 0) - (b[k] ?? 0));
+  return clamp01(1 - l1 / 2);
+}
+
+// A distribution counts as "present" only when it carries positive mass, so an
+// all-zero map (an untested axis) never reads as complete.
+function isDist(
+  d: Record<string, number> | undefined | null,
+): d is Record<string, number> {
+  if (!d) return false;
+  let sum = 0;
+  for (const k of CARE_DIALECT_KEYS) sum += d[k] ?? 0;
+  return sum > 0;
+}
+
+/**
+ * Care-style complementarity 0-1, or null when EITHER member is missing tested
+ * Care Dialect data (so the score falls back to the exact pre-Care-Dialect
+ * blend). Rewards each person giving care the way the other likes to receive it,
+ * with a small bonus for a shared sense of what feeling cared for is like.
+ * Symmetric in a and b by construction.
+ */
+function styleFitBetween(
+  a: MatchCandidate,
+  b: MatchCandidate,
+): number | null {
+  const ag = a.careDialect?.give;
+  const ar = a.careDialect?.receive;
+  const bg = b.careDialect?.give;
+  const br = b.careDialect?.receive;
+  if (!isDist(ag) || !isDist(ar) || !isDist(bg) || !isDist(br)) return null;
+  const aGivesAsBReceives = dialectDot(ag, br);
+  const bGivesAsAReceives = dialectDot(bg, ar);
+  const sharedReceiving = dialectSim(ar, br);
+  return clamp01(
+    0.45 * aGivesAsBReceives + 0.45 * bGivesAsAReceives + 0.1 * sharedReceiving,
+  );
+}
 
 /**
  * Symmetric 0-100 compatibility between two members, derived only from aggregate
@@ -267,11 +351,18 @@ export function scoreCompatibility(
   const readinessSimilarity = clamp01(1 - Math.abs(scoreA - scoreB));
   const readinessDepth = clamp01((scoreA + scoreB) / 2);
 
+  // Care-style complementarity, only when both members completed the quiz. When
+  // it is null we use the original weights and omit the term entirely, so a pair
+  // without Care Dialect data scores exactly as it did before this signal.
+  const styleFit = styleFitBetween(a, b);
+  const useStyle = styleFit !== null;
+  const W = useStyle ? WEIGHTS_WITH_STYLE : WEIGHTS_BASE;
   const blend =
-    WEIGHTS.proximity * proximity +
-    WEIGHTS.sharedDepth * sharedDepth +
-    WEIGHTS.readinessSimilarity * readinessSimilarity +
-    WEIGHTS.readinessDepth * readinessDepth;
+    W.proximity * proximity +
+    W.sharedDepth * sharedDepth +
+    W.readinessSimilarity * readinessSimilarity +
+    W.readinessDepth * readinessDepth +
+    (useStyle ? WEIGHTS_WITH_STYLE.styleFit * (styleFit as number) : 0);
   // Soft verification nudge: each verified side adds a small symmetric bonus, so
   // a verified pair ranks a little higher than an otherwise-identical unverified
   // pair. This is NOT a gate (gatesPass never reads verification) and it can only
@@ -307,6 +398,18 @@ export function scoreCompatibility(
   }
   if (readinessDepth >= 0.7) {
     reasons.push("You're both well into your readiness climb");
+  }
+  // Care-style fit, phrased so it never names or hints at the counterpart's
+  // dialect: it only ever describes the fit between the two of you.
+  if (useStyle) {
+    const sf = styleFit as number;
+    if (sf >= 0.6) {
+      reasons.push(
+        "Your care styles fit closely, you each tend to give what the other most wants",
+      );
+    } else if (sf >= 0.4) {
+      reasons.push("Your care styles complement each other");
+    }
   }
   // Degrade-gracefully note: if either side is missing the audit data the gates
   // rely on, say so plainly instead of pretending the match is fully vetted.

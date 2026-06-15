@@ -137,6 +137,7 @@ const SECTIONS: NavSection[] = [
     more: [
       { name: "Archetype", href: "/archetype", icon: Drama },
       { name: "Connection Style", href: "/connection-style", icon: HeartHandshake },
+      { name: "Care Dialect", href: "/care-dialect", icon: Heart },
       { name: "Photo Lab", href: "/photo-lab", icon: Images },
       { name: "Post-Date Notes", href: "/mirror/dates", icon: CalendarHeart },
       { name: "Journal", href: "/mirror/journal", icon: BookOpen },

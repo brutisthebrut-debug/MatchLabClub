@@ -29,6 +29,7 @@ describe("computeBreakdown", () => {
       postDate: 0,
       wins: 0,
       calendar: 0,
+      careDialect: 0,
       audits: 0,
       coaching: 0,
       instagram: 0,
@@ -102,6 +103,7 @@ describe("computeBreakdown", () => {
       cosmicFacets: 2,
       relocationFacets: 1,
       verificationFacets: 3,
+      careDialect: 1,
     });
     expect(b).toEqual({
       compass: 100,
@@ -111,6 +113,7 @@ describe("computeBreakdown", () => {
       postDate: 100,
       wins: 100,
       calendar: 100,
+      careDialect: 100,
       audits: 100,
       coaching: 100,
       instagram: 100,

@@ -14,6 +14,7 @@ import {
   cosmicChartsTable,
   userVerificationsTable,
   userBlocksTable,
+  careDialectProfilesTable,
   type CosmicPlacements,
 } from "@workspace/db";
 import {
@@ -1593,6 +1594,35 @@ async function loadVerificationStatus(
   return out;
 }
 
+// Per-user Care Dialect distributions, batched. Reads only the derived give and
+// receive distributions (never the raw answers, which are never stored). A user
+// without a completed quiz is simply absent from the map, which leaves their
+// styleFit null and their matches scored exactly as before this signal existed.
+async function loadCareDialects(
+  userIds: string[],
+): Promise<
+  Map<string, { give: Record<string, number>; receive: Record<string, number> }>
+> {
+  const out = new Map<
+    string,
+    { give: Record<string, number>; receive: Record<string, number> }
+  >();
+  if (userIds.length === 0) return out;
+  const rows = await db
+    .select({
+      userId: careDialectProfilesTable.userId,
+      give: careDialectProfilesTable.testedGiveDist,
+      receive: careDialectProfilesTable.testedReceiveDist,
+    })
+    .from(careDialectProfilesTable)
+    .where(inArray(careDialectProfilesTable.userId, userIds));
+  for (const row of rows) {
+    if (!row.userId || !row.give || !row.receive) continue;
+    out.set(row.userId, { give: row.give, receive: row.receive });
+  }
+  return out;
+}
+
 // Assemble the engine's view of one member: preferences, computed readiness, and
 // best-available demographics. Everything here is aggregate, never raw content.
 async function buildMatchCandidate(
@@ -1600,6 +1630,10 @@ async function buildMatchCandidate(
   demographics: { age: number | null; gender: string | null } | undefined,
   cosmic?: { relocationOpen: boolean; loveLineCities: string[] },
   isVerified?: boolean,
+  careDialect?: {
+    give: Record<string, number>;
+    receive: Record<string, number>;
+  },
 ): Promise<MatchCandidate> {
   const [prefs, readiness] = await Promise.all([
     loadPreferences(userId),
@@ -1622,6 +1656,7 @@ async function buildMatchCandidate(
     readinessScore: readiness.score,
     breakdown: readiness.breakdown as unknown as Record<string, number>,
     isVerified: isVerified ?? false,
+    careDialect: careDialect ?? null,
   };
 }
 
@@ -1707,16 +1742,18 @@ export async function mintInternalProposalsForMember(
   if (freshIds.length === 0) return 0;
 
   const allIds = [userId, ...freshIds];
-  const [demographics, cosmic, verified] = await Promise.all([
+  const [demographics, cosmic, verified, careDialects] = await Promise.all([
     loadLatestAuditDemographics(allIds),
     loadCosmicRelocation(allIds),
     loadVerificationStatus(allIds),
+    loadCareDialects(allIds),
   ]);
   const me = await buildMatchCandidate(
     userId,
     demographics.get(userId),
     cosmic.get(userId),
     verified.get(userId),
+    careDialects.get(userId),
   );
   const others = await Promise.all(
     freshIds.map((id) =>
@@ -1725,6 +1762,7 @@ export async function mintInternalProposalsForMember(
         demographics.get(id),
         cosmic.get(id),
         verified.get(id),
+        careDialects.get(id),
       ),
     ),
   );

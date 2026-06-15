@@ -28,6 +28,7 @@ export * from "./wellness_answers";
 export * from "./wellness_inferences";
 export * from "./wellness_tags";
 export * from "./compatibility_reads";
+export * from "./care_dialect_profiles";
 export * from "./imported_sources";
 export * from "./referrals";
 export * from "./ai_usage_counters";

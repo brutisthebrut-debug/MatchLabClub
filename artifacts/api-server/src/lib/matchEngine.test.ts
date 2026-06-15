@@ -161,6 +161,150 @@ describe("scoreCompatibility", () => {
   });
 });
 
+describe("scoreCompatibility care dialect styleFit", () => {
+  const dist = (parts: Record<string, number>): Record<string, number> => ({
+    spokenWarmth: 0,
+    helpingHands: 0,
+    thoughtfulTokens: 0,
+    undividedTime: 0,
+    closeContact: 0,
+    steadyPresence: 0,
+    ...parts,
+  });
+  const common: Partial<MatchCandidate> = {
+    readinessScore: 70,
+    breakdown: { compass: 60 },
+    prefs: {
+      ageMin: null,
+      ageMax: null,
+      genderPreference: null,
+      cityHint: "Austin",
+    },
+  };
+
+  it("scores a dataless pair exactly as before (no styleFit term)", () => {
+    const a = candidate({ userId: "a", ...common });
+    const b = candidate({ userId: "b", ...common });
+    const base = scoreCompatibility(a, b).score;
+    // Adding Care Dialect data to only ONE side leaves styleFit null, so the
+    // score must be identical to the pre-Care-Dialect blend.
+    const oneSided = scoreCompatibility(
+      {
+        ...a,
+        careDialect: {
+          give: dist({ spokenWarmth: 1 }),
+          receive: dist({ undividedTime: 1 }),
+        },
+      },
+      b,
+    ).score;
+    expect(oneSided).toBe(base);
+  });
+
+  it("treats an all-zero (untested) distribution as missing", () => {
+    const a = candidate({ userId: "a", ...common });
+    const b = candidate({ userId: "b", ...common });
+    const base = scoreCompatibility(a, b).score;
+    const withEmpty = scoreCompatibility(
+      { ...a, careDialect: { give: dist({}), receive: dist({}) } },
+      { ...b, careDialect: { give: dist({}), receive: dist({}) } },
+    ).score;
+    expect(withEmpty).toBe(base);
+  });
+
+  it("is symmetric when both sides have care dialect data", () => {
+    const a = {
+      ...candidate({ userId: "a", ...common, readinessScore: 70 }),
+      careDialect: {
+        give: dist({ spokenWarmth: 1 }),
+        receive: dist({ undividedTime: 1 }),
+      },
+    };
+    const b = {
+      ...candidate({ userId: "b", ...common, readinessScore: 65 }),
+      careDialect: {
+        give: dist({ undividedTime: 1 }),
+        receive: dist({ spokenWarmth: 1 }),
+      },
+    };
+    const ab = scoreCompatibility(a, b);
+    const ba = scoreCompatibility(b, a);
+    expect(ab.score).toBe(ba.score);
+    expect(ab.summary).toBe(ba.summary);
+  });
+
+  it("rewards complementary care styles over mismatched ones", () => {
+    // A gives spokenWarmth and wants undividedTime; B gives undividedTime and
+    // wants spokenWarmth, so each gives what the other most wants.
+    const complementary = scoreCompatibility(
+      {
+        ...candidate({ userId: "a", ...common }),
+        careDialect: {
+          give: dist({ spokenWarmth: 1 }),
+          receive: dist({ undividedTime: 1 }),
+        },
+      },
+      {
+        ...candidate({ userId: "b", ...common }),
+        careDialect: {
+          give: dist({ undividedTime: 1 }),
+          receive: dist({ spokenWarmth: 1 }),
+        },
+      },
+    );
+    const mismatched = scoreCompatibility(
+      {
+        ...candidate({ userId: "a", ...common }),
+        careDialect: {
+          give: dist({ spokenWarmth: 1 }),
+          receive: dist({ undividedTime: 1 }),
+        },
+      },
+      {
+        ...candidate({ userId: "b", ...common }),
+        careDialect: {
+          give: dist({ closeContact: 1 }),
+          receive: dist({ helpingHands: 1 }),
+        },
+      },
+    );
+    expect(complementary.score).toBeGreaterThan(mismatched.score);
+    expect(complementary.reasons.some((r) => /care styles/i.test(r))).toBe(
+      true,
+    );
+  });
+
+  it("never names the counterpart dialect in any reason (reveal-safe)", () => {
+    const result = scoreCompatibility(
+      {
+        ...candidate({ userId: "a", ...common }),
+        careDialect: {
+          give: dist({ spokenWarmth: 1 }),
+          receive: dist({ undividedTime: 1 }),
+        },
+      },
+      {
+        ...candidate({ userId: "b", ...common }),
+        careDialect: {
+          give: dist({ undividedTime: 1 }),
+          receive: dist({ spokenWarmth: 1 }),
+        },
+      },
+    );
+    const names = [
+      "Spoken Warmth",
+      "Helping Hands",
+      "Thoughtful Tokens",
+      "Undivided Time",
+      "Close Contact",
+      "Steady Presence",
+    ];
+    for (const reason of [...result.reasons, result.summary]) {
+      for (const n of names) expect(reason).not.toContain(n);
+    }
+  });
+});
+
 describe("gatesPass", () => {
   it("passes when both preferences admit each other", () => {
     const a = candidate({

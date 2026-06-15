@@ -51,11 +51,12 @@ export const PACKAGES: Package[] = [
     more: [
       { name: "Dating Archetype",      href: "/archetype" },
       { name: "Connection Style",      href: "/connection-style" },
+      { name: "Care Dialect",          href: "/care-dialect" },
       { name: "Compatibility Compass", href: "/compatibility-compass" },
     ],
     hubHref: "/blueprint",
     hubLabel: "Build your Blueprint",
-    activeHrefs: ["/blueprint", "/glow-up", "/mirror", "/gallery", "/archetype", "/connection-style", "/compatibility-compass"],
+    activeHrefs: ["/blueprint", "/glow-up", "/mirror", "/gallery", "/archetype", "/connection-style", "/care-dialect", "/compatibility-compass"],
   },
   {
     id: "messages",

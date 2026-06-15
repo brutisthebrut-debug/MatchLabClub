@@ -55,6 +55,7 @@ export interface ReadinessBreakdown {
   cosmicProfile: number;
   relocationOpen: number;
   verification: number;
+  careDialect: number;
 }
 
 /** Raw counts pulled from the database for each contributor. */
@@ -239,6 +240,14 @@ export interface SignalCounts {
    * higher and earns a badge, but it never gates a match and is never required.
    */
   verificationFacets: number;
+  /**
+   * Whether the user has completed the Care Dialect quiz (their tested give and
+   * receive distributions exist). One row per user, so this is 0 or 1. Mapping
+   * how someone gives and receives care is one of the strongest reads we have
+   * for who genuinely complements them; only the derived result is read here,
+   * never the raw quiz answers, which are never stored.
+   */
+  careDialect: number;
 }
 
 /**
@@ -1654,6 +1663,39 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       neverTouched: [
         "Your phone number, the one-time code, and any photo or document are never stored; only the fact that a check passed",
         "Verification only ever ranks you higher; it never gates, narrows, or is required for a match",
+      ],
+    },
+  },
+  {
+    id: "careDialect",
+    countKey: "careDialect",
+    dataSource: { kind: "firstParty" },
+    label: "Care Dialect",
+    dimensions: [
+      "how they give and receive care",
+      "what actually makes them feel cared for",
+    ],
+    weight: 0.12,
+    confidence: 0.7,
+    normalize: { kind: "binary" },
+    describe: () =>
+      `Has mapped their Care Dialect, so we know how they give care and what makes them feel cared for, one of the strongest reads we have for who genuinely complements them.`,
+    action: {
+      label: "Find your Care Dialect",
+      detail:
+        "Take the quiz to see how you give and receive care, then how it lines up with the people we match you with.",
+      href: "/care-dialect",
+    },
+    trust: {
+      origin: "The Care Dialect quiz you take yourself.",
+      noun: "profile",
+      seen: [
+        "Your give and receive dialect scores, the derived result of the quiz",
+        "Which dialect you guessed for yourself, kept only to compare against",
+      ],
+      neverTouched: [
+        "Your individual quiz answers; only the derived give and receive scores are kept, never the picks themselves",
+        "Any free text; the quiz is multiple choice and stores only which dialect each pick maps to",
       ],
     },
   },

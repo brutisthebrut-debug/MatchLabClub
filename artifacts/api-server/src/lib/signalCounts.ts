@@ -30,6 +30,7 @@ import {
   wingmanAnswersTable,
   cosmicChartsTable,
   userVerificationsTable,
+  careDialectProfilesTable,
 } from "@workspace/db";
 import {
   SIGNAL_REGISTRY,
@@ -266,6 +267,24 @@ export async function collectSignalCounts(
     (verificationRows[0]?.selfieVerified ? 1 : 0) +
     (verificationRows[0]?.idVerified ? 1 : 0);
 
+  // Care Dialect: one row per user holding their give/receive distributions. The
+  // signal is binary (completing the quiz fills the lane), so we read only
+  // whether tested data exists (a scored top key), never the raw answers, which
+  // are never stored, nor the distribution values themselves. Both axes must be
+  // scored to count, mirroring matching (styleFit needs both give and receive),
+  // so a partial row never awards the lane while matching still sees it empty.
+  const careDialectRows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(careDialectProfilesTable)
+    .where(
+      and(
+        eq(careDialectProfilesTable.userId, userId),
+        sql`${careDialectProfilesTable.testedGiveTop} is not null`,
+        sql`${careDialectProfilesTable.testedReceiveTop} is not null`,
+      ),
+    );
+  const careDialectCount = Number(careDialectRows[0]?.count ?? 0);
+
   // First-party counts: each comes from a bespoke query against a dedicated
   // table above, keyed here by the contributor's countKey.
   const counts = {
@@ -288,6 +307,7 @@ export async function collectSignalCounts(
     cosmicFacets,
     relocationFacets,
     verificationFacets,
+    careDialect: careDialectCount,
   } as SignalCounts;
 
   // Import-backed counts, derived from the registry's data-source descriptors so

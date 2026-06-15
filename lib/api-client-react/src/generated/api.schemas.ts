@@ -2869,6 +2869,213 @@ export interface CreateQuizResultResult {
 }
 
 /**
+ * Normalized weight per dialect, keyed by the stable dialect key. Values sum to ~1 across the six dialects; all six keys are present, zero when unused. Derived only, never raw answers.
+ */
+export interface CareDialectDistribution {[key: string]: number}
+
+/**
+ * The dialect the user guessed they primarily give.
+ * @nullable
+ */
+export type CareDialectProfileSelfGive = typeof CareDialectProfileSelfGive[keyof typeof CareDialectProfileSelfGive] | null;
+
+
+export const CareDialectProfileSelfGive = {
+  spokenWarmth: 'spokenWarmth',
+  helpingHands: 'helpingHands',
+  thoughtfulTokens: 'thoughtfulTokens',
+  undividedTime: 'undividedTime',
+  closeContact: 'closeContact',
+  steadyPresence: 'steadyPresence',
+} as const;
+
+/**
+ * The dialect the user guessed they most want to receive.
+ * @nullable
+ */
+export type CareDialectProfileSelfReceive = typeof CareDialectProfileSelfReceive[keyof typeof CareDialectProfileSelfReceive] | null;
+
+
+export const CareDialectProfileSelfReceive = {
+  spokenWarmth: 'spokenWarmth',
+  helpingHands: 'helpingHands',
+  thoughtfulTokens: 'thoughtfulTokens',
+  undividedTime: 'undividedTime',
+  closeContact: 'closeContact',
+  steadyPresence: 'steadyPresence',
+} as const;
+
+/**
+ * The top scored give dialect, or null when untested.
+ * @nullable
+ */
+export type CareDialectProfileTestedGiveTop = typeof CareDialectProfileTestedGiveTop[keyof typeof CareDialectProfileTestedGiveTop] | null;
+
+
+export const CareDialectProfileTestedGiveTop = {
+  spokenWarmth: 'spokenWarmth',
+  helpingHands: 'helpingHands',
+  thoughtfulTokens: 'thoughtfulTokens',
+  undividedTime: 'undividedTime',
+  closeContact: 'closeContact',
+  steadyPresence: 'steadyPresence',
+} as const;
+
+/**
+ * The top scored receive dialect, or null when untested.
+ * @nullable
+ */
+export type CareDialectProfileTestedReceiveTop = typeof CareDialectProfileTestedReceiveTop[keyof typeof CareDialectProfileTestedReceiveTop] | null;
+
+
+export const CareDialectProfileTestedReceiveTop = {
+  spokenWarmth: 'spokenWarmth',
+  helpingHands: 'helpingHands',
+  thoughtfulTokens: 'thoughtfulTokens',
+  undividedTime: 'undividedTime',
+  closeContact: 'closeContact',
+  steadyPresence: 'steadyPresence',
+} as const;
+
+export type CareDialectComparisonAlignment = typeof CareDialectComparisonAlignment[keyof typeof CareDialectComparisonAlignment];
+
+
+export const CareDialectComparisonAlignment = {
+  aligned: 'aligned',
+  partial: 'partial',
+  surprising: 'surprising',
+  unknown: 'unknown',
+} as const;
+
+/**
+ * Deterministic self-vs-tested read. giveMatch / receiveMatch are null when either the self pick or the tested top for that axis is missing.
+ */
+export interface CareDialectComparison {
+  /** @nullable */
+  giveMatch: boolean | null;
+  /** @nullable */
+  receiveMatch: boolean | null;
+  alignment: CareDialectComparisonAlignment;
+  insight: string;
+}
+
+/**
+ * A user's Care Dialect profile. The give/receive distributions and top keys are server-scored from the quiz; the self picks are what the user guessed. When no tested data exists the distributions are all-zero and the top keys are null. `isDemo` flags the anon demo example, which never reflects a real person.
+ */
+export interface CareDialectProfile {
+  /** True when the user has completed the quiz and tested data exists. */
+  hasProfile: boolean;
+  /** True when this is the signed-out demo example, not real data. */
+  isDemo: boolean;
+  /**
+     * The dialect the user guessed they primarily give.
+     * @nullable
+     */
+  selfGive: CareDialectProfileSelfGive;
+  /**
+     * The dialect the user guessed they most want to receive.
+     * @nullable
+     */
+  selfReceive: CareDialectProfileSelfReceive;
+  testedGiveDistribution: CareDialectDistribution;
+  /**
+     * The top scored give dialect, or null when untested.
+     * @nullable
+     */
+  testedGiveTop: CareDialectProfileTestedGiveTop;
+  testedReceiveDistribution: CareDialectDistribution;
+  /**
+     * The top scored receive dialect, or null when untested.
+     * @nullable
+     */
+  testedReceiveTop: CareDialectProfileTestedReceiveTop;
+  comparison: CareDialectComparison;
+  /**
+     * Optional Claude-enhanced reflection layered on the deterministic comparison when the deep AI lane is on. Null when the deterministic baseline is used.
+     * @nullable
+     */
+  narrative: string | null;
+  /** @nullable */
+  updatedAt: string | null;
+}
+
+/**
+ * @nullable
+ */
+export type SaveCareDialectInputSelfGive = typeof SaveCareDialectInputSelfGive[keyof typeof SaveCareDialectInputSelfGive] | null;
+
+
+export const SaveCareDialectInputSelfGive = {
+  spokenWarmth: 'spokenWarmth',
+  helpingHands: 'helpingHands',
+  thoughtfulTokens: 'thoughtfulTokens',
+  undividedTime: 'undividedTime',
+  closeContact: 'closeContact',
+  steadyPresence: 'steadyPresence',
+} as const;
+
+/**
+ * @nullable
+ */
+export type SaveCareDialectInputSelfReceive = typeof SaveCareDialectInputSelfReceive[keyof typeof SaveCareDialectInputSelfReceive] | null;
+
+
+export const SaveCareDialectInputSelfReceive = {
+  spokenWarmth: 'spokenWarmth',
+  helpingHands: 'helpingHands',
+  thoughtfulTokens: 'thoughtfulTokens',
+  undividedTime: 'undividedTime',
+  closeContact: 'closeContact',
+  steadyPresence: 'steadyPresence',
+} as const;
+
+export type SaveCareDialectInputGiveAnswersItem = typeof SaveCareDialectInputGiveAnswersItem[keyof typeof SaveCareDialectInputGiveAnswersItem];
+
+
+export const SaveCareDialectInputGiveAnswersItem = {
+  spokenWarmth: 'spokenWarmth',
+  helpingHands: 'helpingHands',
+  thoughtfulTokens: 'thoughtfulTokens',
+  undividedTime: 'undividedTime',
+  closeContact: 'closeContact',
+  steadyPresence: 'steadyPresence',
+} as const;
+
+export type SaveCareDialectInputReceiveAnswersItem = typeof SaveCareDialectInputReceiveAnswersItem[keyof typeof SaveCareDialectInputReceiveAnswersItem];
+
+
+export const SaveCareDialectInputReceiveAnswersItem = {
+  spokenWarmth: 'spokenWarmth',
+  helpingHands: 'helpingHands',
+  thoughtfulTokens: 'thoughtfulTokens',
+  undividedTime: 'undividedTime',
+  closeContact: 'closeContact',
+  steadyPresence: 'steadyPresence',
+} as const;
+
+/**
+ * The user's self picks plus per-answer dialect choices for each axis. Scoring is server-side; the server tallies these into distributions and stores only the derived result.
+ */
+export interface SaveCareDialectInput {
+  /** @nullable */
+  selfGive?: SaveCareDialectInputSelfGive;
+  /** @nullable */
+  selfReceive?: SaveCareDialectInputSelfReceive;
+  /**
+     * Per-answer chosen dialect for the give axis.
+     * @minItems 1
+     * @maxItems 30
+     */
+  giveAnswers: SaveCareDialectInputGiveAnswersItem[];
+  /**
+     * Per-answer chosen dialect for the receive axis.
+     * @minItems 1
+     * @maxItems 30
+     */
+  receiveAnswers: SaveCareDialectInputReceiveAnswersItem[];
+}
+
+/**
  * The deterministic compass output shown to the user.
  */
 export type CompassReadInputDeterministicResult = { [key: string]: unknown };

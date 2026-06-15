@@ -25,6 +25,7 @@ import {
   wingmanSelfRatingsTable,
   cosmicChartsTable,
   userVerificationsTable,
+  careDialectProfilesTable,
 } from "@workspace/db";
 import {
   GetTrustLedgerResponse,
@@ -441,6 +442,25 @@ const FIRST_PARTY_SOURCES: Record<
   // underlying sources is what lowers consistency. The handler exists so the
   // boot guard is satisfied and the ledger lists the lane honestly (held:false)
   // rather than 404-ing on a delete.
+  // Care Dialect: one row per user holding the derived give/receive
+  // distributions (never raw answers). Purge removes that single row, and
+  // countStored reports the same row so the ledger never claims it is empty
+  // while a purge would still delete something.
+  careDialect: {
+    countStored: (client, userId) =>
+      countBy(
+        client,
+        careDialectProfilesTable,
+        eq(careDialectProfilesTable.userId, userId),
+      ),
+    purge: async (tx, userId) => {
+      const rows = await tx
+        .delete(careDialectProfilesTable)
+        .where(eq(careDialectProfilesTable.userId, userId))
+        .returning({ id: careDialectProfilesTable.id });
+      return rows.length;
+    },
+  },
   consistency: {
     countStored: async () => 0,
     purge: async () => 0,

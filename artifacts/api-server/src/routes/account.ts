@@ -44,6 +44,7 @@ import {
   matchConnectionsTable,
   connectionMessagesTable,
   profilePhotosTable,
+  careDialectProfilesTable,
 } from "@workspace/db";
 import {
   ExportMyDataResponse,
@@ -658,6 +659,7 @@ router.delete("/account", async (req, res): Promise<void> => {
     db.delete(coachFollowUpsTable).where(eq(coachFollowUpsTable.userId, userId)),
     db.delete(waitlistTable).where(eq(waitlistTable.userId, userId)),
     db.delete(loginNotificationsTable).where(eq(loginNotificationsTable.userId, userId)),
+    db.delete(careDialectProfilesTable).where(eq(careDialectProfilesTable.userId, userId)),
   ]);
 
   // Echo companion surfaces: the evolving model of the user, the conversation
@@ -1174,6 +1176,14 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .where(eq(companionChannelPrefsTable.userId, userId))
         .returning({ userId: companionChannelPrefsTable.userId });
       tables["companion_channel_prefs"] = companionPrefsDel.length;
+
+      // Care Dialect profile: one derived give/receive row per user, NO FK to
+      // users.id, so we wipe it explicitly here to match the live delete path.
+      const careDialectDel = await tx
+        .delete(careDialectProfilesTable)
+        .where(eq(careDialectProfilesTable.userId, userId))
+        .returning({ id: careDialectProfilesTable.id });
+      tables["care_dialect_profiles"] = careDialectDel.length;
 
       // ── Finally the user row itself ───────────────────────────────────
       const userDel = await tx

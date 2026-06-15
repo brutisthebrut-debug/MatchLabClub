@@ -689,6 +689,87 @@ export const CreateQuizResultBody = zod.object({
 
 
 /**
+ * Returns the user's Care Dialect profile: the give and receive dialects
+they guessed for themselves, the server-scored tested distribution and top
+key per axis, and a deterministic self-vs-tested comparison. Signed-out
+callers get a clearly-flagged demo example so the page is never empty; the
+demo never reflects any real person. Only derived data is ever returned,
+never the raw quiz answers.
+
+ * @summary Get the signed-in user's Care Dialect profile, or a demo example
+ */
+export const GetCareDialectHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetCareDialectResponse = zod.object({
+  "hasProfile": zod.boolean().describe('True when the user has completed the quiz and tested data exists.'),
+  "isDemo": zod.boolean().describe('True when this is the signed-out demo example, not real data.'),
+  "selfGive": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The dialect the user guessed they primarily give.'),
+  "selfReceive": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The dialect the user guessed they most want to receive.'),
+  "testedGiveDistribution": zod.record(zod.string(), zod.number()).describe('Normalized weight per dialect, keyed by the stable dialect key. Values sum to ~1 across the six dialects; all six keys are present, zero when unused. Derived only, never raw answers.'),
+  "testedGiveTop": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The top scored give dialect, or null when untested.'),
+  "testedReceiveDistribution": zod.record(zod.string(), zod.number()).describe('Normalized weight per dialect, keyed by the stable dialect key. Values sum to ~1 across the six dialects; all six keys are present, zero when unused. Derived only, never raw answers.'),
+  "testedReceiveTop": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The top scored receive dialect, or null when untested.'),
+  "comparison": zod.object({
+  "giveMatch": zod.boolean().nullable(),
+  "receiveMatch": zod.boolean().nullable(),
+  "alignment": zod.enum(['aligned', 'partial', 'surprising', 'unknown']),
+  "insight": zod.string()
+}).describe('Deterministic self-vs-tested read. giveMatch \/ receiveMatch are null when either the self pick or the tested top for that axis is missing.'),
+  "narrative": zod.string().nullable().describe('Optional Claude-enhanced reflection layered on the deterministic comparison when the deep AI lane is on. Null when the deterministic baseline is used.'),
+  "updatedAt": zod.coerce.date().nullable()
+}).describe('A user\'s Care Dialect profile. The give\/receive distributions and top keys are server-scored from the quiz; the self picks are what the user guessed. When no tested data exists the distributions are all-zero and the top keys are null. `isDemo` flags the anon demo example, which never reflects a real person.')
+
+
+/**
+ * Accepts the user's self-identified give and receive dialects plus their
+per-answer dialect choices for each axis. Scoring runs server-side: the
+answers are tallied into normalized distributions and a top key per axis,
+and only that derived result is stored, one row per user, upserted on
+retake. Raw answers are never stored or sent to any prompt. Requires
+authentication; anonymous callers get 401.
+
+ * @summary Score and save the signed-in user's Care Dialect from quiz answers
+ */
+export const SaveCareDialectHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const saveCareDialectBodyGiveAnswersMax = 30;
+
+export const saveCareDialectBodyReceiveAnswersMax = 30;
+
+
+
+export const SaveCareDialectBody = zod.object({
+  "selfGive": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullish(),
+  "selfReceive": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullish(),
+  "giveAnswers": zod.array(zod.enum(['spokenWarmth', 'helpingHands', 'thoughtfulTokens', 'undividedTime', 'closeContact', 'steadyPresence'])).min(1).max(saveCareDialectBodyGiveAnswersMax).describe('Per-answer chosen dialect for the give axis.'),
+  "receiveAnswers": zod.array(zod.enum(['spokenWarmth', 'helpingHands', 'thoughtfulTokens', 'undividedTime', 'closeContact', 'steadyPresence'])).min(1).max(saveCareDialectBodyReceiveAnswersMax).describe('Per-answer chosen dialect for the receive axis.')
+}).describe('The user\'s self picks plus per-answer dialect choices for each axis. Scoring is server-side; the server tallies these into distributions and stores only the derived result.')
+
+export const SaveCareDialectResponse = zod.object({
+  "hasProfile": zod.boolean().describe('True when the user has completed the quiz and tested data exists.'),
+  "isDemo": zod.boolean().describe('True when this is the signed-out demo example, not real data.'),
+  "selfGive": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The dialect the user guessed they primarily give.'),
+  "selfReceive": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The dialect the user guessed they most want to receive.'),
+  "testedGiveDistribution": zod.record(zod.string(), zod.number()).describe('Normalized weight per dialect, keyed by the stable dialect key. Values sum to ~1 across the six dialects; all six keys are present, zero when unused. Derived only, never raw answers.'),
+  "testedGiveTop": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The top scored give dialect, or null when untested.'),
+  "testedReceiveDistribution": zod.record(zod.string(), zod.number()).describe('Normalized weight per dialect, keyed by the stable dialect key. Values sum to ~1 across the six dialects; all six keys are present, zero when unused. Derived only, never raw answers.'),
+  "testedReceiveTop": zod.union([zod.literal('spokenWarmth'),zod.literal('helpingHands'),zod.literal('thoughtfulTokens'),zod.literal('undividedTime'),zod.literal('closeContact'),zod.literal('steadyPresence'),zod.literal(null)]).nullable().describe('The top scored receive dialect, or null when untested.'),
+  "comparison": zod.object({
+  "giveMatch": zod.boolean().nullable(),
+  "receiveMatch": zod.boolean().nullable(),
+  "alignment": zod.enum(['aligned', 'partial', 'surprising', 'unknown']),
+  "insight": zod.string()
+}).describe('Deterministic self-vs-tested read. giveMatch \/ receiveMatch are null when either the self pick or the tested top for that axis is missing.'),
+  "narrative": zod.string().nullable().describe('Optional Claude-enhanced reflection layered on the deterministic comparison when the deep AI lane is on. Null when the deterministic baseline is used.'),
+  "updatedAt": zod.coerce.date().nullable()
+}).describe('A user\'s Care Dialect profile. The give\/receive distributions and top keys are server-scored from the quiz; the self picks are what the user guessed. When no tested data exists the distributions are all-zero and the top keys are null. `isDemo` flags the anon demo example, which never reflects a real person.')
+
+
+/**
  * Returns the authenticated user's personal invite code plus a
 privacy-respecting reflection of the people who joined from their
 invites and where each one is in the matching pool. Attribution comes
