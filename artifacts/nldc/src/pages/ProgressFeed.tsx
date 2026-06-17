@@ -59,7 +59,7 @@ const DEMO_FEED: FeedCard[] = [
   {
   id: "5", category: "recommendation", timeAgo: "6 days ago",
   headline: "Your profile hasn't caught up with your self-awareness",
-  body: "Based on the self-description entries you've added and the tools you've used, your bio may still reflect where you were when you wrote it, not who you are now. The Mirror Profile or Glow-Up Studio could help close that gap.",
+  body: "Based on the self-description entries you've added and the tools you've used, your bio may still reflect where you were when you wrote it, not who you are now. The Profile Reflection or Glow-Up Studio could help close that gap.",
   helpful: null,
   },
   {

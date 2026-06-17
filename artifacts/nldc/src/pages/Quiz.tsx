@@ -6,6 +6,7 @@ import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ArrowRight, Share2, Check, RefreshCw } from "lucide-react";
+import { Glyph } from "@/lib/glyphs";
 import { useToast } from "@/hooks/use-toast";
 
 const fadeUp = (delay = 0) => ({
@@ -105,7 +106,7 @@ const QUESTIONS: Question[] = [
 interface Archetype {
   key: ArchetypeKey;
   name: string;
-  emoji: string;
+  icon: string;
   tagline: string;
   color: string;
   bg: string;
@@ -120,7 +121,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
   connector: {
   key: "connector",
   name: "The Connector",
-  emoji: "🌿",
+  icon: "Sprout",
   tagline: "You make people feel seen, and you need that back",
   color: "hsl(var(--brand-green))",
   bg: "hsl(var(--brand-green) / 0.12)",
@@ -133,7 +134,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
   pursuer: {
   key: "pursuer",
   name: "The Bold Pursuer",
-  emoji: "⚡",
+  icon: "Zap",
   tagline: "You go for what you want, directly",
   color: "hsl(var(--brand-gold))",
   bg: "hsl(var(--brand-gold) / 0.12)",
@@ -146,7 +147,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
   adventurer: {
   key: "adventurer",
   name: "The Adventurer",
-  emoji: "🔥",
+  icon: "Flame",
   tagline: "You date with energy, lightness, and real presence",
   color: "hsl(var(--brand-rose))",
   bg: "hsl(var(--brand-rose) / 0.12)",
@@ -159,7 +160,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
   diver: {
   key: "diver",
   name: "The Deep Diver",
-  emoji: "🌊",
+  icon: "Waves",
   tagline: "You want something real, or nothing at all",
   color: "hsl(var(--brand-indigo))",
   bg: "hsl(var(--brand-indigo) / 0.12)",
@@ -172,7 +173,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
   anchor: {
   key: "anchor",
   name: "The Steady Anchor",
-  emoji: "⚓",
+  icon: "Anchor",
   tagline: "You're consistent, patient, and worth the wait",
   color: "hsl(190 55% 60%)",
   bg: "hsl(190 55% 60% / 0.12)",
@@ -185,7 +186,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
   builder: {
   key: "builder",
   name: "The Intentional Builder",
-  emoji: "🧭",
+  icon: "Compass",
   tagline: "You know what you want, and you're building toward it",
   color: "hsl(var(--brand-gold))",
   bg: "hsl(var(--brand-gold) / 0.12)",
@@ -356,9 +357,9 @@ export default function Quiz() {
   {/* Hero card */}
   <div className="glass border border-white/8 rounded-3xl p-7 text-center space-y-4"
   style={{ boxShadow: `0 0 60px ${withAlpha(archetype.color, 0.15)}` }}>
-  <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-3xl"
+  <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center"
   style={{ background: archetype.bg }}>
-  {archetype.emoji}
+  <Glyph name={archetype.icon} className="w-8 h-8" color={archetype.color} />
   </div>
   <div>
   <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: archetype.color }}>Your Dating Signal Type</p>

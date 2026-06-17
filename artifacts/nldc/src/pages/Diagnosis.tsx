@@ -13,13 +13,13 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Loader2, Sparkles, ArrowRight, CheckCircle, TrendingUp, AlertTriangle, Eye, Trophy, FileText } from "lucide-react";
+import { Loader2, Sparkles, ArrowRight, CheckCircle, TrendingUp, AlertTriangle, Eye, Trophy, FileText, Heart, Sun, Sprout, Telescope } from "lucide-react";
 
 const GOALS = [
-  { value: "find a relationship", label: "Find a relationship", emoji: "💍" },
-  { value: "casual dating", label: "Casual dating", emoji: "☀️" },
-  { value: "heal from a breakup", label: "Heal & rediscover myself", emoji: "🌱" },
-  { value: "just curious", label: "Just exploring", emoji: "🔭" },
+  { value: "find a relationship", label: "Find a relationship", icon: Heart },
+  { value: "casual dating", label: "Casual dating", icon: Sun },
+  { value: "heal from a breakup", label: "Heal & rediscover myself", icon: Sprout },
+  { value: "just curious", label: "Just exploring", icon: Telescope },
 ];
 
 type DiagnosisCategory = {
@@ -202,7 +202,7 @@ export default function Diagnosis() {
   { name: "Signal Check", href: "/signal-check" },
   { name: "Blueprint", href: "/blueprint" },
   { name: "Profile Glow-Up",href: "/glow-up" },
-  { name: "Mirror Profile", href: "/mirror" },
+  { name: "Profile Reflection", href: "/mirror" },
   { name: "Signal Quiz", href: "/quiz" },
   ].map(t => (
   <Link key={t.href} href={t.href}
@@ -291,14 +291,14 @@ export default function Diagnosis() {
 
   {/* Rewritten Line Preview */}
   <div className="glass border border-white/8 rounded-3xl p-7">
-  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">One Line, Rewritten ✦</p>
+  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">One Line, Rewritten</p>
   <div className="grid sm:grid-cols-2 gap-4">
   <div className="rounded-2xl p-4 bg-[hsl(248_40%_95%)] border border-white/8">
   <p className="text-xs text-muted-foreground font-medium mb-2">Before</p>
   <p className="text-sm text-muted-foreground italic">{bio.slice(0, 120) || "Your bio text would appear here."}{bio.length > 120 ? "..." : ""}</p>
   </div>
   <div className="rounded-2xl p-4 bg-[hsl(248_62%_52%/0.07)] border border-[hsl(248_62%_52%/0.25)]">
-  <p className="text-xs text-[hsl(248_62%_62%)] font-semibold mb-2">After ✦</p>
+  <p className="text-xs text-[hsl(248_62%_62%)] font-semibold mb-2">After</p>
   <p className="text-sm text-foreground">{result.report.rewrittenBio.slice(0, 180)}{result.report.rewrittenBio.length > 180 ? "..." : ""}</p>
   </div>
   </div>
@@ -397,7 +397,7 @@ export default function Diagnosis() {
   onClick={() => setGoal(g.value)}
   className={`p-5 rounded-2xl border text-left transition-all ${goal === g.value ? "border-[hsl(248_62%_52%/0.5)] bg-[hsl(248_62%_52%/0.1)]" : "border-white/8 bg-[hsl(248_40%_95%/0.5)] hover:border-white/15"}`}
   >
-  <p className="text-xl mb-2">{g.emoji}</p>
+  <g.icon className="w-6 h-6 mb-2 text-[hsl(248_62%_58%)]" />
   <p className="font-semibold text-foreground text-sm">{g.label}</p>
   </button>
   ))}

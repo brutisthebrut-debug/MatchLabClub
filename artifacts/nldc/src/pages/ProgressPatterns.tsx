@@ -62,7 +62,7 @@ const DEMO_PATTERNS: PatternCard[] = [
   description: "Your understanding of yourself has developed significantly over the last few weeks, but your profile was written earlier. There may be a gap between who you are now and what your profile communicates.",
   frequency: 1,
   lastSeen: "12 days ago",
-  suggestedAction: "Run your updated bio through the Mirror Profile or Glow-Up Studio.",
+  suggestedAction: "Run your updated bio through the Profile Reflection or Glow-Up Studio.",
   },
   {
   category: "theme",

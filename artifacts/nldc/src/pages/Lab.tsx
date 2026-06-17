@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
+import { Glyph } from "@/lib/glyphs";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
@@ -52,12 +53,12 @@ const DEMO_RESULT: CoachingResult = {
   coachTip: "After 5–7 messages of real back-and-forth, the window for asking someone out is actually narrowing, not growing. Conversations have a natural energy peak, ask while you're on it, not after it passes.",
 };
 
-const STYLE_META: Record<string, { gradient: string; emoji: string; headerBg: string; glow: string }> = {
-  "Warm": { gradient: "linear-gradient(135deg, hsl(348 55% 58%), hsl(var(--brand-indigo)))", emoji: "💜", headerBg: "hsl(348 55% 58% / 0.12)", glow: "0 4px 20px hsl(348 55% 58% / 0.3)" },
-  "Playful": { gradient: "linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-indigo)))", emoji: "😄", headerBg: "hsl(var(--brand-pink) / 0.12)", glow: "0 4px 20px hsl(var(--brand-pink) / 0.3)" },
-  "Direct": { gradient: "linear-gradient(135deg, hsl(43 65% 52%), hsl(43 55% 42%))", emoji: "→", headerBg: "hsl(43 65% 52% / 0.12)", glow: "0 4px 20px hsl(43 65% 52% / 0.3)" },
-  "Date Ask": { gradient: "linear-gradient(135deg, hsl(142 55% 42%), hsl(190 55% 48%))", emoji: "✦", headerBg: "hsl(142 55% 42% / 0.12)", glow: "0 4px 20px hsl(142 55% 42% / 0.3)" },
-  "Graceful Exit": { gradient: "linear-gradient(135deg, hsl(228 25% 42%), hsl(248 40% 34%))", emoji: "🤍", headerBg: "hsl(228 25% 42% / 0.12)", glow: "0 4px 16px hsl(228 25% 50% / 0.2)" },
+const STYLE_META: Record<string, { gradient: string; icon: string; headerBg: string; glow: string }> = {
+  "Warm": { gradient: "linear-gradient(135deg, hsl(348 55% 58%), hsl(var(--brand-indigo)))", icon: "Heart", headerBg: "hsl(348 55% 58% / 0.12)", glow: "0 4px 20px hsl(348 55% 58% / 0.3)" },
+  "Playful": { gradient: "linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-indigo)))", icon: "Smile", headerBg: "hsl(var(--brand-pink) / 0.12)", glow: "0 4px 20px hsl(var(--brand-pink) / 0.3)" },
+  "Direct": { gradient: "linear-gradient(135deg, hsl(43 65% 52%), hsl(43 55% 42%))", icon: "ArrowRight", headerBg: "hsl(43 65% 52% / 0.12)", glow: "0 4px 20px hsl(43 65% 52% / 0.3)" },
+  "Date Ask": { gradient: "linear-gradient(135deg, hsl(142 55% 42%), hsl(190 55% 48%))", icon: "Sparkles", headerBg: "hsl(142 55% 42% / 0.12)", glow: "0 4px 20px hsl(142 55% 42% / 0.3)" },
+  "Graceful Exit": { gradient: "linear-gradient(135deg, hsl(228 25% 42%), hsl(248 40% 34%))", icon: "DoorOpen", headerBg: "hsl(228 25% 42% / 0.12)", glow: "0 4px 16px hsl(228 25% 50% / 0.2)" },
 };
 
 function CopyButton({ text }: { text: string }) {
@@ -271,7 +272,7 @@ export default function Lab() {
   {/* Header */}
   <div className="flex items-center justify-between px-5 py-3" style={{ background: meta.headerBg }}>
   <div className="flex items-center gap-2">
-  <span className="text-base">{meta.emoji}</span>
+  <Glyph name={meta.icon} className="w-4 h-4" color={meta.gradient.split(',')[1]} />
   <span className="text-xs font-bold uppercase tracking-wider text-foreground">{reply.style}</span>
   </div>
   <CopyButton text={reply.text} />

@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { Clock, ArrowLeft, ArrowRight, Sparkles, BookOpen } from "lucide-react";
 import { ARTICLES, getArticleMeta } from "@/lib/blogArticles";
 import { resolveQuizForArticle } from "@/lib/quizzes";
+import { Glyph } from "@/lib/glyphs";
 import { trackEvent } from "@/lib/analytics";
 import { ShareButton } from "@/components/echo/ShareButton";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -4878,7 +4879,7 @@ export default function BlogPost({ slug }: { slug: string }) {
   style={{ borderColor: withAlpha(article.color, 0.25), borderWidth: "1px", borderStyle: "solid" }}
   >
   <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 mb-2">Take this further</p>
-  <h3 className="font-serif text-lg font-bold text-foreground mb-2">{quiz.emoji} {quiz.title}</h3>
+  <h3 className="font-serif text-lg font-bold text-foreground mb-2 flex items-center gap-2"><Glyph name={quiz.icon} className="w-4 h-4 shrink-0" color={withAlpha(article.color, 1)} />{quiz.title}</h3>
   <p className="text-sm text-muted-foreground mb-2">{quiz.pitch}</p>
   <p className="text-xs text-muted-foreground/70 mb-4">A two-minute read of where you stand, then it folds straight into your readiness score.</p>
   <Link

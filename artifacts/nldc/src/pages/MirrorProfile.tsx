@@ -154,7 +154,7 @@ const SECTIONS = [
 ];
 
 export default function MirrorProfile() {
-  useMeta("Mirror Profile", "See yourself the way others might, values, signals, gaps, and the one experiment that could shift everything.");
+  useMeta("Profile Reflection", "See yourself the way others might, values, signals, gaps, and the one experiment that could shift everything.");
   const [bio, setBio] = useState("");
   const [want, setWant] = useState("");
   const [result, setResult] = useState<MirrorResult | null>(null);
@@ -235,7 +235,7 @@ export default function MirrorProfile() {
   <ScanFace className="w-4 h-4 text-[hsl(248_62%_52%)]" />
   <p className="text-sm font-medium text-[hsl(248_62%_62%)]">Self-Insight</p>
   </div>
-  <h1 className="text-3xl font-bold text-foreground">Mirror Profile</h1>
+  <h1 className="text-3xl font-bold text-foreground">Profile Reflection</h1>
   <FallbackRateBadge toolName="Mirror Profile" className="mt-1" />
 
   <p className="text-muted-foreground mt-2 leading-relaxed">Paste your bio or a short self-description. We'll reflect back what it shows, values, patterns, gaps, and the version of you that isn't fully visible yet.<br /><span className="text-xs text-muted-foreground/60">Based only on what you share. Practical coaching guidance, not clinical advice.</span></p>
@@ -244,7 +244,7 @@ export default function MirrorProfile() {
   {isBrandNewUser && (
   <WelcomePanel
   icon={<ScanFace className="w-6 h-6 text-primary" />}
-  eyebrow="Welcome to Mirror Profile"
+  eyebrow="Welcome to Profile Reflection"
   title="See your bio through fresh eyes"
   description="Paste your bio or a short self-description and we'll reflect back what it actually signals, values, gaps, and one experiment that could shift everything."
   testId="mirror-empty-state"

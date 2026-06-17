@@ -1848,7 +1848,7 @@ function FunnelPanel({ founderKey }: { founderKey: string }) {
   </div>
   <div className="glass rounded-xl p-3" data-testid="stat-funnel-threshold">
   <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Readiness gate</p>
-  <p className="text-xl font-bold text-foreground mt-1">{data?.readinessThreshold ?? "—"}</p>
+  <p className="text-xl font-bold text-foreground mt-1">{data?.readinessThreshold ?? "Not set"}</p>
   </div>
   <div className="glass rounded-xl p-3" data-testid="stat-funnel-purchase-interest">
   <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Paid via Stripe</p>

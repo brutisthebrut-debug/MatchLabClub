@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { motion } from "framer-motion";
-import { Sparkles, ArrowRight, Star, Shield, Copy, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, ArrowRight, Star, Shield, Copy, Check, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { ShareButton } from "@/components/echo/ShareButton";
 
@@ -191,8 +191,8 @@ export default function SampleReport() {
   </div>
   </div>
   <div className="flex flex-wrap gap-2">
-  {["⚠ Generic opener", "⚠ No personality hook", "⚠ Could be anyone", "⚠ No conversation starter"].map(tag => (
-  <span key={tag} className="px-2.5 py-1 rounded-full text-xs bg-[hsl(348_55%_60%/0.1)] text-[hsl(348_55%_68%)] border border-[hsl(348_55%_60%/0.2)]">{tag}</span>
+  {["Generic opener", "No personality hook", "Could be anyone", "No conversation starter"].map(tag => (
+  <span key={tag} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-[hsl(348_55%_60%/0.1)] text-[hsl(348_55%_68%)] border border-[hsl(348_55%_60%/0.2)]"><AlertTriangle className="w-3 h-3 flex-shrink-0" />{tag}</span>
   ))}
   </div>
   </div>
@@ -248,8 +248,8 @@ export default function SampleReport() {
   </div>
   </motion.div>
 
-  {/* Mirror Profile */}
-  <SectionCard title="Mirror Profile" color="hsl(190 55% 60%)" badge="Signal Gap">
+  {/* Profile Reflection */}
+  <SectionCard title="Profile Reflection" color="hsl(190 55% 60%)" badge="Signal Gap">
   <div className="grid sm:grid-cols-2 gap-4 mb-4">
   <div>
   <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(348_55%_65%)] mb-2">What you project</p>
@@ -394,7 +394,7 @@ export default function SampleReport() {
   "Able to name what they actually want (not just what sounds good)",
   ].map(t => (
   <li key={t} className="text-xs text-muted-foreground/60 flex items-start gap-1.5">
-  <span className="text-[hsl(142_55%_60%)] mt-0.5 flex-shrink-0">✓</span>{t}
+  <Check className="w-3.5 h-3.5 text-[hsl(142_55%_60%)] mt-0.5 flex-shrink-0" />{t}
   </li>
   ))}
   </ul>

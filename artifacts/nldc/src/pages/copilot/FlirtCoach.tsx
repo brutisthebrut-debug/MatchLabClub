@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { FallbackRateBadge } from "@/components/FallbackRateBadge";
-import { Flame, Copy, Check, Loader2, RefreshCw, ArrowLeft, Shield } from "lucide-react";
+import { Flame, Copy, Check, Loader2, RefreshCw, ArrowLeft, Shield, Sparkles, Zap, MessageCircle, CalendarDays, Compass, DoorOpen } from "lucide-react";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -19,14 +19,14 @@ const fadeUp = (delay = 0) => ({
 });
 
 const GOALS = [
-  { label: "Flirt playfully", emoji: "✨", desc: "Keep it light and fun, warm interest, no pressure" },
-  { label: "Be direct about interest", emoji: "⚡", desc: "Say what you want clearly, without games" },
-  { label: "Set a clear boundary", emoji: "🛡️", desc: "Decline or redirect firmly but kindly" },
-  { label: "Ask for consent", emoji: "💬", desc: "Check in before escalating, explicit and natural" },
-  { label: "Escalate appropriately", emoji: "🔥", desc: "Move things forward when the moment is right" },
-  { label: "Ask for a date", emoji: "📅", desc: "Make a specific, confident ask to meet IRL" },
-  { label: "Ask for clarity", emoji: "🧭", desc: "Find out where things stand without spiralling" },
-  { label: "Exit cleanly", emoji: "🚪", desc: "Close things off kind and clear, no ghosting" },
+  { label: "Flirt playfully", icon: Sparkles, desc: "Keep it light and fun, warm interest, no pressure" },
+  { label: "Be direct about interest", icon: Zap, desc: "Say what you want clearly, without games" },
+  { label: "Set a clear boundary", icon: Shield, desc: "Decline or redirect firmly but kindly" },
+  { label: "Ask for consent", icon: MessageCircle, desc: "Check in before escalating, explicit and natural" },
+  { label: "Escalate appropriately", icon: Flame, desc: "Move things forward when the moment is right" },
+  { label: "Ask for a date", icon: CalendarDays, desc: "Make a specific, confident ask to meet IRL" },
+  { label: "Ask for clarity", icon: Compass, desc: "Find out where things stand without spiralling" },
+  { label: "Exit cleanly", icon: DoorOpen, desc: "Close things off kind and clear, no ghosting" },
 ];
 
 const TONES = ["Warm & natural", "Playful & flirty", "Direct & confident", "Soft & gentle", "Bold & explicit", "Thoughtful & clear"];
@@ -222,7 +222,7 @@ export default function FlirtCoach() {
   <button key={g.label} onClick={() => setGoal(prev => prev === g.label ? "" : g.label)}
   className={`px-4 py-3 rounded-xl border text-left transition-all ${goal === g.label ? "bg-[hsl(348_55%_65%/0.15)] border-[hsl(348_55%_65%/0.4)] text-foreground" : "border-white/8 text-muted-foreground hover:border-white/18 hover:text-foreground"}`}>
   <div className="flex items-center gap-2">
-  <span className="text-base">{g.emoji}</span>
+  <g.icon className="w-4 h-4 text-[hsl(348_55%_65%)]" />
   <div>
   <p className="text-xs font-semibold leading-tight">{g.label}</p>
   <p className="text-[10px] text-muted-foreground/50 mt-0.5 leading-tight">{g.desc}</p>

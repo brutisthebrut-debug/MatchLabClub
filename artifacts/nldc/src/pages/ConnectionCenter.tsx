@@ -537,7 +537,7 @@ const RESEARCHING: Connector[] = [
     icon: MessageSquare,
     color: "hsl(142 55% 55%)",
     blurb:
-      "End-to-end encrypted by design. We are researching on-device processing so message tone analysis happens without anything leaving your phone. Open question: can we deliver useful coaching while honouring the E2EE contract.",
+      "End-to-end encrypted by design, which is exactly why this is hard. Everything we run today is server-side, so we will only pursue this if there is a way to get a tone read without your raw messages ever reaching our servers. Open question: can we honour the E2EE contract and still deliver useful coaching. Until we can, it stays in research.",
     returns: "If it lands, the most accurate tone read in the product.",
   },
   {
@@ -564,13 +564,13 @@ const RESEARCHING: Connector[] = [
     icon: Images,
     color: "hsl(280 55% 60%)",
     blurb:
-      "Your camera roll is the most honest record of how you actually spend your time. We are researching fully on-device vibe reads (outdoors versus indoors, social versus solo, the settings you gravitate to) so nothing but a small derived summary ever leaves your phone. Open question: can we surface a useful read while keeping every photo on-device.",
+      "Your camera roll is the most honest record of how you actually spend your time. We are researching a vibe read (outdoors versus indoors, social versus solo, the settings you gravitate to) from photos you choose to share. The deterministic baseline runs server-side with no external calls; the opt-in Deep AI lane reads an image in the moment and never stores it. We keep only a small derived summary, never the photos. Open question: can we make the read useful while keeping nothing but that summary.",
     returns: "If it lands, a lifestyle read that grounds your profile in how you really live.",
     access: [
-      "A small on-device summary of scene types and social patterns, computed locally",
+      "A small derived summary of scene types and social patterns, never the photos themselves",
     ],
     excludes: [
-      "Any actual photo leaving your device",
+      "Any photo kept after we derive the summary",
       "Faces, names, or who is in your pictures",
       "Exact locations or timestamps",
     ],

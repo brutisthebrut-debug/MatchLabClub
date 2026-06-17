@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { WelcomePanel } from "@/components/WelcomePanel";
 import { Loader2, Sparkles, RefreshCw, Info } from "lucide-react";
+import { Glyph } from "@/lib/glyphs";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { FallbackNotice } from "@/components/FallbackNotice";
@@ -77,12 +78,12 @@ const QUESTIONS = [
 type StyleKey = "sparkChaser" | "slowBurn" | "qualityFilter" | "steadySeeker" | "guardedRomantic" | "anxiousConfirmer" | "secureBuilder" | "intensityResponder" | "avoidantEditor" | "lowTrustDater" | "directSeeker";
 
 const STYLES: Record<StyleKey, {
-  name: string; emoji: string; color: string; bg: string; border: string;
+  name: string; icon: string; color: string; bg: string; border: string;
   tagline: string; strengths: string[]; activationPattern: string; whatHelps: string; nextExperiment: string;
 }> = {
   sparkChaser: {
   name: "Spark Chaser",
-  emoji: "⚡",
+  icon: "Zap",
   color: "hsl(var(--brand-gold))",
   bg: "hsl(var(--brand-gold) / 0.08)",
   border: "hsl(var(--brand-gold) / 0.25)",
@@ -94,7 +95,7 @@ const STYLES: Record<StyleKey, {
   },
   slowBurn: {
   name: "Slow Burn",
-  emoji: "🕯️",
+  icon: "Flame",
   color: "hsl(var(--brand-indigo))",
   bg: "hsl(var(--brand-indigo) / 0.08)",
   border: "hsl(var(--brand-indigo) / 0.25)",
@@ -106,7 +107,7 @@ const STYLES: Record<StyleKey, {
   },
   qualityFilter: {
   name: "Quality Filter",
-  emoji: "🔎",
+  icon: "Search",
   color: "hsl(190 55% 60%)",
   bg: "hsl(190 55% 60% / 0.08)",
   border: "hsl(190 55% 60% / 0.25)",
@@ -118,7 +119,7 @@ const STYLES: Record<StyleKey, {
   },
   steadySeeker: {
   name: "Steady Seeker",
-  emoji: "🧭",
+  icon: "Compass",
   color: "hsl(var(--brand-green))",
   bg: "hsl(var(--brand-green) / 0.08)",
   border: "hsl(var(--brand-green) / 0.25)",
@@ -130,7 +131,7 @@ const STYLES: Record<StyleKey, {
   },
   guardedRomantic: {
   name: "Guarded Romantic",
-  emoji: "🗝️",
+  icon: "Key",
   color: "hsl(326 100% 65%)",
   bg: "hsl(326 100% 65% / 0.08)",
   border: "hsl(326 100% 65% / 0.25)",
@@ -142,7 +143,7 @@ const STYLES: Record<StyleKey, {
   },
   anxiousConfirmer: {
   name: "Anxious Confirmer",
-  emoji: "💬",
+  icon: "MessageCircle",
   color: "hsl(var(--brand-rose))",
   bg: "hsl(var(--brand-rose) / 0.08)",
   border: "hsl(var(--brand-rose) / 0.25)",
@@ -154,7 +155,7 @@ const STYLES: Record<StyleKey, {
   },
   secureBuilder: {
   name: "Secure Builder",
-  emoji: "🏛️",
+  icon: "Landmark",
   color: "hsl(190 55% 60%)",
   bg: "hsl(190 55% 60% / 0.08)",
   border: "hsl(190 55% 60% / 0.25)",
@@ -166,7 +167,7 @@ const STYLES: Record<StyleKey, {
   },
   intensityResponder: {
   name: "Intensity Responder",
-  emoji: "🔥",
+  icon: "Flame",
   color: "hsl(var(--brand-gold))",
   bg: "hsl(var(--brand-gold) / 0.08)",
   border: "hsl(var(--brand-gold) / 0.25)",
@@ -178,7 +179,7 @@ const STYLES: Record<StyleKey, {
   },
   avoidantEditor: {
   name: "Avoidant Editor",
-  emoji: "✏️",
+  icon: "Pencil",
   color: "hsl(228 18% 65%)",
   bg: "hsl(228 18% 65% / 0.08)",
   border: "hsl(228 18% 65% / 0.25)",
@@ -190,7 +191,7 @@ const STYLES: Record<StyleKey, {
   },
   lowTrustDater: {
   name: "Low-Trust Dater",
-  emoji: "🔒",
+  icon: "Lock",
   color: "hsl(326 100% 65%)",
   bg: "hsl(326 100% 65% / 0.08)",
   border: "hsl(326 100% 65% / 0.25)",
@@ -202,7 +203,7 @@ const STYLES: Record<StyleKey, {
   },
   directSeeker: {
   name: "Quality Filter",
-  emoji: "🔎",
+  icon: "Search",
   color: "hsl(190 55% 60%)",
   bg: "hsl(190 55% 60% / 0.08)",
   border: "hsl(190 55% 60% / 0.25)",
@@ -459,7 +460,7 @@ export default function ConnectionStyle() {
   )}
   {/* Header */}
   <div className="rounded-3xl p-8 border text-center" style={{ background: style!.bg, borderColor: style!.border }}>
-  <div className="text-5xl mb-4">{style!.emoji}</div>
+  <div className="mb-4 flex justify-center"><Glyph name={style!.icon} className="w-12 h-12" color={style!.color} /></div>
   <h2 className="text-2xl font-bold text-foreground mb-2">{style!.name}</h2>
   <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">{style!.tagline}</p>
   </div>

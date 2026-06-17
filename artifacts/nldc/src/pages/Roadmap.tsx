@@ -74,7 +74,7 @@ const LEVELS = [
   modules: ["Screenshot Upload", "Profile Reader", "Presence Audit"],
   module_links: ["/start", "/profile-reader", "/start"],
   insight: "Most people present differently across Hinge, LinkedIn, and Instagram without realising it. This level maps the gaps, and reads what's actually in your screenshots, so the right people recognise you everywhere.",
-  technical: "On-device-style OCR, structured extraction, and deterministic coaching. No passive screen capture. You upload only what you approve.",
+  technical: "OCR and structured extraction on the screenshots you upload, then deterministic coaching. No passive screen capture. You upload only what you approve.",
   accentColor: "hsl(var(--brand-indigo))",
   },
   {

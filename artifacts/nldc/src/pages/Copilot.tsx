@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import {
   Sparkles, Zap, Star, MessageSquare, Heart,
   BarChart2, Calendar, Compass, Shield,
+  MessageCircle, Wind, Palette, RefreshCw,
 } from "lucide-react";
 
 const fadeUp = (delay = 0) => ({
@@ -16,11 +17,11 @@ const fadeUp = (delay = 0) => ({
 });
 
 const QUICK_MOMENTS = [
-  { emoji: "💬", label: "They Didn't Reply", hint: "Re-engage after quiet", href: "/next-message" },
-  { emoji: "✨", label: "I Got a Match!", hint: "Write your first opener", href: "/copilot/reply" },
-  { emoji: "🌀", label: "I'm Spiraling", hint: "Ground yourself fast", href: "/blueprint" },
-  { emoji: "🎨", label: "Sound More Like Me", hint: "Tone-match your rewrite", href: "/copilot/profile" },
-  { emoji: "🔄", label: "What Changed?", hint: "Check in on your progress", href: "/copilot/what-changed" },
+  { icon: MessageCircle, color: "hsl(190 55% 60%)", label: "They Didn't Reply", hint: "Re-engage after quiet", href: "/next-message" },
+  { icon: Sparkles, color: "hsl(var(--brand-gold))", label: "I Got a Match!", hint: "Write your first opener", href: "/copilot/reply" },
+  { icon: Wind, color: "hsl(var(--brand-rose))", label: "I'm Spiraling", hint: "Ground yourself fast", href: "/blueprint" },
+  { icon: Palette, color: "hsl(var(--brand-indigo))", label: "Sound More Like Me", hint: "Tone-match your rewrite", href: "/copilot/profile" },
+  { icon: RefreshCw, color: "hsl(var(--brand-green))", label: "What Changed?", hint: "Check in on your progress", href: "/copilot/what-changed" },
 ];
 
 const WORKFLOWS = [
@@ -164,7 +165,7 @@ export default function Copilot() {
   {QUICK_MOMENTS.map((qm) => (
   <Link key={qm.href} href={qm.href}>
   <div className="glass border border-white/8 rounded-xl p-3 hover:border-white/18 transition-all cursor-pointer text-center group">
-  <div className="text-xl mb-1.5">{qm.emoji}</div>
+  <div className="mb-1.5 flex justify-center"><qm.icon className="w-5 h-5" style={{ color: qm.color }} /></div>
   <p className="text-[11px] font-semibold text-foreground leading-tight group-hover:text-white transition-colors">{qm.label}</p>
   <p className="text-[10px] text-muted-foreground/55 mt-0.5 leading-tight">{qm.hint}</p>
   </div>

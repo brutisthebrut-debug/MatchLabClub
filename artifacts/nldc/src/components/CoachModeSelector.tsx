@@ -1,13 +1,13 @@
 import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Zap, Target, Leaf, Sparkles, Compass, Shield, type LucideIcon } from "lucide-react";
 
 export type CoachMode = "wingman" | "direct-friend" | "soft-mirror" | "flirt-coach" | "grounded-strategist" | "consent-aware";
 
 export interface CoachModeConfig {
   key: CoachMode;
   label: string;
-  emoji: string;
+  icon: LucideIcon;
   tagline: string;
   toneHint: string;
   color: string;
@@ -17,7 +17,7 @@ export const COACH_MODES: CoachModeConfig[] = [
   {
   key: "wingman",
   label: "Wingman",
-  emoji: "⚡",
+  icon: Zap,
   tagline: "Your warm, encouraging partner in this",
   toneHint: "Warm, supportive, action-oriented. Celebrates effort, keeps things moving.",
   color: "hsl(var(--brand-indigo))",
@@ -25,7 +25,7 @@ export const COACH_MODES: CoachModeConfig[] = [
   {
   key: "direct-friend",
   label: "Direct Friend",
-  emoji: "🎯",
+  icon: Target,
   tagline: "No BS, honest feedback, says what most won't",
   toneHint: "Straight talk, zero sugarcoating. Respects you enough to tell it like it is.",
   color: "hsl(var(--brand-gold))",
@@ -33,7 +33,7 @@ export const COACH_MODES: CoachModeConfig[] = [
   {
   key: "soft-mirror",
   label: "Soft Mirror",
-  emoji: "🌿",
+  icon: Leaf,
   tagline: "Gentle reflection, helps you see your own patterns",
   toneHint: "Curious, non-judgmental. Asks questions, mirrors back what it notices.",
   color: "hsl(var(--brand-green))",
@@ -41,7 +41,7 @@ export const COACH_MODES: CoachModeConfig[] = [
   {
   key: "flirt-coach",
   label: "Flirt Coach",
-  emoji: "✨",
+  icon: Sparkles,
   tagline: "Playful help with tone, attraction, and directness",
   toneHint: "Light, warm, a bit cheeky. Keeps advice fun and not overthought.",
   color: "hsl(var(--brand-rose))",
@@ -49,7 +49,7 @@ export const COACH_MODES: CoachModeConfig[] = [
   {
   key: "grounded-strategist",
   label: "Grounded Strategist",
-  emoji: "🧭",
+  icon: Compass,
   tagline: "Practical, data-minded, clear on what actually works",
   toneHint: "Logical, efficient, pattern-aware. Fewer feelings, more frameworks.",
   color: "hsl(190 55% 60%)",
@@ -57,7 +57,7 @@ export const COACH_MODES: CoachModeConfig[] = [
   {
   key: "consent-aware",
   label: "Consent-Aware Coach",
-  emoji: "🛡️",
+  icon: Shield,
   tagline: "Boundaries, clarity, respect, built into every suggestion",
   toneHint: "Consent-forward, non-coercive, always checks the other person's experience too.",
   color: "hsl(326 100% 65%)",
@@ -81,7 +81,7 @@ export function CoachModeSelector({ value, onChange, compact = false }: CoachMod
   onClick={() => setOpen(o => !o)}
   className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 hover:border-white/20 transition-all text-xs font-medium text-muted-foreground hover:text-foreground"
   >
-  <span>{active.emoji}</span>
+  <active.icon className="w-3.5 h-3.5" style={{ color: active.color }} />
   <span>{active.label}</span>
   {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
   </button>
@@ -96,7 +96,7 @@ export function CoachModeSelector({ value, onChange, compact = false }: CoachMod
   value === mode.key ? "bg-white/8" : "hover:bg-white/4"
   }`}
   >
-  <span className="text-base flex-shrink-0 mt-0.5">{mode.emoji}</span>
+  <mode.icon className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: mode.color }} />
   <div>
   <p className="text-xs font-semibold text-foreground leading-tight">{mode.label}</p>
   <p className="text-[10px] text-muted-foreground/55 mt-0.5 leading-snug">{mode.tagline}</p>
@@ -132,7 +132,7 @@ export function CoachModeSelector({ value, onChange, compact = false }: CoachMod
   color: undefined,
   } : undefined}
   >
-  <span>{mode.emoji}</span>
+  <mode.icon className="w-3.5 h-3.5" style={{ color: mode.color }} />
   <span>{mode.label}</span>
   </button>
   ))}

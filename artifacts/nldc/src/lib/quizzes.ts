@@ -34,7 +34,7 @@ export interface QuizQuestion {
 
 export interface QuizArchetype {
   name: string;
-  emoji: string;
+  icon: string;
   tagline: string;
   /** 2-3 sentence insight body. */
   insight: string;
@@ -52,7 +52,7 @@ export interface Quiz {
   pitch: string;
   /** Estimated time-to-complete in seconds. */
   durationSec: number;
-  emoji: string;
+  icon: string;
   /** Short wellness dimension(s) this quiz quietly maps to. Shown in the hub. */
   feeds: string[];
   questions: QuizQuestion[];
@@ -65,7 +65,7 @@ const LOVE_PACE: Quiz = {
   title: "How do you love?",
   pitch: "Five questions to find your love-pace archetype, the speed and shape of how you actually fall.",
   durationSec: 90,
-  emoji: "💗",
+  icon: "Heart",
   feeds: ["intimacy.pace", "communication.tempo", "affection.style"],
   questions: [
     {
@@ -117,7 +117,7 @@ const LOVE_PACE: Quiz = {
   archetypes: {
     freefaller: {
       name: "The Freefaller",
-      emoji: "🌠",
+      icon: "Star",
       tagline: "You feel it fast and you don't apologize for it. Your superpower is presence; your edge is pacing.",
       insight: "You bring an intensity most people don't, which means when you land with the right person, the connection is electric early. The challenge is that fast-feeling people often partner with slow-feeling people, which can read as you being 'too much' when really you're just operating at a different speed. The work isn't dimming your wattage; it's giving them runway to catch up.",
       nextStep: "Try a 'one-day delay' before your most enthusiastic reply this week. Not to play games, but to see whether the urgency is yours or theirs.",
@@ -126,7 +126,7 @@ const LOVE_PACE: Quiz = {
     },
     steady: {
       name: "The Steady",
-      emoji: "🕊️",
+      icon: "Bird",
       tagline: "You love at the pace of actual life. Real, reliable, unflashy, and rarer than you think.",
       insight: "You move at the speed of evidence. You're not avoiding intensity; you're earning it. People who date you describe it as 'easy', which is meant as a compliment but you sometimes hear as 'unexciting'. It's not. The right person will register your steadiness as safety, not absence.",
       nextStep: "Make one small move this week that's louder than feels natural: a specific compliment, an unprompted plan. Steady doesn't have to mean quiet.",
@@ -135,7 +135,7 @@ const LOVE_PACE: Quiz = {
     },
     observer: {
       name: "The Observer",
-      emoji: "🔭",
+      icon: "Telescope",
       tagline: "You're the one watching the whole movie. You read patterns most people miss, and you let them play out before you decide.",
       insight: "You don't get fooled often. You log inconsistencies, you notice tone shifts, you wait for the third date because the third date tells the truth. This makes you a great partner to the right person and slightly terrifying to the wrong one. The shadow: sometimes the watching becomes a way to stay safe instead of a way to choose well.",
       nextStep: "On your next date, share one thing you usually wait three dates to mention. See what it changes.",
@@ -144,7 +144,7 @@ const LOVE_PACE: Quiz = {
     },
     builder: {
       name: "The Builder",
-      emoji: "🏗️",
+      icon: "Construction",
       tagline: "You're not looking for fireworks. You're looking for someone you can build a life with, and you check the foundation first.",
       insight: "You think in terms of fit, not chemistry. This is mature and underrated and exactly what works long-term. The challenge in early dating is that the apps reward chemistry-forward profiles, so your kind of love can read as muted on first scroll. Once someone gets the full picture of you, they tend to stay.",
       nextStep: "Add one specific 'what I'm building' line to your profile this week. Not 'looking for partnership'. Say what the actual life looks like.",
@@ -153,7 +153,7 @@ const LOVE_PACE: Quiz = {
     },
     devoted: {
       name: "The Devoted",
-      emoji: "🪢",
+      icon: "Layers",
       tagline: "Once you choose someone, you choose them. Loyalty isn't a performance for you. It's the baseline.",
       insight: "You don't half-show-up. The person you're dating gets your attention, your effort, and your time. This is rare and the right person will recognize it within a month. The challenge: devoted people sometimes invest before someone has earned it, and then have a hard time recalibrating when the investment isn't being matched.",
       nextStep: "Pick one specific behavior you'd need from a partner to keep showing up the way you do. Name it before the next person you meet.",
@@ -169,7 +169,7 @@ const CONFLICT_INSTINCT: Quiz = {
   title: "What's your conflict instinct?",
   pitch: "How you handle tension in early dating shapes whether real intimacy ever gets a chance. Six questions.",
   durationSec: 75,
-  emoji: "⚡",
+  icon: "Zap",
   feeds: ["conflict.style", "communication.repair", "boundaries.expression"],
   questions: [
     {
@@ -230,7 +230,7 @@ const CONFLICT_INSTINCT: Quiz = {
   archetypes: {
     confronter: {
       name: "The Direct Line",
-      emoji: "🎯",
+      icon: "Target",
       tagline: "You'd rather have the awkward conversation now than the worse one later. People with you know where they stand.",
       insight: "You don't let things fester. Your style works beautifully with someone who can match the directness, and crushes someone who needs more runway. The skill to develop: noticing whether your directness is information or pressure, and using slightly more wrap when the other person is the cautious type.",
       nextStep: "Next hard convo, lead with what you want before what's wrong. 'I want this to keep working, which is why I'm bringing this up.'",
@@ -239,7 +239,7 @@ const CONFLICT_INSTINCT: Quiz = {
     },
     processor: {
       name: "The Slow Drafter",
-      emoji: "📝",
+      icon: "PencilLine",
       tagline: "You don't react, you respond, once you've actually thought it through. People with you get measured, accurate, true.",
       insight: "Your gift is that what you say is what you actually mean. Your edge: the processing time can read as withdrawal or punishment to someone who needs reassurance in the moment. Saying 'I want to think about this and come back in 20 minutes' is the move. It names the delay so they don't fill it with worst-case stories.",
       nextStep: "Practice the bridge sentence: 'I hear you. I want to think before I respond. Back in an hour.' Then actually come back in an hour.",
@@ -248,7 +248,7 @@ const CONFLICT_INSTINCT: Quiz = {
     },
     archiver: {
       name: "The Pattern Reader",
-      emoji: "🗂️",
+      icon: "FolderOpen",
       tagline: "You don't make a thing of individual moments, you watch the trend. This makes you wise and, occasionally, withholding.",
       insight: "You collect data instead of confronting. Over months, this means you see things other people miss. In early dating, it can mean things go quietly stale because the other person didn't know there was anything to fix. The growth edge: one specific, low-stakes piece of feedback shared early changes the relationship's whole trajectory.",
       nextStep: "Pick one small thing you've quietly noted in your last 2 connections. Say it once, early, in a low-stakes moment. See what happens.",
@@ -257,7 +257,7 @@ const CONFLICT_INSTINCT: Quiz = {
     },
     smoother: {
       name: "The Atmosphere",
-      emoji: "🌅",
+      icon: "Sunrise",
       tagline: "You keep the temperature right. You protect the connection. People feel safe and warm with you.",
       insight: "You're the reason fights don't spiral and dates don't curdle. The shadow: smoothing can become avoiding, and the things that didn't get said become resentments that show up months later disguised as something else. Real repair sometimes means letting it stay uncomfortable for an hour.",
       nextStep: "This week, when you'd usually shift the energy, try staying with the awkward for one extra minute. Watch what comes out of you.",
@@ -266,7 +266,7 @@ const CONFLICT_INSTINCT: Quiz = {
     },
     repairer: {
       name: "The Repair Artist",
-      emoji: "🧵",
+      icon: "Wrench",
       tagline: "You're the rare person who can both name what's wrong AND restitch the connection after. This is genuinely uncommon.",
       insight: "You don't avoid hard conversations and you don't get stuck in them. You can hold 'this hurt me' and 'I still want this' in the same sentence. This makes you the kind of partner relationships survive on. Watch for over-functioning: doing all the repair work yourself while the other person watches.",
       nextStep: "Next time something needs repair, wait 24 hours before you initiate it. See if they come to you. Their move tells you a lot.",
@@ -282,7 +282,7 @@ const ENERGY_SOURCES: Quiz = {
   title: "What lights you up?",
   pitch: "Find your aliveness signature, what genuinely energises you and what to put in your profile so the right people lean in.",
   durationSec: 60,
-  emoji: "✨",
+  icon: "Sparkles",
   feeds: ["lifestyle.energy_sources", "values.priorities", "social.style"],
   questions: [
     {
@@ -339,7 +339,7 @@ const ENERGY_SOURCES: Quiz = {
   archetypes: {
     kindler: {
       name: "The Kindler",
-      emoji: "🔥",
+      icon: "Flame",
       tagline: "You bring the energy. Rooms turn up when you walk in. Your profile should sound the way you actually feel.",
       insight: "You're a high-output, high-warmth person and the apps usually underplay you because warmth doesn't photograph. The profile move: lead with a specific recent moment that shows the energy (not 'love to laugh', show what made you laugh hardest this week). Right people lean in immediately.",
       nextStep: "Rewrite your first line as a single recent moment. 'Yesterday I…' beats 'I love…' every time.",
@@ -348,7 +348,7 @@ const ENERGY_SOURCES: Quiz = {
     },
     tender: {
       name: "The Tender",
-      emoji: "🌿",
+      icon: "Sprout",
       tagline: "You love quietly and well. The right person will recognise it the moment they meet you. Your profile just has to show it.",
       insight: "You're not a fireworks person and that's a feature. The trick: 'easy to be with' is great in person and invisible in text. Your profile should lean specific over breezy: one detail about how you actually like Sundays, what you cook on weeknights, the friend you've had since you were ten. Specifics radiate warmth.",
       nextStep: "Pick one sentence in your current bio that's a generic vibe. Replace it with a real detail from this week.",
@@ -357,7 +357,7 @@ const ENERGY_SOURCES: Quiz = {
     },
     explorer: {
       name: "The Explorer",
-      emoji: "🧭",
+      icon: "Compass",
       tagline: "You're alive when there's something new. The profile move is to make the next date feel like an adventure, even a small one.",
       insight: "You filter for novelty and depth: places, ideas, people. Your bio probably sounds like everyone else's because we're all told to mention travel. Stand out by getting specific about the kind of exploring: 'I read about Antarctic exploration before bed' or 'I cannot stop trying neighbourhood ramen places'.",
       nextStep: "Propose a first date that's slightly novel: a museum, an unfamiliar cuisine, a walk somewhere neither of you knows. Watch your response rate.",
@@ -366,7 +366,7 @@ const ENERGY_SOURCES: Quiz = {
     },
     maker: {
       name: "The Maker",
-      emoji: "🛠️",
+      icon: "Hammer",
       tagline: "You build things: projects, careers, routines, lives. Your profile should sound like someone going somewhere on purpose.",
       insight: "You filter for direction and discipline. People who match your energy are out there but won't recognise you in a profile that hides what you're building. Be honest about the project: 'I'm in year three of building a clinic / writing a book / training for an ultra'. Specifics like this attract aligned humans and filter out chaos.",
       nextStep: "Put one specific 'what I'm building' line in your profile this week. Not aspirational, just what you're actually doing right now.",
@@ -375,7 +375,7 @@ const ENERGY_SOURCES: Quiz = {
     },
     depthseeker: {
       name: "The Depthseeker",
-      emoji: "🌊",
+      icon: "Waves",
       tagline: "You want the real conversation, the second question, the why behind the what. Your profile should make that obvious.",
       insight: "You filter out small talk fast and you're hungry for people who can go deep. The risk: profiles full of philosophy quotes attract performers, not depth. The move is asking better questions in the bio itself: share something specific you've been thinking about, frame it like an invitation to disagree.",
       nextStep: "Replace one bio line with an actual question you've been turning over. The right person will answer it on the first date.",
@@ -384,7 +384,7 @@ const ENERGY_SOURCES: Quiz = {
     },
     gatherer: {
       name: "The Gatherer",
-      emoji: "🪩",
+      icon: "Disc",
       tagline: "Your life has a center of gravity. People come over. Plans happen. The right partner will be drawn into your orbit.",
       insight: "You're the connector. The challenge is that 'I have a great life and friends' reads as a humble brag in a bio. Better: show one ritual ('Sunday breakfasts with the same four friends for six years') instead of describing the abundance. Lets the right person picture themselves in it.",
       nextStep: "Replace 'I love my friends' with one specific recurring thing you do with them. Two sentences max.",
@@ -400,7 +400,7 @@ const BOUNDARY_BLUEPRINT: Quiz = {
   title: "Your boundary blueprint",
   pitch: "How you hold your edges shapes who actually gets close. Five questions, real answers.",
   durationSec: 75,
-  emoji: "🛡️",
+  icon: "Shield",
   feeds: ["boundaries.style", "values.non_negotiables", "communication.requests"],
   questions: [
     {
@@ -457,7 +457,7 @@ const BOUNDARY_BLUEPRINT: Quiz = {
   archetypes: {
     architect: {
       name: "The Architect",
-      emoji: "📐",
+      icon: "Ruler",
       tagline: "You design your edges on purpose. People with you know exactly where they stand because you've actually thought it through.",
       insight: "You can articulate not just what your limits are but why they exist and what serves them. This is the rarest and most attractive boundary style, and it filters for partners who can do the same. The shadow: clarity can read as coldness to people who needed a soft entrance.",
       nextStep: "Pair one direct boundary this week with one specific reassurance: 'This is the limit. And here's what I'm still fully in for.'",
@@ -466,7 +466,7 @@ const BOUNDARY_BLUEPRINT: Quiz = {
     },
     holder: {
       name: "The Holder",
-      emoji: "🗿",
+      icon: "Landmark",
       tagline: "Once you say no, it's no. Once you say yes, you mean it. People learn fast that your word is the thing.",
       insight: "Your yes is honest because your no is real. You don't get pulled into negotiations about your limits and that energy is, frankly, magnetic. The growth edge: holders sometimes go from 'no' to 'gone' too fast, missing chances to teach someone how to date you well.",
       nextStep: "Next time you hold a boundary, follow it with one specific 'here's what would work' instead of a clean no. See what shifts.",
@@ -475,7 +475,7 @@ const BOUNDARY_BLUEPRINT: Quiz = {
     },
     voice: {
       name: "The Voice",
-      emoji: "📣",
+      icon: "Megaphone",
       tagline: "You name things. In real time, with care, without softening so much that the message gets lost. This is the work most people are still trying to do.",
       insight: "You bring stuff up. Friends call you when they need help rehearsing a hard conversation. The skill is real; the trap is becoming the explainer in every relationship, doing the emotional naming for both of you. Make sure they're learning to name things too, not just learning to listen.",
       nextStep: "On your next mild discomfort, don't name it. See if they notice. Their noticing-rate tells you something important.",
@@ -484,7 +484,7 @@ const BOUNDARY_BLUEPRINT: Quiz = {
     },
     adapter: {
       name: "The Adapter",
-      emoji: "🌊",
+      icon: "Waves",
       tagline: "You meet people where they are. Your range is enormous, and the work is learning when adapting becomes erasing.",
       insight: "You're flexible in ways most people aren't, which makes you great at the first month of a relationship and a real risk to yourself by month three. The pattern to watch: realising you've been the one accommodating, then resenting them for not noticing. Naming what you need earlier prevents that loop.",
       nextStep: "This week, identify one small preference you've been suppressing. Name it casually, low-stakes, see what happens.",
@@ -493,7 +493,7 @@ const BOUNDARY_BLUEPRINT: Quiz = {
     },
     retreater: {
       name: "The Retreater",
-      emoji: "🚪",
+      icon: "DoorOpen",
       tagline: "When something's off, you pull back rather than push back. This protects you, but it also means people often don't know what happened.",
       insight: "Going quiet is a real boundary, just an invisible one. Which means the people who deserve to hear from you sometimes don't, and the people who don't deserve your time still get to wonder. The growth edge: one specific sentence at the point of pulling back changes the dynamic completely.",
       nextStep: "Next time you'd usually go quiet, try one sentence: 'I need some space, I'll be back in a few days.' Then actually come back.",
@@ -509,7 +509,7 @@ const ATTACHMENT_STYLE: Quiz = {
   title: "What's your dating attachment style?",
   pitch: "Five questions to surface the pattern you actually run when someone starts to matter. Built on real attachment research, no horoscope vibes.",
   durationSec: 75,
-  emoji: "🧷",
+  icon: "Link",
   feeds: ["attachment.style", "attachment.activation", "attachment.deactivation"],
   questions: [
     {
@@ -561,7 +561,7 @@ const ATTACHMENT_STYLE: Quiz = {
   archetypes: {
     secure: {
       name: "Secure Base",
-      emoji: "🌳",
+      icon: "TreePine",
       tagline: "You can want closeness without needing it to prove something. People feel steadier around you, often without knowing why.",
       insight: "Secure attachment in dating doesn't mean nothing rattles you. It means your nervous system has a wide window and a soft landing. Your edge is patience with people who don't have your baseline yet. The growth move: notice when someone's wobble pulls you into managing them, and let them have their own process without absorbing it.",
       nextStep: "On your next date, share something that's actually true about you instead of the version that's easy to like. Watch how that lands.",
@@ -570,7 +570,7 @@ const ATTACHMENT_STYLE: Quiz = {
     },
     anxious: {
       name: "The Tuner",
-      emoji: "🎻",
+      icon: "Music",
       tagline: "You feel people. You catch the small shifts. Your superpower is attunement, and your tax is overreading.",
       insight: "Anxious attachment in early dating sounds like you giving someone else's silence a script. The cost: you're often soothing a story that isn't happening. The skill: noticing the activation, naming it to yourself, and waiting one full day before acting on it. Most of what you're reading as warning signal turns out to be their normal life.",
       nextStep: "Next time their reply takes longer than feels comfortable, write what you want to send. Save it. Reread it tomorrow. Send only what still feels true.",
@@ -579,7 +579,7 @@ const ATTACHMENT_STYLE: Quiz = {
     },
     avoidant: {
       name: "The Independent",
-      emoji: "🪨",
+      icon: "Gem",
       tagline: "You like your own space and you keep your own counsel. Closeness is welcome, but never at the cost of your sovereignty.",
       insight: "Avoidant patterns in dating look like noticing flaws right when things get good, going quiet right when they ask for more, wanting the space more than the person sometimes. None of that means you're broken. It means closeness reads as a small threat to your system. The growth edge: name the pullback out loud instead of just doing it. 'I'm noticing I want some space this week' is a complete sentence.",
       nextStep: "When you feel the urge to ghost or fade, send one honest sentence about needing a beat. Then take the beat. Don't disappear without the sentence.",
@@ -588,7 +588,7 @@ const ATTACHMENT_STYLE: Quiz = {
     },
     fearful: {
       name: "The Push-Pull",
-      emoji: "🌊",
+      icon: "Waves",
       tagline: "You want closeness and you're scared of it, often in the same hour. Your inner world is louder than most people guess.",
       insight: "Fearful avoidant patterns mean closeness and threat live close together in your nervous system. Wanting it and bolting from it isn't contradiction, it's the wiring. The work isn't to pick a side. It's to slow down enough that you can feel both, name both to the person if it's safe, and let the relationship metabolise both. The right partner can hold this. Many can't. That's information.",
       nextStep: "Next time you feel both pulls at once, write 'I want closer and I want space' in your phone. Don't act on either for 24 hours. See which one survives a night's sleep.",
@@ -604,7 +604,7 @@ const POST_DATE_INSTINCT: Quiz = {
   title: "How do you actually process a date?",
   pitch: "What you do in the hour after a date predicts more than the date itself. Find your processing pattern.",
   durationSec: 60,
-  emoji: "🪞",
+  icon: "CircleUser",
   feeds: ["reflection.style", "reflection.recall", "reflection.action"],
   questions: [
     {
@@ -656,7 +656,7 @@ const POST_DATE_INSTINCT: Quiz = {
   archetypes: {
     feeler: {
       name: "The Body Reader",
-      emoji: "🫧",
+      icon: "Wind",
       tagline: "You know how a date went before your brain finishes the sentence. Your body keeps the receipts.",
       insight: "Somatic processors are usually the most accurate readers in the room, and the most likely to second-guess what they already know. Your work isn't sharper analysis. It's learning to trust the first signal and then check it against the second date, not against your friend's opinion of the texts.",
       nextStep: "After your next date, write one sentence about how your body felt at minute thirty. Before any analysis. Keep the note and reread it after date two.",
@@ -665,7 +665,7 @@ const POST_DATE_INSTINCT: Quiz = {
     },
     thinker: {
       name: "The Analyst",
-      emoji: "🔍",
+      icon: "Search",
       tagline: "You don't move until you understand. You collect details others miss and pattern them later.",
       insight: "Analytical processors catch things early. The cost: sometimes you over-investigate a person before you've actually been around them enough for the data to mean anything. Three dates of presence beats thirty hours of forensics on three messages.",
       nextStep: "After your next date, write your usual analysis. Then write one sentence about what you'd do if you only trusted the feel of the evening. Both are real.",
@@ -674,7 +674,7 @@ const POST_DATE_INSTINCT: Quiz = {
     },
     narrator: {
       name: "The Storyteller",
-      emoji: "🎙️",
+      icon: "Mic",
       tagline: "The version you tell your friend becomes the version that's real. You make sense of people by giving them a shape.",
       insight: "Story-making is how you metabolise dating, and that's a real strength. The catch: the framing locks in fast, and the friend you tell sometimes votes louder than the actual evening did. The skill is noticing which details you left out of the telling, because that's usually where the truth is hiding.",
       nextStep: "After your next date, before the friend recap, write the version you'd tell yourself if no one else was listening. Compare them later.",
@@ -683,7 +683,7 @@ const POST_DATE_INSTINCT: Quiz = {
     },
     forecaster: {
       name: "The Forward Planner",
-      emoji: "🧭",
+      icon: "Compass",
       tagline: "You don't dwell. You decide. Dates are inputs to a question you're already answering.",
       insight: "Forecasters keep dating moving and they don't get stuck. The shadow: the decision-orientation can skip past the present moment, and you can end up choosing the trajectory you can already see instead of the one this person could actually become. Slow down for date two and three even when your gut wants to call it.",
       nextStep: "After your next date, before you decide anything about a second, list three things you noticed that weren't about whether to see them again. Then decide.",
@@ -699,7 +699,7 @@ const MESSAGE_STAMINA: Quiz = {
   title: "What's your message stamina?",
   pitch: "Some people open hot and fade. Some warm up slow. Five questions to find out what kind of texter you actually are.",
   durationSec: 60,
-  emoji: "💬",
+  icon: "MessageCircle",
   feeds: ["messaging.opener", "messaging.pace", "messaging.fade"],
   questions: [
     {
@@ -751,7 +751,7 @@ const MESSAGE_STAMINA: Quiz = {
   archetypes: {
     sprinter: {
       name: "The Sprinter",
-      emoji: "⚡",
+      icon: "Zap",
       tagline: "You open hot and you don't believe in long text relationships. You want the actual person, fast.",
       insight: "Sprinters convert matches into dates better than most. The cost: the people who need more runway never get a fair shot with you, and you can come across as more intense than you actually are. The skill: noticing whether someone's slower pace is disinterest or just a different rhythm, and giving the rhythm one more beat before you decide.",
       nextStep: "Next match where you'd usually push for a date by day four, hold for one extra day. See what they bring when you stop carrying the tempo.",
@@ -760,7 +760,7 @@ const MESSAGE_STAMINA: Quiz = {
     },
     pacer: {
       name: "The Pacer",
-      emoji: "🎯",
+      icon: "Target",
       tagline: "You match what's in front of you. Effort meets effort, depth meets depth. People feel met by you because they actually are.",
       insight: "Pacers are the most replicable kind of dater. Your edge is calibration. Your edge case: when someone is a slow starter, your perfect matching can feel like indifference because you give back exactly what they give. Sometimes the move is to slightly outpace them in one specific way that says you're paying attention.",
       nextStep: "On your next thread, send one message a little warmer than what they last gave you. Notice what comes back.",
@@ -769,7 +769,7 @@ const MESSAGE_STAMINA: Quiz = {
     },
     slowStarter: {
       name: "The Slow Starter",
-      emoji: "🌱",
+      icon: "Sprout",
       tagline: "You warm up. Your early messages are not your best ones, and that's fine because your real self shows up around day five.",
       insight: "Slow starters often miss out on people who needed a stronger early signal to stay invested. The good news: your stamina is high once a thread takes. The skill: front-loading one specific, real, slightly riskier message in the first three exchanges so the people who would love your full self get a reason to wait for it.",
       nextStep: "In your next opening exchange, share one specific true thing that isn't easy to say in three words. Watch which people lean in.",
@@ -778,7 +778,7 @@ const MESSAGE_STAMINA: Quiz = {
     },
     stayer: {
       name: "The Stayer",
-      emoji: "🪵",
+      icon: "Square",
       tagline: "You bring sustained warmth. People feel held by you for longer than they're used to. This is rare and worth protecting.",
       insight: "Stayers are who people remember and miss. The shadow: you can outstay your own interest because leaving feels worse than continuing, and you can over-invest in threads that aren't reciprocating because consistency is your default. The growth edge: noticing when sustained warmth is care and when it's avoidance of the harder move of ending it.",
       nextStep: "Audit your last three fading threads. Was the right move to keep showing up, or to send one clean closing message? Practice the closing message next time.",
@@ -794,7 +794,7 @@ const LOVE_LANGUAGE: Quiz = {
   title: "What's your love language?",
   pitch: "Five questions to find how you most naturally give and receive love, the currency that makes you feel actually wanted.",
   durationSec: 90,
-  emoji: "💞",
+  icon: "HeartHandshake",
   feeds: ["affection.style", "affection.expression", "connection.repair"],
   questions: [
     {
@@ -846,7 +846,7 @@ const LOVE_LANGUAGE: Quiz = {
   archetypes: {
     words: {
       name: "Spoken Warmth",
-      emoji: "🗣️",
+      icon: "Speech",
       tagline: "You feel loved when it's said out loud. Naming the feeling is the feeling.",
       insight: "You read care through language, so a partner who says what they appreciate keeps you secure, while one who 'shows not tells' can leave you guessing. The trick isn't needing constant praise; it's needing the relationship narrated honestly. When you know where you stand in words, you give your best self back.",
       nextStep: "Tell a partner, or a future one, the exact sentence you most want to hear. Specificity beats hinting.",
@@ -855,7 +855,7 @@ const LOVE_LANGUAGE: Quiz = {
     },
     time: {
       name: "Undivided Time",
-      emoji: "🕰️",
+      icon: "Clock",
       tagline: "Presence is the gift. You measure love in undivided attention.",
       insight: "You feel most wanted when someone chooses to be fully with you, phone down, no rush. Distraction reads as distance to you even when none is meant. Naming this early saves a lot of quiet hurt, because the fix is rarely more hours, it's more presence in the hours you have.",
       nextStep: "Protect one device-free window with someone this week. Notice how different it feels from time that's only technically shared.",
@@ -864,7 +864,7 @@ const LOVE_LANGUAGE: Quiz = {
     },
     acts: {
       name: "Helping Hands",
-      emoji: "🤲",
+      icon: "Hand",
       tagline: "Love is a verb to you. Showing up beats saying so.",
       insight: "You trust what people do more than what they declare, so a partner who notices and lightens your load earns deep loyalty. Your risk is over-giving and quietly resenting it when it isn't matched. The work is letting yourself receive, and asking plainly instead of waiting to be read.",
       nextStep: "Let someone do one thing for you this week without insisting you're fine. Receiving is part of the language too.",
@@ -873,7 +873,7 @@ const LOVE_LANGUAGE: Quiz = {
     },
     touch: {
       name: "Close Contact",
-      emoji: "🤝",
+      icon: "Handshake",
       tagline: "Closeness regulates you. Contact says what words can't.",
       insight: "You feel safest and most connected through warmth and proximity, so touch is how you both give and read affection. When it fades you can feel the distance before anything is said. Pairing well here is about naming the need out loud, since touch-led people often partner with words-led people and both have to learn the other's dialect.",
       nextStep: "Name how you most like to be close, and ask what feels good to them. Calibration matters more than frequency.",
@@ -882,7 +882,7 @@ const LOVE_LANGUAGE: Quiz = {
     },
     gifts: {
       name: "Thoughtful Tokens",
-      emoji: "🎁",
+      icon: "Gift",
       tagline: "It's not the object, it's the proof you were thought of when apart.",
       insight: "For you a well-chosen thing is shorthand for 'I notice what you love,' so it's the attention behind it that lands, not the price. The misread is that this looks materialistic when it's really about being held in mind. Pairs best with someone willing to pay attention to the small details you drop.",
       nextStep: "Tell a partner the kind of thoughtful gesture that lands for you, so it never has to be guessed.",
@@ -898,7 +898,7 @@ const FUTURE_VISION: Quiz = {
   title: "Where are you headed?",
   pitch: "Five questions on the life you're actually building, so matching reads direction, not just chemistry.",
   durationSec: 90,
-  emoji: "🧭",
+  icon: "Compass",
   feeds: ["values.direction", "lifestyle.pace", "values.commitment"],
   questions: [
     {
@@ -950,7 +950,7 @@ const FUTURE_VISION: Quiz = {
   archetypes: {
     builder: {
       name: "The Builder",
-      emoji: "🏡",
+      icon: "Home",
       tagline: "You're building something to last. Roots, not options.",
       insight: "You're drawn to permanence, a home, a rhythm, a base you can count on, which makes you a steadying force for the right person. The friction shows up with partners who read stability as confinement. Knowing your direction early lets you screen for someone who wants to build, not just visit.",
       nextStep: "Name one concrete thing you're building toward. Direction is attractive when it's specific.",
@@ -959,7 +959,7 @@ const FUTURE_VISION: Quiz = {
     },
     explorer: {
       name: "The Explorer",
-      emoji: "🧗",
+      icon: "Mountain",
       tagline: "You're built for motion. The right partner is a co-adventurer.",
       insight: "Freedom and novelty keep you alive, so you thrive with someone who travels light alongside you rather than anchoring you down. The risk is reading every plan as a cage when sometimes it's just care. Your best matches want a shared adventure with enough structure that neither of you drifts.",
       nextStep: "Get honest about the one form of commitment that wouldn't feel like a cage. That's your real green light.",
@@ -968,7 +968,7 @@ const FUTURE_VISION: Quiz = {
     },
     grower: {
       name: "The Grower",
-      emoji: "🌱",
+      icon: "Sprout",
       tagline: "You move steady. Love is something you compound over time.",
       insight: "You trust gradual, you'd rather deepen than rush, which makes you a safe bet for someone wary of intensity that burns out. Your edge is partners who want fast certainty. When you find someone content to grow in step, you build the kind of thing that quietly outlasts the flashy versions.",
       nextStep: "Tell a new connection the pace that actually works for you. The right person will exhale, not pull back.",
@@ -977,7 +977,7 @@ const FUTURE_VISION: Quiz = {
     },
     anchor: {
       name: "The Anchor",
-      emoji: "⚓",
+      icon: "Anchor",
       tagline: "Partnership is the center, not a side plot.",
       insight: "You organize your life around the people you love, which makes you devoted and present in a way that's increasingly rare. The caution is losing your own edges inside a relationship. Your strongest match wants the same closeness back, so the togetherness feels chosen by both, never carried by one.",
       nextStep: "Keep one thing that's fully yours, even at your most partnered. It makes the closeness sustainable.",
@@ -993,7 +993,7 @@ const DEALBREAKER_RADAR: Quiz = {
   title: "What are your real dealbreakers?",
   pitch: "Five questions to separate your true non-negotiables from the preferences you can flex on. The output doubles as your matching filter.",
   durationSec: 90,
-  emoji: "🚦",
+  icon: "Gauge",
   feeds: ["values.nonNegotiables", "standards.clarity", "matching.filters"],
   questions: [
     {
@@ -1045,7 +1045,7 @@ const DEALBREAKER_RADAR: Quiz = {
   archetypes: {
     clearList: {
       name: "The Clear List",
-      emoji: "📋",
+      icon: "ClipboardList",
       tagline: "You know your non-negotiables and you hold them. That clarity saves you months other people lose.",
       insight: "You can name your dealbreakers without flinching, which means you waste very little time on connections that were never going to work. The risk is that a list held too rigidly can screen out a good person over a fixable thing. Keep the hard lines hard and let the small stuff be small.",
       nextStep: "Turn your top three lines into your matching filters so the machine stops surfacing people who fail them.",
@@ -1054,7 +1054,7 @@ const DEALBREAKER_RADAR: Quiz = {
     },
     flexibleCore: {
       name: "The Flexible Core",
-      emoji: "🧭",
+      icon: "Compass",
       tagline: "A few hard lines, everything else negotiable. You filter on what matters and stay open on the rest.",
       insight: "You hold a small set of true non-negotiables and treat the rest as preferences, which is the healthiest place to be. You rarely lose a good match over something cosmetic. The watch-out is letting the negotiable list quietly absorb things that should have been hard lines.",
       nextStep: "Write down which two or three lines are actually hard. Naming them protects them.",
@@ -1063,7 +1063,7 @@ const DEALBREAKER_RADAR: Quiz = {
     },
     fastLearner: {
       name: "The Fast Learner",
-      emoji: "🔬",
+      icon: "Microscope",
       tagline: "You discover your dealbreakers by watching real behavior, not by guessing in advance.",
       insight: "You trust evidence over theory, so your standards get sharper with every person you date. That makes you hard to fool. The cost is that learning live can mean a few extra weeks invested before the lesson lands. Logging what you notice speeds the loop up.",
       nextStep: "After your next date, write one thing that moved your standards. Patterns build fast when you track them.",
@@ -1072,7 +1072,7 @@ const DEALBREAKER_RADAR: Quiz = {
     },
     softEdges: {
       name: "The Soft Edges",
-      emoji: "🌫️",
+      icon: "Cloud",
       tagline: "You feel your lines but struggle to hold them. The work is not stricter rules, it is trusting the ones you have.",
       insight: "You sense when something is off, then talk yourself out of it to keep the peace or keep the person. This is common and it is workable. The shift is treating your first quiet no as information, not as you being difficult. Your standards are probably more reliable than you give them credit for.",
       nextStep: "Pick one line you keep letting slide and decide it is firm before the next person tests it.",
@@ -1088,7 +1088,7 @@ const READINESS_CHECK: Quiz = {
   title: "Are you actually ready to date right now?",
   pitch: "An honest five-question read on your real capacity for a new connection. No shame either way, just a clearer picture.",
   durationSec: 90,
-  emoji: "🌱",
+  icon: "Sprout",
   feeds: ["readiness.self", "emotional.availability", "intent.clarity"],
   questions: [
     {
@@ -1140,7 +1140,7 @@ const READINESS_CHECK: Quiz = {
   archetypes: {
     readyOpen: {
       name: "Ready and Open",
-      emoji: "🌤️",
+      icon: "Sun",
       tagline: "You have closure, capacity, and a clear reason. This is the strongest place to date from.",
       insight: "You are not dating to fill a hole, you are dating to add to a life that already works. That shows up as steadiness and low neediness, which the right person reads as safety. The only caution is not to let a busy stretch quietly erode the space you have made.",
       nextStep: "Pour this readiness into the meter. The more the machine knows, the better it matches you.",
@@ -1149,7 +1149,7 @@ const READINESS_CHECK: Quiz = {
     },
     curiousGuarded: {
       name: "Curious but Guarded",
-      emoji: "🚪",
+      icon: "DoorOpen",
       tagline: "Open enough to look, careful enough to protect yourself. A reasonable place to start.",
       insight: "You are interested and a little self-protective at the same time, which is healthy after anything that did not end well. You will do better with slow, low-pressure connection than with anything intense up front. Let trust build at the speed of evidence rather than forcing it.",
       nextStep: "Start with low-stakes signal: a quiz or two, a profile audit. Momentum lowers the guard naturally.",
@@ -1158,7 +1158,7 @@ const READINESS_CHECK: Quiz = {
     },
     stillHealing: {
       name: "Still Healing",
-      emoji: "🩹",
+      icon: "HeartPulse",
       tagline: "Part of you is still with someone before. That is not a failing, it is just real, and worth honoring.",
       insight: "Dating to get over someone usually means carrying the last person into the next, which is unfair to you and to them. There is no shame here, only timing. A little more closure now will make the eventual connection far better than rushing it would.",
       nextStep: "Be honest about the pull backward before you take the next date. Naming it loosens its grip.",
@@ -1167,7 +1167,7 @@ const READINESS_CHECK: Quiz = {
     },
     stretchedThin: {
       name: "Stretched Thin",
-      emoji: "🫧",
+      icon: "Wind",
       tagline: "Your capacity is low right now, and a new person needs capacity. Worth knowing before you start.",
       insight: "When you are running close to empty, dating tends to feel like one more obligation, and good people can get the tired version of you. This is about bandwidth, not desire. Topping yourself back up first will change the whole experience.",
       nextStep: "Pick one thing draining you this month and ease it before you add dating on top.",
@@ -1183,7 +1183,7 @@ const MONEY_IN_LOVE: Quiz = {
   title: "What's your money style in love?",
   pitch: "Money is one of the quietest compatibility signals there is. Five questions to name yours before it ever comes up on a date.",
   durationSec: 90,
-  emoji: "💸",
+  icon: "Wallet",
   feeds: ["values.money", "lifestyle.spending", "compatibility.finance"],
   questions: [
     {
@@ -1235,7 +1235,7 @@ const MONEY_IN_LOVE: Quiz = {
   archetypes: {
     planner: {
       name: "The Planner",
-      emoji: "📊",
+      icon: "BarChart3",
       tagline: "You think in systems and timelines. Money is a tool you steer on purpose.",
       insight: "You bring stability and foresight, which makes you a reassuring partner for the long game. The friction shows up with someone more spontaneous, who can read your planning as control. The fix is naming the why behind the plan so it feels like shared security, not a leash.",
       nextStep: "When this gets serious with someone, share the goal behind your habits, not just the rules.",
@@ -1244,7 +1244,7 @@ const MONEY_IN_LOVE: Quiz = {
     },
     generous: {
       name: "The Generous",
-      emoji: "🎁",
+      icon: "Gift",
       tagline: "Giving is how you love. Money, in your hands, is mostly about taking care of people.",
       insight: "Your warmth is obvious and people feel cared for around you. The watch-out is over-investing financially before someone has earned it, then feeling unmatched. Generosity lands best when it is a choice you can sustain, not a way to secure affection.",
       nextStep: "Notice whether your giving is mutual. The right person gives back in their own currency.",
@@ -1253,7 +1253,7 @@ const MONEY_IN_LOVE: Quiz = {
     },
     experienceSeeker: {
       name: "The Experience Seeker",
-      emoji: "🧳",
+      icon: "Briefcase",
       tagline: "Money is for living. You'd rather have the memory than the balance.",
       insight: "You bring adventure and a refusal to let life get joyless, which is genuinely attractive. The tension comes with a security-minded partner who needs a cushion to feel safe. Compatibility here is less about the number and more about respecting each other's relationship to risk.",
       nextStep: "Ask a serious partner early how safe they need to feel. It prevents a quiet recurring fight.",
@@ -1262,7 +1262,7 @@ const MONEY_IN_LOVE: Quiz = {
     },
     securitySeeker: {
       name: "The Security Seeker",
-      emoji: "🛡️",
+      icon: "Shield",
       tagline: "Peace of mind comes first. A solid base is what lets you relax into anything else.",
       insight: "You value steadiness and you are clear-eyed about risk, which protects a partnership from a lot of stress. With a spender or a free spirit, the gap can feel like distrust if it is not named. Framed as a need for safety rather than a judgment, it usually lands fine.",
       nextStep: "Tell a serious partner what safety actually looks like to you in concrete terms.",
@@ -1278,7 +1278,7 @@ const ICK_RADAR: Quiz = {
   title: "What's your ick threshold?",
   pitch: "Some icks protect you. Some cost you good people. Five questions to tell which is which.",
   durationSec: 90,
-  emoji: "🫣",
+  icon: "EyeOff",
   feeds: ["standards.filters", "attraction.triggers", "self.awareness"],
   questions: [
     {
@@ -1330,7 +1330,7 @@ const ICK_RADAR: Quiz = {
   archetypes: {
     quickFilter: {
       name: "The Quick Filter",
-      emoji: "⚡",
+      icon: "Zap",
       tagline: "You decide fast. Efficient, and occasionally a little ruthless on the small stuff.",
       insight: "Your instincts are quick and they save you from forcing chemistry that is not there. The honest risk is that surface icks sometimes screen out people who would have grown on you by date three. Worth asking whether the ick is about them or about an old pattern of yours.",
       nextStep: "Next ick, pause and name what it is really pointing at before you decide. It might surprise you.",
@@ -1339,7 +1339,7 @@ const ICK_RADAR: Quiz = {
     },
     benefitDoubt: {
       name: "The Benefit of the Doubt",
-      emoji: "🤝",
+      icon: "Handshake",
       tagline: "You weigh the whole person against the moment. Fair, and rarely unfairly harsh.",
       insight: "You give people room to be human, which means you do not lose good matches over a nervous laugh or a bad outfit. The flip side is making sure real red flags still get the same attention as small icks. Keep the grace, just do not extend it past your actual lines.",
       nextStep: "Sort your last few icks into surface versus substance. The substance ones deserve more weight.",
@@ -1348,7 +1348,7 @@ const ICK_RADAR: Quiz = {
     },
     valuesFilter: {
       name: "The Values Filter",
-      emoji: "🎯",
+      icon: "Target",
       tagline: "Your icks are wired to substance. When something turns you off, it usually means something.",
       insight: "You react less to mannerisms and more to how someone treats a waiter or talks about an ex, which makes your icks genuinely useful data. The only caution is that a values-led filter can be quietly demanding, so make sure your standards are ones you also meet. Mostly, trust this instinct.",
       nextStep: "Keep logging what triggers it. Your icks are a clean signal worth feeding the machine.",
@@ -1357,7 +1357,7 @@ const ICK_RADAR: Quiz = {
     },
     forgiving: {
       name: "The Forgiving",
-      emoji: "🌊",
+      icon: "Waves",
       tagline: "Very little throws you off. Easygoing, with one thing to keep an eye on.",
       insight: "You are not derailed by small stuff, which makes dating you feel relaxed and unjudged. The watch-out is the opposite of everyone else's: make sure forgiving the small things is not how you also wave past the real ones. A low ick threshold is a gift as long as your dealbreakers still hold.",
       nextStep: "Double-check that your easygoing nature is not quietly skipping past actual red flags.",
@@ -1373,7 +1373,7 @@ const GROWTH_EDGE: Quiz = {
   title: "What's your dating growth edge?",
   pitch: "The one pattern that, if you worked on it, would change your dating life most. Five honest questions to name yours.",
   durationSec: 90,
-  emoji: "🌿",
+  icon: "Sprout",
   feeds: ["growth.edge", "self.awareness", "patterns.recognition"],
   questions: [
     {
@@ -1430,7 +1430,7 @@ const GROWTH_EDGE: Quiz = {
   archetypes: {
     overGiver: {
       name: "The Over-Giver",
-      emoji: "🎁",
+      icon: "Gift",
       tagline: "You love by pouring out. Your growth edge is letting yourself receive without earning it first.",
       insight: "You show up early and generously, which makes people feel cared for fast. The cost is a quiet scoreboard where you give far more than you get and call the imbalance love. The work is not giving less, it is letting someone prove they will meet you before you empty yourself out.",
       nextStep: "On your next few dates, give a little less than your instinct says and watch who steps toward you anyway.",
@@ -1439,7 +1439,7 @@ const GROWTH_EDGE: Quiz = {
     },
     guarded: {
       name: "The Guarded One",
-      emoji: "🛡️",
+      icon: "Shield",
       tagline: "You protect yourself well. Your growth edge is letting someone in before you are certain.",
       insight: "You keep your real feelings back until safety is proven, which spares you a lot of small hurts. The trade is that the people who could love you never quite get to meet you. Vulnerability shared a beat earlier than feels comfortable is usually what turns interest into closeness.",
       nextStep: "Pick one real thing you would normally hold back and say it out loud on your next date.",
@@ -1448,7 +1448,7 @@ const GROWTH_EDGE: Quiz = {
     },
     chaser: {
       name: "The Chaser",
-      emoji: "🏃",
+      icon: "Footprints",
       tagline: "Distance reads as desire to you. Your growth edge is wanting people who actually want you back.",
       insight: "You feel most alive when someone is a little out of reach, so availability can register as boring even when it is exactly what you say you want. The pattern is not romance, it is a nervous system that confuses uncertainty for chemistry. Steadiness is not the absence of spark, it is the ground real spark grows on.",
       nextStep: "Next time someone is clearly into you, stay curious instead of cooling off. The calm is the point.",
@@ -1457,7 +1457,7 @@ const GROWTH_EDGE: Quiz = {
     },
     drifter: {
       name: "The Drifter",
-      emoji: "🍃",
+      icon: "Leaf",
       tagline: "You start strong, then let things fade. Your growth edge is staying present when it gets real.",
       insight: "You get genuinely excited at the start, then somehow let promising connections cool without ever deciding to. Often that drift is avoidance wearing a calm face, a way to leave without the hard conversation. Naming the pull to fade, instead of acting on it, is what keeps a good thing alive.",
       nextStep: "When you next feel a connection starting to drift, say one honest sentence about it rather than going quiet.",
@@ -1466,7 +1466,7 @@ const GROWTH_EDGE: Quiz = {
     },
     pleaser: {
       name: "The Pleaser",
-      emoji: "🪞",
+      icon: "CircleUser",
       tagline: "You are easy to be with by design. Your growth edge is telling the truth about what you want.",
       insight: "You read the room and become the version of you that is easiest to like, which makes early dating smooth and you well-liked. The cost is that nobody is actually choosing you, they are choosing the shape you took for them. Your real preferences are not too much, they are the thing that lets the right person pick the real you.",
       nextStep: "State one genuine preference this week, even a small one, instead of saying you don't mind.",

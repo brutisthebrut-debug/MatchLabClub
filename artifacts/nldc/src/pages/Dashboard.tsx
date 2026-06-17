@@ -88,7 +88,7 @@ import {
 import {
   ArrowRight, FileText, MessageSquare, Mail, Settings,
   TrendingUp, AlertTriangle, Clock, Sparkles, Trophy, Eye,
-  ChevronRight, FlaskConical, Stethoscope, Zap,
+  ChevronRight, FlaskConical, Stethoscope, Zap, Gauge,
   Wand2, ScanFace, BarChart2, Heart, Compass, BookOpen, Camera,
   MessageCircle, User, Map, Brain, Rss, Shield, Users, BarChart, Lightbulb, Layers,
   Calendar, Star, Images, Trash2, RefreshCw, Search, X, ShieldAlert,
@@ -218,7 +218,7 @@ const ACTION_GROUPS = [
     items: [
       { icon: Stethoscope, label: "Dating Diagnosis", desc: "Find your pattern", href: "/signal-check" },
       { icon: Wand2, label: "Profile Glow-Up", desc: "10 rewrites for any platform", href: "/glow-up" },
-      { icon: ScanFace, label: "Mirror Profile", desc: "See yourself as others do", href: "/mirror" },
+      { icon: ScanFace, label: "Profile Reflection", desc: "See yourself as others do", href: "/mirror" },
       { icon: User, label: "Profile Reader", desc: "Decode someone's profile", href: "/profile-reader" },
       { icon: Images, label: "Before & After", desc: "Sample rewrites by scenario", href: "/gallery" },
     ],
@@ -432,7 +432,7 @@ function parseAuditFiltersFromSearch(search: string): {
 }
 
 export default function Dashboard() {
-  useMeta("Your Dashboard", "Your Signal Score history, recent audits, coaching sessions, and quick actions, all in one place.");
+  useMeta("Your Dashboard", "Your Match Readiness, recent audits, coaching sessions, and quick actions, all in one place.");
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -943,6 +943,10 @@ export default function Dashboard() {
   const latestScore = displaySummary.latestScore ?? 0;
   const grade = latestScore >= 80 ? "A" : latestScore >= 70 ? "B" : latestScore >= 60 ? "C" : latestScore >= 50 ? "D" : "F";
   const gradeColor = latestScore >= 75 ? "hsl(var(--brand-green))" : latestScore >= 55 ? "hsl(var(--brand-gold))" : "hsl(var(--brand-rose))";
+  const readinessThreshold = matchingState?.readinessThreshold ?? 50;
+  const readinessSnapshot = matchingState?.readiness.score ?? latestScore;
+  const readinessEligible = matchingState?.eligible ?? readinessSnapshot >= readinessThreshold;
+  const ptsToThreshold = Math.max(0, Math.round(readinessThreshold - readinessSnapshot));
 
   const { data: latestAuditPages } = useInfiniteQuery({
     queryKey: getListAuditsQueryKey({ sort: "newest" }),
@@ -1125,17 +1129,29 @@ export default function Dashboard() {
                   <div className="glass-strong rounded-[2rem] p-8 h-full flex flex-col items-center justify-center text-center relative overflow-hidden border-t-2 border-t-white/20 dark:border-t-white/10" data-testid="card-readiness-score">
                     <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[hsl(var(--brand-indigo)/0.1)] to-transparent pointer-events-none" />
                     
-                    <div className="flex items-center gap-2 mb-8 relative z-10">
-                      <Zap className="w-5 h-5 text-[hsl(248_62%_65%)]" />
-                      <h2 className="text-sm font-bold tracking-[0.2em] uppercase text-muted-foreground">Signal Score</h2>
+                    <div className="flex flex-col items-center gap-1 mb-6 relative z-10">
+                      <div className="flex items-center gap-2">
+                        <Gauge className="w-5 h-5 text-[hsl(248_62%_65%)]" />
+                        <h2 className="text-sm font-bold tracking-[0.2em] uppercase text-muted-foreground">Match Readiness</h2>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground/70 font-medium">The one score that gates matching</p>
                     </div>
 
-                    {summaryLoading ? <Skeleton className="w-40 h-40 rounded-full" /> : <ScoreRing score={latestScore} />}
+                    {summaryLoading ? <Skeleton className="w-40 h-40 rounded-full" /> : <ScoreRing score={readinessSnapshot} />}
                     
                     <div className="mt-8 flex flex-col items-center relative z-10">
-                      <div className="flex items-baseline gap-3">
-                        <span className="text-6xl font-black font-serif drop-shadow-md" style={{ color: gradeColor }} data-testid="grade-letter">{grade}</span>
-                        <span className="text-sm font-bold tracking-widest uppercase text-muted-foreground/70">Grade</span>
+                      {readinessEligible ? (
+                        <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[hsl(142_55%_45%/0.15)] border border-[hsl(142_55%_45%/0.3)] text-sm font-bold text-[hsl(142_55%_60%)]">
+                          <CheckCircle2 className="w-4 h-4" /> Ready for the matching pool
+                        </span>
+                      ) : (
+                        <p className="text-sm font-medium text-muted-foreground">
+                          <strong className="text-foreground text-base">{ptsToThreshold}</strong> pts to enter matching
+                        </p>
+                      )}
+                      <div className="flex items-baseline gap-2 mt-4">
+                        <span className="text-xs font-bold tracking-widest uppercase text-muted-foreground/70">Latest audit grade</span>
+                        <span className="text-xl font-black font-serif" style={{ color: gradeColor }} data-testid="grade-letter">{grade}</span>
                       </div>
                       
                       {!hasRealAudits && <SampleDataBadge className="mt-4" testId="badge-sample-dashboard-score" />}
@@ -1143,9 +1159,16 @@ export default function Dashboard() {
                       {scoreDelta > 0 && (
                         <div className="flex items-center gap-2 mt-4 px-4 py-2 rounded-full bg-[hsl(142_55%_45%/0.15)] border border-[hsl(142_55%_45%/0.3)] shadow-[0_0_15px_hsl(142_55%_45%/0.2)]">
                           <TrendingUp className="w-4 h-4 text-[hsl(142_55%_60%)]" />
-                          <span className="text-sm font-bold tracking-wide text-[hsl(142_55%_60%)]">+{scoreDelta} pts</span>
+                          <span className="text-sm font-bold tracking-wide text-[hsl(142_55%_60%)]">+{scoreDelta} pts on your latest audit</span>
                         </div>
                       )}
+                      <Link
+                        href="/your-mirror"
+                        className="inline-flex items-center gap-1.5 mt-5 text-xs font-bold text-[hsl(248_62%_62%)] hover:text-[hsl(248_62%_72%)] transition-colors"
+                        data-testid="link-dashboard-your-mirror"
+                      >
+                        See the full read in Your Mirror <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
                     </div>
                   </div>
                 </motion.div>
@@ -1355,6 +1378,9 @@ export default function Dashboard() {
                   {showAllTools ? "Collapse" : "View All"} <ArrowRight className={`ml-2 w-4 h-4 transition-transform ${showAllTools ? "rotate-90" : ""}`} />
                 </Button>
               </div>
+              <p className="text-sm text-muted-foreground font-medium mb-6 max-w-2xl" data-testid="text-toolkit-readiness-framing">
+                Every tool here does two jobs: it helps you right now, and it feeds your Match Readiness. The more the machine knows you, the better it matches you. Matching is the payoff.
+              </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {PACKAGE_CARDS.map((pkg, i) => (

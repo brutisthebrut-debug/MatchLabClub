@@ -1,4 +1,5 @@
 import { withAlpha } from "@/lib/brandColor";
+import { Glyph } from "@/lib/glyphs";
 import { useParams, Link } from "wouter";
 import { useState, useEffect, useRef } from "react";
 import { useCopyDurationPref, COPY_DURATION_MS } from "@/lib/copyDurationPref";
@@ -251,12 +252,12 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
 });
 
-const REPLY_STYLES: Record<string, { gradient: string; emoji: string; border: string }> = {
-  "Warm": { gradient: "linear-gradient(135deg, hsl(348 55% 58%), hsl(var(--brand-indigo)))", emoji: "💜", border: "hsl(348 55% 58% / 0.4)" },
-  "Direct": { gradient: "linear-gradient(135deg, hsl(43 65% 52%), hsl(43 55% 42%))", emoji: "→", border: "hsl(43 65% 52% / 0.4)" },
-  "Playful": { gradient: "linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-indigo)))", emoji: "😄", border: "hsl(var(--brand-pink) / 0.4)" },
-  "Date Ask": { gradient: "linear-gradient(135deg, hsl(142 55% 42%), hsl(190 55% 48%))", emoji: "✦", border: "hsl(142 55% 42% / 0.4)" },
-  "Graceful Exit": { gradient: "linear-gradient(135deg, hsl(228 25% 40%), hsl(248 40% 32%))", emoji: "🤍", border: "hsl(228 25% 50% / 0.4)" },
+const REPLY_STYLES: Record<string, { gradient: string; icon: string; border: string }> = {
+  "Warm": { gradient: "linear-gradient(135deg, hsl(348 55% 58%), hsl(var(--brand-indigo)))", icon: "Heart", border: "hsl(348 55% 58% / 0.4)" },
+  "Direct": { gradient: "linear-gradient(135deg, hsl(43 65% 52%), hsl(43 55% 42%))", icon: "ArrowRight", border: "hsl(43 65% 52% / 0.4)" },
+  "Playful": { gradient: "linear-gradient(135deg, hsl(var(--brand-pink)), hsl(var(--brand-indigo)))", icon: "Smile", border: "hsl(var(--brand-pink) / 0.4)" },
+  "Date Ask": { gradient: "linear-gradient(135deg, hsl(142 55% 42%), hsl(190 55% 48%))", icon: "Sparkles", border: "hsl(142 55% 42% / 0.4)" },
+  "Graceful Exit": { gradient: "linear-gradient(135deg, hsl(228 25% 40%), hsl(248 40% 32%))", icon: "DoorOpen", border: "hsl(228 25% 50% / 0.4)" },
 };
 
 const SOURCE_APPS = ["Hinge", "Bumble", "Tinder", "Grindr", "Feeld", "HER", "OkCupid", "CoffeeMeetsBagel"] as const;
@@ -813,7 +814,7 @@ export default function Report() {
                   
                   <div className="bg-gradient-to-b from-[hsl(248_62%_52%/0.1)] to-[hsl(248_62%_52%/0.02)] rounded-2xl p-6 border border-[hsl(248_62%_52%/0.3)] shadow-[0_8px_30px_hsl(248_62%_52%/0.1)] relative group flex flex-col">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(248_62%_62%)]">Rewritten Bio ✦</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(248_62%_62%)]">Rewritten Bio</p>
                       <CopyButton text={r.rewrittenBio} />
                     </div>
                     <p className="text-sm font-medium text-foreground leading-relaxed flex-1" data-testid="text-rewritten-bio">
@@ -927,7 +928,7 @@ export default function Report() {
                         <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-colors flex flex-col group" data-testid={`card-reply-${i}`}>
                            <div className="flex items-center justify-between mb-4">
                              <div className="flex items-center gap-2">
-                               <span className="text-xl">{style.emoji}</span>
+                               <Glyph name={style.icon} className="w-5 h-5" color={style.gradient.split(',')[1]} />
                                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: style.gradient.split(',')[1] }}>{reply.style}</span>
                              </div>
                              <div className="opacity-0 group-hover:opacity-100 transition-opacity"><CopyButton text={reply.text} /></div>

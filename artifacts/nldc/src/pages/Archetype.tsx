@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { WelcomePanel } from "@/components/WelcomePanel";
 import { Sparkles, Copy, Check, RefreshCw, Share2 } from "lucide-react";
+import { Glyph } from "@/lib/glyphs";
 import { useAuth } from "@workspace/replit-auth-web";
 
 const fadeUp = (delay = 0) => ({
@@ -76,13 +77,13 @@ type ArchetypeKey =
   | "intensityResponder" | "avoidantEditor" | "lowTrustDater";
 
 const ARCHETYPES: Record<ArchetypeKey, {
-  name: string; emoji: string; color: string; bg: string; border: string;
+  name: string; icon: string; color: string; bg: string; border: string;
   meaning: string; strengths: string[]; riskLoop: string;
   nextExperiment: string; shareableSummary: string;
 }> = {
   sparkChaser: {
   name: "The Spark Chaser",
-  emoji: "⚡",
+  icon: "Zap",
   color: "hsl(var(--brand-gold))",
   bg: "hsl(var(--brand-gold) / 0.08)",
   border: "hsl(var(--brand-gold) / 0.25)",
@@ -90,11 +91,11 @@ const ARCHETYPES: Record<ArchetypeKey, {
   strengths: ["You feel things fully, intensity is genuine, not performed", "You recognize chemistry fast and act on it decisively", "You bring real energy into early connection", "You don't coast, you're present and invested when you're in"],
   riskLoop: "The loop: strong chemistry → fast attachment → the person starts becoming real (flawed, inconsistent, or just different from the idea) → the spark dims → you pull back or the connection collapses. The exit point: before acting on the spark, give it 3-4 interactions to test whether it's chemistry or just novelty.",
   nextExperiment: "The next time you feel undeniable pull, stay curious about the person for 30 days before making any big decisions. Track whether the spark deepens into something real or just loops on itself. Chemistry is real data, it's also a very specific kind of data.",
-  shareableSummary: "I'm a Spark Chaser. I feel things fast and move toward connection decisively. My growth edge: letting the spark season before betting everything on it. ✨",
+  shareableSummary: "I'm a Spark Chaser. I feel things fast and move toward connection decisively. My growth edge: letting the spark season before betting everything on it.",
   },
   slowBurn: {
   name: "The Slow Burn",
-  emoji: "🕯️",
+  icon: "Flame",
   color: "hsl(var(--brand-indigo))",
   bg: "hsl(var(--brand-indigo) / 0.08)",
   border: "hsl(var(--brand-indigo) / 0.25)",
@@ -102,11 +103,11 @@ const ARCHETYPES: Record<ArchetypeKey, {
   strengths: ["Deeply loyal once trust is established", "Relationships with you tend to get better over time", "You don't perform, what people see is real", "Your depth is genuine, not rehearsed"],
   riskLoop: "The loop: slow reveal → person interprets caution as disinterest or unavailability → they pull back or move on → you assume it wasn't right → actually it just needed more time than the format allows. The exit point: one small earlier signal of genuine interest changes the dynamic significantly.",
   nextExperiment: "In your next promising connection, share one true, specific thing about yourself earlier than feels comfortable, not a disclosure, just a real detail. The goal is to give the other person something to hold onto while you're still arriving.",
-  shareableSummary: "I'm a Slow Burn. I open gradually, love deeply, and get better over time. My growth edge: letting people see the warmth before they've decided. 🕯️",
+  shareableSummary: "I'm a Slow Burn. I open gradually, love deeply, and get better over time. My growth edge: letting people see the warmth before they've decided.",
   },
   qualityFilter: {
   name: "The Quality Filter",
-  emoji: "🔎",
+  icon: "Search",
   color: "hsl(190 55% 60%)",
   bg: "hsl(190 55% 60% / 0.08)",
   border: "hsl(190 55% 60% / 0.25)",
@@ -114,11 +115,11 @@ const ARCHETYPES: Record<ArchetypeKey, {
   strengths: ["You don't waste time on mismatched situations", "Your self-knowledge is advanced, you know what works for you", "You attract people who can meet your level", "You're not easily fooled by performance"],
   riskLoop: "The loop: high standards → assessed quickly → not quite right → passed on → repeat. The problem is not the standards, it's that some of the best fits reveal themselves slowly. The filter, applied at full strength too early, eliminates real possibilities.",
   nextExperiment: "The next person you're about to pass on, give it one more interaction. Not to lower your standards, but to check whether you've been assessing the performance rather than the person. Ask one real question and see what appears.",
-  shareableSummary: "I'm a Quality Filter. I know what I want and I don't compromise on what matters. My growth edge: making sure I see the person, not just the preview. 🔎",
+  shareableSummary: "I'm a Quality Filter. I know what I want and I don't compromise on what matters. My growth edge: making sure I see the person, not just the preview.",
   },
   steadySeeker: {
   name: "The Steady Seeker",
-  emoji: "🧭",
+  icon: "Compass",
   color: "hsl(var(--brand-green))",
   bg: "hsl(var(--brand-green) / 0.08)",
   border: "hsl(var(--brand-green) / 0.25)",
@@ -126,11 +127,11 @@ const ARCHETYPES: Record<ArchetypeKey, {
   strengths: ["You know what you want and pursue it honestly", "You're consistent, people know where they stand with you", "You don't create unnecessary drama or ambiguity", "Your emotional availability is a genuine asset"],
   riskLoop: "The loop: genuine availability → person doesn't feel the need to invest quickly → they slow-play → you wonder if you're too available → start managing your availability artificially → dynamic becomes less honest → connection suffers. The exit: availability is only a problem when matched with someone who doesn't want what you're offering.",
   nextExperiment: "Find one area where you're pursuing rather than letting things come to you, and create a pause of 48-72 hours. Not as a game, as information. Notice what they do in the space. The data tells you something.",
-  shareableSummary: "I'm a Steady Seeker. I want something real and I show up for it honestly. My growth edge: making sure the right person can feel the value, not just the safety. 🧭",
+  shareableSummary: "I'm a Steady Seeker. I want something real and I show up for it honestly. My growth edge: making sure the right person can feel the value, not just the safety.",
   },
   guardedRomantic: {
   name: "The Guarded Romantic",
-  emoji: "🗝️",
+  icon: "Key",
   color: "hsl(326 100% 65%)",
   bg: "hsl(326 100% 65% / 0.08)",
   border: "hsl(326 100% 65% / 0.25)",
@@ -138,11 +139,11 @@ const ARCHETYPES: Record<ArchetypeKey, {
   strengths: ["The depth you're protecting is real and worth knowing", "Your loyalty, when earned, is extraordinary", "You read situations well, your self-protection instinct has valuable signal", "You bring real intensity once the walls come down"],
   riskLoop: "The loop: something real starts forming → it starts to feel like it might actually matter → protection activates → you create distance → they misread it as disinterest → they pull back → you interpret their pull-back as confirmation you were right to protect → connection ends. The exit: catch the protection instinct before it shapes behavior.",
   nextExperiment: "The next time you feel yourself creating distance from something promising, name it to yourself first: I'm protecting. Then ask: what specifically am I protecting against? Is that thing actually likely here? Make the choice consciously instead of automatically.",
-  shareableSummary: "I'm a Guarded Romantic. I want depth more than almost anything, and I've learned to protect that want carefully. My growth edge: making the protection conscious. 🗝️",
+  shareableSummary: "I'm a Guarded Romantic. I want depth more than almost anything, and I've learned to protect that want carefully. My growth edge: making the protection conscious.",
   },
   anxiousConfirmer: {
   name: "The Anxious Confirmer",
-  emoji: "💬",
+  icon: "MessageCircle",
   color: "hsl(var(--brand-rose))",
   bg: "hsl(var(--brand-rose) / 0.08)",
   border: "hsl(var(--brand-rose) / 0.25)",
@@ -150,11 +151,11 @@ const ARCHETYPES: Record<ArchetypeKey, {
   strengths: ["You're genuinely invested, you don't coast", "Your caring shows and is recognized as real", "You communicate, you don't leave people wondering where they stand", "Your capacity for intimacy is high once you feel safe"],
   riskLoop: "The loop: feel uncertain → check in or reach out → person feels slightly crowded → pulls back slightly → you feel the pull-back → anxiety increases → you check in again → dynamic becomes managed rather than natural. The exit: learn to self-soothe first, communicate second.",
   nextExperiment: "The next time you feel the urge to check in, wait 24 hours and see whether the need passes or stays. If it stays, the question becomes: is this information about them or about what I need right now? Answer that first.",
-  shareableSummary: "I'm an Anxious Confirmer. I feel things deeply and my caring shows. My growth edge: learning to trust the connection in the quiet. 💬",
+  shareableSummary: "I'm an Anxious Confirmer. I feel things deeply and my caring shows. My growth edge: learning to trust the connection in the quiet.",
   },
   secureBuilder: {
   name: "The Secure Builder",
-  emoji: "🏛️",
+  icon: "Landmark",
   color: "hsl(190 55% 60%)",
   bg: "hsl(190 55% 60% / 0.08)",
   border: "hsl(190 55% 60% / 0.25)",
@@ -162,11 +163,11 @@ const ARCHETYPES: Record<ArchetypeKey, {
   strengths: ["You don't create chaos, relationships with you tend to feel calm and real", "You're clear about what you want without being rigid about it", "You can handle uncertainty without catastrophizing", "The right people feel safe with you quickly"],
   riskLoop: "Your risk is subtler: stability can attract people who want what you have without offering the same in return. The loop: your groundedness → they feel safe → they take more than they bring → you over-adjust → start giving in ways that cost you. The question to hold: are they building toward you, or anchoring to you?",
   nextExperiment: "In your next promising connection, periodically check the reciprocity: are they investing at a level that matches yours? Not perfectly, early asymmetry is normal, but directionally? The build should feel mutual.",
-  shareableSummary: "I'm a Secure Builder. I show up steadily, communicate clearly, and build toward real things. My growth edge: making sure the person I'm building with is building too. 🏛️",
+  shareableSummary: "I'm a Secure Builder. I show up steadily, communicate clearly, and build toward real things. My growth edge: making sure the person I'm building with is building too.",
   },
   intensityResponder: {
   name: "The Intensity Responder",
-  emoji: "🔥",
+  icon: "Flame",
   color: "hsl(var(--brand-gold))",
   bg: "hsl(var(--brand-gold) / 0.08)",
   border: "hsl(var(--brand-gold) / 0.25)",
@@ -174,11 +175,11 @@ const ARCHETYPES: Record<ArchetypeKey, {
   strengths: ["You're fully present when things feel alive and real", "You bring intensity that some people find irresistible", "You don't do halfway, when you're in, you're in", "You're rarely boring to be with"],
   riskLoop: "The loop: ordinary phase of relationship → you feel yourself dimming → unconsciously create intensity (conflict, tests, distance) → spark comes back → calm again → dim again → pattern escalates. The exit: learn to find aliveness in depth and consistency, not just stakes.",
   nextExperiment: "Find one small, ordinary moment in an existing or potential connection and practice being fully present for it, not escalating it, just meeting it. See whether quiet can feel like something.",
-  shareableSummary: "I'm an Intensity Responder. I come alive in real, high-stakes connection. My growth edge: finding the aliveness in the ordinary. 🔥",
+  shareableSummary: "I'm an Intensity Responder. I come alive in real, high-stakes connection. My growth edge: finding the aliveness in the ordinary.",
   },
   avoidantEditor: {
   name: "The Avoidant Editor",
-  emoji: "✏️",
+  icon: "Pencil",
   color: "hsl(228 18% 65%)",
   bg: "hsl(228 18% 65% / 0.08)",
   border: "hsl(228 18% 65% / 0.25)",
@@ -186,11 +187,11 @@ const ARCHETYPES: Record<ArchetypeKey, {
   strengths: ["Your independence is real and attractive to the right people", "You're not needy, you can function well in your own company", "You don't overshare or create emotional pressure early", "When you do invest, it feels chosen, not compulsive"],
   riskLoop: "The loop: closeness starts → internal discomfort with the demand of it → pulling back or going quiet → person feels the pull and gets confused or hurt → they escalate to get reassurance → you pull back further → connection becomes draining → you exit. The exit: catching the discomfort before it becomes distance.",
   nextExperiment: "Identify one specific moment in your recent history where you went quiet or pulled back. What triggered it? Not the external event, the internal feeling. Name it. That feeling is the information.",
-  shareableSummary: "I'm an Avoidant Editor. I need space to be real, and connection works best when it doesn't feel like a demand. My growth edge: staying present when closeness starts feeling costly. ✏️",
+  shareableSummary: "I'm an Avoidant Editor. I need space to be real, and connection works best when it doesn't feel like a demand. My growth edge: staying present when closeness starts feeling costly.",
   },
   lowTrustDater: {
   name: "The Low-Trust Dater",
-  emoji: "🔒",
+  icon: "Lock",
   color: "hsl(326 100% 65%)",
   bg: "hsl(326 100% 65% / 0.08)",
   border: "hsl(326 100% 65% / 0.25)",
@@ -198,7 +199,7 @@ const ARCHETYPES: Record<ArchetypeKey, {
   strengths: ["You don't give your trust cheaply, which means it means something when you do", "You read situations carefully and accurately", "You're not easily manipulated by charm or performance", "Your self-awareness is high, you've done the work"],
   riskLoop: "The loop: promising person appears → skepticism activates → you test (consciously or not) → person doesn't know what they're being tested for → they respond imperfectly → you take it as confirmation → exit. The problem: good people fail low-trust tests not because they're not trustworthy, but because they don't know the test is happening.",
   nextExperiment: "In your next promising connection, name one thing the person would need to do to build genuine trust with you, not a test, just a real quality. Then see whether they're actually exhibiting it, rather than watching for them to fail.",
-  shareableSummary: "I'm a Low-Trust Dater. I'm careful with my trust because it means something. My growth edge: building a path for the right person to actually reach me. 🔒",
+  shareableSummary: "I'm a Low-Trust Dater. I'm careful with my trust because it means something. My growth edge: building a path for the right person to actually reach me.",
   },
 };
 
@@ -304,7 +305,7 @@ export default function Archetype() {
   <motion.div key="result" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} className="space-y-5">
   {/* Header Card */}
   <div className="rounded-3xl p-8 border text-center" style={{ background: archetype!.bg, borderColor: archetype!.border }}>
-  <div className="text-5xl mb-4">{archetype!.emoji}</div>
+  <div className="mb-4 flex justify-center"><Glyph name={archetype!.icon} className="w-12 h-12" color={archetype!.color} /></div>
   <h2 className="text-2xl font-bold text-foreground mb-2">{archetype!.name}</h2>
   <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">{archetype!.meaning}</p>
   </div>

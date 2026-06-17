@@ -804,7 +804,10 @@ export default function SelfHub() {
                     <div className="h-10 w-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center shrink-0">
                       <Eye className="h-5 w-5 text-[#3D35CC]" />
                     </div>
-                    <h2 className="font-serif text-2xl font-bold text-foreground">Your Mirror</h2>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Latest Mirror read</p>
+                      <h2 className="font-serif text-2xl font-bold text-foreground">Your Mirror</h2>
+                    </div>
                   </div>
                   <Link
                     href="/your-mirror"
@@ -835,26 +838,9 @@ export default function SelfHub() {
                   </p>
                 </div>
                 
-                {shownPortrait.nextSignal && (
-                  <div className="flex flex-col gap-3 rounded-2xl border border-[#3D35CC]/15 bg-white/40 p-5 shadow-sm md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-start gap-3">
-                      <div className="h-9 w-9 rounded-xl bg-[#FF2D9B]/10 flex items-center justify-center shrink-0">
-                        <Compass className="h-4 w-4 text-[#FF2D9B]" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">The one move that sharpens me most</p>
-                        <p className="mt-0.5 font-bold text-foreground">{shownPortrait.nextSignal.label}</p>
-                      </div>
-                    </div>
-                    <Link
-                      href={shownPortrait.nextSignal.href}
-                      className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-bold bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] text-white hover:opacity-90 transition-opacity"
-                      data-testid="mirror-hero-next-signal"
-                    >
-                      Feed this signal <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </div>
-                )}
+                <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                  The full portrait, your blind spots, and the one move that sharpens you most live in Your Mirror. This card is just the latest snapshot.
+                </p>
               </div>
             </motion.div>
 

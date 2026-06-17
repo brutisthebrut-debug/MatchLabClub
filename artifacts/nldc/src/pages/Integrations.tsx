@@ -131,9 +131,9 @@ const COMING: IntegrationCard[] = [
     icon: Camera,
     color: "hsl(200 15% 50%)",
     blurb:
-      "Photo audit without upload. On-device analysis through Apple's PhotosKit and Core ML for composition, expression variety, and group-shot density. Your photos never leave the device.",
-    access: ["On-device EXIF and composition scoring on photos you select"],
-    excludes: ["Any photo upload to our servers", "Photos you didn't pick", "Faces of people other than you"],
+      "Connect Apple Photos and pick the shots to audit. Our deterministic baseline scores composition, expression variety, and group-shot density server-side with no external calls; the opt-in Deep AI lane reads each image in the moment and never stores it. We keep only the derived scores, never the photos.",
+    access: ["Composition and expression scoring on the photos you pick"],
+    excludes: ["Any photo kept after the read", "Photos you didn't pick", "Faces of people other than you"],
   },
   {
     title: "Notion",
@@ -152,7 +152,7 @@ const RESEARCHING: IntegrationCard[] = [
     icon: MessageSquare,
     color: "hsl(142 55% 55%)",
     blurb:
-      "End-to-end encrypted by design. We're researching local on-device processing so message tone analysis can happen without anything leaving your phone. Open research question: can we deliver useful coaching while honouring the E2EE contract.",
+      "End-to-end encrypted by design, which is exactly why this is hard. Everything we run today is server-side, so we will only pursue this if there is a way to read tone without your raw messages ever reaching our servers. Open research question: can we honour the E2EE contract and still deliver useful coaching.",
   },
   {
     title: "LinkedIn",
@@ -483,6 +483,13 @@ export default function Integrations() {
             <p className="text-lg text-muted-foreground mt-5 max-w-2xl leading-relaxed">
               What we're connected to, what's coming, and what works today via paste. One page, no marketing fog.
             </p>
+            <Link
+              href="/connections"
+              className="inline-flex items-center gap-2 mt-6 text-sm font-bold text-[hsl(248_62%_62%)] hover:text-[hsl(248_62%_72%)] transition-colors"
+              data-testid="link-platform-map-to-connections"
+            >
+              Ready to plug something in? Open the Connection Center <ArrowRight className="w-4 h-4" />
+            </Link>
           </motion.div>
 
           {/* Quick legend */}

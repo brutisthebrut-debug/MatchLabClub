@@ -45,7 +45,7 @@ export const PACKAGES: Package[] = [
     tools: [
       { name: "Dating Blueprint",       href: "/blueprint", desc: "Your personalized dating action plan" },
       { name: "Profile Glow-Up",        href: "/glow-up",   desc: "10 bio rewrites for any platform" },
-      { name: "Mirror Profile",         href: "/mirror",    desc: "See yourself the way others do" },
+      { name: "Profile Reflection",         href: "/mirror",    desc: "See yourself the way others do" },
       { name: "Before & After Gallery", href: "/gallery",   desc: "Real before/after profile examples" },
     ],
     more: [

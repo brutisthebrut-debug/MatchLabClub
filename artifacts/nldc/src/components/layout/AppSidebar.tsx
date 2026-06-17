@@ -131,7 +131,7 @@ const SECTIONS: NavSection[] = [
     primary: [
       { name: "Blueprint", href: "/blueprint", icon: FileText },
       { name: "Glow-Up Bio", href: "/glow-up", icon: Sparkles },
-      { name: "Mirror Profile", href: "/mirror", icon: Aperture },
+      { name: "Profile Reflection", href: "/mirror", icon: Aperture },
       { name: "Compatibility Compass", href: "/compatibility-compass", icon: Compass },
     ],
     more: [

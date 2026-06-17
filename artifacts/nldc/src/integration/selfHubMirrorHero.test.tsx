@@ -174,9 +174,9 @@ describe("SelfHub Mirror hero (/me lead card)", () => {
     expect(hero.textContent).toContain(REAL_PORTRAIT.stageLabel);
     expect(hero.textContent).toContain(`${REAL_PORTRAIT.coveragePercent}% of you mapped`);
 
-    // The next-signal CTA and the "Open Your Mirror" link both render.
-    const nextSignal = within(hero).getByTestId("mirror-hero-next-signal");
-    expect(nextSignal.getAttribute("href")).toBe(REAL_PORTRAIT.nextSignal!.href);
+    // The compact lead card no longer renders the next-signal CTA; that now lives
+    // on /your-mirror. Only the "Open Your Mirror" cross-link remains here.
+    expect(within(hero).queryByTestId("mirror-hero-next-signal")).toBeNull();
 
     const open = within(hero).getByTestId("mirror-hero-open");
     expect(open.getAttribute("href")).toBe("/your-mirror");

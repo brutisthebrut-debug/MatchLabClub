@@ -396,7 +396,7 @@ export default function Landing() {
               <span className="gradient-text italic pr-1">working together.</span>
             </h2>
             <p className="text-xl text-muted-foreground leading-relaxed font-medium">
-              We built the exact tools you need to optimize what you are doing right now. The difference is they all talk to each other, feeding a single understanding of who you are.
+              We built the exact tools you need to optimize what you are doing right now. Every one of them feeds a single Match Readiness score, and that score is what earns you introductions to people you would never find on your own.
             </p>
           </div>
 
