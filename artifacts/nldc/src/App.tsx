@@ -129,10 +129,11 @@ function ClaimAnonymousGate() {
 }
 
 // First-run gate. Sends a brand-new authenticated user into the guided onboarding
-// flow exactly once, only when they land on a home surface (/dashboard or /me) and
-// the account has no real signal yet. A returning user with any data, or anyone
-// who has finished or skipped onboarding in this browser, is never redirected.
-const ONBOARDING_ENTRY_ROUTES = new Set(["/dashboard", "/me"]);
+// flow exactly once, only when they land on a home surface (/your-mirror, /me, or
+// /dashboard) and the account has no real signal yet. A returning user with any
+// data, or anyone who has finished or skipped onboarding in this browser, is never
+// redirected.
+const ONBOARDING_ENTRY_ROUTES = new Set(["/dashboard", "/me", "/your-mirror"]);
 
 function OnboardingGate() {
   const [location, setLocation] = useLocation();

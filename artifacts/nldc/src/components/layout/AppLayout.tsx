@@ -69,7 +69,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/your-mirror" className="flex items-center gap-2">
             <img src="/matchlab-logo.png" alt="MatchLab Club" className="h-8 w-auto" />
           </Link>
           <ThemeToggle />

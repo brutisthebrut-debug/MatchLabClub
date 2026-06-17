@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User as UserIcon, ArrowRight, Compass, FlaskConical } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User as UserIcon, ArrowRight, Eye, FlaskConical } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -78,17 +78,17 @@ export function Navbar() {
 
           {isAuthenticated && (
             <Link
-              href="/dashboard"
+              href="/your-mirror"
               onClick={closeAll}
-              aria-current={isActive("/dashboard") ? "page" : undefined}
+              aria-current={isActive("/your-mirror") ? "page" : undefined}
               className={`flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
-                isActive("/dashboard")
+                isActive("/your-mirror")
                   ? "text-[hsl(248_62%_52%)] bg-[hsl(248_62%_52%/0.08)]"
                   : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
               }`}
             >
-              <Compass className="w-3.5 h-3.5" aria-hidden="true" />
-              Dashboard
+              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+              Your Mirror
             </Link>
           )}
 
@@ -157,15 +157,15 @@ export function Navbar() {
 
             {isAuthenticated && (
               <Link
-                href="/dashboard"
+                href="/your-mirror"
                 onClick={closeAll}
                 className={`flex items-center gap-2 text-base font-medium py-2.5 transition-colors ${
-                  isActive("/dashboard")
+                  isActive("/your-mirror")
                     ? "text-[hsl(248_62%_52%)]"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Compass className="w-4 h-4" aria-hidden="true" /> Dashboard
+                <Eye className="w-4 h-4" aria-hidden="true" /> Your Mirror
               </Link>
             )}
 

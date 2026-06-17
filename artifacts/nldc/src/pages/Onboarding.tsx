@@ -242,7 +242,7 @@ export default function Onboarding() {
   function skipAll() {
     markOnboardingComplete();
     trackEvent("onboarding_skip", { atStep: step });
-    setLocation("/me");
+    setLocation("/your-mirror");
   }
 
   function pickGoal(value: string) {

@@ -107,9 +107,9 @@ type NavSection = {
 // one click away. Every prior route is preserved, only regrouped behind the
 // journey and progressive disclosure. No page is orphaned.
 const OVERVIEW: NavLink[] = [
-  { name: "Echo", href: "/echo", icon: Sparkles },
   { name: "Your Mirror", href: "/your-mirror", icon: Eye },
-  { name: "Home", href: "/me", icon: Brain },
+  { name: "Echo", href: "/echo", icon: Sparkles },
+  { name: "Self Hub", href: "/me", icon: Brain },
   { name: "Audit history", href: "/dashboard", icon: LayoutDashboard },
 ];
 
@@ -227,7 +227,7 @@ const SECTIONS: NavSection[] = [
       { name: "Predict yourself", href: "/games/predict", icon: Target },
       { name: "Time capsule", href: "/games/time-capsule", icon: Mail },
       { name: "Wingman", href: "/wingman", icon: Users },
-      { name: "Integrations Roadmap", href: "/integrations", icon: Network },
+      { name: "Platform Map", href: "/integrations", icon: Network },
     ],
   },
   {
@@ -235,7 +235,7 @@ const SECTIONS: NavSection[] = [
     label: "Founder & Beta",
     primary: [
       { name: "Pricing", href: "/pricing", icon: Tag },
-      { name: "Sample Report", href: "/sample-report", icon: FileText },
+      { name: "Sample Read", href: "/sample-report", icon: FileText },
       { name: "Blog", href: "/blog", icon: Newspaper },
       { name: "Early Access", href: "/waitlist", icon: Ticket },
       { name: "Feedback", href: "/feedback", icon: Send },
@@ -440,7 +440,7 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
     <div className="flex h-full flex-col">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-5">
-        <Link href="/me" onClick={onNavigate} className="flex items-center gap-2.5 group">
+        <Link href="/your-mirror" onClick={onNavigate} className="flex items-center gap-2.5 group">
           <img
             src="/matchlab-logo.png"
             alt="MatchLab Club"
