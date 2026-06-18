@@ -17,7 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { rememberAnonymousId } from "@/lib/anonymousIds";
 import {
   Loader2, Sparkles, Copy, Check, AlertTriangle,
-  Lightbulb, Eye, TrendingUp, FlaskConical, ArrowRight
+  Lightbulb, Eye, TrendingUp, FlaskConical, ArrowRight, ShieldAlert
 } from "lucide-react";
 import { ConfidenceLabel } from "@/components/ToneBar";
 import { getConfidenceLevel } from "@/lib/toneUtils";
@@ -82,6 +82,7 @@ export default function Lab() {
   const [goal, setGoal] = useState("");
   const [result, setResult] = useState<CoachingResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   const queryClient = useQueryClient();
   const createSession = useCreateMessageCoachingSession();
@@ -91,6 +92,7 @@ export default function Lab() {
 
   async function runLab() {
   setLoading(true);
+  setError(false);
   try {
   const session = await createSession.mutateAsync({
   data: { matchName: matchName.trim() || "My match", conversationContext: context.trim(), yourLastMessage: message.trim(), goal: goal || null },
@@ -100,7 +102,10 @@ export default function Lab() {
   setResult(coaching as CoachingResult);
   queryClient.invalidateQueries({ queryKey: getListMessageCoachingSessionsQueryKey() });
   } catch {
-  setResult(DEMO_RESULT);
+  // Fail loudly: drop any prior live result so the page falls back to the
+  // clearly-labeled demo baseline instead of showing stale real output.
+  setResult(null);
+  setError(true);
   } finally {
   setLoading(false);
   }
@@ -208,6 +213,13 @@ export default function Lab() {
   {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Analysing...</> : <><Sparkles className="mr-2 h-4 w-4" /> Analyse My Message</>}
   </Button>
   </motion.div>
+
+  {error && (
+  <div className="glass border rounded-2xl p-4 mb-6 flex items-start gap-3" style={{ borderColor: "hsl(348 55% 65% / 0.3)" }} data-testid="lab-error">
+  <ShieldAlert className="w-4 h-4 text-[hsl(348_55%_75%)] flex-shrink-0 mt-0.5" />
+  <p className="text-sm text-muted-foreground leading-relaxed">We could not run live coaching just now. The example below shows the kind of read you will get. Please try again in a moment.</p>
+  </div>
+  )}
 
   {/* Results */}
   <AnimatePresence>

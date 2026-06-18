@@ -334,7 +334,7 @@ export async function applyCoachNotificationCategory(
       [
         {
           identifier: COACH_ACTION_SENT,
-          buttonTitle: "Sent it ✅",
+          buttonTitle: "Sent it",
           options: { opensAppToForeground: false },
         },
         {

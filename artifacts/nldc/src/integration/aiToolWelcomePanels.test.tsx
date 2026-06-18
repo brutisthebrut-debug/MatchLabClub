@@ -627,3 +627,45 @@ describe("AI tool welcome panels", () => {
     });
   }
 });
+
+// ---------------------------------------------------------------------------
+// Chemistry Lab: explicit-failure behavior (no silent stale results)
+// ---------------------------------------------------------------------------
+
+describe("Chemistry Lab failure handling", () => {
+  it("clears stale live output and surfaces an error notice when a later run fails", async () => {
+    authState.isAuthenticated = true;
+
+    render(
+      <Wrap>
+        <Lab />
+      </Wrap>,
+    );
+
+    const msgArea = screen.getByTestId("textarea-lab-message");
+    fireEvent.change(msgArea, {
+      target: { value: "Alex: I love that little ramen place on 5th\nMe: I've been meaning to try it" },
+    });
+
+    // First run succeeds and shows real coaching output (not the demo label).
+    fireEvent.click(screen.getByTestId("button-run-lab"));
+    await waitFor(() => {
+      expect(screen.getAllByText(/Test reply/i).length).toBeGreaterThan(0);
+    });
+    expect(screen.queryByText(/Example output, paste your message above to get yours/i)).toBeNull();
+    expect(screen.queryByTestId("lab-error")).toBeNull();
+
+    // A later run fails: the prior live result must be dropped, not left stale.
+    coachMessageMutateAsync.mockRejectedValueOnce(new Error("boom"));
+    fireEvent.click(screen.getByTestId("button-run-lab"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("lab-error")).toBeTruthy();
+    });
+    // Stale real reply is gone and the clearly-labeled demo baseline returns.
+    expect(screen.queryByText(/Test reply/i)).toBeNull();
+    expect(
+      screen.getAllByText(/Example output, paste your message above to get yours/i).length,
+    ).toBeGreaterThan(0);
+  });
+});

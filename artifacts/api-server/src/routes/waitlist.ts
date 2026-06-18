@@ -16,7 +16,7 @@ async function sendWaitlistWelcomeEmail(
   to: string,
   position: number,
 ): Promise<void> {
-  const subject = "You're on the MatchLab Club waitlist 🎉";
+  const subject = "You're on the MatchLab Club waitlist";
   const text = `Welcome to MatchLab Club!
 
 Thanks for joining the waitlist, you're #${position} in line.
@@ -135,7 +135,7 @@ async function sendWaitlistActivationEmail(
 ): Promise<boolean> {
   const baseUrl = getAppBaseUrl();
   const claimUrl = `${baseUrl}/?welcome=1&from=waitlist`;
-  const subject = "You're in, your MatchLab Club spot just opened 🎉";
+  const subject = "You're in, your MatchLab Club spot just opened";
   const greeting = firstName?.trim() ? `Hi ${firstName.trim()},` : "Hi there,";
   const text = `${greeting}
 

@@ -507,7 +507,7 @@ export default function CoachScreen() {
                 ]}
               >
                 <Text style={[styles.followUpBtnText, { color: "#0B0F1D" }]}>
-                  Sent it ✅
+                  Sent it
                 </Text>
               </Pressable>
               <Pressable

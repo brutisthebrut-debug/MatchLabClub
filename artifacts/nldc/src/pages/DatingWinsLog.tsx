@@ -4,7 +4,8 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Plus, Trash2, Calendar, MessageSquare, Sparkles, Eye, Star, Shield } from "lucide-react";
+import { Trophy, Plus, Trash2, Calendar, MessageSquare, Sparkles, Eye, Star, Shield, ShieldAlert } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { WelcomePanel } from "@/components/WelcomePanel";
 import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
 import { useReadinessClimb } from "@/hooks/useReadinessClimb";
@@ -58,7 +59,7 @@ export default function DatingWinsLog() {
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: winsData } = useGetDatingWins({
+  const { data: winsData, isLoading: winsLoading, isError: winsError } = useGetDatingWins({
     query: { queryKey: getGetDatingWinsQueryKey(), enabled: isAuthenticated },
   });
   const createWin = useCreateDatingWin();
@@ -76,7 +77,7 @@ export default function DatingWinsLog() {
   // A signed-in user never sees fabricated wins: a brand-new account gets the
   // welcome panel and a clean log that starts the moment they add their own.
   const isDemo = !isAuthenticated;
-  const isBrandNewUser = isAuthenticated && wins.length === 0;
+  const isBrandNewUser = isAuthenticated && !winsLoading && !winsError && wins.length === 0;
   const displayed = isDemo ? DEMO_WINS : wins;
 
   const invalidate = () => {
@@ -230,6 +231,20 @@ export default function DatingWinsLog() {
   </motion.p>
   )}
 
+  {/* Loading and error states for signed-in users */}
+  {isAuthenticated && winsLoading && (
+  <div className="space-y-3" data-testid="wins-loading">
+  <Skeleton className="h-20 w-full rounded-2xl" />
+  <Skeleton className="h-20 w-full rounded-2xl" />
+  </div>
+  )}
+  {isAuthenticated && winsError && (
+  <div className="glass border border-white/8 rounded-2xl p-6 text-center" data-testid="wins-error">
+  <ShieldAlert className="w-8 h-8 text-[hsl(348_55%_78%)] mx-auto mb-3" />
+  <p className="text-sm text-muted-foreground">We could not load your wins. Please refresh and try again.</p>
+  </div>
+  )}
+
   {/* Wins list */}
   <div className="space-y-3">
   <AnimatePresence>
@@ -272,7 +287,7 @@ export default function DatingWinsLog() {
   </div>
 
   {/* Empty state */}
-  {!isDemo && displayed.length === 0 && !showForm && (
+  {!isDemo && !winsLoading && !winsError && displayed.length === 0 && !showForm && (
   <motion.div {...fadeUp(0.1)} className="text-center py-16">
   <Trophy className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
   <p className="font-semibold text-foreground mb-1">Your wins log is empty</p>
