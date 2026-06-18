@@ -72,9 +72,10 @@ export default function DatingWinsLog() {
     date: w.createdAt,
   }));
 
-  // Signed-out visitors and brand-new accounts see sample wins so the page is
-  // never empty. The real log starts the moment a signed-in user adds one.
-  const isDemo = !isAuthenticated || wins.length === 0;
+  // Signed-out visitors see sample wins so the marketing view is never empty.
+  // A signed-in user never sees fabricated wins: a brand-new account gets the
+  // welcome panel and a clean log that starts the moment they add their own.
+  const isDemo = !isAuthenticated;
   const isBrandNewUser = isAuthenticated && wins.length === 0;
   const displayed = isDemo ? DEMO_WINS : wins;
 

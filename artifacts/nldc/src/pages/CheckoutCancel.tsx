@@ -32,7 +32,7 @@ export default function CheckoutCancel() {
   </p>
 
   <p className="text-muted-foreground/60 text-sm mb-10">
-  If something felt wrong or confusing, we'd love to know, email us at hello@nextleveldatingclub.com.
+  If something felt wrong or confusing, we'd love to know, email us at hello@matchlab.club.
   </p>
 
   <div className="flex flex-col sm:flex-row gap-4 justify-center">

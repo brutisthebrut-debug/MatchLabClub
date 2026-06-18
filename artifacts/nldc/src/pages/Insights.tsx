@@ -386,7 +386,7 @@ export default function Insights() {
   <p className="text-sm text-muted-foreground leading-relaxed">
   It looks like you ran an analysis before signing in, but your browser cookies were cleared before we could link it to your account. The analysis itself is not lost, it just isn't attached to your profile.{" "}
   <a
-  href="mailto:support@nextleveldatingclub.com?subject=Anonymous%20Email%20Insight%20not%20transferred&body=Hi%2C%20I%20ran%20an%20Email%20Insights%20analysis%20before%20signing%20in%20and%20it%20did%20not%20appear%20in%20my%20account.%20Could%20you%20help%20me%20recover%20it%3F"
+  href="mailto:support@matchlab.club?subject=Anonymous%20Email%20Insight%20not%20transferred&body=Hi%2C%20I%20ran%20an%20Email%20Insights%20analysis%20before%20signing%20in%20and%20it%20did%20not%20appear%20in%20my%20account.%20Could%20you%20help%20me%20recover%20it%3F"
   className="underline underline-offset-2 font-medium text-foreground hover:text-foreground/70 transition-colors"
   data-testid="link-insights-orphan-support"
   >

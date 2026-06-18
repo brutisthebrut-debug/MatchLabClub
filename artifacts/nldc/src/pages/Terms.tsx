@@ -99,9 +99,9 @@ export default function Terms() {
   <Section icon={Mail} title="Changes and contact">
   <p><strong className="text-foreground">Changes to these terms.</strong> We'll email you at least 14 days before any material changes take effect, if you have an account with us. Continued use after that date means acceptance of the updated terms.</p>
   <p><strong className="text-foreground">Questions?</strong> We're real people. Email us:</p>
-  <p><strong className="text-foreground">General:</strong> hello@nextleveldatingclub.com</p>
-  <p><strong className="text-foreground">Privacy:</strong> privacy@nextleveldatingclub.com</p>
-  <p className="text-muted-foreground/60 text-xs pt-2">MatchLab Club · hello@nextleveldatingclub.com</p>
+  <p><strong className="text-foreground">General:</strong> hello@matchlab.club</p>
+  <p><strong className="text-foreground">Privacy:</strong> privacy@matchlab.club</p>
+  <p className="text-muted-foreground/60 text-xs pt-2">MatchLab Club · hello@matchlab.club</p>
   </Section>
   </div>
   </div>

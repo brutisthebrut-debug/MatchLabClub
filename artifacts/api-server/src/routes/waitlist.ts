@@ -125,7 +125,7 @@ function getAppBaseUrl(): string {
   if (explicit) return explicit.replace(/\/$/, "");
   const domains = process.env["REPLIT_DOMAINS"]?.split(",")[0]?.trim();
   if (domains) return `https://${domains}`;
-  return "https://nextleveldatingclub.com";
+  return "https://matchlab.club";
 }
 
 async function sendWaitlistActivationEmail(

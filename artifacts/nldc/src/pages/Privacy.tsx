@@ -97,7 +97,7 @@ export default function Privacy() {
 
   <Section icon={Mail} title="Contact & deletion requests">
   <p>For any privacy question, data request, or deletion request:</p>
-  <p><strong className="text-foreground">Email:</strong> privacy@nextleveldatingclub.com</p>
+  <p><strong className="text-foreground">Email:</strong> privacy@matchlab.club</p>
   <p>We'll respond within 2 business days. Deletion requests are completed within 48 hours of confirmation.</p>
   <p className="text-muted-foreground/60 text-xs">This policy may be updated from time to time. If you have an account, we'll email you about material changes before they take effect.</p>
   </Section>
