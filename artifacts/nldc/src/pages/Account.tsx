@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { BlockedMembersSection } from "@/components/safety/BlockedMembersSection";
+import { SignInUnlocksList } from "@/components/auth/SignInValueProps";
 import { useAutoRefreshPref } from "@/lib/autoRefreshPref";
 import { useTrashReminderPref } from "@/lib/trashReminderPref";
 import { useCopyDurationPref, type CopyDuration, COPY_DURATION_LABELS } from "@/lib/copyDurationPref";
@@ -297,11 +298,16 @@ export default function Account() {
             <div className="w-20 h-20 mx-auto rounded-[2rem] bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(326_100%_59%)] flex items-center justify-center shadow-lg relative z-10">
               <Shield className="w-10 h-10 text-white" />
             </div>
-            <div className="space-y-4 relative z-10">
-              <h2 className="font-serif text-3xl font-bold text-foreground tracking-tight">Sign in to see your account</h2>
-              <p className="text-muted-foreground text-base max-w-md mx-auto leading-relaxed">
-                Your profile, audits, and coaching history live here once you're signed in. It only takes a second.
-              </p>
+            <div className="space-y-6 relative z-10">
+              <div className="space-y-3">
+                <h2 className="font-serif text-3xl font-bold text-foreground tracking-tight">Sign in to keep your progress</h2>
+                <p className="text-muted-foreground text-base max-w-md mx-auto leading-relaxed">
+                  You can run the audit and coaching tools without an account. Sign in to keep what you make and turn it into a rising Match Readiness.
+                </p>
+              </div>
+              <div className="max-w-md mx-auto">
+                <SignInUnlocksList />
+              </div>
             </div>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 relative z-10">
               <Button

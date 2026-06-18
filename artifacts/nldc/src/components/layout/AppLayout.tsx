@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { MatchPathBar } from "@/components/layout/MatchPathBar";
 import { EchoPresence } from "@/components/layout/EchoPresence";
+import { GuestWorkBanner } from "@/components/auth/GuestWorkBanner";
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -48,6 +49,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
     return (
       <div className="min-h-[100dvh] flex flex-col flex-1">
         <Navbar />
+        <GuestWorkBanner />
         <main className="flex-1 flex flex-col">{children}</main>
         <Footer />
       </div>
