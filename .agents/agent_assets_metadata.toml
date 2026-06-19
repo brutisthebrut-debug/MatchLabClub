@@ -35,3 +35,9 @@ id = "XqoPP9RR8TihuRti-HmHN"
 uri = "file://MARKETING_HANDOFF.md"
 type = "text"
 title = "Marketing Handoff Brief"
+
+[[outputs]]
+id = "MJ5i-6Rvmt_KW6NMlP90i"
+uri = "file://PROJECT_SPECIFICATION.md"
+type = "text"
+title = "MatchLab Club — Technical Specification"
