@@ -155,7 +155,7 @@ export default function Echo() {
           Echo
         </h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
-          One companion that travels every page with you, learns as you feed it,
+          One friend who travels every page with you, learns the more you share,
           and never tells you only what you want to hear.
         </p>
       </header>

@@ -559,8 +559,8 @@ export function EchoPresence() {
                 {data.commitments.length === 0 &&
                   data.observations.length === 0 && (
                     <p className="text-sm text-muted-foreground">
-                      Echo has not made any notes yet. The more you feed it, the
-                      more it notices on its own.
+                      I have not made any notes yet. The more you share with me,
+                      the more I will notice on my own.
                     </p>
                   )}
                 {data.commitments.map((c) => (

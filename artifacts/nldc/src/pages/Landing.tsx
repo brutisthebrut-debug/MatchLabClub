@@ -63,7 +63,7 @@ function LiveReadCard() {
       <div className="flex items-center justify-between mb-7 relative z-10">
         <div className="flex items-center gap-2.5">
           <span className="w-2.5 h-2.5 rounded-full bg-[hsl(142_55%_60%)] animate-pulse shadow-[0_0_8px_hsl(142_55%_60%)]" />
-          <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/70">Sample read</span>
+          <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/70">Echo's read</span>
         </div>
         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/70 px-2.5 py-1 rounded-full border border-foreground/10">live demo</span>
       </div>
@@ -107,7 +107,7 @@ function LiveReadCard() {
 
       <div className="mt-8 pt-6 border-t border-foreground/10 relative z-10">
         <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-          <span className="text-foreground font-bold">This is a demo read.</span> Yours starts climbing the moment you run your first Signal Check.
+          <span className="text-foreground font-bold">This is a demo read.</span> Yours starts climbing the moment Echo gets its first look at you.
         </p>
       </div>
     </div>
@@ -116,8 +116,8 @@ function LiveReadCard() {
 
 export default function Landing() {
   useMeta(
-    "MatchLab Club: A second brain for your dating life",
-    "Feed your real signals into one engine. Build your match readiness score. Earn introductions to people you would never find on your own.",
+    "MatchLab Club: the friend who helps you find your person",
+    "Meet Echo, the friend who gets to know you, helps you get genuinely ready, and walks you toward people you would never have found on your own.",
     absoluteUrl(DEFAULT_OG_IMAGE),
     { canonicalUrl: absoluteUrl("/") },
   );
@@ -142,7 +142,7 @@ export default function Landing() {
             className="font-serif font-bold italic text-foreground/[0.025] dark:text-foreground/[0.045] leading-none whitespace-nowrap select-none"
             style={{ fontSize: "clamp(8rem, 28vw, 26rem)" }}
           >
-            readable
+            Echo
           </span>
         </div>
 
@@ -184,7 +184,7 @@ export default function Landing() {
               >
                 <span className="w-2.5 h-2.5 rounded-full bg-[hsl(326_100%_59%)] animate-pulse shadow-[0_0_10px_hsl(326_100%_59%)]" />
                 <span className="text-xs sm:text-sm font-bold tracking-[0.18em] text-foreground/80 uppercase">
-                  Private beta · the machine is reading
+                  Private beta · meet Echo
                 </span>
               </motion.div>
 
@@ -192,24 +192,24 @@ export default function Landing() {
                 className="font-serif font-bold tracking-tight leading-[0.95] mb-6 text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem]"
                 {...fadeUp(0.2)}
               >
-                <span className="text-foreground">You are more</span>{" "}
-                <span className="gradient-text italic pr-1">readable</span>
+                <span className="text-foreground">A friend who actually</span>{" "}
+                <span className="gradient-text italic pr-1">knows you.</span>
                 <br className="hidden sm:block" />
-                <span className="text-foreground">than the apps let on.</span>
+                <span className="text-foreground">And helps you find your person.</span>
               </motion.h1>
 
               <motion.p
                 className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.3em] text-[hsl(248_62%_52%)] mb-7 tabular-nums"
                 {...fadeUp(0.28)}
               >
-                // reads the whole signal, not the thumb-stop
+                in your corner, from first hello to the right person
               </motion.p>
 
               <motion.p
                 className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed mb-10 font-medium"
                 {...fadeUp(0.34)}
               >
-                Every app reduces you to a few photos and a half-second swipe. MatchLab is the second brain underneath: feed it your real signals, watch one readiness number climb, and earn introductions to people you would never find on your own.
+                Every app reduces you to a few photos and a half-second swipe. Echo is the friend underneath all of it. It gets to know the real you, helps you get genuinely ready, and walks you toward people you would never have found on your own.
               </motion.p>
 
               <motion.div className="flex flex-col sm:flex-row items-center lg:items-start gap-5" {...fadeUp(0.42)}>
@@ -218,14 +218,14 @@ export default function Landing() {
                   size="lg"
                   className="rounded-full font-bold h-16 md:h-[4.5rem] px-10 md:px-12 text-lg md:text-xl bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] border-0 glow-pulse text-white shadow-[0_8px_40px_hsl(248_62%_52%/0.5)] hover:scale-[1.03] transition-transform w-full sm:w-auto"
                 >
-                  <Link href="/signal-check">Read me now <ArrowRight className="ml-3 h-6 w-6" /></Link>
+                  <Link href="/signal-check">Meet Echo <ArrowRight className="ml-3 h-6 w-6" /></Link>
                 </Button>
                 <Link
                   href="/how-it-works"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass border border-[hsl(248_62%_52%/0.25)] hover:border-[hsl(248_62%_52%/0.6)] hover:bg-[hsl(248_62%_52%/0.08)] transition-all group text-sm font-bold text-muted-foreground hover:text-foreground"
                 >
                   <Brain className="w-4 h-4 text-[hsl(248_62%_52%)]" />
-                  How the machine works
+                  How Echo works
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </motion.div>
@@ -242,7 +242,7 @@ export default function Landing() {
               </motion.div>
             </div>
 
-            {/* RIGHT: the machine readout */}
+            {/* RIGHT: Echo's read on you */}
             <motion.div
               className="lg:col-span-5 w-full max-w-md mx-auto lg:max-w-none"
               initial={{ opacity: 0, y: 40, scale: 0.97 }}
@@ -283,7 +283,7 @@ export default function Landing() {
               className="text-lg md:text-2xl text-white/80 max-w-3xl mx-auto leading-relaxed font-medium mb-16"
               {...fadeUp(0.2)}
             >
-              They are built to keep you swiping. Every day you stay average is a day they keep you scrolling. MatchLab flips it: we read the full signal you already give off, then quietly make you the person other people stop on.
+              They are built to keep you swiping. Every day you stay average is a day they keep you scrolling. Echo flips it: it gets to know the real you, then quietly helps you become the person other people stop on.
             </motion.p>
 
             <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto text-left">
@@ -305,7 +305,7 @@ export default function Landing() {
                 style={{ background: "linear-gradient(160deg, hsl(248 62% 52% / 0.25), hsl(326 100% 59% / 0.15))" }}
                 {...fadeUp(0.32)}
               >
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[hsl(326_100%_80%)] mb-5">What the machine reads</p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[hsl(326_100%_80%)] mb-5">What Echo pays attention to</p>
                 <ul className="space-y-3">
                   {["Your real conversation patterns", "Your lifestyle and rhythm", "Your readiness, climbing over time"].map((x) => (
                     <li key={x} className="flex items-center gap-3 text-white font-semibold text-lg">
@@ -333,13 +333,13 @@ export default function Landing() {
       <section className="py-32 border-t border-foreground/5 bg-[hsl(248_40%_98%/0.5)] dark:bg-[hsl(248_50%_8%/0.5)] relative overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-24 max-w-3xl mx-auto">
-            <p className="text-sm font-bold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-4">The Readiness Loop</p>
+            <p className="text-sm font-bold uppercase tracking-widest text-[hsl(248_62%_52%)] mb-4">How Echo gets to know you</p>
             <h2 className="text-4xl md:text-6xl font-serif font-bold text-foreground leading-tight">
-              Feed signals in. <br />
-              <span className="gradient-text italic pr-1">Get introductions out.</span>
+              The more Echo knows you, <br />
+              <span className="gradient-text italic pr-1">the better it matches you.</span>
             </h2>
             <p className="text-muted-foreground text-xl mt-6 leading-relaxed font-medium">
-              We ship dozens of working tools. Each one gives you immediate value today, and every action feeds the machine to build your readiness for tomorrow.
+              Dozens of real tools, and each one does two things at once. It helps you today, and it lets Echo understand you a little better, so the matches it works toward actually fit.
             </p>
           </div>
           
@@ -347,20 +347,20 @@ export default function Landing() {
             {[
               {
                 step: "01",
-                title: "Feed your signals",
-                desc: "Audit a profile, analyze a conversation, paste a calendar, or take a quiz. Every tool is a data source.",
+                title: "Let Echo get to know you",
+                desc: "Check a profile, talk through a conversation, paste a calendar, or take a quiz. Every move tells Echo something true about you.",
                 color: "hsl(var(--brand-indigo))",
               },
               {
                 step: "02",
-                title: "Build your readiness",
-                desc: "Every signal moves one central number. Your Match Readiness meter grows as the machine learns your patterns.",
+                title: "Watch your readiness climb",
+                desc: "Every move nudges one central number. Your Match Readiness grows as Echo learns your patterns.",
                 color: "hsl(var(--brand-gold))",
               },
               {
                 step: "03",
-                title: "Earn the payoff",
-                desc: "When your readiness is high enough, the engine works toward introducing you to people near you. No swipe carousel.",
+                title: "Earn the introduction",
+                desc: "When you are genuinely ready, Echo works toward introducing you to people near you. No swipe carousel.",
                 color: "hsl(142 55% 50%)",
               },
             ].map((item, i) => (
@@ -392,11 +392,11 @@ export default function Landing() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-24 max-w-4xl mx-auto">
             <h2 className="text-5xl md:text-6xl font-serif font-bold text-foreground mb-8 leading-tight">
-              An entire suite of tools, <br className="hidden md:block" />
-              <span className="gradient-text italic pr-1">working together.</span>
+              The tools Echo brings <br className="hidden md:block" />
+              <span className="gradient-text italic pr-1">to the table.</span>
             </h2>
             <p className="text-xl text-muted-foreground leading-relaxed font-medium">
-              We built the exact tools you need to optimize what you are doing right now. Every one of them feeds a single Match Readiness score, and that score is what earns you introductions to people you would never find on your own.
+              These are the tools Echo uses to help you right now. Each one is useful today on its own, and each one also helps Echo know you better, which is what earns you introductions to people you would never have found on your own.
             </p>
           </div>
 
@@ -547,7 +547,7 @@ export default function Landing() {
               <span className="gradient-text italic pr-1">No tricks.</span>
             </h2>
             <p className="text-xl text-muted-foreground leading-relaxed font-medium">
-              Start for free. Upgrade when you want the whole engine.
+              Start for free. Upgrade when you want everything Echo can do with you.
             </p>
           </div>
           
@@ -597,7 +597,7 @@ export default function Landing() {
           </div>
           
           <motion.div className="text-center max-w-2xl mx-auto" {...fadeUp(0.4)}>
-            <h3 className="text-3xl font-serif font-bold mb-8">Ready to feed the machine?</h3>
+            <h3 className="text-3xl font-serif font-bold mb-8">Ready to let Echo get to know you?</h3>
             <Button
               asChild
               size="lg"

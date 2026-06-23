@@ -59,13 +59,13 @@ const SEEKING = ["Women", "Men", "Non-binary people", "Everyone", "Other / it's 
 function goalIntro(goal: string): string {
   switch (goal) {
     case "heal from a breakup":
-      return "No pressure, and nothing here is about your ex. These few questions start your wellness profile, the deepest signal we use to understand you. Answer in a sentence or skip any.";
+      return "No pressure, and nothing here is about your ex. These few questions are how Echo starts to really understand you. Answer in a sentence or skip any.";
     case "casual dating":
-      return "These start your wellness profile, the signal that helps us read who actually fits your vibe. A sentence each is plenty, or skip any and come back later.";
+      return "These are how Echo gets a feel for who actually fits your vibe. A sentence each is plenty, or skip any and come back later.";
     case "just curious":
-      return "Just a taste of how this works. These three answers start your wellness profile, the deepest signal we read. Say as little or as much as you like.";
+      return "Just a taste of how this works. These three answers are how Echo starts getting to know you. Say as little or as much as you like.";
     default:
-      return "These start your wellness profile, the deepest signal for matching. Answer in a sentence or two, or skip any and come back later. Used to coach you, never sold or shared.";
+      return "These are how Echo starts getting to know you, the foundation for everything ahead. Answer in a sentence or two, or skip any and come back later. Used to coach you, never sold or shared.";
   }
 }
 
@@ -182,8 +182,8 @@ function AnimatedMeter({ score, label, previousScore }: { score: number, label: 
 
 export default function Onboarding() {
   useMeta(
-    "Welcome to MatchLab",
-    "A two-minute setup. Confirm your goal, share a few words about yourself, connect a source, and start your Match Readiness climb.",
+    "Meet Echo",
+    "A two-minute hello. Tell Echo your goal, share a few words about yourself, connect a source, and start your Match Readiness climb.",
   );
   const [, setLocation] = useLocation();
   const { user } = useAuth();
@@ -355,10 +355,10 @@ export default function Onboarding() {
                     <Award className="w-8 h-8" />
                   </motion.div>
                   <h1 className="font-serif text-4xl font-bold leading-tight md:text-5xl tracking-tight mb-4">
-                    {firstName ? `Welcome to the lab, ${firstName}.` : "Welcome to the lab."}
+                    {firstName ? `Hey ${firstName}, I'm Echo.` : "Hi, I'm Echo."}
                   </h1>
                   <p className="text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto">
-                    This is your personal readiness engine. The more signals you feed it, the more accurately it maps your profile, spots blind spots, and ultimately introduces you to highly compatible people near you.
+                    I'm the friend who gets to know you, helps you get genuinely ready, and walks you toward the person you would never have found on your own. The more you share with me, the better I get at it.
                   </p>
                 </div>
 
@@ -395,7 +395,7 @@ export default function Onboarding() {
                   </div>
 
                   <p className="mb-4 text-xs font-bold uppercase tracking-widest text-foreground/60 flex items-center gap-2">
-                    <Eye className="w-4 h-4 text-[hsl(248_62%_52%)]" /> Calibration
+                    <Eye className="w-4 h-4 text-[hsl(248_62%_52%)]" /> A little about you
                   </p>
                   <div className="space-y-6 bg-background/50 border border-border/50 rounded-2xl p-6">
                     <div>
@@ -467,7 +467,7 @@ export default function Onboarding() {
               <motion.div key="step1" {...fadeStep} className="max-w-2xl mx-auto w-full">
                 <div className="mb-8">
                   <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl tracking-tight mb-4">
-                    The First Signal
+                    Tell me about you
                   </h1>
                   <p className="text-lg text-muted-foreground leading-relaxed">
                     {goalIntro(goal)}
@@ -475,7 +475,7 @@ export default function Onboarding() {
                 </div>
                 
                 <div className="mb-10">
-                  <AnimatedMeter score={readiness} label="Current Readiness" />
+                  <AnimatedMeter score={readiness} label="Where you are now" />
                 </div>
 
                 <div className="space-y-6 mb-10">
@@ -519,11 +519,11 @@ export default function Onboarding() {
                   >
                     {saving ? (
                       <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing Signal...
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Taking it in...
                       </>
                     ) : (
                       <>
-                        Feed Signal <ArrowRight className="ml-2 h-5 w-5" />
+                        Share with Echo <ArrowRight className="ml-2 h-5 w-5" />
                       </>
                     )}
                   </Button>
@@ -538,12 +538,12 @@ export default function Onboarding() {
                     Momentum Unlocked
                   </h1>
                   <p className="text-lg text-muted-foreground leading-relaxed">
-                    Every source you plug in sharpens your readiness and opens up new features. Pick one to try now, or do it later. You control your data.
+                    Every source you connect helps Echo know you better and opens up new features. Pick one to try now, or do it later. You control your data.
                   </p>
                 </div>
                 
                 <div className="mb-10">
-                  <AnimatedMeter score={readiness} label="Readiness After First Signal" previousScore={readinessBefore} />
+                  <AnimatedMeter score={readiness} label="Readiness after your first answers" previousScore={readinessBefore} />
                 </div>
 
                 <div className="grid gap-4 mb-10">
@@ -608,10 +608,10 @@ export default function Onboarding() {
                   <Sparkles className="h-12 w-12 text-white animate-pulse" />
                 </div>
                 <h1 className="font-serif text-4xl font-bold leading-tight md:text-5xl tracking-tight mb-4">
-                  Meet Your Mirror
+                  Here's my first read on you
                 </h1>
                 <p className="mx-auto mt-4 max-w-lg text-lg text-muted-foreground leading-relaxed">
-                  This is the engine's first read on you. It's built entirely from the signals you just fed it, and it learns with every move you make.
+                  This is what Echo can see so far, built entirely from what you just shared. It gets sharper with every move you make.
                 </p>
 
                 {portraitQuery.isLoading ? (
@@ -620,7 +620,7 @@ export default function Onboarding() {
                     data-testid="onboarding-portrait-loading"
                   >
                     <Loader2 className="h-8 w-8 animate-spin text-[hsl(248_62%_52%)]" />
-                    <p className="font-bold text-muted-foreground">Constructing your baseline...</p>
+                    <p className="font-bold text-muted-foreground">Getting my first read...</p>
                   </div>
                 ) : portrait ? (
                   <div
@@ -646,7 +646,7 @@ export default function Onboarding() {
                     {portrait.nextSignal && (
                       <div className="mt-8 rounded-2xl border border-[hsl(326_100%_59%/0.2)] bg-background/80 p-5 relative z-10">
                         <p className="text-xs font-bold uppercase tracking-widest text-[hsl(326_100%_59%)] flex items-center gap-2">
-                          <Zap className="w-3.5 h-3.5" /> Highest Leverage Next Move
+                          <Zap className="w-3.5 h-3.5" /> Your Best Next Move
                         </p>
                         <p className="mt-2 text-lg font-bold text-foreground">{portrait.nextSignal.label}</p>
                         <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">

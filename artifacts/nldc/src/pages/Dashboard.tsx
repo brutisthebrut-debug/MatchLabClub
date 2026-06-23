@@ -367,8 +367,8 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
   if (!hasRealAudits) {
     return {
       label: "Your Move",
-      title: "Get your free Signal Audit",
-      desc: "Takes 3 minutes. Get your Signal Score, bio rewrite, and a 7-day action plan.",
+      title: "Let's get my first real read on you",
+      desc: "Give me three minutes and I'll hand you back your Signal Score, a bio rewrite, and a 7-day plan.",
       href: "/start",
       color: "hsl(var(--brand-indigo))",
       cta: "Start My Audit",
@@ -378,8 +378,8 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
   if (latestScore < 55) {
     return {
       label: "Recommended",
-      title: "Your score has clear room to grow",
-      desc: "A free Signal Check will show you exactly what category of issue to fix first. Fast.",
+      title: "I think we can move this number",
+      desc: "Run a free Signal Check and I'll show you exactly which thing to fix first. It's quick.",
       href: "/signal-check",
       color: "hsl(var(--brand-rose))",
       cta: "Run My Signal Check",
@@ -389,8 +389,8 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
   if (latestScore < 75) {
     return {
       label: "Next Best Move",
-      title: "Your profile is solid. Now sharpen your messages",
-      desc: "Most matches are won or lost in the first few exchanges. Message Coach gets you 3 ready-to-send replies.",
+      title: "Your profile is solid. Let's sharpen your messages",
+      desc: "Most matches are won or lost in the first few exchanges. Bring me a chat and I'll get you 3 ready-to-send replies.",
       href: "/coach",
       color: "hsl(var(--brand-gold))",
       cta: "Open Message Coach",
@@ -399,8 +399,8 @@ function getNextBestAction(latestScore: number, hasRealAudits: boolean) {
   }
   return {
     label: "Keep the Momentum",
-    title: "Strong score. Now see how you actually communicate.",
-    desc: "Style Map maps 9 dimensions of your communication: warmth, clarity, directness, and more.",
+    title: "Strong score. Let's look at how you actually communicate.",
+    desc: "Style Map reads 9 dimensions of how you come across: warmth, clarity, directness, and more.",
     href: "/style-map",
     color: "hsl(var(--brand-green))",
     cta: "Map My Style",
@@ -433,7 +433,8 @@ function parseAuditFiltersFromSearch(search: string): {
 
 export default function Dashboard() {
   useMeta("Your Dashboard", "Your Match Readiness, recent audits, coaching sessions, and quick actions, all in one place.");
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const firstName = user?.firstName?.trim() || "";
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const PAGE_SIZE = 50;
@@ -1045,8 +1046,8 @@ export default function Dashboard() {
             {/* Header Area */}
             <motion.div variants={itemVariants} className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div>
-                <p className="text-sm text-[hsl(248_62%_62%)] font-bold tracking-widest uppercase mb-2">Welcome back</p>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-foreground tracking-tight font-serif drop-shadow-sm">Your Dashboard</h1>
+                <p className="text-sm text-[hsl(248_62%_62%)] font-bold tracking-widest uppercase mb-2">Echo</p>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-foreground tracking-tight font-serif drop-shadow-sm">{firstName ? `Hey ${firstName}, here's where we are.` : "Here's where we are."}</h1>
               </div>
               {showHandoffOffer && (
                 <div data-testid="handoff-cta" className="md:self-center">

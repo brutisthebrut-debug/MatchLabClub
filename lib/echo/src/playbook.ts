@@ -64,6 +64,13 @@ export const PLAYBOOK: readonly PlaybookEntry[] = [
     rationale: `First-touch matches the human intuition of "who actually brought this person here." Last-touch would let any share clobber the original credit, which incentivises spam-sharing and obscures which surfaces actually drive signup. The cookie lasts sixty days, which covers the typical consideration window for a $97-$197 product. On signup, users.invited_by_user_id and users.invited_at are stamped on row INSERT only, never on the onConflictDoUpdate path, so returning users keep their original attribution.`,
     revisitWhen: `Founder wants to A/B test last-touch or multi-touch attribution to compare conversion lifts.`,
   },
+  {
+    date: "2026-06-23",
+    id: "echo-front-door",
+    decision: "Echo is the front door and connective thread of the web product. Lead every first-impression surface with the friend, not the instrument. Clinical 'lab / signal / audit / engine / second brain' language is banned from headlines and intros and replaced with warm, friend-first framing.",
+    rationale: `The platform already has Echo, a fully codified companion ("a sharp friend at a kitchen table"), but the surfaces still read like a clinical instrument: "second brain," "Signal Audit," "readiness engine," "// reads the whole signal," with Echo demoted to a floating corner button. The founder wants the whole product to feel like a friend who knows you and is walking you toward connection, not a pile of tools. So the center of gravity moves: Echo becomes the front door (landing, onboarding, home all open as Echo) and the connective thread (every tool reads as Echo helping with that thing, and Echo references what the person recently did). This reinforces the existing north star rather than replacing it: become genuinely relationship-ready, then get matched. The relationship leads, readiness is the path Echo walks with you, matching is the earned payoff. The tools stay and stay reachable; only their framing changes. Crucially this is a relabel-only pass: routes, toolNames, schema ids, and telemetry identifiers stay stable so codegen, tests, and analytics are untouched. The friend-first promise and tagline live in voice.ts (ECHO_RELATIONSHIP_PROMISE, ECHO_TAGLINE) so every surface threads the same line and future copy does not drift back to clinical framing.`,
+    revisitWhen: `The founder decides the warm framing is hurting trust with a precision-seeking audience and wants the instrument framing back, OR the "MatchLab Club" brand name itself is revisited (the word "Lab" in the name was explicitly left out of this pass).`,
+  },
 ];
 
 /**

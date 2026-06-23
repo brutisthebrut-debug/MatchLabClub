@@ -36,12 +36,12 @@ const GENDERS = ["Man", "Woman", "Non-binary", "Trans man", "Trans woman", "Othe
 const ORIENTATIONS = ["Straight", "Gay", "Lesbian", "Bisexual", "Queer", "Other"];
 
 const LOADING_TIPS = [
-  "Analyzing your bio for authenticity signals...",
-  "Identifying phrases that appear in 10,000 other profiles...",
-  "Checking your conversational tone and warmth...",
-  "Calculating your Dating Readiness Score...",
-  "Crafting your personalized rewrite...",
-  "Finalizing your action plan...",
+  "Reading your bio for what feels real...",
+  "Spotting the lines that show up in 10,000 other profiles...",
+  "Listening for your tone and warmth...",
+  "Working out your Dating Readiness Score...",
+  "Writing you a rewrite in your own voice...",
+  "Putting your action plan together...",
 ];
 
 const PRONOUNS = ["she/her", "he/him", "they/them", "she/they", "he/they", "Other"];
@@ -179,9 +179,9 @@ export default function Wizard() {
     const ANALYSIS_STEPS = [
       "Reading your bio and prompts…",
       "Scoring your Signal Spectrum…",
-      "Mapping strengths and risk areas…",
-      "Writing your personalised rewrite…",
-      "Building your 7-day action plan…",
+      "Noticing your strengths and the rough spots…",
+      "Writing you a rewrite in your own voice…",
+      "Putting your 7-day plan together…",
     ];
     const stepIdx = Math.min(tipIndex, ANALYSIS_STEPS.length - 1);
     return (
@@ -204,9 +204,9 @@ export default function Wizard() {
             >
               <Sparkles className="w-12 h-12 text-white animate-pulse" />
             </motion.div>
-            <h2 className="text-3xl font-serif font-bold mb-3 text-foreground tracking-tight">Processing Signal...</h2>
+            <h2 className="text-3xl font-serif font-bold mb-3 text-foreground tracking-tight">Getting my read on you...</h2>
             <p className="text-base text-muted-foreground mb-10">
-              Analyzing everything carefully, usually takes about 20 seconds.
+              I'm taking it all in. This usually takes about 20 seconds.
             </p>
             <div className="glass-strong border-white/20 rounded-3xl p-8 text-left space-y-5 mb-8 shadow-xl relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent pointer-events-none" />
