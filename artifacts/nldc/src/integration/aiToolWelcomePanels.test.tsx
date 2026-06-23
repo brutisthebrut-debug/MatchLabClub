@@ -107,6 +107,7 @@ vi.mock("@workspace/api-client-react", () => ({
     isPending: false,
   }),
   getGetDatingWinsQueryKey: () => ["dating-wins"],
+  useRecordGrowthEvent: () => ({ mutate: vi.fn(), isPending: false }),
   useGetMatchingState: () => ({
     data: { eligible: false, readiness: { score: 0 }, nextActions: [] },
     isLoading: false,
