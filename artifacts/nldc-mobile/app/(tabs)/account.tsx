@@ -231,7 +231,11 @@ export default function AccountScreen() {
       >
         <ScreenHeader
           eyebrow="Account"
-          title="Your data, your call"
+          title={
+            isAuthenticated && user?.firstName?.trim()
+              ? `${user.firstName.trim()}, your data is yours.`
+              : "Your data, your call"
+          }
           subtitle="Sign in to manage your audits across devices, download everything we have about you, or permanently remove your account."
         />
 

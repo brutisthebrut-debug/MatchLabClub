@@ -97,7 +97,8 @@ export default function ScoreScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { data, isLoading, isError, refetch, isFetching } = useGetAuditSummary();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const firstName = user?.firstName?.trim();
   const followUpStatsQueryKey = useMemo(
     () => getGetCoachFollowUpStatsQueryKey(),
     [],
@@ -184,12 +185,14 @@ export default function ScoreScreen() {
         }
       >
         <ScreenHeader
-          eyebrow="MatchLab Club"
-          title="Your Signal Score"
+          eyebrow="Echo"
+          title={
+            firstName ? `Hey ${firstName}, here's where we are.` : "Here's where we are."
+          }
           subtitle={
             summary.demo
-              ? "Demo score, complete a profile audit on the web to see your real number."
-              : `Average across ${summary.total} audit${summary.total === 1 ? "" : "s"}: ${summary.average.toFixed(1)}`
+              ? "A sample read for now. Run a profile check on the web and I'll show you your real number."
+              : `Your read across ${summary.total} check${summary.total === 1 ? "" : "s"}, averaging ${summary.average.toFixed(1)}.`
           }
         />
 
@@ -393,9 +396,9 @@ export default function ScoreScreen() {
             </>
           ) : (
             <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-              Draft a reply in Coach and we'll check in two hours later. Once
-              you've answered a few of those nudges, your send-through rate will
-              show up here.
+              Draft a reply in Coach and Echo will check in with you a couple of
+              hours later. Once you've answered a few of those nudges, your
+              send-through rate shows up here.
             </Text>
           )}
         </View>
@@ -628,7 +631,7 @@ export default function ScoreScreen() {
         >
           <Feather name="zap" size={18} color={colors.gold} />
           <Text style={[styles.footerText, { color: colors.mutedForeground }]}>
-            Use the Coach tab when a match replies, or Next to draft an opener you'll actually send.
+            Echo's in the Coach tab when a match replies, or in Next to help you draft an opener you'll actually send.
           </Text>
         </View>
       </ScrollView>

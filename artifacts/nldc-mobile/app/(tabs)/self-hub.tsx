@@ -224,7 +224,7 @@ export default function SelfHubScreen() {
         >
           <ScreenHeader
             eyebrow="Self Hub"
-            title="Your second brain, in one place"
+            title="Everything Echo knows about you, in one place"
             subtitle="Wellness completeness, journal cadence, compass reads, imports, and consent. Sign in to see yours."
           />
           <Pressable
@@ -262,8 +262,8 @@ export default function SelfHubScreen() {
       >
         <ScreenHeader
           eyebrow="Self Hub"
-          title={`Hi${user?.firstName ? `, ${user.firstName}` : ""}.`}
-          subtitle="Here's what we know about you. Everything below is yours, exportable, and deletable at any time."
+          title={`Hey${user?.firstName ? `, ${user.firstName}` : ""}.`}
+          subtitle="Here's what Echo knows about you so far. Everything below is yours, exportable, and deletable at any time."
         />
 
         {/* Identity */}
@@ -307,7 +307,7 @@ export default function SelfHubScreen() {
             testId="button-share-self-hub"
             surface="self-hub"
             title="Read your dating signals, free in 2 minutes"
-            text="I've been using MatchLab Club as a second brain for my dating life. Try a quiz, see what your patterns actually say about you."
+            text="I've been using MatchLab Club like a friend who actually knows my dating life. Try a quiz, see what your patterns actually say about you."
             path="/quizzes"
             ref={user?.id ? `user-${user.id}` : "self-hub"}
             variant="primary"

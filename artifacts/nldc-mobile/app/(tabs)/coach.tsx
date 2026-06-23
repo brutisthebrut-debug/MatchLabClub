@@ -176,7 +176,8 @@ export default function CoachScreen() {
   const createSession = useCreateMessageCoachingSession();
   const coach = useCoachMessage();
   const extractScreenshot = useExtractMessageScreenshot();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const firstName = user?.firstName?.trim();
   const queryClient = useQueryClient();
   const followUpStatsQueryKey = useMemo(
     () => getGetCoachFollowUpStatsQueryKey(),
@@ -474,9 +475,9 @@ export default function CoachScreen() {
         ]}
       >
         <ScreenHeader
-          eyebrow="Message Coach"
-          title="Reply that lands"
-          subtitle="Paste what you've got. Get three replies in different tones, copy the one that sounds like you."
+          eyebrow="Echo"
+          title={firstName ? `${firstName}, let's nail this reply` : "Let's nail this reply"}
+          subtitle="Paste what you've got and I'll hand you three replies in different tones. Copy the one that sounds like you."
         />
 
         {followUpPrompt ? (

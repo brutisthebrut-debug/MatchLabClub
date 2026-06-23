@@ -15,6 +15,7 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 import { ReplyCard } from "@/components/ReplyCard";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { useColors } from "@/hooks/useColors";
+import { useAuth } from "@/lib/auth";
 
 const GOALS = [
   "Keep it alive",
@@ -113,6 +114,8 @@ const STYLE_TINTS: Record<string, "violet" | "gold" | "rose" | "teal"> = {
 export default function NextMessageScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+  const firstName = user?.firstName?.trim();
   const [context, setContext] = useState("");
   const [lastMessage, setLastMessage] = useState("");
   const [goal, setGoal] = useState<Goal>("Keep it alive");
@@ -150,9 +153,9 @@ export default function NextMessageScreen() {
         ]}
       >
         <ScreenHeader
-          eyebrow="Next Message"
-          title="7 ways to send it"
-          subtitle="One context, seven angles, from safe to bold to a clean exit. Pick the one that fits."
+          eyebrow="Echo"
+          title={firstName ? `${firstName}, seven ways to send it` : "Seven ways to send it"}
+          subtitle="Give me the context and I'll hand you seven angles, from safe to bold to a clean exit. Pick the one that sounds like you."
         />
 
         <View
