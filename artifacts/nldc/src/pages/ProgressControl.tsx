@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -94,6 +95,7 @@ export default function ProgressControl() {
 
   return (
   <AppLayout>
+  <HubTabs hub="growth" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-violet fixed w-[300px] h-[300px] top-16 right-0 opacity-15 pointer-events-none" />
   <div className="max-w-2xl mx-auto relative z-10">

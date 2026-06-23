@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { motion, AnimatePresence } from "framer-motion";
@@ -127,6 +128,7 @@ export default function TimeCapsule() {
 
   return (
     <AppLayout>
+      <HubTabs hub="games" />
       <div className="min-h-screen mesh-bg py-10 px-4">
         <div className="orb orb-indigo fixed w-[400px] h-[400px] -top-20 right-0 opacity-20 pointer-events-none" />
         <div className="max-w-2xl mx-auto relative z-10">

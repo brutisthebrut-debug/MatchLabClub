@@ -2,6 +2,7 @@ import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -546,6 +547,7 @@ export default function DataVault() {
 
   return (
     <AppLayout>
+      <HubTabs hub="connections" />
       <div className="min-h-screen mesh-bg py-10 px-4">
         <div className="orb orb-violet fixed w-[400px] h-[400px] -top-20 -right-10 opacity-20 pointer-events-none" />
 

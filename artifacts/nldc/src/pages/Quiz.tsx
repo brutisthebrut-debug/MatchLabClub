@@ -2,6 +2,7 @@ import { withAlpha } from "@/lib/brandColor";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -256,6 +257,7 @@ export default function Quiz() {
 
   return (
   <AppLayout>
+  <HubTabs hub="games" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-violet fixed w-[500px] h-[500px] -top-40 -right-20 opacity-20 pointer-events-none" />
   <div className="orb orb-rose fixed w-[300px] h-[300px] bottom-10 -left-10 opacity-20 pointer-events-none" />

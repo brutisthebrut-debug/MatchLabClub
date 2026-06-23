@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { motion, AnimatePresence } from "framer-motion";
@@ -513,6 +514,7 @@ export default function Cosmic() {
 
   return (
     <AppLayout>
+      <HubTabs hub="games" />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <motion.div {...fadeUp(0)} className="mb-8">
           <div className="flex items-center gap-2 mb-3">

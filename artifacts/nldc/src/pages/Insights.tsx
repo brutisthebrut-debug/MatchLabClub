@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
@@ -330,6 +331,7 @@ export default function Insights() {
 
   return (
   <AppLayout>
+  <HubTabs hub="messages" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="max-w-3xl mx-auto">
   {/* Header */}

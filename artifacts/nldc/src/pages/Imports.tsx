@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Upload, FileArchive, CheckCircle2, AlertCircle, Loader2, Clock, CalendarDays } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { ToolHandoff } from "@/components/ToolHandoff";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -523,6 +524,7 @@ export default function Imports() {
 
   return (
     <AppLayout>
+      <HubTabs hub="connections" />
       <div className="max-w-5xl mx-auto px-4 py-10 w-full space-y-10">
         <section className="space-y-3">
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight">

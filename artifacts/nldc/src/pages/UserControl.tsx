@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -73,6 +74,7 @@ export default function UserControl() {
 
   return (
   <AppLayout>
+  <HubTabs hub="connections" />
   <div className="min-h-screen pt-20 pb-32 px-4 sm:px-6 lg:px-8 relative">
   <div className="orb orb-violet fixed w-[400px] h-[400px] top-0 right-0 opacity-30 pointer-events-none" />
   <div className="orb orb-teal fixed w-[300px] h-[300px] bottom-0 left-0 opacity-30 pointer-events-none" />

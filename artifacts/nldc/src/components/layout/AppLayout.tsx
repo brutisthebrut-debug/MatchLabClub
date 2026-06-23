@@ -19,7 +19,6 @@ const MARKETING_PREFIXES = [
   "/roadmap",
   "/blog",
   "/quizzes",
-  "/quiz",
   "/gallery",
   "/sample-report",
   "/privacy",

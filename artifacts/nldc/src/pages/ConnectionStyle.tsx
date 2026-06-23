@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
@@ -390,6 +391,7 @@ export default function ConnectionStyle() {
 
   return (
   <AppLayout>
+  <HubTabs hub="mirror" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-violet fixed w-[360px] h-[360px] -top-10 -left-10 opacity-30 pointer-events-none" />
   <div className="max-w-2xl mx-auto relative z-10">

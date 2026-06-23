@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { ToolHandoff } from "@/components/ToolHandoff";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
@@ -244,6 +245,7 @@ export default function StyleMap() {
 
   return (
   <AppLayout>
+  <HubTabs hub="messages" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-violet fixed w-[340px] h-[340px] top-10 right-0 opacity-25 pointer-events-none" />
   <div className="max-w-3xl mx-auto relative z-10">

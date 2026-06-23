@@ -112,7 +112,7 @@ export default function DatingWinsLog() {
 
   return (
   <AppLayout>
-  <HubTabs hub="growth" />
+  <HubTabs hub="journal" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-gold fixed w-[400px] h-[400px] -top-20 right-0 opacity-20 pointer-events-none" />
   <div className="max-w-2xl mx-auto relative z-10">

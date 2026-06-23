@@ -229,7 +229,7 @@ export default function DatesPage() {
 
   return (
   <AppLayout>
-  <HubTabs hub="mirror" />
+  <HubTabs hub="journal" />
   <div className="container mx-auto max-w-3xl px-4 py-10 md:py-12">
   <Link
   href="/your-mirror"

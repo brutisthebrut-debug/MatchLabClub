@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -253,6 +254,7 @@ export default function Archetype() {
 
   return (
   <AppLayout>
+  <HubTabs hub="mirror" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-violet fixed w-[360px] h-[360px] -top-10 right-0 opacity-30 pointer-events-none" />
   <div className="max-w-2xl mx-auto relative z-10">

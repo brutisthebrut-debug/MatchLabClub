@@ -20,6 +20,7 @@ import {
 } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import {
@@ -95,6 +96,7 @@ export default function Milestones() {
   if (!isAuthenticated) {
     return (
       <AppLayout>
+        <HubTabs hub="growth" />
         <div className="mx-auto max-w-md px-4 py-20 text-center">
           <h1 className="font-serif text-3xl font-bold">Your milestones</h1>
           <p className="mt-3 text-muted-foreground">
@@ -111,6 +113,7 @@ export default function Milestones() {
 
   return (
     <AppLayout>
+      <HubTabs hub="growth" />
       <div className="mx-auto max-w-3xl px-4 py-8">
         <motion.div {...fadeUp(0)} className="mb-8">
           <Button asChild variant="ghost" size="sm" className="rounded-full -ml-2">

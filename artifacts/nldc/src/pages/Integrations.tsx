@@ -1,6 +1,7 @@
 import { withAlpha } from "@/lib/brandColor";
 import { useState, type FormEvent } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -466,6 +467,7 @@ export default function Integrations() {
 
   return (
     <AppLayout>
+      <HubTabs hub="connections" />
       <div className="min-h-screen mesh-bg py-12 px-4 sm:px-6 overflow-hidden">
         <div className="orb orb-violet fixed w-[500px] h-[500px] -top-32 -right-24 opacity-30 pointer-events-none" />
         <div className="orb orb-gold fixed w-[400px] h-[400px] bottom-10 -left-32 opacity-20 pointer-events-none" />

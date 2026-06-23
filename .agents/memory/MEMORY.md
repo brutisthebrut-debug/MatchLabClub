@@ -36,3 +36,4 @@
 - [Paid tier entitlement gating](paid-tier-entitlement.md) — tier is unconstrained varchar granted MANUALLY in beta; gate paid perks by explicit allowlist (reset/wingman), never auto-grant on Stripe reconcile.
 - [Mirror Profile UI relabel vs stable route/toolName](mirror-profile-relabel-decoupling.md) — UI says "Profile Reflection" but route /mirror, export, and toolName "Mirror Profile" stay fixed; don't "finish" the rename or you break fallback telemetry.
 - [Publish build runs Expo Metro export](deploy-mobile-metro-budget.md) — the autoscale web+api publish also Metro-bundles nldc-mobile (iOS+Android); slow runs overrun the build window and fail before promote (no code defect); re-publish first.
+- [Unified hub-and-tabs IA](unified-hub-refactor.md) — signed-in rail is ~9 front doors + 4 sections over 7 HubTabs hubs; orphan-nothing invariant; /quiz out of MARKETING_PREFIXES; navigationCatalog feeds FeatureHub only.

@@ -16,6 +16,7 @@ import {
   getGetMatchingStateQueryKey,
 } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -309,6 +310,7 @@ export default function VoiceIntro() {
 
   return (
     <AppLayout>
+      <HubTabs hub="connections" />
       <div className="max-w-2xl mx-auto px-4 py-10">
         <Link
           href="/connections"

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { WelcomePanel } from "@/components/WelcomePanel";
@@ -94,6 +95,7 @@ export default function WhatChanged() {
 
   return (
   <AppLayout>
+  <HubTabs hub="growth" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-teal fixed w-[350px] h-[350px] -top-10 right-10 opacity-20 pointer-events-none" />
   <div className="max-w-xl mx-auto relative z-10">
