@@ -2,6 +2,7 @@ import {
   Activity,
   ImageUp,
   ScanSearch,
+  ClipboardList,
   Eye,
   Brain,
   Aperture,
@@ -36,6 +37,7 @@ export const HUBS: Record<HubId, HubDef> = {
     id: "audit",
     label: "Signal Audit",
     tabs: [
+      { name: "Full Audit", href: "/start", icon: ClipboardList },
       { name: "Signal Check", href: "/signal-check", icon: Activity },
       { name: "Photo Scan", href: "/scan", icon: ImageUp },
       { name: "Profile Reader", href: "/profile-reader", icon: ScanSearch },

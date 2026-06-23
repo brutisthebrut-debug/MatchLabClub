@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -247,6 +248,7 @@ export default function Wizard() {
 
   return (
     <AppLayout>
+      <HubTabs hub="audit" />
       <div className="min-h-[100dvh] bg-background relative overflow-x-hidden flex flex-col">
         <div className="orb orb-violet fixed w-[800px] h-[800px] -top-[400px] -right-[200px] opacity-30 pointer-events-none" />
         <div className="orb orb-rose fixed w-[600px] h-[600px] -bottom-[300px] -left-[200px] opacity-20 pointer-events-none" />
