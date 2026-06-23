@@ -35,3 +35,4 @@
 - [nldc web vitest conventions](nldc-vitest-conventions.md) — globals off + no jest-dom + no auto-cleanup; import vitest fns explicitly, call cleanup() in afterEach, assert with toBeNull not toBeInTheDocument.
 - [Paid tier entitlement gating](paid-tier-entitlement.md) — tier is unconstrained varchar granted MANUALLY in beta; gate paid perks by explicit allowlist (reset/wingman), never auto-grant on Stripe reconcile.
 - [Mirror Profile UI relabel vs stable route/toolName](mirror-profile-relabel-decoupling.md) — UI says "Profile Reflection" but route /mirror, export, and toolName "Mirror Profile" stay fixed; don't "finish" the rename or you break fallback telemetry.
+- [Publish build runs Expo Metro export](deploy-mobile-metro-budget.md) — the autoscale web+api publish also Metro-bundles nldc-mobile (iOS+Android); slow runs overrun the build window and fail before promote (no code defect); re-publish first.
