@@ -240,7 +240,7 @@ export default function MirrorProfile() {
   <h1 className="text-3xl font-bold text-foreground">Profile Reflection</h1>
   <FallbackRateBadge toolName="Mirror Profile" className="mt-1" />
 
-  <p className="text-muted-foreground mt-2 leading-relaxed">Paste your bio or a short self-description. We'll reflect back what it shows, values, patterns, gaps, and the version of you that isn't fully visible yet.<br /><span className="text-xs text-muted-foreground/60">Based only on what you share. Practical coaching guidance, not clinical advice.</span></p>
+  <p className="text-muted-foreground mt-2 leading-relaxed">Paste your bio or a short self-description. I'll reflect back what it shows, values, patterns, gaps, and the version of you that isn't fully visible yet.<br /><span className="text-xs text-muted-foreground/60">Based only on what you share. Practical coaching guidance, not clinical advice.</span></p>
   </motion.div>
 
   {isBrandNewUser && (
@@ -248,7 +248,7 @@ export default function MirrorProfile() {
   icon={<ScanFace className="w-6 h-6 text-primary" />}
   eyebrow="Welcome to Profile Reflection"
   title="See your bio through fresh eyes"
-  description="Paste your bio or a short self-description and we'll reflect back what it actually signals, values, gaps, and one experiment that could shift everything."
+  description="Paste your bio or a short self-description and I'll reflect back what it actually signals, values, gaps, and one experiment that could shift everything."
   testId="mirror-empty-state"
   />
   )}

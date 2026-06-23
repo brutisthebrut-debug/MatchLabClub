@@ -156,7 +156,7 @@ export default function Scenarios() {
             <p className="text-muted-foreground text-sm leading-relaxed max-w-lg">
               A real relationship moment, one at a time. How you respond when
               things get tense reveals your communication and conflict style, and
-              every answer is a real signal toward who the machine pairs you with.
+              every answer is a real signal toward who I can pair you with.
             </p>
           </motion.div>
 
@@ -199,7 +199,7 @@ export default function Scenarios() {
               icon={<Clapperboard className="w-6 h-6 text-primary" />}
               eyebrow="Welcome to scenario reels"
               title="Play your first scenario"
-              description="There are no wrong answers. Each moment you work through sharpens what the machine understands about how you communicate and handle friction, and nudges your matching readiness up."
+              description="There are no wrong answers. Each moment you work through sharpens what I understand about how you communicate and handle friction, and nudges your matching readiness up."
               testId="scenarios-empty-state"
             />
           )}
@@ -252,7 +252,7 @@ export default function Scenarios() {
                 </p>
                 <p className="text-sm text-muted-foreground max-w-xs mx-auto">
                   Come back as the deck grows. New scenarios keep sharpening what
-                  the machine understands about you.
+                  I understand about you.
                 </p>
               </motion.div>
             )}

@@ -417,7 +417,7 @@ export default function CareDialect() {
               icon={<Sparkles className="w-6 h-6 text-primary" />}
               eyebrow="Welcome to Care Dialect"
               title="Name how you actually love"
-              description="Guess your style, take the quiz, and see where your read on yourself matches what your answers reveal. It becomes part of how the machine matches you."
+              description="Guess your style, take the quiz, and see where your read on yourself matches what your answers reveal. It becomes part of how I match you."
               testId="care-dialect-empty-state"
             />
           )}
@@ -808,7 +808,7 @@ function ResultView({
 
           <ToolHandoff
             testId="care-dialect-handoff"
-            fedLine="Your Care Dialect is saved and counts toward matching. Keep building the picture the machine has of you."
+            fedLine="Your Care Dialect is saved and counts toward matching. Keep building the picture I have of you."
             steps={[
               {
                 label: "Check your readiness",

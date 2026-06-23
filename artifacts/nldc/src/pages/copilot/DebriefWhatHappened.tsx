@@ -261,7 +261,7 @@ export default function DebriefWhatHappened() {
 
   <ToolHandoff
   testId="debrief-handoff"
-  fedLine="Your debrief is saved as a post-date note, so the machine learns what you seek versus what you actually find. Keep the picture honest."
+  fedLine="Your debrief is saved as a post-date note, so I learn what you seek versus what you actually find. Keep the picture honest."
   steps={[
   { label: "See your dates", href: "/mirror/dates", desc: "Track the pattern across your debriefs." },
   { label: "Read your patterns", href: "/insights", desc: "See the communication style underneath." },

@@ -187,7 +187,7 @@ export default function TimeCapsule() {
               icon={<Mailbox className="w-6 h-6 text-primary" />}
               eyebrow="Welcome to your time capsule"
               title="Write your first note"
-              description="One honest line to the person you have not met yet. There is no wrong thing to say. Each note sharpens what the machine understands about what you want, and nudges your matching readiness up."
+              description="One honest line to the person you have not met yet. There is no wrong thing to say. Each note sharpens what I understand about what you want, and nudges your matching readiness up."
               testId="capsule-empty-state"
             />
           )}

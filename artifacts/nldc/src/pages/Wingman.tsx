@@ -124,7 +124,7 @@ function Stars({
 export default function Wingman() {
   useMeta(
     "Wingman",
-    "Ask the people who know you to rate you on five traits, then see how their view lines up with your own. Outside perspective is a real read the machine cannot get any other way, and every answer feeds your matching readiness.",
+    "Ask the people who know you to rate you on five traits, then see how their view lines up with your own. Outside perspective is a real read I cannot get any other way, and every answer feeds your matching readiness.",
   );
 
   const { isAuthenticated } = useAuth();

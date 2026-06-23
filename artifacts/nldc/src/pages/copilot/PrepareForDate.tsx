@@ -266,7 +266,7 @@ export default function PrepareForDate() {
 
   <ToolHandoff
   testId="prepare-date-handoff"
-  fedLine="Prepping the conversation steadies your nerves before a date. Afterwards, a quick debrief turns what happened into signal the machine can learn from."
+  fedLine="Prepping the conversation steadies your nerves before a date. Afterwards, a quick debrief turns what happened into signal I can learn from."
   steps={[
   { label: "Debrief the date", href: "/copilot/debrief", desc: "Save what happened as a post-date note." },
   { label: "Rehearse the talk", href: "/rehearsal", desc: "Practice the moment before you live it." },

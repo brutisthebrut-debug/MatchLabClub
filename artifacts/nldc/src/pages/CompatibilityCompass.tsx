@@ -689,7 +689,7 @@ export default function CompatibilityCompass() {
   icon={<Compass className="w-6 h-6 text-primary" />}
   eyebrow="Welcome to Compatibility Compass"
   title="Find the dynamics that fit you"
-  description="Share your connection style, paste a profile you're considering, or drop a screenshot. We surface supportive traits to look for, dynamics to watch, and the false-spark pattern that pulls you off course."
+  description="Share your connection style, paste a profile you're considering, or drop a screenshot. I'll surface supportive traits to look for, dynamics to watch, and the false-spark pattern that pulls you off course."
   testId="compass-empty-state"
   />
   )}
@@ -1038,9 +1038,9 @@ export default function CompatibilityCompass() {
   <div className="mt-6">
   <ToolHandoff
   testId="compass-handoff"
-  fedLine="This read sharpens what the machine knows about your compatibility, which powers better matches near you."
+  fedLine="This read sharpens what I know about your compatibility, which powers better matches near you."
   steps={[
-  { label: "Open Your Mirror", href: "/your-mirror", desc: "See the full picture the machine keeps of you." },
+  { label: "Open Your Mirror", href: "/your-mirror", desc: "See the full picture I keep of you." },
   { label: "See matching", href: "/matching", desc: "How readiness unlocks introductions." },
   { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
   ]}

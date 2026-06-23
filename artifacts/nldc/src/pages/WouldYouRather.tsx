@@ -205,7 +205,7 @@ export default function WouldYouRather() {
               icon={<Scale className="w-6 h-6 text-primary" />}
               eyebrow="Welcome to Would You Rather"
               title="Make your first pick"
-              description="There are no wrong answers. Each forced tradeoff sharpens what the machine understands about what you actually value, and nudges your matching readiness up."
+              description="There are no wrong answers. Each forced tradeoff sharpens what I understand about what you actually value, and nudges your matching readiness up."
               testId="wyr-empty-state"
             />
           )}
@@ -258,7 +258,7 @@ export default function WouldYouRather() {
                 </p>
                 <p className="text-sm text-muted-foreground max-w-xs mx-auto">
                   Come back as the deck grows. New tradeoffs keep sharpening what
-                  the machine understands about you.
+                  I understand about you.
                 </p>
               </motion.div>
             )}

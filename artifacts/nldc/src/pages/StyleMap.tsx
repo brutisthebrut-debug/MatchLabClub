@@ -276,7 +276,7 @@ export default function StyleMap() {
   icon={<BarChart2 className="w-6 h-6 text-primary" />}
   eyebrow="Welcome to Style Map"
   title="Map your communication style"
-  description="Paste a conversation or a few messages and we'll plot your warmth, clarity, pacing, and pressure, plus the one thing worth adjusting."
+  description="Paste a conversation or a few messages and I'll plot your warmth, clarity, pacing, and pressure, plus the one thing worth adjusting."
   testId="stylemap-empty-state"
   />
   )}
@@ -356,7 +356,7 @@ export default function StyleMap() {
   <div className="mt-6">
   <ToolHandoff
   testId="stylemap-handoff"
-  fedLine="Mapping how you communicate shows your strengths and growth edge. To put it to work and feed the machine your tone, take a real thread to Coach."
+  fedLine="Mapping how you communicate shows your strengths and growth edge. To put it to work and teach me your tone, take a real thread to Coach."
   steps={[
   { label: "Coach a real reply", href: "/coach", desc: "Apply your style to a live conversation." },
   { label: "Read your patterns", href: "/insights", desc: "See the wider communication picture." },

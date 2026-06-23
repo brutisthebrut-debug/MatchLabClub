@@ -411,7 +411,7 @@ export default function ConnectionStyle() {
   icon={<Sparkles className="w-6 h-6 text-primary" />}
   eyebrow="Welcome to Connection Style Lens"
   title="See the pattern beneath your dating"
-  description="Answer six quick questions and we'll name the connection style you're moving from, the risk loop that keeps showing up, and one experiment that could shift it."
+  description="Answer six quick questions and I'll name the connection style you're moving from, the risk loop that keeps showing up, and one experiment that could shift it."
   testId="connection-style-empty-state"
   />
   )}
@@ -506,7 +506,7 @@ export default function ConnectionStyle() {
 
   <ToolHandoff
   testId="connection-style-handoff"
-  fedLine="Knowing your connection style names how you show up. To make it part of how the machine reads you, answer a few wellness questions or get a compatibility read."
+  fedLine="Knowing your connection style names how you show up. To make it part of how I read you, answer a few wellness questions or get a compatibility read."
   steps={[
   { label: "Map your wellness", href: "/wellness", desc: "Turn this lens into saved signal that raises your readiness." },
   { label: "Get a compatibility read", href: "/compatibility-compass", desc: "See how your style reads for fit." },

@@ -338,7 +338,7 @@ export default function Insights() {
   <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
   <p className="text-sm font-medium text-muted-foreground mb-1">Communication Analysis</p>
   <h1 className="text-3xl font-serif font-bold text-foreground">Email Insight Import</h1>
-  <p className="text-muted-foreground mt-2 max-w-xl">Paste exported message history. We'll surface your communication patterns, attachment style, and the profile tweaks most likely to lift your reply rate.</p>
+  <p className="text-muted-foreground mt-2 max-w-xl">Paste exported message history. I'll surface your communication patterns, attachment style, and the profile tweaks most likely to lift your reply rate.</p>
   </motion.div>
 
   {isBrandNewUser && !insightsPossiblyOrphaned && (
@@ -346,7 +346,7 @@ export default function Insights() {
   icon={<Mail className="w-6 h-6 text-primary" />}
   eyebrow="Welcome to Email Insights"
   title="Analyze your first conversation"
-  description="Paste any message history below and we'll surface your communication patterns, attachment style, and the profile tweaks most likely to lift your results."
+  description="Paste any message history below and I'll surface your communication patterns, attachment style, and the profile tweaks most likely to lift your results."
   testId="insights-empty-state"
   />
   )}
@@ -731,7 +731,7 @@ export default function Insights() {
   <div className="mt-6">
   <ToolHandoff
   testId="insights-handoff"
-  fedLine="These patterns become part of how the machine understands you, which sharpens your matches. Put one insight to work next."
+  fedLine="These patterns become part of how I understand you, which sharpens your matches. Put one insight to work next."
   steps={[
   { label: "Coach a reply", href: "/coach", desc: "Apply your patterns to a real conversation." },
   { label: "Go deeper on you", href: "/wellness", desc: "Answer a few questions to raise your readiness." },

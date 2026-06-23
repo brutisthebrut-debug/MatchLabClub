@@ -179,7 +179,7 @@ export default function ProfileReader() {
   icon={<Eye className="w-6 h-6 text-primary" />}
   eyebrow="Welcome to Profile Reader"
   title="Read between the lines"
-  description="Paste any public profile and we'll pull out likely signals, cautions worth noting, and a couple of opening lines that actually fit."
+  description="Paste any public profile and I'll pull out likely signals, cautions worth noting, and a couple of opening lines that actually fit."
   testId="reader-empty-state"
   />
   )}
@@ -221,7 +221,7 @@ export default function ProfileReader() {
   icon={<Eye className="w-6 h-6" />}
   eyebrow="Welcome to Profile Reader"
   title="Read your first profile"
-  description="Paste someone's bio above and we'll surface likely signals, fit clues, questions worth asking, and a suggested opener, without overreading."
+  description="Paste someone's bio above and I'll surface likely signals, fit clues, questions worth asking, and a suggested opener, without overreading."
   testId="profile-reader-empty-state"
   delay={0.1}
   />

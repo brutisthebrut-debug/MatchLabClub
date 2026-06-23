@@ -279,7 +279,7 @@ export default function WeeklyGrowthPlan() {
 
   <ToolHandoff
   testId="weekly-plan-handoff"
-  fedLine="Your plan is saved as a journal entry, so the machine sees the moves you commit to over time. Momentum is its own signal."
+  fedLine="Your plan is saved as a journal entry, so I see the moves you commit to over time. Momentum is its own signal."
   steps={[
   { label: "Open your journal", href: "/mirror/journal", desc: "See your plans and reflections build up." },
   { label: "Log a win", href: "/progress/wins", desc: "Mark the moves you actually pulled off." },

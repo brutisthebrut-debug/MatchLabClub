@@ -317,7 +317,7 @@ export default function Reflection() {
   icon={<Heart className="w-6 h-6 text-primary" />}
   eyebrow="Welcome to Post-Meeting Reflection"
   title="Process your next connection"
-  description="After a date or call, jot down what happened and how it felt. We'll surface the signals worth paying attention to and a suggested next move."
+  description="After a date or call, jot down what happened and how it felt. I'll surface the signals worth paying attention to and a suggested next move."
   testId="reflection-empty-state"
   />
   )}
@@ -435,7 +435,7 @@ export default function Reflection() {
   <div className="mt-6">
   <ToolHandoff
   testId="reflection-handoff"
-  fedLine="Naming the pattern here helps you see it clearly. To make it part of how the machine reads you, save it as a post-date note in your debrief."
+  fedLine="Naming the pattern here helps you see it clearly. To make it part of how I read you, save it as a post-date note in your debrief."
   steps={[
   { label: "Save a debrief", href: "/copilot/debrief", desc: "Log the date so it feeds the Mirror." },
   { label: "Read your patterns", href: "/insights", desc: "See the communication style underneath." },

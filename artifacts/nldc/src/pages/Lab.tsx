@@ -167,7 +167,7 @@ export default function Lab() {
   icon={<FlaskConical className="w-6 h-6 text-primary" />}
   eyebrow="Welcome to the Chemistry Lab"
   title="Run your first experiment"
-  description="Drop in a message or short conversation and we'll surface the tone you're sending, your best next move, and five styled reply options to choose from."
+  description="Drop in a message or short conversation and I'll surface the tone you're sending, your best next move, and five styled reply options to choose from."
   testId="lab-empty-state"
   />
   )}

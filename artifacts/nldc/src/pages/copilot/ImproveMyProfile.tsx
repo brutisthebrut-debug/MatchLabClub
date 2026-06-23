@@ -263,7 +263,7 @@ export default function ImproveMyProfile() {
 
   <ToolHandoff
   testId="improve-profile-handoff"
-  fedLine="A profile you actually like is the highest-leverage signal you send. Run your rewrite through a full audit so it feeds how the machine reads you."
+  fedLine="A profile you actually like is the clearest signal you send. Run your rewrite through a full audit so it feeds how I read you."
   steps={[
   { label: "Audit your profile", href: "/scan", desc: "Score your rewrite and feed the read into your readiness." },
   { label: "Coach your openers", href: "/coach", desc: "Turn a sharper profile into replies that land." },

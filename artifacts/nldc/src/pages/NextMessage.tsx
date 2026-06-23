@@ -299,7 +299,7 @@ export default function NextMessage() {
   icon={<MessageCircle className="w-6 h-6 text-primary" />}
   eyebrow="Welcome to Next Message"
   title="Get your first reply options"
-  description="Paste a conversation and we'll give you seven copy-ready next messages, from safe and warm to playfully bold to a clean exit."
+  description="Paste a conversation and I'll give you seven copy-ready next messages, from safe and warm to playfully bold to a clean exit."
   testId="nextmessage-empty-state"
   />
   )}
@@ -350,7 +350,7 @@ export default function NextMessage() {
   icon={<MessageCircle className="w-6 h-6" />}
   eyebrow="Welcome to Next Message"
   title="Write your first reply"
-  description="Add a little context above and we'll deliver seven copy-ready options. Safe, Warm, Playful, Bold, Direct, an Invitation, and a Clean Exit."
+  description="Add a little context above and I'll deliver seven copy-ready options. Safe, Warm, Playful, Bold, Direct, an Invitation, and a Clean Exit."
   testId="next-message-empty-state"
   delay={0.1}
   />
@@ -429,9 +429,9 @@ export default function NextMessage() {
   <div className="mt-5">
   <ToolHandoff
   testId="next-message-handoff"
-  fedLine="A message that lands keeps the thread alive. To save the conversation and teach the machine your tone, take it into Coach."
+  fedLine="A message that lands keeps the thread alive. To save the conversation and teach me your tone, take it into Coach."
   steps={[
-  { label: "Coach this thread", href: "/coach", desc: "Save the conversation and feed your tone into the machine." },
+  { label: "Coach this thread", href: "/coach", desc: "Save the conversation and feed your tone to Echo." },
   { label: "Read your patterns", href: "/insights", desc: "See the communication style behind your replies." },
   { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
   ]}

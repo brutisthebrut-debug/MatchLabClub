@@ -243,7 +243,7 @@ export default function PredictYourself() {
               icon={<Target className="w-6 h-6 text-primary" />}
               eyebrow="Welcome to predict yourself"
               title="Play your first round"
-              description="Predict how you will answer, then see how close you were. There is no wrong number. The gap itself sharpens what the machine understands about you and nudges your matching readiness up."
+              description="Predict how you will answer, then see how close you were. There is no wrong number. The gap itself sharpens what I understand about you and nudges your matching readiness up."
               testId="predict-empty-state"
             />
           )}

@@ -284,9 +284,9 @@ export default function HelpMeReply() {
   <div className="mt-5">
   <ToolHandoff
   testId="help-reply-handoff"
-  fedLine="Picking a reply here gets you unstuck fast. To turn it into a saved coaching session that teaches the machine your tone, take it to Coach."
+  fedLine="Picking a reply here gets you unstuck fast. To turn it into a saved coaching session that teaches me your tone, take it to Coach."
   steps={[
-  { label: "Coach this thread", href: "/coach", desc: "Save the conversation and feed your tone into the machine." },
+  { label: "Coach this thread", href: "/coach", desc: "Save the conversation and feed your tone to Echo." },
   { label: "Read your patterns", href: "/insights", desc: "See the communication style behind your replies." },
   { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
   ]}

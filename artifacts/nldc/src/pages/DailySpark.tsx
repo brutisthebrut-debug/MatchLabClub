@@ -158,7 +158,7 @@ export default function DailySpark() {
             <p className="text-muted-foreground text-sm leading-relaxed max-w-lg">
               One small question a day. A single honest pick takes seconds and,
               answered across days, it reveals how you actually move through
-              dating. Every answer is a real signal toward who the machine pairs
+              dating. Every answer is a real signal toward who I can pair
               you with.
             </p>
           </motion.div>
@@ -205,7 +205,7 @@ export default function DailySpark() {
               icon={<Sparkles className="w-6 h-6 text-primary" />}
               eyebrow="Welcome to Daily Spark"
               title="Answer your first spark"
-              description="There are no wrong answers. Each small pick sharpens what the machine understands about how you connect, and nudges your matching readiness up."
+              description="There are no wrong answers. Each small pick sharpens what I understand about how you connect, and nudges your matching readiness up."
               testId="spark-empty-state"
             />
           )}
@@ -258,7 +258,7 @@ export default function DailySpark() {
                 </p>
                 <p className="text-sm text-muted-foreground max-w-xs mx-auto">
                   Come back as the deck grows. New sparks keep sharpening what
-                  the machine understands about you.
+                  I understand about you.
                 </p>
               </motion.div>
             )}

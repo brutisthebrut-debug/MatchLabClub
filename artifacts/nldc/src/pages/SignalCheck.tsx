@@ -462,7 +462,7 @@ export default function SignalCheck() {
   icon={<Sparkles className="w-6 h-6" />}
   eyebrow="Welcome to Signal Check"
   title="Run your first signal check"
-  description="Paste your bio below and we'll give you a Signal Strength score, your profile category, your top improvement, and a rewritten line, in about three minutes."
+  description="Paste your bio below and I'll give you a Signal Strength score, your profile category, your top improvement, and a rewritten line, in about three minutes."
   testId="signal-check-empty-state"
   wrapperClassName="mb-5"
   />

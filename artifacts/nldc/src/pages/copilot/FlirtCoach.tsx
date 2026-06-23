@@ -303,7 +303,7 @@ export default function FlirtCoach() {
   testId="flirtcoach-handoff"
   fedLine="Drafting the hard message builds the confidence a real match needs. When you want a reply that sounds like you, take it to Coach."
   steps={[
-  { label: "Coach a real reply", href: "/coach", desc: "Turn the draft into a message that teaches the machine your tone." },
+  { label: "Coach a real reply", href: "/coach", desc: "Turn the draft into a message that teaches me your tone." },
   { label: "Rehearse the talk", href: "/rehearsal", desc: "Practice the conversation before you send it." },
   { label: "Check your readiness", href: "/me", desc: "Watch your Match Readiness climb." },
   ]}

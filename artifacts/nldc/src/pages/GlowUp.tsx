@@ -302,7 +302,7 @@ export default function GlowUp() {
   icon={<Wand2 className="w-6 h-6 text-primary" />}
   eyebrow="Welcome to the Glow-Up Studio"
   title="Rewrite your first bio"
-  description="Paste a generic bio and we'll give you ten sharper versions, different styles and platforms, that actually sound like you."
+  description="Paste a generic bio and I'll give you ten sharper versions, different styles and platforms, that actually sound like you."
   testId="glowup-empty-state"
   />
   )}
@@ -383,7 +383,7 @@ export default function GlowUp() {
   <div className="mt-6">
   <ToolHandoff
   testId="glowup-handoff"
-  fedLine="A bio you actually like is the clearest signal you send. Run your new one through a full audit so it becomes part of how the machine reads and matches you."
+  fedLine="A bio you actually like is the clearest signal you send. Run your new one through a full audit so it becomes part of how I read and match you."
   steps={[
   { label: "Audit your profile", href: "/scan", desc: "Score your new bio and feed the read into your readiness." },
   { label: "Coach your openers", href: "/coach", desc: "Turn a sharper profile into replies that land." },

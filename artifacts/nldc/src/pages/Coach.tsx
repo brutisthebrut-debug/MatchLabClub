@@ -341,7 +341,7 @@ export default function Coach() {
   icon={<MessageSquare className="w-6 h-6" />}
   eyebrow="Welcome to Message Coach"
   title="Coach your first message"
-  description="Paste any dating app conversation below and we'll draft three reply options. Playful, Direct, and Warm, with the reasoning behind each one so you can pick what fits."
+  description="Paste any dating app conversation below and I'll draft three reply options. Playful, Direct, and Warm, with the reasoning behind each one so you can pick what fits."
   testId="coach-empty-state"
   />
   )}
@@ -1155,7 +1155,7 @@ export default function Coach() {
   <div className="mt-6">
   <ToolHandoff
   testId="coach-handoff"
-  fedLine="Every message you coach teaches the machine your tone and helps it match you with people you click with. Keep the trail going."
+  fedLine="Every message you coach teaches me your tone and helps me match you with people you click with. Keep the trail going."
   steps={[
   { label: "Rehearse the hard talk", href: "/rehearsal", desc: "Practice the real conversation with the person played back to you." },
   { label: "Read your patterns", href: "/insights", desc: "See the communication style behind your replies." },

@@ -259,7 +259,7 @@ export default function Blueprint() {
   icon={<Sparkles className="w-6 h-6 text-primary" />}
   eyebrow="Welcome to Personal Blueprint"
   title="Map your patterns and growth edges"
-  description="Share a little about how you show up and what keeps repeating, we'll surface the recurring threads and one concrete shift that could change your results."
+  description="Share a little about how you show up and what keeps repeating, and I'll surface the recurring threads and one concrete shift that could change your results."
   testId="blueprint-empty-state"
   />
   )}
