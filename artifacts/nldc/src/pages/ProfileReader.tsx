@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
@@ -159,6 +160,7 @@ export default function ProfileReader() {
 
   return (
   <AppLayout>
+  <HubTabs hub="audit" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-violet fixed w-[360px] h-[360px] top-0 -left-20 opacity-25 pointer-events-none" />
   <div className="max-w-3xl mx-auto relative z-10">

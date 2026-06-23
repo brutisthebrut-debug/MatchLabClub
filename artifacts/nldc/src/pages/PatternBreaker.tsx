@@ -7,6 +7,13 @@ import { WelcomePanel } from "@/components/WelcomePanel";
 import { Zap, CheckCircle2, Circle, RefreshCw, Shield, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@workspace/replit-auth-web";
+import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
+import { useReadinessClimb } from "@/hooks/useReadinessClimb";
+import {
+  useRecordGrowthEvent,
+  getGetMatchingStateQueryKey,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ActionItem {
   id: string;
@@ -134,6 +141,9 @@ export default function PatternBreaker() {
   const [state, setState] = useState<StoredState>(() => ({ weekKey: "", checked: [], selectedIds: [] }));
   const [expandedWhy, setExpandedWhy] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+  const recordGrowth = useRecordGrowthEvent();
+  const climb = useReadinessClimb({ enabled: isAuthenticated });
 
   useEffect(() => {
   setState(loadState());
@@ -144,12 +154,25 @@ export default function PatternBreaker() {
   const isBrandNewUser = isAuthenticated && doneCount === 0;
 
   const toggle = (id: string) => {
-  const checked = state.checked.includes(id)
+  const wasChecked = state.checked.includes(id);
+  const checked = wasChecked
   ? state.checked.filter(c => c !== id)
   : [...state.checked, id];
   const next = {...state, checked };
   setState(next);
   saveState(next);
+
+  // Marking a step done is the meaningful commit. For signed-in users we also
+  // record a real growth signal in addition to the local checklist so it feeds
+  // the behavioralGrowth lane and the readiness meter climbs. The anon path is
+  // untouched and keeps its existing local-only behavior.
+  if (isAuthenticated && !wasChecked) {
+  climb.snapshot();
+  recordGrowth.mutate(
+  { data: { type: "pattern_broken" } },
+  { onSuccess: () => { void queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() }); } },
+  );
+  }
   };
 
   const refresh = () => {
@@ -218,6 +241,16 @@ export default function PatternBreaker() {
   />
   </div>
   </motion.div>
+
+  {isAuthenticated && climb.before !== null && (
+  <motion.div {...fadeUp(0.07)} className="mb-6">
+  <ReadinessClimbReveal
+  from={climb.before}
+  to={climb.current}
+  className="glass border border-white/8 rounded-2xl p-5"
+  />
+  </motion.div>
+  )}
 
   {/* Action list */}
   <div className="space-y-3">

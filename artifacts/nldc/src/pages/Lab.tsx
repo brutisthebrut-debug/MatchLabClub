@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Glyph } from "@/lib/glyphs";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,6 +117,7 @@ export default function Lab() {
 
   return (
   <AppLayout>
+  <HubTabs hub="messages" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-violet fixed w-[400px] h-[400px] -top-20 -right-20 opacity-40 pointer-events-none" />
   <div className="orb orb-plum fixed w-[300px] h-[300px] bottom-20 -left-10 opacity-35 pointer-events-none" />

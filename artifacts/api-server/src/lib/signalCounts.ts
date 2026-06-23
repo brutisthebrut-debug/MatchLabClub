@@ -31,6 +31,7 @@ import {
   cosmicChartsTable,
   userVerificationsTable,
   careDialectProfilesTable,
+  behavioralGrowthEventsTable,
 } from "@workspace/db";
 import {
   SIGNAL_REGISTRY,
@@ -109,6 +110,22 @@ export async function collectSignalCounts(
       ),
     );
   const winsCount = Number(winsRows[0]?.count ?? 0);
+
+  // Behavioral growth actions: experiments tried, patterns broken, what-changed
+  // notes, follow-ups logged, and kept commitments. Each is a content-free row
+  // (action type and timestamp), so this reads follow-through without touching
+  // any private note. Soft-deleted rows are excluded so a trust-ledger purge
+  // drops the signal.
+  const behavioralGrowthRows = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(behavioralGrowthEventsTable)
+    .where(
+      and(
+        eq(behavioralGrowthEventsTable.userId, userId),
+        isNull(behavioralGrowthEventsTable.deletedAt),
+      ),
+    );
+  const behavioralGrowthCount = Number(behavioralGrowthRows[0]?.count ?? 0);
 
   // Profile audits that reached a generated report. Running an audit (profile or
   // photo screenshot) teaches the engine how the user presents themselves, so
@@ -308,6 +325,7 @@ export async function collectSignalCounts(
     relocationFacets,
     verificationFacets,
     careDialect: careDialectCount,
+    behavioralGrowthEvents: behavioralGrowthCount,
   } as SignalCounts;
 
   // Import-backed counts, derived from the registry's data-source descriptors so

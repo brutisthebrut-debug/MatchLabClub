@@ -16,7 +16,7 @@ import {
   CheckCircle, XCircle, AlertCircle, ArrowRight, Copy, Check,
   Trophy, Calendar, Eye, Sparkles, MessageSquare, Camera,
   TrendingUp, Lightbulb, Heart, Zap, RefreshCw, History, ChevronDown, ChevronUp, GitCompare, CheckSquare, Square, Activity,
-  ArrowUp, ArrowDown, Plus, Minus
+  ArrowUp, ArrowDown, Plus, Minus, ShieldAlert
 } from "lucide-react";
 import { CompareVersionsDialog } from "@/components/CompareVersionsDialog";
 import { ShareButton } from "@/components/echo/ShareButton";
@@ -353,12 +353,13 @@ export default function Report() {
     query: { enabled: !!auditId, queryKey: getGetAuditQueryKey(auditId) }
   });
 
-  const { data: engineMeta } = useGetEngineMeta();
+  const { data: engineMeta, isError: engineMetaError } = useGetEngineMeta();
   const currentEngineVersion = engineMeta?.engineVersion ?? null;
 
   const generateReport = useGenerateAuditReport();
   const [report, setReport] = useState<typeof DEMO_REPORT | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [viewingVersionId, setViewingVersionId] = useState<number | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -388,6 +389,7 @@ export default function Report() {
     if (!audit) return;
     if (audit.report) return;
     setGenerating(true);
+    setGenerateError(false);
     generateReport
       .mutateAsync({ id: auditId })
       .then((result) => {
@@ -395,7 +397,9 @@ export default function Report() {
         queryClient.invalidateQueries({ queryKey: getGetAuditQueryKey(auditId) });
       })
       .catch(() => {
-        setReport(DEMO_REPORT);
+        // Fail loudly: a real generation that errors must surface an honest
+        // error state, never silently swap in the sample report.
+        setGenerateError(true);
       })
       .finally(() => {
         setGenerating(false);
@@ -415,6 +419,24 @@ export default function Report() {
     } finally {
       setRegenerating(false);
     }
+  }
+
+  function retryGeneration() {
+    if (!auditId || generating) return;
+    setGenerating(true);
+    setGenerateError(false);
+    generateReport
+      .mutateAsync({ id: auditId })
+      .then((result) => {
+        setReport(result as typeof DEMO_REPORT);
+        queryClient.invalidateQueries({ queryKey: getGetAuditQueryKey(auditId) });
+      })
+      .catch(() => {
+        setGenerateError(true);
+      })
+      .finally(() => {
+        setGenerating(false);
+      });
   }
 
   function viewVersion(versionId: number) {
@@ -452,6 +474,41 @@ export default function Report() {
             <Skeleton className="h-64 w-full rounded-3xl opacity-50" />
             <Skeleton className="h-96 w-full rounded-3xl opacity-30" />
             <Skeleton className="h-96 w-full rounded-3xl opacity-20" />
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (auditId && generateError && !report) {
+    return (
+      <AppLayout>
+        <div className="min-h-screen mesh-bg py-12 px-4">
+          <div className="max-w-4xl mx-auto">
+            <div
+              className="glass border border-white/8 rounded-3xl p-10 text-center"
+              data-testid="card-report-generate-error"
+            >
+              <ShieldAlert className="w-8 h-8 text-[hsl(348_55%_78%)] mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-foreground mb-2">
+                We could not build this report
+              </h2>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+                Something went wrong generating your Signal Report. Your audit is
+                safe. Please try again in a moment.
+              </p>
+              <Button
+                onClick={retryGeneration}
+                disabled={generating}
+                className="rounded-full"
+                data-testid="button-retry-report-generate"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 mr-2 ${generating ? "animate-spin" : ""}`}
+                />
+                Try again
+              </Button>
+            </div>
           </div>
         </div>
       </AppLayout>
@@ -537,6 +594,14 @@ export default function Report() {
               <ShareReportBtn score={r.readinessScore} />
             </div>
           </motion.div>
+
+          {/* ── Engine Metadata Error ── */}
+          {isAuthenticated && engineMetaError && (
+            <motion.div {...fadeUp(0.04)} className="glass border border-white/8 rounded-2xl p-4 flex items-center gap-3" data-testid="engine-meta-error">
+              <ShieldAlert className="w-5 h-5 text-[hsl(348_55%_78%)] flex-shrink-0" />
+              <p className="text-sm text-muted-foreground">We could not load the latest engine details. Some version information may be missing. Please refresh and try again.</p>
+            </motion.div>
+          )}
 
           {/* ── Stale Warning ── */}
           {shouldShowStaleWarning && (

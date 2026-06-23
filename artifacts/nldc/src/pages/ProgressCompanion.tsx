@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
+import { useAuth } from "@workspace/replit-auth-web";
+import { useReadinessClimb } from "@/hooks/useReadinessClimb";
+import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
+import { useRecordGrowthEvent, getGetMatchingStateQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Copy, Check, ChevronDown, ChevronUp, Search, X } from "lucide-react";
 
@@ -122,16 +128,18 @@ const SCENARIOS: Scenario[] = [
   },
 ];
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({ text, onCommit }: { text: string; onCommit?: () => void }) {
   const [copied, setCopied] = useState(false);
   async function copy() {
   try {
   await navigator.clipboard.writeText(text);
   setCopied(true);
   setTimeout(() => setCopied(false), 2000);
+  onCommit?.();
   } catch {
   // Clipboard unavailable, surface a manual select fallback by selecting the message text
   window.prompt("Copy this message:", text);
+  onCommit?.();
   }
   }
   return (
@@ -145,7 +153,7 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-function ScenarioCard({ scenario, i }: { scenario: Scenario; i: number }) {
+function ScenarioCard({ scenario, i, onCommit }: { scenario: Scenario; i: number; onCommit?: () => void }) {
   const [open, setOpen] = useState(false);
   const cfg = CAT_CONFIG[scenario.category];
   const panelId = `scenario-panel-${scenario.id}`;
@@ -189,7 +197,7 @@ function ScenarioCard({ scenario, i }: { scenario: Scenario; i: number }) {
   <span className="text-xs font-semibold text-foreground/80">{opt.label}</span>
   <span className="text-[11px] text-muted-foreground/50">{opt.tone}</span>
   </div>
-  <CopyButton text={opt.message} />
+  <CopyButton text={opt.message} onCommit={onCommit} />
   </div>
   <p className="px-4 py-3 text-sm text-muted-foreground leading-relaxed font-mono">{opt.message}</p>
   </div>
@@ -206,6 +214,24 @@ function ScenarioCard({ scenario, i }: { scenario: Scenario; i: number }) {
 export default function ProgressCompanion() {
   useMeta("Companion Workspace", "Scenario cards with copy-ready guidance for common dating situations.");
   const [location, setLocation] = useLocation();
+  const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+  const recordGrowth = useRecordGrowthEvent();
+  const climb = useReadinessClimb({ enabled: isAuthenticated });
+
+  // The meaningful commit here is taking a coaching message into a real
+  // conversation, which happens when the member copies an option. Anonymous
+  // visitors keep their existing local-only copy behavior untouched; signed-in
+  // members also record a real backend growth signal so the readiness meter
+  // climbs from this action.
+  const handleCommit = () => {
+  if (!isAuthenticated) return;
+  climb.snapshot();
+  recordGrowth.mutate(
+  { data: { type: "commitment_kept" } },
+  { onSuccess: () => { void queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() }); } },
+  );
+  };
 
   // Parse URL params on first render so refresh/back preserves filters
   const initial = useMemo(() => {
@@ -244,6 +270,7 @@ export default function ProgressCompanion() {
 
   return (
   <AppLayout>
+  <HubTabs hub="growth" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-violet fixed w-[260px] sm:w-[300px] h-[260px] sm:h-[300px] top-16 right-0 opacity-15 pointer-events-none" aria-hidden="true" />
   <div className="max-w-2xl mx-auto relative z-10">
@@ -306,9 +333,19 @@ export default function ProgressCompanion() {
   })}
   </motion.div>
 
+  {isAuthenticated && climb.before !== null && (
+  <motion.div {...fadeUp(0.07)} className="mb-6">
+  <ReadinessClimbReveal
+  from={climb.before}
+  to={climb.current}
+  className="glass border border-white/8 rounded-2xl p-5"
+  />
+  </motion.div>
+  )}
+
   <div className="space-y-3">
   {filtered.map((scenario, i) => (
-  <ScenarioCard key={scenario.id} scenario={scenario} i={i} />
+  <ScenarioCard key={scenario.id} scenario={scenario} i={i} onCommit={handleCommit} />
   ))}
   {filtered.length === 0 && (
   <div className="text-center py-12 px-4 rounded-2xl border border-white/8 bg-white/3">

@@ -8,6 +8,7 @@ import {
   importedSourcesTable,
   postDateNotesTable,
   datingWinsTable,
+  behavioralGrowthEventsTable,
   auditsTable,
   messageCoachingSessionsTable,
   lifePulsesTable,
@@ -81,6 +82,9 @@ async function clearTestUserSignals(userId: string): Promise<void> {
     db.delete(importedSourcesTable).where(eq(importedSourcesTable.userId, userId)),
     db.delete(postDateNotesTable).where(eq(postDateNotesTable.userId, userId)),
     db.delete(datingWinsTable).where(eq(datingWinsTable.userId, userId)),
+    db
+      .delete(behavioralGrowthEventsTable)
+      .where(eq(behavioralGrowthEventsTable.userId, userId)),
     db.delete(auditsTable).where(eq(auditsTable.userId, userId)),
     db
       .delete(messageCoachingSessionsTable)
@@ -270,6 +274,19 @@ async function seedPowerSignals(userId: string): Promise<void> {
       category,
       body: `Win ${i + 1}: a small moment of courage I want to remember and build on.`,
     })),
+  );
+
+  // Behavioral growth actions: one of each kind, so the growth-actions lane is
+  // non-empty for the seeded dev user. Content-free: only the action type is
+  // stored, never any note from the tool that produced it.
+  await db.insert(behavioralGrowthEventsTable).values(
+    [
+      "experiment_tried",
+      "what_changed",
+      "pattern_broken",
+      "follow_up_logged",
+      "commitment_kept",
+    ].map((type) => ({ userId, type })),
   );
 
   // Profile audits: 3 with a generated report, so the audits lane is full.

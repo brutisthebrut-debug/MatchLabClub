@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
 import { trackEvent } from "@/lib/analytics";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -136,6 +137,7 @@ export default function RehearsalRoom() {
 
   return (
     <AppLayout>
+      <HubTabs hub="messages" />
       <div className="mx-auto w-full max-w-3xl px-4 py-8 md:py-12">
         <div className="mb-8">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground">

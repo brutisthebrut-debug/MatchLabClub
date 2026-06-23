@@ -56,6 +56,7 @@ export interface ReadinessBreakdown {
   relocationOpen: number;
   verification: number;
   careDialect: number;
+  behavioralGrowth: number;
 }
 
 /** Raw counts pulled from the database for each contributor. */
@@ -248,6 +249,15 @@ export interface SignalCounts {
    * never the raw quiz answers, which are never stored.
    */
   careDialect: number;
+  /**
+   * Behavioral growth actions completed: experiments tried, patterns broken,
+   * what-changed notes, follow-ups logged, and commitments kept. These were
+   * localStorage-only tools that left no signal; each completion now records one
+   * content-free row (action type and timestamp only), so acting on insight
+   * feeds readiness. Only the count of actions is read here, never the private
+   * notes inside the tool that produced them.
+   */
+  behavioralGrowthEvents: number;
 }
 
 /**
@@ -1711,6 +1721,37 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       neverTouched: [
         "Your individual quiz answers; only the derived give and receive scores are kept, never the picks themselves",
         "Any free text; the quiz is multiple choice and stores only which dialect each pick maps to",
+      ],
+    },
+  },
+  {
+    id: "behavioralGrowth",
+    countKey: "behavioralGrowthEvents",
+    dataSource: { kind: "firstParty" },
+    label: "Growth actions",
+    dimensions: ["follow-through", "acting on what they learn"],
+    weight: 0.04,
+    confidence: 0.45,
+    normalize: { kind: "count", denominator: 6 },
+    describe: (c) =>
+      `Has taken enough growth actions to cover ${c}% of that lane, so we can see they act on what they learn, not just read it.`,
+    action: {
+      label: "Take a growth action",
+      detail:
+        "Try an experiment, break a pattern, or note what changed. Acting on insight feeds your readiness.",
+      href: "/progress/experiments",
+    },
+    trust: {
+      origin:
+        "The growth actions you take in MatchLab: experiments you try, patterns you break, what-changed notes, follow-ups, and commitments you keep.",
+      noun: "growth action",
+      seen: [
+        "That you completed a growth action and which kind it was",
+        "How consistently you act on what you learn over time",
+      ],
+      neverTouched: [
+        "The private notes you write inside any of those tools",
+        "Anything beyond the fact that you completed the action",
       ],
     },
   },

@@ -4472,6 +4472,73 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /me/growth-events:
+    get:
+      tags: [Matching]
+      operationId: getGrowthEvents
+      summary: List the signed-in user's logged growth actions
+      description: |
+        Returns the caller's non-deleted behavioral growth actions, newest
+        first. Each row records only which kind of action was taken and when,
+        never the private notes inside the tool that produced it. Logging them
+        feeds matching readiness as a low-weight follow-through signal.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: List of growth actions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GrowthEvent'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+    post:
+      tags: [Matching]
+      operationId: recordGrowthEvent
+      summary: Record a behavioral growth action
+      description: |
+        Records one behavioral growth action (an experiment tried, a pattern
+        broken, a what-changed note, a follow-up logged, or a commitment kept).
+        Only the action type and timestamp are stored, never the private notes
+        inside the tool. Each action feeds matching readiness as a low-weight
+        follow-through signal.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrowthEventInput'
+      responses:
+        '201':
+          description: The recorded growth action.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrowthEvent'
+        '400':
+          description: Invalid body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/cosmic:
     get:
       tags: [Matching]
@@ -12176,6 +12243,40 @@ components:
           type: string
           minLength: 1
           maxLength: 2000
+
+    GrowthEvent:
+      type: object
+      required: [id, type, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum:
+            [
+              experiment_tried,
+              what_changed,
+              pattern_broken,
+              follow_up_logged,
+              commitment_kept,
+            ]
+        createdAt:
+          type: string
+
+    GrowthEventInput:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum:
+            [
+              experiment_tried,
+              what_changed,
+              pattern_broken,
+              follow_up_logged,
+              commitment_kept,
+            ]
 
     UserVerification:
       type: object

@@ -484,6 +484,7 @@ export default function Dashboard() {
   const {
     data: auditsData,
     isLoading: auditsLoading,
+    isError: auditsError,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -772,7 +773,7 @@ export default function Dashboard() {
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage, audits?.length]);
 
-  const { data: summaryData, isLoading: summaryLoading } = useGetAuditSummary({
+  const { data: summaryData, isLoading: summaryLoading, isError: summaryError } = useGetAuditSummary({
     query: {
       enabled: isAuthenticated,
       queryKey: getGetAuditSummaryQueryKey(),
@@ -977,7 +978,7 @@ export default function Dashboard() {
   const nextAction = getNextBestAction(latestScore, hasRealAudits);
   const latestRealAudit = hasRealAudits ? latestAuditFromQuery ?? (audits && audits[0]) ?? null : null;
 
-  const showRealEmptyState = isAuthenticated && !accountDataLoading && !hasRealAudits;
+  const showRealEmptyState = isAuthenticated && !accountDataLoading && !hasRealAudits && !summaryError && !auditsError;
 
   if (showRealEmptyState) {
     return (
@@ -1056,6 +1057,22 @@ export default function Dashboard() {
 
             {/* Top Action Banners */}
             <div className="space-y-4 mb-10">
+              {isAuthenticated && summaryError && (
+                <motion.div variants={itemVariants}>
+                  <div className="glass border border-white/8 rounded-2xl p-6 text-center" data-testid="dashboard-summary-error">
+                    <ShieldAlert className="w-8 h-8 text-[hsl(348_55%_78%)] mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">We could not load your live readiness data. Please refresh and try again.</p>
+                  </div>
+                </motion.div>
+              )}
+              {isAuthenticated && auditsError && (
+                <motion.div variants={itemVariants}>
+                  <div className="glass border border-white/8 rounded-2xl p-6 text-center" data-testid="dashboard-audits-error">
+                    <ShieldAlert className="w-8 h-8 text-[hsl(348_55%_78%)] mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">We could not load your audits. Please refresh and try again.</p>
+                  </div>
+                </motion.div>
+              )}
               <motion.div variants={itemVariants}>
                 <div className="glass-elevated rounded-[2rem] p-6 sm:p-8 flex flex-col md:flex-row md:items-center gap-6 relative overflow-hidden group border-[hsl(248_62%_52%/0.2)] hover:border-[hsl(248_62%_52%/0.4)] transition-all" data-testid="card-next-best-action">
                   <div className="absolute inset-0 bg-gradient-to-r from-[hsl(248_62%_52%/0.05)] to-transparent pointer-events-none" />

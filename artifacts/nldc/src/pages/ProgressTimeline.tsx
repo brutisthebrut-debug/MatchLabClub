@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
@@ -164,6 +165,7 @@ export default function ProgressTimeline() {
 
   return (
   <AppLayout>
+  <HubTabs hub="growth" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-violet fixed w-[340px] h-[340px] -top-10 right-0 opacity-20 pointer-events-none" />
   <div className="max-w-2xl mx-auto relative z-10">

@@ -217,7 +217,7 @@ export default function FounderDemoJourney() {
   ) : (
   <Button size="sm" onClick={() => { setPhase("pick"); setActiveStop(0); setChecked(new Set()); }}
   className="rounded-full bg-[hsl(142_55%_45%)] border-0 text-xs">
-  Done ✓ Reset
+  <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Done, reset
   </Button>
   )}
   </div>

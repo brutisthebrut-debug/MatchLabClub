@@ -70,10 +70,12 @@ describe("signal registry", () => {
     // brings the raw total to 2.90. The Daily Spark daily-question lane (0.06)
     // brings the raw total to 2.96, and the green/red flags lane (0.07) brings
     // it to 3.03. The Care Dialect lane (0.12) brings the raw total to 3.15.
+    // The behavioral-growth (growth actions) lane (0.04) brings the raw total to
+    // 3.19.
     // Each normalized weight is its raw weight divided by the
     // raw-weight total. The relative proportions between every signal are
     // preserved exactly; adding contributors never forces a manual re-balance.
-    const total = 3.15;
+    const total = 3.19;
     const w = normalizedWeights();
     expect(w.wellness).toBeCloseTo(0.22 / total, 6);
     expect(w.compass).toBeCloseTo(0.2 / total, 6);
@@ -112,6 +114,7 @@ describe("signal registry", () => {
     expect(w.cosmicProfile).toBeCloseTo(0.04 / total, 6);
     expect(w.relocationOpen).toBeCloseTo(0.02 / total, 6);
     expect(w.careDialect).toBeCloseTo(0.12 / total, 6);
+    expect(w.behavioralGrowth).toBeCloseTo(0.04 / total, 6);
   });
 
   it("auto-normalizes when a new contributor is added, never breaking the sum", () => {

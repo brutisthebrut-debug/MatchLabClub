@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
 import { motion } from "framer-motion";
 import { TrendingUp, AlertTriangle, Zap, Target, Repeat, Info } from "lucide-react";
@@ -126,6 +127,7 @@ export default function ProgressPatterns() {
 
   return (
   <AppLayout>
+  <HubTabs hub="growth" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-violet fixed w-[340px] h-[340px] top-10 right-0 opacity-20 pointer-events-none" />
   <div className="max-w-3xl mx-auto relative z-10">

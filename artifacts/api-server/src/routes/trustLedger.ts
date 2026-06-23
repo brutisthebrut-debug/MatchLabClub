@@ -27,6 +27,7 @@ import {
   userVerificationsTable,
   careDialectProfilesTable,
   connectorConnectionsTable,
+  behavioralGrowthEventsTable,
 } from "@workspace/db";
 import {
   GetTrustLedgerResponse,
@@ -472,6 +473,21 @@ const FIRST_PARTY_SOURCES: Record<
   consistency: {
     countStored: async () => 0,
     purge: async () => 0,
+  },
+  behavioralGrowth: {
+    countStored: (client, userId) =>
+      countBy(
+        client,
+        behavioralGrowthEventsTable,
+        eq(behavioralGrowthEventsTable.userId, userId),
+      ),
+    purge: async (tx, userId) => {
+      const rows = await tx
+        .delete(behavioralGrowthEventsTable)
+        .where(eq(behavioralGrowthEventsTable.userId, userId))
+        .returning({ id: behavioralGrowthEventsTable.id });
+      return rows.length;
+    },
   },
 };
 

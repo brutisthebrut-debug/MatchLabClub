@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
 import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
@@ -641,6 +642,7 @@ export default function SelfHub() {
   if (!authLoading && !isAuthenticated) {
     return (
       <AppLayout>
+        <HubTabs hub="mirror" />
         <div className="container mx-auto px-4 py-16 md:py-24 max-w-3xl relative z-10">
           <div className="glass-strong rounded-[2rem] p-10 md:p-16 text-center space-y-8 relative overflow-hidden" data-testid="self-hub-signed-out">
             <div className="absolute top-0 right-0 p-12 opacity-40 pointer-events-none">
@@ -763,6 +765,7 @@ export default function SelfHub() {
 
   return (
     <AppLayout>
+      <HubTabs hub="mirror" />
       <div className="container mx-auto px-4 md:px-8 py-10 md:py-16 max-w-6xl">
         <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="mb-12">
           <motion.div variants={fadeUp}>

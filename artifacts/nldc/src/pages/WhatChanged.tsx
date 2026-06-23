@@ -4,10 +4,17 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { WelcomePanel } from "@/components/WelcomePanel";
+import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
+import { useReadinessClimb } from "@/hooks/useReadinessClimb";
 import { motion } from "framer-motion";
 import { RefreshCw, ArrowRight, Trophy, Zap, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  useRecordGrowthEvent,
+  getGetMatchingStateQueryKey,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 const STORAGE_KEY = "nldc_what_changed";
 
@@ -44,6 +51,9 @@ export default function WhatChanged() {
   const [saved, setSaved] = useState<Reflection | null>(null);
   const [showSummary, setShowSummary] = useState(false);
   const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+  const recordGrowth = useRecordGrowthEvent();
+  const climb = useReadinessClimb({ enabled: isAuthenticated });
   const isBrandNewUser = isAuthenticated && !saved;
 
   useEffect(() => {
@@ -63,6 +73,13 @@ export default function WhatChanged() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(r)); } catch {}
   setSaved(r);
   setShowSummary(true);
+  if (isAuthenticated) {
+  climb.snapshot();
+  recordGrowth.mutate(
+  { data: { type: "what_changed" } },
+  { onSuccess: () => { void queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() }); } },
+  );
+  }
   };
 
   const handleClear = () => {
@@ -173,6 +190,14 @@ export default function WhatChanged() {
   ))}
   </div>
   </div>
+
+  {isAuthenticated && climb.before !== null && (
+  <ReadinessClimbReveal
+  from={climb.before}
+  to={climb.current}
+  className="glass border border-white/8 rounded-2xl p-5"
+  />
+  )}
 
   {saved.nextMove.trim() && (
   <div className="glass border border-[hsl(43_65%_65%/0.25)] rounded-2xl px-4 py-3">

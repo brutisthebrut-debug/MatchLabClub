@@ -1,6 +1,7 @@
 import { withAlpha } from "@/lib/brandColor";
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { absoluteUrl, DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -213,6 +214,7 @@ export default function SignalCheck() {
 
   return (
   <AppLayout>
+  <HubTabs hub="audit" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-gold fixed w-[500px] h-[500px] -top-40 -right-40 opacity-40 pointer-events-none" />
   <div className="orb orb-violet fixed w-[300px] h-[300px] bottom-20 -left-20 opacity-40 pointer-events-none" />

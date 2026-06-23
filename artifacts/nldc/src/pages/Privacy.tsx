@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { absoluteUrl } from "@/lib/seo";
-import { Shield, Eye, Lock, Trash2, Mail, ExternalLink } from "lucide-react";
+import { Shield, Eye, Lock, Trash2, Mail, ExternalLink, Check } from "lucide-react";
 
 const Section = ({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) => (
   <div className="glass rounded-2xl p-6 md:p-8 space-y-4">
@@ -45,11 +45,11 @@ export default function Privacy() {
   <div className="glass-strong rounded-2xl p-6 mb-8 border border-[hsl(248_62%_52%/0.2)]">
   <h2 className="font-semibold text-foreground mb-3">The short version</h2>
   <ul className="space-y-2 text-sm text-muted-foreground">
-  <li className="flex items-start gap-2"><span className="text-green-400 mt-0.5">✓</span> You own your content. We just process it to generate your coaching.</li>
-  <li className="flex items-start gap-2"><span className="text-green-400 mt-0.5">✓</span> We never sell your data. Not now, not ever.</li>
-  <li className="flex items-start gap-2"><span className="text-green-400 mt-0.5">✓</span> No human reads your bio or messages unless you explicitly book 1:1 coaching.</li>
-  <li className="flex items-start gap-2"><span className="text-green-400 mt-0.5">✓</span> You can delete everything by emailing us. We'll do it within 48 hours.</li>
-  <li className="flex items-start gap-2"><span className="text-green-400 mt-0.5">✓</span> Future integrations (Gmail, etc.) will always require your explicit opt-in.</li>
+  <li className="flex items-start gap-2"><Check className="text-green-400 mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> You own your content. We just process it to generate your coaching.</li>
+  <li className="flex items-start gap-2"><Check className="text-green-400 mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> We never sell your data. Not now, not ever.</li>
+  <li className="flex items-start gap-2"><Check className="text-green-400 mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> No human reads your bio or messages unless you explicitly book 1:1 coaching.</li>
+  <li className="flex items-start gap-2"><Check className="text-green-400 mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> You can delete everything by emailing us. We'll do it within 48 hours.</li>
+  <li className="flex items-start gap-2"><Check className="text-green-400 mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> Future integrations (Gmail, etc.) will always require your explicit opt-in.</li>
   </ul>
   </div>
 

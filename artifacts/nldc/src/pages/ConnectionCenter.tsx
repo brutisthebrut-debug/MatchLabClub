@@ -17,6 +17,7 @@ import {
   History,
   Lock,
   Shield,
+  ShieldAlert,
   ArrowRight,
   CheckCircle,
   Wrench,
@@ -48,6 +49,7 @@ import {
   useGetConnectors,
   getGetMatchingStateQueryKey,
 } from "@workspace/api-client-react";
+import { useAuth } from "@workspace/replit-auth-web";
 import { syncGoogleCalendar, disconnectGoogleCalendar } from "@/lib/apiClient";
 
 const FOUNDER_KEY_CLIENT =
@@ -693,7 +695,7 @@ function formatSyncedAt(iso: string | null): string | null {
  * the copy is explicit that raw events are never stored.
  */
 function GoogleCalendarLivePanel() {
-  const { data, isLoading, refetch } = useGetConnectors();
+  const { data, isLoading, isError, refetch } = useGetConnectors();
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState<null | "sync" | "disconnect">(null);
   const [error, setError] = useState<string | null>(null);
@@ -703,7 +705,8 @@ function GoogleCalendarLivePanel() {
     (c) => c.provider === "google-calendar",
   );
   const status = connector?.status ?? "available";
-  const connected = status === "connected";
+  // Never present this lane as connected when the live status fetch failed.
+  const connected = !isError && status === "connected";
   const meta = LIVE_STATUS_META[status] ?? LIVE_STATUS_META.available;
   const syncedAt = formatSyncedAt(connector?.lastSyncAt ?? null);
 
@@ -751,7 +754,7 @@ function GoogleCalendarLivePanel() {
               style={{ background: meta.color }}
             />
           )}
-          {isLoading ? "Checking" : meta.label}
+          {isLoading ? "Checking" : isError ? "Status unavailable" : meta.label}
         </span>
       </div>
 
@@ -973,6 +976,12 @@ export default function ConnectionCenter() {
     "Plug things in. Every connection returns an insight you weren't expecting. Subject lines only, never the body. Read only, never write. Your data, your control.",
   );
 
+  const { isAuthenticated } = useAuth();
+  // Shares the cache with the per-card live panel; surfaces an honest banner
+  // when the signed-in connection status fails to load.
+  const { isError: connectorsError, refetch: refetchConnectors } =
+    useGetConnectors();
+
   return (
     <AppLayout>
       <div className="min-h-screen mesh-bg py-12 px-4 sm:px-6 overflow-hidden">
@@ -1026,6 +1035,35 @@ export default function ConnectionCenter() {
             <StatusBadge status="researching" />
             <span className="text-xs text-muted-foreground">Open question, real research in progress.</span>
           </motion.div>
+
+          {/* Honest error banner: the static sources below still work, but we
+              cannot vouch for per-user connection status when the live read failed. */}
+          {isAuthenticated && connectorsError && (
+            <motion.div
+              variants={fadeUpVariants}
+              initial="initial"
+              animate="whileInView"
+              className="glass rounded-[2rem] p-6 mb-10 flex items-start gap-4 border border-white/10"
+              data-testid="connectors-error"
+            >
+              <div className="w-10 h-10 rounded-[1.25rem] bg-[hsl(348_55%_65%/0.12)] flex items-center justify-center flex-shrink-0 border border-[hsl(348_55%_65%/0.2)]">
+                <ShieldAlert className="w-5 h-5 text-[hsl(348_55%_78%)]" />
+              </div>
+              <div className="flex-1 space-y-3">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  We could not load your connection status. Every source below still works, but we cannot show which ones you have already connected right now. Please refresh and try again.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => refetchConnectors()}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(248_62%_55%/0.4)] text-[hsl(248_62%_60%)] hover:bg-[hsl(248_62%_55%/0.08)] transition-colors"
+                  data-testid="button-connectors-retry"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> Try again
+                </button>
+              </div>
+            </motion.div>
+          )}
 
           <motion.div variants={containerVariants} initial="initial" whileInView="whileInView" viewport={{ once: true }}>
             {/* Plugged in today */}

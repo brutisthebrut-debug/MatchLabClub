@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, CheckCircle2, AlertTriangle, Clock, TrendingUp, Target, Info } from "lucide-react";
@@ -132,6 +133,7 @@ export default function ProgressReadiness() {
 
   return (
   <AppLayout>
+  <HubTabs hub="growth" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-rose fixed w-[300px] h-[300px] top-20 right-0 opacity-15 pointer-events-none" />
   <div className="max-w-2xl mx-auto relative z-10">

@@ -342,6 +342,10 @@ ensureStore("post_date_notes");
 export const postDateNotesTable = makeTable("post_date_notes");
 ensureStore("dating_wins");
 export const datingWinsTable = makeTable("dating_wins");
+ensureStore("behavioral_growth_events");
+export const behavioralGrowthEventsTable = makeTable(
+  "behavioral_growth_events",
+);
 ensureStore("journey_events");
 export const journeyEventsTable = makeTable("journey_events");
 

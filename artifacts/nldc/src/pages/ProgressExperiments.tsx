@@ -1,9 +1,15 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
+import { useAuth } from "@workspace/replit-auth-web";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { FlaskConical, Plus, X, CheckCircle2, XCircle, Clock, Sparkles, Info } from "lucide-react";
+import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
+import { useReadinessClimb } from "@/hooks/useReadinessClimb";
+import { useRecordGrowthEvent, getGetMatchingStateQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -90,13 +96,32 @@ export default function ProgressExperiments() {
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [filterStatus, setFilterStatus] = useState<ExperimentStatus | null>(null);
+  const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+  const recordGrowth = useRecordGrowthEvent();
+  const climb = useReadinessClimb({ enabled: isAuthenticated });
+  const recordedTriedRef = useRef<Set<string>>(new Set());
 
   function cycleStatus(id: string) {
+  let crossedIntoTried = false;
   setExperiments(prev => prev.map(e => {
   if (e.id !== id) return e;
   const idx = ALL_STATUSES.indexOf(e.status);
-  return {...e, status: ALL_STATUSES[(idx + 1) % ALL_STATUSES.length] };
+  const next = ALL_STATUSES[(idx + 1) % ALL_STATUSES.length];
+  if (next === "tried") crossedIntoTried = true;
+  return {...e, status: next };
   }));
+  // Record the readiness signal only on the first planned -> tried transition,
+  // the meaningful "I actually ran it" action (not on planning/adding one).
+  // Deduped per id so repeated status cycling cannot inflate the lane.
+  if (crossedIntoTried && isAuthenticated && !recordedTriedRef.current.has(id)) {
+  recordedTriedRef.current.add(id);
+  climb.snapshot();
+  recordGrowth.mutate(
+  { data: { type: "experiment_tried" } },
+  { onSuccess: () => { void queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() }); } },
+  );
+  }
   }
 
   function deleteExperiment(id: string) {
@@ -123,6 +148,7 @@ export default function ProgressExperiments() {
 
   return (
   <AppLayout>
+  <HubTabs hub="growth" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-teal fixed w-[300px] h-[300px] top-20 right-0 opacity-15 pointer-events-none" />
   <div className="max-w-2xl mx-auto relative z-10">
@@ -197,6 +223,12 @@ export default function ProgressExperiments() {
   </motion.div>
   )}
   </AnimatePresence>
+
+  {isAuthenticated && climb.before !== null && (
+  <motion.div {...fadeUp(0.09)} className="mb-5">
+  <ReadinessClimbReveal from={climb.before} to={climb.current} className="glass border border-white/8 rounded-2xl p-5" />
+  </motion.div>
+  )}
 
   <div className="space-y-3">
   {filtered.map((exp, i) => (

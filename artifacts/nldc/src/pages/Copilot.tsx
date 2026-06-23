@@ -1,6 +1,7 @@
 import { withAlpha } from "@/lib/brandColor";
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
 import { AgentTasksPanel } from "@/components/AgentTasksPanel";
 import { motion } from "framer-motion";
@@ -103,6 +104,7 @@ export default function Copilot() {
   useMeta("Wingman Studio", "Guided AI workflows for every situation, profile rewrites, reply coaching, date prep, weekly planning, and more.");
   return (
   <AppLayout>
+  <HubTabs hub="messages" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-violet fixed w-[500px] h-[500px] -top-40 right-0 opacity-25 pointer-events-none" />
   <div className="orb orb-gold fixed w-[300px] h-[300px] bottom-20 -left-20 opacity-20 pointer-events-none" />

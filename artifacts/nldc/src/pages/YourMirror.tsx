@@ -3,6 +3,8 @@ import { Link } from "wouter";
 import { motion, type Variants } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMeta } from "@/hooks/useMeta";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import {
   ArrowLeft,
   Sparkles,
@@ -21,6 +23,7 @@ import {
   Lightbulb,
   Send,
   Share2,
+  ShieldAlert,
 } from "lucide-react";
 import {
   Area,
@@ -503,10 +506,10 @@ export default function YourMirror() {
   const recentDates = notesData?.notes ?? [];
 
   const { isAuthenticated } = useAuth();
-  const { data: matchingState } = useGetMatchingState({
+  const { data: matchingState, isError: matchingStateError } = useGetMatchingState({
     query: { queryKey: getGetMatchingStateQueryKey(), enabled: isAuthenticated },
   });
-  const { data: journeySummary } = useGetMyJourneySummary({
+  const { data: journeySummary, isError: journeySummaryError } = useGetMyJourneySummary({
     query: {
       queryKey: getGetMyJourneySummaryQueryKey(),
       enabled: isAuthenticated,
@@ -523,13 +526,22 @@ export default function YourMirror() {
   const isDemo = !portrait && !portraitFailedForUser;
   const shownPortrait = portrait ?? DEMO_PORTRAIT;
 
-  const { data: signalMap } = useGetMySignalMap({
+  const { data: signalMap, isError: signalMapError } = useGetMySignalMap({
     query: { queryKey: getGetMySignalMapQueryKey(), enabled: isAuthenticated },
   });
   const shownSignalMap = signalMap ?? DEMO_SIGNAL_MAP;
   const signalMapIsDemo = !signalMap;
 
+  // Honest error reconciliation: for a signed-in user, a failed live run on any
+  // core query must be visible rather than silently masked by DEMO_* data.
+  // Anonymous visitors keep their intentional demo fallback untouched.
+  const coreQueryFailedForUser =
+    isAuthenticated &&
+    (matchingStateError || journeySummaryError || signalMapError);
+
   return (
+    <AppLayout>
+    <HubTabs hub="mirror" />
     <div className="min-h-screen bg-background mesh-bg overflow-x-hidden">
       <div className="container mx-auto max-w-5xl px-4 py-8 md:py-12 relative z-10">
         <Link href="/dashboard">
@@ -562,6 +574,18 @@ export default function YourMirror() {
             </p>
           </motion.div>
         </motion.div>
+
+        {coreQueryFailedForUser && (
+          <div
+            className="glass rounded-[2rem] p-6 text-center mb-8"
+            data-testid="mirror-error"
+          >
+            <ShieldAlert className="mx-auto mb-3 h-8 w-8 text-[hsl(348_55%_78%)]" />
+            <p className="text-sm text-muted-foreground">
+              We could not load your Mirror right now. Please refresh and try again.
+            </p>
+          </div>
+        )}
 
         <div className="mb-16 space-y-8">
           {portraitLoading ? (
@@ -1075,5 +1099,6 @@ export default function YourMirror() {
         )}
       </div>
     </div>
+    </AppLayout>
   );
 }

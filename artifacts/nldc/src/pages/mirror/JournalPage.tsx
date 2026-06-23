@@ -10,6 +10,7 @@ import {
   type JournalEntry,
 } from "@workspace/api-client-react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -224,6 +225,7 @@ export default function JournalPage() {
 
   return (
   <AppLayout>
+  <HubTabs hub="mirror" />
   <div className="container mx-auto max-w-3xl px-4 py-10 md:py-12">
   <Link
   href="/your-mirror"

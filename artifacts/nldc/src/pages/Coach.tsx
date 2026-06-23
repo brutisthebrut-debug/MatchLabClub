@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { ToolHandoff } from "@/components/ToolHandoff";
 import { trackEvent } from "@/lib/analytics";
 import { useMeta } from "@/hooks/useMeta";
@@ -185,10 +186,10 @@ export default function Coach() {
 
   const { isAuthenticated } = useAuth();
   const { data: sessions, isLoading: sessionsLoading } = useListMessageCoachingSessions();
-  const { data: followUpStats } = useGetCoachFollowUpStats({
+  const { data: followUpStats, isError: followUpStatsError } = useGetCoachFollowUpStats({
   query: { enabled: isAuthenticated, queryKey: getGetCoachFollowUpStatsQueryKey() },
   });
-  const { data: followUpTimeline } = useGetCoachFollowUpTimeline({
+  const { data: followUpTimeline, isError: followUpTimelineError } = useGetCoachFollowUpTimeline({
   query: { enabled: isAuthenticated, queryKey: getGetCoachFollowUpTimelineQueryKey() },
   });
   const createSession = useCreateMessageCoachingSession();
@@ -322,6 +323,7 @@ export default function Coach() {
 
   return (
   <AppLayout>
+  <HubTabs hub="messages" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-violet fixed w-[400px] h-[400px] -top-20 -right-20 opacity-40 pointer-events-none" />
   <div className="max-w-3xl mx-auto relative z-10">
@@ -545,7 +547,16 @@ export default function Coach() {
 
   <div className="space-y-5">
   {/* Send-through stats */}
-  {isAuthenticated && followUpStats && (
+  {isAuthenticated && (followUpStatsError || followUpTimelineError) ? (
+  <motion.div
+  initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
+  className="glass border border-white/8 rounded-3xl p-6 text-center"
+  data-testid="coach-followup-error"
+  >
+  <ShieldAlert className="w-8 h-8 text-[hsl(348_55%_78%)] mx-auto mb-3" />
+  <p className="text-sm text-muted-foreground">We could not load your send-through stats. Please refresh and try again.</p>
+  </motion.div>
+  ) : isAuthenticated && followUpStats ? (
   <motion.div
   initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
   className="glass border border-white/8 rounded-3xl p-5"
@@ -729,7 +740,7 @@ export default function Coach() {
   </>
   )}
   </motion.div>
-  )}
+  ) : null}
 
   {/* Recent Sessions */}
   <motion.div

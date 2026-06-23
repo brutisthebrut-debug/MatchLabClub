@@ -152,6 +152,8 @@ import type {
   GetFounderReferralsParams,
   GetFounderReportsParams,
   GetMirrorPortrait401,
+  GrowthEvent,
+  GrowthEventInput,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
   IdentityVerificationResult,
@@ -12514,6 +12516,165 @@ export const useDeleteDatingWin = <TError = ErrorType<AuthErrorEnvelope>,
         TContext
       > => {
       return useMutation(getDeleteDatingWinMutationOptions(options));
+    }
+
+export const getGetGrowthEventsUrl = () => {
+
+
+
+
+  return `/api/me/growth-events`
+}
+
+/**
+ * Returns the caller's non-deleted behavioral growth actions, newest
+first. Each row records only which kind of action was taken and when,
+never the private notes inside the tool that produced it. Logging them
+feeds matching readiness as a low-weight follow-through signal.
+
+ * @summary List the signed-in user's logged growth actions
+ */
+export const getGrowthEvents = async ( options?: RequestInit): Promise<GrowthEvent[]> => {
+
+  return customFetch<GrowthEvent[]>(getGetGrowthEventsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGrowthEventsQueryKey = () => {
+    return [
+    `/api/me/growth-events`
+    ] as const;
+    }
+
+
+export const getGetGrowthEventsQueryOptions = <TData = Awaited<ReturnType<typeof getGrowthEvents>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGrowthEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGrowthEventsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGrowthEvents>>> = ({ signal }) => getGrowthEvents({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGrowthEvents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGrowthEventsQueryResult = NonNullable<Awaited<ReturnType<typeof getGrowthEvents>>>
+export type GetGrowthEventsQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary List the signed-in user's logged growth actions
+ */
+
+export function useGetGrowthEvents<TData = Awaited<ReturnType<typeof getGrowthEvents>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGrowthEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGrowthEventsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getRecordGrowthEventUrl = () => {
+
+
+
+
+  return `/api/me/growth-events`
+}
+
+/**
+ * Records one behavioral growth action (an experiment tried, a pattern
+broken, a what-changed note, a follow-up logged, or a commitment kept).
+Only the action type and timestamp are stored, never the private notes
+inside the tool. Each action feeds matching readiness as a low-weight
+follow-through signal.
+
+ * @summary Record a behavioral growth action
+ */
+export const recordGrowthEvent = async (growthEventInput: GrowthEventInput, options?: RequestInit): Promise<GrowthEvent> => {
+
+  return customFetch<GrowthEvent>(getRecordGrowthEventUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      growthEventInput,)
+  }
+);}
+
+
+
+
+export const getRecordGrowthEventMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordGrowthEvent>>, TError,{data: BodyType<GrowthEventInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordGrowthEvent>>, TError,{data: BodyType<GrowthEventInput>}, TContext> => {
+
+const mutationKey = ['recordGrowthEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordGrowthEvent>>, {data: BodyType<GrowthEventInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  recordGrowthEvent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordGrowthEventMutationResult = NonNullable<Awaited<ReturnType<typeof recordGrowthEvent>>>
+    export type RecordGrowthEventMutationBody = BodyType<GrowthEventInput>
+    export type RecordGrowthEventMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Record a behavioral growth action
+ */
+export const useRecordGrowthEvent = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordGrowthEvent>>, TError,{data: BodyType<GrowthEventInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recordGrowthEvent>>,
+        TError,
+        {data: BodyType<GrowthEventInput>},
+        TContext
+      > => {
+      return useMutation(getRecordGrowthEventMutationOptions(options));
     }
 
 export const getGetCosmicChartUrl = () => {

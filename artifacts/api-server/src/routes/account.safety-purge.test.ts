@@ -14,6 +14,7 @@ import {
   usersTable,
   userReportsTable,
   userBlocksTable,
+  behavioralGrowthEventsTable,
 } from "@workspace/db";
 import type { AuthUser } from "@workspace/api-zod";
 import accountRouter from "./account";
@@ -75,6 +76,9 @@ async function cleanup(): Promise<void> {
         inArray(userReportsTable.reportedUserId, ALL),
       ),
     );
+  await db
+    .delete(behavioralGrowthEventsTable)
+    .where(inArray(behavioralGrowthEventsTable.userId, ALL));
   await db.delete(usersTable).where(inArray(usersTable.id, ALL));
 }
 
@@ -175,5 +179,50 @@ describe("POST /api/me/account/delete purges safety records", () => {
 
     expect(reportsLeft.length).toBe(0);
     expect(blocksLeft.length).toBe(0);
+  });
+});
+
+// Regression guard for the dual GDPR delete-path parity rule: first-party
+// signal tables have no FK cascade on user_id, so BOTH the DELETE /account and
+// the confirmation POST /me/account/delete paths must hard-delete them or they
+// orphan. The POST case here fails if the confirmation path drops the mirror.
+describe("first-party progress signal purge parity", () => {
+  it("DELETE /api/account removes behavioral growth events", async () => {
+    await db.insert(usersTable).values({ id: USER, email: null });
+    await db.insert(behavioralGrowthEventsTable).values([
+      { userId: USER, type: "experiment_tried" },
+      { userId: USER, type: "pattern_broken" },
+    ]);
+
+    testApp.setUser({ id: USER });
+    const res = await request(testApp.app).delete("/api/account");
+    expect(res.status).toBe(200);
+
+    const left = await db
+      .select({ id: behavioralGrowthEventsTable.id })
+      .from(behavioralGrowthEventsTable)
+      .where(eq(behavioralGrowthEventsTable.userId, USER));
+    expect(left.length).toBe(0);
+  });
+
+  it("POST /api/me/account/delete removes behavioral growth events", async () => {
+    const email = `${USER}@example.com`;
+    await db.insert(usersTable).values({ id: USER, email });
+    await db.insert(behavioralGrowthEventsTable).values([
+      { userId: USER, type: "experiment_tried" },
+      { userId: USER, type: "commitment_kept" },
+    ]);
+
+    testApp.setUser({ id: USER });
+    const res = await request(testApp.app)
+      .post("/api/me/account/delete")
+      .send({ confirmation: email });
+    expect(res.status).toBe(200);
+
+    const left = await db
+      .select({ id: behavioralGrowthEventsTable.id })
+      .from(behavioralGrowthEventsTable)
+      .where(eq(behavioralGrowthEventsTable.userId, USER));
+    expect(left.length).toBe(0);
   });
 });

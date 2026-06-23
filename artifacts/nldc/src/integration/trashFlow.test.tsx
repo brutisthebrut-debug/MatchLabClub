@@ -216,6 +216,12 @@ function buildAudit(overrides: Partial<Audit> & { id: number }): Audit {
 let qc: QueryClient;
 
 beforeEach(() => {
+  // Fake timers (auto-advancing) keep the radix toast auto-dismiss timer on the
+  // fake queue so it can never fire after this file's jsdom is torn down. Without
+  // this, a pending real toast timer surfaces as "document is not defined" once a
+  // later file in the same worker disposes the environment. Mirrors
+  // aiToolWelcomePanels.test.tsx. shouldAdvanceTime keeps waitFor/fetch flowing.
+  vi.useFakeTimers({ shouldAdvanceTime: true });
   localStorage.clear();
   sessionStorage.clear();
   server.activeAudits = [buildAudit({ id: 201, firstName: "Casey" })];
@@ -230,6 +236,9 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  // Drop the fake timer queue (incl. any pending toast auto-dismiss) before
+  // restoring real timers, so nothing fires into a disposed environment.
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   localStorage.clear();
   sessionStorage.clear();

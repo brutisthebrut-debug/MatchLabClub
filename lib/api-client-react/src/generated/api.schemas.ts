@@ -4749,6 +4749,38 @@ export interface DatingWinInput {
   body: string;
 }
 
+export type GrowthEventType = typeof GrowthEventType[keyof typeof GrowthEventType];
+
+
+export const GrowthEventType = {
+  experiment_tried: 'experiment_tried',
+  what_changed: 'what_changed',
+  pattern_broken: 'pattern_broken',
+  follow_up_logged: 'follow_up_logged',
+  commitment_kept: 'commitment_kept',
+} as const;
+
+export interface GrowthEvent {
+  id: number;
+  type: GrowthEventType;
+  createdAt: string;
+}
+
+export type GrowthEventInputType = typeof GrowthEventInputType[keyof typeof GrowthEventInputType];
+
+
+export const GrowthEventInputType = {
+  experiment_tried: 'experiment_tried',
+  what_changed: 'what_changed',
+  pattern_broken: 'pattern_broken',
+  follow_up_logged: 'follow_up_logged',
+  commitment_kept: 'commitment_kept',
+} as const;
+
+export interface GrowthEventInput {
+  type: GrowthEventInputType;
+}
+
 export interface UserVerification {
   /** Whether a phone number has cleared a verification check. */
   phoneVerified: boolean;

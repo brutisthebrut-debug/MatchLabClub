@@ -1,9 +1,15 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
+import { useAuth } from "@workspace/replit-auth-web";
 import { useMeta } from "@/hooks/useMeta";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, CheckCircle2, SkipForward, Circle, Info, ChevronDown, ChevronUp } from "lucide-react";
+import { ReadinessClimbReveal } from "@/components/climb/ReadinessClimbReveal";
+import { useReadinessClimb } from "@/hooks/useReadinessClimb";
+import { useRecordGrowthEvent, getGetMatchingStateQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -120,9 +126,20 @@ export default function ProgressFollowUp() {
   useMeta("Follow-Up Check · MatchLab Club", "Short follow-up questions tied to your notes and suggestions, with status tracking.");
   const [items, setItems] = useState<FollowUp[]>(DEMO_FOLLOW_UPS);
   const [filter, setFilter] = useState<CheckStatus | null>(null);
+  const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+  const recordGrowth = useRecordGrowthEvent();
+  const climb = useReadinessClimb({ enabled: isAuthenticated });
 
   function handleAnswer(id: string, text: string) {
   setItems(prev => prev.map(f => f.id === id ? {...f, status: "answered" as CheckStatus, answer: text } : f));
+  if (isAuthenticated) {
+  climb.snapshot();
+  recordGrowth.mutate(
+  { data: { type: "follow_up_logged" } },
+  { onSuccess: () => { void queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() }); } },
+  );
+  }
   }
   function handleSkip(id: string) {
   setItems(prev => prev.map(f => f.id === id ? {...f, status: "skipped" as CheckStatus } : f));
@@ -135,6 +152,7 @@ export default function ProgressFollowUp() {
 
   return (
   <AppLayout>
+  <HubTabs hub="growth" />
   <div className="min-h-screen mesh-bg py-10 px-4">
   <div className="orb orb-violet fixed w-[300px] h-[300px] top-20 right-0 opacity-15 pointer-events-none" />
   <div className="max-w-2xl mx-auto relative z-10">
@@ -157,6 +175,12 @@ export default function ProgressFollowUp() {
   </div>
   ))}
   </motion.div>
+
+  {isAuthenticated && climb.before !== null && (
+  <motion.div {...fadeUp(0.05)} className="mb-6">
+  <ReadinessClimbReveal from={climb.before} to={climb.current} className="glass border border-white/8 rounded-2xl p-5" />
+  </motion.div>
+  )}
 
   <motion.div {...fadeUp(0.06)} className="mb-5 flex items-start gap-2.5 px-4 py-3 rounded-xl border border-white/8 bg-white/3">
   <Info className="w-4 h-4 text-muted-foreground/50 flex-shrink-0 mt-0.5" />

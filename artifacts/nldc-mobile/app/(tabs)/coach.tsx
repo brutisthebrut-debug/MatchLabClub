@@ -523,7 +523,7 @@ export default function CoachScreen() {
                 <Text
                   style={[styles.followUpBtnText, { color: colors.foreground }]}
                 >
-                  Still thinking 💭
+                  Still thinking
                 </Text>
               </Pressable>
             </View>

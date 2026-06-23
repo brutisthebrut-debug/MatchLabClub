@@ -5651,6 +5651,44 @@ export const DeleteDatingWinHeader = zod.object({
 
 
 /**
+ * Returns the caller's non-deleted behavioral growth actions, newest
+first. Each row records only which kind of action was taken and when,
+never the private notes inside the tool that produced it. Logging them
+feeds matching readiness as a low-weight follow-through signal.
+
+ * @summary List the signed-in user's logged growth actions
+ */
+export const GetGrowthEventsHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetGrowthEventsResponseItem = zod.object({
+  "id": zod.number(),
+  "type": zod.enum(['experiment_tried', 'what_changed', 'pattern_broken', 'follow_up_logged', 'commitment_kept']),
+  "createdAt": zod.string()
+})
+export const GetGrowthEventsResponse = zod.array(GetGrowthEventsResponseItem)
+
+
+/**
+ * Records one behavioral growth action (an experiment tried, a pattern
+broken, a what-changed note, a follow-up logged, or a commitment kept).
+Only the action type and timestamp are stored, never the private notes
+inside the tool. Each action feeds matching readiness as a low-weight
+follow-through signal.
+
+ * @summary Record a behavioral growth action
+ */
+export const RecordGrowthEventHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const RecordGrowthEventBody = zod.object({
+  "type": zod.enum(['experiment_tried', 'what_changed', 'pattern_broken', 'follow_up_logged', 'commitment_kept'])
+})
+
+
+/**
  * Returns the caller's saved birth chart with its deterministically
 computed placements, derived soft trait priors, and the always-on
 deterministic reading. Returns 404 when no chart has been built yet.

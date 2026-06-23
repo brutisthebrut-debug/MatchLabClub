@@ -30,6 +30,7 @@ import {
   matchPoolMembershipTable,
   matchProposalsTable,
   datingWinsTable,
+  behavioralGrowthEventsTable,
   matchingReadinessSnapshotsTable,
   matchingNudgeStateTable,
   mirrorDigestPrefsTable,
@@ -638,6 +639,9 @@ router.delete("/account", async (req, res): Promise<void> => {
     db.delete(postDateNotesTable).where(eq(postDateNotesTable.userId, userId)),
     db.delete(datingWinsTable).where(eq(datingWinsTable.userId, userId)),
     db
+      .delete(behavioralGrowthEventsTable)
+      .where(eq(behavioralGrowthEventsTable.userId, userId)),
+    db
       .delete(matchingReadinessSnapshotsTable)
       .where(eq(matchingReadinessSnapshotsTable.userId, userId)),
     db
@@ -941,6 +945,33 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .where(eq(postDateNotesTable.userId, userId))
         .returning({ id: postDateNotesTable.id });
       tables["post_date_notes"] = postDateDel.length;
+
+      // First-party progress + matching state. These have no FK cascade on
+      // user_id, so they MUST be hard-deleted here too or they orphan after a
+      // confirmation-path GDPR deletion. Kept in lockstep with DELETE /account.
+      const datingWinsDel = await tx
+        .delete(datingWinsTable)
+        .where(eq(datingWinsTable.userId, userId))
+        .returning({ id: datingWinsTable.id });
+      tables["dating_wins"] = datingWinsDel.length;
+
+      const behavioralGrowthDel = await tx
+        .delete(behavioralGrowthEventsTable)
+        .where(eq(behavioralGrowthEventsTable.userId, userId))
+        .returning({ id: behavioralGrowthEventsTable.id });
+      tables["behavioral_growth_events"] = behavioralGrowthDel.length;
+
+      const matchingSnapshotDel = await tx
+        .delete(matchingReadinessSnapshotsTable)
+        .where(eq(matchingReadinessSnapshotsTable.userId, userId))
+        .returning({ id: matchingReadinessSnapshotsTable.id });
+      tables["matching_readiness_snapshots"] = matchingSnapshotDel.length;
+
+      const matchingNudgeDel = await tx
+        .delete(matchingNudgeStateTable)
+        .where(eq(matchingNudgeStateTable.userId, userId))
+        .returning({ userId: matchingNudgeStateTable.userId });
+      tables["matching_nudge_state"] = matchingNudgeDel.length;
 
       const lifePulseDel = await tx
         .delete(lifePulsesTable)

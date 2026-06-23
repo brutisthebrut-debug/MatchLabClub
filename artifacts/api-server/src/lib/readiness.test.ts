@@ -60,6 +60,7 @@ describe("computeBreakdown", () => {
       cosmicProfile: 0,
       relocationOpen: 0,
       verification: 0,
+      behavioralGrowth: 0,
     });
     expect(scoreFromBreakdown(b)).toBe(0);
   });
@@ -104,6 +105,7 @@ describe("computeBreakdown", () => {
       relocationFacets: 1,
       verificationFacets: 3,
       careDialect: 1,
+      behavioralGrowthEvents: 50,
     });
     expect(b).toEqual({
       compass: 100,
@@ -144,6 +146,7 @@ describe("computeBreakdown", () => {
       cosmicProfile: 100,
       relocationOpen: 100,
       verification: 100,
+      behavioralGrowth: 100,
     });
     expect(scoreFromBreakdown(b)).toBe(100);
   });

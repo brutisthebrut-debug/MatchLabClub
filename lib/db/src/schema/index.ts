@@ -37,6 +37,7 @@ export * from "./matching";
 export * from "./match_connections";
 export * from "./profile_photos";
 export * from "./dating_wins";
+export * from "./behavioral_growth_events";
 export * from "./wyr_answers";
 export * from "./daily_spark_answers";
 export * from "./flag_selections";

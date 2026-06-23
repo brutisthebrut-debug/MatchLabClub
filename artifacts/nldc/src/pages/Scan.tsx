@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 
 import { AppLayout } from "@/components/layout/AppLayout";
+import { HubTabs } from "@/components/layout/HubTabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -324,6 +325,7 @@ export default function Scan() {
 
   return (
   <AppLayout>
+  <HubTabs hub="audit" />
   <div className="container mx-auto px-4 py-10 max-w-3xl">
   <motion.div {...fadeUp(0)} className="mb-8">
   <div className="text-xs uppercase tracking-[0.2em] text-[hsl(326_100%_70%)] font-semibold mb-2">

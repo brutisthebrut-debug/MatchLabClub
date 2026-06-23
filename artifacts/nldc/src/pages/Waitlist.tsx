@@ -13,7 +13,7 @@ import { useAuth } from "@workspace/replit-auth-web";
 import { ShareButton } from "@/components/echo/ShareButton";
 import { trackEvent } from "@/lib/analytics";
 import { useQueryClient } from "@tanstack/react-query";
-import { Headphones, Users, CheckCircle, ArrowRight, Share2, Loader2, Clock, Quote, Sparkles } from "lucide-react";
+import { Headphones, Users, CheckCircle, ArrowRight, Share2, Loader2, Clock, Quote, Sparkles, ShieldAlert } from "lucide-react";
 import { Link } from "wouter";
 import { TrustBadge } from "@/components/TrustBadge";
 
@@ -37,7 +37,7 @@ export default function Waitlist() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: stats, isLoading: statsLoading } = useGetWaitlistStats({
+  const { data: stats, isLoading: statsLoading, isError: statsError } = useGetWaitlistStats({
   query: { queryKey: getGetWaitlistStatsQueryKey() }
   });
   const joinWaitlist = useJoinWaitlist();
@@ -107,6 +107,14 @@ export default function Waitlist() {
   </div>
   <p className="text-xs text-muted-foreground mt-0.5">Next milestone: {displayStats.nextMilestone} members</p>
   </div>
+  {statsError && (
+  <div className="w-full flex items-start gap-2 pt-1" data-testid="waitlist-stats-error">
+  <ShieldAlert className="w-4 h-4 text-[hsl(348_55%_78%)] flex-shrink-0 mt-0.5" />
+  <p className="text-xs text-muted-foreground leading-relaxed">
+  The live waitlist count is temporarily unavailable, so the numbers above are estimates rather than a live total. Please refresh and try again.
+  </p>
+  </div>
+  )}
   </motion.div>
 
   <AnimatePresence mode="wait">
