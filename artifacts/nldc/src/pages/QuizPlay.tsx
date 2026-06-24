@@ -287,7 +287,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
       setSavedToWellness(true);
       toast({
         title: "Saved to your wellness profile",
-        description: `${saved} ${saved === 1 ? "answer" : "answers"} from this quiz are now part of your dating second-brain.`,
+        description: `${saved} ${saved === 1 ? "answer" : "answers"} from this quiz are now part of what I understand about you.`,
       });
     } else {
       toast({
@@ -575,7 +575,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="text-lg font-bold text-foreground mb-2">
-                          {savedToWellness ? "Saved to your profile" : "Make your second-brain smarter"}
+                          {savedToWellness ? "Saved to your profile" : "Help me understand you better"}
                         </h4>
                         <p className="text-sm text-muted-foreground leading-relaxed mb-4 sm:mb-0 max-w-md">
                           {savedToWellness

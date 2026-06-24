@@ -519,7 +519,7 @@ const BUILDING: Connector[] = [
     blurb:
       "Connect a bank or card through Plaid. I categorise spending into rhythm signals (food, travel, going out, gym, dating-app subscriptions) and return three things your spending says about how you actually date.",
     returns:
-      "A second-brain read on spending tempo, subscription overlap, and the rhythm of your social vs solo nights.",
+      "What I read from your spending tempo, subscription overlap, and the rhythm of your social vs solo nights.",
     access: [
       "Transaction categories and amounts on accounts you connect",
       "Merchant names where they help classify a signal",

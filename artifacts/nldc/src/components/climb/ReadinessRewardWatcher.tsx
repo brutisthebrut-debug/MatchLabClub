@@ -76,7 +76,7 @@ export function ReadinessRewardWatcher() {
           : `Readiness up ${delta}`,
         description: newlyCleared
           ? newlyCleared.unlocks
-          : "Your second brain just learned something new about you.",
+          : "I just learned something new about you.",
       });
     }
 

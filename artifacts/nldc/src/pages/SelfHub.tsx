@@ -416,7 +416,7 @@ function InsightStream({
             )}
           </div>
           <p className="text-sm font-medium text-muted-foreground leading-relaxed">
-            The latest signals your second brain folded in, newest first.
+            The latest signals I've folded in, newest first.
           </p>
         </div>
         <Link
@@ -1083,7 +1083,7 @@ export default function SelfHub() {
                 <ShareButton
                   surface="self-hub"
                   title="Read your dating signals, free in 2 minutes"
-                  text={`I've been using MatchLab Club as a second brain for my dating life, quiz, audit, message coach, the whole thing. Try a quiz, see what your patterns actually say about you.`}
+                  text={`I've been using MatchLab Club to read my dating signals, quiz, audit, message coach, the whole thing. Try a quiz, see what your patterns actually say about you.`}
                   path="/quizzes"
                   ref={user?.id ? `user-${user.id}` : "self-hub"}
                   variant="primary"

@@ -87,7 +87,7 @@ export const DEMO_ACHIEVEMENTS: UserAchievements = {
   totalCount: 10,
   achievements: [
     { id: "first-signal", title: "First signal", description: "Teach the machine its first thing about you.", icon: "Sparkles", tier: "bronze", unit: "signals", target: 1, progress: 1, unlocked: true },
-    { id: "signal-10", title: "Signal stacker", description: "Feed ten signals into your second brain.", icon: "Layers", tier: "silver", unit: "signals", target: 10, progress: 7, unlocked: false },
+    { id: "signal-10", title: "Signal stacker", description: "Feed me ten signals to learn from.", icon: "Layers", tier: "silver", unit: "signals", target: 10, progress: 7, unlocked: false },
     { id: "signal-25", title: "Open book", description: "Feed twenty-five signals and keep going.", icon: "BookOpen", tier: "gold", unit: "signals", target: 25, progress: 7, unlocked: false },
     { id: "streak-3", title: "Warming up", description: "Show up three days in a row.", icon: "Flame", tier: "bronze", unit: "days", target: 3, progress: 3, unlocked: true },
     { id: "streak-7", title: "Week strong", description: "Keep a seven-day streak alive.", icon: "Flame", tier: "gold", unit: "days", target: 7, progress: 3, unlocked: false },
