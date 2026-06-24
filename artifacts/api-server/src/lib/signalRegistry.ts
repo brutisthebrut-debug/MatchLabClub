@@ -429,7 +429,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     normalize: { kind: "count", denominator: 5 },
     decayHalfLifeDays: 120,
     describe: (c) =>
-      `Has run enough compatibility reads to cover ${c}% of that lane, so we have real signal on who they lean toward.`,
+      `Has run enough compatibility reads to cover ${c}% of that lane, so I have real signal on who they lean toward.`,
     action: {
       label: "Run a compass read",
       detail:
@@ -468,7 +468,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     normalize: { kind: "binary" },
     decayHalfLifeDays: 180,
     describe: () =>
-      `Imported their dating app history, so we can see how they actually talk and behave on a dating app, not just how they describe themselves.`,
+      `Imported their dating app history, so I can see how they actually talk and behave on a dating app, not just how they describe themselves.`,
     action: {
       label: "Import your dating app data",
       detail: "One export from Hinge, Tinder, or Bumble fills a whole signal lane at once.",
@@ -498,7 +498,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     normalize: { kind: "count", denominator: 3 },
     decayHalfLifeDays: 120,
     describe: (c) =>
-      `Has reflected on enough real dates to cover ${c}% of that lane, so we know what fits them in person, not just on paper.`,
+      `Has reflected on enough real dates to cover ${c}% of that lane, so I know what fits them in person, not just on paper.`,
     action: {
       label: "Add a post-date note",
       detail:
@@ -528,7 +528,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.6,
     normalize: { kind: "count", denominator: 10 },
     describe: (c) =>
-      `Has journaled enough to cover ${c}% of that lane, so we have a read on their self-awareness and how they process things.`,
+      `Has journaled enough to cover ${c}% of that lane, so I have a read on their self-awareness and how they process things.`,
     action: {
       label: "Write a journal entry",
       detail: "A real reflection counts. One-liners do not.",
@@ -597,11 +597,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     normalize: { kind: "count", denominator: 12 },
     decayHalfLifeDays: 45,
     describe: (c) =>
-      `Has shared enough of their calendar to cover ${c}% of that lane, so we can see how full their week is and when they actually have room to date.`,
+      `Has shared enough of their calendar to cover ${c}% of that lane, so I can see how full their week is and when they actually have room to date.`,
     action: {
       label: "Add your calendar",
       detail:
-        "Paste your .ics export, or connect Google Calendar read-only. We read your rhythm, never the events themselves.",
+        "Paste your .ics export, or connect Google Calendar read-only. I read your rhythm, never the events themselves.",
       href: "/connections",
     },
     trust: {
@@ -637,11 +637,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     normalize: { kind: "count", denominator: 12 },
     decayHalfLifeDays: 60,
     describe: (c) =>
-      `Has forwarded enough confirmations to cover ${c}% of that lane, so we can read the rhythm of what they actually do, the dinners, trips, shows, and classes, never the contents of any email.`,
+      `Has forwarded enough confirmations to cover ${c}% of that lane, so I can read the rhythm of what they actually do, the dinners, trips, shows, and classes, never the contents of any email.`,
     action: {
       label: "Forward your receipts",
       detail:
-        "Send booking and confirmation emails to your private receipts address, or paste them in. We read the sender, subject, and time, never the body.",
+        "Send booking and confirmation emails to your private receipts address, or paste them in. I read the sender, subject, and time, never the body.",
       href: "/receipts",
     },
     trust: {
@@ -654,7 +654,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       neverTouched: [
         "The body of any email",
         "Anything you do not forward or paste in",
-        "Your inbox itself, we never connect to your email account",
+        "Your inbox itself, I never connect to your email account",
       ],
     },
   },
@@ -668,7 +668,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.75,
     normalize: { kind: "count", denominator: 3 },
     describe: (c) =>
-      `Has run enough profile audits to cover ${c}% of that lane, so we know how they present themselves and where their profile is sharp or soft.`,
+      `Has run enough profile audits to cover ${c}% of that lane, so I know how they present themselves and where their profile is sharp or soft.`,
     action: {
       label: "Run a profile audit",
       detail:
@@ -699,7 +699,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     normalize: { kind: "count", denominator: 5 },
     decayHalfLifeDays: 120,
     describe: (c) =>
-      `Has worked through enough message coaching to cover ${c}% of that lane, so we can see how they actually communicate, not just how they describe it.`,
+      `Has worked through enough message coaching to cover ${c}% of that lane, so I can see how they actually communicate, not just how they describe it.`,
     action: {
       label: "Coach a conversation",
       detail:
@@ -730,10 +730,10 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     normalize: { kind: "binary" },
     decayHalfLifeDays: 180,
     describe: () =>
-      `Has shared their Instagram tone, so we have a read on their public-facing personality and voice beyond the dating apps.`,
+      `Has shared their Instagram tone, so I have a read on their public-facing personality and voice beyond the dating apps.`,
     action: {
       label: "Share your Instagram tone",
-      detail: "Paste a few captions. We read the tone, never your account.",
+      detail: "Paste a few captions. I read the tone, never your account.",
       href: "/me",
     },
     trust: {
@@ -802,11 +802,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.55,
     normalize: { kind: "count", denominator: 6 },
     describe: (c) =>
-      `Has shared enough of their taste to cover ${c}% of that lane, so we can match on cultural overlap and the things they actually love, not just a prompt answer.`,
+      `Has shared enough of their taste to cover ${c}% of that lane, so I can match on cultural overlap and the things they actually love, not just a prompt answer.`,
     action: {
       label: "Share your taste",
       detail:
-        "List the music, film, shows, and books you love. We read the overlap, never judge the list.",
+        "List the music, film, shows, and books you love. I read the overlap, never judge the list.",
       href: "/connections/add/taste",
     },
     trust: {
@@ -814,7 +814,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       noun: "item",
       seen: [
         "The list of taste items you paste in, one per line",
-        "A simple count of how many you gave us, used to fill the lane",
+        "A simple count of how many you gave me, used to fill the lane",
       ],
       neverTouched: [
         "Anything you do not paste in",
@@ -842,11 +842,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.55,
     normalize: { kind: "count", denominator: 5 },
     describe: (c) =>
-      `Has described enough of their week to cover ${c}% of that lane, so we can match on lifestyle and shared-activity fit, not just looks on paper.`,
+      `Has described enough of their week to cover ${c}% of that lane, so I can match on lifestyle and shared-activity fit, not just looks on paper.`,
     action: {
       label: "Describe your lifestyle",
       detail:
-        "List the activities and rituals that make up a normal week. We read the rhythm, never the detail.",
+        "List the activities and rituals that make up a normal week. I read the rhythm, never the detail.",
       href: "/connections/add/lifestyle",
     },
     trust: {
@@ -854,7 +854,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       noun: "item",
       seen: [
         "The list of lifestyle items you paste in, one per line",
-        "A simple count of how many you gave us, used to fill the lane",
+        "A simple count of how many you gave me, used to fill the lane",
       ],
       neverTouched: [
         "Anything you do not paste in",
@@ -882,11 +882,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.55,
     normalize: { kind: "count", denominator: 8 },
     describe: (c) =>
-      `Has shared enough of their music to cover ${c}% of that lane, so we can match on the sound someone keeps coming back to, a strong read on mood and conversation chemistry.`,
+      `Has shared enough of their music to cover ${c}% of that lane, so I can match on the sound someone keeps coming back to, a strong read on mood and conversation chemistry.`,
     action: {
       label: "Share your music taste",
       detail:
-        "Paste your top artists and tracks, or your Spotify export. We read the overlap, never your account.",
+        "Paste your top artists and tracks, or your Spotify export. I read the overlap, never your account.",
       href: "/connections/add/music",
     },
     trust: {
@@ -894,7 +894,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       noun: "item",
       seen: [
         "The list of artists and tracks you paste in, one per line",
-        "A simple count of how many you gave us, used to fill the lane",
+        "A simple count of how many you gave me, used to fill the lane",
       ],
       neverTouched: [
         "Anything you do not paste in",
@@ -922,11 +922,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.55,
     normalize: { kind: "count", denominator: 8 },
     describe: (c) =>
-      `Has shared enough of their film taste to cover ${c}% of that lane, so we can match on humour and the kind of stories that move them, not just a prompt answer.`,
+      `Has shared enough of their film taste to cover ${c}% of that lane, so I can match on humour and the kind of stories that move them, not just a prompt answer.`,
     action: {
       label: "Share your film taste",
       detail:
-        "Paste the films and shows you love, or your Letterboxd export. We read the overlap, never judge the list.",
+        "Paste the films and shows you love, or your Letterboxd export. I read the overlap, never judge the list.",
       href: "/connections/add/film",
     },
     trust: {
@@ -934,7 +934,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       noun: "item",
       seen: [
         "The list of films and shows you paste in, one per line",
-        "A simple count of how many you gave us, used to fill the lane",
+        "A simple count of how many you gave me, used to fill the lane",
       ],
       neverTouched: [
         "Anything you do not paste in",
@@ -962,11 +962,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.55,
     normalize: { kind: "count", denominator: 6 },
     describe: (c) =>
-      `Has shared enough of their reading to cover ${c}% of that lane, a quiet read on curiosity and values that deepens how we reason about fit.`,
+      `Has shared enough of their reading to cover ${c}% of that lane, a quiet read on curiosity and values that deepens how I reason about fit.`,
     action: {
       label: "Share your reading",
       detail:
-        "Paste the books and authors you return to, or your Goodreads export. We read the overlap, never the shelves.",
+        "Paste the books and authors you return to, or your Goodreads export. I read the overlap, never the shelves.",
       href: "/connections/add/reading",
     },
     trust: {
@@ -974,7 +974,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       noun: "item",
       seen: [
         "The list of books and authors you paste in, one per line",
-        "A simple count of how many you gave us, used to fill the lane",
+        "A simple count of how many you gave me, used to fill the lane",
       ],
       neverTouched: [
         "Anything you do not paste in",
@@ -1002,11 +1002,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.5,
     normalize: { kind: "count", denominator: 8 },
     describe: (c) =>
-      `Has shared enough of what they are curious about to cover ${c}% of that lane, so we can match on the interests and rabbit holes that actually hold their attention.`,
+      `Has shared enough of what they are curious about to cover ${c}% of that lane, so I can match on the interests and rabbit holes that actually hold their attention.`,
     action: {
       label: "Share your interests",
       detail:
-        "Paste what you search, watch, and follow, or your Google Takeout summary. We read the themes, never the raw history.",
+        "Paste what you search, watch, and follow, or your Google Takeout summary. I read the themes, never the raw history.",
       href: "/connections/add/curiosity",
     },
     trust: {
@@ -1015,7 +1015,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       noun: "item",
       seen: [
         "The list of interests and topics you paste in, one per line",
-        "A simple count of how many you gave us, used to fill the lane",
+        "A simple count of how many you gave me, used to fill the lane",
       ],
       neverTouched: [
         "Anything you do not paste in",
@@ -1047,7 +1047,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     action: {
       label: "Share your vitality rhythm",
       detail:
-        "Paste your workout and rest rhythm, or your Apple Health summary. We read the cadence, never any health record.",
+        "Paste your workout and rest rhythm, or your Apple Health summary. I read the cadence, never any health record.",
       href: "/connections/add/vitality",
     },
     trust: {
@@ -1056,7 +1056,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       noun: "item",
       seen: [
         "The list of activities and rhythms you paste in, one per line",
-        "A simple count of how many you gave us, used to fill the lane",
+        "A simple count of how many you gave me, used to fill the lane",
       ],
       neverTouched: [
         "Anything you do not paste in",
@@ -1079,7 +1079,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.6,
     normalize: { kind: "count", denominator: 4 },
     describe: (c) =>
-      `Has played enough quizzes to cover ${c}% of that lane, so we have a read on their instincts and self-knowledge in their own words, not just a profile bio.`,
+      `Has played enough quizzes to cover ${c}% of that lane, so I have a read on their instincts and self-knowledge in their own words, not just a profile bio.`,
     action: {
       label: "Play a quiz",
       detail:
@@ -1119,11 +1119,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.5,
     normalize: { kind: "count", denominator: 6 },
     describe: (c) =>
-      `Has shared enough of their podcast lineup to cover ${c}% of that lane, a read on the ideas and voices they keep coming back to that sharpens how we match on curiosity.`,
+      `Has shared enough of their podcast lineup to cover ${c}% of that lane, a read on the ideas and voices they keep coming back to that sharpens how I match on curiosity.`,
     action: {
       label: "Share your podcasts",
       detail:
-        "Paste the shows you keep subscribed to, or your OPML export. We read the lineup, never the feed.",
+        "Paste the shows you keep subscribed to, or your OPML export. I read the lineup, never the feed.",
       href: "/connections/add/podcasts",
     },
     trust: {
@@ -1131,7 +1131,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       noun: "item",
       seen: [
         "The list of shows you paste in, one per line",
-        "A simple count of how many you gave us, used to fill the lane",
+        "A simple count of how many you gave me, used to fill the lane",
       ],
       neverTouched: [
         "Anything you do not paste in",
@@ -1159,11 +1159,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.45,
     normalize: { kind: "count", denominator: 6 },
     describe: (c) =>
-      `Has shared enough of their gaming signature to cover ${c}% of that lane, a read on how they unwind and play that helps us match on shared-leisure fit.`,
+      `Has shared enough of their gaming signature to cover ${c}% of that lane, a read on how they unwind and play that helps me match on shared-leisure fit.`,
     action: {
       label: "Share your games",
       detail:
-        "Paste the games you keep returning to, or your Steam list. We read the overlap, never the playtime.",
+        "Paste the games you keep returning to, or your Steam list. I read the overlap, never the playtime.",
       href: "/connections/add/gaming",
     },
     trust: {
@@ -1171,7 +1171,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       noun: "item",
       seen: [
         "The list of games you paste in, one per line",
-        "A simple count of how many you gave us, used to fill the lane",
+        "A simple count of how many you gave me, used to fill the lane",
       ],
       neverTouched: [
         "Anything you do not paste in",
@@ -1199,11 +1199,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.5,
     normalize: { kind: "count", denominator: 6 },
     describe: (c) =>
-      `Has shared enough of where life happens to cover ${c}% of that lane, a read on the kinds of places they spend time that helps us match on real shared-activity fit.`,
+      `Has shared enough of where life happens to cover ${c}% of that lane, a read on the kinds of places they spend time that helps me match on real shared-activity fit.`,
     action: {
       label: "Share your places rhythm",
       detail:
-        "Paste the kinds of places you spend time (gym, trails, cafes, travel), or your Maps Timeline category summary. We read the categories, never a single location.",
+        "Paste the kinds of places you spend time (gym, trails, cafes, travel), or your Maps Timeline category summary. I read the categories, never a single location.",
       href: "/connections/add/places",
     },
     trust: {
@@ -1212,7 +1212,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       noun: "item",
       seen: [
         "The kinds of places you paste in, one per line",
-        "A simple count of how many you gave us, used to fill the lane",
+        "A simple count of how many you gave me, used to fill the lane",
       ],
       neverTouched: [
         "Any location, address, or coordinate, ever",
@@ -1244,7 +1244,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     action: {
       label: "Share your screen rhythm",
       detail:
-        "Paste how your day splits across kinds of apps (social, reading, work, rest), or your Screen Time category summary. We read the balance, never an app or message.",
+        "Paste how your day splits across kinds of apps (social, reading, work, rest), or your Screen Time category summary. I read the balance, never an app or message.",
       href: "/connections/add/screen-rhythm",
     },
     trust: {
@@ -1253,7 +1253,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       noun: "item",
       seen: [
         "The kinds of app time you paste in, one per line",
-        "A simple count of how many you gave us, used to fill the lane",
+        "A simple count of how many you gave me, used to fill the lane",
       ],
       neverTouched: [
         "Any specific app, message, notification, or usage record",
@@ -1281,7 +1281,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.5,
     normalize: { kind: "count", denominator: 12 },
     describe: (c) =>
-      `Has played enough rapid-fire rounds to cover ${c}% of that lane, so we can read the small instinctive preferences that quietly shape day-to-day fit.`,
+      `Has played enough rapid-fire rounds to cover ${c}% of that lane, so I can read the small instinctive preferences that quietly shape day-to-day fit.`,
     action: {
       label: "Play This or That",
       detail:
@@ -1320,11 +1320,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.6,
     normalize: { kind: "binary" },
     describe: (c) =>
-      `Has recorded a spoken intro covering ${c}% of that lane, so we can read the warmth, energy, and pace of how they actually come across, not just how they write.`,
+      `Has recorded a spoken intro covering ${c}% of that lane, so I can read the warmth, energy, and pace of how they actually come across, not just how they write.`,
     action: {
       label: "Record a voice intro",
       detail:
-        "Record a short spoken intro. We read the warmth, energy, and pace in the moment, never the recording itself.",
+        "Record a short spoken intro. I read the warmth, energy, and pace in the moment, never the recording itself.",
       href: "/voice-intro",
     },
     trust: {
@@ -1370,7 +1370,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "How many distinct tradeoffs you have answered",
       ],
       neverTouched: [
-        "Anything beyond the two choices we offer",
+        "Anything beyond the two choices I offer",
         "Any free text, since the game never asks for any",
       ],
     },
@@ -1404,7 +1404,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "How many distinct questions you have answered",
       ],
       neverTouched: [
-        "Anything beyond the options we offer",
+        "Anything beyond the options I offer",
         "Any free text, since the game never asks for any",
       ],
     },
@@ -1437,7 +1437,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "How many distinct flags you have named",
       ],
       neverTouched: [
-        "Anything beyond the flags we offer",
+        "Anything beyond the flags I offer",
         "Any free text, since the picker never asks for any",
       ],
     },
@@ -1497,7 +1497,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "How many distinct scenarios you have worked through",
       ],
       neverTouched: [
-        "Anything beyond the responses we offer",
+        "Anything beyond the responses I offer",
         "Any free text, since the reels never ask for any",
       ],
     },
@@ -1609,7 +1609,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     action: {
       label: "Open your Cosmic Compass",
       detail:
-        "Build your birth chart, then tell us what lands and what does not. The honest part is what you recognise in yourself, and that sharpens who we match you with.",
+        "Build your birth chart, then tell me what lands and what does not. The honest part is what you recognise in yourself, and that sharpens who I match you with.",
       href: "/cosmic",
     },
     trust: {
@@ -1638,7 +1638,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.4,
     normalize: { kind: "count", denominator: 1 },
     describe: (c) =>
-      `Has said they are open to relocating for the right person, covering ${c}% of that lane. This only widens the geography we can match them across; it never narrows it and never gates a match.`,
+      `Has said they are open to relocating for the right person, covering ${c}% of that lane. This only widens the geography I can match them across; it never narrows it and never gates a match.`,
     action: {
       label: "Set your relocation openness",
       detail:
@@ -1650,11 +1650,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
       noun: "preference",
       seen: [
         "Whether you are open to relocating for the right person",
-        "The love-line cities we derive from your chart to widen your matches",
+        "The love-line cities I derive from your chart to widen your matches",
       ],
       neverTouched: [
         "Your real-time location is never tracked; this is only the openness you choose to share",
-        "It only widens who we can match you with, never narrows or gates it",
+        "It only widens who I can match you with, never narrows or gates it",
       ],
     },
   },
@@ -1704,11 +1704,11 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.7,
     normalize: { kind: "binary" },
     describe: () =>
-      `Has mapped their Care Dialect, so we know how they give care and what makes them feel cared for, one of the strongest reads we have for who genuinely complements them.`,
+      `Has mapped their Care Dialect, so I know how they give care and what makes them feel cared for, one of the strongest reads I have for who genuinely complements them.`,
     action: {
       label: "Find your Care Dialect",
       detail:
-        "Take the quiz to see how you give and receive care, then how it lines up with the people we match you with.",
+        "Take the quiz to see how you give and receive care, then how it lines up with the people I match you with.",
       href: "/care-dialect",
     },
     trust: {
@@ -1734,7 +1734,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     confidence: 0.45,
     normalize: { kind: "count", denominator: 6 },
     describe: (c) =>
-      `Has taken enough growth actions to cover ${c}% of that lane, so we can see they act on what they learn, not just read it.`,
+      `Has taken enough growth actions to cover ${c}% of that lane, so I can see they act on what they learn, not just read it.`,
     action: {
       label: "Take a growth action",
       detail:
