@@ -253,7 +253,7 @@ function SignalDensityPanel({ sources }: { sources: SignalSource[] }) {
         <div className="min-w-0">
           <h3 className="font-serif text-2xl font-bold text-foreground mb-2">Sources plugged in</h3>
           <p className="text-sm font-medium text-muted-foreground leading-relaxed">
-            {active} of {total} live sources connected. Each one the machine reads fills a lane above.
+            {active} of {total} live sources connected. Each one I read fills a lane above.
           </p>
         </div>
         <Link
@@ -503,7 +503,7 @@ function InsightStream({
 export default function SelfHub() {
   useMeta(
     "Your Self Hub. MatchLab Club",
-    "Everything we know about you, in one place. Your wellness profile completeness, signal trend, imports, compass reads, journal cadence, and one-tap data export.",
+    "Everything I know about you, in one place. Your wellness profile completeness, signal trend, imports, compass reads, journal cadence, and one-tap data export.",
   );
 
   const { isAuthenticated, isLoading: authLoading, login, user } = useAuth();
@@ -586,13 +586,13 @@ export default function SelfHub() {
             title: next ? "AI on your content is on" : "AI on your content is off",
             description: next
               ? "Your bios, messages, and pastes can now be sent to Claude for deeper analysis."
-              : "We will stick to the deterministic baseline. You can switch this back on anytime.",
+              : "I'll stick to the deterministic baseline. You can switch this back on anytime.",
           });
         },
         onError: () => {
           toast({
             title: "Could not save your choice",
-            description: "Something went wrong on our end. Try again in a moment.",
+            description: "Something went wrong on my end. Try again in a moment.",
             variant: "destructive",
           });
         },
@@ -611,7 +611,7 @@ export default function SelfHub() {
     if (!bio) {
       toast({
         title: "Add a bio first",
-        description: "Paste your Instagram bio so we have something to read.",
+        description: "Paste your Instagram bio so I have something to read.",
         variant: "destructive",
       });
       return;
@@ -624,14 +624,14 @@ export default function SelfHub() {
           setIgCaptions("");
           queryClient.invalidateQueries({ queryKey: getGetMatchingStateQueryKey() });
           toast({
-            title: "We got it",
+            title: "I got it",
             description: "Your tone read will be ready in a minute. It also moves your Match Readiness.",
           });
         },
         onError: () => {
           toast({
             title: "Could not save that paste",
-            description: "Something went wrong on our end. Try again in a moment.",
+            description: "Something went wrong on my end. Try again in a moment.",
             variant: "destructive",
           });
         },
@@ -658,7 +658,7 @@ export default function SelfHub() {
               </div>
               <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground">Your Self Hub</h1>
               <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto font-medium">
-                The full picture of what we know about you, wellness completeness, signal trend, your imports and reads,
+                The full picture of what I know about you, wellness completeness, signal trend, your imports and reads,
                 journal cadence, in one place. Sign in to see yours.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4 pt-8">
@@ -777,7 +777,7 @@ export default function SelfHub() {
               Your <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B]">Self Hub</span>
             </h1>
             <p className="mt-4 text-base md:text-lg font-medium text-muted-foreground leading-relaxed max-w-2xl">
-              Everything we know about you, in one place. Your profile completeness, connected signals, imports, and controls.
+              Everything I know about you, in one place. Your profile completeness, connected signals, imports, and controls.
             </p>
           </motion.div>
         </motion.div>
@@ -793,7 +793,7 @@ export default function SelfHub() {
                 <CompletenessRing
                   pct={wellnessPct}
                   label="Wellness Profile"
-                  sub="Your internal baseline. The more you answer, the better we can spot matches who align with your core values."
+                  sub="Your internal baseline. The more you answer, the better I can spot matches who align with your core values."
                 />
               </div>
             </div>
@@ -987,7 +987,7 @@ export default function SelfHub() {
                     Import from Instagram <span className="text-[10px] uppercase tracking-widest text-[#FF2D9B] bg-[#FF2D9B]/10 px-2 py-0.5 rounded-full ml-2 align-middle">Beta</span>
                   </h2>
                   <p className="text-sm font-medium text-muted-foreground leading-relaxed max-w-2xl">
-                    Paste your bio and a handful of recent captions. We will use them to read your tone and write things that sound like you. Nothing leaves this account.
+                    Paste your bio and a handful of recent captions. I'll use them to read your tone and write things that sound like you. Nothing leaves this account.
                   </p>
                 </div>
               </div>
@@ -1144,7 +1144,7 @@ export default function SelfHub() {
                     </>
                   )}
                   <p className="text-xs font-medium text-muted-foreground mt-6 leading-relaxed max-w-2xl mx-auto text-center">
-                    We only show you a first name and where each person is in the pool. We never share their contact details, and they control their own data the same way you control yours.
+                    I only show you a first name and where each person is in the pool. I never share their contact details, and they control their own data the same way you control yours.
                   </p>
                 </div>
               )}

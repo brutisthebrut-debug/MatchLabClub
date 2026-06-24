@@ -283,7 +283,7 @@ function MatchingReadinessPanel({ profile }: { profile: WellnessProfile | undefi
   </h3>
   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
   {mr.readyForMatching
-  ? "This is one of five signals we use for matching, and yours is well covered."
+  ? "This is one of five signals I use for matching, and yours is well covered."
   : `Answer ${5 - (mr.strongDimensions?.length ?? 0)} more dimension areas to deepen this signal.`}
   </p>
   </div>
@@ -838,7 +838,7 @@ export default function WellnessCenter() {
   Build your <span className="gradient-text-violet">compatibility profile</span>
   </h1>
   <p className="text-muted-foreground max-w-2xl leading-relaxed text-sm">
-  Answer at your own pace across 18 wellness dimensions. Everything you share here powers your coaching and your matching: the more the engine knows you, the better it matches you. You can delete any answer anytime in your Data Vault.
+  Answer at your own pace across 18 wellness dimensions. Everything you share here powers your coaching and your matching: the more I know you, the better I match you. You can delete any answer anytime in your Data Vault.
   </p>
   <div className="mt-4 flex flex-wrap items-center gap-3">
   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(248_45%_157%)] border border-white/5 text-xs text-muted-foreground">
@@ -962,7 +962,7 @@ export default function WellnessCenter() {
   <div className="mt-6">
   <ToolHandoff
   testId="wellness-handoff"
-  fedLine="Every dimension you answer becomes part of how the machine understands you, which powers better matches. Keep building the picture."
+  fedLine="Every dimension you answer becomes part of how I understand you, which powers better matches. Keep building the picture."
   steps={[
   { label: "Take a quiz", href: "/quizzes", desc: "A fast way to fill in more dimensions." },
   { label: "Get a compatibility read", href: "/compatibility-compass", desc: "See how your profile reads for fit." },

@@ -242,7 +242,7 @@ export default function Flags() {
             <p className="text-muted-foreground text-sm leading-relaxed max-w-lg">
               Name the green flags you bring and the ones you look for, plus the
               red flags you watch out for. Naming them is its own read on your
-              standards, it sharpens who the machine pairs you with, and the
+              standards, it sharpens who I pair you with, and the
               result is a card worth sharing.
             </p>
           </motion.div>
@@ -484,7 +484,7 @@ export default function Flags() {
               <strong className="text-muted-foreground/60">
                 Only the flags you pick are stored.
               </strong>{" "}
-              We keep which flags you selected and how many distinct ones you
+              I keep which flags you selected and how many distinct ones you
               named, never any free text. Your picks count toward matching
               readiness and you can wipe everything from your account at any time.
             </p>

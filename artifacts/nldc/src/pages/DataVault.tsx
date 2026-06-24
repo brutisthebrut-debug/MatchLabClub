@@ -89,7 +89,7 @@ const DEMO_ENTRIES: TrustLedgerEntry[] = [
   {
     id: "coaching", label: "Message Coaching", origin: "Threads you bring to Message Coach",
     noun: "session", held: false, count: 0, storedCount: 0, coverage: 0,
-    summary: "Nothing here yet. Coach a thread and the machine learns your conversation style.",
+    summary: "Nothing here yet. Coach a thread and I learn your conversation style.",
     dimensions: ["communication"], seen: ["The conversation snippet you paste"],
     neverTouched: ["Any names or identifiers of the other person"],
     actionLabel: "Coach a message", actionHref: "/message-coach", purgeable: false,
@@ -161,7 +161,7 @@ function SourceRow({
           <button onClick={() => setOpen(o => !o)}
             className="flex items-center gap-1.5 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">
             {open ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-            {open ? "Hide detail" : "What we see"}
+            {open ? "Hide detail" : "What I see"}
           </button>
           <span className="text-white/15">·</span>
           <Link href={entry.actionHref}
@@ -185,7 +185,7 @@ function SourceRow({
             <div className="rounded-xl bg-[hsl(142_55%_50%/0.06)] border border-[hsl(142_55%_50%/0.15)] p-3">
               <div className="flex items-center gap-1.5 mb-2">
                 <Eye className="w-3 h-3 text-[hsl(142_55%_60%)]" />
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(142_55%_62%)]">What we see</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(142_55%_62%)]">What I see</p>
               </div>
               <div className="space-y-1.5">
                 {entry.seen.map(s => (
@@ -399,7 +399,7 @@ function DeleteAccountCard() {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground">Delete my account</p>
           <p className="text-xs text-muted-foreground/70 mt-1 leading-relaxed">
-            This removes everything we have on you. Audits, coaching sessions, journal entries, wellness answers, compass reads, dating app imports, the lot. This cannot be undone.
+            This removes everything I have on you. Audits, coaching sessions, journal entries, wellness answers, compass reads, dating app imports, the lot. This cannot be undone.
           </p>
           <div className="mt-4">
             <Button
@@ -464,7 +464,7 @@ function DeleteAccountCard() {
 }
 
 export default function DataVault() {
-  useMeta("Personal Data Vault", "Every source the machine holds about you, where it came from, what we see versus never touch, with one-tap purge for any of it.");
+  useMeta("Personal Data Vault", "Every source I hold about you, where it came from, what I see versus never touch, with one-tap purge for any of it.");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isExporting, setIsExporting] = useState(false);
@@ -534,7 +534,7 @@ export default function DataVault() {
       const result = await emailExport.mutateAsync();
       toast({
         title: "Export email sent",
-        description: `We sent a single-use download link to ${result.sentTo}. It expires soon.`,
+        description: `I sent a single-use download link to ${result.sentTo}. It expires soon.`,
       });
     } catch (err) {
       toast({
@@ -560,9 +560,9 @@ export default function DataVault() {
               </div>
               <p className="text-sm font-semibold text-[hsl(248_62%_62%)]">Personal Data Vault</p>
             </div>
-            <h1 className="text-3xl font-bold text-foreground">Everything the machine knows about you.</h1>
+            <h1 className="text-3xl font-bold text-foreground">Everything I know about you.</h1>
             <p className="text-muted-foreground text-sm leading-relaxed mt-2">
-              One honest list of every source feeding your readiness, where it came from, exactly what we see versus what we never touch. Purge any source on its own, any time.
+              One honest list of every source feeding your readiness, where it came from, exactly what I see versus what I never touch. Purge any source on its own, any time.
             </p>
           </motion.div>
 
@@ -573,7 +573,7 @@ export default function DataVault() {
               <p className="text-xs text-muted-foreground/70 leading-relaxed">
                 <strong className="text-foreground">This is a sample view.</strong>{" "}
                 <Link href="/login" className="text-[hsl(248_62%_62%)] hover:underline">Sign in</Link>{" "}
-                to see the real sources the machine holds about you, with live counts and one-tap purge.
+                to see the real sources I hold about you, with live counts and one-tap purge.
               </p>
             </motion.div>
           )}
@@ -620,7 +620,7 @@ export default function DataVault() {
               </div>
               <p className="text-sm font-semibold text-foreground">Nothing stored yet</p>
               <p className="text-xs text-muted-foreground/50 leading-relaxed max-w-sm mx-auto">
-                The machine holds nothing about you so far. As you use a tool or connect a source, it appears here with a live count and full controls. Below are the sources waiting for your first signal.
+                I hold nothing about you so far. As you use a tool or connect a source, it appears here with a live count and full controls. Below are the sources waiting for your first signal.
               </p>
               <div className="space-y-3 pt-3 text-left">
                 {entries.map((entry, i) => (

@@ -221,7 +221,7 @@ export default function Milestones() {
                           className="mt-3 rounded-full h-8 text-xs"
                         >
                           <Link href="/matching">
-                            Feed the machine
+                            Feed Echo
                             <ArrowRight
                               className="ml-1 w-3 h-3"
                               aria-hidden="true"

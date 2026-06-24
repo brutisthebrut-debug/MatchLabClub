@@ -61,10 +61,10 @@ const LANE_LABELS: Record<string, string> = {
 };
 
 function stageFor(score: number): { name: string; line: string } {
-  if (score >= 75) return { name: "Dialed in", line: "The machine knows me. Bring on the introductions." };
+  if (score >= 75) return { name: "Dialed in", line: "Echo knows me. Bring on the introductions." };
   if (score >= 50) return { name: "Match ready", line: "Did the work. Ready for people I'd never find on my own." };
-  if (score >= 25) return { name: "Building real signal", line: "Feeding the machine. Getting clearer every week." };
-  return { name: "Laying the groundwork", line: "Just started teaching the machine who I am." };
+  if (score >= 25) return { name: "Building real signal", line: "Feeding Echo. Getting clearer every week." };
+  return { name: "Laying the groundwork", line: "Just started teaching Echo who I am." };
 }
 
 type SnippetOption = { key: string; label: string; text: string };
@@ -501,7 +501,7 @@ export default function ShareCard() {
                       ))
                     ) : (
                       <p className="text-xs text-white/55">
-                        Lanes fill in as I feed the machine.
+                        Lanes fill in as I feed Echo.
                       </p>
                     )}
                   </div>

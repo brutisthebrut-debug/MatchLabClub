@@ -169,8 +169,8 @@ export default function Account() {
         title: next === "off" ? "Mirror digest off" : `Mirror digest: ${label}`,
         description:
           next === "off"
-            ? "We'll stop the digest and nudges. Your Mirror still updates whenever you open the app."
-            : "We'll email you what changed about you, plus the one signal that moves you next.",
+            ? "I'll stop the digest and nudges. Your Mirror still updates whenever you open the app."
+            : "I'll email you what changed about you, plus the one signal that moves you next.",
       });
     } catch (err) {
       toast({
@@ -222,7 +222,7 @@ export default function Account() {
       const result = await emailExport.mutateAsync();
       toast({
         title: "Export email sent",
-        description: `We sent a single-use download link to ${result.sentTo}. It expires soon.`,
+        description: `I sent a single-use download link to ${result.sentTo}. It expires soon.`,
       });
     } catch (err) {
       toast({
@@ -431,7 +431,7 @@ export default function Account() {
                     Hybrid setup. The deterministic engine is always on. Fast, free, never rate-limited.
                     With this on, Anthropic Claude is layered on top for tools that benefit from semantic depth:
                     bio rewrites, message coaching, Compatibility Compass reads, Hinge import summaries, Instagram tone extraction.
-                    Anthropic processes prompts under their zero-retention API policy. We never sell or train on your content.
+                    Anthropic processes prompts under their zero-retention API policy. I never sell or train on your content.
                     Off means baseline only. Nothing breaks either way.
                   </p>
                 </div>
@@ -442,7 +442,7 @@ export default function Account() {
                     {consentGranted ? "Deep AI lane is active" : "Deep AI lane is inactive"}
                   </p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Toggle any time. We log when it changes.
+                    Toggle any time. I log when it changes.
                   </p>
                 </div>
                 <Switch
@@ -466,8 +466,8 @@ export default function Account() {
                   <h3 className="font-serif text-2xl font-bold text-foreground tracking-tight">Mirror digest</h3>
                   <p className="text-base text-muted-foreground mt-3 leading-relaxed">
                     A short email on what changed about you: how your Match Readiness moved, the signals
-                    the machine started reading, and the single thing that moves you next. If nothing
-                    changed, we send one gentle nudge instead. With the Deep AI lane on, the opening is
+                    I started reading, and the single thing that moves you next. If nothing
+                    changed, I send one gentle nudge instead. With the Deep AI lane on, the opening is
                     written by Claude from aggregate signal only, never your raw content.
                   </p>
                 </div>
@@ -543,7 +543,7 @@ export default function Account() {
                   <div className="flex-1 min-w-0">
                     <p className="text-base font-semibold text-foreground">Keep my reports up to date</p>
                     <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                      When on, we'll quietly regenerate a few of your oldest saved
+                      When on, I'll quietly regenerate a few of your oldest saved
                       reports in the background each time you open the app. Failures are silent.
                     </p>
                   </div>
@@ -554,7 +554,7 @@ export default function Account() {
                       toast({
                         title: v ? "Background refresh on" : "Background refresh off",
                         description: v
-                          ? "We'll quietly refresh a few stale reports each session."
+                          ? "I'll quietly refresh a few stale reports each session."
                           : "Stale reports will stay as-is until you refresh them.",
                       });
                     }}
@@ -578,7 +578,7 @@ export default function Account() {
                       toast({
                         title: v ? "Recently deleted reminders on" : "Recently deleted reminders off",
                         description: v
-                          ? "We'll warn you on the dashboard when audits are about to be purged."
+                          ? "I'll warn you on the dashboard when audits are about to be purged."
                           : "No banner will show for audits nearing permanent deletion.",
                       });
                     }}
@@ -598,7 +598,7 @@ export default function Account() {
               <div>
                 <h3 className="font-serif text-2xl font-bold text-foreground tracking-tight">Your data</h3>
                 <p className="text-base text-muted-foreground mt-2">
-                  Download everything we have about you, or permanently remove your account and all associated audits, messages, and insights.
+                  Download everything I have about you, or permanently remove your account and all associated audits, messages, and insights.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-4 pt-2">

@@ -64,7 +64,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "Past Lives\nPhoebe Bridgers\nSunday morning bouldering\nThe little Sichuan place on 9th\nCormac McCarthy",
     access: [
       "The list of taste items you paste in, one per line",
-      "A simple count of how many you gave us, used to fill the lane",
+      "A simple count of how many you gave me, used to fill the lane",
     ],
     excludes: [
       "Anything you do not paste in",
@@ -72,7 +72,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "Your raw items are never sent to any AI prompt, only the count moves your readiness",
     ],
     readiness:
-      "Fills the taste lane of your Match Readiness. The more honest the list, the better the machine reads what a night with you feels like.",
+      "Fills the taste lane of your Match Readiness. The more honest the list, the better I read what a night with you feels like.",
   },
   lifestyle: {
     source: "lifestyle-paste",
@@ -86,7 +86,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "5k most mornings\nDog named Biscuit\nCook most nights\nClimbing twice a week\nVisit my parents on Sundays\nEarly to bed",
     access: [
       "The list of lifestyle items you paste in, one per line",
-      "A simple count of how many you gave us, used to fill the lane",
+      "A simple count of how many you gave me, used to fill the lane",
     ],
     excludes: [
       "Anything you do not paste in",
@@ -108,7 +108,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "Phoebe Bridgers\nFred again..\nThe National\nSunday morning jazz\nFrank Ocean, Blonde\nLittle Simz",
     access: [
       "The list of artists and tracks you paste in, one per line",
-      "A simple count of how many you gave us, used to fill the lane",
+      "A simple count of how many you gave me, used to fill the lane",
     ],
     excludes: [
       "Anything you do not paste in",
@@ -116,7 +116,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "Your raw items are never sent to any AI prompt, only the count moves your readiness",
     ],
     readiness:
-      "Fills the music lane of your Match Readiness. The truer the list, the better we read your mood and the kind of night you light up on.",
+      "Fills the music lane of your Match Readiness. The truer the list, the better I read your mood and the kind of night you light up on.",
   },
   film: {
     source: "film-paste",
@@ -130,7 +130,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "Past Lives\nPortrait of a Lady on Fire\nThe Bear\nPaddington 2\nIn the Mood for Love\nFleabag",
     access: [
       "The list of films and shows you paste in, one per line",
-      "A simple count of how many you gave us, used to fill the lane",
+      "A simple count of how many you gave me, used to fill the lane",
     ],
     excludes: [
       "Anything you do not paste in",
@@ -138,7 +138,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "Your raw items are never sent to any AI prompt, only the count moves your readiness",
     ],
     readiness:
-      "Fills the film lane of your Match Readiness. The more honest the list, the better the machine reads your humour and taste.",
+      "Fills the film lane of your Match Readiness. The more honest the list, the better I read your humour and taste.",
   },
   reading: {
     source: "reading-paste",
@@ -152,7 +152,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "Cormac McCarthy\nThe Overstory\nElena Ferrante\nDune\nBraiding Sweetgrass\nKazuo Ishiguro",
     access: [
       "The list of books and authors you paste in, one per line",
-      "A simple count of how many you gave us, used to fill the lane",
+      "A simple count of how many you gave me, used to fill the lane",
     ],
     excludes: [
       "Anything you do not paste in",
@@ -174,7 +174,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "Urban planning\nFermentation\nFormula 1\nMid-century design\nMarine biology\nStandup comedy",
     access: [
       "The list of interests and topics you paste in, one per line",
-      "A simple count of how many you gave us, used to fill the lane",
+      "A simple count of how many you gave me, used to fill the lane",
     ],
     excludes: [
       "Anything you do not paste in",
@@ -182,7 +182,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "Your raw items are never sent to any AI prompt, only the count moves your readiness",
     ],
     readiness:
-      "Fills the curiosity lane of your Match Readiness. The more we see of what holds your attention, the better we match the things you would actually talk about.",
+      "Fills the curiosity lane of your Match Readiness. The more I see of what holds your attention, the better I match the things you would actually talk about.",
   },
   vitality: {
     source: "vitality-paste",
@@ -196,7 +196,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "Run three mornings a week\nYoga on Sundays\nEarly to bed\nLong walks after work\nClimbing on Tuesdays\nRest day Fridays",
     access: [
       "The list of activities and rhythms you paste in, one per line",
-      "A simple count of how many you gave us, used to fill the lane",
+      "A simple count of how many you gave me, used to fill the lane",
     ],
     excludes: [
       "Anything you do not paste in",
@@ -204,7 +204,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "Your raw items are never sent to any AI prompt, only the count moves your readiness",
     ],
     readiness:
-      "Fills the vitality lane of your Match Readiness. A clearer rhythm helps the machine pace a real connection around your energy.",
+      "Fills the vitality lane of your Match Readiness. A clearer rhythm helps me pace a real connection around your energy.",
   },
   podcasts: {
     source: "podcasts-paste",
@@ -218,7 +218,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "The Rest Is History\nNormal Gossip\n99% Invisible\nIf Books Could Kill\nOlogies\nHeavyweight",
     access: [
       "The list of shows you paste in, one per line",
-      "A simple count of how many you gave us, used to fill the lane",
+      "A simple count of how many you gave me, used to fill the lane",
     ],
     excludes: [
       "Anything you do not paste in",
@@ -226,7 +226,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "Your raw items are never sent to any AI prompt, only the count moves your readiness",
     ],
     readiness:
-      "Fills the podcasts lane of your Match Readiness. The truer the lineup, the better we match on curiosity.",
+      "Fills the podcasts lane of your Match Readiness. The truer the lineup, the better I match on curiosity.",
   },
   gaming: {
     source: "gaming-paste",
@@ -240,7 +240,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "Stardew Valley\nElden Ring\nMario Kart with friends\nBaldur's Gate 3\nTetris\nCatan night",
     access: [
       "The list of games you paste in, one per line",
-      "A simple count of how many you gave us, used to fill the lane",
+      "A simple count of how many you gave me, used to fill the lane",
     ],
     excludes: [
       "Anything you do not paste in",
@@ -248,7 +248,7 @@ const CONFIG: Record<string, SourceConfig> = {
       "Your raw items are never sent to any AI prompt, only the count moves your readiness",
     ],
     readiness:
-      "Fills the gaming lane of your Match Readiness. The truer the list, the better we match on shared-leisure fit.",
+      "Fills the gaming lane of your Match Readiness. The truer the list, the better I match on shared-leisure fit.",
   },
   places: {
     source: "places-paste",
@@ -257,12 +257,12 @@ const CONFIG: Record<string, SourceConfig> = {
     color: "hsl(160 55% 45%)",
     lead: "The kinds of places your life actually happens in. Where you spend time is a real read on lifestyle and shared-activity fit.",
     prompt:
-      "List the kinds of places you spend time, one per line (gym, trails, cafes, travel). Distil a Maps Timeline category summary into a list, or just type them. We read the categories, never a single location.",
+      "List the kinds of places you spend time, one per line (gym, trails, cafes, travel). Distil a Maps Timeline category summary into a list, or just type them. I read the categories, never a single location.",
     placeholder:
       "Climbing gym\nWeekend hikes\nNeighbourhood cafes\nLive music venues\nFarmers markets\nTravel a few times a year",
     access: [
       "The kinds of places you paste in, one per line",
-      "A simple count of how many you gave us, used to fill the lane",
+      "A simple count of how many you gave me, used to fill the lane",
     ],
     excludes: [
       "Any location, address, or coordinate, ever",
@@ -279,12 +279,12 @@ const CONFIG: Record<string, SourceConfig> = {
     color: "hsl(220 50% 58%)",
     lead: "How your day splits across kinds of apps. The balance of attention and rest helps pace a real connection around your week.",
     prompt:
-      "List how your day splits across kinds of apps, one per line (social, reading, work, rest). Distil a Screen Time category summary into a list, or just type them. We read the balance, never an app or message.",
+      "List how your day splits across kinds of apps, one per line (social, reading, work, rest). Distil a Screen Time category summary into a list, or just type them. I read the balance, never an app or message.",
     placeholder:
       "Mostly reading apps at night\nSocial in short bursts\nLong stretches off the phone on weekends\nMaps and music when out\nWork apps nine to five\nNo phone first hour of the day",
     access: [
       "The kinds of app time you paste in, one per line",
-      "A simple count of how many you gave us, used to fill the lane",
+      "A simple count of how many you gave me, used to fill the lane",
     ],
     excludes: [
       "Any specific app, message, notification, or usage record",
@@ -361,7 +361,7 @@ export default function SourcePaste() {
         <div className="max-w-2xl mx-auto px-4 py-16 text-center">
           <h1 className="text-2xl font-semibold mb-3">Source not found</h1>
           <p className="text-muted-foreground mb-6">
-            We do not have a paste connector at this address yet.
+            I do not have a paste connector at this address yet.
           </p>
           <Button asChild>
             <Link href="/connections">Back to Connection Center</Link>
@@ -387,7 +387,7 @@ export default function SourcePaste() {
     if (items.length === 0) {
       toast({
         title: "Add at least one item",
-        description: "Paste a few things, one per line, so we have something to read.",
+        description: "Paste a few things, one per line, so I have something to read.",
         variant: "destructive",
       });
       return;
@@ -421,7 +421,7 @@ export default function SourcePaste() {
         onError: () => {
           toast({
             title: "Could not save your paste",
-            description: "Something went wrong on our end. Try again in a moment.",
+            description: "Something went wrong on my end. Try again in a moment.",
             variant: "destructive",
           });
         },
@@ -539,12 +539,12 @@ export default function SourcePaste() {
               </CardHeader>
               <CardContent className="grid sm:grid-cols-2 gap-6">
                 <ConsentList
-                  title="What we'll see"
+                  title="What I'll see"
                   items={config.access}
                   tone="see"
                 />
                 <ConsentList
-                  title="What we'll never touch"
+                  title="What I'll never touch"
                   items={config.excludes}
                   tone="never"
                 />

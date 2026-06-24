@@ -281,7 +281,7 @@ function SummaryView({ row }: { row: ImportRow }) {
             <p className="text-sm text-muted-foreground mt-1">
               {s.aiError === "consent_not_granted"
                 ? "Echo needs your AI content consent to write a narrative read. Enable it in settings and re-upload."
-                : "We could not generate the narrative read this time. Your numbers are still saved above."}
+                : "I could not generate the narrative read this time. Your numbers are still saved above."}
             </p>
           </div>
         </div>
@@ -293,7 +293,7 @@ function SummaryView({ row }: { row: ImportRow }) {
 export default function Imports() {
   useMeta(
     "Import your dating data",
-    "Bring in your Hinge, Tinder, or Bumble export and other history so the machine understands your patterns and matches you better.",
+    "Bring in your Hinge, Tinder, or Bumble export and other history so I understand your patterns and match you better.",
   );
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -504,7 +504,7 @@ export default function Imports() {
         });
         toast({
           title: "Calendar read",
-          description: "We mapped your weekly rhythm. See it below.",
+          description: "I mapped your weekly rhythm. See it below.",
         });
       } else {
         toast({
@@ -532,7 +532,7 @@ export default function Imports() {
           </h1>
           <p className="text-muted-foreground max-w-2xl">
             Drop your Hinge, Tinder, or Bumble data export or paste your calendar.
-            We'll show you what your patterns and your weekly rhythm actually say
+            I'll show you what your patterns and your weekly rhythm actually say
             about you.
           </p>
         </section>
@@ -757,7 +757,7 @@ export default function Imports() {
         {imports.length > 0 && (
           <ToolHandoff
             testId="imports-handoff"
-            fedLine="Your imported history and rhythm feed the machine's read of you, which sharpens who it matches you with. Keep layering in signal."
+            fedLine="Your imported history and rhythm feed how I read you, which sharpens who I match you with. Keep layering in signal."
             steps={[
               { label: "Read your patterns", href: "/insights", desc: "See the communication style behind your history." },
               { label: "Map your wellness", href: "/wellness", desc: "Cover more dimensions to raise your readiness." },

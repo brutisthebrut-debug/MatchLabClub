@@ -485,7 +485,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                     <h3 className="font-bold text-foreground text-lg">What your Mirror just learned</h3>
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-                    This result is now part of how the machine reads you. It sharpened these parts of your picture:
+                    This result is now part of how I read you. It sharpened these parts of your picture:
                   </p>
                   <div className="flex flex-wrap gap-2 mb-6">
                     {quiz.feeds.map((d) => (
@@ -533,7 +533,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                     ) : (
                       <>
                         <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                          Open your Mirror to see the full picture the machine has of you, and the single next thing that moves your readiness.
+                          Open your Mirror to see the full picture I have of you, and the single next thing that moves your readiness.
                         </p>
                         <Button asChild variant="outline" className="rounded-full font-bold border-foreground/20 hover:bg-foreground/5">
                           <Link href="/your-mirror">See your Mirror <ArrowRight className="ml-2 w-4 h-4" /></Link>
@@ -616,7 +616,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                     testId="quizplay-handoff"
                     fedLine="This quiz just fed your Mirror. The more you feed it, the better it reads you, and the closer you get to matching."
                     steps={[
-                      { label: "See your Mirror", href: "/your-mirror", desc: "See the full picture the machine has of you." },
+                      { label: "See your Mirror", href: "/your-mirror", desc: "See the full picture I have of you." },
                       { label: "Map your wellness", href: "/wellness", desc: "Answer a few more questions to raise your readiness." },
                       { label: "Take another quiz", href: "/quizzes", desc: "Each one adds a new angle on you." },
                     ]}
