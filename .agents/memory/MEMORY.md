@@ -39,3 +39,4 @@
 - [Unified hub-and-tabs IA](unified-hub-refactor.md) — signed-in rail is ~9 front doors + 4 sections over 7 HubTabs hubs; orphan-nothing invariant; /quiz out of MARKETING_PREFIXES; navigationCatalog feeds FeatureHub only.
 - [Echo voice lint vs gamification](echo-voice-lint-vs-gamification.md) — detectAiTells bans "unlock"/"leverage"; founder's gamification intentionally uses "unlock(ed)", so only "leverage" et al. are real violations.
 - [Echo voice machine-vs-friend](echo-voice-machine-vs-friend.md) — tool pages/empty states speak as Echo first-person "I"; marketing/hub pages keep "the machine" on purpose; don't bulk-swap or revert.
+- [Automated voice lint over nldc copy](voice-lint-automated-check.md) — voiceLint.test.ts + `voice-lint` validation lint ONLY user-facing copy (JSX text/copy attrs/copy props/toast), not classNames/comments; "unlock" carved out.

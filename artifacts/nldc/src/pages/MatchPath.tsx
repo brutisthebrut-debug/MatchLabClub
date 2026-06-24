@@ -307,7 +307,7 @@ export default function MatchPath() {
               Your shortest path right now
             </h2>
             <p className="mt-1 text-muted-foreground">
-              The highest-leverage moves for you, in order. Each one is real work
+              The moves that matter most for you, in order. Each one is real work
               that teaches the machine something a profile never shows.
             </p>
             <div className="mt-5 grid gap-4 sm:grid-cols-3">
