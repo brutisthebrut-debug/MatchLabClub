@@ -336,6 +336,90 @@ describe("aiService.generate", () => {
     delete process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL;
   });
 
+  it("auto-cleans em dashes from free-text output without regenerating", async () => {
+    createMock.mockResolvedValueOnce(
+      completion("She replied fast — that's a good sign."),
+    );
+    const { generate } = await import("./aiService");
+    const result = await generate({ system: "s", user: "u" }, "FALLBACK");
+    expect(result.mode).toBe("live");
+    expect(result.isFallback).toBe(false);
+    expect(result.output).toBe("She replied fast, that's a good sign.");
+    expect(result.voiceCleaned).toBe(true);
+    // Em dashes are cleaned in place, no regeneration.
+    expect(createMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("regenerates once when free-text output contains a banned AI-tell word", async () => {
+    createMock
+      .mockResolvedValueOnce(completion("Let's leverage this momentum."))
+      .mockResolvedValueOnce(completion("Keep this momentum going."));
+    const { generate } = await import("./aiService");
+    const result = await generate({ system: "s", user: "u" }, "FALLBACK");
+    expect(result.mode).toBe("live");
+    expect(result.isFallback).toBe(false);
+    expect(result.output).toBe("Keep this momentum going.");
+    expect(createMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("falls back deterministically when output is still off-voice after one regeneration", async () => {
+    createMock
+      .mockResolvedValueOnce(completion("This is a seamless experience."))
+      .mockResolvedValueOnce(completion("A truly seamless experience again."));
+    const { generate } = await import("./aiService");
+    const result = await generate({ system: "s", user: "u" }, "ON_VOICE_FALLBACK");
+    expect(result.mode).toBe("fallback");
+    expect(result.isFallback).toBe(true);
+    expect(result.output).toBe("ON_VOICE_FALLBACK");
+    expect(result.fallbackReason).toBe("voice_violation");
+    expect(createMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("allows gamification 'unlock(ed)' reward language without regenerating", async () => {
+    createMock.mockResolvedValueOnce(completion("Momentum unlocked. Keep going."));
+    const { generate } = await import("./aiService");
+    const result = await generate({ system: "s", user: "u" }, "FALLBACK");
+    expect(result.mode).toBe("live");
+    expect(result.output).toBe("Momentum unlocked. Keep going.");
+    expect(result.voiceCleaned).toBeUndefined();
+    expect(createMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports validated:false on a voice-violation fallback for JSON tools", async () => {
+    const offVoice = { ...VALID_BLUEPRINT, communicationStyle: "A seamless way of talking here." };
+    createMock
+      .mockResolvedValueOnce(completion(JSON.stringify(offVoice)))
+      .mockResolvedValueOnce(completion(JSON.stringify(offVoice)));
+    const { generate } = await import("./aiService");
+    const result = await generate(
+      { system: "s", user: "u", expectJson: true, context: { toolName: "Personal Blueprint" } },
+      "FALLBACK",
+    );
+    expect(result.mode).toBe("fallback");
+    expect(result.isFallback).toBe(true);
+    expect(result.output).toBe("FALLBACK");
+    expect(result.fallbackReason).toBe("voice_violation");
+    // Must NOT claim the returned fallback was schema-validated.
+    expect(result.validated).toBe(false);
+    expect(createMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("auto-cleans em dashes inside structured JSON output", async () => {
+    const offVoice = { ...VALID_BLUEPRINT, growthEdge: "Open up more — slowly does it here." };
+    const cleaned = { ...VALID_BLUEPRINT, growthEdge: "Open up more, slowly does it here." };
+    createMock.mockResolvedValueOnce(completion(JSON.stringify(offVoice)));
+    const { generate } = await import("./aiService");
+    const result = await generate(
+      { system: "s", user: "u", expectJson: true, context: { toolName: "Personal Blueprint" } },
+      "FALLBACK",
+    );
+    expect(result.mode).toBe("live");
+    expect(result.validated).toBe(true);
+    expect(result.voiceCleaned).toBe(true);
+    expect(JSON.parse(result.output)).toEqual(cleaned);
+    expect(createMock).toHaveBeenCalledTimes(1);
+  });
+
   it("tolerates JSON wrapped in prose/code fences on first attempt", async () => {
     const wrapped = "Here you go:\n```json\n" + JSON.stringify(VALID_BLUEPRINT) + "\n```";
     createMock.mockResolvedValueOnce(completion(wrapped));

@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { z } from "zod";
 import { eq, sql } from "drizzle-orm";
 import { extractAndValidateJson, getAiToolSchema } from "@workspace/ai-schemas";
+import { enforceVoice } from "@workspace/echo";
 import { db, aiRequestMetricsTable, usersTable, aiUsageCountersTable } from "@workspace/db";
 import { logger } from "./logger";
 import type { PhotoAnalysis } from "./aiEngine";
@@ -53,7 +54,15 @@ export interface GenerateResult<T = string> {
   /** Number of model attempts made (1 = no retry, 2 = one retry). */
   attempts?: number;
   /** When the call short-circuited to deterministic fallback, why. */
-  fallbackReason?: "consent_required" | "daily_cap_exceeded" | "no_client" | "model_error" | "schema_validation_failed";
+  fallbackReason?:
+    | "consent_required"
+    | "daily_cap_exceeded"
+    | "no_client"
+    | "model_error"
+    | "schema_validation_failed"
+    | "voice_violation";
+  /** True when the post-generation voice pass auto-cleaned em dashes from the output. */
+  voiceCleaned?: boolean;
   /** When the daily cap path was taken, how many calls have been used today. */
   usedToday?: number;
   /** When the daily cap path was taken, the cap that applied to this user. */
@@ -480,8 +489,87 @@ export async function generate(
   fallbackOutput: string,
 ): Promise<GenerateResult<string>> {
   const result = await generateInner(opts, fallbackOutput);
-  recordMetric(opts, result);
-  return result;
+  const policed = await applyVoicePass(opts, fallbackOutput, result);
+  recordMetric(opts, policed);
+  return policed;
+}
+
+/**
+ * Post-generation voice gate. Every live model output is user-facing copy
+ * (bio rewrites, message coaching, Mirror synthesis, import summaries, etc.),
+ * and the model can still slip in em dashes or AI-tell words even with the
+ * voice rules in its system prompt. This pass keeps that copy on-voice before
+ * it ever reaches a user:
+ *   - Em dashes are auto-cleaned in place (mechanical, always safe; works on
+ *     JSON outputs too since em dashes only appear inside string values).
+ *   - Banned AI-tell words can't be safely rewritten in place, so we
+ *     regenerate ONCE with an explicit correction instruction. If the
+ *     regeneration is still off-voice (or itself falls back), we ship the
+ *     deterministic fallback rather than off-voice live copy.
+ * "unlock(ed)" is intentionally allowed (gamification reward language).
+ * Deterministic fallbacks are copy we already control, so they are left alone.
+ */
+async function applyVoicePass(
+  opts: GenerateOptions,
+  fallbackOutput: string,
+  result: GenerateResult<string>,
+): Promise<GenerateResult<string>> {
+  if (result.isFallback || result.mode !== "live" || !result.output) {
+    return result;
+  }
+
+  const firstPass = enforceVoice(result.output);
+  if (firstPass.onVoice) {
+    return firstPass.changed
+      ? { ...result, output: firstPass.text, voiceCleaned: true }
+      : result;
+  }
+
+  logger.warn(
+    { toolName: opts.context?.toolName, aiTells: firstPass.aiTells },
+    "AI output tripped the voice gate; regenerating once",
+  );
+
+  // One correction round. We invoke generateInner once more, which itself may
+  // perform a schema-repair retry for JSON tools, so a structured call can cost
+  // more than one extra provider call (and, for Anthropic, daily-cap slot). The
+  // voice gate never loops: there is at most this single correction round.
+  const correctionSystem = [
+    opts.system,
+    "",
+    `VOICE CORRECTION: your previous response used banned words: ${firstPass.aiTells.join(", ")}. Rewrite the entire response without those words and without em dashes (use a comma or a period instead). Keep the same meaning and structure${opts.expectJson ? ", and keep the exact required JSON shape" : ""}.`,
+  ].join("\n");
+
+  const regen = await generateInner({ ...opts, system: correctionSystem }, fallbackOutput);
+
+  const offVoiceFallback = (base: GenerateResult<string>): GenerateResult<string> => ({
+    ...base,
+    mode: "fallback",
+    isFallback: true,
+    output: fallbackOutput,
+    fallbackReason: "voice_violation",
+    error: "voice_violation",
+    // We are returning the deterministic fallback, not schema-validated model
+    // output, so never let a stale validated:true from the regen leak through.
+    ...(opts.expectJson ? { validated: false } : {}),
+  });
+
+  if (regen.isFallback || regen.mode !== "live" || !regen.output) {
+    return offVoiceFallback(regen);
+  }
+
+  const secondPass = enforceVoice(regen.output);
+  if (secondPass.onVoice) {
+    return secondPass.changed
+      ? { ...regen, output: secondPass.text, voiceCleaned: true }
+      : regen;
+  }
+
+  logger.warn(
+    { toolName: opts.context?.toolName, aiTells: secondPass.aiTells },
+    "AI output still off-voice after regeneration; using deterministic fallback",
+  );
+  return offVoiceFallback(regen);
 }
 
 /**

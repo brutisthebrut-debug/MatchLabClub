@@ -120,3 +120,60 @@ export function detectAiTells(text: string): string[] {
 export function countEmDashes(text: string): number {
   return (text.match(/—/g) ?? []).length;
 }
+
+/**
+ * AI-tell words that are intentionally allowed in Echo copy. "unlock(ed)" is
+ * deliberate gamification reward language (see the founder's repeated
+ * gamification ask), so it is carved out of the runtime voice gate exactly as
+ * it is in the source-copy lint. Every other AI-tell word still trips the gate.
+ */
+export const VOICE_ALLOWED_AI_TELLS: readonly string[] = ["unlock"];
+
+/**
+ * Like {@link detectAiTells}, but excludes the allowed gamification words. This
+ * is the detector the runtime voice gate uses so it never flags "Momentum
+ * Unlocked" style copy.
+ */
+export function detectVoiceAiTells(text: string): string[] {
+  const allowed = new Set(VOICE_ALLOWED_AI_TELLS);
+  return detectAiTells(text).filter((w) => !allowed.has(w));
+}
+
+/**
+ * Auto-cleans em dashes from generated copy by replacing them (and any
+ * surrounding whitespace) with a comma and a single space. "One thing — then
+ * another" becomes "One thing, then another". Safe to run over JSON strings:
+ * em dashes only ever appear inside string values, and a comma keeps the JSON
+ * valid.
+ */
+export function cleanEmDashes(text: string): string {
+  return text.replace(/\s*—\s*/g, ", ");
+}
+
+export interface VoiceEnforcementResult {
+  /** The text after auto-cleaning em dashes. */
+  text: string;
+  /** True when {@link cleanEmDashes} changed the input. */
+  changed: boolean;
+  /** Banned AI-tell words still present after cleaning (excludes "unlock"). */
+  aiTells: string[];
+  /** True when the cleaned text has no em dashes and no banned AI-tell words. */
+  onVoice: boolean;
+}
+
+/**
+ * Runs a post-generation voice pass over AI-generated user-facing copy. Em
+ * dashes are auto-cleaned (they are mechanical and always safe to fix). Banned
+ * AI-tell words cannot be safely rewritten in place, so they are reported back
+ * for the caller to regenerate or fall back. "unlock(ed)" is always allowed.
+ */
+export function enforceVoice(text: string): VoiceEnforcementResult {
+  const cleaned = cleanEmDashes(text);
+  const aiTells = detectVoiceAiTells(cleaned);
+  return {
+    text: cleaned,
+    changed: cleaned !== text,
+    aiTells,
+    onVoice: aiTells.length === 0 && countEmDashes(cleaned) === 0,
+  };
+}

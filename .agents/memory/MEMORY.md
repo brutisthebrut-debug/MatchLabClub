@@ -40,3 +40,4 @@
 - [Echo voice lint vs gamification](echo-voice-lint-vs-gamification.md) — detectAiTells bans "unlock"/"leverage"; founder's gamification intentionally uses "unlock(ed)", so only "leverage" et al. are real violations.
 - [Echo voice machine-vs-friend](echo-voice-machine-vs-friend.md) — tool pages/empty states speak as Echo first-person "I"; marketing/hub pages keep "the machine" on purpose; don't bulk-swap or revert.
 - [Automated voice lint over nldc copy](voice-lint-automated-check.md) — voiceLint.test.ts + `voice-lint` validation lint ONLY user-facing copy (JSX text/copy attrs/copy props/toast), not classNames/comments; "unlock" carved out.
+- [Runtime voice gate on generated copy](runtime-voice-gate.md) — generate() post-polices live output: em dashes auto-cleaned in place (JSON-safe), banned AI-tells regen once then deterministic fallback; "unlock" allowed.
