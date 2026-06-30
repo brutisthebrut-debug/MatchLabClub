@@ -930,6 +930,41 @@ const PHOTO_VISION_SYSTEM = [
   '{"summary": string, "observations": [{"aspect": string, "assessment": "strong"|"okay"|"needs_work", "detail": string}], "topFix": string}',
 ].join("\n");
 
+// Runs each user-facing string in a Claude-vision photo analysis through the
+// shared voice gate. Em dashes are auto-cleaned in place. If any banned AI-tell
+// word survives the clean (a single image read can't be safely rewritten), the
+// whole analysis is rejected so the caller drops to the deterministic photo
+// checklist. Returns the cleaned analysis, or null when it stays off-voice.
+function enforcePhotoAnalysisVoice(analysis: PhotoAnalysis): PhotoAnalysis | null {
+  const summary = enforceVoice(analysis.summary);
+  const topFix = enforceVoice(analysis.topFix);
+  const observations = analysis.observations.map((obs) => ({
+    obs,
+    detail: enforceVoice(obs.detail),
+  }));
+
+  const offVoice =
+    !summary.onVoice ||
+    !topFix.onVoice ||
+    observations.some(({ detail }) => !detail.onVoice);
+  if (offVoice) {
+    const aiTells = [
+      ...summary.aiTells,
+      ...topFix.aiTells,
+      ...observations.flatMap(({ detail }) => detail.aiTells),
+    ];
+    logger.warn({ aiTells }, "photo_vision: output tripped the voice gate; using checklist fallback");
+    return null;
+  }
+
+  return {
+    ...analysis,
+    summary: summary.text,
+    topFix: topFix.text,
+    observations: observations.map(({ obs, detail }) => ({ ...obs, detail: detail.text })),
+  };
+}
+
 export async function analyzeProfilePhotos(
   opts: AnalyzeProfilePhotosOptions,
 ): Promise<AnalyzeProfilePhotosResult> {
@@ -1007,9 +1042,19 @@ export async function analyzeProfilePhotos(
       logger.warn({ err: validated.error.message }, "photo_vision: schema validation failed");
       return miss("schema_validation_failed", "setup-needed");
     }
+    // Claude vision returns free-text fields (summary, observation details,
+    // topFix) that bypass the generate() voice gate, so police them here. Em
+    // dashes are auto-cleaned in place; if a banned AI-tell word survives we
+    // can't safely rewrite a single image read, so we drop to the deterministic
+    // photo checklist fallback rather than ship off-voice copy. "unlock(ed)"
+    // stays allowed (gamification reward language) via enforceVoice.
+    const policed = enforcePhotoAnalysisVoice(validated.data);
+    if (!policed) {
+      return miss("voice_violation", "setup-needed");
+    }
     const durationMs = Date.now() - start;
     recordVisionMetric("live", false, durationMs, null);
-    return { analysis: validated.data, mode: "live", isFallback: false, durationMs };
+    return { analysis: policed, mode: "live", isFallback: false, durationMs };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown Anthropic vision error";
     logger.warn({ err: message }, "photo_vision call failed; falling back to checklist");

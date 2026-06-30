@@ -534,6 +534,70 @@ describe("aiService.analyzeProfilePhotos", () => {
     __setConsentCheckerForTests(null);
   });
 
+  it("auto-cleans em dashes in the photo analysis fields", async () => {
+    const { analyzeProfilePhotos, __setConsentCheckerForTests } = await import("./aiService");
+    __setConsentCheckerForTests(async () => true);
+    const offVoice = {
+      summary: "Clear solo headshot — warm natural light.",
+      observations: [
+        { aspect: "Lighting", assessment: "strong", detail: "Soft daylight — no harsh shadows." },
+      ],
+      topFix: "Swap the dim shot — add an outdoor photo with eye contact.",
+    };
+    anthropicCreateMock.mockResolvedValueOnce(photoResponse(JSON.stringify(offVoice)));
+    const result = await analyzeProfilePhotos({
+      imageBase64: "abc123",
+      imageMediaType: "image/png",
+      userId: "user-with-consent",
+    });
+    expect(result.isFallback).toBe(false);
+    expect(result.mode).toBe("live");
+    expect(result.analysis?.summary).toBe("Clear solo headshot, warm natural light.");
+    expect(result.analysis?.observations[0].detail).toBe("Soft daylight, no harsh shadows.");
+    expect(result.analysis?.topFix).toBe(
+      "Swap the dim shot, add an outdoor photo with eye contact.",
+    );
+    __setConsentCheckerForTests(null);
+  });
+
+  it("drops to the deterministic checklist when a photo field has a banned AI-tell word", async () => {
+    const { analyzeProfilePhotos, __setConsentCheckerForTests } = await import("./aiService");
+    __setConsentCheckerForTests(async () => true);
+    const offVoice = {
+      ...VALID_PHOTO_ANALYSIS,
+      topFix: "A seamless set of photos would help here.",
+    };
+    anthropicCreateMock.mockResolvedValueOnce(photoResponse(JSON.stringify(offVoice)));
+    const result = await analyzeProfilePhotos({
+      imageBase64: "abc123",
+      imageMediaType: "image/png",
+      userId: "user-with-consent",
+    });
+    expect(result.analysis).toBeNull();
+    expect(result.isFallback).toBe(true);
+    expect(result.fallbackReason).toBe("voice_violation");
+    expect(anthropicCreateMock).toHaveBeenCalledTimes(1);
+    __setConsentCheckerForTests(null);
+  });
+
+  it("allows gamification 'unlock(ed)' in photo analysis fields", async () => {
+    const { analyzeProfilePhotos, __setConsentCheckerForTests } = await import("./aiService");
+    __setConsentCheckerForTests(async () => true);
+    const analysis = {
+      ...VALID_PHOTO_ANALYSIS,
+      summary: "A second photo unlocked a fuller picture of you.",
+    };
+    anthropicCreateMock.mockResolvedValueOnce(photoResponse(JSON.stringify(analysis)));
+    const result = await analyzeProfilePhotos({
+      imageBase64: "abc123",
+      imageMediaType: "image/png",
+      userId: "user-with-consent",
+    });
+    expect(result.isFallback).toBe(false);
+    expect(result.analysis?.summary).toBe("A second photo unlocked a fuller picture of you.");
+    __setConsentCheckerForTests(null);
+  });
+
   it("returns the deterministic fallback (null analysis) without calling the model when consent is off", async () => {
     const { analyzeProfilePhotos, __setConsentCheckerForTests } = await import("./aiService");
     __setConsentCheckerForTests(async () => false);
