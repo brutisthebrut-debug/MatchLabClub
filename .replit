@@ -52,6 +52,10 @@ args = "schema-drift"
 task = "workflow.run"
 args = "voice-lint"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "voice-lint-mobile"
+
 [[workflows.workflow]]
 name = "test-claim-client"
 author = "agent"
@@ -147,6 +151,17 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts"
+
+[workflows.workflow.metadata]
+isValidation = true
+
+[[workflows.workflow]]
+name = "voice-lint-mobile"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm --filter @workspace/nldc-mobile exec vitest run lib/voiceLint.test.ts"
 
 [workflows.workflow.metadata]
 isValidation = true
