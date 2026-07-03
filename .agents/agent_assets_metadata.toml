@@ -47,3 +47,9 @@ id = "ZVdd6k4GPzYaoGx0oynSs"
 uri = "file://exports/matchlab-club.tar.gz"
 type = "unspecified"
 title = "MatchLab Club — Full Project Source"
+
+[[outputs]]
+id = "wFZ6ybAOw7_oaf5pQvl52"
+uri = "file://exports/matchlab-club-source.tar.gz"
+type = "unspecified"
+title = "MatchLab Club — Código fuente (15 MB)"
