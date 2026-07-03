@@ -41,3 +41,9 @@ id = "MJ5i-6Rvmt_KW6NMlP90i"
 uri = "file://PROJECT_SPECIFICATION.md"
 type = "text"
 title = "MatchLab Club — Technical Specification"
+
+[[outputs]]
+id = "ZVdd6k4GPzYaoGx0oynSs"
+uri = "file://exports/matchlab-club.tar.gz"
+type = "unspecified"
+title = "MatchLab Club — Full Project Source"
