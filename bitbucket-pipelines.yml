@@ -1,0 +1,127 @@
+# Bitbucket Pipelines CI for the MatchLab Club monorepo.
+# Mirrors the Replit validation gate (see CI.md) plus the extra checks from
+# MIGRATION.md Phase 5b. Runs on every pull request and on pushes to main.
+#
+# pnpm is pinned via corepack and the pnpm store is cached between runs. The API
+# tests run against an ephemeral postgres:16 service, so no external database
+# secret is required for the default gate.
+
+image: node:24
+
+definitions:
+  caches:
+    # Smart cache: rebuilt whenever pnpm-lock.yaml changes, so it never goes
+    # stale after a dependency update.
+    pnpm:
+      key:
+        files:
+          - pnpm-lock.yaml
+      path: $BITBUCKET_CLONE_DIR/.pnpm-store
+  services:
+    postgres:
+      image: postgres:16
+      variables:
+        POSTGRES_DB: matchlab_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  steps:
+    - step: &typecheck
+        name: Typecheck
+        caches: [pnpm]
+        script:
+          - corepack enable
+          - corepack prepare pnpm@10.26.1 --activate
+          - pnpm config set store-dir $BITBUCKET_CLONE_DIR/.pnpm-store
+          - pnpm install --frozen-lockfile
+          - pnpm run typecheck
+    - step: &lint
+        name: Lint
+        caches: [pnpm]
+        script:
+          - corepack enable
+          - corepack prepare pnpm@10.26.1 --activate
+          - pnpm config set store-dir $BITBUCKET_CLONE_DIR/.pnpm-store
+          - pnpm install --frozen-lockfile
+          - pnpm run lint
+    - step: &api-tests
+        name: API tests
+        caches: [pnpm]
+        services: [postgres]
+        script:
+          - corepack enable
+          - corepack prepare pnpm@10.26.1 --activate
+          - pnpm config set store-dir $BITBUCKET_CLONE_DIR/.pnpm-store
+          - pnpm install --frozen-lockfile
+          - export DATABASE_URL="postgres://postgres:postgres@localhost:5432/matchlab_test"
+          # Ephemeral test DB: sync the current schema (the push script also
+          # ensures required Postgres extensions) before running the suite.
+          - pnpm --filter @workspace/db run push-force
+          - pnpm --filter @workspace/api-server run test
+    - step: &schema-drift
+        name: Schema drift
+        caches: [pnpm]
+        script:
+          - corepack enable
+          - corepack prepare pnpm@10.26.1 --activate
+          - pnpm config set store-dir $BITBUCKET_CLONE_DIR/.pnpm-store
+          - pnpm install --frozen-lockfile
+          - pnpm --filter @workspace/db run check-schema-drift
+    - step: &voice-lint
+        name: Voice lint
+        caches: [pnpm]
+        script:
+          - corepack enable
+          - corepack prepare pnpm@10.26.1 --activate
+          - pnpm config set store-dir $BITBUCKET_CLONE_DIR/.pnpm-store
+          - pnpm install --frozen-lockfile
+          - pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts
+    - step: &nldc-tests
+        name: Web tests
+        caches: [pnpm]
+        script:
+          - corepack enable
+          - corepack prepare pnpm@10.26.1 --activate
+          - pnpm config set store-dir $BITBUCKET_CLONE_DIR/.pnpm-store
+          - pnpm install --frozen-lockfile
+          - pnpm --filter @workspace/nldc run test
+
+pipelines:
+  pull-requests:
+    "**":
+      - parallel:
+          - step: *typecheck
+          - step: *lint
+          - step: *api-tests
+          - step: *schema-drift
+          - step: *voice-lint
+          - step: *nldc-tests
+  branches:
+    main:
+      - parallel:
+          - step: *typecheck
+          - step: *lint
+          - step: *api-tests
+          - step: *schema-drift
+          - step: *voice-lint
+          - step: *nldc-tests
+  custom:
+    e2e:
+      - step:
+          name: End-to-end (Playwright)
+          caches: [pnpm]
+          services: [postgres]
+          script:
+            - corepack enable
+            - corepack prepare pnpm@10.26.1 --activate
+            - pnpm config set store-dir $BITBUCKET_CLONE_DIR/.pnpm-store
+            - pnpm install --frozen-lockfile
+            - pnpm -C e2e exec playwright install --with-deps chromium
+            - export DATABASE_URL="postgres://postgres:postgres@localhost:5432/matchlab_test"
+            - pnpm --filter @workspace/db run push-force
+            # CAVEAT: e2e/playwright.config.ts targets the Replit shared proxy at
+            # http://localhost:80 (routes / to the web app and /api to the API
+            # server on 8080). That proxy is Replit-only. Before this passes off
+            # Replit, run a small reverse proxy that mirrors those routes, or
+            # update the Playwright baseURL + webServer to hit the dev servers
+            # directly. Kept as a manual pipeline until then.
+            - pnpm -C e2e exec playwright test --project=chromium

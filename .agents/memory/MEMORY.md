@@ -42,3 +42,4 @@
 - [Automated voice lint over nldc copy](voice-lint-automated-check.md) — voiceLint.test.ts + `voice-lint` validation lint ONLY user-facing copy (JSX text/copy attrs/copy props/toast), not classNames/comments; "unlock" carved out.
 - [Runtime voice gate on generated copy](runtime-voice-gate.md) — generate() post-polices live output: em dashes auto-cleaned in place (JSON-safe), banned AI-tells regen once then deterministic fallback; "unlock" allowed.
 - [Preview port-8080 race + benign screenshot 403](preview-port-race.md) — e2e webServer races API Server for 8080 (dev-only, not a publish blocker); restart API Server after e2e frees it; /api/events 403 is a localhost-origin screenshot artifact.
+- [Validating YAML with no root parser](validate-config-no-root-parser.md) — no yaml parser resolves from repo root and find over node_modules times out; require js-yaml by absolute .pnpm path to validate bitbucket-pipelines.yml.

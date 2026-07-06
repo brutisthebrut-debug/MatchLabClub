@@ -11,6 +11,18 @@ below must pass before changes can be merged.
 
 A red `typecheck`, `api-tests`, or `lint` blocks merges.
 
+## CI off Replit (Bitbucket Pipelines)
+
+The table above is the blocking gate while development happens on Replit,
+enforced by Replit's validation system. When the repo is hosted on Bitbucket,
+the same commands run from `bitbucket-pipelines.yml` at the repo root, on every
+pull request and on pushes to `main`. That pipeline runs the three blocking
+gates (`typecheck`, `api-tests`, `lint`) plus `schema-drift`, the `voice-lint`
+file, and the full `nldc` web test suite in parallel. The Playwright e2e suite
+is a manually triggered `custom: e2e` pipeline (see `MIGRATION.md` section 6.9).
+If the command set changes, update this file, `bitbucket-pipelines.yml`, and the
+registered Replit validations together.
+
 ## Running locally
 
 ```

@@ -1,4 +1,4 @@
-# MatchLab Club — Architecture Overview
+# MatchLab Club: Architecture Overview
 
 > Start here. This is the guided map of the codebase for a first-time reviewer.
 > It explains what the product is, how the monorepo fits together, how a request
@@ -18,6 +18,7 @@ Read these in the order that matches your goal:
 | Know what CI checks gate a merge | `CI.md` |
 | Run operational tasks (Stripe, GeoIP, monitoring) | `OPERATIONS.md` |
 | See the marketing/positioning handoff | `MARKETING_HANDOFF.md`, `seo_strategy.md` |
+| Set up or read the CI pipeline | `bitbucket-pipelines.yml`, `CI.md` |
 
 ## What the product is
 
@@ -60,7 +61,7 @@ matchlab-club/
 │   ├── nldc-mobile/      Expo / React Native mobile app
 │   └── mockup-sandbox/   design/canvas preview harness (not a shipped product)
 ├── lib/                  shared libraries (composite TS packages)
-│   ├── api-spec/         OpenAPI spec — the API contract source of truth
+│   ├── api-spec/         OpenAPI spec: the API contract source of truth
 │   ├── api-client-react/ generated TanStack Query hooks (do not edit generated/)
 │   ├── api-zod/          generated Zod schemas (do not edit generated/)
 │   ├── ai-schemas/       shared AI request/response schemas
@@ -72,6 +73,8 @@ matchlab-club/
 ├── scripts/             shared utility scripts (post-merge, etc.)
 ├── MIGRATION.md         production migration plan (off Replit)
 ├── PROJECT_SPECIFICATION.md, VISION.md, OPERATIONS.md, CI.md
+├── bitbucket-pipelines.yml  CI pipeline (Bitbucket Pipelines)
+├── README.md            repo landing page (points to ARCHITECTURE.md)
 └── replit.md            project README + conventions + gotchas
 ```
 
@@ -170,6 +173,11 @@ pnpm --filter @workspace/nldc run test              # web test suite
 pnpm --filter @workspace/db run check-schema-drift  # migrations match schema
 pnpm run lint
 ```
+
+CI runs these on Bitbucket Pipelines; the config is `bitbucket-pipelines.yml` at
+the repo root. It runs on every pull request and on pushes to `main`, with an
+ephemeral Postgres service for the API tests. The Playwright e2e suite is a
+manually triggered `custom: e2e` pipeline (see `MIGRATION.md` section 6.9).
 
 ## Conventions worth knowing before you read code
 

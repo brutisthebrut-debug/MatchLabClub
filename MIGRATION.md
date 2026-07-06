@@ -16,7 +16,7 @@
 3. [Environment variable inventory](#3-environment-variable-inventory)
 4. [Production readiness checklist](#4-production-readiness-checklist)
 5. [Human code review checklist](#5-human-code-review-checklist)
-6. [Local development and GitHub handoff guide](#6-local-development-and-github-handoff-guide)
+6. [Local development and Bitbucket handoff guide](#6-local-development-and-bitbucket-handoff-guide)
 
 ---
 
@@ -36,7 +36,7 @@ touching the codebase.
 - Environment variable inventory (section 3)
 - Production readiness checklist (section 4)
 - Human code review checklist (section 5)
-- Local development and GitHub handoff guide (section 6)
+- Local development and Bitbucket handoff guide (section 6)
 
 **Exit criteria:** All sections below are complete and reviewed by at least one
 human engineer. No open questions in any checklist item marked REQUIRED.
@@ -225,28 +225,41 @@ the restore procedure. Set a retention window (minimum 30 days).
 
 ### Phase 5 — CI/CD, hosting, and go-live
 
-**Goal:** Full GitHub-based development workflow, automated CI, and a
+**Goal:** Full Bitbucket-based development workflow, automated CI, and a
 non-Replit production hosting target.
 
-#### 5a. GitHub repository and branch protection
-- Mirror the monorepo to GitHub. The pnpm workspace structure, TypeScript
+#### 5a. Bitbucket repository and branch permissions
+- Mirror the monorepo to Bitbucket. The pnpm workspace structure, TypeScript
   project references, and Orval codegen pipeline are fully portable.
-- Branch protection on `main`: require passing CI, require review from at
-  least one human engineer, no force-push.
+- Branch permissions on `main` (Repository settings -> Branch restrictions):
+  require passing builds (Bitbucket Pipelines), require at least one approval,
+  and disable force-push and direct pushes so every change lands through a
+  pull request.
 
-#### 5b. GitHub Actions CI pipeline
-```yaml
-# Suggested jobs (run in parallel where independent)
-typecheck:    pnpm run typecheck
-lint:         pnpm run lint
-api-tests:    DATABASE_URL=${{ secrets.TEST_DATABASE_URL }} pnpm --filter @workspace/api-server run test
-nldc-tests:   pnpm --filter @workspace/nldc run test
-schema-drift: pnpm --filter @workspace/db run check-schema-drift
-voice-lint:   pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts
-e2e:          DATABASE_URL=${{ secrets.TEST_DATABASE_URL }} pnpm -C e2e exec playwright test
-```
-Note: the full `nldc` vitest suite takes 2+ minutes; use a longer timeout
-(`timeout-minutes: 5`) or split into parallel shards.
+#### 5b. Bitbucket Pipelines CI
+
+CI runs on Bitbucket Pipelines. The committed config is `bitbucket-pipelines.yml`
+at the repo root; it runs on every pull request and on pushes to `main`. Steps
+run in parallel where independent:
+
+| Step | Command |
+|---|---|
+| Typecheck | `pnpm run typecheck` |
+| Lint | `pnpm run lint` |
+| API tests | `pnpm --filter @workspace/api-server run test` (against a `postgres` service) |
+| Schema drift | `pnpm --filter @workspace/db run check-schema-drift` |
+| Voice lint | `pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts` |
+| Web tests | `pnpm --filter @workspace/nldc run test` |
+
+The end-to-end Playwright suite is wired as a manually triggered `custom: e2e`
+pipeline rather than a PR gate, because `e2e/playwright.config.ts` currently
+targets the Replit shared proxy at `localhost:80`. Point that at a real reverse
+proxy (or update the config to hit the two dev servers directly) before promoting
+e2e to a blocking step. See section 6.9 and the comments in
+`bitbucket-pipelines.yml`.
+
+Note: the full `nldc` vitest suite takes 2+ minutes; keep it in its own step (or
+shard it) so it does not stretch the parallel group.
 
 #### 5c. Recommended hosting stack
 
@@ -902,7 +915,7 @@ secrets.
 
 ---
 
-## 6. Local development and GitHub handoff guide
+## 6. Local development and Bitbucket handoff guide
 
 This section is for a new engineer setting up the project outside of Replit.
 
@@ -1028,7 +1041,7 @@ pnpm --filter @workspace/api-spec run codegen
 This regenerates `lib/api-client-react/src/generated/` and
 `lib/api-zod/src/generated/`. Never hand-edit those directories.
 
-### 6.8 Recommended GitHub branch and PR workflow
+### 6.8 Recommended Bitbucket branch and PR workflow
 
 ```
 main          ← protected; CI must pass; requires one human review
@@ -1048,82 +1061,22 @@ feature/*     ← all development work; open PR against main
 8. Voice rules: no em dashes, no AI-tell words in user-facing copy. Run
    `pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts`.
 
-### 6.9 GitHub Actions starter workflow
+### 6.9 Bitbucket Pipelines config
 
-```yaml
-# .github/workflows/ci.yml
-name: CI
+CI lives in `bitbucket-pipelines.yml` at the repo root (committed). It pins pnpm
+via corepack, caches the pnpm store, provisions a `postgres:16` service for the
+API tests, and runs typecheck, lint, API tests, schema-drift, and voice-lint in
+parallel on every pull request and on pushes to `main`.
 
-on:
-  pull_request:
-  push:
-    branches: [main]
+To enable it: in Bitbucket open Repository settings -> Pipelines -> Settings and
+toggle Pipelines on. The committed config uses an ephemeral in-pipeline Postgres,
+so no external `DATABASE_URL` secret is required for the default gate; add
+repository variables only for any additional secrets a future step needs.
 
-jobs:
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '24', cache: 'pnpm' }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run typecheck
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '24', cache: 'pnpm' }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run lint
-
-  api-tests:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: matchlab_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    env:
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/matchlab_test
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '24', cache: 'pnpm' }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @workspace/db exec drizzle-kit migrate --config ./drizzle.config.ts
-      - run: pnpm --filter @workspace/api-server run test
-
-  schema-drift:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '24', cache: 'pnpm' }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @workspace/db run check-schema-drift
-
-  voice-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '24', cache: 'pnpm' }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts
-```
+The Playwright end-to-end suite is defined as a manually triggered pipeline
+(`custom: e2e`). Run it from Pipelines -> Run pipeline -> custom: e2e once its
+Replit shared-proxy dependency at `localhost:80` is resolved (see the inline
+comment in the file).
 
 ### 6.10 What to do if you are the first engineer off Replit
 
