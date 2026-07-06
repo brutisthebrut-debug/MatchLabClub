@@ -44,6 +44,10 @@ import {
   Unlink,
   LineChart,
   Plug,
+  Moon,
+  Github,
+  MessageCircle,
+  MessagesSquare,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -275,7 +279,7 @@ const LIVE: Connector[] = [
     ],
     excludes: [
       "Anything you do not paste in",
-      "OAuth access to Spotify or any account",
+      "Any login or OAuth for this paste flow, it never touches an account",
       "Your raw items are never sent to any AI prompt, only the count moves your readiness",
     ],
     cta: { href: "/connections/add/music", label: "Add music" },
@@ -296,7 +300,7 @@ const LIVE: Connector[] = [
     ],
     excludes: [
       "Anything you do not paste in",
-      "OAuth access to Letterboxd, Netflix, or any account",
+      "Any login or OAuth for this paste flow, it never touches an account",
       "Your raw items are never sent to any AI prompt, only the count moves your readiness",
     ],
     cta: { href: "/connections/add/film", label: "Add film" },
@@ -425,6 +429,126 @@ const LIVE: Connector[] = [
     ],
     readiness:
       "Fills the Exist life-log lane of your Match Readiness. The truer the picture of your week, the better I match on how you actually live.",
+  },
+  {
+    id: "spotify",
+    title: "Spotify",
+    icon: Music2,
+    color: "hsl(141 73% 42%)",
+    blurb:
+      "Connect Spotify and I read your listening taste: how many of your top artists you keep in steady rotation. The sound you return to reads mood and chemistry better than a bio line. Read only, I never touch what you play in the moment.",
+    returns: "A read on the taste and mood behind the music you keep coming back to.",
+    access: [
+      "How many of your top artists are in steady rotation",
+      "That you connected Spotify, kept as a count that fills the lane",
+    ],
+    excludes: [
+      "What you are playing right now or your listening history",
+      "Your playlists, saved tracks, or who you follow",
+      "Any ability to change anything on your Spotify account",
+    ],
+    readiness:
+      "Fills the music taste lane of your Match Readiness alongside your paste. The truer your rotation, the better I match on mood and chemistry.",
+  },
+  {
+    id: "oura",
+    title: "Oura",
+    icon: Moon,
+    color: "hsl(220 40% 45%)",
+    blurb:
+      "Connect Oura and I read the rhythm of your days: how many active days you logged in the last month. A steady rhythm is an honest read of your energy and routine. Read only, I never touch sleep stages, heart rate, or any health detail.",
+    returns: "A read on how steady your daily rhythm and energy tend to be.",
+    access: [
+      "How many active days you logged in the last month",
+      "That you connected Oura, kept as a count that fills the lane",
+    ],
+    excludes: [
+      "Sleep stages, heart rate, temperature, or any health metric",
+      "Any raw daily record beyond the active-day count",
+      "Any ability to change anything on your Oura account",
+    ],
+    readiness:
+      "Fills the vitality lane of your Match Readiness alongside your paste, Strava, and Fitbit. A clearer rhythm helps me pace a real connection.",
+  },
+  {
+    id: "trakt",
+    title: "Trakt",
+    icon: Clapperboard,
+    color: "hsl(0 78% 55%)",
+    blurb:
+      "Connect Trakt and I read your watch taste: how many films and shows you have logged recently. What you watch says a lot about your humour and your nights in. Read only, I never touch your ratings, reviews, or who you follow.",
+    returns: "A read on the humour and taste behind what you actually watch.",
+    access: [
+      "How many films and shows you have logged recently",
+      "That you connected Trakt, kept as a count that fills the lane",
+    ],
+    excludes: [
+      "Your ratings, reviews, comments, or lists",
+      "Who you follow or any social activity on Trakt",
+      "Any ability to change anything on your Trakt account",
+    ],
+    readiness:
+      "Fills the film taste lane of your Match Readiness alongside your paste. The truer your history, the better I match on humour and nights in.",
+  },
+  {
+    id: "github",
+    title: "GitHub",
+    icon: Github,
+    color: "hsl(220 12% 30%)",
+    blurb:
+      "Connect GitHub and I read how much you build in the open: your public repository count. The scenes you gather around read what you actually care about. Read only, I never touch your code, private repos, or activity.",
+    returns: "A read on how much you build and create in the open.",
+    access: [
+      "How many public repositories you have",
+      "That you connected GitHub, kept as a count that fills the lane",
+    ],
+    excludes: [
+      "Any code, private repository, or commit content",
+      "Your issues, pull requests, or organisation membership",
+      "Any ability to change anything on your GitHub account",
+    ],
+    readiness:
+      "Fills the communities lane of your Match Readiness alongside Reddit and Discord. The scenes you build in read what you care about.",
+  },
+  {
+    id: "reddit",
+    title: "Reddit",
+    icon: MessageCircle,
+    color: "hsl(16 100% 53%)",
+    blurb:
+      "Connect Reddit and I read the communities you are part of: how many subreddits you subscribe to. The scenes you gather around read your real interests better than a prompt. Read only, I never touch your posts, comments, or history.",
+    returns: "A read on the range of communities and interests you gather around.",
+    access: [
+      "How many subreddits you subscribe to",
+      "That you connected Reddit, kept as a count that fills the lane",
+    ],
+    excludes: [
+      "Your posts, comments, votes, or browsing history",
+      "The names of the specific subreddits you follow",
+      "Any ability to change anything on your Reddit account",
+    ],
+    readiness:
+      "Fills the communities lane of your Match Readiness alongside GitHub and Discord. A fuller set of scenes reads what you care about.",
+  },
+  {
+    id: "discord",
+    title: "Discord",
+    icon: MessagesSquare,
+    color: "hsl(235 86% 65%)",
+    blurb:
+      "Connect Discord and I read the communities you are part of: how many servers you belong to. The scenes you spend time in read what holds your attention. Read only, I never touch your messages, channels, or members.",
+    returns: "A read on the scenes and communities that hold your attention.",
+    access: [
+      "How many servers you belong to",
+      "That you connected Discord, kept as a count that fills the lane",
+    ],
+    excludes: [
+      "Your messages, direct messages, or channel content",
+      "The names of the specific servers you are in",
+      "Any ability to change anything on your Discord account",
+    ],
+    readiness:
+      "Fills the communities lane of your Match Readiness alongside GitHub and Reddit. The scenes you gather in read what you care about.",
   },
   {
     id: "podcasts-paste",
@@ -871,7 +995,17 @@ function GoogleCalendarLivePanel() {
 // starts themselves; the code ships before credentials exist, so the panel
 // reads the honest `configured` flag and shows "Available soon" until the
 // MatchLab team finishes provider setup.
-const OAUTH_PROVIDER_IDS = ["strava", "fitbit", "exist"] as const;
+const OAUTH_PROVIDER_IDS = [
+  "strava",
+  "fitbit",
+  "exist",
+  "spotify",
+  "oura",
+  "trakt",
+  "github",
+  "reddit",
+  "discord",
+] as const;
 
 /**
  * Live per-user status and controls for an OAuth connector (Strava, Fitbit,

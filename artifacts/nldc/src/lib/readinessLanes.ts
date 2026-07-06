@@ -215,6 +215,15 @@ export const BREAKDOWN_ROWS = [
     icon: Activity,
   },
   {
+    key: "communities",
+    label: "Communities you're in",
+    blurb:
+      "The scenes you gather around, GitHub, Reddit, or Discord, read what you actually care about.",
+    href: "/connections",
+    cta: "Connect a community",
+    icon: Users,
+  },
+  {
     key: "wyr",
     label: "Would You Rather",
     blurb:

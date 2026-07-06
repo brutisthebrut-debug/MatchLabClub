@@ -19,4 +19,9 @@ export const ConnectorStatusProvider = {
   strava: 'strava',
   fitbit: 'fitbit',
   exist: 'exist',
+  oura: 'oura',
+  trakt: 'trakt',
+  github: 'github',
+  reddit: 'reddit',
+  discord: 'discord',
 } as const;

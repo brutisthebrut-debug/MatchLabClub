@@ -704,7 +704,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The connector provider key (strava, fitbit, exist).
+          description: The connector provider key (e.g. strava, fitbit, exist, oura, trakt, github, reddit, discord, spotify).
       responses:
         '200':
           description: The updated connector status list.
@@ -755,7 +755,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The connector provider key (strava, fitbit, exist).
+          description: The connector provider key (e.g. strava, fitbit, exist, oura, trakt, github, reddit, discord, spotify).
       responses:
         '200':
           description: The updated connector status list.
@@ -10409,7 +10409,7 @@ components:
       properties:
         provider:
           type: string
-          enum: [google-calendar, spotify, instagram-oauth, strava, fitbit, exist]
+          enum: [google-calendar, spotify, instagram-oauth, strava, fitbit, exist, oura, trakt, github, reddit, discord]
           description: Stable provider key.
         laneId:
           type: string
@@ -11672,7 +11672,7 @@ components:
             - type: 'null'
     MatchReadinessBreakdown:
       type: object
-      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse, taste, lifestyle, quizzes, receipts, music, vitality, curiosity, film, reading, wyr, dailySpark, flags, consistency, scenarioReels, selfAwareness, timeCapsule, externalCalibration, cosmicProfile, relocationOpen, verification]
+      required: [compass, journal, wellness, hingeImport, postDate, wins, calendar, audits, coaching, instagram, lifePulse, taste, lifestyle, quizzes, receipts, music, vitality, communities, curiosity, film, reading, wyr, dailySpark, flags, consistency, scenarioReels, selfAwareness, timeCapsule, externalCalibration, cosmicProfile, relocationOpen, verification]
       properties:
         compass:
           type: integer
@@ -11739,6 +11739,10 @@ components:
           minimum: 0
           maximum: 100
         vitality:
+          type: integer
+          minimum: 0
+          maximum: 100
+        communities:
           type: integer
           minimum: 0
           maximum: 100

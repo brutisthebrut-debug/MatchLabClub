@@ -3012,6 +3012,11 @@ export const ConnectorStatusProvider = {
   strava: 'strava',
   fitbit: 'fitbit',
   exist: 'exist',
+  oura: 'oura',
+  trakt: 'trakt',
+  github: 'github',
+  reddit: 'reddit',
+  discord: 'discord',
 } as const;
 
 /**
@@ -4265,6 +4270,11 @@ export interface MatchReadinessBreakdown {
      * @maximum 100
      */
   vitality: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  communities: number;
   /**
      * @minimum 0
      * @maximum 100

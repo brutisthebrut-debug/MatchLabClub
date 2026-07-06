@@ -31,6 +31,7 @@ const zeroBreakdown: ReadinessBreakdown = {
   receipts: 0,
   music: 0,
   vitality: 0,
+  communities: 0,
   curiosity: 0,
   film: 0,
   reading: 0,
@@ -71,11 +72,12 @@ describe("signal registry", () => {
     // brings the raw total to 2.96, and the green/red flags lane (0.07) brings
     // it to 3.03. The Care Dialect lane (0.12) brings the raw total to 3.15.
     // The behavioral-growth (growth actions) lane (0.04) brings the raw total to
-    // 3.19. The Exist life-log lane (0.04) brings the raw total to 3.23.
+    // 3.19. The Exist life-log lane (0.04) brings the raw total to 3.23. The
+    // communities lane (0.05, GitHub + Reddit + Discord) brings it to 3.28.
     // Each normalized weight is its raw weight divided by the
     // raw-weight total. The relative proportions between every signal are
     // preserved exactly; adding contributors never forces a manual re-balance.
-    const total = 3.23;
+    const total = 3.28;
     const w = normalizedWeights();
     expect(w.wellness).toBeCloseTo(0.22 / total, 6);
     expect(w.compass).toBeCloseTo(0.2 / total, 6);
@@ -98,6 +100,7 @@ describe("signal registry", () => {
     expect(w.curiosity).toBeCloseTo(0.05 / total, 6);
     expect(w.vitality).toBeCloseTo(0.05 / total, 6);
     expect(w.exist).toBeCloseTo(0.04 / total, 6);
+    expect(w.communities).toBeCloseTo(0.05 / total, 6);
     expect(w.podcasts).toBeCloseTo(0.05 / total, 6);
     expect(w.gaming).toBeCloseTo(0.05 / total, 6);
     expect(w.places).toBeCloseTo(0.05 / total, 6);

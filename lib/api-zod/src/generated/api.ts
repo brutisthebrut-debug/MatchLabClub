@@ -789,7 +789,7 @@ export const GetConnectorsResponse = zod.object({
   "generatedAt": zod.coerce.date().describe('ISO timestamp the status was generated.'),
   "isDemo": zod.boolean().describe('True when this is the anon demo, not a real account\'s connectors.'),
   "connectors": zod.array(zod.object({
-  "provider": zod.enum(['google-calendar', 'spotify', 'instagram-oauth', 'strava', 'fitbit', 'exist']).describe('Stable provider key.'),
+  "provider": zod.enum(['google-calendar', 'spotify', 'instagram-oauth', 'strava', 'fitbit', 'exist', 'oura', 'trakt', 'github', 'reddit', 'discord']).describe('Stable provider key.'),
   "laneId": zod.string().describe('The readiness lane this connector feeds.'),
   "label": zod.string().describe('Human label for the connector.'),
   "status": zod.enum(['available', 'connected', 'error', 'disconnected']).describe('Lifecycle of the live connection.'),
@@ -815,7 +815,7 @@ stored, never raw third-party content.
  * @summary Sync a per-user OAuth connector for the signed-in user
  */
 export const SyncConnectorParams = zod.object({
-  "provider": zod.coerce.string().describe('The connector provider key (strava, fitbit, exist).')
+  "provider": zod.coerce.string().describe('The connector provider key (e.g. strava, fitbit, exist, oura, trakt, github, reddit, discord, spotify).')
 })
 
 export const SyncConnectorHeader = zod.object({
@@ -826,7 +826,7 @@ export const SyncConnectorResponse = zod.object({
   "generatedAt": zod.coerce.date().describe('ISO timestamp the status was generated.'),
   "isDemo": zod.boolean().describe('True when this is the anon demo, not a real account\'s connectors.'),
   "connectors": zod.array(zod.object({
-  "provider": zod.enum(['google-calendar', 'spotify', 'instagram-oauth', 'strava', 'fitbit', 'exist']).describe('Stable provider key.'),
+  "provider": zod.enum(['google-calendar', 'spotify', 'instagram-oauth', 'strava', 'fitbit', 'exist', 'oura', 'trakt', 'github', 'reddit', 'discord']).describe('Stable provider key.'),
   "laneId": zod.string().describe('The readiness lane this connector feeds.'),
   "label": zod.string().describe('Human label for the connector.'),
   "status": zod.enum(['available', 'connected', 'error', 'disconnected']).describe('Lifecycle of the live connection.'),
@@ -851,7 +851,7 @@ source and its data.
  * @summary Disconnect a per-user OAuth connector for the signed-in user
  */
 export const DisconnectConnectorParams = zod.object({
-  "provider": zod.coerce.string().describe('The connector provider key (strava, fitbit, exist).')
+  "provider": zod.coerce.string().describe('The connector provider key (e.g. strava, fitbit, exist, oura, trakt, github, reddit, discord, spotify).')
 })
 
 export const DisconnectConnectorHeader = zod.object({
@@ -862,7 +862,7 @@ export const DisconnectConnectorResponse = zod.object({
   "generatedAt": zod.coerce.date().describe('ISO timestamp the status was generated.'),
   "isDemo": zod.boolean().describe('True when this is the anon demo, not a real account\'s connectors.'),
   "connectors": zod.array(zod.object({
-  "provider": zod.enum(['google-calendar', 'spotify', 'instagram-oauth', 'strava', 'fitbit', 'exist']).describe('Stable provider key.'),
+  "provider": zod.enum(['google-calendar', 'spotify', 'instagram-oauth', 'strava', 'fitbit', 'exist', 'oura', 'trakt', 'github', 'reddit', 'discord']).describe('Stable provider key.'),
   "laneId": zod.string().describe('The readiness lane this connector feeds.'),
   "label": zod.string().describe('Human label for the connector.'),
   "status": zod.enum(['available', 'connected', 'error', 'disconnected']).describe('Lifecycle of the live connection.'),
@@ -5174,6 +5174,9 @@ export const getMatchingStateResponseReadinessBreakdownMusicMax = 100;
 export const getMatchingStateResponseReadinessBreakdownVitalityMin = 0;
 export const getMatchingStateResponseReadinessBreakdownVitalityMax = 100;
 
+export const getMatchingStateResponseReadinessBreakdownCommunitiesMin = 0;
+export const getMatchingStateResponseReadinessBreakdownCommunitiesMax = 100;
+
 export const getMatchingStateResponseReadinessBreakdownCuriosityMin = 0;
 export const getMatchingStateResponseReadinessBreakdownCuriosityMax = 100;
 
@@ -5291,6 +5294,7 @@ export const GetMatchingStateResponse = zod.object({
   "receipts": zod.number().min(getMatchingStateResponseReadinessBreakdownReceiptsMin).max(getMatchingStateResponseReadinessBreakdownReceiptsMax),
   "music": zod.number().min(getMatchingStateResponseReadinessBreakdownMusicMin).max(getMatchingStateResponseReadinessBreakdownMusicMax),
   "vitality": zod.number().min(getMatchingStateResponseReadinessBreakdownVitalityMin).max(getMatchingStateResponseReadinessBreakdownVitalityMax),
+  "communities": zod.number().min(getMatchingStateResponseReadinessBreakdownCommunitiesMin).max(getMatchingStateResponseReadinessBreakdownCommunitiesMax),
   "curiosity": zod.number().min(getMatchingStateResponseReadinessBreakdownCuriosityMin).max(getMatchingStateResponseReadinessBreakdownCuriosityMax),
   "film": zod.number().min(getMatchingStateResponseReadinessBreakdownFilmMin).max(getMatchingStateResponseReadinessBreakdownFilmMax),
   "reading": zod.number().min(getMatchingStateResponseReadinessBreakdownReadingMin).max(getMatchingStateResponseReadinessBreakdownReadingMax),

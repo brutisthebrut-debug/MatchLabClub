@@ -19,6 +19,9 @@
 
 export type TokenAuthStyle = "body" | "basic";
 
+/** How the token endpoint expects its request body encoded. Trakt requires JSON. */
+export type TokenContentType = "form" | "json";
+
 export interface ImportSummary {
   counts: { items: number };
 }
@@ -50,6 +53,14 @@ export interface OAuthProviderConfig {
   consentVersion: string;
   /** How the provider delimits scopes in the authorize URL (Strava uses ","). */
   scopeSeparator: string;
+  /** Extra query params merged into the authorize URL (Reddit needs duration=permanent). */
+  extraAuthParams?: Record<string, string>;
+  /** Token endpoint body encoding. Trakt requires JSON; defaults to form. */
+  tokenContentType?: TokenContentType;
+  /** Extra headers sent on the token endpoint request (Reddit enforces a User-Agent). */
+  tokenHeaders?: Record<string, string>;
+  /** When true, refresh requests include redirect_uri (Trakt requires it). */
+  refreshNeedsRedirectUri?: boolean;
   /** The consent contract surfaced to the user before they connect. */
   trust: {
     origin: string;
@@ -76,6 +87,7 @@ const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 async function fetchJson(
   url: string,
   accessToken: string,
+  extraHeaders?: Record<string, string>,
 ): Promise<unknown> {
   let res: Response;
   try {
@@ -83,6 +95,7 @@ async function fetchJson(
       headers: {
         Authorization: `Bearer ${accessToken}`,
         Accept: "application/json",
+        ...(extraHeaders ?? {}),
       },
     });
   } catch {
@@ -214,6 +227,232 @@ export const OAUTH_PROVIDERS: readonly OAuthProviderConfig[] = [
       return { counts: { items } };
     },
   },
+  {
+    id: "spotify",
+    laneId: "music",
+    source: "spotify",
+    label: "Spotify",
+    description:
+      "Reads your listening taste read-only: how many of your top artists you keep in rotation, never who you follow or what you play in the moment.",
+    authUrl: "https://accounts.spotify.com/authorize",
+    tokenUrl: "https://accounts.spotify.com/api/token",
+    scopes: ["user-top-read"],
+    clientIdEnv: "SPOTIFY_CLIENT_ID",
+    secretEnv: "SPOTIFY_CLIENT_SECRET",
+    tokenAuth: "basic",
+    consentVersion: "spotify-v1",
+    scopeSeparator: " ",
+    trust: {
+      origin: "The Spotify account you connect yourself.",
+      seen: [
+        "How many of your top artists are in steady rotation",
+        "That you connected Spotify, used to fill the music lane",
+      ],
+      neverTouched: [
+        "What you are playing right now or your listening history",
+        "Your playlists, saved tracks, or who you follow",
+      ],
+    },
+    async fetchAndReduce(accessToken) {
+      const data = (await fetchJson(
+        "https://api.spotify.com/v1/me/top/artists?limit=50&time_range=medium_term",
+        accessToken,
+      )) as { items?: unknown[] };
+      const items = Array.isArray(data.items) ? data.items.length : 0;
+      return { counts: { items } };
+    },
+  },
+  {
+    id: "oura",
+    laneId: "vitality",
+    source: "oura",
+    label: "Oura",
+    description:
+      "Reads your daily rhythm read-only: how many active days you logged in the last month, never sleep stages, heart rate, or any health detail.",
+    authUrl: "https://cloud.ouraring.com/oauth/authorize",
+    tokenUrl: "https://api.ouraring.com/oauth/token",
+    scopes: ["daily"],
+    clientIdEnv: "OURA_CLIENT_ID",
+    secretEnv: "OURA_CLIENT_SECRET",
+    tokenAuth: "body",
+    consentVersion: "oura-v1",
+    scopeSeparator: " ",
+    trust: {
+      origin: "The Oura account you connect yourself.",
+      seen: [
+        "How many active days you logged in the last month",
+        "That you connected Oura, used to fill the vitality lane",
+      ],
+      neverTouched: [
+        "Sleep stages, heart rate, temperature, or any health metric",
+        "Any raw daily record beyond the active-day count",
+      ],
+    },
+    async fetchAndReduce(accessToken) {
+      const end = new Date();
+      const start = new Date(Date.now() - THIRTY_DAYS_MS);
+      const startDate = start.toISOString().slice(0, 10);
+      const endDate = end.toISOString().slice(0, 10);
+      const data = (await fetchJson(
+        `https://api.ouraring.com/v2/usercollection/daily_activity?start_date=${startDate}&end_date=${endDate}`,
+        accessToken,
+      )) as { data?: unknown[] };
+      const items = Array.isArray(data.data) ? data.data.length : 0;
+      return { counts: { items } };
+    },
+  },
+  {
+    id: "trakt",
+    laneId: "film",
+    source: "trakt",
+    label: "Trakt",
+    description:
+      "Reads your watch taste read-only: how many films and shows you have logged recently, never ratings, comments, or who you follow.",
+    authUrl: "https://trakt.tv/oauth/authorize",
+    tokenUrl: "https://api.trakt.tv/oauth/token",
+    scopes: [],
+    clientIdEnv: "TRAKT_CLIENT_ID",
+    secretEnv: "TRAKT_CLIENT_SECRET",
+    tokenAuth: "body",
+    tokenContentType: "json",
+    refreshNeedsRedirectUri: true,
+    consentVersion: "trakt-v1",
+    scopeSeparator: " ",
+    trust: {
+      origin: "The Trakt account you connect yourself.",
+      seen: [
+        "How many films and shows you have logged recently",
+        "That you connected Trakt, used to fill the film lane",
+      ],
+      neverTouched: [
+        "Your ratings, reviews, comments, or lists",
+        "Who you follow or any social activity on Trakt",
+      ],
+    },
+    async fetchAndReduce(accessToken) {
+      const data = await fetchJson(
+        "https://api.trakt.tv/users/me/history?limit=100",
+        accessToken,
+        {
+          "trakt-api-version": "2",
+          "trakt-api-key": process.env.TRAKT_CLIENT_ID?.trim() ?? "",
+        },
+      );
+      const items = Array.isArray(data) ? data.length : 0;
+      return { counts: { items } };
+    },
+  },
+  {
+    id: "github",
+    laneId: "communities",
+    source: "github",
+    label: "GitHub",
+    description:
+      "Reads how much you build in the open read-only: your public repository count, never your code, private repos, or activity.",
+    authUrl: "https://github.com/login/oauth/authorize",
+    tokenUrl: "https://github.com/login/oauth/access_token",
+    scopes: ["read:user"],
+    clientIdEnv: "GITHUB_CLIENT_ID",
+    secretEnv: "GITHUB_CLIENT_SECRET",
+    tokenAuth: "body",
+    tokenHeaders: { "User-Agent": "MatchLab-Connector" },
+    consentVersion: "github-v1",
+    scopeSeparator: " ",
+    trust: {
+      origin: "The GitHub account you connect yourself.",
+      seen: [
+        "How many public repositories you have",
+        "That you connected GitHub, used to fill the communities lane",
+      ],
+      neverTouched: [
+        "Any code, private repository, or commit content",
+        "Your issues, pull requests, or organisation membership",
+      ],
+    },
+    async fetchAndReduce(accessToken) {
+      const data = (await fetchJson("https://api.github.com/user", accessToken, {
+        "User-Agent": "MatchLab-Connector",
+      })) as { public_repos?: number };
+      const items =
+        typeof data.public_repos === "number" ? data.public_repos : 0;
+      return { counts: { items } };
+    },
+  },
+  {
+    id: "reddit",
+    laneId: "communities",
+    source: "reddit",
+    label: "Reddit",
+    description:
+      "Reads the communities you are part of read-only: how many subreddits you subscribe to, never your posts, comments, or history.",
+    authUrl: "https://www.reddit.com/api/v1/authorize",
+    tokenUrl: "https://www.reddit.com/api/v1/access_token",
+    scopes: ["mysubreddits"],
+    clientIdEnv: "REDDIT_CLIENT_ID",
+    secretEnv: "REDDIT_CLIENT_SECRET",
+    tokenAuth: "basic",
+    tokenHeaders: { "User-Agent": "MatchLab-Connector/1.0" },
+    extraAuthParams: { duration: "permanent" },
+    consentVersion: "reddit-v1",
+    scopeSeparator: " ",
+    trust: {
+      origin: "The Reddit account you connect yourself.",
+      seen: [
+        "How many subreddits you subscribe to",
+        "That you connected Reddit, used to fill the communities lane",
+      ],
+      neverTouched: [
+        "Your posts, comments, votes, or browsing history",
+        "The names of the specific subreddits you follow",
+      ],
+    },
+    async fetchAndReduce(accessToken) {
+      const data = (await fetchJson(
+        "https://oauth.reddit.com/subreddits/mine/subscriber?limit=100",
+        accessToken,
+        { "User-Agent": "MatchLab-Connector/1.0" },
+      )) as { data?: { children?: unknown[] } };
+      const items = Array.isArray(data.data?.children)
+        ? data.data.children.length
+        : 0;
+      return { counts: { items } };
+    },
+  },
+  {
+    id: "discord",
+    laneId: "communities",
+    source: "discord",
+    label: "Discord",
+    description:
+      "Reads the communities you are part of read-only: how many servers you belong to, never your messages, members, or channels.",
+    authUrl: "https://discord.com/oauth2/authorize",
+    tokenUrl: "https://discord.com/api/oauth2/token",
+    scopes: ["identify", "guilds"],
+    clientIdEnv: "DISCORD_CLIENT_ID",
+    secretEnv: "DISCORD_CLIENT_SECRET",
+    tokenAuth: "body",
+    consentVersion: "discord-v1",
+    scopeSeparator: " ",
+    trust: {
+      origin: "The Discord account you connect yourself.",
+      seen: [
+        "How many servers you belong to",
+        "That you connected Discord, used to fill the communities lane",
+      ],
+      neverTouched: [
+        "Your messages, direct messages, or channel content",
+        "The names of the specific servers you are in",
+      ],
+    },
+    async fetchAndReduce(accessToken) {
+      const data = await fetchJson(
+        "https://discord.com/api/users/@me/guilds",
+        accessToken,
+      );
+      const items = Array.isArray(data) ? data.length : 0;
+      return { counts: { items } };
+    },
+  },
 ];
 
 export function getProviderConfig(
@@ -243,7 +482,26 @@ export function buildAuthorizeUrl(
     scope: cfg.scopes.join(cfg.scopeSeparator),
     state,
   });
+  if (cfg.extraAuthParams) {
+    for (const [key, value] of Object.entries(cfg.extraAuthParams)) {
+      params.set(key, value);
+    }
+  }
   return `${cfg.authUrl}?${params.toString()}`;
+}
+
+/** Absolute origin for OAuth redirect URIs on paths without a live request (refresh). */
+function connectorOrigin(): string {
+  const domains = process.env.REPLIT_DOMAINS?.split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (domains && domains.length > 0) return `https://${domains[0]}`;
+  return process.env.APP_ORIGIN?.trim() || "http://localhost";
+}
+
+/** The provider callback URI derived from the environment, for the refresh path. */
+export function connectorCallbackUri(providerId: string): string {
+  return `${connectorOrigin()}/api/me/connectors/${providerId}/callback`;
 }
 
 function normalizeTokenResponse(json: Record<string, unknown>): NormalizedTokens {
@@ -288,17 +546,25 @@ async function tokenRequest(
       503,
     );
   }
-  const body = new URLSearchParams(params);
+  const payload: Record<string, string> = { ...params };
   const headers: Record<string, string> = {
-    "Content-Type": "application/x-www-form-urlencoded",
     Accept: "application/json",
+    ...(cfg.tokenHeaders ?? {}),
   };
   if (cfg.tokenAuth === "basic") {
     headers.Authorization =
       "Basic " + Buffer.from(`${clientId}:${secret}`).toString("base64");
   } else {
-    body.set("client_id", clientId);
-    body.set("client_secret", secret);
+    payload.client_id = clientId;
+    payload.client_secret = secret;
+  }
+  let body: string;
+  if (cfg.tokenContentType === "json") {
+    headers["Content-Type"] = "application/json";
+    body = JSON.stringify(payload);
+  } else {
+    headers["Content-Type"] = "application/x-www-form-urlencoded";
+    body = new URLSearchParams(payload).toString();
   }
   let res: Response;
   try {
@@ -339,8 +605,12 @@ export function refreshAccessToken(
   cfg: OAuthProviderConfig,
   refreshToken: string,
 ): Promise<NormalizedTokens> {
-  return tokenRequest(cfg, {
+  const params: Record<string, string> = {
     grant_type: "refresh_token",
     refresh_token: refreshToken,
-  });
+  };
+  if (cfg.refreshNeedsRedirectUri) {
+    params.redirect_uri = connectorCallbackUri(cfg.id);
+  }
+  return tokenRequest(cfg, params);
 }

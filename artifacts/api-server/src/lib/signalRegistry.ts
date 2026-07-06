@@ -36,6 +36,7 @@ export interface ReadinessBreakdown {
   music: number;
   vitality: number;
   exist: number;
+  communities: number;
   curiosity: number;
   film: number;
   reading: number;
@@ -151,6 +152,12 @@ export interface SignalCounts {
    * here, never the underlying mood, sleep, productivity, or activity values.
    */
   existItems: number;
+  /**
+   * Communities the user belongs to across the connectors they link (public
+   * GitHub repositories, subscribed subreddits, Discord servers). Only the
+   * summed count is used here, never repo contents, subreddit names, or servers.
+   */
+  communityItems: number;
   /**
    * Curiosity items shared in the most recent interests paste (what they search,
    * watch, and follow), pulled from a Google Takeout export or typed by hand.
@@ -876,6 +883,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     dataSource: {
       kind: "importSummaryCount",
       source: "music-paste",
+      sources: ["music-paste", "spotify"],
       summaryPath: ["counts", "items"],
       capture: "paste",
     },
@@ -904,8 +912,8 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "A simple count of how many you gave me, used to fill the lane",
       ],
       neverTouched: [
-        "Anything you do not paste in",
-        "OAuth access to Spotify or any account",
+        "Anything you do not paste in, or anything beyond your top artists if you connect Spotify",
+        "What you are playing now, your playlists, or who you follow",
         "Your raw items are never sent to any AI prompt, only the count moves your readiness",
       ],
     },
@@ -916,6 +924,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     dataSource: {
       kind: "importSummaryCount",
       source: "film-paste",
+      sources: ["film-paste", "trakt"],
       summaryPath: ["counts", "items"],
       capture: "paste",
     },
@@ -944,8 +953,8 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "A simple count of how many you gave me, used to fill the lane",
       ],
       neverTouched: [
-        "Anything you do not paste in",
-        "OAuth access to Letterboxd, Netflix, or any account",
+        "Anything you do not paste in, or anything beyond your recent history if you connect Trakt",
+        "Your ratings, reviews, comments, or lists",
         "Your raw items are never sent to any AI prompt, only the count moves your readiness",
       ],
     },
@@ -1037,7 +1046,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     dataSource: {
       kind: "importSummaryCount",
       source: "vitality-paste",
-      sources: ["vitality-paste", "strava", "fitbit"],
+      sources: ["vitality-paste", "strava", "fitbit", "oura"],
       summaryPath: ["counts", "items"],
       capture: "paste",
     },
@@ -1109,6 +1118,47 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "The actual mood, sleep, productivity, or activity values",
         "Any correlation, insight, or note stored in Exist",
         "Your raw values are never sent to any AI prompt, only the count moves your readiness",
+      ],
+    },
+  },
+  {
+    id: "communities",
+    countKey: "communityItems",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "github",
+      sources: ["github", "reddit", "discord"],
+      summaryPath: ["counts", "items"],
+    },
+    label: "Communities you're in",
+    dimensions: [
+      "the communities you belong to",
+      "how you spend your attention online",
+      "the scenes and interests you gather around",
+    ],
+    weight: 0.05,
+    confidence: 0.5,
+    normalize: { kind: "count", denominator: 10 },
+    describe: (c) =>
+      `Has shared enough of the communities they belong to across GitHub, Reddit, and Discord to cover ${c}% of that lane, a read on the scenes and interests someone gathers around.`,
+    action: {
+      label: "Connect a community source",
+      detail:
+        "Link GitHub, Reddit, or Discord. I read how many communities you belong to, never the contents, names, or messages inside them.",
+      href: "/connections",
+    },
+    trust: {
+      origin:
+        "The GitHub, Reddit, and Discord accounts you connect yourself.",
+      noun: "community",
+      seen: [
+        "How many public repos, subreddits, and servers you belong to across the sources you link",
+        "A simple summed count of those communities, used to fill the lane",
+      ],
+      neverTouched: [
+        "The contents of any repo, subreddit, or server",
+        "The names of the specific communities you are in",
+        "Your posts, messages, or activity inside any of them",
       ],
     },
   },

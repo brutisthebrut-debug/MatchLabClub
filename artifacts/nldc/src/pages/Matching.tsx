@@ -308,6 +308,7 @@ export default function Matching() {
     receipts: 0,
     music: 0,
     vitality: 0,
+    communities: 0,
     curiosity: 0,
     film: 0,
     reading: 0,

@@ -96,6 +96,11 @@ export interface MatchReadinessBreakdown {
      * @minimum 0
      * @maximum 100
      */
+  communities: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
   curiosity: number;
   /**
      * @minimum 0
