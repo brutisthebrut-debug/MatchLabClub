@@ -42,15 +42,20 @@ import {
   RefreshCw,
   Loader2,
   Unlink,
+  LineChart,
+  Plug,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetConnectors,
+  useSyncConnector,
+  useDisconnectConnector,
   getGetMatchingStateQueryKey,
 } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
+import { useToast } from "@/hooks/use-toast";
 import { syncGoogleCalendar, disconnectGoogleCalendar } from "@/lib/apiClient";
 
 const FOUNDER_KEY_CLIENT =
@@ -362,6 +367,66 @@ const LIVE: Connector[] = [
       "Fills the vitality lane of your Match Readiness. A clearer rhythm helps me pace a real connection around your energy.",
   },
   {
+    id: "strava",
+    title: "Strava rhythm",
+    icon: Footprints,
+    color: "hsl(18 90% 55%)",
+    blurb:
+      "Connect Strava and I read the rhythm of when and how you move: activity types, how long, and the days you tend to get out. Movement cadence is an honest read of your energy and weekly tempo. Read only, I never touch your routes or locations.",
+    returns: "An energy and cadence read that helps pace a real connection around your week.",
+    access: [
+      "Activity types, durations, and the days and times you tend to move",
+      "Weekly frequency and rough volume of activity, kept as a count that fills the lane",
+    ],
+    excludes: [
+      "GPS routes, start points, or any precise location",
+      "Heart rate, pace, or performance metrics",
+      "Any ability to post, kudos, or change your activities",
+    ],
+    readiness:
+      "Fills the vitality lane of your Match Readiness alongside your paste and Fitbit. A clearer movement rhythm helps me pace a real connection around your energy.",
+  },
+  {
+    id: "fitbit",
+    title: "Fitbit activity",
+    icon: Activity,
+    color: "hsl(174 60% 45%)",
+    blurb:
+      "Connect Fitbit and I read your daily movement cadence: steps, active minutes, and the shape of a typical week. It grounds your energy and routine in something real, not a self-report. Read only, I never touch precise location or medical detail.",
+    returns: "A read on your daily energy and how steady your weekly routine is.",
+    access: [
+      "Daily step counts and active minutes",
+      "The days and rough times you tend to be active, kept as a count that fills the lane",
+    ],
+    excludes: [
+      "Precise GPS location or map data",
+      "Detailed heart rate, sleep-stage, or any medical record",
+      "Any ability to change anything on your Fitbit account",
+    ],
+    readiness:
+      "Fills the vitality lane of your Match Readiness alongside your paste and Strava. A steadier routine helps me pace a real connection.",
+  },
+  {
+    id: "exist",
+    title: "Exist life-log",
+    icon: LineChart,
+    color: "hsl(210 70% 55%)",
+    blurb:
+      "Connect Exist (exist.io) and I read the derived trends it already tracks about your days: mood, productivity, and activity. It is a compact honest read of your week that no single app captures on its own. Read only, I keep counts and trends, never your raw entries.",
+    returns: "A read on the shape of your week: mood steadiness, productivity, and activity trends.",
+    access: [
+      "The derived daily attribute trends Exist already computes for you",
+      "How many days of data are available, kept as a count that fills the lane",
+    ],
+    excludes: [
+      "Any raw journal entry, note, or free text you logged",
+      "The underlying third-party accounts Exist itself connects to",
+      "Any ability to write or change your Exist data",
+    ],
+    readiness:
+      "Fills the Exist life-log lane of your Match Readiness. The truer the picture of your week, the better I match on how you actually live.",
+  },
+  {
     id: "podcasts-paste",
     title: "Podcast lineup",
     icon: Headphones,
@@ -542,24 +607,6 @@ const RESEARCHING: Connector[] = [
     blurb:
       "End-to-end encrypted by design, which is exactly why this is hard. Everything I run today is server-side, so I will only pursue this if there is a way to get a tone read without your raw messages ever reaching my servers. Open question: can I honour the E2EE contract and still deliver useful coaching. Until I can, it stays in research.",
     returns: "If it lands, the most accurate tone read in the product.",
-  },
-  {
-    id: "strava",
-    title: "Strava rhythm",
-    icon: Footprints,
-    color: "hsl(18 90% 55%)",
-    blurb:
-      "Strava exposes activity types, times, and frequency through its API. Movement rhythm is a strong honest signal of energy and weekly cadence. Research question: how to read the rhythm of when and how you move without ever touching exact routes or locations.",
-    returns: "If it lands, an energy and cadence read that informs date pacing and timing.",
-    access: [
-      "Activity types, durations, and the days and times you tend to move",
-      "Weekly frequency and rough volume of activity",
-    ],
-    excludes: [
-      "GPS routes, start points, or any precise location",
-      "Heart rate, pace, or performance metrics",
-      "Any ability to post, kudos, or change your activities",
-    ],
   },
   {
     id: "photo-library-vibe",
@@ -820,6 +867,197 @@ function GoogleCalendarLivePanel() {
   );
 }
 
+// Per-user OAuth connectors. Each one is a real connection the signed-in user
+// starts themselves; the code ships before credentials exist, so the panel
+// reads the honest `configured` flag and shows "Available soon" until the
+// MatchLab team finishes provider setup.
+const OAUTH_PROVIDER_IDS = ["strava", "fitbit", "exist"] as const;
+
+/**
+ * Live per-user status and controls for an OAuth connector (Strava, Fitbit,
+ * Exist). Signed-out visitors get a sign-in prompt; before credentials are
+ * configured the connect button is disabled with an honest note; once connected
+ * the panel surfaces the derived count and sync/disconnect controls. The derived
+ * count is the only number we ever show, and connect is a full-page redirect to
+ * the provider so no token ever touches the browser.
+ */
+function OAuthConnectorPanel({ provider }: { provider: string }) {
+  const { isAuthenticated, isLoading: authLoading, login } = useAuth();
+  const { data, isLoading, isError, refetch } = useGetConnectors();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const syncMut = useSyncConnector();
+  const disconnectMut = useDisconnectConnector();
+  const [busy, setBusy] = useState<null | "sync" | "disconnect">(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const connector = data?.connectors.find((c) => c.provider === provider);
+  const configured = connector?.configured ?? false;
+  const status = connector?.status ?? "available";
+  const connected = !isError && status === "connected";
+  const meta = LIVE_STATUS_META[status] ?? LIVE_STATUS_META.available;
+  const syncedAt = formatSyncedAt(connector?.lastSyncAt ?? null);
+
+  function startConnect() {
+    if (!isAuthenticated) {
+      login();
+      return;
+    }
+    window.location.href = `/api/me/connectors/${provider}/connect`;
+  }
+
+  async function run(action: "sync" | "disconnect") {
+    setBusy(action);
+    setError(null);
+    try {
+      if (action === "sync") {
+        await syncMut.mutateAsync({ provider });
+      } else {
+        await disconnectMut.mutateAsync({ provider });
+      }
+      await refetch();
+      void queryClient.invalidateQueries({
+        queryKey: getGetMatchingStateQueryKey(),
+      });
+      toast({
+        title: action === "sync" ? "Synced" : "Disconnected",
+        description:
+          action === "sync"
+            ? "I pulled the latest and refreshed your readiness."
+            : "I removed this source and purged its derived data.",
+      });
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Something went wrong. Try again.",
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const badgeLabel = isLoading
+    ? "Checking"
+    : isError
+      ? "Status unavailable"
+      : !configured
+        ? "Available soon"
+        : meta.label;
+  const badgeColor = !configured && !connected ? "hsl(43 65% 60%)" : meta.color;
+
+  return (
+    <div
+      className="rounded-[1.25rem] border border-white/15 bg-white/30 dark:bg-black/10 px-4 py-3 flex flex-col gap-2.5 mt-1"
+      data-testid={`oauth-connector-panel-${provider}`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          Connection status
+        </span>
+        <span
+          className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+          style={{
+            background: withAlpha(badgeColor, 0.12),
+            color: badgeColor,
+            border: `1px solid ${withAlpha(badgeColor, 0.3)}`,
+          }}
+          data-testid={`oauth-connector-status-${provider}`}
+        >
+          {connected && (
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: badgeColor }}
+            />
+          )}
+          {badgeLabel}
+        </span>
+      </div>
+
+      {connected && connector?.derivedCount != null ? (
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Reading {connector.derivedCount} derived{" "}
+          {connector.derivedCount === 1 ? "signal" : "signals"} from this source.
+          I keep the counts and trends, never the raw entries.
+        </p>
+      ) : !configured ? (
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          This connection opens once the MatchLab team finishes provider setup.
+          The full data contract above is what it will read, and never touch,
+          the moment it goes live.
+        </p>
+      ) : status === "error" ? (
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          This connection needs attention. Reconnect to refresh access.
+        </p>
+      ) : (
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Connect to start filling this lane. Read only, and one click removes it
+          and purges everything derived from it.
+        </p>
+      )}
+
+      {syncedAt && (
+        <p className="text-[11px] text-muted-foreground/70">
+          Last synced {syncedAt}
+        </p>
+      )}
+
+      {error && (
+        <p className="text-xs text-[hsl(348_70%_62%)] leading-relaxed">{error}</p>
+      )}
+
+      <div className="flex flex-wrap gap-2 pt-1">
+        {!connected ? (
+          <button
+            type="button"
+            onClick={startConnect}
+            disabled={authLoading || (isAuthenticated && !configured)}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(248_62%_55%/0.4)] text-[hsl(248_62%_60%)] hover:bg-[hsl(248_62%_55%/0.08)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            data-testid={`button-oauth-connect-${provider}`}
+          >
+            <Plug className="w-3.5 h-3.5" />
+            {!isAuthenticated
+              ? "Sign in to connect"
+              : status === "error"
+                ? "Reconnect"
+                : "Connect"}
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => run("sync")}
+              disabled={busy !== null}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(248_62%_55%/0.4)] text-[hsl(248_62%_60%)] hover:bg-[hsl(248_62%_55%/0.08)] disabled:opacity-50 transition-colors"
+              data-testid={`button-oauth-sync-${provider}`}
+            >
+              {busy === "sync" ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="w-3.5 h-3.5" />
+              )}
+              Sync now
+            </button>
+            <button
+              type="button"
+              onClick={() => run("disconnect")}
+              disabled={busy !== null}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-[hsl(348_55%_60%/0.4)] text-[hsl(348_60%_62%)] hover:bg-[hsl(348_55%_55%/0.08)] disabled:opacity-50 transition-colors"
+              data-testid={`button-oauth-disconnect-${provider}`}
+            >
+              {busy === "disconnect" ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Unlink className="w-3.5 h-3.5" />
+              )}
+              Disconnect
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ConnectorCard({
   card,
   status,
@@ -918,6 +1156,10 @@ function ConnectorCard({
 
       {card.id === "google-calendar" && <GoogleCalendarLivePanel />}
 
+      {OAUTH_PROVIDER_IDS.includes(
+        card.id as (typeof OAUTH_PROVIDER_IDS)[number],
+      ) && <OAuthConnectorPanel provider={card.id} />}
+
       {card.comingNote && (
         <p className="text-xs text-[hsl(var(--brand-indigo))] leading-relaxed italic px-1 mt-1">
           {card.comingNote}
@@ -978,10 +1220,43 @@ export default function ConnectionCenter() {
   );
 
   const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
   // Shares the cache with the per-card live panel; surfaces an honest banner
   // when the signed-in connection status fails to load.
   const { isError: connectorsError, refetch: refetchConnectors } =
     useGetConnectors();
+
+  // The OAuth callback redirects back here with a connector result. Surface it
+  // as a toast, then strip the params so a refresh does not repeat the message.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const connector = params.get("connector");
+    if (!connector) return;
+    const connected = params.get("connected");
+    const errorCode = params.get("error");
+    if (connected === "1") {
+      toast({
+        title: "Connected",
+        description: "I pulled your first read and updated your readiness.",
+      });
+    } else if (errorCode) {
+      toast({
+        title: "Connection did not finish",
+        description: "Nothing was saved. You can try connecting again.",
+        variant: "destructive",
+      });
+    }
+    params.delete("connector");
+    params.delete("connected");
+    params.delete("error");
+    const query = params.toString();
+    window.history.replaceState(
+      {},
+      "",
+      window.location.pathname + (query ? `?${query}` : ""),
+    );
+  }, [toast]);
 
   return (
     <AppLayout>

@@ -789,12 +789,86 @@ export const GetConnectorsResponse = zod.object({
   "generatedAt": zod.coerce.date().describe('ISO timestamp the status was generated.'),
   "isDemo": zod.boolean().describe('True when this is the anon demo, not a real account\'s connectors.'),
   "connectors": zod.array(zod.object({
-  "provider": zod.enum(['google-calendar', 'spotify', 'instagram-oauth']).describe('Stable provider key.'),
+  "provider": zod.enum(['google-calendar', 'spotify', 'instagram-oauth', 'strava', 'fitbit', 'exist']).describe('Stable provider key.'),
   "laneId": zod.string().describe('The readiness lane this connector feeds.'),
   "label": zod.string().describe('Human label for the connector.'),
   "status": zod.enum(['available', 'connected', 'error', 'disconnected']).describe('Lifecycle of the live connection.'),
   "live": zod.boolean().describe('True when a live connection currently holds derived signal.'),
   "founderOnly": zod.boolean().describe('True when the live connect\/sync\/disconnect controls are founder-gated.'),
+  "configured": zod.boolean().describe('True when the connector\'s credentials are configured on the server so a user can actually start a connection. False means the provider is registered but not yet configured, and connect attempts return 503.'),
+  "derivedCount": zod.number().nullable().describe('Derived signal count this connector currently contributes (e.g. calendar events), never raw content. Null when not applicable.'),
+  "lastSyncAt": zod.coerce.date().nullable().describe('ISO timestamp of the last sync attempt.'),
+  "lastSuccessAt": zod.coerce.date().nullable().describe('ISO timestamp of the last successful sync.'),
+  "lastErrorCode": zod.string().nullable().describe('Machine-readable code for the last error, null when healthy.'),
+  "description": zod.string().describe('One-line summary of what this connector returns.')
+}).describe('One data connector\'s product state. Only lifecycle and derived counts are exposed here, never raw third-party content. `status` is `available` before a live connection exists, then `connected` \/ `error` \/ `disconnected`. `derivedCount` is the derived signal the connector currently contributes (e.g. calendar events read for rhythm), never the events themselves.'))
+}).describe('The signed-in user\'s data connectors and their live status. `isDemo` flags the signed-out demo example, which never reflects a real account.')
+
+
+/**
+ * Refreshes the access token if needed, reads the provider API read-only,
+reduces it to the derived signal count, and stores ONLY that count as a
+latest-wins import row feeding the connector's readiness lane. Requires
+the user to have connected this provider first. Only derived counts are
+stored, never raw third-party content.
+
+ * @summary Sync a per-user OAuth connector for the signed-in user
+ */
+export const SyncConnectorParams = zod.object({
+  "provider": zod.coerce.string().describe('The connector provider key (strava, fitbit, exist).')
+})
+
+export const SyncConnectorHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const SyncConnectorResponse = zod.object({
+  "generatedAt": zod.coerce.date().describe('ISO timestamp the status was generated.'),
+  "isDemo": zod.boolean().describe('True when this is the anon demo, not a real account\'s connectors.'),
+  "connectors": zod.array(zod.object({
+  "provider": zod.enum(['google-calendar', 'spotify', 'instagram-oauth', 'strava', 'fitbit', 'exist']).describe('Stable provider key.'),
+  "laneId": zod.string().describe('The readiness lane this connector feeds.'),
+  "label": zod.string().describe('Human label for the connector.'),
+  "status": zod.enum(['available', 'connected', 'error', 'disconnected']).describe('Lifecycle of the live connection.'),
+  "live": zod.boolean().describe('True when a live connection currently holds derived signal.'),
+  "founderOnly": zod.boolean().describe('True when the live connect\/sync\/disconnect controls are founder-gated.'),
+  "configured": zod.boolean().describe('True when the connector\'s credentials are configured on the server so a user can actually start a connection. False means the provider is registered but not yet configured, and connect attempts return 503.'),
+  "derivedCount": zod.number().nullable().describe('Derived signal count this connector currently contributes (e.g. calendar events), never raw content. Null when not applicable.'),
+  "lastSyncAt": zod.coerce.date().nullable().describe('ISO timestamp of the last sync attempt.'),
+  "lastSuccessAt": zod.coerce.date().nullable().describe('ISO timestamp of the last successful sync.'),
+  "lastErrorCode": zod.string().nullable().describe('Machine-readable code for the last error, null when healthy.'),
+  "description": zod.string().describe('One-line summary of what this connector returns.')
+}).describe('One data connector\'s product state. Only lifecycle and derived counts are exposed here, never raw third-party content. `status` is `available` before a live connection exists, then `connected` \/ `error` \/ `disconnected`. `derivedCount` is the derived signal the connector currently contributes (e.g. calendar events read for rhythm), never the events themselves.'))
+}).describe('The signed-in user\'s data connectors and their live status. `isDemo` flags the signed-out demo example, which never reflects a real account.')
+
+
+/**
+ * Purges the user's derived import rows for this provider, deletes the
+sealed OAuth tokens, and marks the connection disconnected. The readiness
+lane immediately reflects the lower count. One toggle fully removes the
+source and its data.
+
+ * @summary Disconnect a per-user OAuth connector for the signed-in user
+ */
+export const DisconnectConnectorParams = zod.object({
+  "provider": zod.coerce.string().describe('The connector provider key (strava, fitbit, exist).')
+})
+
+export const DisconnectConnectorHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const DisconnectConnectorResponse = zod.object({
+  "generatedAt": zod.coerce.date().describe('ISO timestamp the status was generated.'),
+  "isDemo": zod.boolean().describe('True when this is the anon demo, not a real account\'s connectors.'),
+  "connectors": zod.array(zod.object({
+  "provider": zod.enum(['google-calendar', 'spotify', 'instagram-oauth', 'strava', 'fitbit', 'exist']).describe('Stable provider key.'),
+  "laneId": zod.string().describe('The readiness lane this connector feeds.'),
+  "label": zod.string().describe('Human label for the connector.'),
+  "status": zod.enum(['available', 'connected', 'error', 'disconnected']).describe('Lifecycle of the live connection.'),
+  "live": zod.boolean().describe('True when a live connection currently holds derived signal.'),
+  "founderOnly": zod.boolean().describe('True when the live connect\/sync\/disconnect controls are founder-gated.'),
+  "configured": zod.boolean().describe('True when the connector\'s credentials are configured on the server so a user can actually start a connection. False means the provider is registered but not yet configured, and connect attempts return 503.'),
   "derivedCount": zod.number().nullable().describe('Derived signal count this connector currently contributes (e.g. calendar events), never raw content. Null when not applicable.'),
   "lastSyncAt": zod.coerce.date().nullable().describe('ISO timestamp of the last sync attempt.'),
   "lastSuccessAt": zod.coerce.date().nullable().describe('ISO timestamp of the last successful sync.'),

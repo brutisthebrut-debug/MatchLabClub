@@ -2154,6 +2154,157 @@ export function useGetConnectors<TData = Awaited<ReturnType<typeof getConnectors
 
 
 
+export const getSyncConnectorUrl = (provider: string,) => {
+
+
+
+
+  return `/api/me/connectors/${provider}/sync`
+}
+
+/**
+ * Refreshes the access token if needed, reads the provider API read-only,
+reduces it to the derived signal count, and stores ONLY that count as a
+latest-wins import row feeding the connector's readiness lane. Requires
+the user to have connected this provider first. Only derived counts are
+stored, never raw third-party content.
+
+ * @summary Sync a per-user OAuth connector for the signed-in user
+ */
+export const syncConnector = async (provider: string, options?: RequestInit): Promise<ConnectorsStatusResponse> => {
+
+  return customFetch<ConnectorsStatusResponse>(getSyncConnectorUrl(provider),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getSyncConnectorMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncConnector>>, TError,{provider: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof syncConnector>>, TError,{provider: string}, TContext> => {
+
+const mutationKey = ['syncConnector'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof syncConnector>>, {provider: string}> = (props) => {
+          const {provider} = props ?? {};
+
+          return  syncConnector(provider,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SyncConnectorMutationResult = NonNullable<Awaited<ReturnType<typeof syncConnector>>>
+
+    export type SyncConnectorMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Sync a per-user OAuth connector for the signed-in user
+ */
+export const useSyncConnector = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncConnector>>, TError,{provider: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof syncConnector>>,
+        TError,
+        {provider: string},
+        TContext
+      > => {
+      return useMutation(getSyncConnectorMutationOptions(options));
+    }
+
+export const getDisconnectConnectorUrl = (provider: string,) => {
+
+
+
+
+  return `/api/me/connectors/${provider}/disconnect`
+}
+
+/**
+ * Purges the user's derived import rows for this provider, deletes the
+sealed OAuth tokens, and marks the connection disconnected. The readiness
+lane immediately reflects the lower count. One toggle fully removes the
+source and its data.
+
+ * @summary Disconnect a per-user OAuth connector for the signed-in user
+ */
+export const disconnectConnector = async (provider: string, options?: RequestInit): Promise<ConnectorsStatusResponse> => {
+
+  return customFetch<ConnectorsStatusResponse>(getDisconnectConnectorUrl(provider),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getDisconnectConnectorMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectConnector>>, TError,{provider: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof disconnectConnector>>, TError,{provider: string}, TContext> => {
+
+const mutationKey = ['disconnectConnector'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof disconnectConnector>>, {provider: string}> = (props) => {
+          const {provider} = props ?? {};
+
+          return  disconnectConnector(provider,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DisconnectConnectorMutationResult = NonNullable<Awaited<ReturnType<typeof disconnectConnector>>>
+
+    export type DisconnectConnectorMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Disconnect a per-user OAuth connector for the signed-in user
+ */
+export const useDisconnectConnector = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectConnector>>, TError,{provider: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof disconnectConnector>>,
+        TError,
+        {provider: string},
+        TContext
+      > => {
+      return useMutation(getDisconnectConnectorMutationOptions(options));
+    }
+
 export const getGetMyReferralsUrl = () => {
 
 

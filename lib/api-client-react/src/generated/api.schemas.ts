@@ -3009,6 +3009,9 @@ export const ConnectorStatusProvider = {
   'google-calendar': 'google-calendar',
   spotify: 'spotify',
   'instagram-oauth': 'instagram-oauth',
+  strava: 'strava',
+  fitbit: 'fitbit',
+  exist: 'exist',
 } as const;
 
 /**
@@ -3040,6 +3043,8 @@ export interface ConnectorStatus {
   live: boolean;
   /** True when the live connect/sync/disconnect controls are founder-gated. */
   founderOnly: boolean;
+  /** True when the connector's credentials are configured on the server so a user can actually start a connection. False means the provider is registered but not yet configured, and connect attempts return 503. */
+  configured: boolean;
   /**
      * Derived signal count this connector currently contributes (e.g. calendar events), never raw content. Null when not applicable.
      * @nullable

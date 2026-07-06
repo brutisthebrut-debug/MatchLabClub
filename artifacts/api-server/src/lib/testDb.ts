@@ -338,6 +338,8 @@ ensureStore("imported_sources");
 export const importedSourcesTable = makeTable("imported_sources");
 ensureStore("connector_connections");
 export const connectorConnectionsTable = makeTable("connector_connections");
+ensureStore("oauth_tokens");
+export const oauthTokensTable = makeTable("oauth_tokens");
 ensureStore("post_date_notes");
 export const postDateNotesTable = makeTable("post_date_notes");
 ensureStore("dating_wins");

@@ -47,6 +47,7 @@ import {
   profilePhotosTable,
   careDialectProfilesTable,
   connectorConnectionsTable,
+  oauthTokensTable,
 } from "@workspace/db";
 import {
   ExportMyDataResponse,
@@ -668,6 +669,7 @@ router.delete("/account", async (req, res): Promise<void> => {
     db
       .delete(connectorConnectionsTable)
       .where(eq(connectorConnectionsTable.userId, userId)),
+    db.delete(oauthTokensTable).where(eq(oauthTokensTable.userId, userId)),
   ]);
 
   // Echo companion surfaces: the evolving model of the user, the conversation
@@ -1013,7 +1015,13 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .delete(connectorConnectionsTable)
         .where(eq(connectorConnectionsTable.userId, userId))
         .returning({ id: connectorConnectionsTable.id });
+
+      const oauthTokenDel = await tx
+        .delete(oauthTokensTable)
+        .where(eq(oauthTokensTable.userId, userId))
+        .returning({ id: oauthTokensTable.id });
       tables["connector_connections"] = connectorDel.length;
+      tables["oauth_tokens"] = oauthTokenDel.length;
 
       const followUpDel = await tx
         .delete(coachFollowUpsTable)

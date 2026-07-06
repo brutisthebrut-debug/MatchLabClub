@@ -35,6 +35,7 @@ export interface ReadinessBreakdown {
   receipts: number;
   music: number;
   vitality: number;
+  exist: number;
   curiosity: number;
   film: number;
   reading: number;
@@ -144,6 +145,12 @@ export interface SignalCounts {
    * underlying health record.
    */
   vitalityItems: number;
+  /**
+   * Life-log attributes the user actively tracks in Exist, read through the
+   * per-user Exist connector. Only the count of tracked attributes is used
+   * here, never the underlying mood, sleep, productivity, or activity values.
+   */
+  existItems: number;
   /**
    * Curiosity items shared in the most recent interests paste (what they search,
    * watch, and follow), pulled from a Google Takeout export or typed by hand.
@@ -1030,6 +1037,7 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
     dataSource: {
       kind: "importSummaryCount",
       source: "vitality-paste",
+      sources: ["vitality-paste", "strava", "fitbit"],
       summaryPath: ["counts", "items"],
       capture: "paste",
     },
@@ -1062,6 +1070,45 @@ export const SIGNAL_REGISTRY: readonly SignalContributor[] = [
         "Anything you do not paste in",
         "Any underlying health record, vitals, or medical detail",
         "Your raw items are never sent to any AI prompt, only the count moves your readiness",
+      ],
+    },
+  },
+  {
+    id: "exist",
+    countKey: "existItems",
+    dataSource: {
+      kind: "importSummaryCount",
+      source: "exist",
+      summaryPath: ["counts", "items"],
+    },
+    label: "Life-log depth",
+    dimensions: [
+      "self-awareness",
+      "daily rhythm",
+      "how they reflect on their own life",
+    ],
+    weight: 0.04,
+    confidence: 0.5,
+    normalize: { kind: "count", denominator: 5 },
+    describe: (c) =>
+      `Tracks enough of their own life in Exist to cover ${c}% of that lane, a read on how self-aware and reflective they are about their daily rhythm.`,
+    action: {
+      label: "Connect Exist",
+      detail:
+        "Link your Exist account. I read how many life attributes you track, never the mood, sleep, or productivity values themselves.",
+      href: "/connections",
+    },
+    trust: {
+      origin: "The Exist account you connect yourself.",
+      noun: "attribute",
+      seen: [
+        "How many life attributes you actively track in Exist",
+        "A simple count of those attributes, used to fill the lane",
+      ],
+      neverTouched: [
+        "The actual mood, sleep, productivity, or activity values",
+        "Any correlation, insight, or note stored in Exist",
+        "Your raw values are never sent to any AI prompt, only the count moves your readiness",
       ],
     },
   },

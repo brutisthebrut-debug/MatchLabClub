@@ -42,6 +42,7 @@
     "pino-http": "^10.5.0",
     "resend": "^6.12.3",
     "tesseract.js": "^7.0.0",
+    "twilio": "^6.0.2",
     "unzipper": "^0.12.3",
     "zod": "catalog:"
   },

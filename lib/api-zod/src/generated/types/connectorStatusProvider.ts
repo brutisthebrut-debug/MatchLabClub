@@ -16,4 +16,7 @@ export const ConnectorStatusProvider = {
   'google-calendar': 'google-calendar',
   spotify: 'spotify',
   'instagram-oauth': 'instagram-oauth',
+  strava: 'strava',
+  fitbit: 'fitbit',
+  exist: 'exist',
 } as const;

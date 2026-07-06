@@ -28,6 +28,7 @@ import {
   careDialectProfilesTable,
   connectorConnectionsTable,
   behavioralGrowthEventsTable,
+  oauthTokensTable,
 } from "@workspace/db";
 import {
   GetTrustLedgerResponse,
@@ -564,6 +565,17 @@ router.delete("/me/trust-ledger/:id", async (req, res): Promise<void> => {
             eq(connectorConnectionsTable.userId, userId),
             inArray(connectorConnectionsTable.provider, keys),
             ne(connectorConnectionsTable.status, "disconnected"),
+          ),
+        );
+      // Per-user OAuth connectors (Strava, Fitbit, Exist) store sealed tokens
+      // keyed by the same provider string as the lane source. Purging the lane
+      // must also drop those tokens so nothing can silently re-sync the source.
+      await tx
+        .delete(oauthTokensTable)
+        .where(
+          and(
+            eq(oauthTokensTable.userId, userId),
+            inArray(oauthTokensTable.provider, keys),
           ),
         );
       return rows.length;

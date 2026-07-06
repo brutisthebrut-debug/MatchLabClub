@@ -1,9 +1,11 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request } from "express";
 import { and, eq, desc, isNull } from "drizzle-orm";
 import {
   db,
   connectorConnectionsTable,
   importedSourcesTable,
+  oauthTokensTable,
+  type OauthToken,
 } from "@workspace/db";
 import { GetConnectorsResponse } from "@workspace/api-zod";
 import { requireFounder } from "../middlewares/founderAuth";
@@ -11,22 +13,43 @@ import {
   syncGoogleCalendarRhythm,
   GoogleCalendarError,
 } from "../lib/googleCalendar";
+import {
+  OAUTH_PROVIDERS,
+  getProviderConfig,
+  providerConfigured,
+  buildAuthorizeUrl,
+  exchangeCodeForTokens,
+  refreshAccessToken,
+  OAuthConnectorError,
+  type OAuthProviderConfig,
+  type NormalizedTokens,
+} from "../lib/oauthConnectors";
+import { signOAuthState, verifyOAuthState } from "../lib/oauthState";
+import { sealToken, openToken } from "../lib/tokenCrypto";
 
 const router: IRouter = Router();
 
 /**
- * Data connectors surface. Live data is opt-in and, for Phase 1, founder-gated:
- * the Replit-managed Google connection is ONE account for the whole Repl (the
- * founder's), so a per-end-user live sync would attach the founder's calendar
- * to whoever called it. The read-only Google Calendar sync therefore lives
- * behind the founder key and attaches to the founder's own signed-in account;
- * the universal `.ics` paste path (in `imports.ts`) stays available to everyone.
+ * Data connectors surface. Two kinds live here:
+ *
+ *  - The Replit-managed Google Calendar sync is founder-gated: the Google
+ *    connection is ONE account for the whole Repl (the founder's), so a
+ *    per-end-user live sync would attach the founder's calendar to whoever
+ *    called it. It attaches to the founder's own signed-in account instead;
+ *    the universal `.ics` paste path (in `imports.ts`) stays available to all.
+ *
+ *  - Per-user consumer connectors (Strava, Fitbit, Exist) authorize each END
+ *    USER individually through a standard OAuth code flow. We hold each user's
+ *    tokens sealed in `oauth_tokens` (never plaintext), sync read-only, and
+ *    store ONLY the derived count. Each provider is gated behind its own
+ *    client id / secret: unconfigured providers report `configured: false` and
+ *    refuse to start a flow, so the feature ships safely before credentials
+ *    exist.
  *
  * Only product state and derived counts are ever exposed or stored here. The
- * derived calendar rhythm itself flows through `imported_sources`
- * (source = `google-calendar`) so it aggregates into the single `calendar`
- * readiness lane alongside pasted `.ics`. We never store Google tokens (they are
- * Replit-managed) and never store raw events.
+ * derived signal itself flows through `imported_sources` so it aggregates into
+ * a single readiness lane alongside any pasted equivalent. Raw events, tracks,
+ * activities, and attributes are never stored.
  */
 
 const GOOGLE_PROVIDER = "google-calendar" as const;
@@ -39,12 +62,13 @@ const GOOGLE_DESCRIPTION =
   "Reads your calendar rhythm read-only: how full your week is and when you tend to be free, never the events themselves.";
 
 type ConnectorStatusShape = {
-  provider: typeof GOOGLE_PROVIDER;
+  provider: string;
   laneId: string;
   label: string;
   status: "available" | "connected" | "error" | "disconnected";
   live: boolean;
   founderOnly: boolean;
+  configured: boolean;
   derivedCount: number | null;
   lastSyncAt: string | null;
   lastSuccessAt: string | null;
@@ -57,6 +81,25 @@ function toIso(value: Date | string | null | undefined): string | null {
   const d = value instanceof Date ? value : new Date(value);
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
+
+/** Absolute origin for building OAuth redirect URIs that survive round-trips. */
+function baseUrl(req: Request): string {
+  const domains = process.env.REPLIT_DOMAINS?.split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (domains && domains.length > 0) return `https://${domains[0]}`;
+  const proto = req.protocol || "https";
+  const host = req.get("host") ?? "localhost";
+  return `${proto}://${host}`;
+}
+
+function callbackUri(req: Request, providerId: string): string {
+  return `${baseUrl(req)}/api/me/connectors/${providerId}/callback`;
+}
+
+// ---------------------------------------------------------------------------
+// Google Calendar (founder-managed, one account for the whole Repl)
+// ---------------------------------------------------------------------------
 
 /** The derived calendar-event count the live Google sync currently contributes. */
 async function googleDerivedCount(userId: string): Promise<number | null> {
@@ -101,6 +144,7 @@ async function buildGoogleStatus(userId: string): Promise<ConnectorStatusShape> 
     status,
     live: status === "connected",
     founderOnly: true,
+    configured: true,
     derivedCount,
     lastSyncAt: toIso(conn?.lastSyncAt ?? null),
     lastSuccessAt: toIso(conn?.lastSuccessAt ?? null),
@@ -109,8 +153,8 @@ async function buildGoogleStatus(userId: string): Promise<ConnectorStatusShape> 
   };
 }
 
-/** The signed-out demo connector list, clearly flagged, never a real account. */
-function demoStatus(): ConnectorStatusShape {
+/** The signed-out demo Google entry, clearly flagged, never a real account. */
+function demoGoogleStatus(): ConnectorStatusShape {
   return {
     provider: GOOGLE_PROVIDER,
     laneId: GOOGLE_LANE,
@@ -118,6 +162,7 @@ function demoStatus(): ConnectorStatusShape {
     status: "available",
     live: false,
     founderOnly: true,
+    configured: true,
     derivedCount: null,
     lastSyncAt: null,
     lastSuccessAt: null,
@@ -126,15 +171,369 @@ function demoStatus(): ConnectorStatusShape {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Per-user OAuth connectors (Strava, Fitbit, Exist)
+// ---------------------------------------------------------------------------
+
+/** The derived item count a per-user OAuth connector currently contributes. */
+async function oauthDerivedCount(
+  userId: string,
+  cfg: OAuthProviderConfig,
+): Promise<number | null> {
+  const rows = await db
+    .select({ summary: importedSourcesTable.parsedSummary })
+    .from(importedSourcesTable)
+    .where(
+      and(
+        eq(importedSourcesTable.userId, userId),
+        eq(importedSourcesTable.source, cfg.source),
+        isNull(importedSourcesTable.deletedAt),
+      ),
+    )
+    .orderBy(desc(importedSourcesTable.uploadedAt));
+  const latest = rows[0]?.summary as
+    | { counts?: { items?: number } }
+    | undefined
+    | null;
+  if (!latest) return null;
+  return Number(latest.counts?.items ?? 0);
+}
+
+async function buildOAuthStatus(
+  userId: string,
+  cfg: OAuthProviderConfig,
+): Promise<ConnectorStatusShape> {
+  const [conn] = await db
+    .select()
+    .from(connectorConnectionsTable)
+    .where(
+      and(
+        eq(connectorConnectionsTable.userId, userId),
+        eq(connectorConnectionsTable.provider, cfg.id),
+      ),
+    );
+  const derivedCount = await oauthDerivedCount(userId, cfg);
+  const status = (conn?.status ?? "available") as ConnectorStatusShape["status"];
+  return {
+    provider: cfg.id,
+    laneId: cfg.laneId,
+    label: cfg.label,
+    status,
+    live: status === "connected",
+    founderOnly: false,
+    configured: providerConfigured(cfg),
+    derivedCount,
+    lastSyncAt: toIso(conn?.lastSyncAt ?? null),
+    lastSuccessAt: toIso(conn?.lastSuccessAt ?? null),
+    lastErrorCode: conn?.lastErrorCode ?? null,
+    description: cfg.description,
+  };
+}
+
+function demoOAuthStatus(cfg: OAuthProviderConfig): ConnectorStatusShape {
+  return {
+    provider: cfg.id,
+    laneId: cfg.laneId,
+    label: cfg.label,
+    status: "available",
+    live: false,
+    founderOnly: false,
+    configured: providerConfigured(cfg),
+    derivedCount: null,
+    lastSyncAt: null,
+    lastSuccessAt: null,
+    lastErrorCode: null,
+    description: cfg.description,
+  };
+}
+
+/** All connector statuses for a signed-in user (Google + every OAuth provider). */
+async function buildAllStatuses(
+  userId: string,
+): Promise<ConnectorStatusShape[]> {
+  const [google, ...oauth] = await Promise.all([
+    buildGoogleStatus(userId),
+    ...OAUTH_PROVIDERS.map((cfg) => buildOAuthStatus(userId, cfg)),
+  ]);
+  return [google, ...oauth];
+}
+
+/** Store freshly issued tokens for a user, sealed. Upserts on (user, provider). */
+async function storeTokens(
+  userId: string,
+  cfg: OAuthProviderConfig,
+  tokens: NormalizedTokens,
+): Promise<void> {
+  const now = new Date();
+  const sealedAccess = sealToken(tokens.accessToken);
+  const sealedRefresh = tokens.refreshToken
+    ? sealToken(tokens.refreshToken)
+    : null;
+  const scopes = tokens.scopes ?? [...cfg.scopes];
+  await db
+    .insert(oauthTokensTable)
+    .values({
+      userId,
+      provider: cfg.id,
+      accessToken: sealedAccess,
+      refreshToken: sealedRefresh,
+      scopes,
+      expiresAt: tokens.expiresAt,
+      providerUserId: tokens.providerUserId,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [oauthTokensTable.userId, oauthTokensTable.provider],
+      set: {
+        accessToken: sealedAccess,
+        refreshToken: sealedRefresh,
+        scopes,
+        expiresAt: tokens.expiresAt,
+        providerUserId: tokens.providerUserId,
+        updatedAt: now,
+      },
+    });
+}
+
+/**
+ * Persist a refreshed access token. Providers that rotate refresh tokens
+ * (Strava) return a new one; those that do not (Fitbit sometimes) leave the
+ * previously stored sealed refresh token in place so the next refresh works.
+ */
+async function persistRefreshedTokens(
+  userId: string,
+  cfg: OAuthProviderConfig,
+  fresh: NormalizedTokens,
+  prev: OauthToken,
+): Promise<void> {
+  const now = new Date();
+  const sealedAccess = sealToken(fresh.accessToken);
+  const sealedRefresh = fresh.refreshToken
+    ? sealToken(fresh.refreshToken)
+    : prev.refreshToken;
+  await db
+    .update(oauthTokensTable)
+    .set({
+      accessToken: sealedAccess,
+      refreshToken: sealedRefresh,
+      expiresAt: fresh.expiresAt,
+      updatedAt: now,
+    })
+    .where(
+      and(
+        eq(oauthTokensTable.userId, userId),
+        eq(oauthTokensTable.provider, cfg.id),
+      ),
+    );
+}
+
+/** Unseal a usable access token, refreshing proactively when near expiry. */
+async function ensureFreshAccessToken(
+  userId: string,
+  cfg: OAuthProviderConfig,
+  tokenRow: OauthToken,
+): Promise<string> {
+  const access = openToken(tokenRow.accessToken);
+  const nearExpiry =
+    tokenRow.expiresAt != null &&
+    tokenRow.expiresAt.getTime() - Date.now() < 60_000;
+  if (access && !nearExpiry) return access;
+  const refresh = openToken(tokenRow.refreshToken);
+  if (!refresh) {
+    if (access) return access;
+    throw new OAuthConnectorError(
+      "reauth_required",
+      "Reconnect this source",
+      401,
+    );
+  }
+  const fresh = await refreshAccessToken(cfg, refresh);
+  await persistRefreshedTokens(userId, cfg, fresh, tokenRow);
+  return fresh.accessToken;
+}
+
+/** Mark a connector connection errored, preserving prior success history. */
+async function recordOAuthError(
+  userId: string,
+  cfg: OAuthProviderConfig,
+  code: string,
+): Promise<void> {
+  const now = new Date();
+  await db
+    .insert(connectorConnectionsTable)
+    .values({
+      userId,
+      provider: cfg.id,
+      laneId: cfg.laneId,
+      source: cfg.source,
+      status: "error",
+      scopes: [...cfg.scopes],
+      consentVersion: cfg.consentVersion,
+      lastSyncAt: now,
+      lastErrorCode: code,
+      connectedAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [
+        connectorConnectionsTable.userId,
+        connectorConnectionsTable.provider,
+      ],
+      set: { status: "error", lastSyncAt: now, lastErrorCode: code, updatedAt: now },
+    });
+}
+
+/** Mark a connector connection connected after a successful sync. */
+async function recordOAuthConnected(
+  userId: string,
+  cfg: OAuthProviderConfig,
+  derivedImportId: number | null,
+  at: Date,
+): Promise<void> {
+  await db
+    .insert(connectorConnectionsTable)
+    .values({
+      userId,
+      provider: cfg.id,
+      laneId: cfg.laneId,
+      source: cfg.source,
+      status: "connected",
+      scopes: [...cfg.scopes],
+      consentVersion: cfg.consentVersion,
+      lastSyncAt: at,
+      lastSuccessAt: at,
+      lastErrorCode: null,
+      derivedImportId,
+      connectedAt: at,
+      disconnectedAt: null,
+      updatedAt: at,
+    })
+    .onConflictDoUpdate({
+      target: [
+        connectorConnectionsTable.userId,
+        connectorConnectionsTable.provider,
+      ],
+      set: {
+        status: "connected",
+        source: cfg.source,
+        laneId: cfg.laneId,
+        scopes: [...cfg.scopes],
+        consentVersion: cfg.consentVersion,
+        lastSyncAt: at,
+        lastSuccessAt: at,
+        lastErrorCode: null,
+        derivedImportId,
+        disconnectedAt: null,
+        updatedAt: at,
+      },
+    });
+}
+
+/**
+ * Read the provider API read-only, reduce it to the derived count, and store
+ * ONLY that count as a latest-wins import row feeding the connector's lane.
+ * Retries once with a forced token refresh on a 401.
+ */
+async function syncProvider(
+  userId: string,
+  cfg: OAuthProviderConfig,
+): Promise<number> {
+  const [tokenRow] = await db
+    .select()
+    .from(oauthTokensTable)
+    .where(
+      and(
+        eq(oauthTokensTable.userId, userId),
+        eq(oauthTokensTable.provider, cfg.id),
+      ),
+    );
+  if (!tokenRow) {
+    throw new OAuthConnectorError("not_connected", "Connect this source first", 404);
+  }
+
+  let accessToken = await ensureFreshAccessToken(userId, cfg, tokenRow);
+  let summary;
+  try {
+    summary = await cfg.fetchAndReduce(accessToken);
+  } catch (err) {
+    if (err instanceof OAuthConnectorError && err.code === "unauthorized") {
+      const refresh = openToken(tokenRow.refreshToken);
+      if (!refresh) {
+        throw new OAuthConnectorError(
+          "reauth_required",
+          "Reconnect this source",
+          401,
+        );
+      }
+      const fresh = await refreshAccessToken(cfg, refresh);
+      await persistRefreshedTokens(userId, cfg, fresh, tokenRow);
+      accessToken = fresh.accessToken;
+      summary = await cfg.fetchAndReduce(accessToken);
+    } else {
+      throw err;
+    }
+  }
+
+  const now = new Date();
+  const inserted = await db.transaction(async (tx) => {
+    await tx
+      .delete(importedSourcesTable)
+      .where(
+        and(
+          eq(importedSourcesTable.userId, userId),
+          eq(importedSourcesTable.source, cfg.source),
+        ),
+      );
+    const [row] = await tx
+      .insert(importedSourcesTable)
+      .values({
+        userId,
+        anonymousClaimToken: null,
+        source: cfg.source,
+        status: "complete",
+        originalFilename: null,
+        parsedSummary: summary as unknown as Record<string, unknown>,
+        processedAt: now,
+      })
+      .returning();
+    return row;
+  });
+
+  await recordOAuthConnected(userId, cfg, inserted?.id ?? null, now);
+  return summary.counts.items;
+}
+
+function humanOAuthError(cfg: OAuthProviderConfig, code: string): string {
+  switch (code) {
+    case "not_connected":
+      return `${cfg.label} is not connected. Connect it first, then sync.`;
+    case "reauth_required":
+      return `${cfg.label} needs to be reconnected. Connect it again to refresh access.`;
+    case "not_configured":
+      return `${cfg.label} is not available yet.`;
+    case "provider_unreachable":
+      return `Could not reach ${cfg.label}. Try again in a moment.`;
+    default:
+      return `${cfg.label} sync failed. Try again in a moment.`;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Routes
+// ---------------------------------------------------------------------------
+
 /**
  * Read-only connector status for the caller. Auth-aware: signed-in users get
- * their own live state, signed-out callers get a clearly flagged demo so the
- * page is never empty. Live controls are founder-gated and live on the founder
- * endpoints below; this is status only.
+ * their own live state across every connector, signed-out callers get a clearly
+ * flagged demo so the page is never empty. The Google lane's live controls stay
+ * founder-gated; the OAuth lanes' connect/sync/disconnect controls are per-user.
  */
 router.get("/me/connectors", async (req, res): Promise<void> => {
   const userId = req.user?.id;
-  const connectors = userId ? [await buildGoogleStatus(userId)] : [demoStatus()];
+  const connectors = userId
+    ? await buildAllStatuses(userId)
+    : [demoGoogleStatus(), ...OAUTH_PROVIDERS.map(demoOAuthStatus)];
   res.json(
     GetConnectorsResponse.parse({
       generatedAt: new Date().toISOString(),
@@ -143,6 +542,207 @@ router.get("/me/connectors", async (req, res): Promise<void> => {
     }),
   );
 });
+
+/**
+ * Start a per-user OAuth flow. Requires the user to be signed in so the
+ * connection can only ever attach to their own account. Redirects the browser
+ * to the provider's authorize page with a signed, identity-bound state.
+ */
+router.get(
+  "/me/connectors/:provider/connect",
+  (req, res): void => {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: "Sign in to connect a data source." });
+      return;
+    }
+    const cfg = getProviderConfig(req.params.provider);
+    if (!cfg) {
+      res.status(404).json({ error: "Unknown connector." });
+      return;
+    }
+    if (!providerConfigured(cfg)) {
+      res.status(503).json({ error: `${cfg.label} is not available yet.` });
+      return;
+    }
+    const state = signOAuthState(userId, cfg.id);
+    res.redirect(buildAuthorizeUrl(cfg, state, callbackUri(req, cfg.id)));
+  },
+);
+
+/**
+ * OAuth callback. Verifies the signed state and that it belongs to the current
+ * signed-in user, exchanges the code for tokens, seals and stores them, runs an
+ * initial sync, and redirects back to the Connection Center. All failures land
+ * back on the page with an error code instead of a raw error.
+ */
+router.get(
+  "/me/connectors/:provider/callback",
+  async (req, res): Promise<void> => {
+    const appBase = baseUrl(req);
+    const providerId = req.params.provider;
+    const back = (params: string): void =>
+      res.redirect(`${appBase}/connections?${params}`);
+
+    const cfg = getProviderConfig(providerId);
+    if (!cfg) {
+      back(`connector=${encodeURIComponent(providerId)}&error=unknown`);
+      return;
+    }
+    const userId = req.user?.id;
+    if (!userId) {
+      back(`connector=${cfg.id}&error=signin`);
+      return;
+    }
+    const state = verifyOAuthState(req.query.state);
+    if (!state || state.userId !== userId || state.provider !== cfg.id) {
+      back(`connector=${cfg.id}&error=state`);
+      return;
+    }
+    const code = typeof req.query.code === "string" ? req.query.code : "";
+    if (!code) {
+      back(`connector=${cfg.id}&error=denied`);
+      return;
+    }
+
+    try {
+      const tokens = await exchangeCodeForTokens(
+        cfg,
+        code,
+        callbackUri(req, cfg.id),
+      );
+      await storeTokens(userId, cfg, tokens);
+      await syncProvider(userId, cfg);
+    } catch (err) {
+      const codeStr =
+        err instanceof OAuthConnectorError ? err.code : "connect_failed";
+      await recordOAuthError(userId, cfg, codeStr).catch(() => {});
+      req.log.error({ err, provider: cfg.id }, "OAuth connect failed");
+      back(`connector=${cfg.id}&error=connect`);
+      return;
+    }
+
+    back(`connector=${cfg.id}&connected=1`);
+  },
+);
+
+/**
+ * Manually re-sync a connected per-user OAuth connector. No background job runs;
+ * refresh happens on connect and on demand here.
+ */
+router.post(
+  "/me/connectors/:provider/sync",
+  async (req, res): Promise<void> => {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: "Sign in first." });
+      return;
+    }
+    const cfg = getProviderConfig(req.params.provider);
+    if (!cfg) {
+      res.status(404).json({ error: "Unknown connector." });
+      return;
+    }
+    if (!providerConfigured(cfg)) {
+      res.status(503).json({ error: `${cfg.label} is not available yet.` });
+      return;
+    }
+
+    try {
+      await syncProvider(userId, cfg);
+    } catch (err) {
+      const code =
+        err instanceof OAuthConnectorError ? err.code : "sync_failed";
+      await recordOAuthError(userId, cfg, code).catch(() => {});
+      req.log.error({ err, provider: cfg.id, code }, "Connector sync failed");
+      const httpStatus =
+        err instanceof OAuthConnectorError &&
+        (err.status === 404 || err.status === 401)
+          ? err.status
+          : 502;
+      res.status(httpStatus).json({ error: humanOAuthError(cfg, code), code });
+      return;
+    }
+
+    const connectors = await buildAllStatuses(userId);
+    res.json(
+      GetConnectorsResponse.parse({
+        generatedAt: new Date().toISOString(),
+        isDemo: false,
+        connectors,
+      }),
+    );
+  },
+);
+
+/**
+ * Disconnect a per-user OAuth connector: purge the user's derived import rows
+ * for this provider, delete the sealed tokens, and mark the connection
+ * disconnected. The readiness lane immediately reflects the lower count.
+ */
+router.post(
+  "/me/connectors/:provider/disconnect",
+  async (req, res): Promise<void> => {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: "Sign in first." });
+      return;
+    }
+    const cfg = getProviderConfig(req.params.provider);
+    if (!cfg) {
+      res.status(404).json({ error: "Unknown connector." });
+      return;
+    }
+
+    const now = new Date();
+    const removed = await db.transaction(async (tx) => {
+      const rows = await tx
+        .delete(importedSourcesTable)
+        .where(
+          and(
+            eq(importedSourcesTable.userId, userId),
+            eq(importedSourcesTable.source, cfg.source),
+          ),
+        )
+        .returning({ id: importedSourcesTable.id });
+      await tx
+        .delete(oauthTokensTable)
+        .where(
+          and(
+            eq(oauthTokensTable.userId, userId),
+            eq(oauthTokensTable.provider, cfg.id),
+          ),
+        );
+      await tx
+        .update(connectorConnectionsTable)
+        .set({
+          status: "disconnected",
+          lastErrorCode: null,
+          derivedImportId: null,
+          disconnectedAt: now,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(connectorConnectionsTable.userId, userId),
+            eq(connectorConnectionsTable.provider, cfg.id),
+          ),
+        );
+      return rows.length;
+    });
+
+    req.log.info({ userId, provider: cfg.id, removed }, "Disconnected connector");
+
+    const connectors = await buildAllStatuses(userId);
+    res.json(
+      GetConnectorsResponse.parse({
+        generatedAt: new Date().toISOString(),
+        isDemo: false,
+        connectors,
+      }),
+    );
+  },
+);
 
 function humanError(code: string): string {
   switch (code) {
@@ -160,7 +760,7 @@ function humanError(code: string): string {
   }
 }
 
-/** Mark the connection errored, preserving any prior success/connect history. */
+/** Mark the Google connection errored, preserving any prior success history. */
 async function recordGoogleError(userId: string, code: string): Promise<void> {
   const now = new Date();
   await db

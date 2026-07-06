@@ -1130,6 +1130,7 @@ export interface ConnectorStatusItem {
   laneId: string;
   label: string;
   status: "available" | "connected" | "error" | "disconnected";
+  configured: boolean;
   live: boolean;
   founderOnly: boolean;
   derivedCount: number | null;
