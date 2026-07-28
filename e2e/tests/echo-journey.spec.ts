@@ -154,9 +154,50 @@ async function mockJourneyApi(page: Page) {
     }
     if (path === "/api/mirror/trends") {
       return json(route, {
+        hasEnoughData: false,
+        totalAudits: 0,
+        spanDays: 0,
+        repeatedStrengths: [],
+        recurringRisks: [],
+        scoreDelta: {
+          first: null,
+          latest: null,
+          previous: null,
+          delta: 0,
+          currentVsPrevious: 0,
+          rolling30Delta: 0,
+          direction: "flat",
+        },
+        themeShifts: [],
+        engagementWindow: {
+          firstAuditAt: null,
+          latestAuditAt: null,
+          avgGapDays: null,
+          mostActiveDay: null,
+          daysSinceLatest: null,
+          auditsPerMonth: 0,
+          dormancyGapCount: 0,
+        },
+        readinessSignals: [],
+        readinessScore: 50,
         scoreHistory: [],
-        outcomeBreakdown: {},
-        totalJournalEntries: 0,
+        headlineInsight: "Run your first audit to start seeing patterns.",
+        outcomeStreak: {
+          positiveStreak: 0,
+          latestOutcome: null,
+          totalWithOutcome: 0,
+        },
+        journalingStreak: {
+          currentStreakDays: 0,
+          daysInLast14: 0,
+          totalEntries: 0,
+        },
+        moodTrend: {
+          recentCount: 0,
+          averageMood: null,
+          direction: "unknown",
+        },
+        engineVersion: "e2e-fixture",
       });
     }
     if (path.startsWith("/api/mirror/journal")) {
