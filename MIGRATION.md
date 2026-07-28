@@ -672,9 +672,9 @@ required for the application to boot (`BOOT`), required for a feature to work
 
 ### 3.13 Admin
 
-| Variable                         | Status  | Notes                                              |
-| -------------------------------- | ------- | -------------------------------------------------- |
-| `FOUNDER_KEY`                    | FEATURE | Static bearer token gating the `/founder/*` routes |
+| Variable                         | Status  | Notes                                               |
+| -------------------------------- | ------- | --------------------------------------------------- |
+| `FOUNDER_EMAILS`                 | REQUIRED | Comma-separated sign-in emails granted founder role |
 | `BENCHMARK_MIN_COHORT`           | FEATURE | Min cohort size before benchmarks become available |
 | `MATCHING_REWEIGHT_MIN_OUTCOMES` | FEATURE | Minimum outcome count for re-weighting confidence  |
 
@@ -794,8 +794,8 @@ addressed.
 
 ### 4.14 Founder / admin access
 
-- [ ] **REQUIRED** `FOUNDER_KEY` set to a strong random value in production _(Phase 0 check)_
-- [ ] **RECOMMENDED** Move from a static shared key to a proper admin role on the new IdP _(Phase 1)_
+- [ ] **REQUIRED** `FOUNDER_EMAILS` contains only approved founder accounts and founder-role route tests pass _(Phase 0 check)_
+- [ ] **RECOMMENDED** Map the server-authoritative founder role to claims from the new IdP _(Phase 1)_
 
 ---
 
@@ -906,7 +906,7 @@ unbounded JSONB columns storing regulated data unintentionally.
 **Reviewer goal:** Confirm founder-only routes cannot be reached by regular users;
 founder actions cannot corrupt production data.
 
-- [ ] `FOUNDER_KEY` gate — is it checked on every `/founder/*` route, including sub-routes?
+- [ ] Founder role gate — does every `/founder/*` route re-check the signed-in user's server-side role?
 - [ ] Reweighting (`proposeWeightAdjustments`) — is it confirmed NOT wired into live scoring? Can a founder accidentally apply weight changes that affect all users immediately?
 - [ ] OCR correction acceptance — does accepting a correction update `ocr_learned_rules` in an append-only way, or can it overwrite existing rules?
 - [ ] Brain config mutations — are they validated (Zod schema) before persisting?
@@ -976,7 +976,7 @@ ISSUER_URL=https://replit.com/oidc         # replace in Phase 1
 REPL_ID=local-dev-placeholder              # replace in Phase 1
 
 # Admin
-FOUNDER_KEY=local-dev-only-not-secret
+FOUNDER_EMAILS=founder@example.com
 SESSION_SECRET=change-me-to-a-random-string
 
 # AI — optional in dev; deterministic fallback fires when keys are absent

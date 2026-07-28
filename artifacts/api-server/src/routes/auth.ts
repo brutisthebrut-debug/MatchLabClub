@@ -59,18 +59,29 @@ function getSafeReturnTo(value: unknown): string {
   return value;
 }
 
+function roleForEmail(email: string | null): "member" | "founder" {
+  if (!email) return "member";
+  const allowlist = (process.env.FOUNDER_EMAILS ?? "")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+  return allowlist.includes(email.trim().toLowerCase()) ? "founder" : "member";
+}
+
 async function upsertUser(
   claims: Record<string, unknown>,
   refCookie?: string | null,
 ) {
+  const email = (claims.email as string) || null;
   const userData = {
     id: claims.sub as string,
-    email: (claims.email as string) || null,
+    email,
     firstName: (claims.first_name as string) || null,
     lastName: (claims.last_name as string) || null,
     profileImageUrl: (claims.profile_image_url || claims.picture) as
       | string
       | null,
+    role: roleForEmail(email),
   };
 
   // Parse Echo referral cookie (`mlc_ref=user-<inviterId>` or just `<inviterId>`).
@@ -130,12 +141,29 @@ async function upsertUser(
   return user;
 }
 
-router.get("/auth/user", (req: Request, res: Response) => {
-  res.json(
-    GetCurrentAuthUserResponse.parse({
-      user: req.isAuthenticated() ? req.user : null,
-    }),
-  );
+router.get("/auth/user", async (req: Request, res: Response, next) => {
+  if (!req.isAuthenticated()) {
+    res.json(GetCurrentAuthUserResponse.parse({ user: null }));
+    return;
+  }
+
+  try {
+    const [account] = await db
+      .select({ role: usersTable.role })
+      .from(usersTable)
+      .where(eq(usersTable.id, req.user.id))
+      .limit(1);
+    res.json(
+      GetCurrentAuthUserResponse.parse({
+        user: {
+          ...req.user,
+          role: account?.role === "founder" ? "founder" : "member",
+        },
+      }),
+    );
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.get("/login", async (req: Request, res: Response) => {
@@ -253,6 +281,7 @@ router.get("/callback", async (req: Request, res: Response) => {
       firstName: dbUser.firstName,
       lastName: dbUser.lastName,
       profileImageUrl: dbUser.profileImageUrl,
+      role: dbUser.role === "founder" ? "founder" : "member",
     },
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token,
@@ -345,6 +374,7 @@ router.post(
           firstName: dbUser.firstName,
           lastName: dbUser.lastName,
           profileImageUrl: dbUser.profileImageUrl,
+          role: dbUser.role === "founder" ? "founder" : "member",
         },
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,

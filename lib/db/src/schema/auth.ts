@@ -32,6 +32,9 @@ export const usersTable = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  // Server-authoritative access role. Founder routes always re-read this value
+  // from the database; no browser-supplied key can grant founder access.
+  role: varchar("role", { length: 20 }).notNull().default("member"),
   // Account-level consent for sending the user's own content to a hosted LLM
   // (Anthropic via Replit AI Integrations). When false/null, AI tools that
   // opt in to this gate fall back to deterministic output.

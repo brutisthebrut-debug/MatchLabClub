@@ -332,6 +332,10 @@ vi.mock("@/lib/apiClient", () => ({
 }));
 
 vi.mock("@workspace/api-client-react", () => ({
+  useGetCurrentAuthUser: () => ({
+    data: { user: { id: "founder-test", role: "founder" } },
+    isLoading: false,
+  }),
   useListAudits: () => ({ data: [] as unknown[] }),
   useAskFounderCopilot: () => ({
     mutate: vi.fn(),
@@ -372,7 +376,7 @@ beforeEach(() => {
   server.changes = [];
   server.nextId = 1;
 
-  window.history.replaceState({}, "", "/founder?key=nldc2024");
+  window.history.replaceState({}, "", "/founder");
 });
 
 afterEach(() => {

@@ -1,8 +1,15 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import express, { type Express } from "express";
+import express, {
+  type Express,
+  type NextFunction,
+  type Request,
+  type Response,
+} from "express";
 import request from "supertest";
-import { pool } from "@workspace/db";
+import { db, pool, usersTable } from "@workspace/db";
+import { inArray } from "drizzle-orm";
 import founderRouter from "./founder";
+import { requireFounder } from "../middlewares/founderAuth";
 
 function makeTestApp(): Express {
   const app = express();
@@ -12,12 +19,21 @@ function makeTestApp(): Express {
 }
 
 let app: Express;
+const FOUNDER_USER = "founder-role-test";
+const MEMBER_USER = "member-role-test";
 
-beforeAll(() => {
+beforeAll(async () => {
   app = makeTestApp();
+  await db.insert(usersTable).values([
+    { id: FOUNDER_USER, role: "founder" },
+    { id: MEMBER_USER, role: "member" },
+  ]);
 });
 
 afterAll(async () => {
+  await db
+    .delete(usersTable)
+    .where(inArray(usersTable.id, [FOUNDER_USER, MEMBER_USER]));
   await pool.end();
 });
 
@@ -47,6 +63,48 @@ const PROTECTED_POST_ROUTES = [
 const PROTECTED_PUT_ROUTES = ["/api/founder/brain/controls"];
 
 describe("founder route auth", () => {
+  describe("server-authoritative roles", () => {
+    function roleApp(userId: string | null): Express {
+      const roleTestApp = express();
+      roleTestApp.use(
+        (req: Request, _res: Response, next: NextFunction) => {
+          if (userId) {
+            req.user = {
+              id: userId,
+              email: null,
+              firstName: null,
+              lastName: null,
+              profileImageUrl: null,
+            };
+          }
+          next();
+        },
+      );
+      roleTestApp.get("/protected", requireFounder, (_req, res) => {
+        res.json({ ok: true });
+      });
+      return roleTestApp;
+    }
+
+    it("allows a signed-in founder without any browser key", async () => {
+      const res = await request(roleApp(FOUNDER_USER)).get("/protected");
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ ok: true });
+    });
+
+    it("rejects a signed-in member even if they invent a founder key", async () => {
+      const res = await request(roleApp(MEMBER_USER))
+        .get("/protected")
+        .set("x-founder-key", "anything-a-member-wants");
+      expect(res.status).toBe(403);
+    });
+
+    it("requires a signed-in account", async () => {
+      const res = await request(roleApp(null)).get("/protected");
+      expect(res.status).toBe(401);
+    });
+  });
+
   describe.each(PROTECTED_GET_ROUTES)("%s", (route) => {
     it("returns 401 with no key", async () => {
       const res = await request(app).get(route);

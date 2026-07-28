@@ -33,7 +33,6 @@ export default defineConfig({
         APP_ORIGINS: process.env.APP_ORIGINS ?? baseURL,
         SESSION_SECRET:
           process.env.SESSION_SECRET ?? "matchlab-e2e-session-secret",
-        FOUNDER_KEY: process.env.FOUNDER_KEY ?? "nldc2024",
       },
       url: `http://127.0.0.1:${API_PORT}/api/healthz`,
       reuseExistingServer: true,

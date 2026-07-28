@@ -295,6 +295,13 @@
       "when": 1785228397840,
       "tag": "0041_violet_rocket_raccoon",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1785229867345,
+      "tag": "0042_modern_fallen_one",
+      "breakpoints": true
     }
   ]
 }

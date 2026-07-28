@@ -5,6 +5,7 @@
  * MatchLab Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { AccountExportUserRole } from './accountExportUserRole';
 
 export interface AccountExportUser {
   id: string;
@@ -16,5 +17,6 @@ export interface AccountExportUser {
   lastName: string | null;
   /** @nullable */
   profileImageUrl: string | null;
+  role: AccountExportUserRole;
   createdAt: string;
 }

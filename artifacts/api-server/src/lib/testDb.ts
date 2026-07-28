@@ -298,7 +298,11 @@ ensureStore("leads");
 ensureStore("waitlist");
 ensureStore("purchase_interest");
 ensureStore("data_export_tokens");
-ensureStore("users");
+stores.users = {
+  rows: [],
+  nextId: 1,
+  defaults: { role: "member" },
+};
 ensureStore("sessions");
 export const aiRequestMetricsTable = makeTable("ai_request_metrics");
 export const profilesTable = makeTable("profiles");

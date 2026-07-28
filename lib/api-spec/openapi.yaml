@@ -2912,11 +2912,13 @@ paths:
       summary: List member reports for founder review
       description: |
         Returns Trust & Safety reports for the founder review queue, newest
-        first. Requires founder key.
+        first. Requires an authenticated founder account.
       parameters:
         - name: x-founder-key
           in: header
-          required: true
+          required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
         - name: status
@@ -2933,14 +2935,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/ListFounderReportsResponse"
         "401":
-          description: Missing or invalid founder key.
+          description: Not authenticated as a founder.
 
   /founder/reports/{id}/status:
     patch:
       operationId: updateFounderReportStatus
       tags: [founder]
       summary: Update the review status of a member report
-      description: Requires founder key.
+      description: Requires an authenticated founder account.
       parameters:
         - name: id
           in: path
@@ -2949,7 +2951,9 @@ paths:
             type: integer
         - name: x-founder-key
           in: header
-          required: true
+          required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
       requestBody:
@@ -2966,7 +2970,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/FounderReport"
         "401":
-          description: Missing or invalid founder key.
+          description: Not authenticated as a founder.
         "404":
           description: Report not found.
 
@@ -3673,11 +3677,13 @@ paths:
       operationId: testAi
       tags: [ai]
       summary: Send a sample prompt through the server-side AI helper
-      description: Safe diagnostic endpoint — runs a tiny generation request. Requires founder key. Falls back gracefully if AI is unavailable.
+      description: Safe diagnostic endpoint — runs a tiny generation request. Requires an authenticated founder account. Falls back gracefully if AI is unavailable.
       parameters:
         - name: x-founder-key
           in: header
           required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
         - name: key
@@ -3705,7 +3711,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/AiError"
         "401":
-          description: Founder key required
+          description: Founder account required
           content:
             application/json:
               schema:
@@ -3726,11 +3732,13 @@ paths:
         Runs `purgeExpiredTrashedAudits()` synchronously and returns the number
         of records deleted. Useful after adjusting the retention window or to
         confirm the purge job is working without waiting for the timer.
-        Requires founder key.
+        Requires an authenticated founder account.
       parameters:
         - name: x-founder-key
           in: header
-          required: true
+          required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
       responses:
@@ -3741,7 +3749,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TrashPurgeResult"
         "401":
-          description: Founder key required
+          description: Founder account required
           content:
             application/json:
               schema:
@@ -3755,11 +3763,13 @@ paths:
       description: |
         Runs the GeoIP updater immediately (the same routine the monthly job calls).
         Useful after rotating the MaxMind license key or when the dataset is suspected
-        to be stale. Requires founder key.
+        to be stale. Requires an authenticated founder account.
       parameters:
         - name: x-founder-key
           in: header
           required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
         - name: key
@@ -3775,7 +3785,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/GeoipRefreshResult"
         "401":
-          description: Founder key required
+          description: Founder account required
           content:
             application/json:
               schema:
@@ -3788,11 +3798,13 @@ paths:
       summary: When did the audit trash purge job last succeed?
       description: |
         Returns the timestamp of the last successful `audit_trash_purge` job run,
-        together with the elapsed time and a staleness flag. Requires founder key.
+        together with the elapsed time and a staleness flag. Requires an authenticated founder account.
       parameters:
         - name: x-founder-key
           in: header
           required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
       responses:
@@ -3803,7 +3815,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TrashPurgeHeartbeat"
         "401":
-          description: Founder key required
+          description: Founder account required
           content:
             application/json:
               schema:
@@ -3823,11 +3835,13 @@ paths:
         of the founder dashboard's purchase view, which treats `status = 'paid'`
         as the canonical signal that money actually moved.
 
-        Requires founder key.
+        Requires an authenticated founder account.
       parameters:
         - name: x-founder-key
           in: header
           required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
         - name: key
@@ -3843,7 +3857,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/FounderReferralsSummary"
         "401":
-          description: Founder key required
+          description: Founder account required
           content:
             application/json:
               schema:
@@ -3868,11 +3882,13 @@ paths:
         are tracked client-side via analytics, so the first server-visible stage
         is accounts.
 
-        Requires founder key.
+        Requires an authenticated founder account.
       parameters:
         - name: x-founder-key
           in: header
           required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
         - name: key
@@ -3888,7 +3904,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/FounderFunnelSummary"
         "401":
-          description: Founder key required
+          description: Founder account required
           content:
             application/json:
               schema:
@@ -3904,11 +3920,13 @@ paths:
         The full strategic playbook is embedded in the system prompt so the
         reply can reference prior decisions. On model failure or unavailable
         provider, returns a fallback answer pointing at the closest playbook
-        entry. Requires founder key.
+        entry. Requires an authenticated founder account.
       parameters:
         - name: x-founder-key
           in: header
           required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
         - name: key
@@ -3936,7 +3954,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/AiError"
         "401":
-          description: Founder key required
+          description: Founder account required
           content:
             application/json:
               schema:
@@ -6560,6 +6578,10 @@ components:
           type: [string, 'null']
         profileImageUrl:
           type: [string, 'null']
+        role:
+          type: string
+          enum: [member, founder]
+          description: Access role resolved by the server. Founder privileges are never granted by a client-supplied key.
     AuthUserEnvelope:
       type: object
       required: [user]
@@ -8108,7 +8130,7 @@ components:
 
     AccountExportUser:
       type: object
-      required: [id, email, firstName, lastName, profileImageUrl, createdAt]
+      required: [id, email, firstName, lastName, profileImageUrl, role, createdAt]
       properties:
         id:
           type: string
@@ -8121,6 +8143,9 @@ components:
           type: [string, 'null']
         profileImageUrl:
           type: [string, 'null']
+        role:
+          type: string
+          enum: [member, founder]
         createdAt:
           type: string
 

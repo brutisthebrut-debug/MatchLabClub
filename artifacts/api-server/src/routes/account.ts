@@ -340,6 +340,7 @@ async function buildExportPayload(userId: string) {
       firstName: u.firstName,
       lastName: u.lastName,
       profileImageUrl: u.profileImageUrl,
+      role: u.role === "founder" ? "founder" : "member",
       createdAt: toIso(u.createdAt),
     },
     audits: audits.map((a) => ({ ...a, createdAt: toIso(a.createdAt) })),

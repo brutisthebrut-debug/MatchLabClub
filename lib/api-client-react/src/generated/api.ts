@@ -8291,7 +8291,7 @@ export const getGetFounderReportsUrl = (params?: GetFounderReportsParams,) => {
 
 /**
  * Returns Trust & Safety reports for the founder review queue, newest
-first. Requires founder key.
+first. Requires an authenticated founder account.
 
  * @summary List member reports for founder review
  */
@@ -8370,7 +8370,7 @@ export const getUpdateFounderReportStatusUrl = (id: number,) => {
 }
 
 /**
- * Requires founder key.
+ * Requires an authenticated founder account.
  * @summary Update the review status of a member report
  */
 export const updateFounderReportStatus = async (id: number,
@@ -10437,7 +10437,7 @@ export const getTestAiUrl = (params?: TestAiParams,) => {
 }
 
 /**
- * Safe diagnostic endpoint — runs a tiny generation request. Requires founder key. Falls back gracefully if AI is unavailable.
+ * Safe diagnostic endpoint — runs a tiny generation request. Requires an authenticated founder account. Falls back gracefully if AI is unavailable.
  * @summary Send a sample prompt through the server-side AI helper
  */
 export const testAi = async (aiTestInput: AiTestInput,
@@ -10513,7 +10513,7 @@ export const getPurgeTrashNowUrl = () => {
  * Runs `purgeExpiredTrashedAudits()` synchronously and returns the number
 of records deleted. Useful after adjusting the retention window or to
 confirm the purge job is working without waiting for the timer.
-Requires founder key.
+Requires an authenticated founder account.
 
  * @summary Manually trigger an immediate audit trash purge
  */
@@ -10594,7 +10594,7 @@ export const getRefreshGeoipUrl = (params?: RefreshGeoipParams,) => {
 /**
  * Runs the GeoIP updater immediately (the same routine the monthly job calls).
 Useful after rotating the MaxMind license key or when the dataset is suspected
-to be stale. Requires founder key.
+to be stale. Requires an authenticated founder account.
 
  * @summary Trigger a manual GeoIP database refresh
  */
@@ -10667,7 +10667,7 @@ export const getGetTrashPurgeHeartbeatUrl = () => {
 
 /**
  * Returns the timestamp of the last successful `audit_trash_purge` job run,
-together with the elapsed time and a staleness flag. Requires founder key.
+together with the elapsed time and a staleness flag. Requires an authenticated founder account.
 
  * @summary When did the audit trash purge job last succeed?
  */
@@ -10761,7 +10761,7 @@ A referred user is counted as "paid" if they have any matching
 of the founder dashboard's purchase view, which treats `status = 'paid'`
 as the canonical signal that money actually moved.
 
-Requires founder key.
+Requires an authenticated founder account.
 
  * @summary Referral attribution summary for the founder dashboard
  */
@@ -10860,7 +10860,7 @@ directional drop-off read, not a strict nested cohort. Anonymous visits
 are tracked client-side via analytics, so the first server-visible stage
 is accounts.
 
-Requires founder key.
+Requires an authenticated founder account.
 
  * @summary Readiness-to-revenue funnel for the founder dashboard
  */
@@ -10950,7 +10950,7 @@ export const getAskFounderCopilotUrl = (params?: AskFounderCopilotParams,) => {
 The full strategic playbook is embedded in the system prompt so the
 reply can reference prior decisions. On model failure or unavailable
 provider, returns a fallback answer pointing at the closest playbook
-entry. Requires founder key.
+entry. Requires an authenticated founder account.
 
  * @summary Ask Echo a free-form strategic question
  */

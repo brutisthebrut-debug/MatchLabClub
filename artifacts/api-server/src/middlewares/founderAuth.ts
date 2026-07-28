@@ -1,20 +1,42 @@
 import type { Request, Response, NextFunction } from "express";
+import { db, usersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
-const RAW_KEY = process.env.FOUNDER_KEY?.trim();
-if (!RAW_KEY) {
-  throw new Error(
-    "FOUNDER_KEY env var is required. Set it in Replit Secrets before starting the API server.",
-  );
-}
-const FOUNDER_KEY: string = RAW_KEY;
-
-export function requireFounder(req: Request, res: Response, next: NextFunction): void {
+export async function requireFounder(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  // Keep old route tests hermetic while production no longer accepts a shared
+  // browser key. This branch cannot run outside NODE_ENV=test.
   const headerKey = (req.header("x-founder-key") ?? "").trim();
-  if (headerKey && headerKey === FOUNDER_KEY) {
+  if (
+    process.env.NODE_ENV === "test" &&
+    headerKey &&
+    headerKey === process.env.FOUNDER_KEY
+  ) {
     next();
     return;
   }
-  res.status(401).json({ error: "Founder key required." });
+
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Sign in with a founder account." });
+    return;
+  }
+  try {
+    const [user] = await db
+      .select({ role: usersTable.role })
+      .from(usersTable)
+      .where(eq(usersTable.id, req.user.id))
+      .limit(1);
+    if (user?.role !== "founder") {
+      res.status(403).json({ error: "Founder access required." });
+      return;
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
 }
 
 interface Bucket { count: number; resetAt: number }

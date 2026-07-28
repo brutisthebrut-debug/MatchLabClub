@@ -128,8 +128,6 @@ jobs:
       E2E_BASE_URL: http://localhost:21668
       APP_ORIGINS: http://localhost:21668
       SESSION_SECRET: matchlab-ci-session-secret
-      FOUNDER_KEY: nldc2024
-      VITE_FOUNDER_KEY: nldc2024
     steps:
       - name: Check out MatchLab
         uses: actions/checkout@v4

@@ -5,6 +5,17 @@
  * MatchLab Club API
  * OpenAPI spec version: 0.1.0
  */
+/**
+ * Access role resolved by the server. Founder privileges are never granted by a client-supplied key.
+ */
+export type AuthUserRole = typeof AuthUserRole[keyof typeof AuthUserRole];
+
+
+export const AuthUserRole = {
+  member: 'member',
+  founder: 'founder',
+} as const;
+
 export interface AuthUser {
   id: string;
   /** @nullable */
@@ -15,6 +26,8 @@ export interface AuthUser {
   lastName: string | null;
   /** @nullable */
   profileImageUrl: string | null;
+  /** Access role resolved by the server. Founder privileges are never granted by a client-supplied key. */
+  role?: AuthUserRole;
 }
 
 export interface AuthUserEnvelope {
@@ -1232,6 +1245,14 @@ export interface AccountSummary {
   postDateNotes: number;
 }
 
+export type AccountExportUserRole = typeof AccountExportUserRole[keyof typeof AccountExportUserRole];
+
+
+export const AccountExportUserRole = {
+  member: 'member',
+  founder: 'founder',
+} as const;
+
 export interface AccountExportUser {
   id: string;
   /** @nullable */
@@ -1242,6 +1263,7 @@ export interface AccountExportUser {
   lastName: string | null;
   /** @nullable */
   profileImageUrl: string | null;
+  role: AccountExportUserRole;
   createdAt: string;
 }
 

@@ -8,6 +8,7 @@
 
 export * from './accountExport';
 export * from './accountExportUser';
+export * from './accountExportUserRole';
 export * from './accountSummary';
 export * from './achievement';
 export * from './achievementTier';
@@ -53,6 +54,7 @@ export * from './authErrorEnvelope';
 export * from './authorizationSessionHeaderParameter';
 export * from './authUser';
 export * from './authUserEnvelope';
+export * from './authUserRole';
 export * from './beginBrowserLoginParams';
 export * from './benchmarkLane';
 export * from './blockUserInput';

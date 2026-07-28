@@ -21,7 +21,8 @@ export const GetCurrentAuthUserResponse = zod.object({
   "email": zod.string().email().nullable(),
   "firstName": zod.string().nullable(),
   "lastName": zod.string().nullable(),
-  "profileImageUrl": zod.string().nullable()
+  "profileImageUrl": zod.string().nullable(),
+  "role": zod.enum(['member', 'founder']).optional().describe('Access role resolved by the server. Founder privileges are never granted by a client-supplied key.')
 }),zod.null()])
 })
 
@@ -230,6 +231,7 @@ export const ExportMyDataResponse = zod.object({
   "firstName": zod.string().nullable(),
   "lastName": zod.string().nullable(),
   "profileImageUrl": zod.string().nullable(),
+  "role": zod.enum(['member', 'founder']),
   "createdAt": zod.string()
 }),
   "audits": zod.array(zod.object({
@@ -1068,6 +1070,7 @@ export const DownloadEmailedExportResponse = zod.object({
   "firstName": zod.string().nullable(),
   "lastName": zod.string().nullable(),
   "profileImageUrl": zod.string().nullable(),
+  "role": zod.enum(['member', 'founder']),
   "createdAt": zod.string()
 }),
   "audits": zod.array(zod.object({
@@ -3893,7 +3896,7 @@ export const CheckOutgoingMessageResponse = zod.object({
 
 /**
  * Returns Trust & Safety reports for the founder review queue, newest
-first. Requires founder key.
+first. Requires an authenticated founder account.
 
  * @summary List member reports for founder review
  */
@@ -3902,7 +3905,7 @@ export const GetFounderReportsQueryParams = zod.object({
 })
 
 export const GetFounderReportsHeader = zod.object({
-  "x-founder-key": zod.string()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const GetFounderReportsResponse = zod.object({
@@ -3924,7 +3927,7 @@ export const GetFounderReportsResponse = zod.object({
 
 
 /**
- * Requires founder key.
+ * Requires an authenticated founder account.
  * @summary Update the review status of a member report
  */
 export const UpdateFounderReportStatusParams = zod.object({
@@ -3932,7 +3935,7 @@ export const UpdateFounderReportStatusParams = zod.object({
 })
 
 export const UpdateFounderReportStatusHeader = zod.object({
-  "x-founder-key": zod.string()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const UpdateFounderReportStatusBody = zod.object({
@@ -4692,7 +4695,7 @@ export const GetAiFallbackRateResponse = zod.object({
 
 
 /**
- * Safe diagnostic endpoint — runs a tiny generation request. Requires founder key. Falls back gracefully if AI is unavailable.
+ * Safe diagnostic endpoint — runs a tiny generation request. Requires an authenticated founder account. Falls back gracefully if AI is unavailable.
  * @summary Send a sample prompt through the server-side AI helper
  */
 export const TestAiQueryParams = zod.object({
@@ -4700,7 +4703,7 @@ export const TestAiQueryParams = zod.object({
 })
 
 export const TestAiHeader = zod.object({
-  "x-founder-key": zod.string().optional()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const testAiBodySampleMax = 2000;
@@ -4739,12 +4742,12 @@ export const TestAiResponse = zod.object({
  * Runs `purgeExpiredTrashedAudits()` synchronously and returns the number
 of records deleted. Useful after adjusting the retention window or to
 confirm the purge job is working without waiting for the timer.
-Requires founder key.
+Requires an authenticated founder account.
 
  * @summary Manually trigger an immediate audit trash purge
  */
 export const PurgeTrashNowHeader = zod.object({
-  "x-founder-key": zod.string()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const PurgeTrashNowResponse = zod.object({
@@ -4755,7 +4758,7 @@ export const PurgeTrashNowResponse = zod.object({
 /**
  * Runs the GeoIP updater immediately (the same routine the monthly job calls).
 Useful after rotating the MaxMind license key or when the dataset is suspected
-to be stale. Requires founder key.
+to be stale. Requires an authenticated founder account.
 
  * @summary Trigger a manual GeoIP database refresh
  */
@@ -4764,7 +4767,7 @@ export const RefreshGeoipQueryParams = zod.object({
 })
 
 export const RefreshGeoipHeader = zod.object({
-  "x-founder-key": zod.string().optional()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const RefreshGeoipResponse = zod.object({
@@ -4775,12 +4778,12 @@ export const RefreshGeoipResponse = zod.object({
 
 /**
  * Returns the timestamp of the last successful `audit_trash_purge` job run,
-together with the elapsed time and a staleness flag. Requires founder key.
+together with the elapsed time and a staleness flag. Requires an authenticated founder account.
 
  * @summary When did the audit trash purge job last succeed?
  */
 export const GetTrashPurgeHeartbeatHeader = zod.object({
-  "x-founder-key": zod.string().optional()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const GetTrashPurgeHeartbeatResponse = zod.object({
@@ -4800,7 +4803,7 @@ A referred user is counted as "paid" if they have any matching
 of the founder dashboard's purchase view, which treats `status = 'paid'`
 as the canonical signal that money actually moved.
 
-Requires founder key.
+Requires an authenticated founder account.
 
  * @summary Referral attribution summary for the founder dashboard
  */
@@ -4809,7 +4812,7 @@ export const GetFounderReferralsQueryParams = zod.object({
 })
 
 export const GetFounderReferralsHeader = zod.object({
-  "x-founder-key": zod.string().optional()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const GetFounderReferralsResponse = zod.object({
@@ -4855,7 +4858,7 @@ directional drop-off read, not a strict nested cohort. Anonymous visits
 are tracked client-side via analytics, so the first server-visible stage
 is accounts.
 
-Requires founder key.
+Requires an authenticated founder account.
 
  * @summary Readiness-to-revenue funnel for the founder dashboard
  */
@@ -4864,7 +4867,7 @@ export const GetFounderFunnelQueryParams = zod.object({
 })
 
 export const GetFounderFunnelHeader = zod.object({
-  "x-founder-key": zod.string().optional()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const GetFounderFunnelResponse = zod.object({
@@ -4885,7 +4888,7 @@ export const GetFounderFunnelResponse = zod.object({
 The full strategic playbook is embedded in the system prompt so the
 reply can reference prior decisions. On model failure or unavailable
 provider, returns a fallback answer pointing at the closest playbook
-entry. Requires founder key.
+entry. Requires an authenticated founder account.
 
  * @summary Ask Echo a free-form strategic question
  */
@@ -4894,7 +4897,7 @@ export const AskFounderCopilotQueryParams = zod.object({
 })
 
 export const AskFounderCopilotHeader = zod.object({
-  "x-founder-key": zod.string().optional()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const askFounderCopilotBodyQuestionMin = 4;
