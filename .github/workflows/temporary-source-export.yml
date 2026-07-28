@@ -1,0 +1,27 @@
+name: Temporary source export
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out MatchLab
+        uses: actions/checkout@v4
+
+      - name: Build tracked source archive
+        run: git archive --format=zip --output=matchlab-source.zip HEAD
+
+      - name: Upload source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: matchlab-source
+          path: matchlab-source.zip
+          if-no-files-found: error
+          retention-days: 1
