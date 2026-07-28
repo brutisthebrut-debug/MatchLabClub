@@ -158,7 +158,7 @@ test("anonymous audit is recovered via real /handoff/issue + /handoff/redeem in 
   // the Cookie and that trusted origin
   // Origin header for every request the context makes so the navigation
   // authenticates AND the redeem POST clears the CSRF guard.
-  const trustedOrigin = process.env.E2E_BASE_URL ?? "http://127.0.0.1:21668";
+  const trustedOrigin = process.env.E2E_BASE_URL ?? "http://localhost:21668";
   const freshContext = await browser.newContext({
     extraHTTPHeaders: {
       Cookie: `sid=${testSid}`,

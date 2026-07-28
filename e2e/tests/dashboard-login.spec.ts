@@ -398,6 +398,11 @@ test("submit audit through wizard, then /dashboard renders real score-ring and a
 test("GET /api/login?returnTo=/dashboard embeds returnTo in the state param", async ({
   request,
 }) => {
+  test.skip(
+    process.env.E2E_OIDC_ENABLED !== "true",
+    "Provider-level OIDC coverage runs only against an explicitly configured staging issuer.",
+  );
+
   const response = await request.get("/api/login?returnTo=/dashboard", {
     maxRedirects: 0,
   });

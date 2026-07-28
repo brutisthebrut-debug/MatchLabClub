@@ -1,6 +1,6 @@
 import { chromium } from "@playwright/test";
 
-const BASE = process.env.E2E_BASE_URL ?? "http://127.0.0.1:21668";
+const BASE = process.env.E2E_BASE_URL ?? "http://localhost:21668";
 const routes = [
   "/",
   "/start",

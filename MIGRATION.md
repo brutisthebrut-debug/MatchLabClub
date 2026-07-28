@@ -267,7 +267,7 @@ Independent jobs run in parallel:
 | Web tests    | `pnpm --filter @workspace/nldc run test`                                      |
 
 The Playwright suite is a PR gate. It starts the API and web apps itself and
-uses the Vite `/api` proxy at `127.0.0.1`, so it has no Replit shared-proxy
+uses the Vite `/api` proxy on localhost, so it has no Replit shared-proxy
 dependency.
 
 Note: the full `nldc` vitest suite takes 2+ minutes; keep it in its own step (or

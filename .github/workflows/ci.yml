@@ -125,8 +125,8 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/matchlab_e2e
-      E2E_BASE_URL: http://127.0.0.1:21668
-      APP_ORIGINS: http://127.0.0.1:21668
+      E2E_BASE_URL: http://localhost:21668
+      APP_ORIGINS: http://localhost:21668
       SESSION_SECRET: matchlab-ci-session-secret
       FOUNDER_KEY: nldc2024
       VITE_FOUNDER_KEY: nldc2024

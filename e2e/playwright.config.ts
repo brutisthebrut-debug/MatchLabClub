@@ -5,7 +5,7 @@ import { defineConfig, devices } from "@playwright/test";
 // Actions without Replit's shared localhost:80 proxy.
 const API_PORT = 8080;
 const WEB_PORT = 21668;
-const baseURL = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${WEB_PORT}`;
+const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${WEB_PORT}`;
 
 export default defineConfig({
   testDir: "./tests",
