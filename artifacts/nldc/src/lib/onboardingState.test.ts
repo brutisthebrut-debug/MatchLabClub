@@ -1,11 +1,17 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+  clearPendingPlayRead,
+  clearPendingWaiting,
   hasCompletedOnboarding,
   hasPendingFirstRead,
   hasPendingArrival,
+  hasPendingWaiting,
   markArrivalSeen,
   markFirstReadSeen,
   markOnboardingComplete,
+  markWaitingPending,
+  readPendingPlayRead,
+  rememberPendingPlayRead,
 } from "./onboardingState";
 
 describe("onboarding arrival handoff", () => {
@@ -37,5 +43,30 @@ describe("onboarding arrival handoff", () => {
     expect(hasCompletedOnboarding()).toBe(true);
     expect(hasPendingArrival()).toBe(false);
     expect(hasPendingFirstRead()).toBe(false);
+  });
+
+  it("carries only the derived Play read into member confirmation", () => {
+    rememberPendingPlayRead({
+      archetypeKey: "connector",
+      archetypeName: "The Connector",
+      summary: "You create warmth quickly and need that care returned.",
+    });
+
+    expect(readPendingPlayRead()).toEqual({
+      archetypeKey: "connector",
+      archetypeName: "The Connector",
+      summary: "You create warmth quickly and need that care returned.",
+    });
+
+    clearPendingPlayRead();
+    expect(readPendingPlayRead()).toBeNull();
+  });
+
+  it("opens the Waiting chapter after a Play read is confirmed", () => {
+    expect(hasPendingWaiting()).toBe(false);
+    markWaitingPending();
+    expect(hasPendingWaiting()).toBe(true);
+    clearPendingWaiting();
+    expect(hasPendingWaiting()).toBe(false);
   });
 });

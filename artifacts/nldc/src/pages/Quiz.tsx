@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ArrowRight, Share2, Check, RefreshCw } from "lucide-react";
 import { Glyph } from "@/lib/glyphs";
 import { useToast } from "@/hooks/use-toast";
+import { rememberPendingPlayRead } from "@/lib/onboardingState";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -232,7 +233,13 @@ export default function Quiz() {
   setSelected(null);
   } else {
   const key = scoreAnswers(newAnswers);
-  setArchetype(ARCHETYPES[key]);
+  const result = ARCHETYPES[key];
+  setArchetype(result);
+  rememberPendingPlayRead({
+    archetypeKey: result.key,
+    archetypeName: result.name,
+    summary: `${result.tagline}. ${result.whatYouNeed}`,
+  });
   setStep("result");
   }
   }
@@ -405,12 +412,20 @@ export default function Quiz() {
   <p className="text-sm text-muted-foreground leading-relaxed">{archetype.whatYouNeed}</p>
   </div>
 
-  {/* CTA */}
-  <Button onClick={() => navigate(archetype.cta.href)}
+  {/* Journey handoff */}
+  <Button onClick={() => navigate("/your-mirror")}
   className="w-full h-12 rounded-full font-semibold border-0"
   style={{ background: `linear-gradient(135deg, ${archetype.color}, hsl(var(--brand-indigo)))` }}>
-  {archetype.cta.label}
+  Bring this read to my Mirror
   </Button>
+
+  <button
+  type="button"
+  onClick={() => navigate(archetype.cta.href)}
+  className="mx-auto flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+  >
+  {archetype.cta.label}
+  </button>
 
   {/* Share + retry */}
   <div className="flex items-center justify-center gap-4">

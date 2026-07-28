@@ -64,6 +64,7 @@ import {
   hasPendingFirstRead,
   markFirstReadSeen,
 } from "@/lib/onboardingState";
+import { PlayConfirmationCard } from "@/components/journey/PlayConfirmationCard";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -617,6 +618,8 @@ export default function YourMirror() {
             </div>
           </motion.section>
         )}
+
+        <PlayConfirmationCard />
 
         {coreQueryFailedForUser && (
           <div
