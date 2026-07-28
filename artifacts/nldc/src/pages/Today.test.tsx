@@ -130,4 +130,24 @@ describe("Today", () => {
     expect(screen.getByText("Open matches")).toBeTruthy();
     expect(screen.getByText("You are match ready")).toBeTruthy();
   });
+
+  it("turns a fresh arrival into the first Mirror read", () => {
+    render(
+      <TodayView
+        firstName="Daniel"
+        companion={companion}
+        matching={matching}
+        signalMap={signalMap}
+        firstArrival
+      />,
+    );
+
+    expect(screen.getByText("Chapter 1 of 8 · Arrive")).toBeTruthy();
+    expect(screen.getByText("Okay, we’re in.")).toBeTruthy();
+    expect(
+      screen.getByTestId("today-first-read").getAttribute("href"),
+    ).toBe(
+      "/your-mirror",
+    );
+  });
 });

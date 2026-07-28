@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight, HeartHandshake, Route, Sparkles, UserRound } from "lucide-react";
 import { useAuth } from "@workspace/replit-auth-web";
@@ -16,12 +17,18 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { SignalOfTheDay } from "@/components/SignalOfTheDay";
 import { NextBestActionCoach } from "@/components/coach/NextBestActionCoach";
 import { useMeta } from "@/hooks/useMeta";
+import {
+  hasPendingArrival,
+  markArrivalSeen,
+} from "@/lib/onboardingState";
 
 type TodayViewProps = {
   firstName?: string | null;
   companion?: CompanionState;
   matching?: MatchingState;
   signalMap?: SignalMap;
+  firstArrival?: boolean;
+  onOpenFirstRead?: () => void;
 };
 
 const QUICK_DESTINATIONS = [
@@ -57,6 +64,8 @@ export function TodayView({
   companion,
   matching,
   signalMap,
+  firstArrival = false,
+  onOpenFirstRead,
 }: TodayViewProps) {
   const score = Math.round(
     matching?.readiness.score ?? companion?.readinessScore ?? 0,
@@ -106,14 +115,18 @@ export function TodayView({
               <div>
                 <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-white/70">
                   <Sparkles className="h-4 w-4 text-[hsl(var(--brand-pink))]" />
-                  Echo&apos;s read for today
+                  {firstArrival
+                    ? "Chapter 1 of 8 · Arrive"
+                    : "Echo's read for today"}
                 </p>
                 <h1 className="mt-4 font-serif text-4xl font-bold tracking-tight sm:text-5xl">
-                  {greetingFor(firstName)}
+                  {firstArrival ? "Okay, we’re in." : greetingFor(firstName)}
                 </h1>
                 <p className="mt-4 max-w-2xl text-lg leading-relaxed text-white/88">
-                  {companion?.read ??
-                    "I am still getting my read on you. Give me one honest signal and I can stop guessing."}
+                  {firstArrival
+                    ? `${greetingFor(firstName)} I have enough for a first impression—not a verdict, not your permanent record, just what I can honestly see so far.`
+                    : (companion?.read ??
+                      "I am still getting my read on you. Give me one honest signal and I can stop guessing.")}
                 </p>
                 {companion?.challenge ? (
                   <p className="mt-5 max-w-2xl rounded-2xl border border-white/15 bg-white/8 px-4 py-3 text-sm leading-relaxed text-white/82">
@@ -123,18 +136,30 @@ export function TodayView({
                 ) : null}
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Link
-                    href="/echo"
+                    href={firstArrival ? "/your-mirror" : "/echo"}
+                    onClick={firstArrival ? onOpenFirstRead : undefined}
                     className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-[hsl(248_66%_18%)] transition-transform hover:-translate-y-0.5"
+                    data-testid={
+                      firstArrival ? "today-first-read" : "today-talk-echo"
+                    }
                   >
-                    Talk to Echo
+                    {firstArrival ? "Show me your first read" : "Talk to Echo"}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <Link
-                    href="/matching"
+                    href={firstArrival ? "/echo" : "/matching"}
                     className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/8 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/14"
                   >
-                    <HeartHandshake className="h-4 w-4" />
-                    {eligible ? "Open matches" : "See my match path"}
+                    {firstArrival ? (
+                      <Sparkles className="h-4 w-4" />
+                    ) : (
+                      <HeartHandshake className="h-4 w-4" />
+                    )}
+                    {firstArrival
+                      ? "Talk to Echo first"
+                      : eligible
+                        ? "Open matches"
+                        : "See my match path"}
                   </Link>
                 </div>
               </div>
@@ -234,6 +259,7 @@ export default function Today() {
     "Your MatchLab home: Echo's current read, one useful next move, and the shortest path back into your dating journey.",
   );
   const { isAuthenticated, user } = useAuth();
+  const [firstArrival] = useState(() => hasPendingArrival());
   const companion = useGetCompanion({
     query: {
       queryKey: getGetCompanionQueryKey(),
@@ -259,6 +285,8 @@ export default function Today() {
       companion={companion.data}
       matching={matching.data}
       signalMap={signalMap.data}
+      firstArrival={firstArrival}
+      onOpenFirstRead={markArrivalSeen}
     />
   );
 }

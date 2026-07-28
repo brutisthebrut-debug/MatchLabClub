@@ -60,6 +60,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen } from "lucide-react";
+import {
+  hasPendingFirstRead,
+  markFirstReadSeen,
+} from "@/lib/onboardingState";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -506,6 +510,7 @@ export default function YourMirror() {
   const recentDates = notesData?.notes ?? [];
 
   const { isAuthenticated } = useAuth();
+  const [firstRead] = useState(() => hasPendingFirstRead());
   const { data: matchingState, isError: matchingStateError } = useGetMatchingState({
     query: { queryKey: getGetMatchingStateQueryKey(), enabled: isAuthenticated },
   });
@@ -574,6 +579,44 @@ export default function YourMirror() {
             </p>
           </motion.div>
         </motion.div>
+
+        {firstRead && (
+          <motion.section
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 overflow-hidden rounded-[2rem] border border-[hsl(var(--brand-pink)/0.28)] bg-gradient-to-br from-[hsl(var(--brand-indigo)/0.12)] via-card/90 to-[hsl(var(--brand-pink)/0.1)] p-6 shadow-lg md:p-8"
+            data-testid="first-read-handoff"
+          >
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[hsl(var(--brand-indigo))]">
+                  Chapter 2 of 8 · First read
+                </p>
+                <h2 className="mt-2 font-serif text-2xl font-bold text-foreground md:text-3xl">
+                  This is a beginning, not a diagnosis.
+                </h2>
+                <p className="mt-3 text-sm font-medium leading-relaxed text-muted-foreground md:text-base">
+                  Keep what feels true. Correct what does not. Anything you saved
+                  stays private by default, and nothing can shape matching until
+                  you confirm it in Your Mirror.
+                </p>
+              </div>
+              <Button
+                asChild
+                className="shrink-0 rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] px-5 font-bold text-white shadow-md"
+              >
+                <Link
+                  href="/quiz"
+                  onClick={markFirstReadSeen}
+                  data-testid="first-read-continue"
+                >
+                  Give me one quick instinct
+                  <ArrowUpRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </motion.section>
+        )}
 
         {coreQueryFailedForUser && (
           <div

@@ -9,6 +9,8 @@
  */
 
 const DONE_KEY = "matchlab.onboarded";
+const ARRIVAL_PENDING_KEY = "matchlab.arrival.pending";
+const FIRST_READ_PENDING_KEY = "matchlab.first-read.pending";
 const GOAL_KEY = "matchlab.goal";
 const ORIENTATION_KEY = "matchlab.orientation";
 const SEEKING_KEY = "matchlab.seeking";
@@ -38,6 +40,24 @@ export function hasCompletedOnboarding(): boolean {
 
 export function markOnboardingComplete(): void {
   safeSet(DONE_KEY, "1");
+  safeSet(ARRIVAL_PENDING_KEY, "1");
+}
+
+export function hasPendingArrival(): boolean {
+  return safeGet(ARRIVAL_PENDING_KEY) === "1";
+}
+
+export function markArrivalSeen(): void {
+  safeSet(ARRIVAL_PENDING_KEY, "0");
+  safeSet(FIRST_READ_PENDING_KEY, "1");
+}
+
+export function hasPendingFirstRead(): boolean {
+  return safeGet(FIRST_READ_PENDING_KEY) === "1";
+}
+
+export function markFirstReadSeen(): void {
+  safeSet(FIRST_READ_PENDING_KEY, "0");
 }
 
 export function rememberOnboardingGoal(goal: string): void {

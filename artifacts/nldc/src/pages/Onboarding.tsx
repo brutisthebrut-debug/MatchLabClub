@@ -218,7 +218,7 @@ export default function Onboarding() {
   function finish() {
     markOnboardingComplete();
     trackEvent("onboarding_complete", { goal });
-    setLocation("/your-mirror");
+    setLocation("/today");
   }
 
   function toggleSeeking(value: string) {
@@ -242,7 +242,7 @@ export default function Onboarding() {
   function skipAll() {
     markOnboardingComplete();
     trackEvent("onboarding_skip", { atStep: step });
-    setLocation("/your-mirror");
+    setLocation("/today");
   }
 
   function pickGoal(value: string) {
