@@ -184,19 +184,20 @@ test("seeded member can move through all eight Echo Journey chapters", async ({
 }) => {
   const api = await mockJourneyApi(page);
 
-  await page.goto("/today");
-  await page.evaluate(() => {
+  await page.addInitScript(() => {
     localStorage.setItem("matchlab.onboarded", "1");
     localStorage.setItem("matchlab.arrival.pending", "1");
   });
-  await page.reload();
+  await page.goto("/today");
 
   await expect(page.getByText("Chapter 1 of 8 · Arrive")).toBeVisible();
   await page.getByTestId("today-first-read").click();
   await expect(page.getByTestId("first-read-handoff")).toBeVisible();
   await expect(page.getByText("Chapter 2 of 8 · First read")).toBeVisible();
 
-  await page.getByTestId("first-read-continue").click();
+  await page
+    .getByRole("link", { name: "Give me one quick instinct" })
+    .click();
   await expect(page.getByTestId("journey-play")).toBeVisible();
   await expect(page.getByText("Chapter 3 of 8 · Play")).toBeVisible();
   await page.getByTestId("journey-play-start").click();
