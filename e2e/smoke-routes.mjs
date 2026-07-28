@@ -1,29 +1,91 @@
 import { chromium } from "@playwright/test";
 
-const BASE = "http://localhost:80";
+const BASE = process.env.E2E_BASE_URL ?? "http://127.0.0.1:21668";
 const routes = [
-  "/", "/start", "/dashboard", "/report/nonexistent-id", "/coach", "/insights",
-  "/integrations", "/pricing", "/waitlist", "/diagnosis", "/lab", "/signal-check",
-  "/roadmap", "/privacy", "/terms", "/checkout/success", "/checkout/cancel",
-  "/checkout/dating-reset", "/partners/shebangs", "/partner", "/blueprint",
-  "/mirror", "/your-mirror", "/mirror/journal", "/mirror/dates", "/archetype",
-  "/reflection", "/profile-reader", "/style-map", "/next-message", "/glow-up",
-  "/connection-style", "/compatibility-compass", "/progress/timeline",
-  "/progress/patterns", "/progress/experiments", "/progress/followup",
-  "/progress/scorecard", "/progress/feed", "/progress/control",
-  "/progress/insights-roadmap", "/progress/readiness", "/progress/companion",
-  "/wellness", "/user-control", "/life-context", "/future-connections",
-  "/copilot", "/copilot/reset", "/copilot/reply", "/copilot/profile",
-  "/copilot/debrief", "/copilot/weekly-plan", "/copilot/prep", "/copilot/flirt",
-  "/copilot/what-changed", "/me", "/matching", "/account", "/account/sessions",
-  "/quiz", "/gallery", "/connections", "/vault", "/imports", "/progress/wins",
-  "/progress/pattern-breaker", "/feedback", "/sample-report", "/scan", "/trash",
-  "/quizzes", "/quizzes/love-pace", "/blog", "/founder",
+  "/",
+  "/start",
+  "/dashboard",
+  "/report/nonexistent-id",
+  "/coach",
+  "/insights",
+  "/integrations",
+  "/pricing",
+  "/waitlist",
+  "/diagnosis",
+  "/lab",
+  "/signal-check",
+  "/roadmap",
+  "/privacy",
+  "/terms",
+  "/checkout/success",
+  "/checkout/cancel",
+  "/checkout/dating-reset",
+  "/partners/shebangs",
+  "/partner",
+  "/blueprint",
+  "/mirror",
+  "/your-mirror",
+  "/mirror/journal",
+  "/mirror/dates",
+  "/archetype",
+  "/reflection",
+  "/profile-reader",
+  "/style-map",
+  "/next-message",
+  "/glow-up",
+  "/connection-style",
+  "/compatibility-compass",
+  "/progress/timeline",
+  "/progress/patterns",
+  "/progress/experiments",
+  "/progress/followup",
+  "/progress/scorecard",
+  "/progress/feed",
+  "/progress/control",
+  "/progress/insights-roadmap",
+  "/progress/readiness",
+  "/progress/companion",
+  "/wellness",
+  "/user-control",
+  "/life-context",
+  "/future-connections",
+  "/copilot",
+  "/copilot/reset",
+  "/copilot/reply",
+  "/copilot/profile",
+  "/copilot/debrief",
+  "/copilot/weekly-plan",
+  "/copilot/prep",
+  "/copilot/flirt",
+  "/copilot/what-changed",
+  "/me",
+  "/matching",
+  "/account",
+  "/account/sessions",
+  "/quiz",
+  "/gallery",
+  "/connections",
+  "/vault",
+  "/imports",
+  "/progress/wins",
+  "/progress/pattern-breaker",
+  "/feedback",
+  "/sample-report",
+  "/scan",
+  "/trash",
+  "/quizzes",
+  "/quizzes/love-pace",
+  "/blog",
+  "/founder",
 ];
 
 const IGNORE = [
-  /React DevTools/i, /\[vite\]/i, /favicon/i, /Download the React/i,
-  /sourcemap/i, /preloaded using link preload/i,
+  /React DevTools/i,
+  /\[vite\]/i,
+  /favicon/i,
+  /Download the React/i,
+  /sourcemap/i,
+  /preloaded using link preload/i,
 ];
 const ignore = (t) => IGNORE.some((re) => re.test(t || ""));
 
@@ -32,24 +94,43 @@ async function checkRoute(browser, route) {
   const page = await ctx.newPage();
   const consoleErrors = [];
   const pageErrors = [];
-  page.on("console", (m) => { if (m.type() === "error" && !ignore(m.text())) consoleErrors.push(m.text()); });
-  page.on("pageerror", (e) => { if (!ignore(e.message)) pageErrors.push(e.message); });
+  page.on("console", (m) => {
+    if (m.type() === "error" && !ignore(m.text())) consoleErrors.push(m.text());
+  });
+  page.on("pageerror", (e) => {
+    if (!ignore(e.message)) pageErrors.push(e.message);
+  });
   let status = "?";
   let bodyLen = 0;
   let boundary = false;
   try {
-    const resp = await page.goto(BASE + route, { waitUntil: "commit", timeout: 8000 });
+    const resp = await page.goto(BASE + route, {
+      waitUntil: "commit",
+      timeout: 8000,
+    });
     status = resp ? resp.status() : "no-resp";
     await page.waitForTimeout(700);
-    const txt = (await page.evaluate(() => document.body?.innerText || "")).trim();
+    const txt = (
+      await page.evaluate(() => document.body?.innerText || "")
+    ).trim();
     bodyLen = txt.length;
-    boundary = /something went wrong|unexpected error|error boundary|cannot read prop|is not a function/i.test(txt);
+    boundary =
+      /something went wrong|unexpected error|error boundary|cannot read prop|is not a function/i.test(
+        txt,
+      );
   } catch (e) {
     pageErrors.push("NAV:" + e.message.split("\n")[0]);
   }
   await ctx.close();
-  const bad = consoleErrors.length || pageErrors.length || boundary || bodyLen < 40 || (typeof status === "number" && status >= 400);
-  console.log(`${bad ? "✗" : "·"} ${route} [s${status} b${bodyLen}${boundary ? " ERR" : ""}${pageErrors.length ? " PE" + pageErrors.length : ""}${consoleErrors.length ? " CE" + consoleErrors.length : ""}]`);
+  const bad =
+    consoleErrors.length ||
+    pageErrors.length ||
+    boundary ||
+    bodyLen < 40 ||
+    (typeof status === "number" && status >= 400);
+  console.log(
+    `${bad ? "✗" : "·"} ${route} [s${status} b${bodyLen}${boundary ? " ERR" : ""}${pageErrors.length ? " PE" + pageErrors.length : ""}${consoleErrors.length ? " CE" + consoleErrors.length : ""}]`,
+  );
   return { route, status, bodyLen, boundary, consoleErrors, pageErrors };
 }
 
@@ -65,15 +146,33 @@ async function run() {
   await browser.close();
 
   const problems = results.filter(
-    (r) => r.pageErrors.length || r.consoleErrors.length || r.boundary || r.bodyLen < 40 || (typeof r.status === "number" && r.status >= 400)
+    (r) =>
+      r.pageErrors.length ||
+      r.consoleErrors.length ||
+      r.boundary ||
+      r.bodyLen < 40 ||
+      (typeof r.status === "number" && r.status >= 400),
   );
-  console.log(`\n=== SWEEP: ${results.length} routes, ${problems.length} with issues ===\n`);
+  console.log(
+    `\n=== SWEEP: ${results.length} routes, ${problems.length} with issues ===\n`,
+  );
   for (const p of problems) {
-    console.log(`✗ ${p.route}  [status ${p.status}, bodyLen ${p.bodyLen}${p.boundary ? ", ERROR-TEXT" : ""}]`);
-    p.pageErrors.slice(0, 2).forEach((e) => console.log(`    pageerror: ${e.slice(0, 160)}`));
-    p.consoleErrors.slice(0, 2).forEach((e) => console.log(`    console:   ${e.slice(0, 160)}`));
+    console.log(
+      `✗ ${p.route}  [status ${p.status}, bodyLen ${p.bodyLen}${p.boundary ? ", ERROR-TEXT" : ""}]`,
+    );
+    p.pageErrors
+      .slice(0, 2)
+      .forEach((e) => console.log(`    pageerror: ${e.slice(0, 160)}`));
+    p.consoleErrors
+      .slice(0, 2)
+      .forEach((e) => console.log(`    console:   ${e.slice(0, 160)}`));
   }
   const clean = results.filter((r) => !problems.includes(r));
-  console.log(`\n=== CLEAN (${clean.length}): ${clean.map((r) => r.route).join(", ")}\n`);
+  console.log(
+    `\n=== CLEAN (${clean.length}): ${clean.map((r) => r.route).join(", ")}\n`,
+  );
 }
-run().catch((e) => { console.error("FATAL", e); process.exit(1); });
+run().catch((e) => {
+  console.error("FATAL", e);
+  process.exit(1);
+});

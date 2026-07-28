@@ -1,4 +1,9 @@
-import express, { type Express, type Request, type Response, type NextFunction } from "express";
+import express, {
+  type Express,
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
@@ -11,12 +16,21 @@ import { handleIdentityWebhook } from "./lib/identityVerification";
 /**
  * Build the set of origins that are trusted for credentialed CORS requests.
  * Sources:
+ *   APP_ORIGINS, comma-separated list of complete application origins
+ *                (for example https://app.matchlab.club)
  *   REPLIT_DOMAINS  , comma-separated list of all domains for this Repl
- *                      (dev previews and published production domains)
+ *                      (legacy dev previews and published domains)
  *   REPLIT_EXPO_DEV_DOMAIN, Expo tunnel domain used by the mobile app in dev
  */
 function buildAllowedOrigins(): Set<string> {
   const origins = new Set<string>();
+  const appOrigins = process.env["APP_ORIGINS"];
+  if (appOrigins) {
+    for (const origin of appOrigins.split(",")) {
+      const trimmed = origin.trim().replace(/\/+$/, "");
+      if (trimmed) origins.add(trimmed);
+    }
+  }
   const domains = process.env["REPLIT_DOMAINS"];
   if (domains) {
     for (const d of domains.split(",")) {

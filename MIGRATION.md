@@ -16,7 +16,7 @@
 3. [Environment variable inventory](#3-environment-variable-inventory)
 4. [Production readiness checklist](#4-production-readiness-checklist)
 5. [Human code review checklist](#5-human-code-review-checklist)
-6. [Local development and Bitbucket handoff guide](#6-local-development-and-bitbucket-handoff-guide)
+6. [Local development and GitHub handoff guide](#6-local-development-and-github-handoff-guide)
 
 ---
 
@@ -31,12 +31,13 @@ able to read this document and understand the full migration scope without
 touching the codebase.
 
 **Deliverables (all `.md` files, no runtime changes):**
+
 - This file (`MIGRATION.md`)
 - Replit dependency inventory (section 2)
 - Environment variable inventory (section 3)
 - Production readiness checklist (section 4)
 - Human code review checklist (section 5)
-- Local development and Bitbucket handoff guide (section 6)
+- Local development and GitHub handoff guide (section 6)
 
 **Exit criteria:** All sections below are complete and reviewed by at least one
 human engineer. No open questions in any checklist item marked REQUIRED.
@@ -49,6 +50,7 @@ human engineer. No open questions in any checklist item marked REQUIRED.
 identity provider without losing any existing user accounts or sessions.
 
 **Scope:**
+
 - Choose an IdP: Clerk, Auth0, or WorkOS are the recommended options. Clerk is
   the fastest path for a small team; Auth0 scales further; WorkOS is best if
   enterprise SSO is a future requirement.
@@ -67,6 +69,7 @@ identity provider without losing any existing user accounts or sessions.
   `ALLOW_DEV_AUTH=true` + `NODE_ENV !== 'production'` double gate.
 
 **Key files:**
+
 - `artifacts/api-server/src/routes/auth.ts`
 - `artifacts/api-server/src/lib/auth.ts`
 - `artifacts/api-server/src/middlewares/authMiddleware.ts`
@@ -88,6 +91,7 @@ cloud service, so the server boots and runs without any Replit infrastructure.
 **Sub-tasks in recommended order:**
 
 #### 2a. Stripe (`stripe-replit-sync` → direct SDK)
+
 - Remove `stripe-replit-sync` from `package.json`.
 - Write a plain webhook handler using the official `stripe` SDK
   (`stripe.webhooks.constructEvent`).
@@ -108,6 +112,7 @@ cloud service, so the server boots and runs without any Replit infrastructure.
 `artifacts/api-server/src/lib/webhookHandlers.ts`
 
 #### 2b. Object storage (sidecar → direct GCS or S3-compatible)
+
 - The sidecar at `http://127.0.0.1:1106` handles GCS token exchange and signed
   URL generation. Replace with one of:
   - **Direct GCS**: service account JSON key → `GOOGLE_APPLICATION_CREDENTIALS`
@@ -123,11 +128,12 @@ cloud service, so the server boots and runs without any Replit infrastructure.
 **Key files:** `artifacts/api-server/src/lib/objectStorage.ts`
 
 #### 2c. Google Calendar (`@replit/connectors-sdk` → real OAuth)
+
 - Currently, no OAuth tokens are stored — Replit proxies the API call.
 - Migration requires: Google Cloud project → OAuth 2.0 credentials →
   `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` → store per-user `access_token`
-  + `refresh_token` in a new `oauth_tokens` table → surface a consent screen
-  to users → refresh tokens automatically before expiry.
+  - `refresh_token` in a new `oauth_tokens` table → surface a consent screen
+    to users → refresh tokens automatically before expiry.
 - `googleCalendar.ts` currently calls `ReplitConnectors.proxy()`. Replace the
   call with a direct `https://www.googleapis.com/calendar/v3/...` fetch using
   the stored token.
@@ -137,6 +143,7 @@ cloud service, so the server boots and runs without any Replit infrastructure.
 **Key files:** `artifacts/api-server/src/lib/googleCalendar.ts`
 
 #### 2d. Email (Resend connector → direct Resend SDK or SMTP)
+
 - `mailer.ts` already supports both `RESEND_API_KEY` (direct) and `SMTP_URL`.
   The only Replit-coupled path is when it reads credentials from
   `REPLIT_CONNECTORS_HOSTNAME`. Set `RESEND_API_KEY` explicitly and the
@@ -151,6 +158,7 @@ cloud service, so the server boots and runs without any Replit infrastructure.
 can call Anthropic and OpenAI directly.
 
 **Scope:**
+
 - Add `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` as explicit secrets.
 - In `aiService.ts`, update the SDK initialization to use the direct base URL
   (remove any Replit proxy configuration). Anthropic SDK defaults to
@@ -173,11 +181,13 @@ breaking the product entirely.
 **Goal:** Make the server safe for horizontal scale and production traffic.
 
 #### 4a. Background jobs (critical for autoscale)
+
 All eight in-process jobs run via `setInterval`/`setTimeout`. On a multi-replica
 deployment they fire on every instance simultaneously, causing duplicate
 proposals, duplicate nudges, and duplicate GeoIP updates.
 
 **Options (choose one):**
+
 - **pg-boss** (recommended): Postgres-native job queue; no Redis dependency;
   works with the existing `DATABASE_URL`; distributed locks built in.
 - **BullMQ + Redis**: higher throughput ceiling; requires a managed Redis
@@ -193,12 +203,14 @@ queue worker) that runs as a single instance regardless of API replica count.
 `handoffRedemptionCleanup`, `dataExportTokenCleanup`
 
 #### 4b. Database migrations (push → migrate)
+
 `scripts/post-merge.sh` runs `pnpm --filter db push` which calls
 `drizzle-kit push` — this directly mutates the schema without recording
 migration history. This is acceptable in a single-developer Replit environment
 but dangerous against a managed production database.
 
 **Action:** Replace `drizzle-kit push` with `drizzle-kit migrate` in CI/CD:
+
 1. Always generate migration files (`drizzle-kit generate`) when schema changes.
 2. Commit the generated SQL under `lib/db/drizzle/`.
 3. CI applies migrations via `drizzle-kit migrate` as a deploy step (never
@@ -206,6 +218,7 @@ but dangerous against a managed production database.
 4. Never run `drizzle-kit push` against the production database.
 
 #### 4c. Security hardening
+
 - Add `helmet()` to `app.ts` middleware stack (before routes).
 - Add `express-rate-limit` globally on all routes; tighten further on auth
   endpoints (`/api/auth/login`, `/api/auth/callback`).
@@ -218,6 +231,7 @@ but dangerous against a managed production database.
   accidentally become live if `NODE_ENV` is misconfigured.
 
 #### 4d. Database backups
+
 Configure automated daily backups on the managed Postgres provider. Document
 the restore procedure. Set a retention window (minimum 30 days).
 
@@ -225,57 +239,57 @@ the restore procedure. Set a retention window (minimum 30 days).
 
 ### Phase 5 — CI/CD, hosting, and go-live
 
-**Goal:** Full Bitbucket-based development workflow, automated CI, and a
+**Goal:** Full GitHub-based development workflow, automated CI, and a
 non-Replit production hosting target.
 
-#### 5a. Bitbucket repository and branch permissions
-- Mirror the monorepo to Bitbucket. The pnpm workspace structure, TypeScript
+#### 5a. GitHub repository and branch protection
+
+- Keep the monorepo in GitHub. The pnpm workspace structure, TypeScript
   project references, and Orval codegen pipeline are fully portable.
-- Branch permissions on `main` (Repository settings -> Branch restrictions):
-  require passing builds (Bitbucket Pipelines), require at least one approval,
+- Protect `main` (Settings -> Branches or Rulesets):
+  require passing GitHub Actions checks, require at least one approval,
   and disable force-push and direct pushes so every change lands through a
   pull request.
 
-#### 5b. Bitbucket Pipelines CI
+#### 5b. GitHub Actions CI
 
-CI runs on Bitbucket Pipelines. The committed config is `bitbucket-pipelines.yml`
-at the repo root; it runs on every pull request and on pushes to `main`. Steps
-run in parallel where independent:
+CI runs in GitHub Actions. The committed config is
+`.github/workflows/ci.yml`; it runs on every pull request and push to `main`.
+Independent jobs run in parallel:
 
-| Step | Command |
-|---|---|
-| Typecheck | `pnpm run typecheck` |
-| Lint | `pnpm run lint` |
-| API tests | `pnpm --filter @workspace/api-server run test` (against a `postgres` service) |
-| Schema drift | `pnpm --filter @workspace/db run check-schema-drift` |
-| Voice lint | `pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts` |
-| Web tests | `pnpm --filter @workspace/nldc run test` |
+| Step         | Command                                                                       |
+| ------------ | ----------------------------------------------------------------------------- |
+| Typecheck    | `pnpm run typecheck`                                                          |
+| Lint         | `pnpm run lint`                                                               |
+| API tests    | `pnpm --filter @workspace/api-server run test` (against a `postgres` service) |
+| Schema drift | `pnpm --filter @workspace/db run check-schema-drift`                          |
+| Voice lint   | `pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts`     |
+| Web tests    | `pnpm --filter @workspace/nldc run test`                                      |
 
-The end-to-end Playwright suite is wired as a manually triggered `custom: e2e`
-pipeline rather than a PR gate, because `e2e/playwright.config.ts` currently
-targets the Replit shared proxy at `localhost:80`. Point that at a real reverse
-proxy (or update the config to hit the two dev servers directly) before promoting
-e2e to a blocking step. See section 6.9 and the comments in
-`bitbucket-pipelines.yml`.
+The Playwright suite is a PR gate. It starts the API and web apps itself and
+uses the Vite `/api` proxy at `127.0.0.1`, so it has no Replit shared-proxy
+dependency.
 
 Note: the full `nldc` vitest suite takes 2+ minutes; keep it in its own step (or
 shard it) so it does not stretch the parallel group.
 
 #### 5c. Recommended hosting stack
 
-| Service | Recommended option | Notes |
-|---|---|---|
-| API server | Fly.io or Railway | Both support the esbuild `.mjs` bundle; persistent workers; health-check path `/api/healthz` already exists |
-| Web (static) | Cloudflare Pages or Vercel | Vite builds to `dist/public`; zero-config deploy |
-| Database | Neon (serverless Postgres) | Direct `DATABASE_URL` swap; no Drizzle changes; autoscales to zero |
-| Background jobs | pg-boss on the same Neon DB | Eliminates Redis dependency |
-| Object storage | Cloudflare R2 | S3-compatible; free egress; swap `objectStorage.ts` credential block |
-| Email | Resend (direct API key) | No code change required once `RESEND_API_KEY` is set |
-| Redis (if needed) | Upstash | Serverless, pay-per-request |
-| Mobile builds | Expo EAS | Already fully portable; no changes |
+| Service           | Recommended option          | Notes                                                                                                       |
+| ----------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| API server        | Fly.io or Railway           | Both support the esbuild `.mjs` bundle; persistent workers; health-check path `/api/healthz` already exists |
+| Web (static)      | Cloudflare Pages or Vercel  | Vite builds to `dist/public`; zero-config deploy                                                            |
+| Database          | Neon (serverless Postgres)  | Direct `DATABASE_URL` swap; no Drizzle changes; autoscales to zero                                          |
+| Background jobs   | pg-boss on the same Neon DB | Eliminates Redis dependency                                                                                 |
+| Object storage    | Cloudflare R2               | S3-compatible; free egress; swap `objectStorage.ts` credential block                                        |
+| Email             | Resend (direct API key)     | No code change required once `RESEND_API_KEY` is set                                                        |
+| Redis (if needed) | Upstash                     | Serverless, pay-per-request                                                                                 |
+| Mobile builds     | Expo EAS                    | Already fully portable; no changes                                                                          |
 
 #### 5d. Production deployment runbook
+
 Write a step-by-step runbook covering:
+
 - Environment variable checklist (all variables in section 3 marked REQUIRED)
 - Database migration apply procedure
 - Stripe webhook re-registration at the new domain
@@ -300,15 +314,16 @@ becomes a blocker the moment the process runs outside Replit.**
 **Coupling type:** Identity provider  
 **Risk:** Critical — every authenticated request flows through this
 
-| Item | Detail |
-|---|---|
-| OIDC issuer | `https://replit.com/oidc` (hardcoded default in `auth.ts`, overridable via `ISSUER_URL`) |
-| Client ID | `process.env.REPL_ID` — the Replit Repl's unique ID serves as the OAuth client ID |
-| Token refresh | Access tokens are refreshed against Replit's token endpoint using the stored refresh token |
+| Item          | Detail                                                                                                         |
+| ------------- | -------------------------------------------------------------------------------------------------------------- |
+| OIDC issuer   | `https://replit.com/oidc` (hardcoded default in `auth.ts`, overridable via `ISSUER_URL`)                       |
+| Client ID     | `process.env.REPL_ID` — the Replit Repl's unique ID serves as the OAuth client ID                              |
+| Token refresh | Access tokens are refreshed against Replit's token endpoint using the stored refresh token                     |
 | User identity | `users.id` is a UUID generated on first login; the Replit OIDC `sub` claim links the row to the Replit account |
-| Mobile auth | `/api/mobile-auth/token-exchange` exchanges an Expo-issued OIDC code with Replit as the IdP |
+| Mobile auth   | `/api/mobile-auth/token-exchange` exchanges an Expo-issued OIDC code with Replit as the IdP                    |
 
 **Files:**
+
 - `artifacts/api-server/src/routes/auth.ts` — OIDC flow, callback, state management
 - `artifacts/api-server/src/lib/auth.ts` — `ISSUER_URL` constant, `upsertUser`
 - `artifacts/api-server/src/middlewares/authMiddleware.ts` — session hydration + token refresh
@@ -324,13 +339,14 @@ becomes a blocker the moment the process runs outside Replit.**
 **Coupling type:** Managed API proxy (no local API keys needed on Replit)  
 **Risk:** High — all live AI calls fail without the proxy
 
-| Item | Detail |
-|---|---|
+| Item      | Detail                                                                                            |
+| --------- | ------------------------------------------------------------------------------------------------- |
 | Anthropic | `@anthropic-ai/sdk` initialized without an explicit key; Replit injects credentials via its proxy |
-| OpenAI | `openai` SDK initialized without an explicit key; same mechanism |
-| Env var | `REPLIT_INTEGRATIONS_TOKEN` or similar (injected by platform, not user-set) |
+| OpenAI    | `openai` SDK initialized without an explicit key; same mechanism                                  |
+| Env var   | `REPLIT_INTEGRATIONS_TOKEN` or similar (injected by platform, not user-set)                       |
 
 **Files:**
+
 - `artifacts/api-server/src/lib/aiService.ts` — SDK initialization, all provider calls
 
 **Migration action:** Phase 3. Add `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` as
@@ -345,14 +361,15 @@ during the transition.
 **Coupling type:** Proprietary package + managed webhook registration  
 **Risk:** High — payments, tier upgrades, and reconciliation break without it
 
-| Item | Detail |
-|---|---|
-| Package | `stripe-replit-sync` (Replit-proprietary; not on npm public registry) |
+| Item                 | Detail                                                                                                      |
+| -------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Package              | `stripe-replit-sync` (Replit-proprietary; not on npm public registry)                                       |
 | Webhook registration | `initStripe.ts` calls `StripeSync.registerWebhook()` which auto-configures a Replit-hosted webhook endpoint |
-| DB schema | Populates a `stripe.*` Postgres schema; `stripeReconcile.ts` reads from `stripe.checkout_sessions` |
-| Credentials | `REPLIT_CONNECTORS_HOSTNAME`, `REPL_IDENTITY`, `WEB_REPL_RENEWAL` (all Replit-injected) |
+| DB schema            | Populates a `stripe.*` Postgres schema; `stripeReconcile.ts` reads from `stripe.checkout_sessions`          |
+| Credentials          | `REPLIT_CONNECTORS_HOSTNAME`, `REPL_IDENTITY`, `WEB_REPL_RENEWAL` (all Replit-injected)                     |
 
 **Files:**
+
 - `artifacts/api-server/src/lib/stripeClient.ts`
 - `artifacts/api-server/src/lib/initStripe.ts`
 - `artifacts/api-server/src/lib/stripeReconcile.ts`
@@ -370,14 +387,15 @@ Stripe dashboard. Replace or normalize the `stripe.*` schema.
 **Risk:** High — all file uploads, signed URL generation, and private object
 reads fail without the sidecar
 
-| Item | Detail |
-|---|---|
-| Sidecar address | `http://127.0.0.1:1106` (hardcoded in `objectStorage.ts`) |
+| Item              | Detail                                                                                    |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| Sidecar address   | `http://127.0.0.1:1106` (hardcoded in `objectStorage.ts`)                                 |
 | Functions coupled | `getToken()` (credential exchange), `getSignedUrl()` (signed GCS URLs), `getCredential()` |
-| Public paths | `PUBLIC_OBJECT_SEARCH_PATHS` env var (format stays the same post-migration) |
-| Private paths | `PRIVATE_OBJECT_DIR` env var (format stays the same post-migration) |
+| Public paths      | `PUBLIC_OBJECT_SEARCH_PATHS` env var (format stays the same post-migration)               |
+| Private paths     | `PRIVATE_OBJECT_DIR` env var (format stays the same post-migration)                       |
 
 **Files:**
+
 - `artifacts/api-server/src/lib/objectStorage.ts` — top ~30 lines contain all sidecar calls
 
 **Migration action:** Phase 2b. Replace the three sidecar helper functions with
@@ -393,13 +411,14 @@ changes.
 **Risk:** Medium — Calendar integration stops working; user data is not lost
 (the calendar lane falls back to zero signal count)
 
-| Item | Detail |
-|---|---|
-| Package | `@replit/connectors-sdk` |
-| Mechanism | `ReplitConnectors.proxy()` — Replit holds the OAuth tokens and proxies the Google Calendar API call |
-| No local storage | There are no `access_token` or `refresh_token` rows in the database for Calendar today |
+| Item             | Detail                                                                                              |
+| ---------------- | --------------------------------------------------------------------------------------------------- |
+| Package          | `@replit/connectors-sdk`                                                                            |
+| Mechanism        | `ReplitConnectors.proxy()` — Replit holds the OAuth tokens and proxies the Google Calendar API call |
+| No local storage | There are no `access_token` or `refresh_token` rows in the database for Calendar today              |
 
 **Files:**
+
 - `artifacts/api-server/src/lib/googleCalendar.ts`
 
 **Migration action:** Phase 2c. Implement Google OAuth 2.0 with a real
@@ -414,12 +433,13 @@ consent button.
 **Coupling type:** Optional connector credential fetch  
 **Risk:** Low — falls back to SMTP or log transport; already supports direct key
 
-| Item | Detail |
-|---|---|
+| Item      | Detail                                                                                 |
+| --------- | -------------------------------------------------------------------------------------- |
 | Mechanism | `mailer.ts` checks `REPLIT_CONNECTORS_HOSTNAME` to fetch Resend credentials at runtime |
-| Fallback | If `RESEND_API_KEY` is set directly, the connector path is never reached |
+| Fallback  | If `RESEND_API_KEY` is set directly, the connector path is never reached               |
 
 **Files:**
+
 - `artifacts/api-server/src/lib/mailer.ts`
 
 **Migration action:** Phase 2d. Set `RESEND_API_KEY` explicitly. No code change
@@ -433,12 +453,13 @@ required.
 **Risk:** High — if these are empty on a non-Replit host, the CORS allowlist
 collapses and all cross-origin requests (including from the SPA) are rejected
 
-| Item | Detail |
-|---|---|
-| `REPLIT_DOMAINS` | Comma-separated list of all Replit-assigned domains; feeds `getAllowedOrigins()` |
-| `REPLIT_EXPO_DEV_DOMAIN` | Expo tunnel domain in development; allows the mobile dev build to reach the API |
+| Item                     | Detail                                                                           |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| `REPLIT_DOMAINS`         | Comma-separated list of all Replit-assigned domains; feeds `getAllowedOrigins()` |
+| `REPLIT_EXPO_DEV_DOMAIN` | Expo tunnel domain in development; allows the mobile dev build to reach the API  |
 
 **Files:**
+
 - `artifacts/api-server/src/app.ts` — `getAllowedOrigins()` function at the top
 
 **Migration action:** Add `ALLOWED_ORIGINS` as an explicit env var (comma-separated
@@ -453,11 +474,11 @@ production domains + staging domain + `localhost:*` for development). Update
 **Risk:** Low — these files are ignored outside Replit; production hosting uses
 its own config (`fly.toml`, `Dockerfile`, Vercel `vercel.json`, etc.)
 
-| Item | Detail |
-|---|---|
-| `artifacts/api-server/.replit-artifact/artifact.toml` | Defines service routing at `/api`, port 8080, production build/run commands |
-| `artifacts/nldc/.replit-artifact/artifact.toml` | Defines static serve from `dist/public`, SPA rewrites |
-| `.replit` | `deploymentTarget = "autoscale"`, port mappings, workflow definitions, `postMerge` hook |
+| Item                                                  | Detail                                                                                  |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `artifacts/api-server/.replit-artifact/artifact.toml` | Defines service routing at `/api`, port 8080, production build/run commands             |
+| `artifacts/nldc/.replit-artifact/artifact.toml`       | Defines static serve from `dist/public`, SPA rewrites                                   |
+| `.replit`                                             | `deploymentTarget = "autoscale"`, port mappings, workflow definitions, `postMerge` hook |
 
 **Files:** `.replit`, `artifacts/*/. replit-artifact/artifact.toml`
 
@@ -474,17 +495,17 @@ changes.
 **Risk:** High on autoscale — duplicate sends, duplicate DB writes on every
 additional replica
 
-| Jobs | Risk |
-|---|---|
-| `autoProposalJob` | Duplicate match proposals |
-| `matchingNudgeJob` | Duplicate SMS/in-app nudges |
-| `companionNudgeJob` | Duplicate Echo nudges |
-| `mirrorDigestJob` | Duplicate digest generation |
-| `geoipUpdateJob` | Duplicate MaxMind downloads (minor) |
-| `ocrLearningJob` | Duplicate rule writes (minor, idempotent-ish) |
-| `auditTrashPurge` | Safe (deletes are idempotent) |
-| `handoffRedemptionCleanup` | Safe |
-| `dataExportTokenCleanup` | Safe |
+| Jobs                       | Risk                                          |
+| -------------------------- | --------------------------------------------- |
+| `autoProposalJob`          | Duplicate match proposals                     |
+| `matchingNudgeJob`         | Duplicate SMS/in-app nudges                   |
+| `companionNudgeJob`        | Duplicate Echo nudges                         |
+| `mirrorDigestJob`          | Duplicate digest generation                   |
+| `geoipUpdateJob`           | Duplicate MaxMind downloads (minor)           |
+| `ocrLearningJob`           | Duplicate rule writes (minor, idempotent-ish) |
+| `auditTrashPurge`          | Safe (deletes are idempotent)                 |
+| `handoffRedemptionCleanup` | Safe                                          |
+| `dataExportTokenCleanup`   | Safe                                          |
 
 **Files:** `artifacts/api-server/src/index.ts` — all jobs started here
 
@@ -520,6 +541,7 @@ which replays only the committed SQL files in `lib/db/drizzle/`.
 become invalid (anonymous-to-authenticated migrations fail)
 
 **Files:**
+
 - `artifacts/api-server/src/lib/anonClaimToken.ts`
 - `artifacts/api-server/src/lib/handoffToken.ts`
 
@@ -537,135 +559,135 @@ required for the application to boot (`BOOT`), required for a feature to work
 
 ### 3.1 Core runtime (BOOT — must be set on every host)
 
-| Variable | Used in | Notes |
-|---|---|---|
-| `DATABASE_URL` | `lib/db/src/index.ts`, `drizzle.config.ts`, migration scripts | Standard Postgres connection string |
-| `PORT` | `artifacts/api-server/src/index.ts` | API server listen port; throws on missing; set to `8080` in production artifact.toml |
-| `NODE_ENV` | Throughout | Set to `production` in production builds; gates `devAuth.ts` |
-| `SESSION_SECRET` | Cookie signing | Must be a strong random string; rotate with a graceful overlap |
-| `ISSUER_URL` | `artifacts/api-server/src/lib/auth.ts` | OIDC issuer base URL; defaults to `https://replit.com/oidc` — **must be replaced in Phase 1** |
+| Variable         | Used in                                                       | Notes                                                                                         |
+| ---------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`   | `lib/db/src/index.ts`, `drizzle.config.ts`, migration scripts | Standard Postgres connection string                                                           |
+| `PORT`           | `artifacts/api-server/src/index.ts`                           | API server listen port; throws on missing; set to `8080` in production artifact.toml          |
+| `NODE_ENV`       | Throughout                                                    | Set to `production` in production builds; gates `devAuth.ts`                                  |
+| `SESSION_SECRET` | Cookie signing                                                | Must be a strong random string; rotate with a graceful overlap                                |
+| `ISSUER_URL`     | `artifacts/api-server/src/lib/auth.ts`                        | OIDC issuer base URL; defaults to `https://replit.com/oidc` — **must be replaced in Phase 1** |
 
 ### 3.2 Authentication (Phase 1 replacements)
 
-| Variable | Status | Notes |
-|---|---|---|
-| `REPL_ID` | REPLIT-ONLY (BOOT today) | Used as OIDC client ID and handoff signing key seed; replace with `OIDC_CLIENT_ID` + `APP_SECRET` |
-| `OIDC_CLIENT_ID` | FEATURE (Phase 1) | New IdP application client ID; replaces `REPL_ID` in auth.ts |
-| `OIDC_CLIENT_SECRET` | FEATURE (Phase 1) | New IdP application client secret |
-| `APP_SECRET` | FEATURE (Phase 1) | Random 32-byte secret for handoff token signing; replaces `REPL_ID` fallback |
+| Variable             | Status                   | Notes                                                                                             |
+| -------------------- | ------------------------ | ------------------------------------------------------------------------------------------------- |
+| `REPL_ID`            | REPLIT-ONLY (BOOT today) | Used as OIDC client ID and handoff signing key seed; replace with `OIDC_CLIENT_ID` + `APP_SECRET` |
+| `OIDC_CLIENT_ID`     | FEATURE (Phase 1)        | New IdP application client ID; replaces `REPL_ID` in auth.ts                                      |
+| `OIDC_CLIENT_SECRET` | FEATURE (Phase 1)        | New IdP application client secret                                                                 |
+| `APP_SECRET`         | FEATURE (Phase 1)        | Random 32-byte secret for handoff token signing; replaces `REPL_ID` fallback                      |
 
 ### 3.3 AI services (Phase 3 replacements)
 
-| Variable | Status | Notes |
-|---|---|---|
+| Variable            | Status            | Notes                                                        |
+| ------------------- | ----------------- | ------------------------------------------------------------ |
 | `ANTHROPIC_API_KEY` | FEATURE (Phase 3) | Direct Anthropic API key; currently provided by Replit proxy |
-| `OPENAI_API_KEY` | FEATURE (Phase 3) | Direct OpenAI API key; currently provided by Replit proxy |
+| `OPENAI_API_KEY`    | FEATURE (Phase 3) | Direct OpenAI API key; currently provided by Replit proxy    |
 
 ### 3.4 Stripe payments
 
-| Variable | Status | Notes |
-|---|---|---|
-| `REPLIT_CONNECTORS_HOSTNAME` | REPLIT-ONLY | Stripe credential fetch host; replaced in Phase 2a |
-| `REPL_IDENTITY` | REPLIT-ONLY | Replit identity token for connector auth; replaced in Phase 2a |
-| `WEB_REPL_RENEWAL` | REPLIT-ONLY | Connector token renewal; replaced in Phase 2a |
-| `STRIPE_SECRET_KEY` | FEATURE (Phase 2a) | Direct Stripe secret key; replaces connector credential fetch |
-| `STRIPE_WEBHOOK_SECRET` | FEATURE (Phase 2a) | Stripe-generated webhook signing secret; register endpoint manually |
-| `VITE_STRIPE_SIGNAL_AUDIT_LINK` | FEATURE | Stripe Payment Link URL for $29 product; falls back to interest form if unset |
-| `VITE_STRIPE_DATING_RESET_LINK` | FEATURE | Stripe Payment Link URL for $97 product |
-| `VITE_STRIPE_WINGMAN_LINK` | FEATURE | Stripe Payment Link URL for $197/mo product |
+| Variable                        | Status             | Notes                                                                         |
+| ------------------------------- | ------------------ | ----------------------------------------------------------------------------- |
+| `REPLIT_CONNECTORS_HOSTNAME`    | REPLIT-ONLY        | Stripe credential fetch host; replaced in Phase 2a                            |
+| `REPL_IDENTITY`                 | REPLIT-ONLY        | Replit identity token for connector auth; replaced in Phase 2a                |
+| `WEB_REPL_RENEWAL`              | REPLIT-ONLY        | Connector token renewal; replaced in Phase 2a                                 |
+| `STRIPE_SECRET_KEY`             | FEATURE (Phase 2a) | Direct Stripe secret key; replaces connector credential fetch                 |
+| `STRIPE_WEBHOOK_SECRET`         | FEATURE (Phase 2a) | Stripe-generated webhook signing secret; register endpoint manually           |
+| `VITE_STRIPE_SIGNAL_AUDIT_LINK` | FEATURE            | Stripe Payment Link URL for $29 product; falls back to interest form if unset |
+| `VITE_STRIPE_DATING_RESET_LINK` | FEATURE            | Stripe Payment Link URL for $97 product                                       |
+| `VITE_STRIPE_WINGMAN_LINK`      | FEATURE            | Stripe Payment Link URL for $197/mo product                                   |
 
 ### 3.5 Object storage (Phase 2b replacements)
 
-| Variable | Status | Notes |
-|---|---|---|
-| `DEFAULT_OBJECT_STORAGE_BUCKET_ID` | REPLIT-ONLY | Replit object storage bucket reference; replaced in Phase 2b |
-| `PUBLIC_OBJECT_SEARCH_PATHS` | FEATURE | Comma-separated GCS path prefixes for public objects; format unchanged post-migration |
-| `PRIVATE_OBJECT_DIR` | FEATURE | GCS path prefix for private objects; format unchanged post-migration |
-| `GOOGLE_APPLICATION_CREDENTIALS` | FEATURE (Phase 2b) | Path to GCS service account JSON key; or use `AWS_*` vars for S3/R2 |
+| Variable                           | Status             | Notes                                                                                 |
+| ---------------------------------- | ------------------ | ------------------------------------------------------------------------------------- |
+| `DEFAULT_OBJECT_STORAGE_BUCKET_ID` | REPLIT-ONLY        | Replit object storage bucket reference; replaced in Phase 2b                          |
+| `PUBLIC_OBJECT_SEARCH_PATHS`       | FEATURE            | Comma-separated GCS path prefixes for public objects; format unchanged post-migration |
+| `PRIVATE_OBJECT_DIR`               | FEATURE            | GCS path prefix for private objects; format unchanged post-migration                  |
+| `GOOGLE_APPLICATION_CREDENTIALS`   | FEATURE (Phase 2b) | Path to GCS service account JSON key; or use `AWS_*` vars for S3/R2                   |
 
 ### 3.6 Google OAuth (Phase 2c replacement)
 
-| Variable | Status | Notes |
-|---|---|---|
-| `GOOGLE_CLIENT_ID` | FEATURE (Phase 2c) | OAuth 2.0 client ID for Google Calendar integration |
-| `GOOGLE_CLIENT_SECRET` | FEATURE (Phase 2c) | OAuth 2.0 client secret |
+| Variable               | Status             | Notes                                               |
+| ---------------------- | ------------------ | --------------------------------------------------- |
+| `GOOGLE_CLIENT_ID`     | FEATURE (Phase 2c) | OAuth 2.0 client ID for Google Calendar integration |
+| `GOOGLE_CLIENT_SECRET` | FEATURE (Phase 2c) | OAuth 2.0 client secret                             |
 
 ### 3.7 Email
 
-| Variable | Status | Notes |
-|---|---|---|
+| Variable         | Status  | Notes                                                                                      |
+| ---------------- | ------- | ------------------------------------------------------------------------------------------ |
 | `RESEND_API_KEY` | FEATURE | Direct Resend API key; when set, bypasses the Replit connector path; no code change needed |
-| `SMTP_URL` | FEATURE | Alternative: standard SMTP connection string; lower priority than `RESEND_API_KEY` |
+| `SMTP_URL`       | FEATURE | Alternative: standard SMTP connection string; lower priority than `RESEND_API_KEY`         |
 
 ### 3.8 SMS (Twilio — no coupling, already direct)
 
-| Variable | Status | Notes |
-|---|---|---|
+| Variable             | Status  | Notes                              |
+| -------------------- | ------- | ---------------------------------- |
 | `TWILIO_ACCOUNT_SID` | FEATURE | Logs instead of sending when unset |
-| `TWILIO_AUTH_TOKEN` | FEATURE | |
-| `TWILIO_FROM_NUMBER` | FEATURE | E.164 format |
+| `TWILIO_AUTH_TOKEN`  | FEATURE |                                    |
+| `TWILIO_FROM_NUMBER` | FEATURE | E.164 format                       |
 
 ### 3.9 Observability and monitoring
 
-| Variable | Status | Notes |
-|---|---|---|
-| `SENTRY_DSN_API` | FEATURE | Server-side Sentry DSN; no-op when unset |
-| `VITE_SENTRY_DSN` | FEATURE | Frontend Sentry DSN; no-op when unset |
-| `VITE_GA_MEASUREMENT_ID` | FEATURE | Google Analytics; no-op when unset |
+| Variable                 | Status  | Notes                                    |
+| ------------------------ | ------- | ---------------------------------------- |
+| `SENTRY_DSN_API`         | FEATURE | Server-side Sentry DSN; no-op when unset |
+| `VITE_SENTRY_DSN`        | FEATURE | Frontend Sentry DSN; no-op when unset    |
+| `VITE_GA_MEASUREMENT_ID` | FEATURE | Google Analytics; no-op when unset       |
 
 ### 3.10 GeoIP
 
-| Variable | Status | Notes |
-|---|---|---|
-| `MAXMIND_LICENSE_KEY` | FEATURE | Monthly GeoLite2 refresh; no-op when unset (stale bundled data is used) |
-| `GEOIP_KEY_MISSING_ALERT_DAYS` | FEATURE | Days before founder is alerted about missing key (default 35) |
-| `GEOIP_ALERT_REBREACH_COOLDOWN_MINUTES` | FEATURE | Cooldown between alerts (default 15) |
+| Variable                                | Status  | Notes                                                                   |
+| --------------------------------------- | ------- | ----------------------------------------------------------------------- |
+| `MAXMIND_LICENSE_KEY`                   | FEATURE | Monthly GeoLite2 refresh; no-op when unset (stale bundled data is used) |
+| `GEOIP_KEY_MISSING_ALERT_DAYS`          | FEATURE | Days before founder is alerted about missing key (default 35)           |
+| `GEOIP_ALERT_REBREACH_COOLDOWN_MINUTES` | FEATURE | Cooldown between alerts (default 15)                                    |
 
 ### 3.11 Matching automation and Echo
 
-| Variable | Status | Notes |
-|---|---|---|
-| `AUTO_PROPOSAL_ENABLED` | FEATURE | Seeds founder-dashboard toggle; defaults ON when unset |
-| `PROPOSAL_EXPIRY_ENABLED` | FEATURE | Seeds toggle; defaults ON |
-| `MATCHING_NUDGE_ENABLED` | FEATURE | Seeds toggle; defaults ON |
-| `COMPANION_NUDGE_ENABLED` | FEATURE | Seeds toggle; defaults OFF |
-| `AUTO_PROPOSAL_INTERVAL_HOURS` | FEATURE | Tuning |
-| `PROPOSAL_EXPIRY_INTERVAL_HOURS` | FEATURE | Tuning |
-| `PROPOSAL_EXPIRY_MAX_AGE_DAYS` | FEATURE | Tuning |
-| `MATCHING_NUDGE_INTERVAL_HOURS` | FEATURE | Tuning |
-| `MATCHING_NUDGE_COOLDOWN_HOURS` | FEATURE | Tuning |
-| `COMPANION_NUDGE_INTERVAL_HOURS` | FEATURE | Tuning |
-| `COMPANION_NUDGE_COOLDOWN_HOURS` | FEATURE | Tuning |
-| `COMPANION_NUDGE_QUIET_DAYS` | FEATURE | Days of week when nudges are suppressed |
+| Variable                         | Status  | Notes                                                  |
+| -------------------------------- | ------- | ------------------------------------------------------ |
+| `AUTO_PROPOSAL_ENABLED`          | FEATURE | Seeds founder-dashboard toggle; defaults ON when unset |
+| `PROPOSAL_EXPIRY_ENABLED`        | FEATURE | Seeds toggle; defaults ON                              |
+| `MATCHING_NUDGE_ENABLED`         | FEATURE | Seeds toggle; defaults ON                              |
+| `COMPANION_NUDGE_ENABLED`        | FEATURE | Seeds toggle; defaults OFF                             |
+| `AUTO_PROPOSAL_INTERVAL_HOURS`   | FEATURE | Tuning                                                 |
+| `PROPOSAL_EXPIRY_INTERVAL_HOURS` | FEATURE | Tuning                                                 |
+| `PROPOSAL_EXPIRY_MAX_AGE_DAYS`   | FEATURE | Tuning                                                 |
+| `MATCHING_NUDGE_INTERVAL_HOURS`  | FEATURE | Tuning                                                 |
+| `MATCHING_NUDGE_COOLDOWN_HOURS`  | FEATURE | Tuning                                                 |
+| `COMPANION_NUDGE_INTERVAL_HOURS` | FEATURE | Tuning                                                 |
+| `COMPANION_NUDGE_COOLDOWN_HOURS` | FEATURE | Tuning                                                 |
+| `COMPANION_NUDGE_QUIET_DAYS`     | FEATURE | Days of week when nudges are suppressed                |
 
 ### 3.12 Reliability tuning
 
-| Variable | Status | Notes |
-|---|---|---|
-| `AI_RELIABILITY_REBREACH_COOLDOWN_MINUTES` | FEATURE | Cooldown between AI reliability alerts |
-| `AUDIT_TRASH_RETENTION_DAYS` | FEATURE | Days before trashed audits are hard-deleted |
-| `AUDIT_TRASH_PURGE_INTERVAL_HOURS` | FEATURE | Purge job frequency |
-| `ANON_CLAIM_HANDOFF_SECRET` | FEATURE | Overrides `REPL_ID`-derived default signing key; set this in Phase 1 |
-| `RECEIPTS_WEBHOOK_SECRET` | FEATURE | Inbound email webhook authentication |
+| Variable                                   | Status  | Notes                                                                |
+| ------------------------------------------ | ------- | -------------------------------------------------------------------- |
+| `AI_RELIABILITY_REBREACH_COOLDOWN_MINUTES` | FEATURE | Cooldown between AI reliability alerts                               |
+| `AUDIT_TRASH_RETENTION_DAYS`               | FEATURE | Days before trashed audits are hard-deleted                          |
+| `AUDIT_TRASH_PURGE_INTERVAL_HOURS`         | FEATURE | Purge job frequency                                                  |
+| `ANON_CLAIM_HANDOFF_SECRET`                | FEATURE | Overrides `REPL_ID`-derived default signing key; set this in Phase 1 |
+| `RECEIPTS_WEBHOOK_SECRET`                  | FEATURE | Inbound email webhook authentication                                 |
 
 ### 3.13 Admin
 
-| Variable | Status | Notes |
-|---|---|---|
-| `FOUNDER_KEY` | FEATURE | Static bearer token gating the `/founder/*` routes |
-| `BENCHMARK_MIN_COHORT` | FEATURE | Min cohort size before benchmarks become available |
-| `MATCHING_REWEIGHT_MIN_OUTCOMES` | FEATURE | Minimum outcome count for re-weighting confidence |
+| Variable                         | Status  | Notes                                              |
+| -------------------------------- | ------- | -------------------------------------------------- |
+| `FOUNDER_KEY`                    | FEATURE | Static bearer token gating the `/founder/*` routes |
+| `BENCHMARK_MIN_COHORT`           | FEATURE | Min cohort size before benchmarks become available |
+| `MATCHING_REWEIGHT_MIN_OUTCOMES` | FEATURE | Minimum outcome count for re-weighting confidence  |
 
 ### 3.14 Replit-only variables (all become obsolete post-migration)
 
-| Variable | Replaced by |
-|---|---|
-| `REPL_ID` | `OIDC_CLIENT_ID` + `APP_SECRET` |
-| `REPLIT_DOMAINS` | `ALLOWED_ORIGINS` |
-| `REPLIT_EXPO_DEV_DOMAIN` | Include dev domains in `ALLOWED_ORIGINS` |
+| Variable                     | Replaced by                                  |
+| ---------------------------- | -------------------------------------------- |
+| `REPL_ID`                    | `OIDC_CLIENT_ID` + `APP_SECRET`              |
+| `REPLIT_DOMAINS`             | `ALLOWED_ORIGINS`                            |
+| `REPLIT_EXPO_DEV_DOMAIN`     | Include dev domains in `ALLOWED_ORIGINS`     |
 | `REPLIT_CONNECTORS_HOSTNAME` | Direct `STRIPE_SECRET_KEY`, `RESEND_API_KEY` |
-| `REPL_IDENTITY` | Direct `STRIPE_SECRET_KEY` |
-| `WEB_REPL_RENEWAL` | Direct `STRIPE_SECRET_KEY` |
+| `REPL_IDENTITY`              | Direct `STRIPE_SECRET_KEY`                   |
+| `WEB_REPL_RENEWAL`           | Direct `STRIPE_SECRET_KEY`                   |
 
 ---
 
@@ -677,103 +699,103 @@ addressed.
 
 ### 4.1 Authentication and identity
 
-- [ ] **REQUIRED** OIDC issuer replaced — `ISSUER_URL` no longer points to `https://replit.com/oidc` *(Phase 1)*
-- [ ] **REQUIRED** `REPL_ID` removed as OIDC client ID — replaced with `OIDC_CLIENT_ID` *(Phase 1)*
-- [ ] **REQUIRED** Existing user account-linking migration written and tested against a staging DB *(Phase 1)*
-- [ ] **REQUIRED** Mobile `token-exchange` endpoint tested against new IdP *(Phase 1)*
-- [ ] **REQUIRED** `devAuth.ts` removed from production build or double-gated with `ALLOW_DEV_AUTH=true` *(Phase 1)*
-- [ ] **RECOMMENDED** Session rotation on privilege escalation (consent grant, tier change) *(Phase 4c)*
-- [ ] **RECOMMENDED** Session TTL enforced at DB level (index on `sessions.expire`) *(Phase 4c)*
+- [ ] **REQUIRED** OIDC issuer replaced — `ISSUER_URL` no longer points to `https://replit.com/oidc` _(Phase 1)_
+- [ ] **REQUIRED** `REPL_ID` removed as OIDC client ID — replaced with `OIDC_CLIENT_ID` _(Phase 1)_
+- [ ] **REQUIRED** Existing user account-linking migration written and tested against a staging DB _(Phase 1)_
+- [ ] **REQUIRED** Mobile `token-exchange` endpoint tested against new IdP _(Phase 1)_
+- [ ] **REQUIRED** `devAuth.ts` removed from production build or double-gated with `ALLOW_DEV_AUTH=true` _(Phase 1)_
+- [ ] **RECOMMENDED** Session rotation on privilege escalation (consent grant, tier change) _(Phase 4c)_
+- [ ] **RECOMMENDED** Session TTL enforced at DB level (index on `sessions.expire`) _(Phase 4c)_
 
 ### 4.2 Sessions
 
-- [ ] **REQUIRED** `SESSION_SECRET` set to a strong random value (not a placeholder) *(Phase 0 check)*
-- [ ] **REQUIRED** `APP_SECRET` set for handoff token signing, replacing `REPL_ID` fallback *(Phase 1)*
-- [ ] **RECOMMENDED** Session cleanup job confirmed running (not duplicating on multiple replicas) *(Phase 4a)*
+- [ ] **REQUIRED** `SESSION_SECRET` set to a strong random value (not a placeholder) _(Phase 0 check)_
+- [ ] **REQUIRED** `APP_SECRET` set for handoff token signing, replacing `REPL_ID` fallback _(Phase 1)_
+- [ ] **RECOMMENDED** Session cleanup job confirmed running (not duplicating on multiple replicas) _(Phase 4a)_
 
 ### 4.3 Security headers
 
-- [ ] **REQUIRED** `helmet()` added to `app.ts` middleware stack *(Phase 4c)*
-- [ ] **REQUIRED** Content Security Policy configured (at minimum: `default-src 'self'`, exceptions for Stripe, Google Analytics, Sentry CDNs) *(Phase 4c)*
-- [ ] **REQUIRED** `express.json` body limit scoped — `64kb` globally, `12mb` only on upload routes *(Phase 4c)*
+- [ ] **REQUIRED** `helmet()` added to `app.ts` middleware stack _(Phase 4c)_
+- [ ] **REQUIRED** Content Security Policy configured (at minimum: `default-src 'self'`, exceptions for Stripe, Google Analytics, Sentry CDNs) _(Phase 4c)_
+- [ ] **REQUIRED** `express.json` body limit scoped — `64kb` globally, `12mb` only on upload routes _(Phase 4c)_
 
 ### 4.4 Rate limiting
 
-- [ ] **REQUIRED** Global rate limiter on all routes (e.g., 200 req/15 min per IP) *(Phase 4c)*
-- [ ] **REQUIRED** Tighter rate limits on auth endpoints (`/api/auth/login`, `/api/auth/callback`) *(Phase 4c)*
-- [ ] **REQUIRED** Existing handoff rate limit (`handoffRateLimit.ts`) verified still applies *(Phase 4c check)*
-- [ ] **RECOMMENDED** Per-user rate limits on AI-consuming routes *(Phase 4c)*
+- [ ] **REQUIRED** Global rate limiter on all routes (e.g., 200 req/15 min per IP) _(Phase 4c)_
+- [ ] **REQUIRED** Tighter rate limits on auth endpoints (`/api/auth/login`, `/api/auth/callback`) _(Phase 4c)_
+- [ ] **REQUIRED** Existing handoff rate limit (`handoffRateLimit.ts`) verified still applies _(Phase 4c check)_
+- [ ] **RECOMMENDED** Per-user rate limits on AI-consuming routes _(Phase 4c)_
 
 ### 4.5 Background jobs
 
-- [ ] **REQUIRED** All 9 jobs confirmed safe for single-executor model (no duplicate sends on multi-replica) *(Phase 4a)*
-- [ ] **REQUIRED** Job queue chosen and implemented (pg-boss or BullMQ) *(Phase 4a)*
-- [ ] **REQUIRED** Worker process deployed separately from API replicas *(Phase 4a)*
-- [ ] **RECOMMENDED** Job failure alerting wired to Sentry or PagerDuty *(Phase 4a)*
+- [ ] **REQUIRED** All 9 jobs confirmed safe for single-executor model (no duplicate sends on multi-replica) _(Phase 4a)_
+- [ ] **REQUIRED** Job queue chosen and implemented (pg-boss or BullMQ) _(Phase 4a)_
+- [ ] **REQUIRED** Worker process deployed separately from API replicas _(Phase 4a)_
+- [ ] **RECOMMENDED** Job failure alerting wired to Sentry or PagerDuty _(Phase 4a)_
 
 ### 4.6 Database migrations
 
-- [ ] **REQUIRED** `drizzle-kit push` removed from CI/CD pipeline *(Phase 4b)*
-- [ ] **REQUIRED** `drizzle-kit migrate` (file-based) used for all production schema changes *(Phase 4b)*
-- [ ] **REQUIRED** Migration dry-run tested against a production DB snapshot before first apply *(Phase 4b)*
-- [ ] **REQUIRED** `post-merge.sh` updated for non-Replit environments *(Phase 5)*
+- [ ] **REQUIRED** `drizzle-kit push` removed from CI/CD pipeline _(Phase 4b)_
+- [ ] **REQUIRED** `drizzle-kit migrate` (file-based) used for all production schema changes _(Phase 4b)_
+- [ ] **REQUIRED** Migration dry-run tested against a production DB snapshot before first apply _(Phase 4b)_
+- [ ] **REQUIRED** `post-merge.sh` updated for non-Replit environments _(Phase 5)_
 
 ### 4.7 Database backups
 
-- [ ] **REQUIRED** Automated daily backups configured on managed Postgres provider *(Phase 5)*
-- [ ] **REQUIRED** Restore procedure written and tested *(Phase 5)*
-- [ ] **RECOMMENDED** Point-in-time recovery (PITR) enabled *(Phase 5)*
-- [ ] **RECOMMENDED** 30-day backup retention minimum *(Phase 5)*
+- [ ] **REQUIRED** Automated daily backups configured on managed Postgres provider _(Phase 5)_
+- [ ] **REQUIRED** Restore procedure written and tested _(Phase 5)_
+- [ ] **RECOMMENDED** Point-in-time recovery (PITR) enabled _(Phase 5)_
+- [ ] **RECOMMENDED** 30-day backup retention minimum _(Phase 5)_
 
 ### 4.8 Object storage
 
-- [ ] **REQUIRED** GCS sidecar replaced with direct SDK or S3-compatible client *(Phase 2b)*
-- [ ] **REQUIRED** Private object ACL gate verified (`PRIVATE_OBJECT_DIR` path, auth + reveal gate) *(Phase 2b)*
-- [ ] **REQUIRED** Public object signed URL expiry verified *(Phase 2b)*
-- [ ] **RECOMMENDED** Object storage CORS policy set to production domains only *(Phase 2b)*
+- [ ] **REQUIRED** GCS sidecar replaced with direct SDK or S3-compatible client _(Phase 2b)_
+- [ ] **REQUIRED** Private object ACL gate verified (`PRIVATE_OBJECT_DIR` path, auth + reveal gate) _(Phase 2b)_
+- [ ] **REQUIRED** Public object signed URL expiry verified _(Phase 2b)_
+- [ ] **RECOMMENDED** Object storage CORS policy set to production domains only _(Phase 2b)_
 
 ### 4.9 AI API keys
 
-- [ ] **REQUIRED** `ANTHROPIC_API_KEY` set and confirmed reaching `api.anthropic.com` directly *(Phase 3)*
-- [ ] **REQUIRED** `OPENAI_API_KEY` set and confirmed reaching `api.openai.com` directly *(Phase 3)*
-- [ ] **REQUIRED** Daily cap system (`ai_usage_counters`) tested post-key-swap *(Phase 3)*
-- [ ] **REQUIRED** Deterministic fallback confirmed still firing on consent-off accounts *(Phase 3)*
-- [ ] **RECOMMENDED** AI call cost alerting set up (Anthropic + OpenAI usage dashboards) *(Phase 3)*
+- [ ] **REQUIRED** `ANTHROPIC_API_KEY` set and confirmed reaching `api.anthropic.com` directly _(Phase 3)_
+- [ ] **REQUIRED** `OPENAI_API_KEY` set and confirmed reaching `api.openai.com` directly _(Phase 3)_
+- [ ] **REQUIRED** Daily cap system (`ai_usage_counters`) tested post-key-swap _(Phase 3)_
+- [ ] **REQUIRED** Deterministic fallback confirmed still firing on consent-off accounts _(Phase 3)_
+- [ ] **RECOMMENDED** AI call cost alerting set up (Anthropic + OpenAI usage dashboards) _(Phase 3)_
 
 ### 4.10 Stripe webhooks
 
-- [ ] **REQUIRED** `stripe-replit-sync` removed *(Phase 2a)*
-- [ ] **REQUIRED** Direct webhook handler implemented and signed with `STRIPE_WEBHOOK_SECRET` *(Phase 2a)*
-- [ ] **REQUIRED** Webhook endpoint registered in Stripe dashboard at production domain *(Phase 2a)*
-- [ ] **REQUIRED** End-to-end checkout flow tested in Stripe test mode against the new handler *(Phase 2a)*
-- [ ] **REQUIRED** Tier upgrade (`purchase_interest` → user tier) verified after webhook fires *(Phase 2a)*
+- [ ] **REQUIRED** `stripe-replit-sync` removed _(Phase 2a)_
+- [ ] **REQUIRED** Direct webhook handler implemented and signed with `STRIPE_WEBHOOK_SECRET` _(Phase 2a)_
+- [ ] **REQUIRED** Webhook endpoint registered in Stripe dashboard at production domain _(Phase 2a)_
+- [ ] **REQUIRED** End-to-end checkout flow tested in Stripe test mode against the new handler _(Phase 2a)_
+- [ ] **REQUIRED** Tier upgrade (`purchase_interest` → user tier) verified after webhook fires _(Phase 2a)_
 
 ### 4.11 Google OAuth (Calendar)
 
-- [ ] **REQUIRED** `@replit/connectors-sdk` removed from `googleCalendar.ts` *(Phase 2c)*
-- [ ] **REQUIRED** `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` set *(Phase 2c)*
-- [ ] **REQUIRED** OAuth redirect URI allowlist in Google Cloud Console updated to production domain *(Phase 2c)*
-- [ ] **REQUIRED** Per-user token storage in DB tested (connect → disconnect → reconnect) *(Phase 2c)*
+- [ ] **REQUIRED** `@replit/connectors-sdk` removed from `googleCalendar.ts` _(Phase 2c)_
+- [ ] **REQUIRED** `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` set _(Phase 2c)_
+- [ ] **REQUIRED** OAuth redirect URI allowlist in Google Cloud Console updated to production domain _(Phase 2c)_
+- [ ] **REQUIRED** Per-user token storage in DB tested (connect → disconnect → reconnect) _(Phase 2c)_
 
 ### 4.12 Observability
 
-- [ ] **REQUIRED** `SENTRY_DSN_API` set and first error confirmed captured *(Phase 5)*
-- [ ] **REQUIRED** `VITE_SENTRY_DSN` set and frontend error confirmed captured *(Phase 5)*
-- [ ] **RECOMMENDED** Structured logging (pino) confirmed flowing to a log aggregator (Datadog, Logtail, etc.) *(Phase 5)*
-- [ ] **RECOMMENDED** Uptime monitoring on `/api/healthz` *(Phase 5)*
-- [ ] **RECOMMENDED** Alerting on P95 API latency > 2s *(Phase 5)*
+- [ ] **REQUIRED** `SENTRY_DSN_API` set and first error confirmed captured _(Phase 5)_
+- [ ] **REQUIRED** `VITE_SENTRY_DSN` set and frontend error confirmed captured _(Phase 5)_
+- [ ] **RECOMMENDED** Structured logging (pino) confirmed flowing to a log aggregator (Datadog, Logtail, etc.) _(Phase 5)_
+- [ ] **RECOMMENDED** Uptime monitoring on `/api/healthz` _(Phase 5)_
+- [ ] **RECOMMENDED** Alerting on P95 API latency > 2s _(Phase 5)_
 
 ### 4.13 Privacy and consent
 
-- [ ] **REQUIRED** Both GDPR delete paths (user-initiated + admin) confirmed purging all first-party lanes *(Phase 0 check — review only)*
-- [ ] **REQUIRED** `ai_content_consent` consent gate confirmed firing before any user content reaches Claude *(Phase 0 check — review only)*
-- [ ] **REQUIRED** Data export (`/api/account/export`) confirmed complete and downloading *(Phase 0 check — review only)*
-- [ ] **RECOMMENDED** Cookie banner / privacy notice reviewed for accuracy post-migration (Replit references may need removing) *(Phase 5)*
+- [ ] **REQUIRED** Both GDPR delete paths (user-initiated + admin) confirmed purging all first-party lanes _(Phase 0 check — review only)_
+- [ ] **REQUIRED** `ai_content_consent` consent gate confirmed firing before any user content reaches Claude _(Phase 0 check — review only)_
+- [ ] **REQUIRED** Data export (`/api/account/export`) confirmed complete and downloading _(Phase 0 check — review only)_
+- [ ] **RECOMMENDED** Cookie banner / privacy notice reviewed for accuracy post-migration (Replit references may need removing) _(Phase 5)_
 
 ### 4.14 Founder / admin access
 
-- [ ] **REQUIRED** `FOUNDER_KEY` set to a strong random value in production *(Phase 0 check)*
-- [ ] **RECOMMENDED** Move from a static shared key to a proper admin role on the new IdP *(Phase 1)*
+- [ ] **REQUIRED** `FOUNDER_KEY` set to a strong random value in production _(Phase 0 check)_
+- [ ] **RECOMMENDED** Move from a static shared key to a proper admin role on the new IdP _(Phase 1)_
 
 ---
 
@@ -908,14 +930,14 @@ Bearer token path does not allow cross-user access.
 **Reviewer goal:** Confirm no deploy script can corrupt production data or expose
 secrets.
 
-- [ ] `scripts/post-merge.sh` — confirm `drizzle-kit push` is not used against production; confirm `pnpm install --frozen-lockfile` is correct for CI *(replace in Phase 4b)*
+- [ ] `scripts/post-merge.sh` — confirm `drizzle-kit push` is not used against production; confirm `pnpm install --frozen-lockfile` is correct for CI _(replace in Phase 4b)_
 - [ ] `artifacts/api-server/build.mjs` — is the esbuild externals list complete? Are there any native modules that will fail to load at runtime because they are not installed alongside the bundle?
-- [ ] Vite `manualChunks` — confirm no vendor chunk isolation that caused the TDZ white-screen (documented in memory: cyclic vendors must stay in `vendor-misc`) *(verify before each publish)*
+- [ ] Vite `manualChunks` — confirm no vendor chunk isolation that caused the TDZ white-screen (documented in memory: cyclic vendors must stay in `vendor-misc`) _(verify before each publish)_
 - [ ] Metro export (mobile) — is the Expo build step time-bounded? Does it fail loudly rather than silently overrun the build window?
 
 ---
 
-## 6. Local development and Bitbucket handoff guide
+## 6. Local development and GitHub handoff guide
 
 This section is for a new engineer setting up the project outside of Replit.
 
@@ -1002,8 +1024,8 @@ PORT=3000 pnpm --filter @workspace/nldc run dev
 ```
 
 The web dev server proxies `/api/*` through to `http://localhost:8080` via
-Vite's dev server (no proxy config is needed; the shared reverse proxy handles
-this on Replit, and the `BASE_URL` in `customFetch` handles it locally).
+Vite's dev server. Override the target with `API_ORIGIN` when the API runs
+somewhere else.
 
 ### 6.6 Running tests
 
@@ -1041,7 +1063,7 @@ pnpm --filter @workspace/api-spec run codegen
 This regenerates `lib/api-client-react/src/generated/` and
 `lib/api-zod/src/generated/`. Never hand-edit those directories.
 
-### 6.8 Recommended Bitbucket branch and PR workflow
+### 6.8 Recommended GitHub branch and PR workflow
 
 ```
 main          ← protected; CI must pass; requires one human review
@@ -1050,6 +1072,7 @@ feature/*     ← all development work; open PR against main
 ```
 
 **PR checklist for reviewers:**
+
 1. `pnpm run typecheck` passes locally.
 2. `pnpm run lint` passes locally.
 3. `pnpm --filter @workspace/api-server run test` passes.
@@ -1061,22 +1084,14 @@ feature/*     ← all development work; open PR against main
 8. Voice rules: no em dashes, no AI-tell words in user-facing copy. Run
    `pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts`.
 
-### 6.9 Bitbucket Pipelines config
+### 6.9 GitHub Actions config
 
-CI lives in `bitbucket-pipelines.yml` at the repo root (committed). It pins pnpm
-via corepack, caches the pnpm store, provisions a `postgres:16` service for the
-API tests, and runs typecheck, lint, API tests, schema-drift, and voice-lint in
-parallel on every pull request and on pushes to `main`.
+CI lives in `.github/workflows/ci.yml`. It pins pnpm, caches the pnpm store,
+provisions PostgreSQL 16 services, and runs the full quality, API, build, and
+browser gates on every pull request and push to `main`.
 
-To enable it: in Bitbucket open Repository settings -> Pipelines -> Settings and
-toggle Pipelines on. The committed config uses an ephemeral in-pipeline Postgres,
-so no external `DATABASE_URL` secret is required for the default gate; add
-repository variables only for any additional secrets a future step needs.
-
-The Playwright end-to-end suite is defined as a manually triggered pipeline
-(`custom: e2e`). Run it from Pipelines -> Run pipeline -> custom: e2e once its
-Replit shared-proxy dependency at `localhost:80` is resolved (see the inline
-comment in the file).
+The default workflow needs no application secrets. Protect `main` with the
+`quality`, `api`, and `e2e` jobs after the first successful run.
 
 ### 6.10 What to do if you are the first engineer off Replit
 
@@ -1097,8 +1112,8 @@ comment in the file).
 
 ---
 
-*This document was generated in Phase 0 of the migration. It is a living
+_This document was generated in Phase 0 of the migration. It is a living
 document — update it as each phase completes and as new coupling points are
 discovered. The source of truth for CI commands is `CI.md`; the source of
 truth for operational runbooks is `OPERATIONS.md`. This file covers migration
-only.*
+only._

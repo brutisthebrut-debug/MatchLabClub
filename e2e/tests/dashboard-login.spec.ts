@@ -7,9 +7,9 @@
  * landing page instead.  The OIDC callback handler read `returnTo` exclusively
  * from a `return_to` cookie (Secure + SameSite=Lax).  In Playwright's
  * Chromium context the cookie is silently dropped in two scenarios:
- *   1. The base URL is `http://localhost:80` (HTTP) — browsers discard
+ *   1. The local base URL is HTTP — browsers discard
  *      `Secure`-flagged cookies on non-HTTPS origins (localhost IS a secure
- *      context per spec, but some Chromium builds / proxy configurations still
+ *      context per spec, but some Chromium builds or proxy configurations still
  *      drop it during cross-origin OIDC redirects).
  *   2. The Replit testing fake OIDC issuer overrides the redirect_uri back to
  *      the callback but does not guarantee the cross-origin cookie jar is
@@ -133,14 +133,16 @@ test("dashboard renders authenticated UI when user is logged in", async ({
 
   // Brand-new users see the welcome/empty-state panel (no audits yet).
   // This element is present ONLY on the Dashboard — it never appears on Landing.
-  await expect(page.locator('[data-testid="dashboard-real-empty-state"]')).toBeVisible({
+  await expect(
+    page.locator('[data-testid="dashboard-real-empty-state"]'),
+  ).toBeVisible({
     timeout: 20_000,
   });
 
   // A brand-new authenticated user (zero audits) lands on the real empty
   // state, whose heading is "No audits yet". The full "Your Dating Blueprint"
   // dashboard only renders once at least one audit exists.
-  await expect(page.locator('h1')).toContainText("No audits yet", {
+  await expect(page.locator("h1")).toContainText("No audits yet", {
     timeout: 5_000,
   });
 });
@@ -347,9 +349,7 @@ test("submit audit through wizard, then /dashboard renders real score-ring and a
   await page.locator('[data-testid="button-next"]').click();
 
   // ── Step 3: dating goal ───────────────────────────────────────────────────
-  await page
-    .locator('[data-testid="button-goal-find-a-relationship"]')
-    .click();
+  await page.locator('[data-testid="button-goal-find-a-relationship"]').click();
   await page.locator('[data-testid="button-next"]').click();
 
   // ── Step 4: bio (must be > 20 chars) ──────────────────────────────────────

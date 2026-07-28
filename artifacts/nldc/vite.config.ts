@@ -12,6 +12,8 @@ if (port !== undefined && (Number.isNaN(port) || port <= 0)) {
 }
 
 const basePath = process.env.BASE_PATH ?? "/";
+const host = process.env.HOST ?? "0.0.0.0";
+const apiOrigin = process.env.API_ORIGIN ?? "http://127.0.0.1:8080";
 
 export default defineConfig({
   base: basePath,
@@ -36,7 +38,12 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
-      "@assets": path.resolve(import.meta.dirname, "..", "..", "attached_assets"),
+      "@assets": path.resolve(
+        import.meta.dirname,
+        "..",
+        "..",
+        "attached_assets",
+      ),
     },
     dedupe: ["react", "react-dom"],
   },
@@ -83,15 +90,21 @@ export default defineConfig({
   server: {
     port,
     strictPort: true,
-    host: "0.0.0.0",
+    host,
     allowedHosts: true,
+    proxy: {
+      "/api": {
+        target: apiOrigin,
+        changeOrigin: true,
+      },
+    },
     fs: {
       strict: true,
     },
   },
   preview: {
     port,
-    host: "0.0.0.0",
+    host,
     allowedHosts: true,
   },
 });
