@@ -280,6 +280,7 @@ import type {
   WellnessAnswerInput,
   WellnessAnswerList,
   WellnessAnswerPatch,
+  WellnessAnswerPermissionsPatch,
   WellnessDaily,
   WellnessInferenceConfirmInput,
   WellnessInferenceConfirmResult,
@@ -4654,7 +4655,7 @@ export const getUpdateWellnessAnswerUrl = (id: number,) => {
 }
 
 /**
- * @summary Update a wellness answer or consent level
+ * @summary Update a wellness answer
  */
 export const updateWellnessAnswer = async (id: number,
     wellnessAnswerPatch: WellnessAnswerPatch, options?: RequestInit): Promise<WellnessAnswer> => {
@@ -4704,7 +4705,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateWellnessAnswerMutationError = ErrorType<void>
 
     /**
- * @summary Update a wellness answer or consent level
+ * @summary Update a wellness answer
  */
 export const useUpdateWellnessAnswer = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWellnessAnswer>>, TError,{id: number;data: BodyType<WellnessAnswerPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -4785,6 +4786,84 @@ export const useDeleteWellnessAnswer = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteWellnessAnswerMutationOptions(options));
+    }
+
+export const getUpdateWellnessAnswerPermissionsUrl = (id: number,) => {
+
+
+
+
+  return `/api/wellness/answers/${id}/permissions`
+}
+
+/**
+ * Saving an answer does not grant Echo, Mirror, matching, or research
+use. This endpoint changes those purposes explicitly and records an
+append-only actor audit event for every changed permission. Matching
+permission requires Mirror confirmation. Revoking Mirror confirmation
+also revokes matching permission.
+
+ * @summary Change purpose-specific permissions for one wellness answer
+ */
+export const updateWellnessAnswerPermissions = async (id: number,
+    wellnessAnswerPermissionsPatch: WellnessAnswerPermissionsPatch, options?: RequestInit): Promise<WellnessAnswer> => {
+
+  return customFetch<WellnessAnswer>(getUpdateWellnessAnswerPermissionsUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      wellnessAnswerPermissionsPatch,)
+  }
+);}
+
+
+
+
+export const getUpdateWellnessAnswerPermissionsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWellnessAnswerPermissions>>, TError,{id: number;data: BodyType<WellnessAnswerPermissionsPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateWellnessAnswerPermissions>>, TError,{id: number;data: BodyType<WellnessAnswerPermissionsPatch>}, TContext> => {
+
+const mutationKey = ['updateWellnessAnswerPermissions'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWellnessAnswerPermissions>>, {id: number;data: BodyType<WellnessAnswerPermissionsPatch>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateWellnessAnswerPermissions(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateWellnessAnswerPermissionsMutationResult = NonNullable<Awaited<ReturnType<typeof updateWellnessAnswerPermissions>>>
+    export type UpdateWellnessAnswerPermissionsMutationBody = BodyType<WellnessAnswerPermissionsPatch>
+    export type UpdateWellnessAnswerPermissionsMutationError = ErrorType<void>
+
+    /**
+ * @summary Change purpose-specific permissions for one wellness answer
+ */
+export const useUpdateWellnessAnswerPermissions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWellnessAnswerPermissions>>, TError,{id: number;data: BodyType<WellnessAnswerPermissionsPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateWellnessAnswerPermissions>>,
+        TError,
+        {id: number;data: BodyType<WellnessAnswerPermissionsPatch>},
+        TContext
+      > => {
+      return useMutation(getUpdateWellnessAnswerPermissionsMutationOptions(options));
     }
 
 export const getGetWellnessDailyUrl = () => {

@@ -330,8 +330,25 @@ ensureStore("compatibility_reads");
 export const compatibilityReadsTable = makeTable("compatibility_reads");
 ensureStore("journal_entries");
 export const journalEntriesTable = makeTable("journal_entries");
-ensureStore("wellness_answers");
+stores.wellness_answers = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    userId: null,
+    anonymousClaimToken: null,
+    category: null,
+    consentLevel: "coaching",
+    echoUseApproved: false,
+    mirrorConfirmed: false,
+    matchingUseApproved: false,
+    researchUseApproved: false,
+    permissionUpdatedAt: null,
+    deletedAt: null,
+  },
+};
 export const wellnessAnswersTable = makeTable("wellness_answers");
+ensureStore("data_permission_events");
+export const dataPermissionEventsTable = makeTable("data_permission_events");
 ensureStore("wellness_inferences");
 export const wellnessInferencesTable = makeTable("wellness_inferences");
 ensureStore("imported_sources");

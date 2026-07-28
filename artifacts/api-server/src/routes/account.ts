@@ -15,6 +15,7 @@ import {
   journalEntriesTable,
   postDateNotesTable,
   wellnessAnswersTable,
+  dataPermissionEventsTable,
   wellnessInferencesTable,
   wellnessTagsTable,
   compatibilityReadsTable,
@@ -274,7 +275,17 @@ router.get("/account/summary", async (req, res): Promise<void> => {
 });
 
 async function buildExportPayload(userId: string) {
-  const [userRow, audits, profiles, messages, insights, journalEntries, postDateNotes] = await Promise.all([
+  const [
+    userRow,
+    audits,
+    profiles,
+    messages,
+    insights,
+    journalEntries,
+    postDateNotes,
+    wellnessAnswers,
+    dataPermissionEvents,
+  ] = await Promise.all([
     db.select().from(usersTable).where(eq(usersTable.id, userId)),
     db
       .select()
@@ -306,6 +317,16 @@ async function buildExportPayload(userId: string) {
       .from(postDateNotesTable)
       .where(eq(postDateNotesTable.userId, userId))
       .orderBy(postDateNotesTable.createdAt),
+    db
+      .select()
+      .from(wellnessAnswersTable)
+      .where(eq(wellnessAnswersTable.userId, userId))
+      .orderBy(wellnessAnswersTable.createdAt),
+    db
+      .select()
+      .from(dataPermissionEventsTable)
+      .where(eq(dataPermissionEventsTable.userId, userId))
+      .orderBy(dataPermissionEventsTable.createdAt),
   ]);
 
   const u = userRow[0];
@@ -341,6 +362,31 @@ async function buildExportPayload(userId: string) {
       createdAt: toIso(p.createdAt),
       updatedAt: toIso(p.updatedAt),
       deletedAt: p.deletedAt ? toIso(p.deletedAt) : null,
+    })),
+    wellnessAnswers: wellnessAnswers.map((answer) => ({
+      id: answer.id,
+      questionId: answer.questionId,
+      dimension: answer.dimension,
+      category: answer.category,
+      questionText: answer.questionText,
+      answer: answer.answer,
+      consentLevel: answer.consentLevel,
+      permissions: {
+        echo: answer.echoUseApproved,
+        mirror: answer.mirrorConfirmed,
+        matching: answer.matchingUseApproved,
+        research: answer.researchUseApproved,
+      },
+      permissionUpdatedAt: answer.permissionUpdatedAt
+        ? toIso(answer.permissionUpdatedAt)
+        : null,
+      deletedAt: answer.deletedAt ? toIso(answer.deletedAt) : null,
+      createdAt: toIso(answer.createdAt),
+      updatedAt: toIso(answer.updatedAt),
+    })),
+    dataPermissionEvents: dataPermissionEvents.map((event) => ({
+      ...event,
+      createdAt: toIso(event.createdAt),
     })),
   });
 }
@@ -657,6 +703,9 @@ router.delete("/account", async (req, res): Promise<void> => {
   // account goes. Each is best-effort independent; one failure shouldn't
   // strand the rest.
   await Promise.all([
+    db
+      .delete(dataPermissionEventsTable)
+      .where(eq(dataPermissionEventsTable.userId, userId)),
     db.delete(wellnessAnswersTable).where(eq(wellnessAnswersTable.userId, userId)),
     db.delete(wellnessInferencesTable).where(eq(wellnessInferencesTable.userId, userId)),
     db.delete(wellnessTagsTable).where(eq(wellnessTagsTable.userId, userId)),
@@ -980,6 +1029,12 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .where(eq(lifePulsesTable.userId, userId))
         .returning({ id: lifePulsesTable.id });
       tables["life_pulses"] = lifePulseDel.length;
+
+      const dataPermissionEventDel = await tx
+        .delete(dataPermissionEventsTable)
+        .where(eq(dataPermissionEventsTable.userId, userId))
+        .returning({ id: dataPermissionEventsTable.id });
+      tables["data_permission_events"] = dataPermissionEventDel.length;
 
       const wellnessAnswerDel = await tx
         .delete(wellnessAnswersTable)

@@ -838,17 +838,19 @@ export default function WellnessCenter() {
   Build your <span className="gradient-text-violet">compatibility profile</span>
   </h1>
   <p className="text-muted-foreground max-w-2xl leading-relaxed text-sm">
-  Answer at your own pace across 18 wellness dimensions. Everything you share here powers your coaching and your matching: the more I know you, the better I match you. You can delete any answer anytime in your Data Vault.
+  Answer at your own pace across 18 wellness dimensions. Each answer is saved
+  privately first. You decide separately whether Echo may use it, whether it
+  belongs in your Mirror, and whether it may inform matching.
   </p>
   <div className="mt-4 flex flex-wrap items-center gap-3">
   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(248_45%_157%)] border border-white/5 text-xs text-muted-foreground">
   <Shield className="w-3 h-3 text-[hsl(142_55%_60%)]" />
-  Every answer feeds your match readiness. Delete anything anytime.
+  Saved first. Nothing feeds matching until you approve it.
   </div>
   {totalAnswered > 0 && (
   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(142_55%_60%/0.09)] border border-[hsl(142_55%_60%/0.2)] text-xs text-[hsl(142_55%_72%)]">
   <CheckCircle2 className="w-3 h-3" />
-  {totalAnswered} answer{totalAnswered !== 1 ? "s" : ""} saved · {overallPct}% complete
+  {totalAnswered} answer{totalAnswered !== 1 ? "s" : ""} saved · {overallPct}% approved for matching
   </div>
   )}
   </div>
@@ -947,7 +949,9 @@ export default function WellnessCenter() {
   <p className="text-xs font-bold uppercase tracking-widest text-[hsl(248_62%_62%)]">What happens next</p>
   <h3 className="font-serif text-xl font-semibold">Compatibility matching is coming</h3>
   <p className="text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
-  When live matching opens, your completed profile will be used to surface people who are actually compatible with how you think, communicate, and live, not just photos and bios.
+  When live matching opens, only the answers you explicitly approve for
+  matching will help surface people compatible with how you think,
+  communicate, and live, not just photos and bios.
   </p>
   <div className="flex flex-wrap gap-3 justify-center">
   <Button asChild variant="outline" className="rounded-full">

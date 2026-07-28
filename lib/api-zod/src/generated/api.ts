@@ -405,6 +405,37 @@ export const ExportMyDataResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "deletedAt": zod.coerce.date().nullish()
+})),
+  "wellnessAnswers": zod.array(zod.object({
+  "id": zod.number(),
+  "questionId": zod.string(),
+  "dimension": zod.string(),
+  "category": zod.string().nullish(),
+  "questionText": zod.string(),
+  "answer": zod.string(),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).describe('Legacy compatibility field. Purpose-specific permissions are canonical.'),
+  "permissions": zod.object({
+  "echo": zod.boolean(),
+  "mirror": zod.boolean(),
+  "matching": zod.boolean(),
+  "research": zod.boolean()
+}),
+  "permissionUpdatedAt": zod.coerce.date().nullable(),
+  "deletedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "dataPermissionEvents": zod.array(zod.object({
+  "id": zod.number(),
+  "userId": zod.string(),
+  "resourceType": zod.string(),
+  "resourceId": zod.string(),
+  "purpose": zod.enum(['echo', 'mirror', 'matching', 'research']),
+  "granted": zod.boolean(),
+  "actorType": zod.enum(['member', 'system', 'founder', 'migration']),
+  "actorId": zod.string().nullable(),
+  "reason": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
 }))
 })
 
@@ -1212,6 +1243,37 @@ export const DownloadEmailedExportResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "deletedAt": zod.coerce.date().nullish()
+})),
+  "wellnessAnswers": zod.array(zod.object({
+  "id": zod.number(),
+  "questionId": zod.string(),
+  "dimension": zod.string(),
+  "category": zod.string().nullish(),
+  "questionText": zod.string(),
+  "answer": zod.string(),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).describe('Legacy compatibility field. Purpose-specific permissions are canonical.'),
+  "permissions": zod.object({
+  "echo": zod.boolean(),
+  "mirror": zod.boolean(),
+  "matching": zod.boolean(),
+  "research": zod.boolean()
+}),
+  "permissionUpdatedAt": zod.coerce.date().nullable(),
+  "deletedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "dataPermissionEvents": zod.array(zod.object({
+  "id": zod.number(),
+  "userId": zod.string(),
+  "resourceType": zod.string(),
+  "resourceId": zod.string(),
+  "purpose": zod.enum(['echo', 'mirror', 'matching', 'research']),
+  "granted": zod.boolean(),
+  "actorType": zod.enum(['member', 'system', 'founder', 'migration']),
+  "actorId": zod.string().nullable(),
+  "reason": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
 }))
 })
 
@@ -1924,7 +1986,14 @@ export const ListWellnessAnswersResponse = zod.object({
   "category": zod.string().nullish(),
   "questionText": zod.string(),
   "answer": zod.string(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).describe('Legacy compatibility field. Purpose-specific permissions are canonical.'),
+  "permissions": zod.object({
+  "echo": zod.boolean(),
+  "mirror": zod.boolean(),
+  "matching": zod.boolean(),
+  "research": zod.boolean()
+}),
+  "permissionUpdatedAt": zod.coerce.date().nullable(),
   "deletedAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -1958,12 +2027,12 @@ export const CreateWellnessAnswerBody = zod.object({
   "category": zod.string().max(createWellnessAnswerBodyCategoryMax).nullish(),
   "questionText": zod.string().min(1).max(createWellnessAnswerBodyQuestionTextMax),
   "answer": zod.string().min(1).max(createWellnessAnswerBodyAnswerMax),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).optional()
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).optional().describe('Legacy compatibility field. Purpose-specific permissions are canonical.')
 })
 
 
 /**
- * @summary Update a wellness answer or consent level
+ * @summary Update a wellness answer
  */
 export const UpdateWellnessAnswerParams = zod.object({
   "id": zod.coerce.number()
@@ -1979,7 +2048,7 @@ export const updateWellnessAnswerBodyAnswerMax = 5000;
 
 export const UpdateWellnessAnswerBody = zod.object({
   "answer": zod.string().min(1).max(updateWellnessAnswerBodyAnswerMax).optional(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).optional()
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).optional().describe('Legacy compatibility field. Purpose-specific permissions are canonical.')
 })
 
 export const UpdateWellnessAnswerResponse = zod.object({
@@ -1989,7 +2058,14 @@ export const UpdateWellnessAnswerResponse = zod.object({
   "category": zod.string().nullish(),
   "questionText": zod.string(),
   "answer": zod.string(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).describe('Legacy compatibility field. Purpose-specific permissions are canonical.'),
+  "permissions": zod.object({
+  "echo": zod.boolean(),
+  "mirror": zod.boolean(),
+  "matching": zod.boolean(),
+  "research": zod.boolean()
+}),
+  "permissionUpdatedAt": zod.coerce.date().nullable(),
   "deletedAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -2010,6 +2086,51 @@ export const DeleteWellnessAnswerHeader = zod.object({
 export const DeleteWellnessAnswerResponse = zod.object({
   "success": zod.boolean(),
   "deletedId": zod.number()
+})
+
+
+/**
+ * Saving an answer does not grant Echo, Mirror, matching, or research
+use. This endpoint changes those purposes explicitly and records an
+append-only actor audit event for every changed permission. Matching
+permission requires Mirror confirmation. Revoking Mirror confirmation
+also revokes matching permission.
+
+ * @summary Change purpose-specific permissions for one wellness answer
+ */
+export const UpdateWellnessAnswerPermissionsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateWellnessAnswerPermissionsHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const UpdateWellnessAnswerPermissionsBody = zod.object({
+  "echo": zod.boolean().optional(),
+  "mirror": zod.boolean().optional(),
+  "matching": zod.boolean().optional(),
+  "research": zod.boolean().optional()
+})
+
+export const UpdateWellnessAnswerPermissionsResponse = zod.object({
+  "id": zod.number(),
+  "questionId": zod.string(),
+  "dimension": zod.string(),
+  "category": zod.string().nullish(),
+  "questionText": zod.string(),
+  "answer": zod.string(),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).describe('Legacy compatibility field. Purpose-specific permissions are canonical.'),
+  "permissions": zod.object({
+  "echo": zod.boolean(),
+  "mirror": zod.boolean(),
+  "matching": zod.boolean(),
+  "research": zod.boolean()
+}),
+  "permissionUpdatedAt": zod.coerce.date().nullable(),
+  "deletedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
 })
 
 
@@ -2119,7 +2240,14 @@ export const ConfirmWellnessInferenceResponse = zod.object({
   "category": zod.string().nullish(),
   "questionText": zod.string(),
   "answer": zod.string(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).describe('Legacy compatibility field. Purpose-specific permissions are canonical.'),
+  "permissions": zod.object({
+  "echo": zod.boolean(),
+  "mirror": zod.boolean(),
+  "matching": zod.boolean(),
+  "research": zod.boolean()
+}),
+  "permissionUpdatedAt": zod.coerce.date().nullable(),
   "deletedAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()

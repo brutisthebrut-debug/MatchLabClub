@@ -38,7 +38,7 @@ export default function Terms() {
   <p className="text-muted-foreground leading-relaxed max-w-xl mx-auto">
   We've written this the way we'd want to read it, clear, direct, no legalese. If anything seems unclear, email us and we'll explain it in plain English.
   </p>
-  <p className="text-muted-foreground/50 text-xs mt-4">Last updated: May 2026</p>
+  <p className="text-muted-foreground/50 text-xs mt-4">Last updated: July 2026</p>
   </div>
 
   <div className="space-y-6">
@@ -61,9 +61,9 @@ export default function Terms() {
   </Section>
 
   <Section icon={Sparkles} title="The Wellness Center and your match profile">
-  <p><strong className="text-foreground">Everything you share here is captured.</strong> The Wellness Center is how the engine gets to know you. When you answer a wellness prompt, log a reflection, or complete a quiz, that answer is saved in full and used across all of what we do for you: personal coaching, compatibility matching, and anonymised product research. There is no per-answer toggle to set, because the whole point is that the more the engine knows you, the better it can match you.</p>
-  <p><strong className="text-foreground">By using the Wellness Center, you agree to this.</strong> Engaging with these prompts is your consent for comprehensive capture across those uses. We keep the same promises we make everywhere else: we never sell your data, we never train external models on your private content, and any research use is anonymised.</p>
-  <p><strong className="text-foreground">You stay in control of the door.</strong> You can view everything we hold in your Data Vault, delete any answer or your whole profile at any time, and export your data whenever you want. Capture is assumed; deletion is always yours.</p>
+  <p><strong className="text-foreground">Saving is not blanket permission.</strong> When you answer a Wellness Center prompt, the answer is saved so you can review, edit, export, or delete it. Saving the answer does not automatically allow Echo, Mirror, matching, or research to use it.</p>
+  <p><strong className="text-foreground">You choose each purpose separately.</strong> In your Data Vault, every answer has independent controls for conversational use by Echo, confirmation in your visible Mirror, use in compatibility matching, and research. Matching use requires Mirror confirmation. Research is always optional and is never implied by using another part of MatchLab.</p>
+  <p><strong className="text-foreground">Changing the source resets approval.</strong> If you edit an answer, its prior approvals turn off until you review the new wording. You can also revoke a purpose, delete one answer, purge the whole Wellness source, export your data, or delete your account.</p>
   </Section>
 
   <Section icon={Star} title="Our coaching output">

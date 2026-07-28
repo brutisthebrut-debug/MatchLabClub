@@ -27,6 +27,7 @@ export * from "./post_date_notes";
 export * from "./wellness_answers";
 export * from "./wellness_inferences";
 export * from "./wellness_tags";
+export * from "./data_permission_events";
 export * from "./compatibility_reads";
 export * from "./care_dialect_profiles";
 export * from "./imported_sources";

@@ -65,7 +65,7 @@ function goalIntro(goal: string): string {
     case "just curious":
       return "Just a taste of how this works. These three answers are how Echo starts getting to know you. Say as little or as much as you like.";
     default:
-      return "These are how Echo starts getting to know you, the foundation for everything ahead. Answer in a sentence or two, or skip any and come back later. Used to coach you, never sold or shared.";
+      return "These are a starting point for your MatchLab profile. Answer in a sentence or two, or skip any and come back later. Answers save privately first; you choose later what Echo, Mirror, or matching may use.";
   }
 }
 

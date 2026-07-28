@@ -55,7 +55,7 @@ import {
   computeReweightingDetail,
 } from "./matching";
 import { recordJourneyEvent, summarizeJourneyEvents } from "../lib/journeyEvents";
-import { and, count, sql, desc, gte, asc, eq, isNotNull, lt, inArray, lte } from "drizzle-orm";
+import { and, count, sql, desc, gte, asc, eq, isNotNull, isNull, lt, inArray, lte } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { z } from "zod/v4";
 import { requireFounder } from "../middlewares/founderAuth";
@@ -129,7 +129,12 @@ router.get("/founder/wellness-stats", requireFounder, async (_req, res): Promise
   const [usersApprovedMatching] = await db
     .select({ c: sql<number>`count(distinct ${wellnessAnswersTable.userId})::int` })
     .from(wellnessAnswersTable)
-    .where(sql`${wellnessAnswersTable.consentLevel} in ('matching', 'all')`);
+    .where(
+      and(
+        eq(wellnessAnswersTable.matchingUseApproved, true),
+        isNull(wellnessAnswersTable.deletedAt),
+      ),
+    );
 
   // dimensions answered (distinct dimension values)
   const dimensionRows = await db

@@ -1742,7 +1742,7 @@ paths:
     patch:
       operationId: updateWellnessAnswer
       tags: [wellness]
-      summary: Update a wellness answer or consent level
+      summary: Update a wellness answer
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -1787,6 +1787,43 @@ paths:
                 $ref: "#/components/schemas/DeleteWellnessAnswerResult"
         "404":
           description: Not found
+
+  /wellness/answers/{id}/permissions:
+    patch:
+      operationId: updateWellnessAnswerPermissions
+      tags: [wellness]
+      summary: Change purpose-specific permissions for one wellness answer
+      description: |
+        Saving an answer does not grant Echo, Mirror, matching, or research
+        use. This endpoint changes those purposes explicitly and records an
+        append-only actor audit event for every changed permission. Matching
+        permission requires Mirror confirmation. Revoking Mirror confirmation
+        also revokes matching permission.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WellnessAnswerPermissionsPatch"
+      responses:
+        "200":
+          description: Permissions updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessAnswer"
+        "400":
+          description: Invalid permission transition
+        "404":
+          description: Answer not found
 
   /wellness/daily:
     get:
@@ -8001,7 +8038,7 @@ components:
 
     AccountExport:
       type: object
-      required: [exportedAt, user, audits, profiles, messages, insights, journalEntries, postDateNotes]
+      required: [exportedAt, user, audits, profiles, messages, insights, journalEntries, postDateNotes, wellnessAnswers, dataPermissionEvents]
       properties:
         exportedAt:
           type: string
@@ -8032,6 +8069,42 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PostDateNote'
+        wellnessAnswers:
+          type: array
+          items:
+            $ref: '#/components/schemas/WellnessAnswer'
+        dataPermissionEvents:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataPermissionEvent'
+
+    DataPermissionEvent:
+      type: object
+      required: [id, userId, resourceType, resourceId, purpose, granted, actorType, actorId, reason, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        resourceType:
+          type: string
+        resourceId:
+          type: string
+        purpose:
+          type: string
+          enum: [echo, mirror, matching, research]
+        granted:
+          type: boolean
+        actorType:
+          type: string
+          enum: [member, system, founder, migration]
+        actorId:
+          type: [string, "null"]
+        reason:
+          type: [string, "null"]
+        createdAt:
+          type: string
+          format: date-time
 
     AccountExportUser:
       type: object
@@ -9664,6 +9737,35 @@ components:
     WellnessConsentLevel:
       type: string
       enum: [coaching, matching, research, all]
+      deprecated: true
+      description: Legacy compatibility field. Purpose-specific permissions are canonical.
+
+    WellnessAnswerPermissions:
+      type: object
+      required: [echo, mirror, matching, research]
+      properties:
+        echo:
+          type: boolean
+        mirror:
+          type: boolean
+        matching:
+          type: boolean
+        research:
+          type: boolean
+
+    WellnessAnswerPermissionsPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        echo:
+          type: boolean
+        mirror:
+          type: boolean
+        matching:
+          type: boolean
+        research:
+          type: boolean
 
     WellnessAnswerInput:
       type: object
@@ -9690,6 +9792,7 @@ components:
           maxLength: 5000
         consentLevel:
           $ref: "#/components/schemas/WellnessConsentLevel"
+          deprecated: true
 
     WellnessAnswerPatch:
       type: object
@@ -9700,10 +9803,11 @@ components:
           maxLength: 5000
         consentLevel:
           $ref: "#/components/schemas/WellnessConsentLevel"
+          deprecated: true
 
     WellnessAnswer:
       type: object
-      required: [id, questionId, dimension, questionText, answer, consentLevel, createdAt, updatedAt]
+      required: [id, questionId, dimension, questionText, answer, consentLevel, permissions, permissionUpdatedAt, createdAt, updatedAt]
       properties:
         id:
           type: integer
@@ -9719,6 +9823,11 @@ components:
           type: string
         consentLevel:
           $ref: "#/components/schemas/WellnessConsentLevel"
+        permissions:
+          $ref: "#/components/schemas/WellnessAnswerPermissions"
+        permissionUpdatedAt:
+          type: [string, "null"]
+          format: date-time
         deletedAt:
           type: [string, "null"]
           format: date-time

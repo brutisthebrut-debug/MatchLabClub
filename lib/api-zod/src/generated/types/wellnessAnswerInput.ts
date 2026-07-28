@@ -33,5 +33,6 @@ export interface WellnessAnswerInput {
      * @maxLength 5000
      */
   answer: string;
+  /** @deprecated */
   consentLevel?: WellnessConsentLevel;
 }

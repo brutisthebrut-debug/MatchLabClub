@@ -7,11 +7,13 @@
  */
 import type { AccountExportUser } from './accountExportUser';
 import type { Audit } from './audit';
+import type { DataPermissionEvent } from './dataPermissionEvent';
 import type { DatingProfile } from './datingProfile';
 import type { EmailInsight } from './emailInsight';
 import type { JournalEntry } from './journalEntry';
 import type { MessageCoachingSession } from './messageCoachingSession';
 import type { PostDateNote } from './postDateNote';
+import type { WellnessAnswer } from './wellnessAnswer';
 
 export interface AccountExport {
   /** ISO timestamp of when the export was generated. */
@@ -23,4 +25,6 @@ export interface AccountExport {
   insights: EmailInsight[];
   journalEntries: JournalEntry[];
   postDateNotes: PostDateNote[];
+  wellnessAnswers: WellnessAnswer[];
+  dataPermissionEvents: DataPermissionEvent[];
 }

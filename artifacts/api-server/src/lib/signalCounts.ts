@@ -79,7 +79,13 @@ export async function collectSignalCounts(
       count: sql<number>`count(distinct ${wellnessAnswersTable.dimension})::int`,
     })
     .from(wellnessAnswersTable)
-    .where(eq(wellnessAnswersTable.userId, userId));
+    .where(
+      and(
+        eq(wellnessAnswersTable.userId, userId),
+        eq(wellnessAnswersTable.matchingUseApproved, true),
+        isNull(wellnessAnswersTable.deletedAt),
+      ),
+    );
   const wellnessDistinct = Number(wellnessRows[0]?.count ?? 0);
 
   // Only post-date notes the user actually reflected on count: an outcome set

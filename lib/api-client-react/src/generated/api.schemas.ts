@@ -1296,6 +1296,80 @@ export interface PostDateNote {
   deletedAt?: string | null;
 }
 
+/**
+ * Legacy compatibility field. Purpose-specific permissions are canonical.
+ * @deprecated
+ */
+export type WellnessConsentLevel = typeof WellnessConsentLevel[keyof typeof WellnessConsentLevel];
+
+
+export const WellnessConsentLevel = {
+  coaching: 'coaching',
+  matching: 'matching',
+  research: 'research',
+  all: 'all',
+} as const;
+
+export interface WellnessAnswerPermissions {
+  echo: boolean;
+  mirror: boolean;
+  matching: boolean;
+  research: boolean;
+}
+
+export interface WellnessAnswer {
+  id: number;
+  questionId: string;
+  dimension: string;
+  /** @nullable */
+  category?: string | null;
+  questionText: string;
+  answer: string;
+  consentLevel: WellnessConsentLevel;
+  permissions: WellnessAnswerPermissions;
+  /** @nullable */
+  permissionUpdatedAt: string | null;
+  /** @nullable */
+  deletedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type DataPermissionEventPurpose = typeof DataPermissionEventPurpose[keyof typeof DataPermissionEventPurpose];
+
+
+export const DataPermissionEventPurpose = {
+  echo: 'echo',
+  mirror: 'mirror',
+  matching: 'matching',
+  research: 'research',
+} as const;
+
+export type DataPermissionEventActorType = typeof DataPermissionEventActorType[keyof typeof DataPermissionEventActorType];
+
+
+export const DataPermissionEventActorType = {
+  member: 'member',
+  system: 'system',
+  founder: 'founder',
+  migration: 'migration',
+} as const;
+
+export interface DataPermissionEvent {
+  id: number;
+  userId: string;
+  resourceType: string;
+  resourceId: string;
+  purpose: DataPermissionEventPurpose;
+  granted: boolean;
+  actorType: DataPermissionEventActorType;
+  /** @nullable */
+  actorId: string | null;
+  /** @nullable */
+  reason: string | null;
+  createdAt: string;
+}
+
 export interface AccountExport {
   /** ISO timestamp of when the export was generated. */
   exportedAt: string;
@@ -1306,6 +1380,8 @@ export interface AccountExport {
   insights: EmailInsight[];
   journalEntries: JournalEntry[];
   postDateNotes: PostDateNote[];
+  wellnessAnswers: WellnessAnswer[];
+  dataPermissionEvents: DataPermissionEvent[];
 }
 
 export interface BulkDeleteAuditsInput {
@@ -2382,15 +2458,12 @@ export interface DeletePostDateNoteResult {
   deletedId: number;
 }
 
-export type WellnessConsentLevel = typeof WellnessConsentLevel[keyof typeof WellnessConsentLevel];
-
-
-export const WellnessConsentLevel = {
-  coaching: 'coaching',
-  matching: 'matching',
-  research: 'research',
-  all: 'all',
-} as const;
+export interface WellnessAnswerPermissionsPatch {
+  echo?: boolean;
+  mirror?: boolean;
+  matching?: boolean;
+  research?: boolean;
+}
 
 export interface WellnessAnswerInput {
   /**
@@ -2418,6 +2491,7 @@ export interface WellnessAnswerInput {
      * @maxLength 5000
      */
   answer: string;
+  /** @deprecated */
   consentLevel?: WellnessConsentLevel;
 }
 
@@ -2427,22 +2501,8 @@ export interface WellnessAnswerPatch {
      * @maxLength 5000
      */
   answer?: string;
+  /** @deprecated */
   consentLevel?: WellnessConsentLevel;
-}
-
-export interface WellnessAnswer {
-  id: number;
-  questionId: string;
-  dimension: string;
-  /** @nullable */
-  category?: string | null;
-  questionText: string;
-  answer: string;
-  consentLevel: WellnessConsentLevel;
-  /** @nullable */
-  deletedAt?: string | null;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface WellnessAnswerList {

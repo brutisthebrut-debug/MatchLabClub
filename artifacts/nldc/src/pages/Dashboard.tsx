@@ -1397,7 +1397,10 @@ export default function Dashboard() {
                 </Button>
               </div>
               <p className="text-sm text-muted-foreground font-medium mb-6 max-w-2xl" data-testid="text-toolkit-readiness-framing">
-                Every tool here does two jobs: it helps you right now, and it feeds your Match Readiness. The more the machine knows you, the better it matches you. Matching is the payoff.
+                Every tool here should help you now. When a result can inform
+                matching, you decide whether it may feed Match Readiness. More
+                data is not the goal; relevant data you understand and approve
+                is.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
