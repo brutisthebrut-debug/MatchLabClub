@@ -18,7 +18,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 export const AUTH_TOKEN_KEY = "auth_session_token";
 const ISSUER_URL =
-  process.env.EXPO_PUBLIC_ISSUER_URL ?? "https://replit.com/oidc";
+  process.env.EXPO_PUBLIC_OIDC_ISSUER_URL ?? "https://auth.invalid";
 
 export interface AuthUser {
   id: string;
@@ -49,14 +49,11 @@ const AuthContext = createContext<AuthContextValue>({
 });
 
 function getApiBaseUrl(): string {
-  if (process.env.EXPO_PUBLIC_DOMAIN) {
-    return `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
-  }
-  return "";
+  return (process.env.EXPO_PUBLIC_API_URL ?? "").replace(/\/+$/, "");
 }
 
 function getClientId(): string {
-  return process.env.EXPO_PUBLIC_REPL_ID || "";
+  return process.env.EXPO_PUBLIC_OIDC_CLIENT_ID ?? "";
 }
 
 export async function getStoredAuthToken(): Promise<string | null> {

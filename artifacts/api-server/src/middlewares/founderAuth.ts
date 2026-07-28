@@ -7,18 +7,6 @@ export async function requireFounder(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  // Keep old route tests hermetic while production no longer accepts a shared
-  // browser key. This branch cannot run outside NODE_ENV=test.
-  const headerKey = (req.header("x-founder-key") ?? "").trim();
-  if (
-    process.env.NODE_ENV === "test" &&
-    headerKey &&
-    headerKey === process.env.FOUNDER_KEY
-  ) {
-    next();
-    return;
-  }
-
   if (!req.user?.id) {
     res.status(401).json({ error: "Sign in with a founder account." });
     return;

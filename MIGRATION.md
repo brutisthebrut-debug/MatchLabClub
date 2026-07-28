@@ -971,8 +971,10 @@ PORT=8080
 NODE_ENV=development
 
 # Auth — use placeholder values in local dev until Phase 1 is complete
-ISSUER_URL=https://replit.com/oidc         # replace in Phase 1
-REPL_ID=local-dev-placeholder              # replace in Phase 1
+OIDC_ISSUER_URL=https://your-provider.example
+OIDC_WEB_CLIENT_ID=your-web-client-id
+OIDC_MOBILE_CLIENT_ID=your-mobile-client-id
+APP_SECRET=replace-with-at-least-32-random-bytes
 
 # Admin
 FOUNDER_EMAILS=founder@example.com
@@ -1117,3 +1119,14 @@ document — update it as each phase completes and as new coupling points are
 discovered. The source of truth for CI commands is `CI.md`; the source of
 truth for operational runbooks is `OPERATIONS.md`. This file covers migration
 only._
+
+
+## Auth portability checkpoint
+
+MatchLab uses provider-neutral OIDC discovery through `OIDC_ISSUER_URL`,
+`OIDC_WEB_CLIENT_ID`, and optional `OIDC_MOBILE_CLIENT_ID`. Pre-launch
+accounts are intentionally reset instead of dual-migrated. A verified email in
+`FOUNDER_EMAILS` bootstraps founder access; unverified identities remain
+members. Database sessions stay server-authoritative, legacy founder keys are
+rejected, and `APP_SECRET` domain-separates handoff, Wingman, and receipt
+signatures without a hosting-provider identifier.

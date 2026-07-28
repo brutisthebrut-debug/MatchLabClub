@@ -9,6 +9,7 @@ import {
   getOrCreateAnonClaimToken,
 } from "../lib/anonClaimToken";
 import { recordJourneyEvent } from "../lib/journeyEvents";
+import { deriveAppSecret } from "../lib/appSecrets";
 
 /**
  * Beat 2: the per-user "receipts" forwarding inbox.
@@ -124,10 +125,7 @@ function handleFromTo(to: string): string | null {
 }
 
 function expectedWebhookSecret(): string {
-  return (
-    process.env.RECEIPTS_WEBHOOK_SECRET ??
-    `receipts-${process.env.REPL_ID ?? "dev"}`
-  );
+  return process.env.RECEIPTS_WEBHOOK_SECRET?.trim() || deriveAppSecret("receipts-webhook");
 }
 
 function secretMatches(provided: string | undefined): boolean {

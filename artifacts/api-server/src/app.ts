@@ -18,9 +18,7 @@ import { handleIdentityWebhook } from "./lib/identityVerification";
  * Sources:
  *   APP_ORIGINS, comma-separated list of complete application origins
  *                (for example https://app.matchlab.club)
- *   REPLIT_DOMAINS  , comma-separated list of all domains for this Repl
- *                      (legacy dev previews and published domains)
- *   REPLIT_EXPO_DEV_DOMAIN, Expo tunnel domain used by the mobile app in dev
+ *   Every trusted web or mobile origin must be explicit.
  */
 function buildAllowedOrigins(): Set<string> {
   const origins = new Set<string>();
@@ -30,17 +28,6 @@ function buildAllowedOrigins(): Set<string> {
       const trimmed = origin.trim().replace(/\/+$/, "");
       if (trimmed) origins.add(trimmed);
     }
-  }
-  const domains = process.env["REPLIT_DOMAINS"];
-  if (domains) {
-    for (const d of domains.split(",")) {
-      const trimmed = d.trim();
-      if (trimmed) origins.add(`https://${trimmed}`);
-    }
-  }
-  const expoDomain = process.env["REPLIT_EXPO_DEV_DOMAIN"];
-  if (expoDomain) {
-    origins.add(`https://${expoDomain}`);
   }
   return origins;
 }

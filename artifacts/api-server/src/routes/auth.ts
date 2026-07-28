@@ -16,10 +16,13 @@ import {
   deleteSession,
   SESSION_COOKIE,
   SESSION_TTL,
-  ISSUER_URL,
+  getIssuerUrl,
+  getMobileClientId,
+  getWebClientId,
   type SessionData,
 } from "../lib/auth";
 import { notifySignInIfNew, extractClientIp } from "../lib/loginNotifications";
+import { normalizeIdentityClaims, roleForIdentity } from "../lib/identityClaims";
 
 const OIDC_COOKIE_TTL = 10 * 60 * 1000;
 
@@ -59,29 +62,18 @@ function getSafeReturnTo(value: unknown): string {
   return value;
 }
 
-function roleForEmail(email: string | null): "member" | "founder" {
-  if (!email) return "member";
-  const allowlist = (process.env.FOUNDER_EMAILS ?? "")
-    .split(",")
-    .map((value) => value.trim().toLowerCase())
-    .filter(Boolean);
-  return allowlist.includes(email.trim().toLowerCase()) ? "founder" : "member";
-}
-
 async function upsertUser(
   claims: Record<string, unknown>,
   refCookie?: string | null,
 ) {
-  const email = (claims.email as string) || null;
+  const identity = normalizeIdentityClaims(claims);
   const userData = {
-    id: claims.sub as string,
-    email,
-    firstName: (claims.first_name as string) || null,
-    lastName: (claims.last_name as string) || null,
-    profileImageUrl: (claims.profile_image_url || claims.picture) as
-      | string
-      | null,
-    role: roleForEmail(email),
+    id: identity.id,
+    email: identity.email,
+    firstName: identity.firstName,
+    lastName: identity.lastName,
+    profileImageUrl: identity.profileImageUrl,
+    role: roleForIdentity(identity),
   };
 
   // Parse Echo referral cookie (`mlc_ref=user-<inviterId>` or just `<inviterId>`).
@@ -167,7 +159,7 @@ router.get("/auth/user", async (req: Request, res: Response, next) => {
 });
 
 router.get("/login", async (req: Request, res: Response) => {
-  const config = await getOidcConfig();
+  const config = await getOidcConfig(getWebClientId());
   const callbackUrl = `${getOrigin(req)}/api/callback`;
 
   const returnTo = getSafeReturnTo(req.query.returnTo);
@@ -215,7 +207,7 @@ router.get("/login", async (req: Request, res: Response) => {
 // Query params are not validated because the OIDC provider may include
 // parameters not expressed in the schema.
 router.get("/callback", async (req: Request, res: Response) => {
-  const config = await getOidcConfig();
+  const config = await getOidcConfig(getWebClientId());
   const callbackUrl = `${getOrigin(req)}/api/callback`;
 
   const codeVerifier = req.cookies?.code_verifier;
@@ -285,6 +277,7 @@ router.get("/callback", async (req: Request, res: Response) => {
     },
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token,
+    client_id: getWebClientId(),
     expires_at: tokens.expiresIn() ? now + tokens.expiresIn()! : claims.exp,
   };
 
@@ -314,18 +307,10 @@ router.get("/callback", async (req: Request, res: Response) => {
 });
 
 router.get("/logout", async (req: Request, res: Response) => {
-  const config = await getOidcConfig();
   const origin = getOrigin(req);
-
   const sid = getSessionId(req);
   await clearSession(res, sid);
-
-  const endSessionUrl = oidc.buildEndSessionUrl(config, {
-    client_id: process.env.REPL_ID!,
-    post_logout_redirect_uri: origin,
-  });
-
-  res.redirect(endSessionUrl.href);
+  res.redirect(origin);
 });
 
 router.post(
@@ -341,12 +326,13 @@ router.post(
       parsed.data;
 
     try {
-      const config = await getOidcConfig();
+      const mobileClientId = getMobileClientId();
+      const config = await getOidcConfig(mobileClientId);
 
       const callbackUrl = new URL(redirect_uri);
       callbackUrl.searchParams.set("code", code);
       callbackUrl.searchParams.set("state", state);
-      callbackUrl.searchParams.set("iss", ISSUER_URL);
+      callbackUrl.searchParams.set("iss", getIssuerUrl());
 
       const tokens = await oidc.authorizationCodeGrant(config, callbackUrl, {
         pkceCodeVerifier: code_verifier,
@@ -378,6 +364,7 @@ router.post(
         },
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
+        client_id: mobileClientId,
         expires_at: tokens.expiresIn() ? now + tokens.expiresIn()! : claims.exp,
       };
 
