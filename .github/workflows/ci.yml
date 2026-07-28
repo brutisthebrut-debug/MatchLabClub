@@ -60,6 +60,14 @@ jobs:
       - name: Build web app
         run: pnpm --filter @workspace/nldc run build
 
+      - name: Export web preview bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: matchlab-web-preview
+          path: artifacts/nldc/dist/public
+          if-no-files-found: error
+          retention-days: 7
+
   api:
     name: API and database
     runs-on: ubuntu-latest
