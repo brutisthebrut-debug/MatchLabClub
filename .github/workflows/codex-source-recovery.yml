@@ -1,0 +1,30 @@
+name: Codex source recovery
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  export-source:
+    name: Export tracked source
+    if: github.head_ref == 'build/echo-journey-v1'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out MatchLab
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Pack source
+        run: tar --exclude=.git -czf /tmp/matchlab-source.tgz .
+
+      - name: Upload source
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-matchlab-source
+          path: /tmp/matchlab-source.tgz
+          retention-days: 1
