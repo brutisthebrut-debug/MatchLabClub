@@ -10,6 +10,7 @@ import {
   aiRequestMetricsTable,
   aiRequestMetricsDailyTable,
   jobHeartbeatsTable,
+  usersTable,
   AI_METRICS_ROLLUP_JOB,
 } from "@workspace/db";
 import {
@@ -29,6 +30,7 @@ interface SeedRow {
   mode?: string;
 }
 
+const FOUNDER_USER = "founder-retention-route-test";
 const usedToolNames: string[] = [];
 const usedHeartbeatJobNames: string[] = [];
 
@@ -96,6 +98,7 @@ async function makeTrendsApp(): Promise<Express> {
   const app = express();
   app.use(express.json());
   app.use((req, _res, next) => {
+    req.user = { id: FOUNDER_USER, email: null, firstName: null, lastName: null, profileImageUrl: null };
     const noop = () => undefined;
     // @ts-expect-error — test stub for pino logger
     req.log = { info: noop, warn: noop, error: noop, debug: noop };
@@ -107,6 +110,9 @@ async function makeTrendsApp(): Promise<Express> {
 
 describe("rollupThenPruneAiMetrics", () => {
   beforeEach(async () => {
+    await db.insert(usersTable).values({ id: FOUNDER_USER, role: "founder" }).onConflictDoNothing();
+  });
+  beforeEach(async () => {
     await clearOwnRows();
   });
 
@@ -116,6 +122,7 @@ describe("rollupThenPruneAiMetrics", () => {
 
   afterAll(async () => {
     await clearOwnRows();
+    await db.delete(usersTable).where(eq(usersTable.id, FOUNDER_USER));
     await pool.end();
   });
 
@@ -329,7 +336,7 @@ describe("rollupThenPruneAiMetrics", () => {
     await rollupThenPruneAiMetrics({ toolNames, jobName });
 
     const app = await makeTrendsApp();
-    const res = await request(app).get("/api/founder/ai-metrics/trends?days=30").set("x-founder-key", "nldc2024");
+    const res = await request(app).get("/api/founder/ai-metrics/trends?days=30");
     expect(res.status).toBe(200);
     expect(res.body.days).toBe(30);
     expect(Array.isArray(res.body.series)).toBe(true);
@@ -398,7 +405,7 @@ describe("rollupThenPruneAiMetrics", () => {
     await rollupThenPruneAiMetrics({ toolNames });
 
     const app = await makeTrendsApp();
-    const res = await request(app).get("/api/founder/rollup-heartbeat").set("x-founder-key", "nldc2024");
+    const res = await request(app).get("/api/founder/rollup-heartbeat");
     expect(res.status).toBe(200);
     expect(res.body.lastSuccessAt).toEqual(expect.any(String));
     expect(typeof res.body.ageMs).toBe("number");
@@ -410,7 +417,7 @@ describe("rollupThenPruneAiMetrics", () => {
 
   it("GET /api/founder/rollup-heartbeat reports stale=true when no heartbeat exists", async () => {
     const app = await makeTrendsApp();
-    const res = await request(app).get("/api/founder/rollup-heartbeat").set("x-founder-key", "nldc2024");
+    const res = await request(app).get("/api/founder/rollup-heartbeat");
     expect(res.status).toBe(200);
     expect(res.body.lastSuccessAt).toBeNull();
     expect(res.body.ageMs).toBeNull();
@@ -429,7 +436,7 @@ describe("rollupThenPruneAiMetrics", () => {
       });
 
     const app = await makeTrendsApp();
-    const res = await request(app).get("/api/founder/rollup-heartbeat").set("x-founder-key", "nldc2024");
+    const res = await request(app).get("/api/founder/rollup-heartbeat");
     expect(res.status).toBe(200);
     expect(res.body.stale).toBe(true);
     expect(res.body.ageMs).toBeGreaterThan(36 * 60 * 60 * 1000);
@@ -446,7 +453,7 @@ describe("rollupThenPruneAiMetrics", () => {
     await rollupOldAiMetrics({ toolNames });
 
     const app = await makeTrendsApp();
-    const res = await request(app).get("/api/founder/ai-metrics/trends?days=7").set("x-founder-key", "nldc2024");
+    const res = await request(app).get("/api/founder/ai-metrics/trends?days=7");
     expect(res.status).toBe(200);
     expect(res.body.days).toBe(7);
     // Only the recent day should appear for our tool within a 7-day window
