@@ -15,6 +15,7 @@ import {
 import {
   clearPendingIntroduction,
   hasPendingIntroduction,
+  markDatePending,
 } from "@/lib/onboardingState";
 
 const fadeUp = (delay = 0) => ({
@@ -147,6 +148,7 @@ export default function Matches() {
 
   function finishIntroductionHandoff(): void {
     clearPendingIntroduction();
+    markDatePending();
     setIntroductionPending(false);
   }
 

@@ -1,18 +1,24 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+  clearPendingDate,
   clearPendingIntroduction,
   clearPendingPlayRead,
+  clearPendingReflection,
   clearPendingWaiting,
   hasCompletedOnboarding,
   hasPendingFirstRead,
   hasPendingArrival,
+  hasPendingDate,
   hasPendingIntroduction,
+  hasPendingReflection,
   hasPendingWaiting,
   markArrivalSeen,
   markFirstReadSeen,
   markOnboardingComplete,
   markIntroductionPending,
+  markDatePending,
   markWaitingPending,
+  markReflectionPending,
   readPendingPlayRead,
   rememberPendingPlayRead,
 } from "./onboardingState";
@@ -79,5 +85,19 @@ describe("onboarding arrival handoff", () => {
     expect(hasPendingIntroduction()).toBe(true);
     clearPendingIntroduction();
     expect(hasPendingIntroduction()).toBe(false);
+  });
+
+  it("moves from Date into Reflect without leaving both chapters open", () => {
+    markDatePending();
+    expect(hasPendingDate()).toBe(true);
+    expect(hasPendingReflection()).toBe(false);
+
+    markReflectionPending();
+    expect(hasPendingDate()).toBe(false);
+    expect(hasPendingReflection()).toBe(true);
+
+    clearPendingDate();
+    clearPendingReflection();
+    expect(hasPendingReflection()).toBe(false);
   });
 });

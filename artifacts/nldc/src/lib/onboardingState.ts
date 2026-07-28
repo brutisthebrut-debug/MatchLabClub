@@ -14,6 +14,8 @@ const FIRST_READ_PENDING_KEY = "matchlab.first-read.pending";
 const PLAY_READ_PENDING_KEY = "matchlab.play-read.pending";
 const WAITING_PENDING_KEY = "matchlab.waiting.pending";
 const INTRODUCTION_PENDING_KEY = "matchlab.introduction.pending";
+const DATE_PENDING_KEY = "matchlab.date.pending";
+const REFLECTION_PENDING_KEY = "matchlab.reflection.pending";
 const GOAL_KEY = "matchlab.goal";
 const ORIENTATION_KEY = "matchlab.orientation";
 const SEEKING_KEY = "matchlab.seeking";
@@ -130,6 +132,31 @@ export function hasPendingIntroduction(): boolean {
 
 export function clearPendingIntroduction(): void {
   safeRemove(INTRODUCTION_PENDING_KEY);
+}
+
+export function markDatePending(): void {
+  safeSet(DATE_PENDING_KEY, "1");
+}
+
+export function hasPendingDate(): boolean {
+  return safeGet(DATE_PENDING_KEY) === "1";
+}
+
+export function clearPendingDate(): void {
+  safeRemove(DATE_PENDING_KEY);
+}
+
+export function markReflectionPending(): void {
+  clearPendingDate();
+  safeSet(REFLECTION_PENDING_KEY, "1");
+}
+
+export function hasPendingReflection(): boolean {
+  return safeGet(REFLECTION_PENDING_KEY) === "1";
+}
+
+export function clearPendingReflection(): void {
+  safeRemove(REFLECTION_PENDING_KEY);
 }
 
 export function rememberOnboardingGoal(goal: string): void {
