@@ -111,19 +111,18 @@ cloud service, so the server boots and runs without any Replit infrastructure.
 `artifacts/api-server/src/lib/stripeReconcile.ts`,
 `artifacts/api-server/src/lib/webhookHandlers.ts`
 
-#### 2b. Object storage (sidecar → direct GCS or S3-compatible)
+#### 2b. Object storage (direct GCS)
 
-- The sidecar at `http://127.0.0.1:1106` handles GCS token exchange and signed
-  URL generation. Replace with one of:
-  - **Direct GCS**: service account JSON key → `GOOGLE_APPLICATION_CREDENTIALS`
-    env var; use `@google-cloud/storage` directly.
-  - **Cloudflare R2**: S3-compatible, zero egress cost; switch to `@aws-sdk/client-s3`
-    with a custom endpoint.
-  - **AWS S3**: straightforward; `@aws-sdk/client-s3`.
-- `objectStorage.ts` has a clean abstraction layer; the only changes are in
-  the `getToken()` and `getSignedUrl()` helpers at the top of that file.
+- `objectStorage.ts` now uses `@google-cloud/storage` directly with Application
+  Default Credentials and v4 signed URLs. Set `GOOGLE_APPLICATION_CREDENTIALS`
+  to a service-account JSON file on a general-purpose host, or use workload
+  identity when deployed on Google Cloud.
+- The Replit sidecar/token exchange is no longer used.
+- Stored profile-photo deletion removes the physical object before its database
+  row. Missing objects are treated as already deleted so individual and full
+  account deletion are retry-safe.
 - `PUBLIC_OBJECT_SEARCH_PATHS` and `PRIVATE_OBJECT_DIR` env vars remain as-is;
-  only the credential mechanism changes.
+  they use `/bucket/prefix` paths.
 
 **Key files:** `artifacts/api-server/src/lib/objectStorage.ts`
 
@@ -603,7 +602,7 @@ required for the application to boot (`BOOT`), required for a feature to work
 | `DEFAULT_OBJECT_STORAGE_BUCKET_ID` | REPLIT-ONLY        | Replit object storage bucket reference; replaced in Phase 2b                          |
 | `PUBLIC_OBJECT_SEARCH_PATHS`       | FEATURE            | Comma-separated GCS path prefixes for public objects; format unchanged post-migration |
 | `PRIVATE_OBJECT_DIR`               | FEATURE            | GCS path prefix for private objects; format unchanged post-migration                  |
-| `GOOGLE_APPLICATION_CREDENTIALS`   | FEATURE (Phase 2b) | Path to GCS service account JSON key; or use `AWS_*` vars for S3/R2                   |
+| `GOOGLE_APPLICATION_CREDENTIALS`   | FEATURE            | Path to a GCS service-account JSON key; omit only when workload identity/ADC is configured |
 
 ### 3.6 Google OAuth (Phase 2c replacement)
 
@@ -986,6 +985,7 @@ OPENAI_API_KEY=
 # Object storage — optional in dev; upload routes will fail if unset
 PUBLIC_OBJECT_SEARCH_PATHS=
 PRIVATE_OBJECT_DIR=
+GOOGLE_APPLICATION_CREDENTIALS=
 
 # Email — optional; logs to console when unset
 RESEND_API_KEY=

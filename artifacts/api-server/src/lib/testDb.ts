@@ -320,6 +320,15 @@ stores.match_pool_membership = {
     revealConsent: false,
   },
 };
+stores.profile_photos = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    userId: null,
+    objectPath: null,
+    ordinal: 0,
+  },
+};
 ensureStore("leads");
 ensureStore("waitlist");
 ensureStore("purchase_interest");
@@ -373,6 +382,8 @@ export const careDialectProfilesTable = makeTable("care_dialect_profiles");
 export const userBlocksTable = makeTable("user_blocks");
 export const matchConnectionsTable = makeTable("match_connections");
 export const matchPoolMembershipTable = makeTable("match_pool_membership");
+export const profilePhotosTable = makeTable("profile_photos");
+export const MAX_PROFILE_PHOTOS = 6;
 ensureStore("match_proposals");
 export const matchProposalsTable = makeTable("match_proposals");
 ensureStore("compatibility_reads");

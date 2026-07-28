@@ -130,9 +130,10 @@ Files below are under `artifacts/api-server/src/` unless noted.
 - **Payments.** `lib/stripeClient.ts`, `lib/initStripe.ts`, `lib/stripeReconcile.ts`,
   `lib/webhookHandlers.ts` run Stripe through the Replit-managed integration today.
   Migration to the direct Stripe SDK is Phase 2a in `MIGRATION.md`.
-- **Object storage.** `lib/objectStorage.ts` talks to a Replit sidecar today; the
-  abstraction is clean and only the credential helpers change on migration
-  (Phase 2b).
+- **Object storage.** `lib/objectStorage.ts` uses GCS directly through
+  Application Default Credentials and v4 signed URLs. Profile and account
+  deletion remove stored photo objects before their database rows, with
+  missing-object retries treated as success (Phase 2b).
 - **Email.** `lib/mailer.ts` already supports a direct Resend key or SMTP, so it
   is portable as-is.
 - **Background jobs.** Started from `index.ts` via timers (auto-proposal, nudges,

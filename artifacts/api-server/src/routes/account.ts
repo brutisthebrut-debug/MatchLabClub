@@ -33,6 +33,7 @@ import {
   connectionMessagesTable,
   leadsTable,
   userVerificationsTable,
+  profilePhotosTable,
 } from "@workspace/db";
 import {
   ExportMyDataResponse,
@@ -60,8 +61,10 @@ import {
   ACCOUNT_DELETE_USER_ID_TABLES,
   ACCOUNT_EXPORT_DIRECT_USER_ID_TABLES,
 } from "../lib/accountOwnership";
+import { ObjectStorageService } from "../lib/objectStorage";
 
 const router: IRouter = Router();
+const objectStorageService = new ObjectStorageService();
 
 const EXPORT_TOKEN_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -847,6 +850,30 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
   }
 
   const tables: Record<string, number> = {};
+
+  // Stored profile photos live outside Postgres, so they cannot participate in
+  // the database transaction below. Delete them first and abort on any storage
+  // failure; that keeps the account and photo rows available for a safe retry
+  // instead of claiming deletion while bytes remain behind. Missing objects are
+  // accepted by the storage layer, so a prior partial attempt is idempotent.
+  const photoRows = await db
+    .select({ objectPath: profilePhotosTable.objectPath })
+    .from(profilePhotosTable)
+    .where(eq(profilePhotosTable.userId, userId));
+  try {
+    for (const photo of photoRows) {
+      await objectStorageService.deleteObjectEntity(photo.objectPath);
+    }
+  } catch (err) {
+    req.log.error(
+      { err, userId, photoCount: photoRows.length },
+      "GDPR account delete could not remove stored photo objects",
+    );
+    res.status(503).json({
+      error: "Couldn't delete your stored photos yet. Your account is still intact; try again in a moment.",
+    });
+    return;
+  }
 
   try {
     await db.transaction(async (tx) => {

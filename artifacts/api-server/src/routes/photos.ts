@@ -102,7 +102,10 @@ router.post("/me/photos", async (req: Request, res: Response): Promise<void> => 
   res.status(201).json(serialize(row!));
 });
 
-// DELETE /me/photos/:id — remove one of the member's photos.
+// DELETE /me/photos/:id — permanently remove one of the member's photos.
+// Delete the object first and the row second. If storage fails the row stays
+// visible and the member can retry. Object deletion ignores a missing object,
+// so a retry also repairs the inverse partial failure (object gone, row left).
 router.delete(
   "/me/photos/:id",
   async (req: Request, res: Response): Promise<void> => {
@@ -116,20 +119,41 @@ router.delete(
       res.status(404).json({ error: "Photo not found" });
       return;
     }
-    const [deleted] = await db
-      .delete(profilePhotosTable)
+    const [photo] = await db
+      .select({ objectPath: profilePhotosTable.objectPath })
+      .from(profilePhotosTable)
       .where(
         and(
           eq(profilePhotosTable.id, id),
           eq(profilePhotosTable.userId, userId),
         ),
       )
-      .returning();
-    if (!deleted) {
+      .limit(1);
+    if (!photo) {
       res.status(404).json({ error: "Photo not found" });
       return;
     }
+
+    try {
+      await objectStorageService.deleteObjectEntity(photo.objectPath);
+    } catch (error) {
+      req.log.error({ err: error, photoId: id }, "Failed to delete photo object");
+      res.status(503).json({
+        error: "We couldn't delete that photo yet. Nothing was removed; please retry.",
+      });
+      return;
+    }
+
+    await db
+      .delete(profilePhotosTable)
+      .where(
+        and(
+          eq(profilePhotosTable.id, id),
+          eq(profilePhotosTable.userId, userId),
+        ),
+      );
     const rows = await listForUser(userId);
+    req.log.info({ photoId: id }, "profile photo object and row deleted");
     res.json(rows.map(serialize));
   },
 );
