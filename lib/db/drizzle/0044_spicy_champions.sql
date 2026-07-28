@@ -1,0 +1,1 @@
+ALTER TABLE "companion_state" ALTER COLUMN "persona" SET DEFAULT 'witty_sibling';
