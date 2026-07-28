@@ -25,6 +25,7 @@
 - [Matching automation default-on](matching-automation-default-on.md) — auto-proposal/expiry/nudge default ON; Echo stays off; stored explicit false still wins in prod.
 - [Canonical account ownership path](account-delete-dual-path.md) — one confirmed transactional delete and a schema-guarded ownership registry now cover export/deletion; relation and email-owned rows remain explicit.
 - [Reveal-safe location labeling](reveal-safe-location-labeling.md) — counterpart city is PII; name it only when revealed or shared; route all generators through ONE label chokepoint.
+- [Matching state integrity](matching-state-integrity.md) — pair-level advisory locks serialize yes/pause/block/unmatch; declines stay terminal, closed pairs never silently reopen, and reveal surfaces require a live unblocked connection.
 - [Gate cap-consuming client queries](claude-cap-query-gating.md) — enable a query that hits a daily-capped Claude endpoint ONLY when its result will render, else page/thread opens silently drain the cap.
 - [Self-inference reads own text only](own-text-only-inference.md) — never feed two-sided columns (coach conversationContext, emailInsights pastedContent) into user self-inference; both AI lanes share one sources array.
 - [Orval body-schema naming collision](orval-body-schema-naming.md) — a requestBody schema named operationId+"Body" emits dup zod const + type (TS2308); $ref a distinctly-named schema; clean skips the types folder.

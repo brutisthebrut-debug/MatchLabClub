@@ -14,7 +14,7 @@ const DEFAULT_MAX_AGE_DAYS = 14;
 // proposal has not already been declined/expired/completed. Once a proposal is
 // older than the max age and still sitting in one of these, the sweep moves it
 // to "expired" so discover stops resurfacing it and the dashboards stay honest.
-const OPEN_STATES = ["proposed", "user_yes", "user_no"] as const;
+const OPEN_STATES = ["proposed", "user_yes"] as const;
 
 function readPositiveNumberEnv(name: string, fallback: number): number {
   const raw = process.env[name];
@@ -25,8 +25,10 @@ function readPositiveNumberEnv(name: string, fallback: number): number {
 }
 
 // One sweep: expire every open proposal whose last update predates the cutoff.
-// Keyed on updatedAt so a proposal a member recently said yes/no to (waiting on
+// Keyed on updatedAt so a proposal a member recently said yes to (waiting on
 // the other side) gets the full window from that action, not from creation.
+// A no is terminal and must remain a no; the sweep never rewrites a decline as
+// a timeout.
 // Returns the number of proposals expired.
 export async function runProposalExpirySweep(options?: {
   jobName?: string;

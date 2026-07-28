@@ -56,11 +56,13 @@ import {
   type BrainControls,
 } from "../lib/brainConfig";
 import { recordJourneyEvent } from "../lib/journeyEvents";
+import { rankCandidates, type MatchCandidate } from "../lib/matchEngine";
+import { notifyNewMatch } from "../lib/matchConnections";
 import {
-  rankCandidates,
-  type MatchCandidate,
-} from "../lib/matchEngine";
-import { ensureConnection, notifyNewMatch } from "../lib/matchConnections";
+  applyInternalProposalResponse,
+  matchMemberLockKey,
+  matchPairLockKey,
+} from "../lib/matchProposalState";
 
 async function loadUserTier(userId: string): Promise<string | null> {
   const rows = await db
@@ -385,7 +387,10 @@ export interface ReweightingLane {
 export async function computeReweightingDetail(
   userId: string,
   controls: BrainControls,
-): Promise<{ observation: ReweightingObservation; leanLanes: ReweightingLane[] }> {
+): Promise<{
+  observation: ReweightingObservation;
+  leanLanes: ReweightingLane[];
+}> {
   const breakdown = await readinessBreakdownFor(userId, controls);
   const outcome = await computeOutcomeInsightForUser(userId);
   const observation = evaluateReweighting(
@@ -592,7 +597,10 @@ async function loadBenchmarks(userId: string): Promise<BenchmarksResult> {
 
   // Latest goal per user (most recent generated audit), so we can bucket the
   // whole population by normalized goal in JS.
-  const goalByUser = await db.execute<{ user_id: string; dating_goal: string }>(sql`
+  const goalByUser = await db.execute<{
+    user_id: string;
+    dating_goal: string;
+  }>(sql`
     SELECT DISTINCT ON (user_id) user_id, dating_goal
     FROM audits
     WHERE report_generated_at IS NOT NULL AND deleted_at IS NULL
@@ -940,30 +948,93 @@ router.put("/me/matching/pool-membership", async (req, res): Promise<void> => {
     );
   }
   const pausedReason =
-    nextStatus === "paused" ? parsed.data.pausedReason ?? null : null;
+    nextStatus === "paused" ? (parsed.data.pausedReason ?? null) : null;
   const now = new Date();
   const readyAt =
-    nextStatus === "ready" ? existing?.readyAt ?? now : existing?.readyAt ?? null;
-  const [row] = await db
-    .insert(matchPoolMembershipTable)
-    .values({
-      userId,
-      status: nextStatus,
-      readyAt,
-      pausedReason,
-      tier,
-      updatedAt: now,
-    })
-    .onConflictDoUpdate({
-      target: matchPoolMembershipTable.userId,
-      set: {
+    nextStatus === "ready"
+      ? (existing?.readyAt ?? now)
+      : (existing?.readyAt ?? null);
+  const row = await db.transaction(async (tx) => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${matchMemberLockKey(userId)}))`,
+    );
+    // Leaving or pausing the pool withdraws every unfinished internal proposal
+    // involving this member. Pair locks serialize the opt-out against a
+    // simultaneous yes response: whichever transition commits first becomes
+    // the durable truth instead of leaving an inactive member newly matched.
+    if (nextStatus === "off" || nextStatus === "paused") {
+      const pending = await tx
+        .select({
+          userId: matchProposalsTable.userId,
+          proposedToUserId: matchProposalsTable.proposedToUserId,
+        })
+        .from(matchProposalsTable)
+        .where(
+          and(
+            eq(matchProposalsTable.source, "internal"),
+            or(
+              eq(matchProposalsTable.userId, userId),
+              eq(matchProposalsTable.proposedToUserId, userId),
+            ),
+            inArray(matchProposalsTable.status, ["proposed", "user_yes"]),
+          ),
+        );
+      const lockKeys = [
+        ...new Set(
+          pending.flatMap((proposal) => {
+            const counterpart =
+              proposal.userId === userId
+                ? proposal.proposedToUserId
+                : proposal.userId;
+            return counterpart ? [matchPairLockKey(userId, counterpart)] : [];
+          }),
+        ),
+      ].sort();
+      for (const lockKey of lockKeys) {
+        await tx.execute(
+          sql`select pg_advisory_xact_lock(hashtext(${lockKey}))`,
+        );
+      }
+    }
+
+    const [membership] = await tx
+      .insert(matchPoolMembershipTable)
+      .values({
+        userId,
         status: nextStatus,
         readyAt,
         pausedReason,
+        tier,
         updatedAt: now,
-      },
-    })
-    .returning();
+      })
+      .onConflictDoUpdate({
+        target: matchPoolMembershipTable.userId,
+        set: {
+          status: nextStatus,
+          readyAt,
+          pausedReason,
+          updatedAt: now,
+        },
+      })
+      .returning();
+
+    if (nextStatus === "off" || nextStatus === "paused") {
+      await tx
+        .update(matchProposalsTable)
+        .set({ status: "expired", updatedAt: now })
+        .where(
+          and(
+            eq(matchProposalsTable.source, "internal"),
+            or(
+              eq(matchProposalsTable.userId, userId),
+              eq(matchProposalsTable.proposedToUserId, userId),
+            ),
+            inArray(matchProposalsTable.status, ["proposed", "user_yes"]),
+          ),
+        );
+    }
+    return membership;
+  });
   res.json(serializeMembership(row!));
 });
 
@@ -1061,7 +1132,11 @@ function coerceExternalReadAi(value: unknown): ExternalReadAiOutput | null {
   const score = Math.max(0, Math.min(100, Math.round(rawScore)));
   const toStringArray = (x: unknown): string[] =>
     Array.isArray(x)
-      ? x.filter((s): s is string => typeof s === "string" && s.trim().length > 0).slice(0, 6)
+      ? x
+          .filter(
+            (s): s is string => typeof s === "string" && s.trim().length > 0,
+          )
+          .slice(0, 6)
       : [];
   const summary = typeof v.summary === "string" ? v.summary.trim() : "";
   if (summary.length === 0) return null;
@@ -1189,7 +1264,11 @@ router.post("/me/matching/external-read", async (req, res): Promise<void> => {
   void recordJourneyEvent({
     eventType: "match_step",
     userId,
-    props: { step: "proposal_created", source: "external_paste", score: final.score },
+    props: {
+      step: "proposal_created",
+      source: "external_paste",
+      score: final.score,
+    },
   });
 
   res.json(final);
@@ -1390,89 +1469,66 @@ router.put(
       return;
     }
     const nextStatus = parsed.data.interested ? "user_yes" : "user_no";
-    // Carry the ownership + "still proposed" guard into the UPDATE predicate so
-    // the transition is atomic. If a founder or another request advanced the
-    // proposal between the read above and here, no row matches and we return the
-    // current state instead of clobbering it.
-    const [updated] = await db
-      .update(matchProposalsTable)
-      .set({ status: nextStatus, updatedAt: new Date() })
-      .where(
-        and(
-          eq(matchProposalsTable.id, id),
-          eq(matchProposalsTable.userId, userId),
-          eq(matchProposalsTable.status, "proposed"),
-        ),
-      )
-      .returning();
-    if (!updated) {
-      const [current] = await db
-        .select()
-        .from(matchProposalsTable)
+    let finalRow: ProposalRow;
+    if (row.source === "internal" && row.proposedToUserId) {
+      const result = await applyInternalProposalResponse({
+        proposalId: row.id,
+        userId,
+        counterpartUserId: row.proposedToUserId,
+        interested: parsed.data.interested,
+      });
+      if (!result.proposal) {
+        res.status(409).json({
+          error:
+            "This match is no longer available. Your matching state has been refreshed.",
+        });
+        return;
+      }
+      finalRow = result.proposal;
+      if (finalRow.status === "mutual_yes") {
+        void recordJourneyEvent({
+          eventType: "match_step",
+          userId,
+          props: { step: "mutual_yes", proposalId: finalRow.id },
+        });
+        if (result.connectionCreated && result.connection) {
+          void notifyNewMatch(result.connection);
+        }
+      }
+    } else {
+      // External and concierge proposals have no mirrored member row. Their
+      // transition is still ownership- and state-guarded, but remains local to
+      // the signed-in member.
+      const [updated] = await db
+        .update(matchProposalsTable)
+        .set({ status: nextStatus, updatedAt: new Date() })
         .where(
           and(
             eq(matchProposalsTable.id, id),
             eq(matchProposalsTable.userId, userId),
+            eq(matchProposalsTable.status, "proposed"),
           ),
         )
-        .limit(1);
-      if (!current) {
-        res.status(404).json({ error: "Proposal not found" });
+        .returning();
+      if (!updated) {
+        const [current] = await db
+          .select()
+          .from(matchProposalsTable)
+          .where(
+            and(
+              eq(matchProposalsTable.id, id),
+              eq(matchProposalsTable.userId, userId),
+            ),
+          )
+          .limit(1);
+        if (!current) {
+          res.status(404).json({ error: "Proposal not found" });
+          return;
+        }
+        res.json(serializeProposal(current));
         return;
       }
-      res.json(serializeProposal(current));
-      return;
-    }
-    // "It's a match" moment: when this is a yes on an internal (member-to-member)
-    // proposal, check the mirror row created at discover time. If the other side
-    // already said yes, flip BOTH to mutual_yes atomically.
-    let finalRow = updated;
-    if (
-      nextStatus === "user_yes" &&
-      updated.source === "internal" &&
-      updated.proposedToUserId
-    ) {
-      const reciprocal = await db
-        .select()
-        .from(matchProposalsTable)
-        .where(
-          and(
-            eq(matchProposalsTable.source, "internal"),
-            eq(matchProposalsTable.userId, updated.proposedToUserId),
-            eq(matchProposalsTable.proposedToUserId, updated.userId),
-          ),
-        )
-        .orderBy(desc(matchProposalsTable.createdAt))
-        .limit(1);
-      const other = reciprocal[0];
-      if (other && other.status === "user_yes") {
-        const ts = new Date();
-        await db
-          .update(matchProposalsTable)
-          .set({ status: "mutual_yes", updatedAt: ts })
-          .where(inArray(matchProposalsTable.id, [updated.id, other.id]));
-        finalRow = { ...updated, status: "mutual_yes", updatedAt: ts };
-        void recordJourneyEvent({
-          eventType: "match_step",
-          userId,
-          props: { step: "mutual_yes", proposalId: updated.id },
-        });
-        // Open the real conversation for the pair. Idempotent on the ordered
-        // pair, so the second side flipping to yes never creates a duplicate.
-        // Only the creating call fires the "it's a match" notification.
-        try {
-          const { connection, created } = await ensureConnection(
-            updated.userId,
-            updated.proposedToUserId,
-          );
-          if (created) void notifyNewMatch(connection);
-        } catch (err) {
-          req.log.warn(
-            { err: err instanceof Error ? err.message : String(err) },
-            "Failed to open connection on mutual match",
-          );
-        }
-      }
+      finalRow = updated;
     }
     req.log.info(
       { proposalId: id, status: finalRow.status },
@@ -1670,9 +1726,7 @@ async function buildMatchCandidate(
 // direction (they blocked the other, or the other blocked them). Matching is a
 // hard, symmetric gate: a block from either side removes the pair from the
 // candidate pool entirely, so neither person can ever be proposed the other.
-export async function loadBlockedUserIds(
-  userId: string,
-): Promise<Set<string>> {
+export async function loadBlockedUserIds(userId: string): Promise<Set<string>> {
   const rows = await db
     .select({
       blockerUserId: userBlocksTable.blockerUserId,
@@ -1713,8 +1767,7 @@ export async function mintInternalProposalsForMember(
   const otherUserIds = memberRows
     .map((r) => r.userId)
     .filter(
-      (id): id is string =>
-        Boolean(id) && id !== userId && !blockedIds.has(id),
+      (id): id is string => Boolean(id) && id !== userId && !blockedIds.has(id),
     )
     .slice(0, MAX_DISCOVER_CANDIDATES);
 
@@ -1772,39 +1825,125 @@ export async function mintInternalProposalsForMember(
   // Each match is a mirrored pair of internal proposals (one row per member)
   // sharing the same symmetric score and summary. The summary is generic by
   // construction, so no PII or raw content is ever stored on a proposal.
-  const values = ranked.flatMap((r) => [
-    {
-      userId,
-      proposedToUserId: r.candidate.userId,
-      source: "internal" as const,
-      compatibilityScore: r.score,
-      summary: r.summary,
-      status: "proposed" as const,
-    },
-    {
-      userId: r.candidate.userId,
-      proposedToUserId: userId,
-      source: "internal" as const,
-      compatibilityScore: r.score,
-      summary: r.summary,
-      status: "proposed" as const,
-    },
-  ]);
-  // ON CONFLICT DO NOTHING against the partial unique index on internal
-  // (userId, proposedToUserId) pairs makes this idempotent and race-safe:
-  // a concurrent run that already minted the same pair is dropped here
-  // instead of creating duplicates.
-  await db.insert(matchProposalsTable).values(values).onConflictDoNothing();
+  let minted = 0;
+  for (const result of ranked) {
+    const counterpartUserId = result.candidate.userId;
+    const created = await db.transaction(async (tx) => {
+      // A member can pause matching while an automated sweep is running. Lock
+      // both memberships, then the pair, and re-check every eligibility gate
+      // inside the transaction before either mirrored row is written.
+      const memberLockKeys = [
+        matchMemberLockKey(userId),
+        matchMemberLockKey(counterpartUserId),
+      ].sort();
+      for (const lockKey of memberLockKeys) {
+        await tx.execute(
+          sql`select pg_advisory_xact_lock(hashtext(${lockKey}))`,
+        );
+      }
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${matchPairLockKey(
+          userId,
+          counterpartUserId,
+        )}))`,
+      );
+
+      const memberships = await tx
+        .select({
+          userId: matchPoolMembershipTable.userId,
+          status: matchPoolMembershipTable.status,
+        })
+        .from(matchPoolMembershipTable)
+        .where(
+          inArray(matchPoolMembershipTable.userId, [userId, counterpartUserId]),
+        );
+      const activeIds = new Set(
+        memberships
+          .filter((membership) =>
+            ["building", "ready"].includes(membership.status),
+          )
+          .map((membership) => membership.userId),
+      );
+      if (!activeIds.has(userId) || !activeIds.has(counterpartUserId)) {
+        return false;
+      }
+
+      const [block, existingPair] = await Promise.all([
+        tx
+          .select({ id: userBlocksTable.id })
+          .from(userBlocksTable)
+          .where(
+            or(
+              and(
+                eq(userBlocksTable.blockerUserId, userId),
+                eq(userBlocksTable.blockedUserId, counterpartUserId),
+              ),
+              and(
+                eq(userBlocksTable.blockerUserId, counterpartUserId),
+                eq(userBlocksTable.blockedUserId, userId),
+              ),
+            ),
+          )
+          .limit(1),
+        tx
+          .select({ id: matchProposalsTable.id })
+          .from(matchProposalsTable)
+          .where(
+            and(
+              eq(matchProposalsTable.source, "internal"),
+              or(
+                and(
+                  eq(matchProposalsTable.userId, userId),
+                  eq(matchProposalsTable.proposedToUserId, counterpartUserId),
+                ),
+                and(
+                  eq(matchProposalsTable.userId, counterpartUserId),
+                  eq(matchProposalsTable.proposedToUserId, userId),
+                ),
+              ),
+            ),
+          )
+          .limit(1),
+      ]);
+      if (block[0] || existingPair[0]) return false;
+
+      const inserted = await tx
+        .insert(matchProposalsTable)
+        .values([
+          {
+            userId,
+            proposedToUserId: counterpartUserId,
+            source: "internal",
+            compatibilityScore: result.score,
+            summary: result.summary,
+            status: "proposed",
+          },
+          {
+            userId: counterpartUserId,
+            proposedToUserId: userId,
+            source: "internal",
+            compatibilityScore: result.score,
+            summary: result.summary,
+            status: "proposed",
+          },
+        ])
+        .onConflictDoNothing()
+        .returning({ id: matchProposalsTable.id });
+      return inserted.length === 2;
+    });
+    if (created) minted += 1;
+  }
+  if (minted === 0) return 0;
   void recordJourneyEvent({
     eventType: "match_step",
     userId,
     props: {
       step: "proposal_created",
       source: "internal",
-      count: ranked.length,
+      count: minted,
     },
   });
-  return ranked.length;
+  return minted;
 }
 
 // The internal matching engine in route form: pair the caller with other live

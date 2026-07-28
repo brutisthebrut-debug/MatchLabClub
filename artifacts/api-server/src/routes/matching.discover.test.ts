@@ -8,7 +8,7 @@ import express, {
 import cookieParser from "cookie-parser";
 import request from "supertest";
 import crypto from "crypto";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, or } from "drizzle-orm";
 import {
   db,
   pool,
@@ -16,6 +16,7 @@ import {
   matchPreferencesTable,
   matchPoolMembershipTable,
   matchProposalsTable,
+  matchConnectionsTable,
 } from "@workspace/db";
 import type { AuthUser } from "@workspace/api-zod";
 import matchingRouter from "./matching";
@@ -121,11 +122,21 @@ async function cleanup(): Promise<void> {
     .delete(matchPoolMembershipTable)
     .where(inArray(matchPoolMembershipTable.userId, ALL_USERS));
   for (const u of ALL_USERS) {
-    await db.delete(matchProposalsTable).where(eq(matchProposalsTable.userId, u));
+    await db
+      .delete(matchProposalsTable)
+      .where(eq(matchProposalsTable.userId, u));
     await db
       .delete(matchProposalsTable)
       .where(eq(matchProposalsTable.proposedToUserId, u));
   }
+  await db
+    .delete(matchConnectionsTable)
+    .where(
+      or(
+        inArray(matchConnectionsTable.userLowId, ALL_USERS),
+        inArray(matchConnectionsTable.userHighId, ALL_USERS),
+      ),
+    );
 }
 
 beforeAll(() => {
@@ -264,5 +275,194 @@ describe("POST /me/matching/discover", () => {
       .from(matchProposalsTable)
       .where(eq(matchProposalsTable.id, aProposal.id));
     expect(aAfter[0]?.status).toBe("mutual_yes");
+
+    const connections = await db
+      .select()
+      .from(matchConnectionsTable)
+      .where(
+        or(
+          eq(matchConnectionsTable.userLowId, USER_A),
+          eq(matchConnectionsTable.userHighId, USER_A),
+        ),
+      );
+    expect(
+      connections.some(
+        (connection) =>
+          connection.status === "active" &&
+          [connection.userLowId, connection.userHighId].includes(USER_B),
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps a decline terminal and expires the mirrored proposal", async () => {
+    await seedMember(USER_A, {
+      status: "ready",
+      age: 30,
+      gender: "woman",
+      genderPreference: "men",
+      cityHint: "Austin",
+    });
+    await seedMember(USER_B, {
+      status: "ready",
+      age: 32,
+      gender: "man",
+      genderPreference: "women",
+      cityHint: "Austin",
+    });
+
+    testApp.setUser({ id: USER_A });
+    await request(testApp.app).post("/api/me/matching/discover");
+    const aProposals = await db
+      .select()
+      .from(matchProposalsTable)
+      .where(eq(matchProposalsTable.userId, USER_A));
+    const aProposal = aProposals.find(
+      (proposal) => proposal.proposedToUserId === USER_B,
+    );
+
+    const declined = await request(testApp.app)
+      .put(`/api/me/matching/proposals/${aProposal!.id}/response`)
+      .send({ interested: false });
+    expect(declined.status).toBe(200);
+    expect(declined.body.status).toBe("user_no");
+
+    const rows = (
+      await db
+        .select()
+        .from(matchProposalsTable)
+        .where(inArray(matchProposalsTable.userId, [USER_A, USER_B]))
+    ).filter(
+      (row) =>
+        [USER_A, USER_B].includes(row.userId) &&
+        row.proposedToUserId != null &&
+        [USER_A, USER_B].includes(row.proposedToUserId),
+    );
+    expect(rows.find((row) => row.userId === USER_A)?.status).toBe("user_no");
+    expect(rows.find((row) => row.userId === USER_B)?.status).toBe("expired");
+  });
+
+  it("withdraws unfinished proposals when either member pauses the pool", async () => {
+    await seedMember(USER_A, {
+      status: "ready",
+      age: 30,
+      gender: "woman",
+      genderPreference: "men",
+      cityHint: "Austin",
+    });
+    await seedMember(USER_B, {
+      status: "ready",
+      age: 32,
+      gender: "man",
+      genderPreference: "women",
+      cityHint: "Austin",
+    });
+
+    testApp.setUser({ id: USER_A });
+    await request(testApp.app).post("/api/me/matching/discover");
+    const aProposals = await db
+      .select()
+      .from(matchProposalsTable)
+      .where(eq(matchProposalsTable.userId, USER_A));
+    const aProposal = aProposals.find(
+      (proposal) => proposal.proposedToUserId === USER_B,
+    );
+    await request(testApp.app)
+      .put(`/api/me/matching/proposals/${aProposal!.id}/response`)
+      .send({ interested: true });
+
+    testApp.setUser({ id: USER_B });
+    const paused = await request(testApp.app)
+      .put("/api/me/matching/pool-membership")
+      .send({ status: "paused", pausedReason: "Taking a break" });
+    expect(paused.status).toBe(200);
+    expect(paused.body.status).toBe("paused");
+
+    const rows = (
+      await db
+        .select()
+        .from(matchProposalsTable)
+        .where(inArray(matchProposalsTable.userId, [USER_A, USER_B]))
+    ).filter(
+      (row) =>
+        [USER_A, USER_B].includes(row.userId) &&
+        row.proposedToUserId != null &&
+        [USER_A, USER_B].includes(row.proposedToUserId),
+    );
+    expect(rows.filter((row) => row.status === "expired")).toHaveLength(2);
+
+    const connections = await db
+      .select()
+      .from(matchConnectionsTable)
+      .where(
+        or(
+          eq(matchConnectionsTable.userLowId, USER_A),
+          eq(matchConnectionsTable.userHighId, USER_A),
+        ),
+      );
+    expect(connections).toHaveLength(0);
+  });
+
+  it("never silently reopens a connection either member already closed", async () => {
+    await seedMember(USER_A, {
+      status: "ready",
+      age: 30,
+      gender: "woman",
+      genderPreference: "men",
+      cityHint: "Austin",
+    });
+    await seedMember(USER_B, {
+      status: "ready",
+      age: 32,
+      gender: "man",
+      genderPreference: "women",
+      cityHint: "Austin",
+    });
+
+    testApp.setUser({ id: USER_A });
+    await request(testApp.app).post("/api/me/matching/discover");
+    const aRows = await db
+      .select()
+      .from(matchProposalsTable)
+      .where(eq(matchProposalsTable.userId, USER_A));
+    const bRows = await db
+      .select()
+      .from(matchProposalsTable)
+      .where(eq(matchProposalsTable.userId, USER_B));
+    const aProposal = aRows.find(
+      (proposal) => proposal.proposedToUserId === USER_B,
+    )!;
+    const bProposal = bRows.find(
+      (proposal) => proposal.proposedToUserId === USER_A,
+    )!;
+    const [userLowId, userHighId] = [USER_A, USER_B].sort();
+    const [closedConnection] = await db
+      .insert(matchConnectionsTable)
+      .values({
+        userLowId,
+        userHighId,
+        status: "closed",
+        closedReason: "unmatch",
+        closedByUserId: USER_A,
+      })
+      .returning();
+
+    const aYes = await request(testApp.app)
+      .put(`/api/me/matching/proposals/${aProposal.id}/response`)
+      .send({ interested: true });
+    expect(aYes.body.status).toBe("user_yes");
+
+    testApp.setUser({ id: USER_B });
+    const bYes = await request(testApp.app)
+      .put(`/api/me/matching/proposals/${bProposal.id}/response`)
+      .send({ interested: true });
+    expect(bYes.status).toBe(200);
+    expect(bYes.body.status).toBe("completed");
+
+    const [after] = await db
+      .select()
+      .from(matchConnectionsTable)
+      .where(eq(matchConnectionsTable.id, closedConnection!.id));
+    expect(after?.status).toBe("closed");
+    expect(after?.closedReason).toBe("unmatch");
   });
 });

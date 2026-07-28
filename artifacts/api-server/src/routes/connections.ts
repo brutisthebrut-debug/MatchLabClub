@@ -1,5 +1,16 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, asc, desc, eq, gt, isNull, ne, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  inArray,
+  isNull,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm";
 import {
   db,
   matchConnectionsTable,
@@ -20,6 +31,7 @@ import {
 import { z } from "zod/v4";
 import { notifyNewMessage } from "../lib/matchConnections";
 import { blockUserPair } from "../lib/userBlocks";
+import { matchPairLockKey } from "../lib/matchProposalState";
 import { computeReadiness } from "./matching";
 import { generateConnectionStarters, generateDateIdeas } from "../lib/aiEngine";
 import { generate } from "../lib/aiService";
@@ -120,53 +132,56 @@ async function isBlockedPair(a: string, b: string): Promise<boolean> {
 // GET /me/connections — the member's conversation list, most recently active
 // first. Each row carries the counterpart id, the unread count, and a short
 // preview of the latest message.
-router.get("/me/connections", async (req: Request, res: Response): Promise<void> => {
-  if (!req.user?.id) {
-    res.status(401).json({ error: "Not authenticated" });
-    return;
-  }
-  const userId = req.user.id;
-  const connections = await db
-    .select()
-    .from(matchConnectionsTable)
-    .where(
-      or(
-        eq(matchConnectionsTable.userLowId, userId),
-        eq(matchConnectionsTable.userHighId, userId),
-      ),
-    )
-    .orderBy(
-      desc(matchConnectionsTable.lastMessageAt),
-      desc(matchConnectionsTable.createdAt),
-    );
-
-  const out = [];
-  for (const connection of connections) {
-    const [unread] = await db
-      .select({ value: sql<number>`count(*)::int` })
-      .from(connectionMessagesTable)
+router.get(
+  "/me/connections",
+  async (req: Request, res: Response): Promise<void> => {
+    if (!req.user?.id) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    const userId = req.user.id;
+    const connections = await db
+      .select()
+      .from(matchConnectionsTable)
       .where(
-        and(
-          eq(connectionMessagesTable.connectionId, connection.id),
-          ne(connectionMessagesTable.senderUserId, userId),
-          isNull(connectionMessagesTable.readAt),
+        or(
+          eq(matchConnectionsTable.userLowId, userId),
+          eq(matchConnectionsTable.userHighId, userId),
         ),
+      )
+      .orderBy(
+        desc(matchConnectionsTable.lastMessageAt),
+        desc(matchConnectionsTable.createdAt),
       );
-    const [latest] = await db
-      .select({ body: connectionMessagesTable.body })
-      .from(connectionMessagesTable)
-      .where(eq(connectionMessagesTable.connectionId, connection.id))
-      .orderBy(desc(connectionMessagesTable.id))
-      .limit(1);
-    out.push(
-      serializeConnection(connection, userId, {
-        unreadCount: unread?.value ?? 0,
-        lastMessagePreview: latest?.body ? latest.body.slice(0, 140) : null,
-      }),
-    );
-  }
-  res.json(out);
-});
+
+    const out = [];
+    for (const connection of connections) {
+      const [unread] = await db
+        .select({ value: sql<number>`count(*)::int` })
+        .from(connectionMessagesTable)
+        .where(
+          and(
+            eq(connectionMessagesTable.connectionId, connection.id),
+            ne(connectionMessagesTable.senderUserId, userId),
+            isNull(connectionMessagesTable.readAt),
+          ),
+        );
+      const [latest] = await db
+        .select({ body: connectionMessagesTable.body })
+        .from(connectionMessagesTable)
+        .where(eq(connectionMessagesTable.connectionId, connection.id))
+        .orderBy(desc(connectionMessagesTable.id))
+        .limit(1);
+      out.push(
+        serializeConnection(connection, userId, {
+          unreadCount: unread?.value ?? 0,
+          lastMessagePreview: latest?.body ? latest.body.slice(0, 140) : null,
+        }),
+      );
+    }
+    res.json(out);
+  },
+);
 
 // GET /me/connections/:id — a single conversation's metadata.
 router.get(
@@ -262,7 +277,9 @@ router.post(
     if ((recent?.value ?? 0) >= SEND_MAX_PER_WINDOW) {
       res
         .status(429)
-        .json({ error: "You are sending messages too quickly. Try again in a moment." });
+        .json({
+          error: "You are sending messages too quickly. Try again in a moment.",
+        });
       return;
     }
 
@@ -281,10 +298,7 @@ router.post(
 
     void notifyNewMessage(connection, counterpart);
 
-    req.log.info(
-      { connectionId: connection.id },
-      "connection.message sent",
-    );
+    req.log.info({ connectionId: connection.id }, "connection.message sent");
     res.status(201).json(serializeMessage(message!, userId));
   },
 );
@@ -325,7 +339,10 @@ router.post(
         and(
           eq(companionNotificationsTable.userId, userId),
           eq(companionNotificationsTable.kind, "match_message"),
-          eq(companionNotificationsTable.ctaHref, `/connections/${connection.id}`),
+          eq(
+            companionNotificationsTable.ctaHref,
+            `/connections/${connection.id}`,
+          ),
           isNull(companionNotificationsTable.readAt),
         ),
       );
@@ -334,7 +351,7 @@ router.post(
 );
 
 // POST /me/connections/:id/unmatch — end the conversation. Closing is symmetric:
-// once closed neither side can send. A later mutual match reopens it.
+// once closed neither side can send, and this pair is never silently reopened.
 router.post(
   "/me/connections/:id/unmatch",
   async (req: Request, res: Response): Promise<void> => {
@@ -351,11 +368,51 @@ router.post(
       res.status(404).json({ error: "Connection not found" });
       return;
     }
-    const [updated] = await db
-      .update(matchConnectionsTable)
-      .set({ status: "closed", closedReason: "unmatch", closedByUserId: userId })
-      .where(eq(matchConnectionsTable.id, connection.id))
-      .returning();
+    const counterpart = counterpartOf(connection, userId);
+    const updated = await db.transaction(async (tx) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${matchPairLockKey(
+          userId,
+          counterpart,
+        )}))`,
+      );
+      const [closed] = await tx
+        .update(matchConnectionsTable)
+        .set({
+          status: "closed",
+          closedReason: "unmatch",
+          closedByUserId: userId,
+        })
+        .where(eq(matchConnectionsTable.id, connection.id))
+        .returning();
+      // A proposal cannot keep advertising "mutual yes" after either member
+      // deliberately ended the connection. "completed" preserves the intro as
+      // history without leaving a live-match state behind.
+      await tx
+        .update(matchProposalsTable)
+        .set({ status: "completed", updatedAt: new Date() })
+        .where(
+          and(
+            eq(matchProposalsTable.source, "internal"),
+            or(
+              and(
+                eq(matchProposalsTable.userId, userId),
+                eq(matchProposalsTable.proposedToUserId, counterpart),
+              ),
+              and(
+                eq(matchProposalsTable.userId, counterpart),
+                eq(matchProposalsTable.proposedToUserId, userId),
+              ),
+            ),
+            inArray(matchProposalsTable.status, [
+              "proposed",
+              "user_yes",
+              "mutual_yes",
+            ]),
+          ),
+        );
+      return closed;
+    });
     req.log.info({ connectionId: connection.id }, "connection.unmatched");
     res.json(serializeConnection(updated ?? connection, userId));
   },
@@ -440,8 +497,8 @@ function readinessPhrase(score: number): string {
 // (one ordered row per member, sharing the same score and summary), so we read
 // the viewer's row first and fall back to the counterpart's. Status is
 // intentionally not filtered: a live connection may sit on any proposal status.
-// Returns null when no internal proposal exists (e.g. a reopened or
-// concierge-made connection), so callers expose null rather than a fake score.
+// Returns null when no internal proposal exists (e.g. a concierge-made
+// connection), so callers expose null rather than a fake score.
 async function loadPairCompatibility(
   me: string,
   counterpart: string,
@@ -504,6 +561,13 @@ router.get(
       return;
     }
     const counterpart = counterpartOf(connection, userId);
+    if (
+      connection.status !== "active" ||
+      (await isBlockedPair(userId, counterpart))
+    ) {
+      res.status(409).json({ error: "This conversation is closed" });
+      return;
+    }
 
     const [membership] = await db
       .select({ revealConsent: matchPoolMembershipTable.revealConsent })
@@ -571,6 +635,13 @@ router.get(
       return;
     }
     const counterpart = counterpartOf(connection, userId);
+    if (
+      connection.status !== "active" ||
+      (await isBlockedPair(userId, counterpart))
+    ) {
+      res.status(409).json({ error: "This conversation is closed" });
+      return;
+    }
 
     const [membership] = await db
       .select({ revealConsent: matchPoolMembershipTable.revealConsent })
@@ -632,7 +703,9 @@ router.get(
         ctx.compatibilityScore != null
           ? `Compatibility score (0 to 100, context only, never quote it back): ${ctx.compatibilityScore}`
           : "Compatibility score: not available",
-        ctx.matchSummary ? `Aggregate match summary: ${ctx.matchSummary}` : null,
+        ctx.matchSummary
+          ? `Aggregate match summary: ${ctx.matchSummary}`
+          : null,
         `Readiness phrasing for the match: ${ctx.readinessSummary}`,
       ]
         .filter((line): line is string => Boolean(line))
@@ -745,11 +818,14 @@ router.post(
     // A closed or reported thread cannot get fresh ideas; the frontend hides the
     // card, and gating here keeps a stale tab from spending a deep-AI-lane token
     // on a connection that is already over.
-    if (connection.status !== "active") {
+    const counterpart = counterpartOf(connection, userId);
+    if (
+      connection.status !== "active" ||
+      (await isBlockedPair(userId, counterpart))
+    ) {
       res.status(409).json({ error: "This conversation is closed" });
       return;
     }
-    const counterpart = counterpartOf(connection, userId);
 
     const [membership] = await db
       .select({ revealConsent: matchPoolMembershipTable.revealConsent })
@@ -876,7 +952,11 @@ router.post(
 
       if (!aiResult.isFallback && aiResult.validated && aiResult.output) {
         const parsed = JSON.parse(aiResult.output) as {
-          ideas?: { title?: unknown; description?: unknown; category?: unknown }[];
+          ideas?: {
+            title?: unknown;
+            description?: unknown;
+            category?: unknown;
+          }[];
         };
         const clean = Array.isArray(parsed.ideas)
           ? parsed.ideas

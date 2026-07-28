@@ -1,13 +1,20 @@
-import { and, eq, or } from "drizzle-orm";
-import { db, userBlocksTable, matchProposalsTable } from "@workspace/db";
+import { and, eq, or, sql } from "drizzle-orm";
+import {
+  db,
+  userBlocksTable,
+  matchConnectionsTable,
+  matchProposalsTable,
+  orderConnectionPair,
+} from "@workspace/db";
+import { matchPairLockKey } from "./matchProposalState";
 
 // Create a one-directional block and clear any internal proposals between the
 // pair in both directions. Blocking is a hard, symmetric gate in the matching
 // engine (loadBlockedUserIds in matching.ts checks both directions), so a single
-// directional row removes the pair from each other's candidate pool and stops
-// any in-flight proposal from resurfacing. Idempotent via the unique
-// (blocker, blocked) index. Shared by the explicit safety block route and the
-// report-and-block path on a connection.
+// directional row removes the pair from each other's candidate pool, stops any
+// in-flight proposal from resurfacing, and closes a live connection. Idempotent
+// via the unique (blocker, blocked) index. Shared by the explicit safety block
+// route and the report-and-block path on a connection.
 export async function blockUserPair(
   blockerUserId: string,
   blockedUserId: string,
@@ -18,6 +25,12 @@ export async function blockUserPair(
   // linger, or drop the proposals without recording the block, leaving the pair
   // able to resurface.
   await db.transaction(async (tx) => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${matchPairLockKey(
+        blockerUserId,
+        blockedUserId,
+      )}))`,
+    );
     await tx
       .insert(userBlocksTable)
       .values({ blockerUserId, blockedUserId, reason })
@@ -36,6 +49,20 @@ export async function blockUserPair(
             eq(matchProposalsTable.userId, blockedUserId),
             eq(matchProposalsTable.proposedToUserId, blockerUserId),
           ),
+        ),
+      );
+    const pair = orderConnectionPair(blockerUserId, blockedUserId);
+    await tx
+      .update(matchConnectionsTable)
+      .set({
+        status: "closed",
+        closedReason: "block",
+        closedByUserId: blockerUserId,
+      })
+      .where(
+        and(
+          eq(matchConnectionsTable.userLowId, pair.userLowId),
+          eq(matchConnectionsTable.userHighId, pair.userHighId),
         ),
       );
   });
