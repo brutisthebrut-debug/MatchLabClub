@@ -90,10 +90,11 @@ export default function Terms() {
   </Section>
 
   <Section icon={FileText} title="Subscriptions and cancellation">
-  <p><strong className="text-foreground">Monthly Wingman.</strong> Billed monthly. Cancel anytime from your account settings, no penalty, no questions. Cancellation stops future charges; any remaining time in your billing period continues until it ends.</p>
+  <p><strong className="text-foreground">Monthly Wingman.</strong> Billed monthly through Stripe. You can open Stripe's billing portal from your account page to update payment details or cancel. A scheduled cancellation stops the next renewal; access continues through the end of the period you've already paid for.</p>
+  <p><strong className="text-foreground">Failed or incomplete payments.</strong> An incomplete first payment does not start paid access. If a renewal fails, access continues only through the period already paid for while Stripe gives you a chance to fix the payment method. It does not silently continue forever.</p>
   <p><strong className="text-foreground">The Dating Reset.</strong> One-time payment. No recurring charge.</p>
-  <p><strong className="text-foreground">Refunds.</strong> If you're unhappy with a purchase, email us within 14 days and we'll make it right. We'd rather earn your trust than keep your money.</p>
-  <p><strong className="text-foreground">Data on cancellation.</strong> Your account data is retained for 30 days after cancellation in case you change your mind. After that, it's deleted unless you request otherwise.</p>
+  <p><strong className="text-foreground">Refunds.</strong> If you're unhappy with a purchase, email us within 30 days and we'll redo the work or refund it. We'd rather earn your trust than keep your money.</p>
+  <p><strong className="text-foreground">Your data after cancellation.</strong> Canceling a subscription does not delete your MatchLab account or its saved record. You can export or permanently delete the account yourself from the account page at any time.</p>
   </Section>
 
   <Section icon={Mail} title="Changes and contact">

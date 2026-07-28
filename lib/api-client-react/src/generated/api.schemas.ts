@@ -1263,6 +1263,17 @@ export const AccountExportUserRole = {
   founder: 'founder',
 } as const;
 
+/**
+ * @nullable
+ */
+export type AccountExportUserTierSource = typeof AccountExportUserTierSource[keyof typeof AccountExportUserTierSource] | null;
+
+
+export const AccountExportUserTierSource = {
+  founder: 'founder',
+  stripe: 'stripe',
+} as const;
+
 export interface AccountExportUser {
   id: string;
   /** @nullable */
@@ -1285,6 +1296,8 @@ export interface AccountExportUser {
   tier: string | null;
   /** @nullable */
   tierGrantedAt: string | null;
+  /** @nullable */
+  tierSource: AccountExportUserTierSource;
   createdAt: string;
   updatedAt: string;
 }
@@ -1431,6 +1444,93 @@ export interface AccountExport {
   Sessions and verification records use redacted projections.
    */
   records: AccountExportRecords;
+}
+
+export type BillingEntitlementTier = typeof BillingEntitlementTier[keyof typeof BillingEntitlementTier];
+
+
+export const BillingEntitlementTier = {
+  free: 'free',
+  reset: 'reset',
+  wingman: 'wingman',
+} as const;
+
+export type BillingEntitlementStatus = typeof BillingEntitlementStatus[keyof typeof BillingEntitlementStatus];
+
+
+export const BillingEntitlementStatus = {
+  free: 'free',
+  active: 'active',
+  canceling: 'canceling',
+  past_due: 'past_due',
+  incomplete: 'incomplete',
+  unpaid: 'unpaid',
+  canceled: 'canceled',
+} as const;
+
+export type BillingEntitlementSource = typeof BillingEntitlementSource[keyof typeof BillingEntitlementSource];
+
+
+export const BillingEntitlementSource = {
+  free: 'free',
+  founder: 'founder',
+  stripe: 'stripe',
+} as const;
+
+export interface BillingEntitlement {
+  tier: BillingEntitlementTier;
+  status: BillingEntitlementStatus;
+  active: boolean;
+  source: BillingEntitlementSource;
+  /** @nullable */
+  accessUntil: string | null;
+  cancelAtPeriodEnd: boolean;
+  canManageBilling: boolean;
+}
+
+export type CreateBillingCheckoutInputProduct = typeof CreateBillingCheckoutInputProduct[keyof typeof CreateBillingCheckoutInputProduct];
+
+
+export const CreateBillingCheckoutInputProduct = {
+  'signal-audit': 'signal-audit',
+  'dating-reset': 'dating-reset',
+  wingman: 'wingman',
+} as const;
+
+export interface CreateBillingCheckoutInput {
+  product: CreateBillingCheckoutInputProduct;
+}
+
+export interface BillingRedirect {
+  url: string;
+}
+
+export type BillingCheckoutStatusPaymentStatus = typeof BillingCheckoutStatusPaymentStatus[keyof typeof BillingCheckoutStatusPaymentStatus];
+
+
+export const BillingCheckoutStatusPaymentStatus = {
+  paid: 'paid',
+  unpaid: 'unpaid',
+  no_payment_required: 'no_payment_required',
+} as const;
+
+/**
+ * @nullable
+ */
+export type BillingCheckoutStatusProduct = typeof BillingCheckoutStatusProduct[keyof typeof BillingCheckoutStatusProduct] | null;
+
+
+export const BillingCheckoutStatusProduct = {
+  'signal-audit': 'signal-audit',
+  'dating-reset': 'dating-reset',
+  wingman: 'wingman',
+} as const;
+
+export interface BillingCheckoutStatus {
+  confirmed: boolean;
+  paymentStatus: BillingCheckoutStatusPaymentStatus;
+  /** @nullable */
+  product: BillingCheckoutStatusProduct;
 }
 
 export interface BulkDeleteAuditsInput {

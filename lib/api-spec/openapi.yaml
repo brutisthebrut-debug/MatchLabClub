@@ -329,6 +329,143 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
+  /billing/entitlement:
+    get:
+      tags: [Auth]
+      operationId: getBillingEntitlement
+      summary: Get the signed-in user's effective paid access
+      description: |
+        Resolves founder beta grants and Stripe-backed entitlements using the
+        paid-through date. A cancellation or failed renewal keeps access only
+        through time already paid for; an incomplete payment grants nothing.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Current effective billing state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingEntitlement'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /billing/checkout:
+    post:
+      tags: [Auth]
+      operationId: createBillingCheckout
+      summary: Create an attributed Stripe Checkout session
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBillingCheckoutInput'
+      responses:
+        '200':
+          description: Stripe-hosted checkout URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingRedirect'
+        '400':
+          description: The product or account email is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '503':
+          description: Stripe or the requested product price is not configured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /billing/checkout-session/{sessionId}:
+    get:
+      tags: [Auth]
+      operationId: getBillingCheckoutStatus
+      summary: Confirm the signed-in member's returned Stripe Checkout session
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Server-read payment state from Stripe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingCheckoutStatus'
+        '400':
+          description: Invalid session identifier.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: The session does not belong to the signed-in account.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /billing/portal:
+    post:
+      tags: [Auth]
+      operationId: createBillingPortal
+      summary: Open Stripe's self-service billing portal
+      description: |
+        Creates a short-lived Stripe portal session where the member can update
+        payment details or cancel Monthly Wingman. Stripe webhooks remain the
+        source of truth for when cancellation actually changes access.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Stripe-hosted billing portal URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingRedirect'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '409':
+          description: The account has no Stripe customer record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
   /me/consent:
     get:
       tags: [Auth]
@@ -8115,7 +8252,7 @@ components:
 
     AccountExportUser:
       type: object
-      required: [id, email, firstName, lastName, profileImageUrl, role, aiContentConsentGranted, aiContentConsentGrantedAt, aiContentConsentRevokedAt, aiContentConsentUpdatedAt, tier, tierGrantedAt, createdAt, updatedAt]
+      required: [id, email, firstName, lastName, profileImageUrl, role, aiContentConsentGranted, aiContentConsentGrantedAt, aiContentConsentRevokedAt, aiContentConsentUpdatedAt, tier, tierGrantedAt, tierSource, createdAt, updatedAt]
       properties:
         id:
           type: string
@@ -8147,12 +8284,67 @@ components:
         tierGrantedAt:
           type: [string, 'null']
           format: date-time
+        tierSource:
+          type: [string, 'null']
+          enum: [founder, stripe, null]
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
+
+    BillingEntitlement:
+      type: object
+      required: [tier, status, active, source, accessUntil, cancelAtPeriodEnd, canManageBilling]
+      properties:
+        tier:
+          type: string
+          enum: [free, reset, wingman]
+        status:
+          type: string
+          enum: [free, active, canceling, past_due, incomplete, unpaid, canceled]
+        active:
+          type: boolean
+        source:
+          type: string
+          enum: [free, founder, stripe]
+        accessUntil:
+          type: [string, 'null']
+          format: date-time
+        cancelAtPeriodEnd:
+          type: boolean
+        canManageBilling:
+          type: boolean
+
+    CreateBillingCheckoutInput:
+      type: object
+      required: [product]
+      properties:
+        product:
+          type: string
+          enum: [signal-audit, dating-reset, wingman]
+
+    BillingRedirect:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          format: uri
+
+    BillingCheckoutStatus:
+      type: object
+      required: [confirmed, paymentStatus, product]
+      properties:
+        confirmed:
+          type: boolean
+        paymentStatus:
+          type: string
+          enum: [paid, unpaid, no_payment_required]
+        product:
+          type: [string, 'null']
+          enum: [signal-audit, dating-reset, wingman, null]
 
     BulkDeleteAuditsInput:
       type: object

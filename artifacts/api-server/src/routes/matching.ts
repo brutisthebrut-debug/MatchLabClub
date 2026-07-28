@@ -63,14 +63,10 @@ import {
   matchMemberLockKey,
   matchPairLockKey,
 } from "../lib/matchProposalState";
+import { loadEffectivePaidTier } from "../lib/billingEntitlements";
 
 async function loadUserTier(userId: string): Promise<string | null> {
-  const rows = await db
-    .select({ tier: usersTable.tier })
-    .from(usersTable)
-    .where(eq(usersTable.id, userId))
-    .limit(1);
-  return rows[0]?.tier ?? null;
+  return loadEffectivePaidTier(userId);
 }
 
 const router: IRouter = Router();

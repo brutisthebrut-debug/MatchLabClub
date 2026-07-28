@@ -239,6 +239,7 @@ export const ExportMyDataResponse = zod.object({
   "aiContentConsentUpdatedAt": zod.coerce.date().nullable(),
   "tier": zod.string().nullable(),
   "tierGrantedAt": zod.coerce.date().nullable(),
+  "tierSource": zod.union([zod.literal('founder'),zod.literal('stripe'),zod.literal(null)]).nullable(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }),
@@ -469,6 +470,78 @@ export const GetAccountSummaryResponse = zod.object({
   "insights": zod.number(),
   "journalEntries": zod.number(),
   "postDateNotes": zod.number()
+})
+
+
+/**
+ * Resolves founder beta grants and Stripe-backed entitlements using the
+paid-through date. A cancellation or failed renewal keeps access only
+through time already paid for; an incomplete payment grants nothing.
+
+ * @summary Get the signed-in user's effective paid access
+ */
+export const GetBillingEntitlementHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetBillingEntitlementResponse = zod.object({
+  "tier": zod.enum(['free', 'reset', 'wingman']),
+  "status": zod.enum(['free', 'active', 'canceling', 'past_due', 'incomplete', 'unpaid', 'canceled']),
+  "active": zod.boolean(),
+  "source": zod.enum(['free', 'founder', 'stripe']),
+  "accessUntil": zod.coerce.date().nullable(),
+  "cancelAtPeriodEnd": zod.boolean(),
+  "canManageBilling": zod.boolean()
+})
+
+
+/**
+ * @summary Create an attributed Stripe Checkout session
+ */
+export const CreateBillingCheckoutHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const CreateBillingCheckoutBody = zod.object({
+  "product": zod.enum(['signal-audit', 'dating-reset', 'wingman'])
+})
+
+export const CreateBillingCheckoutResponse = zod.object({
+  "url": zod.string().url()
+})
+
+
+/**
+ * @summary Confirm the signed-in member's returned Stripe Checkout session
+ */
+export const GetBillingCheckoutStatusParams = zod.object({
+  "sessionId": zod.coerce.string()
+})
+
+export const GetBillingCheckoutStatusHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetBillingCheckoutStatusResponse = zod.object({
+  "confirmed": zod.boolean(),
+  "paymentStatus": zod.enum(['paid', 'unpaid', 'no_payment_required']),
+  "product": zod.union([zod.literal('signal-audit'),zod.literal('dating-reset'),zod.literal('wingman'),zod.literal(null)]).nullable()
+})
+
+
+/**
+ * Creates a short-lived Stripe portal session where the member can update
+payment details or cancel Monthly Wingman. Stripe webhooks remain the
+source of truth for when cancellation actually changes access.
+
+ * @summary Open Stripe's self-service billing portal
+ */
+export const CreateBillingPortalHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const CreateBillingPortalResponse = zod.object({
+  "url": zod.string().url()
 })
 
 
@@ -1086,6 +1159,7 @@ export const DownloadEmailedExportResponse = zod.object({
   "aiContentConsentUpdatedAt": zod.coerce.date().nullable(),
   "tier": zod.string().nullable(),
   "tierGrantedAt": zod.coerce.date().nullable(),
+  "tierSource": zod.union([zod.literal('founder'),zod.literal('stripe'),zod.literal(null)]).nullable(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }),

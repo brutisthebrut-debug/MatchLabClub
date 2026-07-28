@@ -9,6 +9,7 @@ export const ACCOUNT_DELETE_USER_ID_TABLES = [
   "ai_usage_counters",
   "audits",
   "behavioral_growth_events",
+  "billing_entitlements",
   "care_dialect_profiles",
   "coach_follow_ups",
   "companion_channel_prefs",

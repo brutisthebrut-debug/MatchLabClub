@@ -323,11 +323,26 @@ stores.match_pool_membership = {
 ensureStore("leads");
 ensureStore("waitlist");
 ensureStore("purchase_interest");
+stores.billing_entitlements = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    source: "stripe",
+    amountCents: null,
+    stripeCustomerId: null,
+    stripeCheckoutSessionId: null,
+    stripeSubscriptionId: null,
+    accessEndsAt: null,
+    cancelAtPeriodEnd: false,
+    lastStripeEventCreatedAt: null,
+  },
+};
+ensureStore("stripe_webhook_events");
 ensureStore("data_export_tokens");
 stores.users = {
   rows: [],
   nextId: 1,
-  defaults: { role: "member" },
+  defaults: { role: "member", tier: null, tierSource: null, tierGrantedAt: null },
 };
 ensureStore("sessions");
 export const aiRequestMetricsTable = makeTable("ai_request_metrics");
@@ -336,6 +351,8 @@ export const coachFollowUpsTable = makeTable("coach_follow_ups");
 export const leadsTable = makeTable("leads");
 export const waitlistTable = makeTable("waitlist");
 export const purchaseInterestTable = makeTable("purchase_interest");
+export const billingEntitlementsTable = makeTable("billing_entitlements");
+export const stripeWebhookEventsTable = makeTable("stripe_webhook_events");
 export const dataExportTokensTable = makeTable("data_export_tokens");
 export const usersTable = makeTable("users");
 export const sessionsTable = makeTable("sessions");
@@ -763,6 +780,7 @@ class InsertChain extends AsyncChain<Row[]> {
   private returningSpec: Record<string, ColumnRef> | true | null = null;
   private conflictTarget: ColumnRef | ColumnRef[] | null = null;
   private conflictSet: Row | null = null;
+  private conflictDoNothing = false;
   constructor(tableName: string) {
     super();
     this.tableName = tableName;
@@ -786,6 +804,7 @@ class InsertChain extends AsyncChain<Row[]> {
   onConflictDoNothing(_opts?: { target?: ColumnRef | ColumnRef[] }): this {
     this.conflictTarget = _opts?.target ?? null;
     this.conflictSet = null;
+    this.conflictDoNothing = true;
     return this;
   }
   protected execute(): Row[] {
@@ -831,6 +850,7 @@ class InsertChain extends AsyncChain<Row[]> {
         targets.every((t) => r[t.__col] === v[t.__col]),
       );
       if (existing) {
+        if (this.conflictDoNothing) return [];
         if (this.conflictSet) Object.assign(existing, this.conflictSet);
         if (this.returningSpec === null || this.returningSpec === true) {
           return [existing];

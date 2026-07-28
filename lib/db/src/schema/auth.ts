@@ -56,6 +56,10 @@ export const usersTable = pgTable("users", {
   // this gets stamped automatically.
   tier: varchar("tier"),
   tierGrantedAt: timestamp("tier_granted_at", { withTimezone: true }),
+  // `founder` means an explicit beta override. `stripe` means the value is a
+  // denormalized cache of billing_entitlements and must pass the paid-through
+  // check before it unlocks anything. Null preserves legacy founder grants.
+  tierSource: varchar("tier_source", { length: 20 }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

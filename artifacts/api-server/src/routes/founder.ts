@@ -558,6 +558,7 @@ router.post("/founder/users/set-tier", requireFounder, async (req, res): Promise
     .set({
       tier,
       tierGrantedAt: tier === null ? null : now,
+      tierSource: tier === null ? null : "founder",
       updatedAt: now,
     })
     .where(eq(usersTable.email, emailRaw))

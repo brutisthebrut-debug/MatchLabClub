@@ -500,6 +500,7 @@ async function buildExportPayload(userId: string) {
         : null,
       tier: u.tier,
       tierGrantedAt: u.tierGrantedAt ? toIso(u.tierGrantedAt) : null,
+      tierSource: u.tierSource,
       createdAt: toIso(u.createdAt),
       updatedAt: toIso(u.updatedAt),
     },

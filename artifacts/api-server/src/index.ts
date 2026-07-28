@@ -25,7 +25,6 @@ import { startImportRecoveryJob } from "./lib/importRecoveryJob";
 import { startAutoProposalJob } from "./lib/autoProposalJob";
 import { startProposalExpiryJob } from "./lib/proposalExpiryJob";
 import { startCompanionNudgeJob } from "./lib/companionNudgeJob";
-import { initStripe } from "./lib/initStripe";
 
 Sentry.setupExpressErrorHandler(app);
 
@@ -68,5 +67,4 @@ app.listen(port, (err) => {
     logger.warn({ err }, "Initial OCR learned-rules load failed"),
   );
   startOcrLearningJob();
-  void initStripe();
 });

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AccountExportUserRole } from './accountExportUserRole';
+import type { AccountExportUserTierSource } from './accountExportUserTierSource';
 
 export interface AccountExportUser {
   id: string;
@@ -29,6 +30,8 @@ export interface AccountExportUser {
   tier: string | null;
   /** @nullable */
   tierGrantedAt: Date | null;
+  /** @nullable */
+  tierSource: AccountExportUserTierSource;
   createdAt: Date;
   updatedAt: Date;
 }
