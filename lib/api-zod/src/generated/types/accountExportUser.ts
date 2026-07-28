@@ -18,5 +18,17 @@ export interface AccountExportUser {
   /** @nullable */
   profileImageUrl: string | null;
   role: AccountExportUserRole;
-  createdAt: string;
+  aiContentConsentGranted: boolean;
+  /** @nullable */
+  aiContentConsentGrantedAt: Date | null;
+  /** @nullable */
+  aiContentConsentRevokedAt: Date | null;
+  /** @nullable */
+  aiContentConsentUpdatedAt: Date | null;
+  /** @nullable */
+  tier: string | null;
+  /** @nullable */
+  tierGrantedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 }

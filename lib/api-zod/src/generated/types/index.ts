@@ -7,6 +7,8 @@
  */
 
 export * from './accountExport';
+export * from './accountExportRecords';
+export * from './accountExportRecordsItem';
 export * from './accountExportUser';
 export * from './accountExportUserRole';
 export * from './accountSummary';
@@ -197,8 +199,6 @@ export * from './deleteAuditResult';
 export * from './deleteImportResult';
 export * from './deleteInsightResult';
 export * from './deleteJournalEntryResult';
-export * from './deleteMyAccountResult';
-export * from './deleteMyAccountResultDeleted';
 export * from './deletePostDateNoteResult';
 export * from './deleteProfileResult';
 export * from './deleteWellnessAnswerResult';

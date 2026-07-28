@@ -23,36 +23,19 @@ import {
   waitlistTable,
   coachFollowUpsTable,
   loginNotificationsTable,
-  pushTokensTable,
   referralsTable,
   purchaseInterestTable,
-  aiUsageCountersTable,
-  matchPreferencesTable,
-  matchPoolMembershipTable,
   matchProposalsTable,
-  datingWinsTable,
-  behavioralGrowthEventsTable,
-  matchingReadinessSnapshotsTable,
-  matchingNudgeStateTable,
   mirrorDigestPrefsTable,
-  companionStateTable,
-  companionMessagesTable,
-  companionObservationsTable,
-  companionCommitmentsTable,
-  companionNotificationsTable,
-  companionChannelPrefsTable,
   userReportsTable,
   userBlocksTable,
   matchConnectionsTable,
   connectionMessagesTable,
-  profilePhotosTable,
-  careDialectProfilesTable,
-  connectorConnectionsTable,
-  oauthTokensTable,
+  leadsTable,
+  userVerificationsTable,
 } from "@workspace/db";
 import {
   ExportMyDataResponse,
-  DeleteMyAccountResponse,
   DeleteMyAccountConfirmedBody,
   DeleteMyAccountConfirmedResponse,
   GetAccountSummaryResponse,
@@ -73,6 +56,10 @@ import { describeUserAgent } from "../lib/userAgent";
 import { describeIpLocation } from "../lib/geoLocation";
 import { sendMail } from "../lib/mailer";
 import { originFor, sendExpiredLink } from "../lib/expiredLinkPage";
+import {
+  ACCOUNT_DELETE_USER_ID_TABLES,
+  ACCOUNT_EXPORT_DIRECT_USER_ID_TABLES,
+} from "../lib/accountOwnership";
 
 const router: IRouter = Router();
 
@@ -274,9 +261,27 @@ router.get("/account/summary", async (req, res): Promise<void> => {
   );
 });
 
+async function exportRowsByUserId(
+  tableName: string,
+  userId: string,
+): Promise<Record<string, unknown>[]> {
+  const result = await db.execute(
+    sql`select * from ${sql.identifier(tableName)} where "user_id" = ${userId}`,
+  );
+  return (result.rows ?? []) as Record<string, unknown>[];
+}
+
 async function buildExportPayload(userId: string) {
+  const userRows = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
+    .limit(1);
+  const u = userRows[0];
+  if (!u) return null;
+
+  const normalizedEmail = u.email?.trim().toLowerCase() ?? null;
   const [
-    userRow,
     audits,
     profiles,
     messages,
@@ -285,8 +290,20 @@ async function buildExportPayload(userId: string) {
     postDateNotes,
     wellnessAnswers,
     dataPermissionEvents,
+    directRecordEntries,
+    auditReportVersions,
+    matchProposals,
+    matchConnections,
+    connectionMessages,
+    reportsFiled,
+    blocksCreated,
+    referrals,
+    sessions,
+    verifications,
+    waitlistEntries,
+    leads,
+    purchaseInterests,
   ] = await Promise.all([
-    db.select().from(usersTable).where(eq(usersTable.id, userId)),
     db
       .select()
       .from(auditsTable)
@@ -327,10 +344,140 @@ async function buildExportPayload(userId: string) {
       .from(dataPermissionEventsTable)
       .where(eq(dataPermissionEventsTable.userId, userId))
       .orderBy(dataPermissionEventsTable.createdAt),
+    Promise.all(
+      ACCOUNT_EXPORT_DIRECT_USER_ID_TABLES.map(async (tableName) => {
+        const rows = await exportRowsByUserId(tableName, userId);
+        return [tableName, rows] as const;
+      }),
+    ),
+    db.execute(
+      sql`
+        select arv.*
+        from "audit_report_versions" arv
+        inner join "audits" a on a."id" = arv."audit_id"
+        where a."user_id" = ${userId}
+        order by arv."created_at", arv."id"
+      `,
+    ),
+    db
+      .select()
+      .from(matchProposalsTable)
+      .where(
+        or(
+          eq(matchProposalsTable.userId, userId),
+          eq(matchProposalsTable.proposedToUserId, userId),
+        ),
+      )
+      .orderBy(matchProposalsTable.createdAt),
+    db
+      .select()
+      .from(matchConnectionsTable)
+      .where(
+        or(
+          eq(matchConnectionsTable.userLowId, userId),
+          eq(matchConnectionsTable.userHighId, userId),
+        ),
+      )
+      .orderBy(matchConnectionsTable.createdAt),
+    db.execute(
+      sql`
+        select cm.*
+        from "connection_messages" cm
+        inner join "match_connections" mc on mc."id" = cm."connection_id"
+        where mc."user_low_id" = ${userId} or mc."user_high_id" = ${userId}
+        order by cm."created_at", cm."id"
+      `,
+    ),
+    db
+      .select()
+      .from(userReportsTable)
+      .where(eq(userReportsTable.reporterUserId, userId))
+      .orderBy(userReportsTable.createdAt),
+    db
+      .select()
+      .from(userBlocksTable)
+      .where(eq(userBlocksTable.blockerUserId, userId))
+      .orderBy(userBlocksTable.createdAt),
+    db
+      .select()
+      .from(referralsTable)
+      .where(
+        or(
+          eq(referralsTable.inviterUserId, userId),
+          eq(referralsTable.inviteeUserId, userId),
+        ),
+      )
+      .orderBy(referralsTable.landedAt),
+    db
+      .select({
+        createdAt: sessionsTable.createdAt,
+        lastSeenAt: sessionsTable.lastSeenAt,
+        expiresAt: sessionsTable.expire,
+        userAgent: sessionsTable.userAgent,
+        ip: sessionsTable.ip,
+        channel: sessionsTable.channel,
+      })
+      .from(sessionsTable)
+      .where(eq(sessionsTable.userId, userId))
+      .orderBy(sessionsTable.createdAt),
+    db
+      .select({
+        phoneVerified: userVerificationsTable.phoneVerified,
+        phoneVerifiedAt: userVerificationsTable.phoneVerifiedAt,
+        selfieVerified: userVerificationsTable.selfieVerified,
+        selfieVerifiedAt: userVerificationsTable.selfieVerifiedAt,
+        idVerified: userVerificationsTable.idVerified,
+        idVerifiedAt: userVerificationsTable.idVerifiedAt,
+        ageOver18: userVerificationsTable.ageOver18,
+        createdAt: userVerificationsTable.createdAt,
+        updatedAt: userVerificationsTable.updatedAt,
+      })
+      .from(userVerificationsTable)
+      .where(eq(userVerificationsTable.userId, userId)),
+    db
+      .select()
+      .from(waitlistTable)
+      .where(
+        normalizedEmail
+          ? or(
+              eq(waitlistTable.userId, userId),
+              sql`lower(${waitlistTable.email}) = ${normalizedEmail}`,
+            )
+          : eq(waitlistTable.userId, userId),
+      )
+      .orderBy(waitlistTable.createdAt),
+    normalizedEmail
+      ? db
+          .select()
+          .from(leadsTable)
+          .where(sql`lower(${leadsTable.email}) = ${normalizedEmail}`)
+          .orderBy(leadsTable.createdAt)
+      : Promise.resolve([]),
+    normalizedEmail
+      ? db
+          .select()
+          .from(purchaseInterestTable)
+          .where(
+            sql`lower(${purchaseInterestTable.email}) = ${normalizedEmail}`,
+          )
+          .orderBy(purchaseInterestTable.createdAt)
+      : Promise.resolve([]),
   ]);
 
-  const u = userRow[0];
-  if (!u) return null;
+  const records: Record<string, unknown[]> =
+    Object.fromEntries(directRecordEntries);
+  records["audit_report_versions"] = auditReportVersions.rows ?? [];
+  records["match_proposals"] = matchProposals;
+  records["match_connections"] = matchConnections;
+  records["connection_messages"] = connectionMessages.rows ?? [];
+  records["user_reports_filed"] = reportsFiled;
+  records["user_blocks_created"] = blocksCreated;
+  records["referrals"] = referrals;
+  records["account_sessions"] = sessions;
+  records["user_verifications"] = verifications;
+  records["waitlist"] = waitlistEntries;
+  records["leads"] = leads;
+  records["purchase_interest"] = purchaseInterests;
 
   return ExportMyDataResponse.parse({
     exportedAt: new Date().toISOString(),
@@ -341,7 +488,20 @@ async function buildExportPayload(userId: string) {
       lastName: u.lastName,
       profileImageUrl: u.profileImageUrl,
       role: u.role === "founder" ? "founder" : "member",
+      aiContentConsentGranted: u.aiContentConsentGranted,
+      aiContentConsentGrantedAt: u.aiContentConsentGrantedAt
+        ? toIso(u.aiContentConsentGrantedAt)
+        : null,
+      aiContentConsentRevokedAt: u.aiContentConsentRevokedAt
+        ? toIso(u.aiContentConsentRevokedAt)
+        : null,
+      aiContentConsentUpdatedAt: u.aiContentConsentUpdatedAt
+        ? toIso(u.aiContentConsentUpdatedAt)
+        : null,
+      tier: u.tier,
+      tierGrantedAt: u.tierGrantedAt ? toIso(u.tierGrantedAt) : null,
       createdAt: toIso(u.createdAt),
+      updatedAt: toIso(u.updatedAt),
     },
     audits: audits.map((a) => ({ ...a, createdAt: toIso(a.createdAt) })),
     profiles: profiles.map((p) => ({ ...p, createdAt: toIso(p.createdAt) })),
@@ -389,6 +549,7 @@ async function buildExportPayload(userId: string) {
       ...event,
       createdAt: toIso(event.createdAt),
     })),
+    records,
   });
 }
 
@@ -637,261 +798,6 @@ router.get(
   },
 );
 
-router.delete("/account", async (req, res): Promise<void> => {
-  if (!req.user?.id) {
-    res.status(401).json({ error: "Not authenticated" });
-    return;
-  }
-
-  const userId = req.user.id;
-
-  // Fetch the user's email/name BEFORE we delete the row so we can send a
-  // confirmation receipt after the deletion completes.
-  const preDeleteUser = await db
-    .select({
-      email: usersTable.email,
-      firstName: usersTable.firstName,
-    })
-    .from(usersTable)
-    .where(eq(usersTable.id, userId));
-  const recipient = preDeleteUser[0];
-
-  const [audits, profiles, messages, insights] = await Promise.all([
-    db
-      .delete(auditsTable)
-      .where(eq(auditsTable.userId, userId))
-      .returning({ id: auditsTable.id }),
-    db
-      .delete(profilesTable)
-      .where(eq(profilesTable.userId, userId))
-      .returning({ id: profilesTable.id }),
-    db
-      .delete(messageCoachingSessionsTable)
-      .where(eq(messageCoachingSessionsTable.userId, userId))
-      .returning({ id: messageCoachingSessionsTable.id }),
-    db
-      .delete(emailInsightsTable)
-      .where(eq(emailInsightsTable.userId, userId))
-      .returning({ id: emailInsightsTable.id }),
-  ]);
-
-  // Wellness self-ratings (Life Pulse) are first-party personal data and must
-  // also be hard-deleted when the user closes their account.
-  await db.delete(lifePulsesTable).where(eq(lifePulsesTable.userId, userId));
-
-  // Mirror retention surfaces (journal entries + post-date notes) are also
-  // first-party personal reflections and must be hard-deleted, including any
-  // soft-deleted rows still sitting in the user's trash.
-  await Promise.all([
-    db.delete(journalEntriesTable).where(eq(journalEntriesTable.userId, userId)),
-    db.delete(postDateNotesTable).where(eq(postDateNotesTable.userId, userId)),
-    db.delete(datingWinsTable).where(eq(datingWinsTable.userId, userId)),
-    db
-      .delete(behavioralGrowthEventsTable)
-      .where(eq(behavioralGrowthEventsTable.userId, userId)),
-    db
-      .delete(matchingReadinessSnapshotsTable)
-      .where(eq(matchingReadinessSnapshotsTable.userId, userId)),
-    db
-      .delete(matchingNudgeStateTable)
-      .where(eq(matchingNudgeStateTable.userId, userId)),
-  ]);
-
-  // Pivot-era surfaces: wellness self-rating answers + system-derived tags,
-  // compatibility compass reads, GDPR imported sources (Hinge etc.), coach
-  // follow-up reminders, waitlist signup, and per-device login-notification
-  // throttle rows. All are user-scoped first-party data, must go when the
-  // account goes. Each is best-effort independent; one failure shouldn't
-  // strand the rest.
-  await Promise.all([
-    db
-      .delete(dataPermissionEventsTable)
-      .where(eq(dataPermissionEventsTable.userId, userId)),
-    db.delete(wellnessAnswersTable).where(eq(wellnessAnswersTable.userId, userId)),
-    db.delete(wellnessInferencesTable).where(eq(wellnessInferencesTable.userId, userId)),
-    db.delete(wellnessTagsTable).where(eq(wellnessTagsTable.userId, userId)),
-    db.delete(compatibilityReadsTable).where(eq(compatibilityReadsTable.userId, userId)),
-    db.delete(importedSourcesTable).where(eq(importedSourcesTable.userId, userId)),
-    db.delete(coachFollowUpsTable).where(eq(coachFollowUpsTable.userId, userId)),
-    db.delete(waitlistTable).where(eq(waitlistTable.userId, userId)),
-    db.delete(loginNotificationsTable).where(eq(loginNotificationsTable.userId, userId)),
-    db.delete(careDialectProfilesTable).where(eq(careDialectProfilesTable.userId, userId)),
-    db
-      .delete(connectorConnectionsTable)
-      .where(eq(connectorConnectionsTable.userId, userId)),
-    db.delete(oauthTokensTable).where(eq(oauthTokensTable.userId, userId)),
-  ]);
-
-  // Echo companion surfaces: the evolving model of the user, the conversation
-  // thread, Echo's own observations, the commitments it tracks, its in-app
-  // notification feed, and channel preferences (including any phone number for
-  // SMS). All first-party personal data; wiped with the account.
-  await Promise.all([
-    db.delete(companionStateTable).where(eq(companionStateTable.userId, userId)),
-    db.delete(companionMessagesTable).where(eq(companionMessagesTable.userId, userId)),
-    db
-      .delete(companionObservationsTable)
-      .where(eq(companionObservationsTable.userId, userId)),
-    db
-      .delete(companionCommitmentsTable)
-      .where(eq(companionCommitmentsTable.userId, userId)),
-    db
-      .delete(companionNotificationsTable)
-      .where(eq(companionNotificationsTable.userId, userId)),
-    db
-      .delete(companionChannelPrefsTable)
-      .where(eq(companionChannelPrefsTable.userId, userId)),
-  ]);
-
-  // Trust & Safety records: reports the user filed or received, and blocks in
-  // either direction. These are not readiness signals, but they are still
-  // user-scoped first-party data, so they go with the account.
-  await Promise.all([
-    db
-      .delete(userReportsTable)
-      .where(
-        or(
-          eq(userReportsTable.reporterUserId, userId),
-          eq(userReportsTable.reportedUserId, userId),
-        ),
-      ),
-    db
-      .delete(userBlocksTable)
-      .where(
-        or(
-          eq(userBlocksTable.blockerUserId, userId),
-          eq(userBlocksTable.blockedUserId, userId),
-        ),
-      ),
-  ]);
-
-  // Match connections and their message threads. A connection belongs to two
-  // members, so we first delete every message in any connection this user is a
-  // party to (including the counterpart's messages, which would otherwise be
-  // orphaned), then delete the connection rows themselves.
-  const ownConnections = await db
-    .select({ id: matchConnectionsTable.id })
-    .from(matchConnectionsTable)
-    .where(
-      or(
-        eq(matchConnectionsTable.userLowId, userId),
-        eq(matchConnectionsTable.userHighId, userId),
-      ),
-    );
-  if (ownConnections.length > 0) {
-    const connectionIds = ownConnections.map((c) => c.id);
-    await db
-      .delete(connectionMessagesTable)
-      .where(inArray(connectionMessagesTable.connectionId, connectionIds));
-    await db
-      .delete(matchConnectionsTable)
-      .where(inArray(matchConnectionsTable.id, connectionIds));
-  }
-
-  // Profile photo rows. We store only the object path, never the bytes; the
-  // stored objects are best-effort purged separately, the rows go here.
-  await db
-    .delete(profilePhotosTable)
-    .where(eq(profilePhotosTable.userId, userId));
-
-  // Delete every active session belonging to this user (session JSONB
-  // payload stores `user.id`).
-  await db
-    .delete(sessionsTable)
-    .where(sql`(${sessionsTable.sess} -> 'user' ->> 'id') = ${userId}`);
-
-  await db.delete(usersTable).where(eq(usersTable.id, userId));
-
-  // Clear the browser session cookie for this caller. clearSession would
-  // also try to delete the session row, but we've already wiped sessions
-  // for this user above.
-  const sid = getSessionId(req);
-  await clearSession(res, sid);
-  res.clearCookie(SESSION_COOKIE, { path: "/" });
-
-  req.log.info(
-    {
-      userId,
-      deleted: {
-        audits: audits.length,
-        profiles: profiles.length,
-        messages: messages.length,
-        insights: insights.length,
-      },
-    },
-    "Deleted user account and associated data",
-  );
-
-  if (recipient?.email) {
-    const name = recipient.firstName?.trim() || "there";
-    const when = new Date().toUTCString();
-    const text = [
-      `Hi ${name},`,
-      "",
-      "This is a confirmation that your MatchLab Club account has been deleted.",
-      `When: ${when}`,
-      "",
-      "Here's a summary of what was permanently removed:",
-      `  • ${audits.length} audit${audits.length === 1 ? "" : "s"}`,
-      `  • ${profiles.length} saved profile${profiles.length === 1 ? "" : "s"}`,
-      `  • ${messages.length} message coaching session${messages.length === 1 ? "" : "s"}`,
-      `  • ${insights.length} email insight report${insights.length === 1 ? "" : "s"}`,
-      "  • Your sign-in sessions and account record",
-      "",
-      "If you didn't request this, please reply to this email right away,",
-      "someone else may have had access to your account.",
-      "",
-      "Thanks for giving us a try.",
-      "MatchLab Club",
-    ].join("\n");
-    const html = `<!doctype html>
-<html>
-  <body style="font-family: -apple-system, Segoe UI, sans-serif; line-height: 1.6; color: #222;">
-    <p>Hi ${name},</p>
-    <p>This is a confirmation that your <strong>MatchLab Club</strong> account has been deleted.</p>
-    <p style="font-size: 13px; color: #666;"><strong>When:</strong> ${when}</p>
-    <p>Here's a summary of what was permanently removed:</p>
-    <ul>
-      <li>${audits.length} audit${audits.length === 1 ? "" : "s"}</li>
-      <li>${profiles.length} saved profile${profiles.length === 1 ? "" : "s"}</li>
-      <li>${messages.length} message coaching session${messages.length === 1 ? "" : "s"}</li>
-      <li>${insights.length} email insight report${insights.length === 1 ? "" : "s"}</li>
-      <li>Your sign-in sessions and account record</li>
-    </ul>
-    <p style="font-size: 13px; color: #666;">
-      If you didn't request this, please reply to this email right away, someone else may have had access to your account.
-    </p>
-    <p>Thanks for giving us a try.<br/>MatchLab Club</p>
-  </body>
-</html>`;
-    try {
-      await sendMail({
-        to: recipient.email,
-        subject: "Your MatchLab Club account has been deleted",
-        text,
-        html,
-      });
-    } catch (err) {
-      req.log.error(
-        { err, userId },
-        "Failed to send account deletion confirmation email",
-      );
-    }
-  }
-
-  res.json(
-    DeleteMyAccountResponse.parse({
-      success: true,
-      deleted: {
-        audits: audits.length,
-        profiles: profiles.length,
-        messages: messages.length,
-        insights: insights.length,
-      },
-    }),
-  );
-});
-
 /**
  * POST /api/me/account/delete
  *
@@ -961,153 +867,19 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
       }
       tables["audit_report_versions"] = auditVersionCount;
 
-      // ── First-party user-scoped data ──────────────────────────────────
-      const auditsDel = await tx
-        .delete(auditsTable)
-        .where(eq(auditsTable.userId, userId))
-        .returning({ id: auditsTable.id });
-      tables["audits"] = auditsDel.length;
-
-      const profilesDel = await tx
-        .delete(profilesTable)
-        .where(eq(profilesTable.userId, userId))
-        .returning({ id: profilesTable.id });
-      tables["dating_profiles"] = profilesDel.length;
-
-      const messagesDel = await tx
-        .delete(messageCoachingSessionsTable)
-        .where(eq(messageCoachingSessionsTable.userId, userId))
-        .returning({ id: messageCoachingSessionsTable.id });
-      tables["message_coaching_sessions"] = messagesDel.length;
-
-      const insightsDel = await tx
-        .delete(emailInsightsTable)
-        .where(eq(emailInsightsTable.userId, userId))
-        .returning({ id: emailInsightsTable.id });
-      tables["email_insights"] = insightsDel.length;
-
-      const journalDel = await tx
-        .delete(journalEntriesTable)
-        .where(eq(journalEntriesTable.userId, userId))
-        .returning({ id: journalEntriesTable.id });
-      tables["journal_entries"] = journalDel.length;
-
-      const postDateDel = await tx
-        .delete(postDateNotesTable)
-        .where(eq(postDateNotesTable.userId, userId))
-        .returning({ id: postDateNotesTable.id });
-      tables["post_date_notes"] = postDateDel.length;
-
-      // First-party progress + matching state. These have no FK cascade on
-      // user_id, so they MUST be hard-deleted here too or they orphan after a
-      // confirmation-path GDPR deletion. Kept in lockstep with DELETE /account.
-      const datingWinsDel = await tx
-        .delete(datingWinsTable)
-        .where(eq(datingWinsTable.userId, userId))
-        .returning({ id: datingWinsTable.id });
-      tables["dating_wins"] = datingWinsDel.length;
-
-      const behavioralGrowthDel = await tx
-        .delete(behavioralGrowthEventsTable)
-        .where(eq(behavioralGrowthEventsTable.userId, userId))
-        .returning({ id: behavioralGrowthEventsTable.id });
-      tables["behavioral_growth_events"] = behavioralGrowthDel.length;
-
-      const matchingSnapshotDel = await tx
-        .delete(matchingReadinessSnapshotsTable)
-        .where(eq(matchingReadinessSnapshotsTable.userId, userId))
-        .returning({ id: matchingReadinessSnapshotsTable.id });
-      tables["matching_readiness_snapshots"] = matchingSnapshotDel.length;
-
-      const matchingNudgeDel = await tx
-        .delete(matchingNudgeStateTable)
-        .where(eq(matchingNudgeStateTable.userId, userId))
-        .returning({ userId: matchingNudgeStateTable.userId });
-      tables["matching_nudge_state"] = matchingNudgeDel.length;
-
-      const lifePulseDel = await tx
-        .delete(lifePulsesTable)
-        .where(eq(lifePulsesTable.userId, userId))
-        .returning({ id: lifePulsesTable.id });
-      tables["life_pulses"] = lifePulseDel.length;
-
-      const dataPermissionEventDel = await tx
-        .delete(dataPermissionEventsTable)
-        .where(eq(dataPermissionEventsTable.userId, userId))
-        .returning({ id: dataPermissionEventsTable.id });
-      tables["data_permission_events"] = dataPermissionEventDel.length;
-
-      const wellnessAnswerDel = await tx
-        .delete(wellnessAnswersTable)
-        .where(eq(wellnessAnswersTable.userId, userId))
-        .returning({ id: wellnessAnswersTable.id });
-      tables["wellness_answers"] = wellnessAnswerDel.length;
-
-      const wellnessTagDel = await tx
-        .delete(wellnessTagsTable)
-        .where(eq(wellnessTagsTable.userId, userId))
-        .returning({ id: wellnessTagsTable.id });
-      tables["wellness_tags"] = wellnessTagDel.length;
-
-      const wellnessInferenceDel = await tx
-        .delete(wellnessInferencesTable)
-        .where(eq(wellnessInferencesTable.userId, userId))
-        .returning({ id: wellnessInferencesTable.id });
-      tables["wellness_inferences"] = wellnessInferenceDel.length;
-
-      const compassDel = await tx
-        .delete(compatibilityReadsTable)
-        .where(eq(compatibilityReadsTable.userId, userId))
-        .returning({ id: compatibilityReadsTable.id });
-      tables["compatibility_reads"] = compassDel.length;
-
-      const importsDel = await tx
-        .delete(importedSourcesTable)
-        .where(eq(importedSourcesTable.userId, userId))
-        .returning({ id: importedSourcesTable.id });
-      tables["imported_sources"] = importsDel.length;
-
-      const connectorDel = await tx
-        .delete(connectorConnectionsTable)
-        .where(eq(connectorConnectionsTable.userId, userId))
-        .returning({ id: connectorConnectionsTable.id });
-
-      const oauthTokenDel = await tx
-        .delete(oauthTokensTable)
-        .where(eq(oauthTokensTable.userId, userId))
-        .returning({ id: oauthTokensTable.id });
-      tables["connector_connections"] = connectorDel.length;
-      tables["oauth_tokens"] = oauthTokenDel.length;
-
-      const followUpDel = await tx
-        .delete(coachFollowUpsTable)
-        .where(eq(coachFollowUpsTable.userId, userId))
-        .returning({ id: coachFollowUpsTable.id });
-      tables["coach_follow_ups"] = followUpDel.length;
-
-      const waitlistDel = await tx
-        .delete(waitlistTable)
-        .where(eq(waitlistTable.userId, userId))
-        .returning({ id: waitlistTable.id });
-      tables["waitlist"] = waitlistDel.length;
-
-      const loginNotifDel = await tx
-        .delete(loginNotificationsTable)
-        .where(eq(loginNotificationsTable.userId, userId))
-        .returning({ userId: loginNotificationsTable.userId });
-      tables["login_notifications"] = loginNotifDel.length;
-
-      const exportTokenDel = await tx
-        .delete(dataExportTokensTable)
-        .where(eq(dataExportTokensTable.userId, userId))
-        .returning({ token: dataExportTokensTable.token });
-      tables["data_export_tokens"] = exportTokenDel.length;
-
-      const pushTokenDel = await tx
-        .delete(pushTokensTable)
-        .where(eq(pushTokensTable.userId, userId))
-        .returning({ token: pushTokensTable.token });
-      tables["push_tokens"] = pushTokenDel.length;
+      // ── Every table with a user_id column ──────────────────────────────
+      // ACCOUNT_DELETE_USER_ID_TABLES is compared with the live Drizzle
+      // schema in accountOwnership.test.ts. A new user-owned table therefore
+      // fails CI until it is part of this transaction.
+      for (const tableName of ACCOUNT_DELETE_USER_ID_TABLES) {
+        const result = await tx.execute(
+          sql`
+            delete from ${sql.identifier(tableName)}
+            where "user_id" = ${userId}
+          `,
+        );
+        tables[tableName] = result.rowCount ?? 0;
+      }
 
       // Referrals: delete every row where this user is the inviter or the
       // invitee. (FK is ON DELETE SET NULL / CASCADE respectively, but we
@@ -1123,54 +895,46 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         .returning({ id: referralsTable.id });
       tables["referrals"] = referralDel.length;
 
-      // purchase_interest has no user_id column, it's keyed by email
-      // (lowercased). The founder referrals view uses the same join key to
-      // attribute paid status back to a user. We mirror that here so a
-      // GDPR delete also wipes any checkout interest rows tied to this
-      // user's email address.
-      const purchaseDel = await tx
-        .delete(purchaseInterestTable)
-        .where(sql`lower(${purchaseInterestTable.email}) = ${expected}`)
-        .returning({ id: purchaseInterestTable.id });
+      // Email-only signup and checkout rows can predate the account, so they
+      // do not always carry user_id. The verified account email is the
+      // canonical ownership key for these older records.
+      const [purchaseDel, leadDel, waitlistEmailDel] = await Promise.all([
+        tx
+          .delete(purchaseInterestTable)
+          .where(sql`lower(${purchaseInterestTable.email}) = ${expected}`)
+          .returning({ id: purchaseInterestTable.id }),
+        tx
+          .delete(leadsTable)
+          .where(sql`lower(${leadsTable.email}) = ${expected}`)
+          .returning({ id: leadsTable.id }),
+        tx
+          .delete(waitlistTable)
+          .where(sql`lower(${waitlistTable.email}) = ${expected}`)
+          .returning({ id: waitlistTable.id }),
+      ]);
       tables["purchase_interest"] = purchaseDel.length;
+      tables["leads"] = leadDel.length;
+      tables["waitlist"] =
+        (tables["waitlist"] ?? 0) + waitlistEmailDel.length;
 
-      // Sessions: match both the user_id column and the session JSONB
-      // payload (older sessions may only carry the JSONB form).
-      const sessionDel = await tx
+      // The registry removes sessions with a modern user_id. This catches
+      // older Replit sessions that only identify the member inside JSONB.
+      const legacySessionDel = await tx
         .delete(sessionsTable)
-        .where(
-          or(
-            eq(sessionsTable.userId, userId),
-            sql`(${sessionsTable.sess} -> 'user' ->> 'id') = ${userId}`,
-          ),
-        )
+        .where(sql`(${sessionsTable.sess} -> 'user' ->> 'id') = ${userId}`)
         .returning({ sid: sessionsTable.sid });
-      tables["sessions"] = sessionDel.length;
+      tables["sessions"] =
+        (tables["sessions"] ?? 0) + legacySessionDel.length;
 
-      // match_preferences / match_pool_membership / match_proposals have NO
-      // FK to users.id (same rationale as ai_usage_counters). Explicit wipe.
-      const matchPrefsDel = await tx
-        .delete(matchPreferencesTable)
-        .where(eq(matchPreferencesTable.userId, userId))
-        .returning({ userId: matchPreferencesTable.userId });
-      tables["match_preferences"] = matchPrefsDel.length;
-
-      const matchPoolDel = await tx
-        .delete(matchPoolMembershipTable)
-        .where(eq(matchPoolMembershipTable.userId, userId))
-        .returning({ userId: matchPoolMembershipTable.userId });
-      tables["match_pool_membership"] = matchPoolDel.length;
-
-      const matchProposalsDel = await tx
+      // The registry removes proposal rows created for this user. A proposal
+      // can also point at the user from another member's row, so wipe that
+      // direction explicitly.
+      const receivedProposalDel = await tx
         .delete(matchProposalsTable)
-        .where(
-          or(
-            eq(matchProposalsTable.userId, userId),
-            eq(matchProposalsTable.proposedToUserId, userId),
-          ),
-        )
+        .where(eq(matchProposalsTable.proposedToUserId, userId))
         .returning({ id: matchProposalsTable.id });
-      tables["match_proposals"] = matchProposalsDel.length;
+      tables["match_proposals"] =
+        (tables["match_proposals"] ?? 0) + receivedProposalDel.length;
 
       // Trust & Safety records: reports the user filed or received, and blocks
       // in either direction. Mirrors the live delete so both GDPR paths wipe
@@ -1226,69 +990,6 @@ router.post("/me/account/delete", async (req, res): Promise<void> => {
         tables["connection_messages"] = 0;
         tables["match_connections"] = 0;
       }
-
-      // Profile photo rows (object bytes are purged best-effort elsewhere).
-      const photosDel = await tx
-        .delete(profilePhotosTable)
-        .where(eq(profilePhotosTable.userId, userId))
-        .returning({ id: profilePhotosTable.id });
-      tables["profile_photos"] = photosDel.length;
-
-      // ai_usage_counters has NO FK to users.id (so anon traffic can bucket
-      // under a sentinel without FK violations). That means user deletes do
-      // not auto-cascade here; we wipe explicitly.
-      const aiUsageDel = await tx
-        .delete(aiUsageCountersTable)
-        .where(eq(aiUsageCountersTable.userId, userId))
-        .returning({ userId: aiUsageCountersTable.userId });
-      tables["ai_usage_counters"] = aiUsageDel.length;
-
-      // Echo companion surfaces have NO FK to users.id (same rationale as the
-      // matching tables). Explicit wipe: state, thread, observations,
-      // commitments, notification feed, and channel prefs (incl. phone number).
-      const companionStateDel = await tx
-        .delete(companionStateTable)
-        .where(eq(companionStateTable.userId, userId))
-        .returning({ userId: companionStateTable.userId });
-      tables["companion_state"] = companionStateDel.length;
-
-      const companionMessagesDel = await tx
-        .delete(companionMessagesTable)
-        .where(eq(companionMessagesTable.userId, userId))
-        .returning({ id: companionMessagesTable.id });
-      tables["companion_messages"] = companionMessagesDel.length;
-
-      const companionObsDel = await tx
-        .delete(companionObservationsTable)
-        .where(eq(companionObservationsTable.userId, userId))
-        .returning({ id: companionObservationsTable.id });
-      tables["companion_observations"] = companionObsDel.length;
-
-      const companionCommitDel = await tx
-        .delete(companionCommitmentsTable)
-        .where(eq(companionCommitmentsTable.userId, userId))
-        .returning({ id: companionCommitmentsTable.id });
-      tables["companion_commitments"] = companionCommitDel.length;
-
-      const companionNotifDel = await tx
-        .delete(companionNotificationsTable)
-        .where(eq(companionNotificationsTable.userId, userId))
-        .returning({ id: companionNotificationsTable.id });
-      tables["companion_notifications"] = companionNotifDel.length;
-
-      const companionPrefsDel = await tx
-        .delete(companionChannelPrefsTable)
-        .where(eq(companionChannelPrefsTable.userId, userId))
-        .returning({ userId: companionChannelPrefsTable.userId });
-      tables["companion_channel_prefs"] = companionPrefsDel.length;
-
-      // Care Dialect profile: one derived give/receive row per user, NO FK to
-      // users.id, so we wipe it explicitly here to match the live delete path.
-      const careDialectDel = await tx
-        .delete(careDialectProfilesTable)
-        .where(eq(careDialectProfilesTable.userId, userId))
-        .returning({ id: careDialectProfilesTable.id });
-      tables["care_dialect_profiles"] = careDialectDel.length;
 
       // ── Finally the user row itself ───────────────────────────────────
       const userDel = await tx

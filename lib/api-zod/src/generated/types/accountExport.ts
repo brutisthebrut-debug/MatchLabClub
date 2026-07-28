@@ -5,6 +5,7 @@
  * MatchLab Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { AccountExportRecords } from './accountExportRecords';
 import type { AccountExportUser } from './accountExportUser';
 import type { Audit } from './audit';
 import type { DataPermissionEvent } from './dataPermissionEvent';
@@ -27,4 +28,9 @@ export interface AccountExport {
   postDateNotes: PostDateNote[];
   wellnessAnswers: WellnessAnswer[];
   dataPermissionEvents: DataPermissionEvent[];
+  /** Complete account-owned records grouped by database source. Tables
+  containing live credentials or delivery tokens are omitted.
+  Sessions and verification records use redacted projections.
+   */
+  records: AccountExportRecords;
 }

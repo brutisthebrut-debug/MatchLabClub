@@ -1,16 +1,28 @@
 ---
-name: Account-deletion dual path parity
-description: Two GDPR delete paths exist in account.ts; both must wipe every user-scoped table or the confirmation path orphans rows.
+name: Canonical account ownership path
+description: Account export and deletion share one schema-guarded ownership inventory; deletion only runs through the confirmed transactional endpoint.
 ---
 
-# Account deletion has two divergent paths
+# Account deletion has one canonical path
 
-`routes/account.ts` exposes two account-deletion endpoints:
-- `DELETE /account` — the live in-app delete (no confirmation body).
-- `POST /me/account/delete` — the GDPR confirmation-based delete (POST so request bodies survive proxies; verifies the typed confirmation equals the account email; runs inside one `db.transaction`).
+`routes/account.ts` exposes one account-deletion endpoint:
 
-**Rule:** every user-scoped table wiped by one path MUST be wiped by the other. They are maintained as separate code and silently drift.
+- `POST /me/account/delete` verifies that the typed confirmation equals the
+  signed-in account email and performs the full delete in one transaction.
 
-**Why:** a change added trust & safety writes (the report-and-block flow writes `user_blocks`/`user_reports`) and only the live `DELETE /account` path purged them; the confirmation path left them orphaned (including free-text report notes), breaching GDPR erasure.
+The old `DELETE /account` path and generated client were retired because they
+were weaker, non-transactional, and repeatedly drifted from the confirmed path.
+Web, mobile, and Data Vault all use the confirmed endpoint.
 
-**How to apply:** when you add any table keyed to a user (or written on a user's behalf), add the delete to BOTH paths, in both directions where the row references two users (reporter/reported, blocker/blocked, low/high). The confirmation path records per-table counts in its `tables` map; add the count there too. Cover both paths with a real-DB test (see `account.safety-purge.test.ts`).
+**Rule:** `lib/accountOwnership.ts` is the ownership registry. Every table with
+a `user_id` column is deleted by iterating that registry.
+`accountOwnership.test.ts` compares it with the live Drizzle schema, so adding a
+new user-owned table without deletion coverage fails CI.
+
+Tables owned through another key still require an explicit relational or email
+handler in `routes/account.ts`, including audit versions, connection messages,
+reports/blocks, referrals, and pre-account lead/waitlist/checkout rows.
+
+Account export uses the same inventory. Credential-bearing rows (OAuth tokens,
+export tokens, push tokens, and raw session payloads) stay out of the export;
+sessions and verification data use safe projections.

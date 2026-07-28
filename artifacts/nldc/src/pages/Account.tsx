@@ -29,7 +29,7 @@ import {
   useListAudits,
   getListAuditsQueryKey,
   exportMyData,
-  useDeleteMyAccount,
+  useDeleteMyAccountConfirmed,
   useGetAccountSummary,
   getGetAccountSummaryQueryKey,
   useEmailMyDataExport,
@@ -106,10 +106,12 @@ export default function Account() {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isExporting, setIsExporting] = useState(false);
-  const DELETE_CONFIRM_PHRASE = "delete";
+  const DELETE_CONFIRM_PHRASE = user?.email?.trim() ?? "";
   const isDeleteConfirmed =
-    deleteConfirmText.trim().toLowerCase() === DELETE_CONFIRM_PHRASE;
-  const deleteAccount = useDeleteMyAccount();
+    DELETE_CONFIRM_PHRASE.length > 0 &&
+    deleteConfirmText.trim().toLowerCase() ===
+      DELETE_CONFIRM_PHRASE.toLowerCase();
+  const deleteAccount = useDeleteMyAccountConfirmed();
   const summaryQuery = useGetAccountSummary({
     query: {
       queryKey: getGetAccountSummaryQueryKey(),
@@ -234,8 +236,11 @@ export default function Account() {
   };
 
   const handleConfirmDelete = async () => {
+    if (!user?.email) return;
     try {
-      await deleteAccount.mutateAsync();
+      await deleteAccount.mutateAsync({
+        data: { confirmation: user.email },
+      });
       toast({
         title: "Account deleted",
         description: "Your account and all associated data have been removed.",
@@ -634,9 +639,15 @@ export default function Account() {
                 <div className="flex-grow hidden sm:block"></div>
                 <Button
                   onClick={() => setConfirmDeleteOpen(true)}
+                  disabled={!user?.email}
                   variant="outline"
                   className="w-full sm:w-auto rounded-full h-11 px-6 text-sm font-semibold border-[hsl(348_55%_65%/0.4)] text-[hsl(348_55%_55%)] hover:bg-[hsl(348_55%_65%/0.1)] hover:text-[hsl(348_55%_65%)] mt-2 sm:mt-0"
                   data-testid="button-account-delete"
+                  title={
+                    !user?.email
+                      ? "An account email is required to confirm deletion"
+                      : undefined
+                  }
                 >
                   <Trash2 className="w-5 h-5 mr-2" /> Delete my account
                 </Button>
@@ -707,13 +718,17 @@ export default function Account() {
             </AlertDialogHeader>
             <div className="space-y-3 my-6">
               <Label htmlFor="delete-confirm-input" className="text-base text-center block">
-                Type <span className="font-bold text-foreground">delete</span> to confirm
+                Type{" "}
+                <span className="font-bold text-foreground">
+                  {DELETE_CONFIRM_PHRASE}
+                </span>{" "}
+                to confirm
               </Label>
               <Input
                 id="delete-confirm-input"
                 value={deleteConfirmText}
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
-                placeholder="delete"
+                placeholder={DELETE_CONFIRM_PHRASE}
                 autoComplete="off"
                 autoCapitalize="off"
                 autoCorrect="off"

@@ -209,9 +209,10 @@ export const GetAnonymousClaimHandoffStatusResponse = zod.object({
 
 /**
  * Returns a single JSON document containing the authenticated user's
-profile record plus every audit, dating profile, message coaching
-session, and email insight tied to that user. Intended to power a
-"Download my data" button on the account page.
+account, Echo, Play, Journey, matching, consent, profile, coaching,
+wellness, verification, and connection records. Live credentials,
+provider tokens, session payloads, and device delivery tokens are
+deliberately excluded.
 
  * @summary Download all of the signed-in user's data as JSON
  */
@@ -232,7 +233,14 @@ export const ExportMyDataResponse = zod.object({
   "lastName": zod.string().nullable(),
   "profileImageUrl": zod.string().nullable(),
   "role": zod.enum(['member', 'founder']),
-  "createdAt": zod.string()
+  "aiContentConsentGranted": zod.boolean(),
+  "aiContentConsentGrantedAt": zod.coerce.date().nullable(),
+  "aiContentConsentRevokedAt": zod.coerce.date().nullable(),
+  "aiContentConsentUpdatedAt": zod.coerce.date().nullable(),
+  "tier": zod.string().nullable(),
+  "tierGrantedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
 }),
   "audits": zod.array(zod.object({
   "id": zod.number(),
@@ -438,7 +446,8 @@ export const ExportMyDataResponse = zod.object({
   "actorId": zod.string().nullable(),
   "reason": zod.string().nullable(),
   "createdAt": zod.coerce.date()
-}))
+})),
+  "records": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.unknown()))).describe('Complete account-owned records grouped by database source. Tables\ncontaining live credentials or delivery tokens are omitted.\nSessions and verification records use redacted projections.\n')
 })
 
 
@@ -1071,7 +1080,14 @@ export const DownloadEmailedExportResponse = zod.object({
   "lastName": zod.string().nullable(),
   "profileImageUrl": zod.string().nullable(),
   "role": zod.enum(['member', 'founder']),
-  "createdAt": zod.string()
+  "aiContentConsentGranted": zod.boolean(),
+  "aiContentConsentGrantedAt": zod.coerce.date().nullable(),
+  "aiContentConsentRevokedAt": zod.coerce.date().nullable(),
+  "aiContentConsentUpdatedAt": zod.coerce.date().nullable(),
+  "tier": zod.string().nullable(),
+  "tierGrantedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
 }),
   "audits": zod.array(zod.object({
   "id": zod.number(),
@@ -1277,7 +1293,8 @@ export const DownloadEmailedExportResponse = zod.object({
   "actorId": zod.string().nullable(),
   "reason": zod.string().nullable(),
   "createdAt": zod.coerce.date()
-}))
+})),
+  "records": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.unknown()))).describe('Complete account-owned records grouped by database source. Tables\ncontaining live credentials or delivery tokens are omitted.\nSessions and verification records use redacted projections.\n')
 })
 
 
@@ -1345,29 +1362,6 @@ export const RevokeOneSessionHeader = zod.object({
 export const RevokeOneSessionResponse = zod.object({
   "success": zod.boolean(),
   "revoked": zod.number().describe('Number of sessions actually deleted.')
-})
-
-
-/**
- * Permanently removes the authenticated user along with every audit,
-dating profile, message coaching session, and email insight tied to
-that user. Also clears every active session for the user and the
-browser session cookie, effectively signing them out.
-
- * @summary Permanently delete the signed-in user's account and all data
- */
-export const DeleteMyAccountHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
-
-export const DeleteMyAccountResponse = zod.object({
-  "success": zod.boolean(),
-  "deleted": zod.object({
-  "audits": zod.number(),
-  "profiles": zod.number(),
-  "messages": zod.number(),
-  "insights": zod.number()
-})
 })
 
 

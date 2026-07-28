@@ -1245,6 +1245,16 @@ export interface AccountSummary {
   postDateNotes: number;
 }
 
+export type AccountExportRecordsItem = { [key: string]: unknown };
+
+/**
+ * Complete account-owned records grouped by database source. Tables
+containing live credentials or delivery tokens are omitted.
+Sessions and verification records use redacted projections.
+
+ */
+export type AccountExportRecords = {[key: string]: AccountExportRecordsItem[]};
+
 export type AccountExportUserRole = typeof AccountExportUserRole[keyof typeof AccountExportUserRole];
 
 
@@ -1264,7 +1274,19 @@ export interface AccountExportUser {
   /** @nullable */
   profileImageUrl: string | null;
   role: AccountExportUserRole;
+  aiContentConsentGranted: boolean;
+  /** @nullable */
+  aiContentConsentGrantedAt: string | null;
+  /** @nullable */
+  aiContentConsentRevokedAt: string | null;
+  /** @nullable */
+  aiContentConsentUpdatedAt: string | null;
+  /** @nullable */
+  tier: string | null;
+  /** @nullable */
+  tierGrantedAt: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface JournalEntry {
@@ -1404,6 +1426,11 @@ export interface AccountExport {
   postDateNotes: PostDateNote[];
   wellnessAnswers: WellnessAnswer[];
   dataPermissionEvents: DataPermissionEvent[];
+  /** Complete account-owned records grouped by database source. Tables
+  containing live credentials or delivery tokens are omitted.
+  Sessions and verification records use redacted projections.
+   */
+  records: AccountExportRecords;
 }
 
 export interface BulkDeleteAuditsInput {
@@ -1521,18 +1548,6 @@ export interface RevokeSessionsResult {
   success: true;
   /** Number of sessions actually deleted. */
   revoked: number;
-}
-
-export type DeleteMyAccountResultDeleted = {
-  audits: number;
-  profiles: number;
-  messages: number;
-  insights: number;
-};
-
-export interface DeleteMyAccountResult {
-  success: true;
-  deleted: DeleteMyAccountResultDeleted;
 }
 
 export interface DeleteAccountInput {

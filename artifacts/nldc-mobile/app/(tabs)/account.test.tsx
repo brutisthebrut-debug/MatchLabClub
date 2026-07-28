@@ -228,8 +228,14 @@ vi.mock("@/hooks/useColors", () => ({
 
 vi.mock("@/lib/auth", () => ({
   useAuth: () => ({
-    user: null,
-    isAuthenticated: false,
+    user: {
+      id: "account-test-user",
+      email: "daniel@example.com",
+      firstName: "Daniel",
+      lastName: null,
+      profileImageUrl: null,
+    },
+    isAuthenticated: true,
     isLoading: false,
     isSigningIn: false,
     error: null,
@@ -256,7 +262,7 @@ vi.mock("@/lib/autoRefreshPref", () => ({
 }));
 
 vi.mock("@workspace/api-client-react", () => ({
-  useDeleteMyAccount: () => ({
+  useDeleteMyAccountConfirmed: () => ({
     mutateAsync: vi.fn(async () => {}),
     isPending: false,
   }),
@@ -287,10 +293,10 @@ function Wrap({ children }: { children: React.ReactNode }) {
 }
 
 // ---------------------------------------------------------------------------
-// Tests: type-delete guard on the delete-account confirm dialog
+// Tests: type-email guard on the delete-account confirm dialog
 // ---------------------------------------------------------------------------
 
-describe("Delete-account confirm dialog — type-delete guard", () => {
+describe("Delete-account confirm dialog — type-email guard", () => {
   it("confirm button is disabled when the confirm input is empty", async () => {
     render(
       <Wrap>
@@ -321,12 +327,12 @@ describe("Delete-account confirm dialog — type-delete guard", () => {
     await screen.findByTestId("dialog-confirm-delete-account");
 
     const input = screen.getByTestId("input-account-delete-confirm");
-    fireEvent.change(input, { target: { value: "delet" } });
+    fireEvent.change(input, { target: { value: "wrong@example.com" } });
 
     expect((screen.getByTestId("button-account-delete-confirm") as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it("confirm button becomes enabled when 'delete' is typed (exact match)", async () => {
+  it("confirm button becomes enabled when the account email is typed", async () => {
     render(
       <Wrap>
         <AccountScreen />
@@ -338,14 +344,14 @@ describe("Delete-account confirm dialog — type-delete guard", () => {
     await screen.findByTestId("dialog-confirm-delete-account");
 
     const input = screen.getByTestId("input-account-delete-confirm");
-    fireEvent.change(input, { target: { value: "delete" } });
+    fireEvent.change(input, { target: { value: "daniel@example.com" } });
 
     await waitFor(() => {
       expect((screen.getByTestId("button-account-delete-confirm") as HTMLButtonElement).disabled).toBe(false);
     });
   });
 
-  it("confirm button becomes enabled when 'DELETE' is typed (case-insensitive)", async () => {
+  it("accepts the account email case-insensitively", async () => {
     render(
       <Wrap>
         <AccountScreen />
@@ -357,14 +363,14 @@ describe("Delete-account confirm dialog — type-delete guard", () => {
     await screen.findByTestId("dialog-confirm-delete-account");
 
     const input = screen.getByTestId("input-account-delete-confirm");
-    fireEvent.change(input, { target: { value: "DELETE" } });
+    fireEvent.change(input, { target: { value: "DANIEL@EXAMPLE.COM" } });
 
     await waitFor(() => {
       expect((screen.getByTestId("button-account-delete-confirm") as HTMLButtonElement).disabled).toBe(false);
     });
   });
 
-  it("confirm button becomes enabled when '  Delete  ' is typed (trimmed)", async () => {
+  it("accepts surrounding whitespace around the account email", async () => {
     render(
       <Wrap>
         <AccountScreen />
@@ -376,7 +382,7 @@ describe("Delete-account confirm dialog — type-delete guard", () => {
     await screen.findByTestId("dialog-confirm-delete-account");
 
     const input = screen.getByTestId("input-account-delete-confirm");
-    fireEvent.change(input, { target: { value: "  Delete  " } });
+    fireEvent.change(input, { target: { value: "  daniel@example.com  " } });
 
     await waitFor(() => {
       expect((screen.getByTestId("button-account-delete-confirm") as HTMLButtonElement).disabled).toBe(false);
@@ -413,9 +419,9 @@ describe("Delete-account confirm dialog — type-delete guard", () => {
     fireEvent.click(deleteBtn);
     await screen.findByTestId("dialog-confirm-delete-account");
 
-    // Type "delete" to enable the confirm button.
+    // Type the account email to enable the confirm button.
     fireEvent.change(screen.getByTestId("input-account-delete-confirm"), {
-      target: { value: "delete" },
+      target: { value: "daniel@example.com" },
     });
     await waitFor(() => {
       expect((screen.getByTestId("button-account-delete-confirm") as HTMLButtonElement).disabled).toBe(false);

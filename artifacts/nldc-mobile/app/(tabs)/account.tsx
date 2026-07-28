@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import {
   exportMyData,
   getExportMyDataQueryKey,
-  useDeleteMyAccount,
+  useDeleteMyAccountConfirmed,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import * as FileSystem from "expo-file-system";
@@ -115,7 +115,7 @@ export default function AccountScreen() {
     logout,
   } = useAuth();
 
-  const deleteAccount = useDeleteMyAccount();
+  const deleteAccount = useDeleteMyAccountConfirmed();
 
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -126,9 +126,11 @@ export default function AccountScreen() {
   const [banner, setBanner] = useState<Banner>(null);
   const autoRefresh = useAutoRefreshPref();
 
-  const DELETE_CONFIRM_PHRASE = "delete";
+  const DELETE_CONFIRM_PHRASE = user?.email?.trim() ?? "";
   const isDeleteConfirmed =
-    deleteConfirmText.trim().toLowerCase() === DELETE_CONFIRM_PHRASE;
+    DELETE_CONFIRM_PHRASE.length > 0 &&
+    deleteConfirmText.trim().toLowerCase() ===
+      DELETE_CONFIRM_PHRASE.toLowerCase();
 
   function closeConfirm() {
     setConfirmOpen(false);
@@ -193,10 +195,13 @@ export default function AccountScreen() {
   }
 
   async function handleConfirmDelete() {
+    if (!user?.email) return;
     setBanner(null);
     setIsDeleting(true);
     try {
-      await deleteAccount.mutateAsync();
+      await deleteAccount.mutateAsync({
+        data: { confirmation: user.email },
+      });
       // Tear down every cached query, the user is signed out and any
       // user-scoped data should not survive in memory.
       queryClient.clear();
@@ -541,9 +546,9 @@ export default function AccountScreen() {
             </Text>
           </View>
           <Text style={[styles.cardBody, { color: colors.mutedForeground }]}>
-            Exports your profile, every audit you've run, your saved dating
-            profiles, message coaching sessions, and email insights as a single
-            JSON file. {Platform.OS === "web"
+            Exports your account, Echo history, Play answers, Journey,
+            matching, wellness, coaching, verification, and connection records
+            as a single JSON file. {Platform.OS === "web"
               ? "Saves directly to your device."
               : "Opens the share sheet so you can save it to Files, send it to yourself, or hand it to another app."}
           </Text>
@@ -634,14 +639,19 @@ export default function AccountScreen() {
           </Text>
           <Pressable
             testID="button-account-delete"
-            disabled={isDeleting || deleted}
+            disabled={isDeleting || deleted || !user?.email}
             onPress={() => setConfirmOpen(true)}
             style={({ pressed }) => [
               styles.actionBtn,
               {
                 borderColor: colors.destructive,
                 backgroundColor: `${colors.destructive}14`,
-                opacity: isDeleting || deleted ? 0.5 : pressed ? 0.85 : 1,
+                opacity:
+                  isDeleting || deleted || !user?.email
+                    ? 0.5
+                    : pressed
+                      ? 0.85
+                      : 1,
               },
             ]}
           >
@@ -723,7 +733,7 @@ export default function AccountScreen() {
               >
                 Type{" "}
                 <Text style={{ color: colors.foreground, fontFamily: "PlusJakartaSans_700Bold" }}>
-                  delete
+                  {DELETE_CONFIRM_PHRASE}
                 </Text>{" "}
                 to confirm
               </Text>
@@ -731,7 +741,7 @@ export default function AccountScreen() {
                 testID="input-account-delete-confirm"
                 value={deleteConfirmText}
                 onChangeText={setDeleteConfirmText}
-                placeholder="delete"
+                placeholder={DELETE_CONFIRM_PHRASE}
                 placeholderTextColor={colors.mutedForeground}
                 autoCapitalize="none"
                 autoCorrect={false}

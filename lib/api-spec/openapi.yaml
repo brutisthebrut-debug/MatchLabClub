@@ -282,9 +282,10 @@ paths:
       summary: Download all of the signed-in user's data as JSON
       description: |
         Returns a single JSON document containing the authenticated user's
-        profile record plus every audit, dating profile, message coaching
-        session, and email insight tied to that user. Intended to power a
-        "Download my data" button on the account page.
+        account, Echo, Play, Journey, matching, consent, profile, coaching,
+        wellness, verification, and connection records. Live credentials,
+        provider tokens, session payloads, and device delivery tokens are
+        deliberately excluded.
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -1084,33 +1085,6 @@ paths:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
         '404':
           description: Session does not exist or is not owned by the caller.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthErrorEnvelope'
-
-  /account:
-    delete:
-      tags: [Auth]
-      operationId: deleteMyAccount
-      summary: Permanently delete the signed-in user's account and all data
-      description: |
-        Permanently removes the authenticated user along with every audit,
-        dating profile, message coaching session, and email insight tied to
-        that user. Also clears every active session for the user and the
-        browser session cookie, effectively signing them out.
-      parameters:
-        - $ref: '#/components/parameters/AuthorizationSessionHeader'
-        - $ref: '#/components/parameters/SessionCookie'
-      responses:
-        '200':
-          description: Account and all associated data were deleted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeleteMyAccountResult'
-        '401':
-          description: Not authenticated.
           content:
             application/json:
               schema:
@@ -8060,7 +8034,7 @@ components:
 
     AccountExport:
       type: object
-      required: [exportedAt, user, audits, profiles, messages, insights, journalEntries, postDateNotes, wellnessAnswers, dataPermissionEvents]
+      required: [exportedAt, user, audits, profiles, messages, insights, journalEntries, postDateNotes, wellnessAnswers, dataPermissionEvents, records]
       properties:
         exportedAt:
           type: string
@@ -8099,6 +8073,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DataPermissionEvent'
+        records:
+          type: object
+          description: |
+            Complete account-owned records grouped by database source. Tables
+            containing live credentials or delivery tokens are omitted.
+            Sessions and verification records use redacted projections.
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              additionalProperties: true
 
     DataPermissionEvent:
       type: object
@@ -8130,7 +8115,7 @@ components:
 
     AccountExportUser:
       type: object
-      required: [id, email, firstName, lastName, profileImageUrl, role, createdAt]
+      required: [id, email, firstName, lastName, profileImageUrl, role, aiContentConsentGranted, aiContentConsentGrantedAt, aiContentConsentRevokedAt, aiContentConsentUpdatedAt, tier, tierGrantedAt, createdAt, updatedAt]
       properties:
         id:
           type: string
@@ -8146,8 +8131,28 @@ components:
         role:
           type: string
           enum: [member, founder]
+        aiContentConsentGranted:
+          type: boolean
+        aiContentConsentGrantedAt:
+          type: [string, 'null']
+          format: date-time
+        aiContentConsentRevokedAt:
+          type: [string, 'null']
+          format: date-time
+        aiContentConsentUpdatedAt:
+          type: [string, 'null']
+          format: date-time
+        tier:
+          type: [string, 'null']
+        tierGrantedAt:
+          type: [string, 'null']
+          format: date-time
         createdAt:
           type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
 
     BulkDeleteAuditsInput:
       type: object
@@ -8317,26 +8322,6 @@ components:
         revoked:
           type: integer
           description: Number of sessions actually deleted.
-
-    DeleteMyAccountResult:
-      type: object
-      required: [success, deleted]
-      properties:
-        success:
-          type: boolean
-          const: true
-        deleted:
-          type: object
-          required: [audits, profiles, messages, insights]
-          properties:
-            audits:
-              type: integer
-            profiles:
-              type: integer
-            messages:
-              type: integer
-            insights:
-              type: integer
 
     DeleteAccountInput:
       type: object

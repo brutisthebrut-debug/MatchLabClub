@@ -302,8 +302,8 @@ vi.mock("@/lib/autoRefreshPref", () => ({
 }));
 
 vi.mock("@workspace/api-client-react", () => ({
-  deleteMyAccount: vi.fn(async () => {}),
-  useDeleteMyAccount: () => ({
+  deleteMyAccountConfirmed: vi.fn(async () => {}),
+  useDeleteMyAccountConfirmed: () => ({
     mutateAsync: vi.fn(async () => {}),
     isPending: false,
   }),
