@@ -43,6 +43,7 @@ const ShebangsPartner = lazy(() => import("@/pages/ShebangsPartner"));
 const Blueprint = lazy(() => import("@/pages/Blueprint"));
 const MirrorProfile = lazy(() => import("@/pages/MirrorProfile"));
 const YourMirror = lazy(() => import("@/pages/YourMirror"));
+const Today = lazy(() => import("@/pages/Today"));
 const Echo = lazy(() => import("@/pages/Echo"));
 const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
 const Archetype = lazy(() => import("@/pages/Archetype"));
@@ -133,7 +134,12 @@ function ClaimAnonymousGate() {
 // /dashboard) and the account has no real signal yet. A returning user with any
 // data, or anyone who has finished or skipped onboarding in this browser, is never
 // redirected.
-const ONBOARDING_ENTRY_ROUTES = new Set(["/dashboard", "/me", "/your-mirror"]);
+const ONBOARDING_ENTRY_ROUTES = new Set([
+  "/today",
+  "/dashboard",
+  "/me",
+  "/your-mirror",
+]);
 
 function OnboardingGate() {
   const [location, setLocation] = useLocation();
@@ -228,6 +234,7 @@ function Router() {
         {/* New coaching modules */}
         <Route path="/blueprint" component={Blueprint} />
         <Route path="/mirror" component={MirrorProfile} />
+        <Route path="/today" component={Today} />
         <Route path="/your-mirror" component={YourMirror} />
         <Route path="/echo" component={Echo} />
         <Route path="/how-it-works" component={HowItWorks} />

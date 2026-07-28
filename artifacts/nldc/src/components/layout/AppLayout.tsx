@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { MatchPathBar } from "@/components/layout/MatchPathBar";
 import { EchoPresence } from "@/components/layout/EchoPresence";
+import { MobilePrimaryNav } from "@/components/layout/MobilePrimaryNav";
 import { GuestWorkBanner } from "@/components/auth/GuestWorkBanner";
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -70,14 +71,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <Link href="/your-mirror" className="flex items-center gap-2">
+          <Link href="/today" className="flex items-center gap-2">
             <img src="/matchlab-logo.png" alt="MatchLab Club" className="h-8 w-auto" />
           </Link>
           <ThemeToggle />
         </header>
         <MatchPathBar />
-        <main className="flex-1 flex flex-col">{children}</main>
+        <main className="flex flex-1 flex-col pb-20 md:pb-0">{children}</main>
       </div>
+      <MobilePrimaryNav />
       <EchoPresence />
     </div>
   );
