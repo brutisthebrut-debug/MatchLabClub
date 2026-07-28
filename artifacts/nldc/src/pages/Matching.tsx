@@ -58,6 +58,7 @@ import { useToast } from "@/hooks/use-toast";
 import { trackEvent } from "@/lib/analytics";
 import { NextStepCard } from "@/components/NextStepCard";
 import { BREAKDOWN_ROWS } from "@/lib/readinessLanes";
+import { WaitingIntroductionCard } from "@/components/journey/WaitingIntroductionCard";
 import {
   useGetMatchingState,
   getGetMatchingStateQueryKey,
@@ -587,6 +588,12 @@ export default function Matching() {
             you.
           </p>
         </motion.div>
+
+        <WaitingIntroductionCard
+          eligible={eligible}
+          poolStatus={poolStatus}
+          proposals={proposalList}
+        />
 
         {/* Readiness */}
         <motion.div {...fadeUp(0.05)}>
@@ -1214,7 +1221,7 @@ export default function Matching() {
 
         {/* Your match track */}
         <motion.div {...fadeUp(0.17)}>
-          <Card className="mb-6" data-testid="card-match-track">
+          <Card id="match-track" className="mb-6" data-testid="card-match-track">
             <CardHeader>
               <CardTitle className="text-xl flex items-center gap-2">
                 <Sparkles

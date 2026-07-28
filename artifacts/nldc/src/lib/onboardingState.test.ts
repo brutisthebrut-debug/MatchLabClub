@@ -1,14 +1,17 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+  clearPendingIntroduction,
   clearPendingPlayRead,
   clearPendingWaiting,
   hasCompletedOnboarding,
   hasPendingFirstRead,
   hasPendingArrival,
+  hasPendingIntroduction,
   hasPendingWaiting,
   markArrivalSeen,
   markFirstReadSeen,
   markOnboardingComplete,
+  markIntroductionPending,
   markWaitingPending,
   readPendingPlayRead,
   rememberPendingPlayRead,
@@ -68,5 +71,13 @@ describe("onboarding arrival handoff", () => {
     expect(hasPendingWaiting()).toBe(true);
     clearPendingWaiting();
     expect(hasPendingWaiting()).toBe(false);
+  });
+
+  it("opens the Introduction chapter only after a mutual match", () => {
+    expect(hasPendingIntroduction()).toBe(false);
+    markIntroductionPending();
+    expect(hasPendingIntroduction()).toBe(true);
+    clearPendingIntroduction();
+    expect(hasPendingIntroduction()).toBe(false);
   });
 });

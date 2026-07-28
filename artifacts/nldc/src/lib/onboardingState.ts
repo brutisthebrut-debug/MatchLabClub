@@ -13,6 +13,7 @@ const ARRIVAL_PENDING_KEY = "matchlab.arrival.pending";
 const FIRST_READ_PENDING_KEY = "matchlab.first-read.pending";
 const PLAY_READ_PENDING_KEY = "matchlab.play-read.pending";
 const WAITING_PENDING_KEY = "matchlab.waiting.pending";
+const INTRODUCTION_PENDING_KEY = "matchlab.introduction.pending";
 const GOAL_KEY = "matchlab.goal";
 const ORIENTATION_KEY = "matchlab.orientation";
 const SEEKING_KEY = "matchlab.seeking";
@@ -117,6 +118,18 @@ export function hasPendingWaiting(): boolean {
 
 export function clearPendingWaiting(): void {
   safeRemove(WAITING_PENDING_KEY);
+}
+
+export function markIntroductionPending(): void {
+  safeSet(INTRODUCTION_PENDING_KEY, "1");
+}
+
+export function hasPendingIntroduction(): boolean {
+  return safeGet(INTRODUCTION_PENDING_KEY) === "1";
+}
+
+export function clearPendingIntroduction(): void {
+  safeRemove(INTRODUCTION_PENDING_KEY);
 }
 
 export function rememberOnboardingGoal(goal: string): void {
