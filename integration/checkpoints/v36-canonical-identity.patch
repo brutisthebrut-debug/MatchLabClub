@@ -1,0 +1,76 @@
+diff --git a/app/account-binding.ts b/app/account-binding.ts
+index 97d8139..76cc859 100644
+--- a/app/account-binding.ts
++++ b/app/account-binding.ts
+@@ -1,12 +1,12 @@
++import { normalizeAuthenticatedEmail } from "./chatgpt-auth";
++
+ export function accountBindingMatches(
+   expectedAccountEmail: unknown,
+   authenticatedEmail: string,
+ ) {
+-  return (
+-    typeof expectedAccountEmail === "string" &&
+-    expectedAccountEmail.trim().toLowerCase() ===
+-      authenticatedEmail.trim().toLowerCase()
+-  );
++  const expected = normalizeAuthenticatedEmail(expectedAccountEmail);
++  const authenticated = normalizeAuthenticatedEmail(authenticatedEmail);
++  return Boolean(expected && authenticated && expected === authenticated);
+ }
+ 
+ export function accountBindingConflict() {
+diff --git a/app/chatgpt-auth.ts b/app/chatgpt-auth.ts
+index 8d1fb35..86642d5 100644
+--- a/app/chatgpt-auth.ts
++++ b/app/chatgpt-auth.ts
+@@ -18,15 +18,18 @@ const CALLBACK_PATH = "/callback";
+ 
+ export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
+   const requestHeaders = await headers();
+-  const email = requestHeaders.get(USER_EMAIL_HEADER);
++  const email = normalizeAuthenticatedEmail(
++    requestHeaders.get(USER_EMAIL_HEADER),
++  );
+   if (!email) return null;
+ 
+   const encodedFullName = requestHeaders.get(USER_FULL_NAME_HEADER);
+-  const fullName =
++  const decodedFullName =
+     encodedFullName &&
+     requestHeaders.get(USER_FULL_NAME_ENCODING_HEADER) === PERCENT_ENCODED_UTF8
+       ? safeDecodeURIComponent(encodedFullName)
+       : null;
++  const fullName = decodedFullName?.trim().slice(0, 200) || null;
+ 
+   return {
+     displayName: fullName ?? email,
+@@ -35,6 +38,13 @@ export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
+   };
+ }
+ 
++export function normalizeAuthenticatedEmail(value: unknown): string | null {
++  if (typeof value !== "string") return null;
++  const normalized = value.trim().toLowerCase();
++  if (!normalized || normalized.length > 320) return null;
++  return normalized;
++}
++
+ export async function requireChatGPTUser(
+   returnTo: string,
+ ): Promise<ChatGPTUser> {
+diff --git a/tests/rendered-html.test.mjs b/tests/rendered-html.test.mjs
+index 4375d20..df85d70 100644
+--- a/tests/rendered-html.test.mjs
++++ b/tests/rendered-html.test.mjs
+@@ -353,8 +353,8 @@ test("normalizes a forwarded authenticated identity", async () => {
+   const response = await worker.fetch(
+     new Request("http://localhost/api/session", {
+       headers: {
+-        "oai-authenticated-user-email": "founder@matchlab.test",
+-        "oai-authenticated-user-full-name": "Founder%20QA",
++        "oai-authenticated-user-email": "  Founder@MatchLab.Test  ",
++        "oai-authenticated-user-full-name": "%20Founder%20QA%20",
+         "oai-authenticated-user-full-name-encoding":
+           "percent-encoded-utf-8",
+       },
