@@ -1,0 +1,1126 @@
+diff --git a/app/api/account/route.ts b/app/api/account/route.ts
+index 8e774b0..8294dc8 100644
+--- a/app/api/account/route.ts
++++ b/app/api/account/route.ts
+@@ -1,6 +1,10 @@
+ import { eq } from "drizzle-orm";
+ import { getDb } from "../../../db";
+-import { journeyStates, matchingCandidacies } from "../../../db/schema";
++import {
++  journeyStates,
++  matchingCandidacies,
++  mutationReceipts,
++} from "../../../db/schema";
+ import { getChatGPTUser } from "../../chatgpt-auth";
+ import {
+   accountBindingConflict,
+@@ -10,6 +14,54 @@ import { readBoundedJsonObject } from "../../request-policy";
+ 
+ export const dynamic = "force-dynamic";
+ 
++export async function GET() {
++  const user = await getChatGPTUser();
++  if (!user) {
++    return Response.json(
++      { error: "Sign in to export your MatchLab data." },
++      { status: 401 },
++    );
++  }
++
++  const db = getDb();
++  const [journeyRows, candidacyRows, receiptRows] = await db.batch([
++    db
++      .select()
++      .from(journeyStates)
++      .where(eq(journeyStates.userEmail, user.email))
++      .limit(1),
++    db
++      .select()
++      .from(matchingCandidacies)
++      .where(eq(matchingCandidacies.userEmail, user.email))
++      .limit(1),
++    db
++      .select()
++      .from(mutationReceipts)
++      .where(eq(mutationReceipts.userEmail, user.email)),
++  ]);
++
++  return Response.json(
++    {
++      exportedAt: new Date().toISOString(),
++      product: "MatchLab",
++      account: user,
++      journey: journeyRows[0] ?? null,
++      candidacy: candidacyRows[0] ?? null,
++      mutationReceipts: receiptRows.map((receipt) => ({
++        operationId: receipt.operationId,
++        operationKind: receipt.operationKind,
++        acceptedResponse: JSON.parse(receipt.responseJson) as unknown,
++        statusCode: receipt.statusCode,
++        createdAt: receipt.createdAt,
++      })),
++      betaBoundary:
++        "This export includes the account, Journey, candidacy, and duplicate-write safety records implemented in the current Echo Experience beta.",
++    },
++    { headers: { "Cache-Control": "no-store" } },
++  );
++}
++
+ export async function DELETE(request: Request) {
+   const user = await getChatGPTUser();
+   if (!user) {
+@@ -59,6 +111,9 @@ export async function DELETE(request: Request) {
+   }
+ 
+   await db.batch([
++    db
++      .delete(mutationReceipts)
++      .where(eq(mutationReceipts.userEmail, user.email)),
+     db
+       .delete(matchingCandidacies)
+       .where(eq(matchingCandidacies.userEmail, user.email)),
+@@ -66,7 +121,7 @@ export async function DELETE(request: Request) {
+   ]);
+ 
+   return Response.json({
+-    deleted: ["matchingCandidacy", "journeyState"],
++    deleted: ["mutationReceipts", "matchingCandidacy", "journeyState"],
+     deletedAt: new Date().toISOString(),
+     identity: "ChatGPT sign-in remains separate and was not deleted.",
+   });
+diff --git a/app/api/candidacy/route.ts b/app/api/candidacy/route.ts
+index 0f885fe..94a992d 100644
+--- a/app/api/candidacy/route.ts
++++ b/app/api/candidacy/route.ts
+@@ -3,6 +3,7 @@ import { getDb } from "../../../db";
+ import {
+   journeyStates,
+   matchingCandidacies,
++  mutationReceipts,
+ } from "../../../db/schema";
+ import { getChatGPTUser } from "../../chatgpt-auth";
+ import { validateCandidacy, type CandidacyInput } from "../../candidacy-policy";
+@@ -12,6 +13,11 @@ import {
+   accountBindingMatches,
+ } from "../../account-binding";
+ import { readBoundedJsonObject } from "../../request-policy";
++import {
++  mutationReceiptKey,
++  normalizeOperationId,
++  replayMutationReceipt,
++} from "../../mutation-receipt";
+ 
+ export const dynamic = "force-dynamic";
+ 
+@@ -82,16 +88,33 @@ export async function PUT(request: Request) {
+   const payload = parsed.value as CandidacyInput & {
+     revision?: number | null;
+     accountEmail?: string;
++    operationId?: string;
+   };
+   if (!accountBindingMatches(payload.accountEmail, auth.user.email)) {
+     return accountBindingConflict();
+   }
++  const operationId = normalizeOperationId(payload.operationId);
++  if (!operationId) {
++    return Response.json(
++      { error: "A valid operation identifier is required to save safely." },
++      { status: 400 },
++    );
++  }
++  const db = getDb();
++  const receiptKey = mutationReceiptKey(auth.user.email, operationId);
++  const [existingReceipt] = await db
++    .select()
++    .from(mutationReceipts)
++    .where(eq(mutationReceipts.receiptKey, receiptKey))
++    .limit(1);
++  if (existingReceipt) {
++    return replayMutationReceipt(existingReceipt, "candidacy-upsert");
++  }
+   const validated = validateCandidacy(payload);
+   if (!validated.ok) {
+     return Response.json({ error: validated.error }, { status: 400 });
+   }
+ 
+-  const db = getDb();
+   const [journey] = await db
+     .select({
+       mirrorRejected: journeyStates.mirrorRejected,
+@@ -169,7 +192,21 @@ export async function PUT(request: Request) {
+       ),
+   ]);
+ 
+-  return Response.json({ candidacy, revision });
++  const responseBody = { candidacy, revision };
++  await db
++    .insert(mutationReceipts)
++    .values({
++      receiptKey,
++      userEmail: auth.user.email,
++      operationId,
++      operationKind: "candidacy-upsert",
++      responseJson: JSON.stringify(responseBody),
++      statusCode: 200,
++      createdAt: now,
++    })
++    .onConflictDoNothing();
++
++  return Response.json(responseBody);
+ }
+ 
+ export async function DELETE(request: Request) {
+@@ -182,10 +219,27 @@ export async function DELETE(request: Request) {
+   const payload = parsed.value as {
+     revision?: number | null;
+     accountEmail?: string;
++    operationId?: string;
+   };
+   if (!accountBindingMatches(payload?.accountEmail, auth.user.email)) {
+     return accountBindingConflict();
+   }
++  const operationId = normalizeOperationId(payload.operationId);
++  if (!operationId) {
++    return Response.json(
++      { error: "A valid operation identifier is required to save safely." },
++      { status: 400 },
++    );
++  }
++  const receiptKey = mutationReceiptKey(auth.user.email, operationId);
++  const [existingReceipt] = await db
++    .select()
++    .from(mutationReceipts)
++    .where(eq(mutationReceipts.receiptKey, receiptKey))
++    .limit(1);
++  if (existingReceipt) {
++    return replayMutationReceipt(existingReceipt, "candidacy-pause");
++  }
+   const [journey] = await db
+     .select({ revision: journeyStates.revision })
+     .from(journeyStates)
+@@ -234,5 +288,19 @@ export async function DELETE(request: Request) {
+       ),
+   ]);
+ 
+-  return Response.json({ status: "paused", revision });
++  const responseBody = { status: "paused", revision };
++  await db
++    .insert(mutationReceipts)
++    .values({
++      receiptKey,
++      userEmail: auth.user.email,
++      operationId,
++      operationKind: "candidacy-pause",
++      responseJson: JSON.stringify(responseBody),
++      statusCode: 200,
++      createdAt: now,
++    })
++    .onConflictDoNothing();
++
++  return Response.json(responseBody);
+ }
+diff --git a/app/api/journey/route.ts b/app/api/journey/route.ts
+index 3ceafe0..f1f9200 100644
+--- a/app/api/journey/route.ts
++++ b/app/api/journey/route.ts
+@@ -1,6 +1,10 @@
+ import { and, eq } from "drizzle-orm";
+ import { getDb } from "../../../db";
+-import { journeyStates, matchingCandidacies } from "../../../db/schema";
++import {
++  journeyStates,
++  matchingCandidacies,
++  mutationReceipts,
++} from "../../../db/schema";
+ import { getChatGPTUser } from "../../chatgpt-auth";
+ import { normalizeEchoThreads } from "../../echo-thread-policy";
+ import {
+@@ -13,6 +17,11 @@ import {
+   accountBindingMatches,
+ } from "../../account-binding";
+ import { readBoundedJsonObject } from "../../request-policy";
++import {
++  mutationReceiptKey,
++  normalizeOperationId,
++  replayMutationReceipt,
++} from "../../mutation-receipt";
+ 
+ export const dynamic = "force-dynamic";
+ 
+@@ -75,10 +84,28 @@ export async function PUT(request: Request) {
+     matchingPilotJoined?: boolean;
+     revision?: number | null;
+     accountEmail?: string;
++    operationId?: string;
+   };
+   if (!accountBindingMatches(payload.accountEmail, auth.user.email)) {
+     return accountBindingConflict();
+   }
++  const operationId = normalizeOperationId(payload.operationId);
++  if (!operationId) {
++    return Response.json(
++      { error: "A valid operation identifier is required to save safely." },
++      { status: 400 },
++    );
++  }
++  const db = getDb();
++  const receiptKey = mutationReceiptKey(auth.user.email, operationId);
++  const [existingReceipt] = await db
++    .select()
++    .from(mutationReceipts)
++    .where(eq(mutationReceipts.receiptKey, receiptKey))
++    .limit(1);
++  if (existingReceipt) {
++    return replayMutationReceipt(existingReceipt, "journey-save");
++  }
+ 
+   const requestedStage = Number.isFinite(payload.stage)
+     ? Math.max(0, Math.min(4, Math.trunc(payload.stage as number)))
+@@ -100,7 +127,6 @@ export async function PUT(request: Request) {
+     typeof payload.mirrorLearning === "string"
+       ? payload.mirrorLearning.trim().slice(0, 1000)
+       : "";
+-  const db = getDb();
+   const [[existingCandidacy], [existingJourney]] = await Promise.all([
+     db
+       .select({
+@@ -236,5 +262,19 @@ export async function PUT(request: Request) {
+     );
+   }
+ 
+-  return Response.json({ state: savedRows[0] });
++  const responseBody = { state: savedRows[0] };
++  await db
++    .insert(mutationReceipts)
++    .values({
++      receiptKey,
++      userEmail: auth.user.email,
++      operationId,
++      operationKind: "journey-save",
++      responseJson: JSON.stringify(responseBody),
++      statusCode: 200,
++      createdAt: now,
++    })
++    .onConflictDoNothing();
++
++  return Response.json(responseBody);
+ }
+diff --git a/app/api/matching-control/route.ts b/app/api/matching-control/route.ts
+index c1d39c8..b736f87 100644
+--- a/app/api/matching-control/route.ts
++++ b/app/api/matching-control/route.ts
+@@ -1,6 +1,10 @@
+ import { and, eq } from "drizzle-orm";
+ import { getDb } from "../../../db";
+-import { journeyStates, matchingCandidacies } from "../../../db/schema";
++import {
++  journeyStates,
++  matchingCandidacies,
++  mutationReceipts,
++} from "../../../db/schema";
+ import { getChatGPTUser } from "../../chatgpt-auth";
+ import {
+   applyMatchingControlTransition,
+@@ -11,6 +15,11 @@ import {
+   accountBindingMatches,
+ } from "../../account-binding";
+ import { readBoundedJsonObject } from "../../request-policy";
++import {
++  mutationReceiptKey,
++  normalizeOperationId,
++  replayMutationReceipt,
++} from "../../mutation-receipt";
+ 
+ export const dynamic = "force-dynamic";
+ 
+@@ -39,6 +48,7 @@ export async function PATCH(request: Request) {
+     learning?: string;
+     revision?: number | null;
+     accountEmail?: string;
++    operationId?: string;
+   };
+   if (!payload?.action || !actions.has(payload.action)) {
+     return Response.json(
+@@ -49,8 +59,24 @@ export async function PATCH(request: Request) {
+   if (!accountBindingMatches(payload.accountEmail, user.email)) {
+     return accountBindingConflict();
+   }
++  const operationId = normalizeOperationId(payload.operationId);
++  if (!operationId) {
++    return Response.json(
++      { error: "A valid operation identifier is required to save safely." },
++      { status: 400 },
++    );
++  }
+ 
+   const db = getDb();
++  const receiptKey = mutationReceiptKey(user.email, operationId);
++  const [existingReceipt] = await db
++    .select()
++    .from(mutationReceipts)
++    .where(eq(mutationReceipts.receiptKey, receiptKey))
++    .limit(1);
++  if (existingReceipt) {
++    return replayMutationReceipt(existingReceipt, "matching-control");
++  }
+   const [journey] = await db
+     .select()
+     .from(journeyStates)
+@@ -134,10 +160,24 @@ export async function PATCH(request: Request) {
+     );
+   }
+ 
+-  return Response.json({
++  const responseBody = {
+     state: next,
+     candidacyStatus: transition.pauseCandidacy ? "paused" : "unchanged",
+     revision,
+     updatedAt: now,
+-  });
++  };
++  await db
++    .insert(mutationReceipts)
++    .values({
++      receiptKey,
++      userEmail: user.email,
++      operationId,
++      operationKind: "matching-control",
++      responseJson: JSON.stringify(responseBody),
++      statusCode: 200,
++      createdAt: now,
++    })
++    .onConflictDoNothing();
++
++  return Response.json(responseBody);
+ }
+diff --git a/app/mutation-receipt.ts b/app/mutation-receipt.ts
+new file mode 100644
+index 0000000..03362d5
+--- /dev/null
++++ b/app/mutation-receipt.ts
+@@ -0,0 +1,39 @@
++export type StoredMutationReceipt = {
++  operationKind: string;
++  responseJson: string;
++  statusCode: number;
++};
++
++export function normalizeOperationId(value: unknown): string | null {
++  if (typeof value !== "string") return null;
++  const normalized = value.trim();
++  return /^[a-zA-Z0-9_-]{8,80}$/.test(normalized) ? normalized : null;
++}
++
++export function mutationReceiptKey(userEmail: string, operationId: string) {
++  return `${userEmail}\n${operationId}`;
++}
++
++export function replayMutationReceipt(
++  receipt: StoredMutationReceipt,
++  expectedKind: string,
++) {
++  if (receipt.operationKind !== expectedKind) {
++    return Response.json(
++      {
++        error:
++          "This operation identifier was already used for a different MatchLab action.",
++      },
++      { status: 409 },
++    );
++  }
++
++  return new Response(receipt.responseJson, {
++    status: receipt.statusCode,
++    headers: {
++      "Cache-Control": "no-store",
++      "Content-Type": "application/json",
++      "X-MatchLab-Replayed": "true",
++    },
++  });
++}
+diff --git a/app/page.tsx b/app/page.tsx
+index d2c9201..7a44035 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -97,6 +97,10 @@ function journeyFingerprint(input: JourneyFingerprintInput) {
+   return JSON.stringify(input);
+ }
+ 
++function newOperationId() {
++  return crypto.randomUUID();
++}
++
+ class RequestOutcomeUnknownError extends Error {
+   constructor() {
+     super(
+@@ -1381,6 +1385,8 @@ function TrustView({
+   const [panel, setPanel] = useState<"exported" | "delete" | null>(null);
+   const [deletePhrase, setDeletePhrase] = useState("");
+   const [deleteRevision, setDeleteRevision] = useState<number | null>(null);
++  const [exporting, setExporting] = useState(false);
++  const [exportError, setExportError] = useState("");
+   const [deleting, setDeleting] = useState(false);
+   const [deleteError, setDeleteError] = useState("");
+   const echoMessageCount = Object.values(echoThreads).reduce(
+@@ -1390,6 +1396,13 @@ function TrustView({
+   const candidacyActive =
+     matchingPilotJoined && candidacy?.status === "active";
+   const sources = [
++    {
++      name: "Opening words",
++      detail: firstIntent ? "1 saved response" : "No saved response",
++      echo: Boolean(firstIntent),
++      match: false,
++      manage: onOpenJourney,
++    },
+     {
+       name: "Echo conversations",
+       detail: `${echoMessageCount} saved ${echoMessageCount === 1 ? "message" : "messages"}`,
+@@ -1406,11 +1419,13 @@ function TrustView({
+     },
+     {
+       name: "Repair learning",
+-      detail: mirrorRejected
+-        ? "Rejected by you"
+-        : mirrorConfirmed
+-          ? "1 member-confirmed learning"
+-          : "1 proposed learning",
++      detail: !mirrorLearning.trim()
++        ? "No proposed learning"
++        : mirrorRejected
++          ? "Rejected by you"
++          : mirrorConfirmed
++            ? "1 member-confirmed learning"
++            : "1 proposed learning",
+       echo: !mirrorRejected,
+       match: mirrorConfirmed && mirrorMatchingUse,
+       manage: onOpenMirror,
+@@ -1424,39 +1439,56 @@ function TrustView({
+       match: candidacyActive,
+       manage: onOpenMatches,
+     },
++    {
++      name: "Save safety receipts",
++      detail: journeySavedAt
++        ? `Used only for duplicate-write safety · last save ${journeySavedAt.toLocaleDateString()}`
++        : "Used only to prevent duplicate protected writes",
++      echo: false,
++      match: false,
++      manage: () => void exportAccount(),
++    },
+   ];
+ 
+-  const exportAccount = () => {
+-    const payload = {
+-      exportedAt: new Date().toISOString(),
+-      product: "MatchLab",
+-      account: user,
+-      journey: {
+-        openingWords: firstIntent,
+-        repairAnswers,
+-        repairCompleted,
+-        echoThreads,
+-        mirrorLearning,
+-        mirrorRejected,
+-        mirrorConfirmed,
+-        mirrorMatchingUse,
+-        matchingPilotJoined,
+-        lastSavedAt: journeySavedAt?.toISOString() ?? null,
+-      },
+-      candidacy,
+-      betaBoundary:
+-        "This export includes the account data implemented in the current Echo Experience beta.",
+-    };
+-    const file = new Blob([JSON.stringify(payload, null, 2)], {
+-      type: "application/json",
+-    });
+-    const url = URL.createObjectURL(file);
+-    const anchor = document.createElement("a");
+-    anchor.href = url;
+-    anchor.download = `matchlab-account-${new Date().toISOString().slice(0, 10)}.json`;
+-    anchor.click();
+-    URL.revokeObjectURL(url);
+-    setPanel("exported");
++  const exportAccount = async () => {
++    if (exporting) return;
++    if (!isOnline) {
++      setExportError("Reconnect before downloading your account export.");
++      return;
++    }
++    setExporting(true);
++    setExportError("");
++    try {
++      const response = await fetchWithDeadline(
++        "/api/account",
++        { cache: "no-store" },
++        10_000,
++      );
++      if (response.status === 401) onSessionExpired();
++      if (!response.ok) {
++        const failure = (await response.json()) as { error?: string };
++        throw new Error(failure.error || "Your account export is unavailable.");
++      }
++      const payload = await response.json();
++      const file = new Blob([JSON.stringify(payload, null, 2)], {
++        type: "application/json",
++      });
++      const url = URL.createObjectURL(file);
++      const anchor = document.createElement("a");
++      anchor.href = url;
++      anchor.download = `matchlab-account-${new Date().toISOString().slice(0, 10)}.json`;
++      anchor.click();
++      URL.revokeObjectURL(url);
++      setPanel("exported");
++    } catch (error) {
++      setExportError(
++        error instanceof Error
++          ? error.message
++          : "Your account export is unavailable.",
++      );
++    } finally {
++      setExporting(false);
++    }
+   };
+ 
+   const deleteAccountData = async () => {
+@@ -1510,9 +1542,9 @@ function TrustView({
+     <div className="permission-architecture"><div><span>Three separate decisions</span><h2>Saved does not mean shared.</h2><p>Something may exist in your MatchLab without becoming Echo memory. Echo may use it without matching ever seeing it.</p></div><div className="permission-flow"><div><b>01</b><span>Save the record</span></div><i>→</i><div><b>02</b><span>Let Echo use it</span></div><i>→</i><div><b>03</b><span>Let matching use it</span></div></div></div>
+     <div className="content-section"><div className="section-title"><div><span>Source-level truth</span><h2>Your data, line by line</h2></div><p>Permissions are changed at the source so a decorative switch can never misrepresent what the server will use.</p></div><div className="source-table"><div className="source-head"><span>Source</span><span>Echo can use</span><span>Matching can use</span><span>Manage</span></div>{sources.map((source)=><div className="source-row" key={source.name}><div><b>{source.name}</b><span>{source.detail}</span></div><div className={`permission-state ${source.echo ? "on" : "off"}`}><i/><span>{source.echo?"On":"Off"}</span></div><div className={`permission-state ${source.match ? "on" : "off"}`}><i/><span>{source.match?"On":"Off"}</span></div><button onClick={source.manage}>Review →</button></div>)}</div></div>
+     <div className="trust-grid"><article><span>Saved conversation</span><h3>{echoMessageCount} member/Echo messages</h3><p>Conversation history remains a record. It is not silently promoted into confirmed learning.</p><button onClick={onOpenEcho}>Open conversations →</button></article><article><span>Matching profile</span><h3>{mirrorConfirmed && mirrorMatchingUse ? "1 approved learning" : "No approved learning"}</h3><p>{candidacyActive ? "Your candidacy is active in the controlled pilot." : "No member data enters the matching pool while candidacy or permission is off."}</p><button onClick={onOpenMatches}>Review matching use →</button></article><article><span>Recently deleted</span><h3>No deletion records</h3><p>This beta does not yet implement a recovery bin, so MatchLab will not invent one.</p><button disabled>Nothing to review</button></article></div>
+-    <div className="account-actions"><div><span>Portability</span><h3>Take your implemented MatchLab data with you.</h3><p>Download the conversations, Repair result, Mirror state, permissions, Journey save time, and candidacy that exist in this beta.</p><button onClick={exportAccount}>Download account export</button></div><div className="danger-zone"><span>Permanent deletion</span><h3>Delete your MatchLab data.</h3><p>This removes the Journey and matching records tied to your signed-in identity. It does not delete your ChatGPT account.</p><button onClick={()=>{setDeletePhrase("");setDeleteError("");setDeleteRevision(getJourneyRevision());setPanel("delete");}}>Delete my MatchLab data</button></div></div>
++    <div className="account-actions"><div><span>Portability</span><h3>Take your implemented MatchLab data with you.</h3><p>Download the server-confirmed Journey, candidacy, consent state, and duplicate-write safety receipts that exist in this beta.</p><button disabled={exporting} onClick={exportAccount}>{exporting ? "Preparing export…" : "Download account export"}</button>{exportError && <p className="form-error" role="alert">{exportError}</p>}</div><div className="danger-zone"><span>Permanent deletion</span><h3>Delete your MatchLab data.</h3><p>This removes the Journey, matching records, and safety receipts tied to your signed-in identity. It does not delete your ChatGPT account.</p><button onClick={()=>{setDeletePhrase("");setDeleteError("");setDeleteRevision(getJourneyRevision());setPanel("delete");}}>Delete my MatchLab data</button></div></div>
+     {panel === "exported" && <div className="trust-notice" role="status"><span>Your current beta account export was downloaded.</span><button aria-label="Dismiss export notice" onClick={()=>setPanel(null)}>×</button></div>}
+-    {panel === "delete" && <div className="studio-backdrop" role="dialog" aria-modal="true" aria-label="Delete MatchLab account data"><div className="tool-modal deletion-preview"><header><span>Permanent action</span><button aria-label="Close account deletion" disabled={deleting} onClick={()=>setPanel(null)}>×</button></header><h2>Delete your MatchLab data?</h2><p>This permanently removes the implemented MatchLab records below. Your ChatGPT identity remains separate.</p><div className="rejection-impact"><div><span>Journey</span><b>Opening words, chapter state, Play choices, and Echo threads</b></div><div><span>Mirror</span><b>Learning, rejection, confirmation, and matching permission</b></div><div><span>Matching</span><b>Candidacy, pilot status, and approved learning copy</b></div><div><span>Afterward</span><b>You will be signed out and can begin again with an empty MatchLab</b></div></div><label className="delete-confirmation"><span>Type DELETE to confirm</span><input autoComplete="off" value={deletePhrase} onChange={(event)=>setDeletePhrase(event.target.value)} placeholder="DELETE"/></label>{!isOnline && <p className="form-error" role="alert">Offline · deletion is unavailable until MatchLab reconnects.</p>}{deleteError && <p className="form-error" role="alert">{deleteError}</p>}<div className="evidence-actions"><button disabled={deleting} onClick={()=>setPanel(null)}>Keep my data</button><button className="reject-confirm" disabled={deletePhrase !== "DELETE" || deleting || !isOnline} onClick={deleteAccountData}>{deleting ? "Deleting…" : "Delete permanently"}</button></div><small>This cannot be undone. The deletion is bound to the saved account you reviewed; if anything changes, MatchLab will stop and ask you to review again.</small></div></div>}
++    {panel === "delete" && <div className="studio-backdrop" role="dialog" aria-modal="true" aria-label="Delete MatchLab account data"><div className="tool-modal deletion-preview"><header><span>Permanent action</span><button aria-label="Close account deletion" disabled={deleting} onClick={()=>setPanel(null)}>×</button></header><h2>Delete your MatchLab data?</h2><p>This permanently removes the implemented MatchLab records below. Your ChatGPT identity remains separate.</p><div className="rejection-impact"><div><span>Journey</span><b>Opening words, chapter state, Play choices, and Echo threads</b></div><div><span>Mirror</span><b>Learning, rejection, confirmation, and matching permission</b></div><div><span>Matching</span><b>Candidacy, pilot status, and approved learning copy</b></div><div><span>Safety</span><b>Receipts used only to prevent duplicate protected writes</b></div><div><span>Afterward</span><b>You will be signed out and can begin again with an empty MatchLab</b></div></div><label className="delete-confirmation"><span>Type DELETE to confirm</span><input autoComplete="off" value={deletePhrase} onChange={(event)=>setDeletePhrase(event.target.value)} placeholder="DELETE"/></label>{!isOnline && <p className="form-error" role="alert">Offline · deletion is unavailable until MatchLab reconnects.</p>}{deleteError && <p className="form-error" role="alert">{deleteError}</p>}<div className="evidence-actions"><button disabled={deleting} onClick={()=>setPanel(null)}>Keep my data</button><button className="reject-confirm" disabled={deletePhrase !== "DELETE" || deleting || !isOnline} onClick={deleteAccountData}>{deleting ? "Deleting…" : "Delete permanently"}</button></div><small>This cannot be undone. The deletion is bound to the saved account you reviewed; if anything changes, MatchLab will stop and ask you to review again.</small></div></div>}
+   </section>;
+ }
+ 
+@@ -2183,6 +2215,7 @@ export default function Home() {
+             method: "PUT",
+             headers: { "Content-Type": "application/json" },
+             body: JSON.stringify({
++              operationId: newOperationId(),
+               entered,
+               firstIntent,
+               stage,
+@@ -2407,6 +2440,7 @@ export default function Home() {
+         method: "PUT",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
++          operationId: newOperationId(),
+           ...draft,
+           age: Number(draft.age),
+           ageMin: Number(draft.ageMin),
+@@ -2449,6 +2483,7 @@ export default function Home() {
+         method: "DELETE",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
++          operationId: newOperationId(),
+           revision: journeyRevisionRef.current,
+           accountEmail: session?.user?.email,
+         }),
+@@ -2497,6 +2532,7 @@ export default function Home() {
+         method: "PATCH",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
++          operationId: newOperationId(),
+           action,
+           learning,
+           revision: journeyRevisionRef.current,
+diff --git a/db/schema.ts b/db/schema.ts
+index 784f4bd..ca1141a 100644
+--- a/db/schema.ts
++++ b/db/schema.ts
+@@ -53,3 +53,13 @@ export const matchingCandidacies = sqliteTable("matching_candidacies", {
+   pausedAt: text("paused_at"),
+   updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+ });
++
++export const mutationReceipts = sqliteTable("mutation_receipts", {
++  receiptKey: text("receipt_key").primaryKey(),
++  userEmail: text("user_email").notNull(),
++  operationId: text("operation_id").notNull(),
++  operationKind: text("operation_kind").notNull(),
++  responseJson: text("response_json").notNull(),
++  statusCode: integer("status_code").notNull().default(200),
++  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
++});
+diff --git a/drizzle/0007_glamorous_young_avengers.sql b/drizzle/0007_glamorous_young_avengers.sql
+new file mode 100644
+index 0000000..3619be4
+--- /dev/null
++++ b/drizzle/0007_glamorous_young_avengers.sql
+@@ -0,0 +1,9 @@
++CREATE TABLE `mutation_receipts` (
++	`receipt_key` text PRIMARY KEY NOT NULL,
++	`user_email` text NOT NULL,
++	`operation_id` text NOT NULL,
++	`operation_kind` text NOT NULL,
++	`response_json` text NOT NULL,
++	`status_code` integer DEFAULT 200 NOT NULL,
++	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
++);
+diff --git a/drizzle/meta/0007_snapshot.json b/drizzle/meta/0007_snapshot.json
+new file mode 100644
+index 0000000..f086ec7
+--- /dev/null
++++ b/drizzle/meta/0007_snapshot.json
+@@ -0,0 +1,349 @@
++{
++  "version": "6",
++  "dialect": "sqlite",
++  "id": "eae5a37e-9772-47f9-aa2e-037661c633c3",
++  "prevId": "01a4a580-eace-46d4-9ce1-be807b7b5c61",
++  "tables": {
++    "journey_states": {
++      "name": "journey_states",
++      "columns": {
++        "user_email": {
++          "name": "user_email",
++          "type": "text",
++          "primaryKey": true,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "display_name": {
++          "name": "display_name",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "entered": {
++          "name": "entered",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": false
++        },
++        "first_intent": {
++          "name": "first_intent",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "''"
++        },
++        "stage": {
++          "name": "stage",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": 0
++        },
++        "view": {
++          "name": "view",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "'today'"
++        },
++        "match_phase": {
++          "name": "match_phase",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "'waiting'"
++        },
++        "repair_answers": {
++          "name": "repair_answers",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "'[]'"
++        },
++        "echo_threads": {
++          "name": "echo_threads",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "'{}'"
++        },
++        "repair_completed": {
++          "name": "repair_completed",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": false
++        },
++        "mirror_learning": {
++          "name": "mirror_learning",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "'After conflict, I need a clear signal that we are still on the same team before either of us takes space.'"
++        },
++        "mirror_rejected": {
++          "name": "mirror_rejected",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": false
++        },
++        "mirror_confirmed": {
++          "name": "mirror_confirmed",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": false
++        },
++        "mirror_matching_use": {
++          "name": "mirror_matching_use",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": false
++        },
++        "matching_pilot_joined": {
++          "name": "matching_pilot_joined",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": false
++        },
++        "revision": {
++          "name": "revision",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": 0
++        },
++        "updated_at": {
++          "name": "updated_at",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "CURRENT_TIMESTAMP"
++        }
++      },
++      "indexes": {},
++      "foreignKeys": {},
++      "compositePrimaryKeys": {},
++      "uniqueConstraints": {},
++      "checkConstraints": {}
++    },
++    "matching_candidacies": {
++      "name": "matching_candidacies",
++      "columns": {
++        "user_email": {
++          "name": "user_email",
++          "type": "text",
++          "primaryKey": true,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "display_name": {
++          "name": "display_name",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "status": {
++          "name": "status",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "'paused'"
++        },
++        "city": {
++          "name": "city",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "age": {
++          "name": "age",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "age_min": {
++          "name": "age_min",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "age_max": {
++          "name": "age_max",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "gender_identity": {
++          "name": "gender_identity",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "interested_in": {
++          "name": "interested_in",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "relationship_goal": {
++          "name": "relationship_goal",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "max_distance_miles": {
++          "name": "max_distance_miles",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "approved_learning": {
++          "name": "approved_learning",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "consent_revision": {
++          "name": "consent_revision",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": 0
++        },
++        "joined_at": {
++          "name": "joined_at",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "CURRENT_TIMESTAMP"
++        },
++        "paused_at": {
++          "name": "paused_at",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": false,
++          "autoincrement": false
++        },
++        "updated_at": {
++          "name": "updated_at",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "CURRENT_TIMESTAMP"
++        }
++      },
++      "indexes": {},
++      "foreignKeys": {},
++      "compositePrimaryKeys": {},
++      "uniqueConstraints": {},
++      "checkConstraints": {}
++    },
++    "mutation_receipts": {
++      "name": "mutation_receipts",
++      "columns": {
++        "receipt_key": {
++          "name": "receipt_key",
++          "type": "text",
++          "primaryKey": true,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "user_email": {
++          "name": "user_email",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "operation_id": {
++          "name": "operation_id",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "operation_kind": {
++          "name": "operation_kind",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "response_json": {
++          "name": "response_json",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "status_code": {
++          "name": "status_code",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": 200
++        },
++        "created_at": {
++          "name": "created_at",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "CURRENT_TIMESTAMP"
++        }
++      },
++      "indexes": {},
++      "foreignKeys": {},
++      "compositePrimaryKeys": {},
++      "uniqueConstraints": {},
++      "checkConstraints": {}
++    }
++  },
++  "views": {},
++  "enums": {},
++  "_meta": {
++    "schemas": {},
++    "tables": {},
++    "columns": {}
++  },
++  "internal": {
++    "indexes": {}
++  }
++}
+\ No newline at end of file
+diff --git a/drizzle/meta/_journal.json b/drizzle/meta/_journal.json
+index 7e3d287..dec3cc3 100644
+--- a/drizzle/meta/_journal.json
++++ b/drizzle/meta/_journal.json
+@@ -50,6 +50,13 @@
+       "when": 1785448742931,
+       "tag": "0006_thankful_the_fallen",
+       "breakpoints": true
++    },
++    {
++      "idx": 7,
++      "version": "6",
++      "when": 1785478118996,
++      "tag": "0007_glamorous_young_avengers",
++      "breakpoints": true
+     }
+   ]
+ }
+\ No newline at end of file
+diff --git a/tests/rendered-html.test.mjs b/tests/rendered-html.test.mjs
+index 76d3fa1..0812318 100644
+--- a/tests/rendered-html.test.mjs
++++ b/tests/rendered-html.test.mjs
+@@ -229,7 +229,7 @@ test("freezes protected writes offline and rechecks the server before retrying",
+   assert.match(source, /window\.addEventListener\("online", onOnline\)/);
+   assert.match(source, /Offline · Not saved/);
+   assert.match(source, /const reconnectSafely = async/);
+-  assert.match(source, /fetch\("\/api\/member-state"/);
++  assert.match(source, /fetchWithDeadline\("\/api\/member-state"/);
+   assert.match(source, /payload\.snapshotRevision !== journeyRevisionRef\.current/);
+   assert.match(source, /Reconnect before changing consent/);
+   assert.match(source, /deletion is unavailable until MatchLab reconnects/);
+@@ -328,6 +328,31 @@ test("stops protected writes when a request outcome cannot be confirmed", async
+   assert.match(source, /Check the latest saved version before trying again/);
+ });
+ 
++test("records successful mutations so duplicate delivery can replay safely", async () => {
++  const [pageSource, schema, journeySource, controlSource, candidacySource, accountSource] =
++    await Promise.all([
++      readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
++      readFile(new URL("../db/schema.ts", import.meta.url), "utf8"),
++      readFile(new URL("../app/api/journey/route.ts", import.meta.url), "utf8"),
++      readFile(
++        new URL("../app/api/matching-control/route.ts", import.meta.url),
++        "utf8",
++      ),
++      readFile(new URL("../app/api/candidacy/route.ts", import.meta.url), "utf8"),
++      readFile(new URL("../app/api/account/route.ts", import.meta.url), "utf8"),
++    ]);
++
++  assert.match(pageSource, /function newOperationId\(\)/);
++  assert.match(pageSource, /operationId: newOperationId\(\)/);
++  assert.match(schema, /sqliteTable\("mutation_receipts"/);
++  assert.match(journeySource, /replayMutationReceipt\(existingReceipt, "journey-save"\)/);
++  assert.match(controlSource, /replayMutationReceipt\(existingReceipt, "matching-control"\)/);
++  assert.match(candidacySource, /"candidacy-upsert"/);
++  assert.match(candidacySource, /"candidacy-pause"/);
++  assert.match(accountSource, /delete\(mutationReceipts\)/);
++  assert.match(accountSource, /"mutationReceipts"/);
++});
++
+ test("renders development preview metadata", async () => {
+   const worker = await loadWorker();
+   const response = await worker.fetch(
+@@ -771,7 +796,7 @@ test("protects returning-member continuity across load, save, theme, and navigat
+     "utf8",
+   );
+ 
+-  assert.match(source, /fetch\("\/api\/member-state"/);
++  assert.match(source, /fetchWithDeadline\("\/api\/member-state"/);
+   assert.match(source, /snapshotRevision/);
+   assert.match(source, /Nothing was overwritten/);
+   assert.match(source, /setHydrateRevision\(\(revision\) => revision \+ 1\)/);
+@@ -791,7 +816,7 @@ test("hydrates Journey and candidacy from one authoritative account snapshot", a
+     ),
+   ]);
+ 
+-  assert.match(pageSource, /fetch\("\/api\/member-state"/);
++  assert.match(pageSource, /fetchWithDeadline\("\/api\/member-state"/);
+   assert.doesNotMatch(pageSource, /Promise\.all\(\[\s*fetch\("\/api\/journey"/);
+   assert.match(routeSource, /await db\.batch\(\[/);
+   assert.match(routeSource, /snapshotRevision: state\?\.revision/);
+@@ -904,17 +929,20 @@ test("makes Journey records inspectable, actionable, and member-exportable", asy
+ });
+ 
+ test("makes Trust and Data reflect implemented account truth", async () => {
+-  const source = await readFile(
+-    new URL("../app/page.tsx", import.meta.url),
+-    "utf8",
+-  );
++  const [source, accountSource] = await Promise.all([
++    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
++    readFile(new URL("../app/api/account/route.ts", import.meta.url), "utf8"),
++  ]);
+ 
+   assert.match(source, /Object\.values\(echoThreads\)\.reduce/);
+   assert.match(source, /No candidacy created/);
+   assert.match(source, /No deletion records/);
+   assert.match(source, /does not yet implement a recovery bin/);
+   assert.match(source, /matchlab-account-/);
+-  assert.match(source, /This export includes the account data implemented/);
++  assert.match(source, /fetchWithDeadline\(\s*"\/api\/account"/);
++  assert.match(accountSource, /export async function GET\(\)/);
++  assert.match(accountSource, /mutationReceipts: receiptRows\.map/);
++  assert.match(source, /duplicate-write safety receipts/);
+   assert.match(source, /Delete your MatchLab data/);
+   assert.match(source, /does not delete your ChatGPT account/);
+   assert.doesNotMatch(source, /18 moments · 6 proposed observations/);
