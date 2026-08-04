@@ -11,8 +11,12 @@ import { useMeta } from "@/hooks/useMeta";
 import { useAuth } from "@workspace/replit-auth-web";
 import {
   getGetCompanionQueryKey,
+  getGetConnectionsQueryKey,
+  getGetMatchingProposalsQueryKey,
   getGetMatchingStateQueryKey,
   useGetCompanion,
+  useGetConnections,
+  useGetMatchingProposals,
   useGetMatchingState,
 } from "@workspace/api-client-react";
 
@@ -57,6 +61,20 @@ export default function Today() {
       retry: false,
     },
   });
+  const proposals = useGetMatchingProposals({
+    query: {
+      queryKey: getGetMatchingProposalsQueryKey(),
+      enabled: isAuthenticated,
+      retry: false,
+    },
+  });
+  const connections = useGetConnections({
+    query: {
+      queryKey: getGetConnectionsQueryKey(),
+      enabled: isAuthenticated,
+      retry: false,
+    },
+  });
 
   const state = matching.data;
   const echo = companion.data;
@@ -69,7 +87,27 @@ export default function Today() {
       ? "Paused"
       : "Not started";
   const nearbyMembers = Math.max(0, state?.cityDensity ?? 0);
-  const nextAction = state?.nextActions?.[0] ?? null;
+  const openProposal = (proposals.data ?? []).find(
+    (proposal) => proposal.status === "proposed",
+  );
+  const unreadConnection = (connections.data ?? []).find(
+    (connection) => connection.unreadCount > 0,
+  );
+  const backendAction = state?.nextActions?.[0] ?? null;
+  const nextAction = openProposal
+    ? {
+        label: "Consider your proposal",
+        detail:
+          "Echo has a real proposal ready. Nothing reveals unless both people choose yes.",
+        href: "/matches",
+      }
+    : unreadConnection
+      ? {
+          label: "Return to your conversation",
+          detail: `${unreadConnection.unreadCount} unread ${unreadConnection.unreadCount === 1 ? "message" : "messages"} in a mutual introduction.`,
+          href: `/matches/${unreadConnection.id}`,
+        }
+      : backendAction;
   const nextHref =
     nextAction?.href ?? (state?.eligible ? "/matching" : "/echo");
   const nextLabel =
@@ -79,6 +117,16 @@ export default function Today() {
         ? "Review your search"
         : "Choose search settings"
       : "Tell Echo what is happening");
+  const loading =
+    companion.isLoading ||
+    matching.isLoading ||
+    proposals.isLoading ||
+    connections.isLoading;
+  const failed =
+    companion.isError ||
+    matching.isError ||
+    proposals.isError ||
+    connections.isError;
 
   return (
     <AppLayout>
@@ -126,14 +174,14 @@ export default function Today() {
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </button>
             </section>
-          ) : companion.isLoading || matching.isLoading ? (
+          ) : loading ? (
             <section className="glass-strong animate-pulse rounded-[2rem] p-8">
               <div className="h-4 w-32 rounded bg-foreground/10" />
               <div className="mt-5 h-8 w-3/4 rounded bg-foreground/10" />
               <div className="mt-3 h-4 w-full rounded bg-foreground/10" />
               <div className="mt-2 h-4 w-5/6 rounded bg-foreground/10" />
             </section>
-          ) : companion.isError || matching.isError || !echo || !state ? (
+          ) : failed || !echo || !state ? (
             <section className="glass-strong rounded-[2rem] p-8 text-center">
               <p className="font-semibold text-foreground">
                 Echo could not load today's read.
