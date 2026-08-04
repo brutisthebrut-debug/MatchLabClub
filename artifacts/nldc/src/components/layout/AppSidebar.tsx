@@ -71,79 +71,84 @@ type NavSection = {
   more: NavLink[];
 };
 
-// The rail is now a short spine of FRONT DOORS, not a flat dump of every tool.
-// Each hub (Your Mirror, Signal Audit, Message Studio, Progress, Journal,
-// Games, Connection Center) is ONE Overview link; its sibling tools live behind
-// the in-page HubTabs strip (lib/hubs.ts), so the cluster reads as one thing.
-// The collapsible sections below carry the routes that are not a single hub
-// (Get Matched, the standalone Reset extras under "More tools", Founder & Beta,
-// Account). Everything that used to be a primary link is still reachable: as a
-// hub tab from its front door, or under a section's "Show all". No page is
-// orphaned, the rail is just no longer the whole index at once.
+// The approved v1 shell has exactly five primary destinations. Existing tools
+// stay reachable through the secondary disclosures and in-page hub tabs, but
+// they do not compete with the member's main journey in the rail.
 const OVERVIEW: NavLink[] = [
-  { name: "Your Mirror", href: "/your-mirror", icon: Eye },
-  { name: "Echo", href: "/echo", icon: Sparkles },
-  { name: "Signal Audit", href: "/start", icon: ClipboardList },
-  { name: "Message Studio", href: "/coach", icon: MessageCircle },
-  { name: "Progress", href: "/progress/readiness", icon: Gauge },
-  { name: "Journal", href: "/mirror/journal", icon: BookOpen },
-  { name: "Games", href: "/quiz", icon: Shuffle },
-  { name: "Connection Center", href: "/connections", icon: Plug },
-  { name: "Audit history", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Today", href: "/today", icon: Sparkles },
+  { name: "Matches", href: "/matches", icon: HeartHandshake },
+  { name: "My MatchLab", href: "/me", icon: Eye },
+  { name: "Journey", href: "/progress/timeline", icon: BookOpen },
+  { name: "Play", href: "/quiz", icon: Shuffle },
 ];
 
 const SECTIONS: NavSection[] = [
   {
-    id: "matching",
-    label: "Get Matched",
+    id: "more-matchlab",
+    label: "More MatchLab",
     primary: [
-      { name: "Matching", href: "/matching", icon: HeartHandshake, badge: "Beta" },
-      { name: "Conversations", href: "/matches", icon: MessageCircle },
-      { name: "Date Safety", href: "/date-safety", icon: ShieldAlert },
+      { name: "Echo", href: "/echo", icon: Sparkles },
+      {
+        name: "Matching settings",
+        href: "/matching",
+        icon: HeartHandshake,
+        badge: "Pilot",
+      },
+      { name: "Connection Center", href: "/connections", icon: Plug },
     ],
     more: [
+      { name: "Signal Audit", href: "/start", icon: ClipboardList },
+      { name: "Audit history", href: "/dashboard", icon: LayoutDashboard },
+      { name: "Message Studio", href: "/coach", icon: MessageCircle },
+      { name: "Readiness", href: "/progress/readiness", icon: Gauge },
+      { name: "Journal", href: "/mirror/journal", icon: BookOpen },
+      { name: "Date Safety", href: "/date-safety", icon: ShieldAlert },
       { name: "What it takes", href: "/match-path", icon: Target },
       { name: "Match photos", href: "/photos", icon: ImageUp },
       { name: "Future Connections", href: "/future-connections", icon: Users },
       { name: "Get Verified", href: "/verification", icon: ShieldCheck },
-    ],
-  },
-  {
-    id: "tools",
-    label: "More tools",
-    primary: [
       { name: "Blueprint", href: "/blueprint", icon: FileText },
       { name: "Glow-Up Bio", href: "/glow-up", icon: Sparkles },
-      { name: "Compatibility Compass", href: "/compatibility-compass", icon: Compass },
+      {
+        name: "Compatibility Compass",
+        href: "/compatibility-compass",
+        icon: Compass,
+      },
       { name: "Before & After", href: "/gallery", icon: Images },
-    ],
-    more: [
       { name: "Photo Lab", href: "/photo-lab", icon: Images },
       { name: "Start My Reset", href: "/copilot/reset", icon: RotateCcw },
       { name: "Flirt Coach", href: "/copilot/flirt", icon: Flame },
       { name: "Help Me Reply", href: "/copilot/reply", icon: Reply },
       { name: "Improve My Profile", href: "/copilot/profile", icon: UserPen },
-      { name: "Prepare For A Date", href: "/copilot/prep", icon: HeartHandshake },
+      {
+        name: "Prepare For A Date",
+        href: "/copilot/prep",
+        icon: HeartHandshake,
+      },
       { name: "Experiments", href: "/progress/experiments", icon: Beaker },
       { name: "Follow-Up", href: "/progress/followup", icon: ListChecks },
       { name: "Companion", href: "/progress/companion", icon: MessagesSquare },
-      { name: "Pattern Breaker", href: "/progress/pattern-breaker", icon: Unplug },
+      {
+        name: "Pattern Breaker",
+        href: "/progress/pattern-breaker",
+        icon: Unplug,
+      },
       { name: "Green and red flags", href: "/flags", icon: Flag },
       { name: "Share Card", href: "/share-card", icon: Share2 },
     ],
   },
   {
     id: "founder",
-    label: "Founder & Beta",
+    label: "About & Beta",
     primary: [
+      { name: "Feedback", href: "/feedback", icon: Send },
+      { name: "Roadmap", href: "/roadmap", icon: MapIcon },
+    ],
+    more: [
       { name: "Pricing", href: "/pricing", icon: Tag },
       { name: "Sample Read", href: "/sample-report", icon: FileText },
       { name: "Blog", href: "/blog", icon: Newspaper },
       { name: "Early Access", href: "/waitlist", icon: Ticket },
-      { name: "Feedback", href: "/feedback", icon: Send },
-    ],
-    more: [
-      { name: "Roadmap", href: "/roadmap", icon: MapIcon },
       { name: "Demo Journey", href: "/copilot/demo", icon: Clapperboard },
     ],
   },
@@ -174,7 +179,10 @@ function isActiveHref(location: string, href: string) {
 function bestMatchHref(location: string): string | null {
   let best: string | null = null;
   const consider = (href: string) => {
-    if (isActiveHref(location, href) && (best === null || href.length > best.length)) {
+    if (
+      isActiveHref(location, href) &&
+      (best === null || href.length > best.length)
+    ) {
       best = href;
     }
   };
@@ -343,12 +351,18 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
     <div className="flex h-full flex-col">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-5">
-        <Link href="/your-mirror" onClick={onNavigate} className="flex items-center gap-2.5 group">
+        <Link
+          href="/today"
+          onClick={onNavigate}
+          className="flex items-center gap-2.5 group"
+        >
           <img
             src="/matchlab-logo.png"
             alt="MatchLab Club"
             className="h-12 w-auto transition-transform group-hover:scale-[1.04]"
-            style={{ filter: "drop-shadow(0 2px 10px hsl(326 100% 60% / 0.4))" }}
+            style={{
+              filter: "drop-shadow(0 2px 10px hsl(326 100% 60% / 0.4))",
+            }}
           />
           <div className="flex flex-col leading-tight">
             <span className="font-serif text-base font-bold tracking-tight text-foreground">
@@ -361,15 +375,15 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
         </Link>
       </div>
 
-      {/* New audit CTA */}
+      {/* Echo is the companion-first entry point for the signed-in experience. */}
       <div className="px-3 pb-3">
         <Link
-          href="/start"
+          href="/echo"
           onClick={onNavigate}
           className="flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-          data-testid="sidebar-new-audit"
+          data-testid="sidebar-echo-cta"
         >
-          New Audit <ArrowRight className="h-4 w-4" />
+          Talk to Echo <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
 
@@ -399,7 +413,12 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
             <div key={section.id} className="pt-2">
               <button
                 type="button"
-                onClick={() => setOpen((prev) => ({ ...prev, [section.id]: !prev[section.id] }))}
+                onClick={() =>
+                  setOpen((prev) => ({
+                    ...prev,
+                    [section.id]: !prev[section.id],
+                  }))
+                }
                 aria-expanded={isOpen}
                 aria-controls={`sidebar-panel-${section.id}`}
                 className="flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-foreground/50 transition-colors hover:text-foreground/80"
@@ -407,12 +426,18 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
               >
                 {section.label}
                 <ChevronDown
-                  className={cn("h-3.5 w-3.5 transition-transform", isOpen && "rotate-180")}
+                  className={cn(
+                    "h-3.5 w-3.5 transition-transform",
+                    isOpen && "rotate-180",
+                  )}
                   aria-hidden="true"
                 />
               </button>
               {isOpen && (
-                <div id={`sidebar-panel-${section.id}`} className="mt-1 space-y-0.5">
+                <div
+                  id={`sidebar-panel-${section.id}`}
+                  className="mt-1 space-y-0.5"
+                >
                   {section.primary.map((link) => (
                     <NavRow
                       key={link.href}
@@ -434,16 +459,24 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
                     <button
                       type="button"
                       onClick={() =>
-                        setShowAll((prev) => ({ ...prev, [section.id]: !prev[section.id] }))
+                        setShowAll((prev) => ({
+                          ...prev,
+                          [section.id]: !prev[section.id],
+                        }))
                       }
                       className="flex w-full items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground/80 transition-colors hover:bg-foreground/5 hover:text-foreground"
                       data-testid={`sidebar-showall-${section.id}`}
                     >
                       <ChevronDown
-                        className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")}
+                        className={cn(
+                          "h-3.5 w-3.5 transition-transform",
+                          expanded && "rotate-180",
+                        )}
                         aria-hidden="true"
                       />
-                      {expanded ? "Show less" : `Show all (${section.more.length} more)`}
+                      {expanded
+                        ? "Show less"
+                        : `Show all (${section.more.length} more)`}
                     </button>
                   )}
                 </div>
@@ -465,7 +498,9 @@ function SidebarBody({ onNavigate }: { onNavigate: () => void }) {
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B] text-xs font-bold text-white">
               {(user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase()}
             </span>
-            <span className="truncate font-medium">{user?.firstName || user?.email || "Account"}</span>
+            <span className="truncate font-medium">
+              {user?.firstName || user?.email || "Account"}
+            </span>
           </Link>
           <ThemeToggle />
           <button
