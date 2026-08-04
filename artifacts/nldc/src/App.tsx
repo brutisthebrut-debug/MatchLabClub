@@ -127,6 +127,7 @@ const BlogPost = lazy(() => import("@/pages/BlogPost"));
 const Quizzes = lazy(() => import("@/pages/Quizzes"));
 const QuizPlay = lazy(() => import("@/pages/QuizPlay"));
 const SelfHub = lazy(() => import("@/pages/SelfHub"));
+const MyMatchLab = lazy(() => import("@/pages/MyMatchLab"));
 const Matching = lazy(() => import("@/pages/Matching"));
 const MatchPath = lazy(() => import("@/pages/MatchPath"));
 const Verification = lazy(() => import("@/pages/Verification"));
@@ -292,7 +293,8 @@ function Router() {
         <Route path="/copilot/prep" component={PrepareForDate} />
         <Route path="/copilot/demo" component={FounderDemoJourney} />
         <Route path="/copilot/flirt" component={FlirtCoach} />
-        <Route path="/me" component={SelfHub} />
+        <Route path="/me" component={MyMatchLab} />
+        <Route path="/me/details" component={SelfHub} />
         <Route path="/onboarding" component={Onboarding} />
         <Route path="/matching" component={Matching} />
         <Route path="/match-path" component={MatchPath} />
