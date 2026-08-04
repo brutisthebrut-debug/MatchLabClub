@@ -78,14 +78,14 @@ export default function Today() {
 
   const state = matching.data;
   const echo = companion.data;
-  const searchActive = ["building", "ready", "concierge_only"].includes(
-    state?.poolStatus ?? "off",
-  );
+  const searchActive = state?.searchActive ?? false;
   const searchLabel = searchActive
     ? "Active"
-    : state?.poolStatus === "paused"
-      ? "Paused"
-      : "Not started";
+    : state?.plan && !state.plan.canActivateSearch
+      ? "Available on Match"
+      : state?.poolStatus === "paused"
+        ? "Paused"
+        : "Not started";
   const nearbyMembers = Math.max(0, state?.cityDensity ?? 0);
   const openProposal = (proposals.data ?? []).find(
     (proposal) => proposal.status === "proposed",
@@ -109,13 +109,20 @@ export default function Today() {
         }
       : backendAction;
   const nextHref =
-    nextAction?.href ?? (state?.eligible ? "/matching" : "/echo");
+    nextAction?.href ??
+    (state?.eligible
+      ? state.plan.canActivateSearch
+        ? "/matching"
+        : "/pricing"
+      : "/echo");
   const nextLabel =
     nextAction?.label ??
     (state?.eligible
       ? searchActive
         ? "Review your search"
-        : "Choose search settings"
+        : state.plan.canActivateSearch
+          ? "Choose search settings"
+          : "Explore active matching"
       : "Tell Echo what is happening");
   const loading =
     companion.isLoading ||
