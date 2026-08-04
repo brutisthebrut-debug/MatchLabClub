@@ -84,12 +84,22 @@ Match or Guided. None of the plans creates priority or entitlement to a person.
 Stripe is now the entitlement source of truth for non-beta paid accounts. Signed
 subscription, invoice, refund, credit, pause, and cancellation events trigger a
 fresh read of the customer's current subscriptions, so duplicate or out-of-order
-webhooks converge on one result. Active/trialing grants access; past-due preserves
-existing access without granting an upgrade; paused, unpaid, canceled, and failed
-activation states revoke Stripe-managed access. Founder beta grants remain
-explicit overrides. Guided billing stays disabled until human capacity is
-defined. Authenticated checkout, billing portal controls, and the connected beta
-runtime are still open work.
+webhooks converge on one result. Authenticated Insight/Match Checkout Sessions,
+billing status, and Billing Portal sessions are implemented server-side. Founder
+beta grants remain explicit overrides, duplicate live subscriptions are blocked,
+and Guided billing stays disabled until human capacity is defined. The approved
+account/checkout UI hookup and one connected test-mode runtime journey remain
+open evidence gates.
+
+## Legacy capability guardrail
+
+The original route surface remains an inventory, not a second product. Matching
+and Future Connections belong under Matches; profile, wellness, photos, voice,
+and verification belong under My MatchLab; history and learning belong under
+Journey; quizzes and games belong under Play. Working capability must be
+integrated, preserved contextually, or explicitly parked. The old Signal Audit,
+Dating Reset, and Wingman checkout copy is retired and cannot assign canonical
+beta access.
 
 ## Quick start
 
@@ -101,10 +111,10 @@ pnpm --filter @workspace/nldc run dev         # web on $PORT
 
 Required env: `DATABASE_URL` (Postgres). Set `APP_ORIGINS` to the comma-separated
 web origins allowed to make credentialed API requests, for example
-`https://beta.matchlab.club,http://localhost:3000`. See `MIGRATION.md` section 3
-for the full env inventory. Connected-beta billing also requires
-`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `API_PUBLIC_URL`, and the four
-Insight/Match Stripe Price IDs documented in `OPERATIONS.md`.
+`https://beta.matchlab.club,http://localhost:3000`. A portable connected runtime
+also sets `OIDC_CLIENT_ID`, `ISSUER_URL`, `API_PUBLIC_URL`, and `WEB_PUBLIC_URL`.
+Connected-beta billing requires `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and
+the four Insight/Match Stripe Price IDs documented in `OPERATIONS.md`.
 
 ## Tech stack
 
