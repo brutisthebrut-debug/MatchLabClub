@@ -1,11 +1,11 @@
 # MatchLab Club
 
-AI companion that sits alongside dating apps (Tinder, Hinge, Bumble). The north
-star is readiness first, matching as the payoff: help someone become genuinely
-relationship-ready, then match them (AI-driven, radius-based) with people they
-would not find on their own. The AI is hybrid: a deterministic engine runs on
-every account by default, with Anthropic Claude layered on top, opt-in per
-account.
+AI companion that sits alongside dating apps (Tinder, Hinge, Bumble). Echo helps
+someone understand their patterns, name what they really want, and wait honestly.
+When a real nearby fit exists, MatchLab can support one considered introduction;
+profile completion never earns or guarantees another person. The AI is hybrid: a
+deterministic engine runs on every account by default, with Anthropic Claude
+layered on top, opt-in per account.
 
 ## Start here
 
@@ -27,9 +27,11 @@ experience. Existing tools and routes are preserved behind contextual hubs and
 secondary navigation, so consolidation must not delete or orphan working
 capability.
 
-Readiness, search activity, and market availability are separate states. A
-member becoming profile-ready must never be presented as proof that an
-introduction is available.
+Profile evidence, search activity, and market availability are separate states.
+A member becoming profile-ready must never be presented as proof that an
+introduction is available. Member-facing primary surfaces use qualitative
+evidence states rather than a numeric score that could imply human worth or
+entitlement.
 
 The Matches destination presents waiting, proposal, mutual reveal, date, and
 debrief as one lifecycle. Signed-out review uses a labeled process preview only;
@@ -77,6 +79,7 @@ Orval codegen.
 
 ## CI
 
-Runs on Bitbucket Pipelines (`bitbucket-pipelines.yml`): typecheck, lint, API
-tests, schema-drift, and voice-lint on every pull request and on pushes to
-`main`. See `CI.md` and `MIGRATION.md` section 6.9.
+GitHub Actions (`.github/workflows/ci.yml`) is the repository gate. It runs
+typecheck, lint, API tests, schema drift, voice lint, web tests, and produces a
+reviewable web artifact for each pull request. `bitbucket-pipelines.yml` remains
+a compatibility mirror. See `CI.md` and `MIGRATION.md` section 6.9.
