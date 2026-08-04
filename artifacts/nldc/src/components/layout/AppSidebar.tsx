@@ -78,7 +78,7 @@ const OVERVIEW: NavLink[] = [
   { name: "Today", href: "/today", icon: Sparkles },
   { name: "Matches", href: "/matches", icon: HeartHandshake },
   { name: "My MatchLab", href: "/me", icon: Eye },
-  { name: "Journey", href: "/progress/timeline", icon: BookOpen },
+  { name: "Journey", href: "/journey", icon: BookOpen },
   { name: "Play", href: "/quiz", icon: Shuffle },
 ];
 
