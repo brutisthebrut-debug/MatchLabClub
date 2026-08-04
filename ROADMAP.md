@@ -126,6 +126,22 @@ every pull request and push to `main`. The same workflow packages the exact web
 build used for the canonical visual checkpoint. Human acceptance and pilot
 evidence remain open even when CI is green.
 
+### Batch 5 — Connected beta acceptance
+
+Status: **In progress in `agent/echo-shell-phase-0`**
+
+- Keep the approved Echo Journey visual system on every primary and companion
+  surface. Backend integration must not reintroduce legacy dashboard framing.
+- Remove the remaining numeric readiness and point-reward treatment from Echo;
+  show profile evidence, search activity, and nearby availability as separate
+  qualitative states.
+- Make Today choose its one useful move from real proposal and unread
+  conversation data before falling back to general matching guidance.
+- Allow an explicit beta web origin through the API's credentialed CORS and CSRF
+  boundary while retaining existing Replit development origins.
+- Validate the authenticated frontend, API, session, and database together on a
+  connected beta deployment. A static web artifact does not satisfy this gate.
+
 ## Definition of done
 
 The milestone is complete when:
