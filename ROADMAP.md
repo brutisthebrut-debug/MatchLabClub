@@ -83,6 +83,23 @@ that a compatible introduction exists.
 - All genders and orientations remain first-class. Consent and user control are
   non-negotiable.
 
+## Original capability disposition
+
+Beta completeness is measured against the original product, not only the five
+primary screens. Every working capability must have one explicit disposition:
+integrated into a primary hub, preserved as a secondary tool, or parked with a
+reason.
+
+| Original capability family | Beta home | Disposition |
+| --- | --- | --- |
+| Matching, Future Connections, proposals, reveal, safety, date, debrief | **Matches** | Consolidate into the honest lifecycle; keep deep preferences secondary. |
+| Profile, readiness evidence, wellness, life context, photos, voice, verification, permissions | **My MatchLab** | Preserve under the member model and detailed workspace. |
+| Timeline, journal, patterns, scorecard/trends, wins, weekly plan | **Journey** | Use server-backed history; preserve working tools contextually. |
+| Quizzes, games, results | **Play** | Preserve through the bounded catalog and saved outcomes. |
+| Echo, coaching, preparation, reply help, reflection | **Today / persistent Echo** | Reuse the working contracts through one next action; do not restore a tool dashboard. |
+| Signal Audit, Dating Reset, Wingman public checkout | **Canonical billing surface** | Retired commercial presentation. Must be replaced by authenticated Insight/Match checkout before beta; legacy links cannot grant canonical access. |
+| Referrals/sharing, broad integrations, Experiments, audio-native claims | **None in beta** | Explicitly parked until the core journey produces evidence. |
+
 ## Delivery batches
 
 ### Batch 0A — Canonical handoff and freeze
@@ -232,14 +249,24 @@ Status: **Complete in `agent/echo-shell-phase-0`; validated by CI run #82**
 
 #### Batch 7B — Authenticated billing and connected runtime
 
-Status: **Pending**
+Status: **Implemented in code; repository validation and connected-runtime evidence pending**
 
 - Create authenticated canonical-plan Checkout Sessions with member and plan
   metadata; legacy public Payment Links must not assign beta packages.
+  **Implemented in code.** Only Insight and Match use server-owned Price IDs;
+  Guided remains disabled, founder grants cannot be double-sold, and an existing
+  live/recovery subscription routes to account management instead of creating a
+  duplicate.
 - Add account billing status and Stripe Billing Portal controls for cancellation,
-  payment recovery, and invoice history.
+  payment recovery, and invoice history. **Implemented as authenticated API
+  controls; the approved Echo Journey account surface still needs the final UI
+  hookup.**
+- Replace the runtime's hard dependency on the Replit OIDC client ID and request
+  host with explicit `OIDC_CLIENT_ID`, `API_PUBLIC_URL`, and `WEB_PUBLIC_URL`
+  settings while retaining documented migration fallbacks. **Implemented in
+  code; provider and domain validation remain open.**
 - Run web, API, session/auth, Postgres, and Stripe test mode together on the
-  connected beta domain.
+  connected beta domain. **Pending deployment evidence.**
 
 #### Batch 7C — Guided operations and cohort evidence
 
@@ -251,6 +278,17 @@ Status: **Pending**
   real journey from signup through debrief.
 - Record Daniel + Lissa acceptance evidence and select the next milestone from
   observed gaps.
+
+### Roadmap note — 2026-08-04 (Batch 7B)
+
+- **Milestone change:** none. The active lane remains connected-beta foundations.
+- **Scope clarification:** beta completeness now includes a route-capability
+  ledger so original functionality cannot disappear during consolidation.
+- **Commercial correction:** legacy Signal Audit, Dating Reset, and Wingman
+  checkout pages are recorded as retired presentation, not alternate ways to
+  grant Member/Insight/Match/Guided access.
+- **Completion rule:** backend billing code, approved-design UI hookup, and live
+  runtime evidence are tracked separately; none substitutes for the others.
 
 ## Definition of done
 
@@ -280,3 +318,5 @@ The milestone is complete when:
 - After-dark mode.
 - Connector expansion that does not directly unblock the approved v1 journey.
 - Monetization changes unrelated to validating the simplified shell.
+- Selling or reviving the legacy Signal Audit, Dating Reset, or Wingman offers as
+  canonical beta packages.
