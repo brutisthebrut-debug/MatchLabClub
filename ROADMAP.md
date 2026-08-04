@@ -106,10 +106,13 @@ Status: **Complete in `agent/echo-shell-phase-0`**
 
 ### Batch 4 — Landing-to-app continuity and acceptance
 
-Status: **Planned**
+Status: **In progress in `agent/echo-shell-phase-0`**
 
 - Align landing promises and signed-in language around the same journey.
-- Tune Echo's voice with a dedicated copy pass.
+  **Complete in code.** Public copy now separates readiness from availability and
+  ends at the signed-in Today destination.
+- Tune Echo's voice with a dedicated copy pass. **Initial pass complete in code.**
+  Echo states uncertainty and challenges without cruelty or false intimacy.
 - Run Daniel + Lissa acceptance review against the canonical build.
 - Capture pilot evidence and the next decision before expanding scope.
 
