@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { withAlpha } from "@/lib/brandColor";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -41,7 +40,7 @@ import {
   Activity,
   LockKeyhole,
 } from "lucide-react";
-import { motion, useScroll, useTransform, animate } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useMeta } from "@/hooks/useMeta";
 import { absoluteUrl, DEFAULT_OG_IMAGE } from "@/lib/seo";
 
@@ -72,25 +71,36 @@ const staggerItem = {
   },
 };
 
-function Counter({ to, duration = 2.2 }: { to: number; duration?: number }) {
-  const [val, setVal] = useState(0);
-  useEffect(() => {
-    const controls = animate(0, to, {
-      duration,
-      delay: 0.6,
-      ease: [0.16, 1, 0.3, 1],
-      onUpdate: (v) => setVal(Math.round(v)),
-    });
-    return () => controls.stop();
-  }, [to, duration]);
-  return <>{val}</>;
-}
-
-const SAMPLE_LANES: { label: string; value: number; color: string }[] = [
-  { label: "Profile signal", value: 82, color: "hsl(var(--brand-indigo))" },
-  { label: "Conversation", value: 74, color: "hsl(var(--brand-pink))" },
-  { label: "Lifestyle rhythm", value: 63, color: "hsl(var(--brand-teal))" },
-  { label: "Wellness base", value: 55, color: "hsl(var(--brand-green))" },
+const SAMPLE_LANES: {
+  label: string;
+  status: string;
+  width: number;
+  color: string;
+}[] = [
+  {
+    label: "Profile signal",
+    status: "Well supported",
+    width: 82,
+    color: "hsl(var(--brand-indigo))",
+  },
+  {
+    label: "Conversation",
+    status: "Growing",
+    width: 68,
+    color: "hsl(var(--brand-pink))",
+  },
+  {
+    label: "Lifestyle rhythm",
+    status: "Early read",
+    width: 46,
+    color: "hsl(var(--brand-teal))",
+  },
+  {
+    label: "Wellness base",
+    status: "Needs context",
+    width: 30,
+    color: "hsl(var(--brand-green))",
+  },
 ];
 
 function LiveReadCard() {
@@ -109,26 +119,13 @@ function LiveReadCard() {
         </span>
       </div>
 
-      <div className="flex items-end gap-3 mb-2 relative z-10">
-        <span className="font-serif font-bold leading-none gradient-text tabular-nums text-7xl md:text-8xl">
-          <Counter to={78} />
-        </span>
-        <span className="text-2xl font-bold text-muted-foreground mb-2 tabular-nums">
-          /100
-        </span>
-      </div>
-      <p className="text-sm font-bold uppercase tracking-[0.18em] text-[hsl(248_62%_52%)] mb-6 relative z-10">
-        Match readiness
+      <p className="font-serif font-bold leading-none gradient-text text-5xl md:text-6xl relative z-10">
+        A grounded read
       </p>
-
-      <div className="h-2.5 rounded-full bg-foreground/10 overflow-hidden mb-8 relative z-10">
-        <motion.div
-          className="h-full rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B]"
-          initial={{ width: 0 }}
-          animate={{ width: "78%" }}
-          transition={{ duration: 2.2, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        />
-      </div>
+      <p className="mt-3 mb-8 text-sm leading-relaxed text-muted-foreground font-medium relative z-10">
+        Echo shows what is well supported, what is still forming, and where it
+        needs more context.
+      </p>
 
       <div className="space-y-4 relative z-10">
         {SAMPLE_LANES.map((lane, i) => (
@@ -137,11 +134,8 @@ function LiveReadCard() {
               <span className="text-sm font-semibold text-foreground/80">
                 {lane.label}
               </span>
-              <span
-                className="text-sm font-bold tabular-nums"
-                style={{ color: lane.color }}
-              >
-                {lane.value}
+              <span className="text-sm font-bold" style={{ color: lane.color }}>
+                {lane.status}
               </span>
             </div>
             <div className="h-1.5 rounded-full bg-foreground/10 overflow-hidden">
@@ -149,7 +143,7 @@ function LiveReadCard() {
                 className="h-full rounded-full"
                 style={{ background: lane.color }}
                 initial={{ width: 0 }}
-                animate={{ width: `${lane.value}%` }}
+                animate={{ width: `${lane.width}%` }}
                 transition={{
                   duration: 1.4,
                   delay: 0.8 + i * 0.15,
@@ -166,7 +160,8 @@ function LiveReadCard() {
           <span className="text-foreground font-bold">
             This is a demo read.
           </span>{" "}
-          Yours starts climbing the moment Echo gets its first look at you.
+          Yours changes as Echo gathers stronger evidence and you correct what
+          it gets wrong.
         </p>
       </div>
     </div>
@@ -425,7 +420,7 @@ export default function Landing() {
                   {[
                     "Your real conversation patterns",
                     "Your lifestyle and rhythm",
-                    "Your readiness, climbing over time",
+                    "What is supported and what is uncertain",
                   ].map((x) => (
                     <li
                       key={x}
@@ -485,8 +480,8 @@ export default function Landing() {
               },
               {
                 step: "02",
-                title: "Watch your readiness climb",
-                desc: "Every move nudges one central number. Your Match Readiness grows as Echo learns your patterns.",
+                title: "See what Echo understands",
+                desc: "Every move adds context. Echo shows what is well supported, what is still uncertain, and what would help next.",
                 color: "hsl(var(--brand-gold))",
               },
               {
@@ -864,9 +859,8 @@ export default function Landing() {
                 Honest capabilities
               </h3>
               <p className="text-muted-foreground leading-relaxed font-medium">
-                We do not sell magic. We provide tools that require your input.
-                Readiness is earned through interaction, not bought with a
-                premium tier.
+                We do not sell magic. Paid features add depth and continuity,
+                never worth, priority, or entitlement to another person.
               </p>
             </motion.div>
           </div>
@@ -952,8 +946,8 @@ export default function Landing() {
                   </span>
                 </p>
                 <p className="text-lg text-muted-foreground mb-10 font-medium">
-                  Full access to the current suite of tools, forever. Watch your
-                  readiness score grow over time.
+                  Full access to the current suite of tools, forever. Keep your
+                  deeper reads, history, and next steps in one place.
                 </p>
                 <ul className="space-y-4 mb-10">
                   <li className="flex items-center gap-3 font-bold text-foreground">
