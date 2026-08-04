@@ -35,6 +35,10 @@ The Matches destination presents waiting, proposal, mutual reveal, date, and
 debrief as one lifecycle. Signed-out review uses a labeled process preview only;
 fake people, messages, and implied availability do not stand in for member data.
 
+My MatchLab brings the member's profile model, source coverage, permissions, and
+readiness evidence into one decision view. The detailed profile workspace stays
+available at `/me/details`; consolidation does not delete it.
+
 ## Quick start
 
 ```bash
