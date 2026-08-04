@@ -3603,6 +3603,10 @@ export type MatchPoolMembershipTier = typeof MatchPoolMembershipTier[keyof typeo
 
 
 export const MatchPoolMembershipTier = {
+  member: 'member',
+  insight: 'insight',
+  match: 'match',
+  guided: 'guided',
   free: 'free',
   reset: 'reset',
   wingman: 'wingman',
@@ -4443,16 +4447,64 @@ export const MatchingStatePoolStatus = {
 } as const;
 
 /**
- * @nullable
+ * Canonical plan key retained for compatibility. Prefer plan.key.
+ * @deprecated
  */
-export type MatchingStateTier = typeof MatchingStateTier[keyof typeof MatchingStateTier] | null;
+export type MatchingStateTier = typeof MatchingStateTier[keyof typeof MatchingStateTier];
 
 
 export const MatchingStateTier = {
-  free: 'free',
-  reset: 'reset',
-  wingman: 'wingman',
+  member: 'member',
+  insight: 'insight',
+  match: 'match',
+  guided: 'guided',
 } as const;
+
+export type CommercialPlanAssignmentKey = typeof CommercialPlanAssignmentKey[keyof typeof CommercialPlanAssignmentKey];
+
+
+export const CommercialPlanAssignmentKey = {
+  member: 'member',
+  insight: 'insight',
+  match: 'match',
+  guided: 'guided',
+} as const;
+
+export type CommercialPlanAssignmentSource = typeof CommercialPlanAssignmentSource[keyof typeof CommercialPlanAssignmentSource];
+
+
+export const CommercialPlanAssignmentSource = {
+  default: 'default',
+  canonical: 'canonical',
+  legacy: 'legacy',
+} as const;
+
+/**
+ * @nullable
+ */
+export type CommercialPlanAssignmentNextPlanKey = typeof CommercialPlanAssignmentNextPlanKey[keyof typeof CommercialPlanAssignmentNextPlanKey] | null;
+
+
+export const CommercialPlanAssignmentNextPlanKey = {
+  member: 'member',
+  insight: 'insight',
+  match: 'match',
+  guided: 'guided',
+} as const;
+
+export interface CommercialPlanAssignment {
+  key: CommercialPlanAssignmentKey;
+  label: string;
+  source: CommercialPlanAssignmentSource;
+  /** @nullable */
+  grantedAt: string | null;
+  canActivateSearch: boolean;
+  includesHumanGuidance: boolean;
+  /** @nullable */
+  nextPlanKey: CommercialPlanAssignmentNextPlanKey;
+  /** @nullable */
+  upgradeCta: string | null;
+}
 
 export interface ReadinessDeltaLane {
   /** Signal lane id, matching a MatchReadinessBreakdown key. */
@@ -4503,10 +4555,16 @@ export interface MatchingState {
   poolStatus: MatchingStatePoolStatus;
   /** Whether the member lets a mutual match see their reveal card (name + photos). Off by default; never gates being matched. */
   revealConsent?: boolean;
-  /** @nullable */
+  /**
+     * Canonical plan key retained for compatibility. Prefer plan.key.
+     * @deprecated
+     */
   tier: MatchingStateTier;
+  plan: CommercialPlanAssignment;
+  /** True only when the account has Match or Guided active-search access and its pool state is active. Candidate-pool opt-in alone does not make search active. */
+  searchActive: boolean;
   readiness: MatchReadiness;
-  /** True when readiness.score is at or above readinessThreshold. The client uses this to gate the pool opt-in switch. */
+  /** True when profile evidence is at or above readinessThreshold. This is distinct from plan access, active search, market availability, and whether an introduction exists. */
   eligible: boolean;
   /**
      * Minimum readiness score required to join the matching pool, set by the MATCHING_READINESS_THRESHOLD env var (default 50).
@@ -5184,6 +5242,109 @@ export interface MatchPoolIneligible {
      * @maximum 100
      */
   readinessThreshold: number;
+}
+
+export type MatchingPlanRequiredCode = typeof MatchingPlanRequiredCode[keyof typeof MatchingPlanRequiredCode];
+
+
+export const MatchingPlanRequiredCode = {
+  active_matching_plan_required: 'active_matching_plan_required',
+} as const;
+
+export type MatchingPlanRequiredRequiredPlan = typeof MatchingPlanRequiredRequiredPlan[keyof typeof MatchingPlanRequiredRequiredPlan];
+
+
+export const MatchingPlanRequiredRequiredPlan = {
+  match: 'match',
+} as const;
+
+export type MatchingPlanRequiredCurrentPlan = typeof MatchingPlanRequiredCurrentPlan[keyof typeof MatchingPlanRequiredCurrentPlan];
+
+
+export const MatchingPlanRequiredCurrentPlan = {
+  member: 'member',
+  insight: 'insight',
+  match: 'match',
+  guided: 'guided',
+} as const;
+
+export interface MatchingPlanRequired {
+  error: string;
+  code: MatchingPlanRequiredCode;
+  requiredPlan: MatchingPlanRequiredRequiredPlan;
+  currentPlan: MatchingPlanRequiredCurrentPlan;
+}
+
+export type CommercialPlanPriceCadence = typeof CommercialPlanPriceCadence[keyof typeof CommercialPlanPriceCadence];
+
+
+export const CommercialPlanPriceCadence = {
+  free: 'free',
+  monthly: 'monthly',
+  annual: 'annual',
+  quarterly: 'quarterly',
+} as const;
+
+export interface CommercialPlanPrice {
+  cadence: CommercialPlanPriceCadence;
+  /** @minimum 0 */
+  amountCents: number;
+}
+
+export interface CommercialPlanMonthlyRange {
+  /** @minimum 0 */
+  min: number;
+  /** @minimum 0 */
+  max: number;
+}
+
+export interface CommercialPlanEntitlements {
+  fullMirror: boolean;
+  expandedPlay: boolean;
+  selectedSources: boolean;
+  activeMatching: boolean;
+  humanGuidance: boolean;
+}
+
+export type CommercialPlanKey = typeof CommercialPlanKey[keyof typeof CommercialPlanKey];
+
+
+export const CommercialPlanKey = {
+  member: 'member',
+  insight: 'insight',
+  match: 'match',
+  guided: 'guided',
+} as const;
+
+/**
+ * @nullable
+ */
+export type CommercialPlanNextPlanKey = typeof CommercialPlanNextPlanKey[keyof typeof CommercialPlanNextPlanKey] | null;
+
+
+export const CommercialPlanNextPlanKey = {
+  member: 'member',
+  insight: 'insight',
+  match: 'match',
+  guided: 'guided',
+} as const;
+
+export interface CommercialPlan {
+  key: CommercialPlanKey;
+  label: string;
+  outcome: string;
+  prices: CommercialPlanPrice[];
+  monthlyRangeCents: CommercialPlanMonthlyRange | null;
+  includes: string[];
+  /** @nullable */
+  upgradeCta: string | null;
+  /** @nullable */
+  nextPlanKey: CommercialPlanNextPlanKey;
+  entitlements: CommercialPlanEntitlements;
+}
+
+export interface CommercialPlansResponse {
+  plans: CommercialPlan[];
 }
 
 /**
