@@ -81,6 +81,16 @@ beta grants use canonical plan keys. Candidate-pool opt-in and active search are
 separate: Member may opt into the pool, while initiating discovery requires
 Match or Guided. None of the plans creates priority or entitlement to a person.
 
+Stripe is now the entitlement source of truth for non-beta paid accounts. Signed
+subscription, invoice, refund, credit, pause, and cancellation events trigger a
+fresh read of the customer's current subscriptions, so duplicate or out-of-order
+webhooks converge on one result. Active/trialing grants access; past-due preserves
+existing access without granting an upgrade; paused, unpaid, canceled, and failed
+activation states revoke Stripe-managed access. Founder beta grants remain
+explicit overrides. Guided billing stays disabled until human capacity is
+defined. Authenticated checkout, billing portal controls, and the connected beta
+runtime are still open work.
+
 ## Quick start
 
 ```bash
@@ -92,7 +102,9 @@ pnpm --filter @workspace/nldc run dev         # web on $PORT
 Required env: `DATABASE_URL` (Postgres). Set `APP_ORIGINS` to the comma-separated
 web origins allowed to make credentialed API requests, for example
 `https://beta.matchlab.club,http://localhost:3000`. See `MIGRATION.md` section 3
-for the full env inventory.
+for the full env inventory. Connected-beta billing also requires
+`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `API_PUBLIC_URL`, and the four
+Insight/Match Stripe Price IDs documented in `OPERATIONS.md`.
 
 ## Tech stack
 
