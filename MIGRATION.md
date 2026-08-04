@@ -332,8 +332,10 @@ becomes a blocker the moment the process runs outside Replit.**
 - `artifacts/api-server/src/middlewares/authMiddleware.ts` — session hydration + token refresh
 - `artifacts/api-server/src/routes/devAuth.ts` — dev-only bypass (must be removed/double-gated)
 
-**Migration action:** Phase 1. Choose a new IdP. Replace `REPL_ID` with a real
-`OIDC_CLIENT_ID`. Add account-linking migration for existing users.
+**Migration action:** The runtime now prefers `OIDC_CLIENT_ID`, explicit public
+API/web origins, and provider-neutral profile claims while retaining `REPL_ID` as
+a migration fallback. A non-Replit provider, callback-domain validation, and any
+required account-linking migration still need connected-runtime evidence.
 
 ---
 
@@ -974,9 +976,12 @@ DATABASE_URL=postgres://localhost:5432/matchlab_dev
 PORT=8080
 NODE_ENV=development
 
-# Auth — use placeholder values in local dev until Phase 1 is complete
-ISSUER_URL=https://replit.com/oidc         # replace in Phase 1
-REPL_ID=local-dev-placeholder              # replace in Phase 1
+# Auth — portable OIDC path; REPL_ID is a temporary migration fallback
+ISSUER_URL=https://replit.com/oidc
+OIDC_CLIENT_ID=local-dev-placeholder
+API_PUBLIC_URL=http://localhost:8080
+WEB_PUBLIC_URL=http://localhost:3000
+COOKIE_SECURE=false
 
 # Admin
 FOUNDER_KEY=local-dev-only-not-secret
@@ -989,7 +994,6 @@ OPENAI_API_KEY=
 # Stripe — optional in local dev; required for connected-beta billing
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
-API_PUBLIC_URL=http://localhost:8080
 STRIPE_PRICE_INSIGHT_MONTHLY=
 STRIPE_PRICE_INSIGHT_ANNUAL=
 STRIPE_PRICE_MATCH_MONTHLY=
