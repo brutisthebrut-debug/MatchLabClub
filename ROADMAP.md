@@ -35,6 +35,19 @@ This change records an intentional milestone advance, not a silent rewrite.
 | Design scope               | Echo Journey and five destinations protected                             | Unchanged                                                                                   | Backend work must serve the approved experience and cannot reintroduce the legacy dashboard.                                |
 | Acceptance gate            | Daniel + Lissa review plus pilot evidence                                | Unchanged and still open                                                                    | Code and static visual review do not prove authenticated beta behavior.                                                     |
 
+## Roadmap implementation delta — 2026-08-04, Batch 7A
+
+The milestone did not change. Batch 7 was decomposed so backend progress can be
+validated without implying that checkout or the connected runtime already exist.
+
+| Area                | Previous wording                                             | Updated implementation contract                                                                                                              | Why                                                                                                       |
+| ------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Stripe lifecycle    | One pending bullet combined checkout, lifecycle, and runtime | Signed event handling and current-customer reconciliation are Batch 7A; authenticated checkout/portal and runtime deployment remain Batch 7B | Webhook truth can be completed and tested independently from deployment credentials and account controls. |
+| Beta grants         | Replace founder-only plan grants                             | Stripe controls non-beta paid access; founder grants remain explicit controlled-cohort overrides                                             | Removing the only safe beta-access path before live billing acceptance would block testing.               |
+| Payment failure     | Undefined                                                    | `past_due` preserves existing access but never grants or upgrades; `unpaid`, paused, canceled, and failed activation revoke                  | This distinguishes a retry window from terminal nonpayment without creating free upgrades.                |
+| Refunds and credits | Undefined                                                    | Reconcile current subscription truth; refund alone is not cancellation                                                                       | Billing adjustments and service termination are different events.                                         |
+| Guided sales        | Package named, operational limits pending                    | Stripe reconciliation rejects Guided unless capacity is explicitly enabled                                                                   | The package cannot be sold honestly before staffing, scheduling, and overflow rules exist.                |
+
 ## Commercial package contract
 
 These are commercial packages, not numbered progress levels. Product progress
@@ -180,7 +193,7 @@ Status: **In progress in `agent/echo-shell-phase-0`**
 
 ### Batch 6 — Commercial plans and matching entitlement boundary
 
-Status: **Complete in `agent/echo-shell-phase-0`; validated by CI run #78**
+Status: **Implemented in `agent/echo-shell-phase-0`; repository validation pending**
 
 - Establish Member, Insight, Match, and Guided as one backend-owned catalog with
   the approved prices, included outcomes, entitlements, and progression prompts.
@@ -197,17 +210,47 @@ Status: **Complete in `agent/echo-shell-phase-0`; validated by CI run #78**
 
 ### Batch 7 — Live beta runtime and subscription lifecycle
 
+Status: **In progress in `agent/echo-shell-phase-0`**
+
+#### Batch 7A — Stripe subscription truth
+
+Status: **Complete in code; full CI evidence pending**
+
+- Accept explicit Stripe API/webhook credentials outside Replit while preserving
+  the connector as a temporary migration fallback.
+- Register the webhook from an explicit public API URL rather than requiring a
+  Replit-generated domain.
+- Recalculate entitlement from the customer's current Stripe subscriptions after
+  signed subscription, invoice, checkout, refund, credit, pause, and cancellation
+  events. Duplicate and out-of-order delivery must converge safely.
+- Grant active/trialing plans, preserve but never upgrade on `past_due`, and
+  revoke Stripe-managed access on paused, unpaid, canceled, or failed activation.
+- Preserve founder beta grants and legacy tier history as explicit overrides;
+  Stripe must not silently rewrite controlled testers or old purchases.
+- Reconcile a bounded customer cohort on startup to recover missed webhooks.
+- Keep Guided billing disabled until the human-service contract is approved.
+
+#### Batch 7B — Authenticated billing and connected runtime
+
 Status: **Pending**
 
-- Run web, API, session/auth, and Postgres together on the connected beta domain.
-- Replace founder-only plan grants with idempotent Stripe subscription lifecycle
-  syncing for checkout completion, renewal, cancellation, refund/credit, pause,
-  and failure states.
+- Create authenticated canonical-plan Checkout Sessions with member and plan
+  metadata; legacy public Payment Links must not assign beta packages.
+- Add account billing status and Stripe Billing Portal controls for cancellation,
+  payment recovery, and invoice history.
+- Run web, API, session/auth, Postgres, and Stripe test mode together on the
+  connected beta domain.
+
+#### Batch 7C — Guided operations and cohort evidence
+
+Status: **Pending**
+
 - Define Guided capacity, scheduling, async-support limits, and overflow behavior
   before selling it.
 - Seed a controlled cohort with explicit Match beta grants, then validate one
   real journey from signup through debrief.
-- Record acceptance evidence and select the next milestone from observed gaps.
+- Record Daniel + Lissa acceptance evidence and select the next milestone from
+  observed gaps.
 
 ## Definition of done
 
@@ -219,6 +262,8 @@ The milestone is complete when:
 - Readiness, search activity, and market availability are visibly distinct.
 - Member, Insight, Match, and Guided are represented by one backend contract;
   Match/Guided search access is enforced server-side.
+- Stripe lifecycle events idempotently grant, preserve, or revoke non-beta paid
+  access without overriding founder grants or selling unstaffed Guided service.
 - Landing and signed-in experiences tell the same story.
 - Automated typecheck, web tests, API tests, schema drift, lint, and voice lint
   pass on the final branch.
