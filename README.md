@@ -43,6 +43,10 @@ Journey is a server-backed history of saved insights, reflections, compatibility
 reads, introductions, dates, and wins. The older client-local timeline remains a
 secondary experimental tool and never stands in for real member history.
 
+Play is a bounded activity catalog rather than an endless feed. Every activity
+states its duration, what it teaches Echo, and the result it saves; existing game
+and quiz routes remain intact behind the catalog.
+
 ## Quick start
 
 ```bash
