@@ -1,19 +1,40 @@
 import { runMigrations } from "stripe-replit-sync";
 import { getStripeSync, isStripeConnected } from "./stripeClient";
 import { reconcilePurchaseInterestFromStripe } from "./stripeReconcile";
+import { reconcileAllStripeCommercialPlans } from "./subscriptionLifecycle";
 import { logger } from "./logger";
 
+type StripeRuntimeEnvironment = Partial<
+  Record<"STRIPE_WEBHOOK_URL" | "API_PUBLIC_URL" | "REPLIT_DOMAINS", string>
+>;
+
+export function resolveStripeWebhookUrl(
+  env: StripeRuntimeEnvironment = process.env,
+): string | null {
+  const explicit = env.STRIPE_WEBHOOK_URL?.trim();
+  const apiOrigin = env.API_PUBLIC_URL?.trim();
+  const replitDomain = env.REPLIT_DOMAINS?.split(",")[0]?.trim();
+  const candidate =
+    explicit ||
+    (apiOrigin ? `${apiOrigin.replace(/\/$/, "")}/api/stripe/webhook` : null) ||
+    (replitDomain ? `https://${replitDomain}/api/stripe/webhook` : null);
+  if (!candidate) return null;
+
+  try {
+    const parsed = new URL(candidate);
+    if (parsed.protocol !== "https:" && parsed.hostname !== "localhost") {
+      return null;
+    }
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Initialize the Stripe integration on startup. This is a guarded no-op: when
- * the Stripe connection or DATABASE_URL is absent, it logs and returns without
- * throwing, so the server boots normally with Stripe disabled.
- *
- * Order matters (per the stripe-replit-sync contract):
- *   1. runMigrations() creates the `stripe` schema (idempotent)
- *   2. getStripeSync() builds the sync client
- *   3. findOrCreateManagedWebhook() registers the managed webhook
- *   4. syncBackfill() pulls existing Stripe data into the `stripe` schema
- *   5. reconcile our purchase_interest rows against the freshly synced data
+ * Initialize Stripe without making it a server boot dependency. The managed
+ * Stripe mirror remains read-only to MatchLab; commercial-plan reconciliation
+ * updates only users.tier for non-founder-managed accounts.
  */
 export async function initStripe(): Promise<void> {
   const databaseUrl = process.env["DATABASE_URL"];
@@ -29,34 +50,37 @@ export async function initStripe(): Promise<void> {
 
   try {
     await runMigrations({ databaseUrl });
-
     const stripeSync = await getStripeSync();
+    const webhookUrl = resolveStripeWebhookUrl();
 
-    const primaryDomain = process.env["REPLIT_DOMAINS"]?.split(",")[0]?.trim();
-    if (primaryDomain) {
-      const webhook = await stripeSync.findOrCreateManagedWebhook(
-        `https://${primaryDomain}/api/stripe/webhook`,
-      );
+    if (webhookUrl) {
+      const webhook = await stripeSync.findOrCreateManagedWebhook(webhookUrl);
       logger.info(
         { webhookUrl: webhook?.url ?? "configured" },
         "Stripe managed webhook ready",
       );
     } else {
       logger.warn(
-        "Stripe webhook registration skipped: REPLIT_DOMAINS not set",
+        "Stripe webhook registration skipped: set STRIPE_WEBHOOK_URL or API_PUBLIC_URL",
       );
     }
 
-    // Backfill, then reconcile, in the background so startup is not blocked.
     void stripeSync
       .syncBackfill()
-      .then(() => reconcilePurchaseInterestFromStripe())
+      .then(async () => {
+        const [purchaseInterest, commercialPlans] = await Promise.all([
+          reconcilePurchaseInterestFromStripe(),
+          reconcileAllStripeCommercialPlans(),
+        ]);
+        return { purchaseInterest, commercialPlans };
+      })
       .then((result) =>
-        logger.info(result, "Stripe backfill and reconcile complete"),
+        logger.info(
+          result,
+          "Stripe backfill and entitlement reconcile complete",
+        ),
       )
-      .catch((err) =>
-        logger.warn({ err }, "Stripe backfill/reconcile failed"),
-      );
+      .catch((err) => logger.warn({ err }, "Stripe backfill/reconcile failed"));
   } catch (err) {
     logger.warn({ err }, "Stripe init failed; continuing without Stripe");
   }
