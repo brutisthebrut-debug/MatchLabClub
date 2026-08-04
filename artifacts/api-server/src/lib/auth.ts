@@ -4,8 +4,9 @@ import { type Request, type Response } from "express";
 import { db, sessionsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import type { AuthUser } from "@workspace/api-zod";
+import { resolveOidcClientId, resolveOidcIssuer } from "./runtimeConfig";
 
-export const ISSUER_URL = process.env.ISSUER_URL ?? "https://replit.com/oidc";
+export const ISSUER_URL = resolveOidcIssuer();
 export const SESSION_COOKIE = "sid";
 export const SESSION_TTL = 7 * 24 * 60 * 60 * 1000;
 
@@ -18,12 +19,19 @@ export interface SessionData {
 
 let oidcConfig: client.Configuration | null = null;
 
+export function getOidcClientId(): string {
+  const clientId = resolveOidcClientId();
+  if (!clientId) {
+    throw new Error(
+      "OIDC_CLIENT_ID is required (REPL_ID is a migration fallback)",
+    );
+  }
+  return clientId;
+}
+
 export async function getOidcConfig(): Promise<client.Configuration> {
   if (!oidcConfig) {
-    oidcConfig = await client.discovery(
-      new URL(ISSUER_URL),
-      process.env.REPL_ID!,
-    );
+    oidcConfig = await client.discovery(new URL(ISSUER_URL), getOidcClientId());
   }
   return oidcConfig;
 }
@@ -101,10 +109,7 @@ export async function deleteSession(sid: string): Promise<void> {
   await db.delete(sessionsTable).where(eq(sessionsTable.sid, sid));
 }
 
-export async function clearSession(
-  res: Response,
-  sid?: string,
-): Promise<void> {
+export async function clearSession(res: Response, sid?: string): Promise<void> {
   if (sid) await deleteSession(sid);
   res.clearCookie(SESSION_COOKIE, { path: "/" });
 }
