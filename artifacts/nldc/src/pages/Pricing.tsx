@@ -190,9 +190,13 @@ export default function Pricing() {
                 const Icon = PLAN_ICONS[plan.key];
                 const isCurrent = currentPlan === plan.key;
                 const isIncluded = PLAN_RANK[currentPlan] > PLAN_RANK[plan.key];
-                const isBillable =
-                  plan.key === "insight" || plan.key === "match";
-                const selectedCadence = isBillable ? cadence[plan.key] : null;
+                const billablePlanKey =
+                  plan.key === "insight" || plan.key === "match"
+                    ? plan.key
+                    : null;
+                const selectedCadence = billablePlanKey
+                  ? cadence[billablePlanKey]
+                  : null;
                 const selectedPrice = selectedCadence
                   ? plan.prices.find(
                       (price) => price.cadence === selectedCadence,
@@ -252,19 +256,19 @@ export default function Pricing() {
                       ) : null}
                     </div>
 
-                    {isBillable ? (
+                    {billablePlanKey ? (
                       <div className="mt-4 flex rounded-full border border-foreground/10 bg-background/45 p-1">
-                        {BILLABLE_CADENCES[plan.key].map((option) => (
+                        {BILLABLE_CADENCES[billablePlanKey].map((option) => (
                           <button
                             key={option}
                             type="button"
                             onClick={() =>
                               setCadence((current) => ({
                                 ...current,
-                                [plan.key]: option,
+                                [billablePlanKey]: option,
                               }))
                             }
-                            className={`flex-1 rounded-full px-2 py-2 text-xs font-semibold transition ${cadence[plan.key] === option ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
+                            className={`flex-1 rounded-full px-2 py-2 text-xs font-semibold transition ${cadence[billablePlanKey] === option ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
                           >
                             {CADENCE_LABEL[option]}
                           </button>
@@ -312,9 +316,9 @@ export default function Pricing() {
                               : "Included in your package"}
                           </Link>
                         </Button>
-                      ) : (
+                      ) : billablePlanKey ? (
                         <Button
-                          onClick={() => startCheckout(plan.key)}
+                          onClick={() => startCheckout(billablePlanKey)}
                           disabled={
                             checkout.isPending ||
                             billing.data?.billingState === "beta_grant"
@@ -333,7 +337,7 @@ export default function Pricing() {
                             />
                           ) : null}
                         </Button>
-                      )}
+                      ) : null}
                     </div>
                   </motion.article>
                 );
