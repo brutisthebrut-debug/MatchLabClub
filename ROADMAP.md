@@ -214,7 +214,7 @@ Status: **In progress in `agent/echo-shell-phase-0`**
 
 #### Batch 7A — Stripe subscription truth
 
-Status: **Complete in code; full CI evidence pending**
+Status: **Complete in `agent/echo-shell-phase-0`; validated by CI run #82**
 
 - Accept explicit Stripe API/webhook credentials outside Replit while preserving
   the connector as a temporary migration fallback.
