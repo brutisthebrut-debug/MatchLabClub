@@ -61,6 +61,26 @@ web origin through `APP_ORIGINS`. The static review artifact remains useful for
 visual acceptance, but authenticated beta acceptance requires the web, API,
 session, and database to run together.
 
+## Commercial plans
+
+The backend commercial contract is **Member → Insight → Match → Guided**. These
+are packages tied to outcomes, not numbered progress levels:
+
+- Member: free; profile building, limited Echo/Play, first Mirror preview, basic
+  Journey, and candidate-pool opt-in.
+- Insight: $14.99/month or $99/year; full Mirror, deeper Echo/Journey, expanded
+  Play, and selected low-cost/manual sources.
+- Match: $49/month or $129/quarter; active search, limited introductions,
+  compatibility explanations, prep, safety, debrief, and refinement.
+- Guided: $249–$499/month; capped human coaching, scheduled review, and bounded
+  asynchronous support.
+
+`GET /api/plans` is the catalog source of truth. Historical `free`, `reset`, and
+`wingman` assignments are resolved through a compatibility map; new controlled-
+beta grants use canonical plan keys. Candidate-pool opt-in and active search are
+separate: Member may opt into the pool, while initiating discovery requires
+Match or Guided. None of the plans creates priority or entitlement to a person.
+
 ## Quick start
 
 ```bash
