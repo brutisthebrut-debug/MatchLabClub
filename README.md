@@ -47,6 +47,11 @@ Play is a bounded activity catalog rather than an endless feed. Every activity
 states its duration, what it teaches Echo, and the result it saves; existing game
 and quiz routes remain intact behind the catalog.
 
+The public landing page and signed-in shell now tell the same journey. Public
+copy does not promise that readiness creates availability, and the final public
+CTA hands into Today with Echo. Echo's baseline voice states uncertainty and can
+challenge a member without cruelty or false intimacy.
+
 ## Quick start
 
 ```bash
