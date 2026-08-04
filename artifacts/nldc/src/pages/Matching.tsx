@@ -209,8 +209,8 @@ function ChipList({
 
 export default function Matching() {
   useMeta(
-    "Matching, in beta. Get to the front of the line.",
-    "Match readiness, preferences, and a compatibility read for any profile you are already talking to. Hybrid model: founder-curated intros for Wingman, algorithmic everywhere else.",
+    "Matching, in beta",
+    "Match readiness, preferences, and considered introductions. Guided adds bounded human review; Match activates the search service.",
   );
 
   const { isAuthenticated, isLoading: authLoading, login } = useAuth();
@@ -336,7 +336,8 @@ export default function Matching() {
   const readinessLearning = state.data?.readinessLearning ?? null;
   const cityDensity = state.data?.cityDensity ?? 0;
   const totalPool = state.data?.totalPoolCount ?? 0;
-  const tier = state.data?.tier ?? null;
+  const plan = state.data?.plan ?? null;
+  const canActivateSearch = plan?.canActivateSearch ?? false;
   const poolStatus = state.data?.poolStatus ?? "off";
   const poolToggleOn = poolStatus !== "off" && poolStatus !== "paused";
   const eligible = state.data?.eligible ?? false;
@@ -359,14 +360,20 @@ export default function Matching() {
 
   const proposalList = proposals.data ?? [];
 
-  const cityLabel = useMemo(() => prefs?.cityHint ?? cityHint, [prefs, cityHint]);
+  const cityLabel = useMemo(
+    () => prefs?.cityHint ?? cityHint,
+    [prefs, cityHint],
+  );
 
   const conciergeUrl =
     (import.meta.env.VITE_CONCIERGE_INTAKE_URL as string | undefined) ?? "";
 
   async function handleSavePreferences() {
     const distanceNum = distanceKm === "any" ? null : Number(distanceKm);
-    if (distanceNum != null && (!Number.isFinite(distanceNum) || distanceNum < 0)) {
+    if (
+      distanceNum != null &&
+      (!Number.isFinite(distanceNum) || distanceNum < 0)
+    ) {
       toast({ title: "Pick a match radius and try again." });
       return;
     }
@@ -376,7 +383,8 @@ export default function Matching() {
           ageMin,
           ageMax,
           distanceKm: distanceNum,
-          genderPreference: genderPreference === "any" ? null : genderPreference,
+          genderPreference:
+            genderPreference === "any" ? null : genderPreference,
           cityHint: cityHint.trim().length === 0 ? null : cityHint.trim(),
           dealBreakers: dealBreakers.length === 0 ? null : dealBreakers,
           mustHaves: mustHaves.length === 0 ? null : mustHaves,
@@ -535,7 +543,7 @@ export default function Matching() {
             </Badge>
           </div>
           <h1 className="font-serif text-3xl md:text-5xl font-bold leading-tight">
-            Matching is coming. Sign in to get to the front of the line.
+            Matching is in controlled beta. Sign in to see your current state.
           </h1>
           <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
             AI-driven introductions inside your radius (25, 35, or 45 miles), to
@@ -551,7 +559,11 @@ export default function Matching() {
             >
               Sign in
             </Button>
-            <Button asChild variant="outline" className="rounded-full px-6 h-11">
+            <Button
+              asChild
+              variant="outline"
+              className="rounded-full px-6 h-11"
+            >
               <Link href="/pricing">See the tiers</Link>
             </Button>
           </div>
@@ -574,17 +586,16 @@ export default function Matching() {
             </Badge>
           </div>
           <h1 className="font-serif text-3xl md:text-5xl font-bold leading-tight">
-            Matching is coming. Here is how you get to the front of the line.
+            Matching is careful by design.
           </h1>
           <p className="text-muted-foreground mt-4 max-w-2xl leading-relaxed">
             This is the payoff, not the headline. The more the machine knows
             you, the better it matches you, so matching stays gated behind your
-            readiness. When it opens, you get AI-driven introductions inside
-            your radius (25, 35, or 45 miles) to people you would never find on
-            your own. Wingman customers also get founder-curated intros, hand
-            picked. Open to every gender and orientation. No swipe carousel, no
-            infinite scroll, just a small number of well-considered people near
-            you.
+            readiness. Match activates considered introductions inside your
+            radius (25, 35, or 45 miles) to people you would never find on your
+            own. Guided members can also receive bounded human review. Open to
+            every gender and orientation. No swipe carousel, no infinite scroll,
+            just a small number of well-considered people near you.
           </p>
         </motion.div>
 
@@ -598,7 +609,10 @@ export default function Matching() {
                     <CardTitle className="text-2xl">Match readiness</CardTitle>
                     {isVerified ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-bold text-emerald-400">
-                        <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
+                        <ShieldCheck
+                          className="w-3.5 h-3.5"
+                          aria-hidden="true"
+                        />
                         Verified
                       </span>
                     ) : (
@@ -606,7 +620,10 @@ export default function Matching() {
                         href="/verification"
                         className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
+                        <ShieldCheck
+                          className="w-3.5 h-3.5"
+                          aria-hidden="true"
+                        />
                         Verify to rank higher
                       </Link>
                     )}
@@ -688,8 +705,13 @@ export default function Matching() {
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <Icon className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                          <span className="font-semibold text-sm">{row.label}</span>
+                          <Icon
+                            className="w-4 h-4 text-muted-foreground"
+                            aria-hidden="true"
+                          />
+                          <span className="font-semibold text-sm">
+                            {row.label}
+                          </span>
                         </div>
                         <span className="text-xs font-mono text-muted-foreground">
                           {value}%
@@ -708,7 +730,10 @@ export default function Matching() {
                       >
                         <Link href={row.href}>
                           {row.cta}
-                          <ArrowRight className="ml-1 w-3 h-3" aria-hidden="true" />
+                          <ArrowRight
+                            className="ml-1 w-3 h-3"
+                            aria-hidden="true"
+                          />
                         </Link>
                       </Button>
                     </div>
@@ -783,7 +808,10 @@ export default function Matching() {
                 </Link>
               </div>
               <div className="text-right">
-                <div className="text-3xl font-bold" data-testid="text-points-to-pool">
+                <div
+                  className="text-3xl font-bold"
+                  data-testid="text-points-to-pool"
+                >
                   {readinessScore}
                   <span className="text-lg text-muted-foreground">
                     /{readinessThreshold}
@@ -822,7 +850,9 @@ export default function Matching() {
                   className="rounded-full"
                   data-testid="button-run-echo-read"
                 >
-                  {runEcho.isPending ? "Reading your signals." : "Get Echo's read"}
+                  {runEcho.isPending
+                    ? "Reading your signals."
+                    : "Get Echo's read"}
                 </Button>
               )}
               {echoResult && (
@@ -844,7 +874,10 @@ export default function Matching() {
                     </div>
                     <Progress value={echoResult.confidence} className="h-2" />
                   </div>
-                  <p className="font-semibold text-lg" data-testid="text-echo-headline">
+                  <p
+                    className="font-semibold text-lg"
+                    data-testid="text-echo-headline"
+                  >
                     {echoResult.headline}
                   </p>
                   {echoResult.reading.length > 0 && (
@@ -952,7 +985,10 @@ export default function Matching() {
             <Card className="mb-6" data-testid="card-readiness-trend">
               <CardHeader>
                 <CardTitle className="text-xl flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-[hsl(248_62%_52%)]" aria-hidden="true" />
+                  <TrendingUp
+                    className="w-5 h-5 text-[hsl(248_62%_52%)]"
+                    aria-hidden="true"
+                  />
                   Your readiness over time
                 </CardTitle>
                 <CardDescription>
@@ -960,7 +996,10 @@ export default function Matching() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-44 w-full" data-testid="chart-readiness-trend">
+                <div
+                  className="h-44 w-full"
+                  data-testid="chart-readiness-trend"
+                >
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={history}
@@ -1007,7 +1046,10 @@ export default function Matching() {
             <Card className="mb-6" data-testid="card-outcome-insight">
               <CardHeader>
                 <CardTitle className="text-xl flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-[hsl(326_100%_50%)]" aria-hidden="true" />
+                  <Calendar
+                    className="w-5 h-5 text-[hsl(326_100%_50%)]"
+                    aria-hidden="true"
+                  />
                   Patterns from your dates
                 </CardTitle>
                 <CardDescription>{outcomeInsight.headline}</CardDescription>
@@ -1015,7 +1057,10 @@ export default function Matching() {
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {[
-                    { label: "Another date", value: outcomeInsight.anotherDate },
+                    {
+                      label: "Another date",
+                      value: outcomeInsight.anotherDate,
+                    },
                     { label: "No more", value: outcomeInsight.noMore },
                     { label: "Ghosted", value: outcomeInsight.ghosted },
                     { label: "Unsure", value: outcomeInsight.unsure },
@@ -1033,8 +1078,8 @@ export default function Matching() {
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground mt-3">
-                  These outcomes feed every compatibility read, so the scores get
-                  sharper the more dates you reflect on.
+                  These outcomes feed every compatibility read, so the scores
+                  get sharper the more dates you reflect on.
                 </p>
               </CardContent>
             </Card>
@@ -1055,13 +1100,17 @@ export default function Matching() {
             leaningInto: [],
           };
           const learning = readinessLearning ?? demo;
-          const hasData = learning.totalDates > 0 && learning.leaningInto.length > 0;
+          const hasData =
+            learning.totalDates > 0 && learning.leaningInto.length > 0;
           return (
             <motion.div {...fadeUp(0.095)}>
               <Card className="mb-6" data-testid="card-readiness-learning">
                 <CardHeader>
                   <CardTitle className="text-xl flex items-center gap-2">
-                    <Brain className="w-5 h-5 text-[hsl(248_62%_52%)]" aria-hidden="true" />
+                    <Brain
+                      className="w-5 h-5 text-[hsl(248_62%_52%)]"
+                      aria-hidden="true"
+                    />
                     What your dates are teaching your brain
                   </CardTitle>
                   <CardDescription>{learning.headline}</CardDescription>
@@ -1079,22 +1128,31 @@ export default function Matching() {
                             className="inline-flex items-center gap-1.5 rounded-full border border-[hsl(248_62%_52%/0.25)] bg-[hsl(248_62%_52%/0.08)] px-3 py-1 text-xs font-semibold text-[hsl(248_62%_62%)]"
                             data-testid={`learning-lane-${lane.toLowerCase().replace(/\s+/g, "-")}`}
                           >
-                            <TrendingUp className="w-3 h-3" aria-hidden="true" />
+                            <TrendingUp
+                              className="w-3 h-3"
+                              aria-hidden="true"
+                            />
                             {lane}
                           </span>
                         ))}
                       </div>
                       <div className="grid grid-cols-3 gap-3">
                         <div className="rounded-2xl border border-foreground/8 p-4 text-center">
-                          <div className="text-2xl font-bold">{learning.baseScore}</div>
+                          <div className="text-2xl font-bold">
+                            {learning.baseScore}
+                          </div>
                           <div className="text-xs text-muted-foreground mt-1">
                             Your score today
                           </div>
                         </div>
                         <div className="rounded-2xl border border-foreground/8 p-4 text-center">
-                          <div className="text-2xl font-bold">{learning.observedScore}</div>
+                          <div className="text-2xl font-bold">
+                            {learning.observedScore}
+                          </div>
                           <div className="text-xs text-muted-foreground mt-1">
-                            {learning.applied ? "Now applied" : "If we acted on it"}
+                            {learning.applied
+                              ? "Now applied"
+                              : "If we acted on it"}
                           </div>
                         </div>
                         <div className="rounded-2xl border border-foreground/8 p-4 text-center">
@@ -1142,7 +1200,10 @@ export default function Matching() {
           <Card className="mb-6" data-testid="card-city-density">
             <CardContent className="p-6 flex items-start gap-4">
               <div className="rounded-full p-3 bg-[hsl(248_62%_52%/0.08)]">
-                <Users className="w-5 h-5 text-[hsl(248_62%_52%)]" aria-hidden="true" />
+                <Users
+                  className="w-5 h-5 text-[hsl(248_62%_52%)]"
+                  aria-hidden="true"
+                />
               </div>
               <div className="flex-1">
                 <div className="font-semibold text-lg">
@@ -1151,8 +1212,8 @@ export default function Matching() {
                     : `${totalPool} early-pool signups so far.`}
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  We hold launch until each city has enough depth to make
-                  intros worth your time.
+                  We hold launch until each city has enough depth to make intros
+                  worth your time.
                 </p>
               </div>
             </CardContent>
@@ -1170,8 +1231,8 @@ export default function Matching() {
                 <p className="text-sm text-muted-foreground mt-1">
                   Off by default. Turn it on and we will hold your spot in the
                   pool. Status today: <strong>{poolStatus}</strong>.
-                  {tier === "wingman" && (
-                    <> Your Wingman tier routes you to the concierge queue.</>
+                  {plan?.key === "guided" && (
+                    <> Your Guided plan routes you to the human-review queue.</>
                   )}
                 </p>
                 {poolLocked && (
@@ -1225,10 +1286,10 @@ export default function Matching() {
               </CardTitle>
               <CardDescription>
                 Intros the founder has hand picked or the machine has surfaced
-                for you. Say you are interested and it routes to the front of the
-                intro queue. This is a real track, not a preview.
+                for you. Say you are interested and it routes to the front of
+                the intro queue. This is a real track, not a preview.
               </CardDescription>
-              {eligible && (
+              {eligible && canActivateSearch && (
                 <Button
                   className="mt-3 rounded-full self-start"
                   disabled={discover.isPending}
@@ -1241,6 +1302,11 @@ export default function Matching() {
                     : "Find matches near you"}
                 </Button>
               )}
+              {eligible && !canActivateSearch && (
+                <Button asChild className="mt-3 rounded-full self-start">
+                  <Link href="/pricing">See active matching</Link>
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="space-y-3">
               {proposalList.length === 0 && (
@@ -1248,9 +1314,9 @@ export default function Matching() {
                   className="text-sm text-muted-foreground"
                   data-testid="text-no-proposals"
                 >
-                  No intros yet. Keep feeding signals and turn on the pool above.
-                  When you are eligible, run a match pass to pair with other
-                  members, or wait for the founder to curate one for you.
+                  No intros yet. Keep feeding signals and turn on the pool
+                  above. When you are eligible, run a match pass to pair with
+                  other members, or wait for the founder to curate one for you.
                 </p>
               )}
               {proposalList.map((p: MatchProposal) => {
@@ -1379,8 +1445,8 @@ export default function Matching() {
           </Card>
         </motion.div>
 
-        {/* Concierge (wingman only) */}
-        {tier === "wingman" && (
+        {/* Human guidance (Guided only) */}
+        {plan?.key === "guided" && (
           <motion.div {...fadeUp(0.2)}>
             <Card
               className="mb-6 border-[hsl(326_100%_60%/0.3)] bg-[hsl(326_100%_60%/0.04)]"
@@ -1388,11 +1454,14 @@ export default function Matching() {
             >
               <CardContent className="p-6 flex items-start gap-4">
                 <div className="rounded-full p-3 bg-[hsl(326_100%_60%/0.12)]">
-                  <Sparkles className="w-5 h-5 text-[hsl(326_100%_50%)]" aria-hidden="true" />
+                  <Sparkles
+                    className="w-5 h-5 text-[hsl(326_100%_50%)]"
+                    aria-hidden="true"
+                  />
                 </div>
                 <div className="flex-1">
                   <div className="font-semibold text-lg">
-                    Your Wingman tier includes founder-curated intros.
+                    Your Guided plan includes bounded human support.
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     Book a fifteen minute intake call so the founder can hand
@@ -1411,7 +1480,10 @@ export default function Matching() {
                           rel="noopener noreferrer"
                         >
                           Schedule intake
-                          <ArrowRight className="ml-1 w-4 h-4" aria-hidden="true" />
+                          <ArrowRight
+                            className="ml-1 w-4 h-4"
+                            aria-hidden="true"
+                          />
                         </a>
                       </Button>
                     ) : (
@@ -1431,13 +1503,16 @@ export default function Matching() {
           <Card className="mb-6" data-testid="card-external-read">
             <CardHeader>
               <CardTitle className="text-xl flex items-center gap-2">
-                <Heart className="w-5 h-5 text-[hsl(326_100%_50%)]" aria-hidden="true" />
+                <Heart
+                  className="w-5 h-5 text-[hsl(326_100%_50%)]"
+                  aria-hidden="true"
+                />
                 Already talking to someone? Score the match.
               </CardTitle>
               <CardDescription>
-                Paste their Hinge, Tinder, Bumble, Grindr, Feeld, HER, or Facebook
-                Dating profile. We score it against what we know about you and save
-                the read.
+                Paste their Hinge, Tinder, Bumble, Grindr, Feeld, HER, or
+                Facebook Dating profile. We score it against what we know about
+                you and save the read.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1460,7 +1535,10 @@ export default function Matching() {
                         setExternalSource(v as typeof externalSource)
                       }
                     >
-                      <SelectTrigger id="external-source" data-testid="select-external-source">
+                      <SelectTrigger
+                        id="external-source"
+                        data-testid="select-external-source"
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1470,7 +1548,9 @@ export default function Matching() {
                         <SelectItem value="grindr">Grindr</SelectItem>
                         <SelectItem value="feeld">Feeld</SelectItem>
                         <SelectItem value="her">HER</SelectItem>
-                        <SelectItem value="facebookDating">Facebook Dating</SelectItem>
+                        <SelectItem value="facebookDating">
+                          Facebook Dating
+                        </SelectItem>
                         <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
@@ -1509,7 +1589,11 @@ export default function Matching() {
                       </span>
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         {externalResult.highlights.map((h, i) => (
-                          <Badge key={`${h}-${i}`} variant="secondary" className="text-xs">
+                          <Badge
+                            key={`${h}-${i}`}
+                            variant="secondary"
+                            className="text-xs"
+                          >
                             {h}
                           </Badge>
                         ))}
@@ -1523,7 +1607,11 @@ export default function Matching() {
                       </span>
                       <div className="flex flex-wrap gap-1.5 mt-1">
                         {externalResult.frictions.map((f, i) => (
-                          <Badge key={`${f}-${i}`} variant="outline" className="text-xs">
+                          <Badge
+                            key={`${f}-${i}`}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {f}
                           </Badge>
                         ))}
@@ -1566,7 +1654,9 @@ export default function Matching() {
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
-                    <Label htmlFor="age-min" className="text-xs">Min</Label>
+                    <Label htmlFor="age-min" className="text-xs">
+                      Min
+                    </Label>
                     <Slider
                       id="age-min"
                       value={[ageMin]}
@@ -1582,7 +1672,9 @@ export default function Matching() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="age-max" className="text-xs">Max</Label>
+                    <Label htmlFor="age-max" className="text-xs">
+                      Max
+                    </Label>
                     <Slider
                       id="age-max"
                       value={[ageMax]}
@@ -1618,8 +1710,8 @@ export default function Matching() {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Introductions stay inside this radius, so the people you meet
-                    are genuinely near you.
+                    Introductions stay inside this radius, so the people you
+                    meet are genuinely near you.
                   </p>
                 </div>
                 <div>
@@ -1637,7 +1729,9 @@ export default function Matching() {
                       <SelectItem value="any">Open to everyone</SelectItem>
                       <SelectItem value="women">Women</SelectItem>
                       <SelectItem value="men">Men</SelectItem>
-                      <SelectItem value="nonbinary">Nonbinary people</SelectItem>
+                      <SelectItem value="nonbinary">
+                        Nonbinary people
+                      </SelectItem>
                       <SelectItem value="trans-women">Trans women</SelectItem>
                       <SelectItem value="trans-men">Trans men</SelectItem>
                     </SelectContent>
@@ -1650,8 +1744,12 @@ export default function Matching() {
               </div>
 
               <div>
-                <Label htmlFor="city" className="text-sm font-semibold flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5" aria-hidden="true" /> City hint
+                <Label
+                  htmlFor="city"
+                  className="text-sm font-semibold flex items-center gap-1.5"
+                >
+                  <MapPin className="w-3.5 h-3.5" aria-hidden="true" /> City
+                  hint
                 </Label>
                 <Input
                   id="city"
@@ -1694,7 +1792,9 @@ export default function Matching() {
                   <ChipList
                     items={dealBreakers}
                     onRemove={(i) =>
-                      setDealBreakers((prev) => prev.filter((_, idx) => idx !== i))
+                      setDealBreakers((prev) =>
+                        prev.filter((_, idx) => idx !== i),
+                      )
                     }
                     testIdPrefix="chip-deal-breaker"
                   />
