@@ -116,6 +116,10 @@ Status: **In progress in `agent/echo-shell-phase-0`**
 - Run Daniel + Lissa acceptance review against the canonical build.
 - Capture pilot evidence and the next decision before expanding scope.
 
+Repository validation is now executable through `.github/workflows/ci.yml` on
+every pull request and push to `main`. Human acceptance and pilot evidence remain
+open even when CI is green.
+
 ## Definition of done
 
 The milestone is complete when:
