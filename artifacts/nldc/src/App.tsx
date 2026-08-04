@@ -1,4 +1,10 @@
-import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
+import {
+  Switch,
+  Route,
+  Router as WouterRouter,
+  Redirect,
+  useLocation,
+} from "wouter";
 import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -19,6 +25,7 @@ import { hasCompletedOnboarding } from "@/lib/onboardingState";
 // Route-level code splitting — each page loads only when first visited.
 const NotFound = lazy(() => import("@/pages/not-found"));
 const Landing = lazy(() => import("@/pages/Landing"));
+const Today = lazy(() => import("@/pages/Today"));
 const Wizard = lazy(() => import("@/pages/Wizard"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Report = lazy(() => import("@/pages/Report"));
@@ -61,7 +68,9 @@ const ProgressFollowUp = lazy(() => import("@/pages/ProgressFollowUp"));
 const ProgressScorecard = lazy(() => import("@/pages/ProgressScorecard"));
 const ProgressFeed = lazy(() => import("@/pages/ProgressFeed"));
 const ProgressControl = lazy(() => import("@/pages/ProgressControl"));
-const ProgressInsightsRoadmap = lazy(() => import("@/pages/ProgressInsightsRoadmap"));
+const ProgressInsightsRoadmap = lazy(
+  () => import("@/pages/ProgressInsightsRoadmap"),
+);
 const ProgressReadiness = lazy(() => import("@/pages/ProgressReadiness"));
 const ProgressCompanion = lazy(() => import("@/pages/ProgressCompanion"));
 const WellnessCenter = lazy(() => import("@/pages/WellnessCenter"));
@@ -72,10 +81,14 @@ const Copilot = lazy(() => import("@/pages/Copilot"));
 const StartMyReset = lazy(() => import("@/pages/copilot/StartMyReset"));
 const HelpMeReply = lazy(() => import("@/pages/copilot/HelpMeReply"));
 const ImproveMyProfile = lazy(() => import("@/pages/copilot/ImproveMyProfile"));
-const DebriefWhatHappened = lazy(() => import("@/pages/copilot/DebriefWhatHappened"));
+const DebriefWhatHappened = lazy(
+  () => import("@/pages/copilot/DebriefWhatHappened"),
+);
 const WeeklyGrowthPlan = lazy(() => import("@/pages/copilot/WeeklyGrowthPlan"));
 const PrepareForDate = lazy(() => import("@/pages/copilot/PrepareForDate"));
-const FounderDemoJourney = lazy(() => import("@/pages/copilot/FounderDemoJourney"));
+const FounderDemoJourney = lazy(
+  () => import("@/pages/copilot/FounderDemoJourney"),
+);
 const FlirtCoach = lazy(() => import("@/pages/copilot/FlirtCoach"));
 const Account = lazy(() => import("@/pages/Account"));
 const Sessions = lazy(() => import("@/pages/Sessions"));
@@ -129,11 +142,16 @@ function ClaimAnonymousGate() {
 }
 
 // First-run gate. Sends a brand-new authenticated user into the guided onboarding
-// flow exactly once, only when they land on a home surface (/your-mirror, /me, or
-// /dashboard) and the account has no real signal yet. A returning user with any
+// flow exactly once, only when they land on a home surface (/today, /your-mirror,
+// /me, or /dashboard) and the account has no real signal yet. A returning user with any
 // data, or anyone who has finished or skipped onboarding in this browser, is never
 // redirected.
-const ONBOARDING_ENTRY_ROUTES = new Set(["/dashboard", "/me", "/your-mirror"]);
+const ONBOARDING_ENTRY_ROUTES = new Set([
+  "/today",
+  "/dashboard",
+  "/me",
+  "/your-mirror",
+]);
 
 function OnboardingGate() {
   const [location, setLocation] = useLocation();
@@ -192,6 +210,7 @@ function Router() {
     <Suspense fallback={null}>
       <Switch>
         <Route path="/" component={Landing} />
+        <Route path="/today" component={Today} />
         <Route path="/start" component={Wizard} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/report/:id" component={Report} />
@@ -221,7 +240,9 @@ function Router() {
         <Route path="/checkout/success" component={CheckoutSuccess} />
         <Route path="/checkout/cancel" component={CheckoutCancel} />
         <Route path="/checkout/:product">
-          {(params: { product?: string } | null) => <Checkout product={params?.product ?? "dating-reset"} />}
+          {(params: { product?: string } | null) => (
+            <Checkout product={params?.product ?? "dating-reset"} />
+          )}
         </Route>
         <Route path="/founder" component={Founder} />
         <Route path="/partners/shebangs" component={ShebangsPartner} />
@@ -250,7 +271,10 @@ function Router() {
         <Route path="/progress/scorecard" component={ProgressScorecard} />
         <Route path="/progress/feed" component={ProgressFeed} />
         <Route path="/progress/control" component={ProgressControl} />
-        <Route path="/progress/insights-roadmap" component={ProgressInsightsRoadmap} />
+        <Route
+          path="/progress/insights-roadmap"
+          component={ProgressInsightsRoadmap}
+        />
         <Route path="/progress/readiness" component={ProgressReadiness} />
         <Route path="/progress/companion" component={ProgressCompanion} />
         {/* Wellness & Control */}
@@ -303,11 +327,15 @@ function Router() {
         <Route path="/trash" component={Trash} />
         <Route path="/quizzes" component={Quizzes} />
         <Route path="/quizzes/:slug">
-          {(params: { slug?: string } | null) => <QuizPlay slug={params?.slug ?? ""} />}
+          {(params: { slug?: string } | null) => (
+            <QuizPlay slug={params?.slug ?? ""} />
+          )}
         </Route>
         <Route path="/blog" component={Blog} />
         <Route path="/blog/:slug">
-          {(params: { slug?: string } | null) => <BlogPost slug={params?.slug ?? ""} />}
+          {(params: { slug?: string } | null) => (
+            <BlogPost slug={params?.slug ?? ""} />
+          )}
         </Route>
         <Route component={NotFound} />
       </Switch>
