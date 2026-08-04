@@ -180,7 +180,7 @@ Status: **In progress in `agent/echo-shell-phase-0`**
 
 ### Batch 6 — Commercial plans and matching entitlement boundary
 
-Status: **Implemented in `agent/echo-shell-phase-0`; repository validation pending**
+Status: **Complete in `agent/echo-shell-phase-0`; validated by CI run #78**
 
 - Establish Member, Insight, Match, and Guided as one backend-owned catalog with
   the approved prices, included outcomes, entitlements, and progression prompts.
