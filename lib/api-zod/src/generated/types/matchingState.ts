@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ActivityStreak } from './activityStreak';
+import type { CommercialPlanAssignment } from './commercialPlanAssignment';
 import type { MatchingStatePoolStatus } from './matchingStatePoolStatus';
 import type { MatchingStateTier } from './matchingStateTier';
 import type { MatchPreferences } from './matchPreferences';
@@ -21,10 +22,16 @@ export interface MatchingState {
   poolStatus: MatchingStatePoolStatus;
   /** Whether the member lets a mutual match see their reveal card (name + photos). Off by default; never gates being matched. */
   revealConsent?: boolean;
-  /** @nullable */
+  /**
+     * Canonical plan key retained for compatibility. Prefer plan.key.
+     * @deprecated
+     */
   tier: MatchingStateTier;
+  plan: CommercialPlanAssignment;
+  /** True only when the account has Match or Guided active-search access and its pool state is active. Candidate-pool opt-in alone does not make search active. */
+  searchActive: boolean;
   readiness: MatchReadiness;
-  /** True when readiness.score is at or above readinessThreshold. The client uses this to gate the pool opt-in switch. */
+  /** True when profile evidence is at or above readinessThreshold. This is distinct from plan access, active search, market availability, and whether an introduction exists. */
   eligible: boolean;
   /**
      * Minimum readiness score required to join the matching pool, set by the MATCHING_READINESS_THRESHOLD env var (default 50).
