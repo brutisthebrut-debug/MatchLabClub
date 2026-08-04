@@ -9,15 +9,51 @@ definition of done changes.
 
 ## Active milestone
 
-**Complete and approve the simplified v1 MatchLab shell.**
+**Connect the approved Echo-led experience to the minimum backend foundations
+required for a controlled beta.**
 
 The approved journey is:
 
 > Get known → understand yourself → know who you really want → wait honestly →
 > receive one considered introduction → meet → learn afterward.
 
-This is a consolidation milestone. It is not permission for a broad redesign,
-new destination, or connector expansion.
+The shell-consolidation work remains protected and still needs Daniel + Lissa
+acceptance on a connected build. The active implementation lane has advanced to
+beta foundations: authenticated runtime, durable plan/entitlement state,
+subscription lifecycle, and controlled-cohort evidence. It is not permission
+for a broad redesign, new destination, or connector expansion.
+
+## Roadmap delta — 2026-08-04
+
+This change records an intentional milestone advance, not a silent rewrite.
+
+| Area                       | Previous roadmap                                                         | Updated roadmap                                                                             | Why                                                                                                                         |
+| -------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Active implementation lane | Complete and approve the simplified v1 shell                             | Connect that approved shell to controlled-beta foundations                                  | Batches 0–5 are implemented and green; the remaining product gap is live authenticated integration, not another shell pass. |
+| Commercial model           | Legacy `free` / `reset` / `wingman` tier fields remained in backend code | Canonical Member / Insight / Match / Guided plan contract with explicit legacy mapping      | The approved commercial ladder was not represented in the runtime contract.                                                 |
+| Matching access            | Readiness and pool opt-in could initiate discovery                       | Candidate-pool opt-in remains available from Member; active search requires Match or Guided | Profile evidence, candidate availability, paid service activation, and an actual introduction must remain separate states.  |
+| Design scope               | Echo Journey and five destinations protected                             | Unchanged                                                                                   | Backend work must serve the approved experience and cannot reintroduce the legacy dashboard.                                |
+| Acceptance gate            | Daniel + Lissa review plus pilot evidence                                | Unchanged and still open                                                                    | Code and static visual review do not prove authenticated beta behavior.                                                     |
+
+## Commercial package contract
+
+These are commercial packages, not numbered progress levels. Product progress
+describes what MatchLab understands; packages describe which outcome the member
+is buying.
+
+| Package     | Outcome                                                       | Price                     | Progression prompt                                 |
+| ----------- | ------------------------------------------------------------- | ------------------------- | -------------------------------------------------- |
+| **Member**  | Build a profile that reflects the real member                 | Free                      | See your full Mirror                               |
+| **Insight** | Understand dating patterns and actual needs                   | $14.99/month or $99/year  | Turn on active matching                            |
+| **Match**   | Actively find and evaluate compatible people                  | $49/month or $129/quarter | Work through this with a coach                     |
+| **Guided**  | Add bounded human judgment from someone who knows the history | $249–$499/month           | Final package; human capacity is explicitly capped |
+
+Member includes candidate-pool opt-in but not an active search. Insight deepens
+the Mirror, Journey, Echo, Play, and selected sources. Match activates the
+matching service only where honest geography and affinity supply exist. Guided
+adds bounded human support and may attach to Insight or Match operationally.
+Paid access never creates priority, entitlement to another person, or a promise
+that a compatible introduction exists.
 
 ## Product contract
 
@@ -142,6 +178,37 @@ Status: **In progress in `agent/echo-shell-phase-0`**
 - Validate the authenticated frontend, API, session, and database together on a
   connected beta deployment. A static web artifact does not satisfy this gate.
 
+### Batch 6 — Commercial plans and matching entitlement boundary
+
+Status: **Implemented in `agent/echo-shell-phase-0`; repository validation pending**
+
+- Establish Member, Insight, Match, and Guided as one backend-owned catalog with
+  the approved prices, included outcomes, entitlements, and progression prompts.
+- Expose the canonical plan catalog through the API so pricing surfaces do not
+  invent their own package definitions.
+- Resolve historical `free`, `reset`, and `wingman` records through an explicit
+  compatibility map while new founder beta grants store canonical plan keys.
+- Keep candidate-pool opt-in available to Member, but require Match or Guided to
+  initiate active discovery.
+- Return canonical plan assignment and active-search state separately from
+  profile readiness and pool membership.
+- Preserve Guided's bounded human-review routing without restoring legacy
+  Wingman presentation.
+
+### Batch 7 — Live beta runtime and subscription lifecycle
+
+Status: **Pending**
+
+- Run web, API, session/auth, and Postgres together on the connected beta domain.
+- Replace founder-only plan grants with idempotent Stripe subscription lifecycle
+  syncing for checkout completion, renewal, cancellation, refund/credit, pause,
+  and failure states.
+- Define Guided capacity, scheduling, async-support limits, and overflow behavior
+  before selling it.
+- Seed a controlled cohort with explicit Match beta grants, then validate one
+  real journey from signup through debrief.
+- Record acceptance evidence and select the next milestone from observed gaps.
+
 ## Definition of done
 
 The milestone is complete when:
@@ -150,10 +217,14 @@ The milestone is complete when:
 - Echo is persistent and provides a useful next action without overclaiming.
 - No working legacy route is orphaned.
 - Readiness, search activity, and market availability are visibly distinct.
+- Member, Insight, Match, and Guided are represented by one backend contract;
+  Match/Guided search access is enforced server-side.
 - Landing and signed-in experiences tell the same story.
 - Automated typecheck, web tests, API tests, schema drift, lint, and voice lint
   pass on the final branch.
 - Daniel and Lissa complete an acceptance review of the same canonical build.
+- A connected beta proves web, API, auth/session, Postgres, and plan assignment
+  together; a static artifact does not satisfy this gate.
 - The next milestone is selected from evidence, not from feature enthusiasm.
 
 ## Explicitly parked during this milestone
