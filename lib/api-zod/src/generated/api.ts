@@ -5273,7 +5273,18 @@ export const GetMatchingStateResponse = zod.object({
 }),zod.null()]),
   "poolStatus": zod.enum(['off', 'building', 'ready', 'paused', 'concierge_only']),
   "revealConsent": zod.boolean().optional().describe('Whether the member lets a mutual match see their reveal card (name + photos). Off by default; never gates being matched.'),
-  "tier": zod.union([zod.literal('free'),zod.literal('reset'),zod.literal('wingman'),zod.literal(null)]).nullable(),
+  "tier": zod.enum(['member', 'insight', 'match', 'guided']).describe('Canonical plan key retained for compatibility. Prefer plan.key.'),
+  "plan": zod.object({
+  "key": zod.enum(['member', 'insight', 'match', 'guided']),
+  "label": zod.string(),
+  "source": zod.enum(['default', 'canonical', 'legacy']),
+  "grantedAt": zod.coerce.date().nullable(),
+  "canActivateSearch": zod.boolean(),
+  "includesHumanGuidance": zod.boolean(),
+  "nextPlanKey": zod.union([zod.literal('member'),zod.literal('insight'),zod.literal('match'),zod.literal('guided'),zod.literal(null)]).nullable(),
+  "upgradeCta": zod.string().nullable()
+}),
+  "searchActive": zod.boolean().describe('True only when the account has Match or Guided active-search access and its pool state is active. Candidate-pool opt-in alone does not make search active.'),
   "readiness": zod.object({
   "score": zod.number().min(getMatchingStateResponseReadinessScoreMin).max(getMatchingStateResponseReadinessScoreMax),
   "breakdown": zod.object({
@@ -5311,7 +5322,7 @@ export const GetMatchingStateResponse = zod.object({
   "verification": zod.number().min(getMatchingStateResponseReadinessBreakdownVerificationMin).max(getMatchingStateResponseReadinessBreakdownVerificationMax)
 })
 }),
-  "eligible": zod.boolean().describe('True when readiness.score is at or above readinessThreshold. The client uses this to gate the pool opt-in switch.'),
+  "eligible": zod.boolean().describe('True when profile evidence is at or above readinessThreshold. This is distinct from plan access, active search, market availability, and whether an introduction exists.'),
   "readinessThreshold": zod.number().min(getMatchingStateResponseReadinessThresholdMin).max(getMatchingStateResponseReadinessThresholdMax).describe('Minimum readiness score required to join the matching pool, set by the MATCHING_READINESS_THRESHOLD env var (default 50).'),
   "cityDensity": zod.number().min(getMatchingStateResponseCityDensityMin),
   "totalPoolCount": zod.number().min(getMatchingStateResponseTotalPoolCountMin),
@@ -5615,9 +5626,11 @@ export const UpdateMatchingPreferencesResponse = zod.object({
 /**
  * Inserts or updates the caller's row in `match_pool_membership`.
 Accepted client-facing statuses: `off`, `building`, `ready`,
-`paused`. When the caller's tier is `wingman` and the client
-sends `building`, the server may upgrade the stored status to
-`concierge_only` for founder-curated routing.
+`paused`. Member and Insight members may opt into the candidate pool;
+that does not activate a paid search. When the caller's canonical plan
+includes human guidance and the client sends `building`, the server may
+upgrade the stored status to `concierge_only` for founder-curated
+routing.
 
  * @summary Upsert the signed-in user's match pool membership status
  */
@@ -5639,7 +5652,7 @@ export const UpdateMatchingPoolMembershipResponse = zod.object({
   "status": zod.enum(['off', 'building', 'ready', 'paused', 'concierge_only']),
   "readyAt": zod.coerce.date().nullable(),
   "pausedReason": zod.string().nullable(),
-  "tier": zod.union([zod.literal('free'),zod.literal('reset'),zod.literal('wingman'),zod.literal(null)]).nullable(),
+  "tier": zod.union([zod.literal('member'),zod.literal('insight'),zod.literal('match'),zod.literal('guided'),zod.literal('free'),zod.literal('reset'),zod.literal('wingman'),zod.literal(null)]).nullable(),
   "updatedAt": zod.coerce.date()
 })
 
@@ -6790,7 +6803,9 @@ aggregate signals and stated preferences (no raw content, no PII), and
 creates mutual internal proposals for the top candidates, skipping any
 pair that already has an internal proposal in either direction. Returns
 the caller's full proposal list (newest first), so the surface can
-refresh in one round-trip. Requires the caller to be in the pool.
+refresh in one round-trip. Requires the caller to be in the pool and to
+have active-search access through Match or Guided. Member and Insight
+may still opt into the candidate pool without initiating a search.
 
  * @summary Find and create internal matches for the signed-in user
  */
@@ -7326,6 +7341,49 @@ export const ReportConnectionResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "lastMessageAt": zod.coerce.date().nullable(),
   "lastMessagePreview": zod.string().nullable()
+})
+
+
+/**
+ * Returns the approved Member, Insight, Match, and Guided outcome ladder,
+including prices, progression prompts, included services, and bounded
+entitlements. These are commercial packages, not numbered product
+progress levels. No authentication is required.
+
+ * @summary Get the canonical MatchLab commercial plans
+ */
+export const getCommercialPlansResponsePlansItemPricesItemAmountCentsMin = 0;
+
+export const getCommercialPlansResponsePlansItemMonthlyRangeCentsOneMinMin = 0;
+
+export const getCommercialPlansResponsePlansItemMonthlyRangeCentsOneMaxMin = 0;
+
+
+
+export const GetCommercialPlansResponse = zod.object({
+  "plans": zod.array(zod.object({
+  "key": zod.enum(['member', 'insight', 'match', 'guided']),
+  "label": zod.string(),
+  "outcome": zod.string(),
+  "prices": zod.array(zod.object({
+  "cadence": zod.enum(['free', 'monthly', 'annual', 'quarterly']),
+  "amountCents": zod.number().min(getCommercialPlansResponsePlansItemPricesItemAmountCentsMin)
+})),
+  "monthlyRangeCents": zod.union([zod.object({
+  "min": zod.number().min(getCommercialPlansResponsePlansItemMonthlyRangeCentsOneMinMin),
+  "max": zod.number().min(getCommercialPlansResponsePlansItemMonthlyRangeCentsOneMaxMin)
+}),zod.null()]),
+  "includes": zod.array(zod.string()),
+  "upgradeCta": zod.string().nullable(),
+  "nextPlanKey": zod.union([zod.literal('member'),zod.literal('insight'),zod.literal('match'),zod.literal('guided'),zod.literal(null)]).nullable(),
+  "entitlements": zod.object({
+  "fullMirror": zod.boolean(),
+  "expandedPlay": zod.boolean(),
+  "selectedSources": zod.boolean(),
+  "activeMatching": zod.boolean(),
+  "humanGuidance": zod.boolean()
+})
+}))
 })
 
 
