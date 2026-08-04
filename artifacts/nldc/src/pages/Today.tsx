@@ -160,7 +160,9 @@ export default function Today() {
                         {echo.personaLabel}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Readiness {echo.readinessScore} of {echo.threshold}
+                        {state.eligible
+                          ? "Profile ready for review"
+                          : "Still gathering signal"}
                       </p>
                     </div>
                   </div>
