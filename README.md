@@ -54,6 +54,13 @@ copy does not promise that readiness creates availability, and the final public
 CTA hands into Today with Echo. Echo's baseline voice states uncertainty and can
 challenge a member without cruelty or false intimacy.
 
+The current branch is also closing the connected-beta gap. Today prioritizes
+real proposals and unread mutual conversations, Echo uses the approved visual
+system without numeric readiness rewards, and the API accepts an explicit beta
+web origin through `APP_ORIGINS`. The static review artifact remains useful for
+visual acceptance, but authenticated beta acceptance requires the web, API,
+session, and database to run together.
+
 ## Quick start
 
 ```bash
@@ -62,8 +69,10 @@ pnpm --filter @workspace/api-server run dev   # API on port 8080
 pnpm --filter @workspace/nldc run dev         # web on $PORT
 ```
 
-Required env: `DATABASE_URL` (Postgres). See `MIGRATION.md` section 3 for the full
-env inventory.
+Required env: `DATABASE_URL` (Postgres). Set `APP_ORIGINS` to the comma-separated
+web origins allowed to make credentialed API requests, for example
+`https://beta.matchlab.club,http://localhost:3000`. See `MIGRATION.md` section 3
+for the full env inventory.
 
 ## Tech stack
 
