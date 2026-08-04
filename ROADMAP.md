@@ -91,9 +91,11 @@ Status: **Complete in `agent/echo-shell-phase-0`**
 
 ### Batch 3 — My MatchLab, Journey, and Play
 
-Status: **Planned**
+Status: **In progress in `agent/echo-shell-phase-0`**
 
-- My MatchLab: profile model, data sources, permissions, and readiness evidence.
+- My MatchLab: **Complete.** Profile model, data sources, permissions, and
+  readiness evidence now share one decision view; the detailed legacy profile
+  workspace remains reachable at `/me/details`.
 - Journey: durable history of meaningful changes, introductions, dates, and
   learning afterward.
 - Play: a catalog of bounded, signal-producing activities with clear outcomes.
