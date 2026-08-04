@@ -31,6 +31,10 @@ Readiness, search activity, and market availability are separate states. A
 member becoming profile-ready must never be presented as proof that an
 introduction is available.
 
+The Matches destination presents waiting, proposal, mutual reveal, date, and
+debrief as one lifecycle. Signed-out review uses a labeled process preview only;
+fake people, messages, and implied availability do not stand in for member data.
+
 ## Quick start
 
 ```bash
