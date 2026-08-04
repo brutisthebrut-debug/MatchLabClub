@@ -1,3 +1,4 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
 # MatchLab Club Delivery Roadmap
 
 Last updated: 2026-08-04
@@ -256,7 +257,7 @@ Status: **Complete in `agent/echo-shell-phase-0`; validated by CI run #82**
 
 #### Batch 7B — Authenticated billing and connected runtime
 
-Status: **Backend slice validated by CI run #87; approved-design UI hookup implemented with repository validation and connected-runtime evidence pending**
+Status: **Backend and approved-design UI hookup validated by CI run #91; connected-runtime evidence pending**
 
 - Create authenticated canonical-plan Checkout Sessions with member and plan
   metadata; legacy public Payment Links must not assign beta packages.
@@ -306,6 +307,9 @@ Status: **Pending**
   mean preserving every page or feature. Capabilities are consolidated around a
   better member job, made contextual, or parked; visible route count is not a
   beta-completeness metric.
+- **Validation evidence:** CI run #91 passed full monorepo typecheck, lint,
+  schema drift, voice lint, web tests/build, and the complete Postgres-backed API
+  suite on the canonical package UI and typed billing contract.
 
 ## Definition of done
 
