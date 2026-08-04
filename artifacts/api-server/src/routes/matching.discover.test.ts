@@ -16,6 +16,7 @@ import {
   matchPreferencesTable,
   matchPoolMembershipTable,
   matchProposalsTable,
+  usersTable,
 } from "@workspace/db";
 import type { AuthUser } from "@workspace/api-zod";
 import matchingRouter from "./matching";
@@ -62,6 +63,19 @@ const USER_B = `disc-b-${suffix}`;
 const USER_C = `disc-c-${suffix}`;
 const ALL_USERS = [USER_A, USER_B, USER_C];
 
+
+async function grantPlan(
+  userId: string,
+  tier: "member" | "insight" | "match",
+): Promise<void> {
+  await db
+    .insert(usersTable)
+    .values({ id: userId, tier, tierGrantedAt: new Date() })
+    .onConflictDoUpdate({
+      target: usersTable.id,
+      set: { tier, tierGrantedAt: new Date() },
+    });
+}
 async function seedMember(
   userId: string,
   opts: {
@@ -126,6 +140,7 @@ async function cleanup(): Promise<void> {
       .delete(matchProposalsTable)
       .where(eq(matchProposalsTable.proposedToUserId, u));
   }
+  await db.delete(usersTable).where(inArray(usersTable.id, ALL_USERS));
 }
 
 beforeAll(() => {
@@ -149,6 +164,7 @@ describe("POST /me/matching/discover", () => {
   });
 
   it("422s when the caller is not in the pool", async () => {
+    await grantPlan(USER_A, "match");
     testApp.setUser({ id: USER_A });
     await db
       .insert(matchPoolMembershipTable)
@@ -164,7 +180,41 @@ describe("POST /me/matching/discover", () => {
       .where(eq(matchPoolMembershipTable.userId, USER_A));
   });
 
+
+
+  it("keeps Member and Insight pool-eligible but blocks active search", async () => {
+    await seedMember(USER_A, {
+      status: "ready",
+      age: 30,
+      gender: "woman",
+      genderPreference: "men",
+      cityHint: "Austin",
+    });
+    testApp.setUser({ id: USER_A });
+
+    await grantPlan(USER_A, "member");
+    const memberAttempt = await request(testApp.app).post(
+      "/api/me/matching/discover",
+    );
+    expect(memberAttempt.status).toBe(403);
+    expect(memberAttempt.body.code).toBe("active_matching_plan_required");
+
+    const membership = await db
+      .select({ status: matchPoolMembershipTable.status })
+      .from(matchPoolMembershipTable)
+      .where(eq(matchPoolMembershipTable.userId, USER_A));
+    expect(membership[0]?.status).toBe("ready");
+
+    await grantPlan(USER_A, "insight");
+    const insightAttempt = await request(testApp.app).post(
+      "/api/me/matching/discover",
+    );
+    expect(insightAttempt.status).toBe(403);
+    expect(insightAttempt.body.code).toBe("active_matching_plan_required");
+  });
+
   it("creates mutual internal proposals and is idempotent", async () => {
+    await grantPlan(USER_A, "match");
     await seedMember(USER_A, {
       status: "ready",
       age: 30,
@@ -213,6 +263,7 @@ describe("POST /me/matching/discover", () => {
   });
 
   it("flips both rows to mutual_yes when both members say yes", async () => {
+    await grantPlan(USER_A, "match");
     await seedMember(USER_A, {
       status: "ready",
       age: 30,
