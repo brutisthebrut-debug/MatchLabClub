@@ -79,7 +79,7 @@ const OVERVIEW: NavLink[] = [
   { name: "Matches", href: "/matches", icon: HeartHandshake },
   { name: "My MatchLab", href: "/me", icon: Eye },
   { name: "Journey", href: "/journey", icon: BookOpen },
-  { name: "Play", href: "/quiz", icon: Shuffle },
+  { name: "Play", href: "/play", icon: Shuffle },
 ];
 
 const SECTIONS: NavSection[] = [
