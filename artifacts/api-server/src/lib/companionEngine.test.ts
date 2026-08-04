@@ -12,6 +12,7 @@ import {
   clampCandor,
   personaLabel,
   buildReaction,
+  COMPANION_PERSONAS,
 } from "./companionEngine";
 
 const AI_TELL_WORDS =
@@ -53,10 +54,15 @@ function assertVoiceClean(text: string) {
 }
 
 describe("normalizePersona / clampCandor", () => {
-  it("defaults unknown persona to best_friend", () => {
-    expect(normalizePersona("nonsense")).toBe("best_friend");
-    expect(normalizePersona(null)).toBe("best_friend");
-    expect(normalizePersona("tough_coach")).toBe("tough_coach");
+  it("defaults a new or unknown persona to the approved sibling voice", () => {
+    expect(normalizePersona("nonsense")).toBe("witty_sibling");
+    expect(normalizePersona(null)).toBe("witty_sibling");
+  });
+
+  it("preserves every persona an existing member explicitly chose", () => {
+    for (const persona of COMPANION_PERSONAS) {
+      expect(normalizePersona(persona)).toBe(persona);
+    }
   });
 
   it("clamps candor into 1..3 with a default of 2", () => {
@@ -100,6 +106,18 @@ describe("buildCompanionView", () => {
     expect(gentle.challenge).not.toEqual(blunt.challenge);
     assertVoiceClean(gentle.challenge ?? "");
     assertVoiceClean(blunt.challenge ?? "");
+  });
+
+  it("keeps the sibling first read warm, candid, and free of machinery language", () => {
+    const view = buildCompanionView({
+      portrait: makePortrait(emptyBreakdown(), 0),
+      persona: "witty_sibling",
+      candor: 2,
+    });
+    expect(view.greeting).toMatch(/I know enough to be useful/);
+    expect(`${view.greeting} ${view.challenge}`).not.toMatch(/\b(machine|model)\b/i);
+    assertVoiceClean(view.greeting);
+    assertVoiceClean(view.challenge ?? "");
   });
 });
 

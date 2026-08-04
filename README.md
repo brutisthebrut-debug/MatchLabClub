@@ -22,12 +22,13 @@ More detail: `PROJECT_SPECIFICATION.md` and `VISION.md` (product), `OPERATIONS.m
 
 ```bash
 pnpm install
-pnpm --filter @workspace/api-server run dev   # API on port 8080
-pnpm --filter @workspace/nldc run dev         # web on $PORT
+PORT=8080 pnpm --filter @workspace/api-server run dev
+PORT=21668 pnpm --filter @workspace/nldc run dev
 ```
 
 Required env: `DATABASE_URL` (Postgres). See `MIGRATION.md` section 3 for the full
-env inventory.
+env inventory. The Vite dev server proxies `/api` to
+`http://127.0.0.1:8080` by default.
 
 ## Tech stack
 
@@ -43,6 +44,6 @@ Orval codegen.
 
 ## CI
 
-Runs on Bitbucket Pipelines (`bitbucket-pipelines.yml`): typecheck, lint, API
-tests, schema-drift, and voice-lint on every pull request and on pushes to
-`main`. See `CI.md` and `MIGRATION.md` section 6.9.
+Runs in GitHub Actions (`.github/workflows/ci.yml`): typecheck, lint, API and
+web tests, schema drift, Echo voice checks, the production web build, and the
+Playwright browser journey. See `CI.md` and `MIGRATION.md` section 6.9.

@@ -9,16 +9,16 @@
 
 Read these in the order that matches your goal:
 
-| If you want to... | Read |
-|---|---|
-| Understand the layout and how pieces connect (you are here) | `ARCHITECTURE.md` |
-| Review the plan to move off Replit infrastructure | `MIGRATION.md` |
-| Understand the product vision and north star | `VISION.md`, `replit.md` |
-| See the full feature/product specification | `PROJECT_SPECIFICATION.md` |
-| Know what CI checks gate a merge | `CI.md` |
-| Run operational tasks (Stripe, GeoIP, monitoring) | `OPERATIONS.md` |
-| See the marketing/positioning handoff | `MARKETING_HANDOFF.md`, `seo_strategy.md` |
-| Set up or read the CI pipeline | `bitbucket-pipelines.yml`, `CI.md` |
+| If you want to...                                           | Read                                      |
+| ----------------------------------------------------------- | ----------------------------------------- |
+| Understand the layout and how pieces connect (you are here) | `ARCHITECTURE.md`                         |
+| Review the plan to move off Replit infrastructure           | `MIGRATION.md`                            |
+| Understand the product vision and north star                | `VISION.md`, `replit.md`                  |
+| See the full feature/product specification                  | `PROJECT_SPECIFICATION.md`                |
+| Know what CI checks gate a merge                            | `CI.md`                                   |
+| Run operational tasks (Stripe, GeoIP, monitoring)           | `OPERATIONS.md`                           |
+| See the marketing/positioning handoff                       | `MARKETING_HANDOFF.md`, `seo_strategy.md` |
+| Set up or read the CI pipeline                              | `.github/workflows/ci.yml`, `CI.md`       |
 
 ## What the product is
 
@@ -73,7 +73,7 @@ matchlab-club/
 ├── scripts/             shared utility scripts (post-merge, etc.)
 ├── MIGRATION.md         production migration plan (off Replit)
 ├── PROJECT_SPECIFICATION.md, VISION.md, OPERATIONS.md, CI.md
-├── bitbucket-pipelines.yml  CI pipeline (Bitbucket Pipelines)
+├── .github/workflows/ci.yml  CI pipeline (GitHub Actions)
 ├── README.md            repo landing page (points to ARCHITECTURE.md)
 └── replit.md            project README + conventions + gotchas
 ```
@@ -130,9 +130,10 @@ Files below are under `artifacts/api-server/src/` unless noted.
 - **Payments.** `lib/stripeClient.ts`, `lib/initStripe.ts`, `lib/stripeReconcile.ts`,
   `lib/webhookHandlers.ts` run Stripe through the Replit-managed integration today.
   Migration to the direct Stripe SDK is Phase 2a in `MIGRATION.md`.
-- **Object storage.** `lib/objectStorage.ts` talks to a Replit sidecar today; the
-  abstraction is clean and only the credential helpers change on migration
-  (Phase 2b).
+- **Object storage.** `lib/objectStorage.ts` uses GCS directly through
+  Application Default Credentials and v4 signed URLs. Profile and account
+  deletion remove stored photo objects before their database rows, with
+  missing-object retries treated as success (Phase 2b).
 - **Email.** `lib/mailer.ts` already supports a direct Resend key or SMTP, so it
   is portable as-is.
 - **Background jobs.** Started from `index.ts` via timers (auto-proposal, nudges,
@@ -174,10 +175,9 @@ pnpm --filter @workspace/db run check-schema-drift  # migrations match schema
 pnpm run lint
 ```
 
-CI runs these on Bitbucket Pipelines; the config is `bitbucket-pipelines.yml` at
-the repo root. It runs on every pull request and on pushes to `main`, with an
-ephemeral Postgres service for the API tests. The Playwright e2e suite is a
-manually triggered `custom: e2e` pipeline (see `MIGRATION.md` section 6.9).
+CI runs these in GitHub Actions; the config is `.github/workflows/ci.yml`. It
+runs on every pull request and push to `main`, with ephemeral PostgreSQL
+services for API and Playwright tests.
 
 ## Conventions worth knowing before you read code
 

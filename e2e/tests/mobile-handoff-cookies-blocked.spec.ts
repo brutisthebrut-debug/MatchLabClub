@@ -73,10 +73,9 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
   if (createdAuditIds.length > 0) {
-    await pool.query(
-      `DELETE FROM audits WHERE id = ANY($1::int[])`,
-      [createdAuditIds],
-    );
+    await pool.query(`DELETE FROM audits WHERE id = ANY($1::int[])`, [
+      createdAuditIds,
+    ]);
   }
   await pool.query(`DELETE FROM sessions WHERE sid = $1`, [testSid]);
   // Purge any handoff_token_redemptions rows we wrote so reruns are clean.
@@ -94,165 +93,158 @@ function b64urlEncode(s: string): string {
     .replace(/=+$/, "");
 }
 
-test(
-  "anonymous audit is recovered via real /handoff/issue + /handoff/redeem in a cookies-cleared browser",
-  async ({ browser }) => {
-    // ── Phase 1: anonymous browser context creates an audit + issues handoff ──
-    const anonContext = await browser.newContext();
+test("anonymous audit is recovered via real /handoff/issue + /handoff/redeem in a cookies-cleared browser", async ({
+  browser,
+}) => {
+  // ── Phase 1: anonymous browser context creates an audit + issues handoff ──
+  const anonContext = await browser.newContext();
 
-    const createResp = await anonContext.request.post("/api/audits", {
+  const createResp = await anonContext.request.post("/api/audits", {
+    headers: { "content-type": "application/json" },
+    data: {
+      firstName: "HandoffE2E",
+      age: 30,
+      gender: "x",
+      orientation: "unspecified",
+      datingGoal: "find a relationship",
+      currentApps: [],
+      bio: "e2e handoff test fixture",
+    },
+  });
+  expect(createResp.status()).toBe(201);
+  const audit = (await createResp.json()) as { id: number; firstName: string };
+  createdAuditIds.push(audit.id);
+
+  // Confirm anon_claim cookie was set on this context.
+  const anonCookies = await anonContext.cookies();
+  expect(anonCookies.some((c) => c.name === "anon_claim")).toBe(true);
+
+  const issueResp = await anonContext.request.post(
+    "/api/claim-anonymous/handoff/issue",
+    { headers: { "content-type": "application/json" }, data: {} },
+  );
+  expect(issueResp.status()).toBe(200);
+  const issueBody = (await issueResp.json()) as { handoff: string };
+  expect(issueBody.handoff).toBeTruthy();
+
+  // Mirror what `buildMobileHandoffShareUrl` produces on the mobile side:
+  // a base64url JSON payload carrying the token + anon row IDs.
+  const payload = {
+    handoff: issueBody.handoff,
+    auditIds: [audit.id],
+    profileIds: [],
+    messageSessionIds: [],
+    insightIds: [],
+    followUpIds: [],
+  };
+  const param = b64urlEncode(JSON.stringify(payload));
+
+  // Discard the originating browser entirely — its cookies do not carry
+  // over to the next context.
+  await anonContext.close();
+
+  // ── Phase 2: fresh authenticated context, no anon cookie ──────────────
+  // The real /api/auth/login response sets the `sid` cookie with
+  // `secure: true`, which Chromium rejects on the local HTTP
+  // baseURL Playwright uses. We need the session cookie to authenticate
+  // the navigation, so seed it via extraHTTPHeaders instead — that
+  // bypasses the browser cookie jar entirely and attaches `Cookie: sid=…`
+  // to every request the context makes. This is the same workaround
+  // pattern as `handoff-expired-page.spec.ts` (which sends Cookie via
+  // request.post) extended to a full page navigation.
+  // The `secure: true` flag on the real sid cookie means Chromium drops it
+  // on the local HTTP origin, and the API server's CSRF Origin guard trusts
+  // only explicitly configured APP_ORIGINS for non-safe methods. Inject both
+  // the Cookie and that trusted origin
+  // Origin header for every request the context makes so the navigation
+  // authenticates AND the redeem POST clears the CSRF guard.
+  const trustedOrigin = process.env.E2E_BASE_URL ?? "http://localhost:21668";
+  const freshContext = await browser.newContext({
+    extraHTTPHeaders: {
+      Cookie: `sid=${testSid}`,
+      Origin: trustedOrigin,
+    },
+  });
+  // Cookie jar is empty — auth travels via the extraHTTPHeaders Cookie
+  // header instead, mirroring the cookies-blocked condition where the
+  // browser couldn't persist auth cookies either.
+  const freshCookies = await freshContext.cookies();
+  expect(freshCookies.some((c) => c.name === "anon_claim")).toBe(false);
+
+  // Sanity check: cookie-scoped claim claims 0 rows because there is no
+  // anon_claim cookie. This proves the cookie path is genuinely broken
+  // before handoff repairs it — i.e. the handoff IS doing real work.
+  const cookieClaimResp = await freshContext.request.post(
+    "/api/claim-anonymous",
+    {
       headers: { "content-type": "application/json" },
       data: {
-        firstName: "HandoffE2E",
-        age: 30,
-        gender: "x",
-        orientation: "unspecified",
-        datingGoal: "find a relationship",
-        currentApps: [],
-        bio: "e2e handoff test fixture",
+        auditIds: [audit.id],
+        profileIds: [],
+        messageSessionIds: [],
+        insightIds: [],
+        followUpIds: [],
       },
-    });
-    expect(createResp.status()).toBe(201);
-    const audit = (await createResp.json()) as { id: number; firstName: string };
-    createdAuditIds.push(audit.id);
+    },
+  );
+  expect(cookieClaimResp.status()).toBe(200);
+  const cookieClaimBody = (await cookieClaimResp.json()) as {
+    claimed: { audits: number };
+  };
+  expect(cookieClaimBody.claimed.audits).toBe(0);
 
-    // Confirm anon_claim cookie was set on this context.
-    const anonCookies = await anonContext.cookies();
-    expect(anonCookies.some((c) => c.name === "anon_claim")).toBe(true);
+  // Confirm the row is still anonymous in the DB.
+  const rowsBefore = await pool.query(
+    `SELECT user_id FROM audits WHERE id = $1`,
+    [audit.id],
+  );
+  expect(rowsBefore.rows[0].user_id).toBeNull();
 
-    const issueResp = await anonContext.request.post(
-      "/api/claim-anonymous/handoff/issue",
-      { headers: { "content-type": "application/json" }, data: {} },
-    );
-    expect(issueResp.status()).toBe(200);
-    const issueBody = (await issueResp.json()) as { handoff: string };
-    expect(issueBody.handoff).toBeTruthy();
-
-    // Mirror what `buildMobileHandoffShareUrl` produces on the mobile side:
-    // a base64url JSON payload carrying the token + anon row IDs.
-    const payload = {
-      handoff: issueBody.handoff,
-      auditIds: [audit.id],
-      profileIds: [],
-      messageSessionIds: [],
-      insightIds: [],
-      followUpIds: [],
-    };
-    const param = b64urlEncode(JSON.stringify(payload));
-
-    // Discard the originating browser entirely — its cookies do not carry
-    // over to the next context.
-    await anonContext.close();
-
-    // ── Phase 2: fresh authenticated context, no anon cookie ──────────────
-    // The real /api/auth/login response sets the `sid` cookie with
-    // `secure: true`, which Chromium rejects on the http://localhost:80
-    // baseURL Playwright uses. We need the session cookie to authenticate
-    // the navigation, so seed it via extraHTTPHeaders instead — that
-    // bypasses the browser cookie jar entirely and attaches `Cookie: sid=…`
-    // to every request the context makes. This is the same workaround
-    // pattern as `handoff-expired-page.spec.ts` (which sends Cookie via
-    // request.post) extended to a full page navigation.
-    // The `secure: true` flag on the real sid cookie means Chromium drops
-    // it on http://localhost:80, and the API server's CSRF Origin guard
-    // (artifacts/api-server/src/app.ts) only trusts https://$REPLIT_DOMAINS
-    // origins for non-safe methods. Inject both the Cookie and a trusted
-    // Origin header for every request the context makes so the navigation
-    // authenticates AND the redeem POST clears the CSRF guard.
-    const replitDomain = process.env.REPLIT_DOMAINS?.split(",")[0]?.trim();
-    if (!replitDomain) {
-      throw new Error(
-        "REPLIT_DOMAINS env var is required for this e2e test (used to spoof a trusted Origin past the CSRF guard).",
-      );
-    }
-    const trustedOrigin = `https://${replitDomain}`;
-    const freshContext = await browser.newContext({
-      extraHTTPHeaders: {
-        Cookie: `sid=${testSid}`,
+  // ── Phase 3: redeem the handoff token via the real API endpoint ──────
+  // This is the request the mobile/web client makes after carrying the
+  // handoff URL into a fresh authenticated session. We call it directly
+  // via the request context (with the trusted Origin needed to pass the
+  // CSRF guard, and the sid cookie for auth) because Chromium reserves
+  // the Origin header on page-driven fetches — but the user-visible
+  // assertion (audit appears in matches list) is still made against the
+  // real React UI in the steps below.
+  const redeemResp = await freshContext.request.post(
+    "/api/claim-anonymous/handoff/redeem",
+    {
+      headers: {
+        "content-type": "application/json",
         Origin: trustedOrigin,
       },
-    });
-    // Cookie jar is empty — auth travels via the extraHTTPHeaders Cookie
-    // header instead, mirroring the cookies-blocked condition where the
-    // browser couldn't persist auth cookies either.
-    const freshCookies = await freshContext.cookies();
-    expect(freshCookies.some((c) => c.name === "anon_claim")).toBe(false);
-
-    // Sanity check: cookie-scoped claim claims 0 rows because there is no
-    // anon_claim cookie. This proves the cookie path is genuinely broken
-    // before handoff repairs it — i.e. the handoff IS doing real work.
-    const cookieClaimResp = await freshContext.request.post(
-      "/api/claim-anonymous",
-      {
-        headers: { "content-type": "application/json" },
-        data: {
-          auditIds: [audit.id],
-          profileIds: [],
-          messageSessionIds: [],
-          insightIds: [],
-          followUpIds: [],
-        },
+      data: {
+        handoff: issueBody.handoff,
+        auditIds: [audit.id],
+        profileIds: [],
+        messageSessionIds: [],
+        insightIds: [],
+        followUpIds: [],
       },
-    );
-    expect(cookieClaimResp.status()).toBe(200);
-    const cookieClaimBody = (await cookieClaimResp.json()) as {
-      claimed: { audits: number };
-    };
-    expect(cookieClaimBody.claimed.audits).toBe(0);
+    },
+  );
+  expect(redeemResp.status()).toBe(200);
+  const redeemBody = (await redeemResp.json()) as {
+    claimed: { audits: number };
+  };
+  expect(redeemBody.claimed.audits).toBe(1);
 
-    // Confirm the row is still anonymous in the DB.
-    const rowsBefore = await pool.query(
-      `SELECT user_id FROM audits WHERE id = $1`,
-      [audit.id],
-    );
-    expect(rowsBefore.rows[0].user_id).toBeNull();
+  // ── Phase 4: a real browser page load shows the audit in the matches list ──
+  const freshPage = await freshContext.newPage();
+  await freshPage.goto(`/dashboard`);
+  await expect(
+    freshPage.locator(`[data-testid="row-audit-${audit.id}"]`),
+  ).toBeVisible({ timeout: 20_000 });
 
-    // ── Phase 3: redeem the handoff token via the real API endpoint ──────
-    // This is the request the mobile/web client makes after carrying the
-    // handoff URL into a fresh authenticated session. We call it directly
-    // via the request context (with the trusted Origin needed to pass the
-    // CSRF guard, and the sid cookie for auth) because Chromium reserves
-    // the Origin header on page-driven fetches — but the user-visible
-    // assertion (audit appears in matches list) is still made against the
-    // real React UI in the steps below.
-    const redeemResp = await freshContext.request.post(
-      "/api/claim-anonymous/handoff/redeem",
-      {
-        headers: {
-          "content-type": "application/json",
-          Origin: trustedOrigin,
-        },
-        data: {
-          handoff: issueBody.handoff,
-          auditIds: [audit.id],
-          profileIds: [],
-          messageSessionIds: [],
-          insightIds: [],
-          followUpIds: [],
-        },
-      },
-    );
-    expect(redeemResp.status()).toBe(200);
-    const redeemBody = (await redeemResp.json()) as {
-      claimed: { audits: number };
-    };
-    expect(redeemBody.claimed.audits).toBe(1);
+  // ── Phase 4: server-side ownership confirmed ──────────────────────────
+  const rowsAfter = await pool.query(
+    `SELECT user_id, anonymous_claim_token FROM audits WHERE id = $1`,
+    [audit.id],
+  );
+  expect(rowsAfter.rows[0].user_id).toBe(TEST_USER_ID);
+  expect(rowsAfter.rows[0].anonymous_claim_token).toBeNull();
 
-    // ── Phase 4: a real browser page load shows the audit in the matches list ──
-    const freshPage = await freshContext.newPage();
-    await freshPage.goto(`/dashboard`);
-    await expect(
-      freshPage.locator(`[data-testid="row-audit-${audit.id}"]`),
-    ).toBeVisible({ timeout: 20_000 });
-
-    // ── Phase 4: server-side ownership confirmed ──────────────────────────
-    const rowsAfter = await pool.query(
-      `SELECT user_id, anonymous_claim_token FROM audits WHERE id = $1`,
-      [audit.id],
-    );
-    expect(rowsAfter.rows[0].user_id).toBe(TEST_USER_ID);
-    expect(rowsAfter.rows[0].anonymous_claim_token).toBeNull();
-
-    await freshContext.close();
-  },
-);
+  await freshContext.close();
+});

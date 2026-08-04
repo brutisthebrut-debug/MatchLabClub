@@ -1,4 +1,9 @@
-import express, { type Express, type Request, type Response, type NextFunction } from "express";
+import express, {
+  type Express,
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
@@ -11,22 +16,18 @@ import { handleIdentityWebhook } from "./lib/identityVerification";
 /**
  * Build the set of origins that are trusted for credentialed CORS requests.
  * Sources:
- *   REPLIT_DOMAINS  , comma-separated list of all domains for this Repl
- *                      (dev previews and published production domains)
- *   REPLIT_EXPO_DEV_DOMAIN, Expo tunnel domain used by the mobile app in dev
+ *   APP_ORIGINS, comma-separated list of complete application origins
+ *                (for example https://app.matchlab.club)
+ *   Every trusted web or mobile origin must be explicit.
  */
 function buildAllowedOrigins(): Set<string> {
   const origins = new Set<string>();
-  const domains = process.env["REPLIT_DOMAINS"];
-  if (domains) {
-    for (const d of domains.split(",")) {
-      const trimmed = d.trim();
-      if (trimmed) origins.add(`https://${trimmed}`);
+  const appOrigins = process.env["APP_ORIGINS"];
+  if (appOrigins) {
+    for (const origin of appOrigins.split(",")) {
+      const trimmed = origin.trim().replace(/\/+$/, "");
+      if (trimmed) origins.add(trimmed);
     }
-  }
-  const expoDomain = process.env["REPLIT_EXPO_DEV_DOMAIN"];
-  if (expoDomain) {
-    origins.add(`https://${expoDomain}`);
   }
   return origins;
 }
@@ -114,9 +115,9 @@ app.post(
     }
     try {
       const sig = Array.isArray(signature) ? signature[0]! : signature;
-      // Stripe Identity events are not synced resources, so capture them here
-      // first; everything else flows to the managed sync handler. Both verify
-      // the signature against the same webhook secret.
+      // Stripe Identity needs its own verification flow, so capture it here
+      // first; billing events then flow to the portable entitlement handler.
+      // Both verify the signature against the same webhook secret.
       const handledIdentity = await handleIdentityWebhook(
         req.body as Buffer,
         sig,

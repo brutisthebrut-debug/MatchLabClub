@@ -5,6 +5,7 @@
  * MatchLab Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { WellnessAnswerPermissions } from './wellnessAnswerPermissions';
 import type { WellnessConsentLevel } from './wellnessConsentLevel';
 
 export interface WellnessAnswer {
@@ -16,6 +17,9 @@ export interface WellnessAnswer {
   questionText: string;
   answer: string;
   consentLevel: WellnessConsentLevel;
+  permissions: WellnessAnswerPermissions;
+  /** @nullable */
+  permissionUpdatedAt: Date | null;
   /** @nullable */
   deletedAt?: Date | null;
   createdAt: Date;

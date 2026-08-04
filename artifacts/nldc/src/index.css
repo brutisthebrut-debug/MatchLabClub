@@ -558,3 +558,12 @@
     border: 1px solid rgba(61, 53, 204, 0.12);
   }
 }
+
+/* Keep the approved multicolor mark legible on the ultraviolet night surface. */
+.dark img[src="/matchlab-logo.png"] {
+  filter:
+    brightness(1.55)
+    saturate(1.12)
+    drop-shadow(0 2px 14px hsl(326 100% 65% / 0.5))
+    drop-shadow(0 0 20px hsl(248 80% 76% / 0.42)) !important;
+}

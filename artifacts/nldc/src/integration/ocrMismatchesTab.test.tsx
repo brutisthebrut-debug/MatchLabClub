@@ -12,7 +12,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // ---------------------------------------------------------------------------
 // End-to-end coverage for the founder OCR Mismatches tab.
-// We mount the real Founder page, unlock the dashboard with the default key,
+// We mount the real Founder page as a server-authorized founder,
 // switch to the OCR Mismatches tab, and exercise the field filter chips.
 // All network calls are mocked so the test is hermetic.
 // ---------------------------------------------------------------------------
@@ -96,6 +96,10 @@ const ocrMismatchesPayload = {
 // ---------------------------------------------------------------------------
 
 vi.mock("@workspace/api-client-react", () => ({
+  useGetCurrentAuthUser: () => ({
+    data: { user: { id: "founder-test", role: "founder" } },
+    isLoading: false,
+  }),
   useListAudits: () => ({ data: [] }),
   useAskFounderCopilot: () => ({
     mutate: vi.fn(),
@@ -198,11 +202,7 @@ function renderFounder() {
 }
 
 async function unlockDashboard() {
-  const input = await screen.findByPlaceholderText(/Founder key/i);
-  fireEvent.change(input, { target: { value: "nldc2024" } });
-  const unlock = screen.getByRole("button", { name: /Open Dashboard/i });
-  fireEvent.click(unlock);
-  // Tab nav appears after unlock.
+  // Tab nav appears once the founder role resolves.
   await screen.findByRole("button", { name: /OCR Mismatches/i });
 }
 
@@ -212,7 +212,7 @@ async function openOcrTab() {
 }
 
 describe("Founder dashboard → OCR Mismatches tab (e2e)", () => {
-  it("unlocks the dashboard, opens the tab, and renders summary/per-field/recent sections", async () => {
+  it("authorizes the founder, opens the tab, and renders summary/per-field/recent sections", async () => {
     renderFounder();
     await unlockDashboard();
     await openOcrTab();

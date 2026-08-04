@@ -5,9 +5,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles } from "lucide-react";
 
-const FOUNDER_KEY =
-  (import.meta.env as Record<string, string>).VITE_FOUNDER_KEY || "nldc2024";
-
 function formatDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
@@ -71,7 +68,6 @@ function AskEchoSection() {
         question: question.trim(),
         ...(trimmedHint.length > 0 ? { contextHint: trimmedHint } : {}),
       },
-      params: { key: FOUNDER_KEY },
     });
   };
 

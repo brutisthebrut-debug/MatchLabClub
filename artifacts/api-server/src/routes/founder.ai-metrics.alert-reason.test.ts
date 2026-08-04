@@ -2,13 +2,18 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import express, { type Express } from "express";
 import request from "supertest";
 import crypto from "crypto";
-import { inArray } from "drizzle-orm";
-import { db, pool, aiRequestMetricsTable } from "@workspace/db";
+import { eq, inArray } from "drizzle-orm";
+import { db, pool, aiRequestMetricsTable, usersTable } from "@workspace/db";
 import founderRouter, { buildAlertReason } from "./founder";
 
+const FOUNDER_USER = "founder-alert-reason-route-test";
 function makeTestApp(): Express {
   const app = express();
   app.use(express.json());
+  app.use((req, _res, next) => {
+    req.user = { id: FOUNDER_USER, email: null, firstName: null, lastName: null, profileImageUrl: null };
+    next();
+  });
   app.use("/api", founderRouter);
   return app;
 }
@@ -49,7 +54,7 @@ interface AlertRow {
 }
 
 async function fetchAlertFor(app: Express, toolName: string): Promise<AlertRow> {
-  const res = await request(app).get("/api/founder/ai-metrics").set("x-founder-key", "nldc2024");
+  const res = await request(app).get("/api/founder/ai-metrics");
   expect(res.status).toBe(200);
   const alerts = res.body.alerts as AlertRow[];
   const row = alerts.find((a) => a.toolName === toolName);
@@ -59,7 +64,8 @@ async function fetchAlertFor(app: Express, toolName: string): Promise<AlertRow> 
 
 let app: Express;
 
-beforeAll(() => {
+beforeAll(async () => {
+  await db.insert(usersTable).values({ id: FOUNDER_USER, role: "founder" }).onConflictDoNothing();
   app = makeTestApp();
 });
 
@@ -72,6 +78,7 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
+  await db.delete(usersTable).where(eq(usersTable.id, FOUNDER_USER));
   await pool.end();
 });
 

@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
+/**
+ * Legacy compatibility field. Purpose-specific permissions are canonical.
+ * @deprecated
+ */
 export type WellnessConsentLevel = typeof WellnessConsentLevel[keyof typeof WellnessConsentLevel];
 
 

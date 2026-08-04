@@ -1,4 +1,12 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  beforeEach,
+  afterEach,
+  vi,
+} from "vitest";
 import express, {
   type Express,
   type Request,
@@ -148,16 +156,14 @@ describe("POST /api/me/safety/report", () => {
 
   it("files an off-platform conversation report with no reportedUserId", async () => {
     testApp.setUser({ id: USER_A });
-    const res = await request(testApp.app)
-      .post("/api/me/safety/report")
-      .send({
-        subjectType: "off_platform",
-        reason: "scam",
-        context: "conversation",
-        externalApp: "Hinge",
-        externalLabel: "Alex",
-        note: "Coach flagged an elevated romance-scam pattern.",
-      });
+    const res = await request(testApp.app).post("/api/me/safety/report").send({
+      subjectType: "off_platform",
+      reason: "scam",
+      context: "conversation",
+      externalApp: "Hinge",
+      externalLabel: "Alex",
+      note: "Coach flagged an elevated romance-scam pattern.",
+    });
     expect(res.status).toBe(201);
     expect(res.body.ok).toBe(true);
     expect(typeof res.body.reportId).toBe("number");
@@ -166,14 +172,12 @@ describe("POST /api/me/safety/report", () => {
   it("stores off-platform reports with no platform member, app, and label", async () => {
     testApp.setUser({ id: USER_A });
     const { dumpTable } = await import("../lib/testDb");
-    await request(testApp.app)
-      .post("/api/me/safety/report")
-      .send({
-        subjectType: "off_platform",
-        reason: "scam",
-        externalApp: "Tinder",
-        externalLabel: "Jordan",
-      });
+    await request(testApp.app).post("/api/me/safety/report").send({
+      subjectType: "off_platform",
+      reason: "scam",
+      externalApp: "Tinder",
+      externalLabel: "Jordan",
+    });
     const rows = (
       dumpTable("user_reports") as Array<{
         reporterUserId: string;
@@ -233,6 +237,50 @@ describe("safety block / list / unblock", () => {
       (b: { blockedUserId: string }) => b.blockedUserId === USER_B,
     );
     expect(mine.length).toBe(1);
+  });
+
+  it("closes a live connection and removes both proposal directions", async () => {
+    const {
+      db,
+      dumpTable,
+      matchConnectionsTable,
+      matchProposalsTable,
+      orderConnectionPair,
+    } = await import("../lib/testDb");
+    const pair = orderConnectionPair(USER_A, USER_B);
+    await db.insert(matchConnectionsTable).values({
+      userLowId: pair.userLowId,
+      userHighId: pair.userHighId,
+      status: "active",
+    });
+    await db.insert(matchProposalsTable).values([
+      {
+        userId: USER_A,
+        proposedToUserId: USER_B,
+        source: "internal",
+        compatibilityScore: 80,
+        status: "mutual_yes",
+      },
+      {
+        userId: USER_B,
+        proposedToUserId: USER_A,
+        source: "internal",
+        compatibilityScore: 80,
+        status: "mutual_yes",
+      },
+    ]);
+
+    testApp.setUser({ id: USER_A });
+    const res = await request(testApp.app)
+      .post("/api/me/safety/block")
+      .send({ blockedUserId: USER_B, reason: "harassment" });
+    expect(res.status).toBe(201);
+
+    const [connection] = dumpTable("match_connections");
+    expect(connection?.status).toBe("closed");
+    expect(connection?.closedReason).toBe("block");
+    expect(connection?.closedByUserId).toBe(USER_A);
+    expect(dumpTable("match_proposals")).toHaveLength(0);
   });
 
   it("unblocks and is idempotent for a non-existent block", async () => {
@@ -305,7 +353,8 @@ describe("POST /api/me/safety/message-check", () => {
     const res = await request(testApp.app)
       .post("/api/me/safety/message-check")
       .send({
-        draft: "Okay, I will send the gift card and wire transfer the money tonight.",
+        draft:
+          "Okay, I will send the gift card and wire transfer the money tonight.",
       });
     expect(res.status).toBe(200);
     expect(res.body.risk).toBe("elevated");

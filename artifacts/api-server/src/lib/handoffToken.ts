@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { deriveAppSecret } from "./appSecrets";
 
 /**
  * Cross-device handoff for anonymous claim tokens.
@@ -29,16 +30,7 @@ import crypto from "crypto";
 export const HANDOFF_DEFAULT_TTL_MS = 15 * 60 * 1000;
 
 function getSigningSecret(): string {
-  const explicit = process.env.ANON_CLAIM_HANDOFF_SECRET?.trim();
-  if (explicit) return explicit;
-  const replId = process.env.REPL_ID?.trim();
-  if (replId) return `nldc-handoff:${replId}`;
-  if (process.env.NODE_ENV === "production") {
-    throw new Error(
-      "ANON_CLAIM_HANDOFF_SECRET (or REPL_ID) must be set to sign handoff tokens",
-    );
-  }
-  return "nldc-handoff-dev-insecure";
+  return deriveAppSecret("anonymous-handoff");
 }
 
 function b64url(buf: Buffer): string {

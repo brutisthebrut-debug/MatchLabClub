@@ -108,9 +108,7 @@ async function cleanup(): Promise<void> {
   const conns = await db
     .select({ id: matchConnectionsTable.id })
     .from(matchConnectionsTable)
-    .where(
-      inArray(matchConnectionsTable.userLowId, ALL_USERS),
-    );
+    .where(inArray(matchConnectionsTable.userLowId, ALL_USERS));
   const ids = conns.map((c) => c.id);
   if (ids.length > 0) {
     await db
@@ -197,6 +195,22 @@ describe("connection messaging", () => {
 
   it("unmatch closes the thread and blocks further sends", async () => {
     const id = await makeConnection();
+    await db.insert(matchProposalsTable).values([
+      {
+        userId: USER_A,
+        proposedToUserId: USER_B,
+        source: "internal",
+        compatibilityScore: 82,
+        status: "mutual_yes",
+      },
+      {
+        userId: USER_B,
+        proposedToUserId: USER_A,
+        source: "internal",
+        compatibilityScore: 82,
+        status: "mutual_yes",
+      },
+    ]);
     testApp.setUser({ id: USER_A });
     const closed = await request(testApp.app).post(
       `/api/me/connections/${id}/unmatch`,
@@ -217,6 +231,20 @@ describe("connection messaging", () => {
       .post(`/api/me/connections/${id}/messages`)
       .send({ body: "Hello?" });
     expect(blockedB.status).toBe(409);
+
+    const pairRows = await db
+      .select({ status: matchProposalsTable.status })
+      .from(matchProposalsTable)
+      .where(inArray(matchProposalsTable.userId, [USER_A, USER_B]));
+    expect(pairRows).toHaveLength(2);
+    expect(pairRows.every((row) => row.status === "completed")).toBe(true);
+
+    // Closing the connection also closes reveal-only surfaces. A stale tab
+    // cannot keep reading the counterpart's curated identity card.
+    const profile = await request(testApp.app).get(
+      `/api/me/connections/${id}/profile`,
+    );
+    expect(profile.status).toBe(409);
   });
 
   it("a block between the pair hard-gates sending", async () => {
@@ -341,7 +369,9 @@ describe("compatibility score on the profile", () => {
     );
     expect(res.status).toBe(200);
     expect(res.body.compatibilityScore).toBe(84);
-    expect(res.body.matchSummary).toBe("Strong overall fit, about 8 miles apart.");
+    expect(res.body.matchSummary).toBe(
+      "Strong overall fit, about 8 miles apart.",
+    );
   });
 
   it("falls back to the counterpart's mirrored row when the viewer's is absent", async () => {
@@ -362,7 +392,9 @@ describe("compatibility score on the profile", () => {
     );
     expect(res.status).toBe(200);
     expect(res.body.compatibilityScore).toBe(61);
-    expect(res.body.matchSummary).toBe("Promising fit, worth a real conversation.");
+    expect(res.body.matchSummary).toBe(
+      "Promising fit, worth a real conversation.",
+    );
   });
 });
 

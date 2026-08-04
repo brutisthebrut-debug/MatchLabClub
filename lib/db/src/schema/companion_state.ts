@@ -13,7 +13,7 @@ import {
  * the userId primary key (onConflictDoUpdate), a single lookup path, so no
  * advisory lock is needed to keep concurrent writes safe.
  *
- * `persona` is the relationship register (warm best friend by default).
+ * `persona` is the relationship register (candid, warm sibling by default).
  * `candor` is the bluntness dial, 1 (gentle) to 3 (tough love); default 2 means
  * honest, challenges by default, never a yes person. `evolvingSummary` is a
  * short derived read of the person that Echo refreshes as signals accumulate;
@@ -24,7 +24,7 @@ import {
  */
 export const companionStateTable = pgTable("companion_state", {
   userId: varchar("user_id").primaryKey(),
-  persona: varchar("persona").notNull().default("best_friend"),
+  persona: varchar("persona").notNull().default("witty_sibling"),
   candor: integer("candor").notNull().default(2),
   evolvingSummary: text("evolving_summary"),
   lastMood: varchar("last_mood"),

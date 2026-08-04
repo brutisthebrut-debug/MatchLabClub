@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { deriveAppSecret } from "./appSecrets";
 
 /**
  * Signed invite links for the Wingman loop.
@@ -14,16 +15,7 @@ import crypto from "crypto";
 export const WINGMAN_DEFAULT_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 function getSigningSecret(): string {
-  const explicit = process.env.WINGMAN_INVITE_SECRET?.trim();
-  if (explicit) return explicit;
-  const replId = process.env.REPL_ID?.trim();
-  if (replId) return `nldc-wingman:${replId}`;
-  if (process.env.NODE_ENV === "production") {
-    throw new Error(
-      "WINGMAN_INVITE_SECRET (or REPL_ID) must be set to sign wingman invite tokens",
-    );
-  }
-  return "nldc-wingman-dev-insecure";
+  return deriveAppSecret("wingman-invite");
 }
 
 function b64url(buf: Buffer): string {

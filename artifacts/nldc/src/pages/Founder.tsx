@@ -33,7 +33,7 @@ import {
   type AiToolCooldownState,
 } from "@/lib/apiClient";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, ComposedChart, Bar } from "recharts";
-import { useListAudits, useGetWaitlistStats, useGetCoachFollowUpTimeline, useGetFounderReferrals } from "@workspace/api-client-react";
+import { useListAudits, useGetWaitlistStats, useGetCoachFollowUpTimeline, useGetFounderReferrals, useGetCurrentAuthUser } from "@workspace/api-client-react";
 import { Lock, LogOut, Users, ShoppingBag, BarChart3, Inbox, ListChecks, RefreshCw, Sparkles, CheckCircle2, AlertTriangle, Loader2, Send, Mail, Copy, ClipboardCheck, Circle, Moon, XCircle, Download, ScanLine, Clock, Share2, Heart, MapPin, Brain, SlidersHorizontal, RotateCcw, ThumbsUp, ThumbsDown, Activity, Save, Gauge, TrendingUp, ShieldAlert } from "lucide-react";
 import { buildAiContext, readSavedProgressEntries, readSavedGoals } from "@/lib/contextBuilder";
 import { EchoPlaybookPanel } from "@/components/founder/EchoPlaybookPanel";
@@ -2244,10 +2244,10 @@ function AiMetricsPanel({ refreshKey, founderKey }: { refreshKey: number; founde
   );
 }
 
-const FOUNDER_KEY =
-  (import.meta.env as Record<string, string>).VITE_FOUNDER_KEY || "nldc2024";
-
-const FOUNDER_KEY_STORAGE_KEY = "founder_key";
+// Founder API clients still accept this legacy argument while the generated
+// surface is migrated. The server ignores it and authorizes the signed-in
+// account's database role instead.
+const FOUNDER_KEY = "";
 
 function StatCard({ label, value, icon: Icon, color, "data-testid": testId }: { label: string; value: number | string; icon: React.ElementType; color: string; "data-testid"?: string }) {
   return (
@@ -3964,19 +3964,7 @@ function FollowUpTrendsPanel() {
   );
 }
 
-function LockedView({ onSubmit }: { onSubmit: (key: string) => void }) {
-  const [value, setValue] = useState("");
-  const [error, setError] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  if (value === FOUNDER_KEY) {
-  onSubmit(value);
-  } else {
-  setError(true);
-  }
-  };
-
+function LockedView({ signedIn }: { signedIn: boolean }) {
   return (
   <div className="min-h-[60vh] flex items-center justify-center">
   <div className="glass rounded-2xl p-10 max-w-sm w-full text-center space-y-6">
@@ -3985,26 +3973,20 @@ function LockedView({ onSubmit }: { onSubmit: (key: string) => void }) {
   </div>
   <div>
   <h1 className="font-serif text-xl font-bold text-foreground">Founder Dashboard</h1>
-  <p className="text-sm text-muted-foreground mt-2">Enter your founder key to continue.</p>
+  <p className="text-sm text-muted-foreground mt-2">
+  {signedIn
+    ? "This account does not have founder access."
+    : "Sign in with an approved founder account to continue."}
+  </p>
   </div>
-  <form onSubmit={handleSubmit} className="space-y-3">
-  <input
-  type="password"
-  value={value}
-  onChange={(e) => { setValue(e.target.value); setError(false); }}
-  placeholder="Founder key"
-  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-foreground text-sm outline-none focus:border-[hsl(248_62%_52%/0.5)] transition-colors"
-  />
-  {error && <p className="text-xs text-red-400">Incorrect key.</p>}
-  <button
-  type="submit"
-  className="w-full py-3 bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] text-white font-semibold rounded-xl text-sm hover:opacity-90 transition-opacity"
+  <a
+  href={signedIn ? "/api/logout" : "/api/login?returnTo=/founder"}
+  className="block w-full py-3 bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(326_100%_55%)] text-white font-semibold rounded-xl text-sm hover:opacity-90 transition-opacity"
   >
-  Open Dashboard
-  </button>
-  </form>
+  {signedIn ? "Sign in with another account" : "Sign in"}
+  </a>
   <p className="text-xs text-muted-foreground/40">
-  Set <code className="font-mono">VITE_FOUNDER_KEY</code> to configure a custom key.
+  Access is assigned on the server. There is no browser key to enter or leak.
   </p>
   </div>
   </div>
@@ -4561,7 +4543,7 @@ function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   {tab === "testing" && <TestingChecklistPanel />}
 
   {/* Referrals */}
-  {tab === "referrals" && <ReferralsPanel founderKey={FOUNDER_KEY} refreshKey={refreshKey} />}
+  {tab === "referrals" && <ReferralsPanel refreshKey={refreshKey} />}
 
   {/* Matching Review Queue */}
   {tab === "matching" && (
@@ -5856,10 +5838,8 @@ function PoolReadyPanel({ founderKey, refreshKey }: { founderKey: string; refres
 
 /* ─── Referrals Panel ───────────────────────────────────────────────── */
 
-function ReferralsPanel({ founderKey, refreshKey }: { founderKey: string; refreshKey: number }) {
-  const { data, isLoading, isError, refetch } = useGetFounderReferrals(
-  { key: founderKey },
-  );
+function ReferralsPanel({ refreshKey }: { refreshKey: number }) {
+  const { data, isLoading, isError, refetch } = useGetFounderReferrals();
 
   useEffect(() => {
   void refetch();
@@ -5877,7 +5857,7 @@ function ReferralsPanel({ founderKey, refreshKey }: { founderKey: string; refres
   if (isError || !data) {
   return (
   <div className="glass rounded-2xl p-8 text-sm text-muted-foreground">
-  Could not load referral data. Check the founder key and try again.
+  Could not load referral data. Check this account's founder access and try again.
   </div>
   );
   }
@@ -6621,48 +6601,30 @@ function TestingChecklistPanel() {
 
 export default function Founder() {
   useMeta("Founder Dashboard", "MatchLab Club Founder Dashboard, live app data.");
+  const { data: auth, isLoading } = useGetCurrentAuthUser();
+  const isFounder = auth?.user?.role === "founder";
 
-  const params = new URLSearchParams(
-  typeof window !== "undefined" ? window.location.search : ""
-  );
-  const keyParam = params.get("key");
-
-  const [authenticated, setAuthenticated] = useState(() => {
-  if (keyParam === FOUNDER_KEY) return true;
-  try {
-  return localStorage.getItem(FOUNDER_KEY_STORAGE_KEY) === FOUNDER_KEY;
-  } catch {
-  return false;
-  }
-  });
-
-  const handleAuth = (key: string) => {
-  try {
-  localStorage.setItem(FOUNDER_KEY_STORAGE_KEY, key);
-  } catch {
-  }
-  setAuthenticated(true);
-  };
-
-  const handleSignOut = () => {
-  try {
-  localStorage.removeItem(FOUNDER_KEY_STORAGE_KEY);
-  } catch {
-  }
-  setAuthenticated(false);
-  };
-
-  if (!authenticated) {
+  if (isLoading) {
   return (
   <AppLayout>
-  <LockedView onSubmit={handleAuth} />
+  <div className="min-h-[60vh] flex items-center justify-center">
+  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+  </div>
+  </AppLayout>
+  );
+  }
+
+  if (!isFounder) {
+  return (
+  <AppLayout>
+  <LockedView signedIn={Boolean(auth?.user)} />
   </AppLayout>
   );
   }
 
   return (
   <AppLayout>
-  <Dashboard onSignOut={handleSignOut} />
+  <Dashboard onSignOut={() => { window.location.href = "/api/logout"; }} />
   </AppLayout>
   );
 }

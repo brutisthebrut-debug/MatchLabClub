@@ -1,25 +1,32 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import express, { type Express } from "express";
 import request from "supertest";
-import { inArray } from "drizzle-orm";
-import { db, pool, auditsTable } from "@workspace/db";
+import { eq, inArray } from "drizzle-orm";
+import { db, pool, auditsTable, usersTable } from "@workspace/db";
 import type { OcrCorrectionsRecord } from "@workspace/db";
 import founderRouter from "./founder";
 
-function makeTestApp(): Express {
+const FOUNDER_USER = "founder-ocr-route-test";
+function makeTestApp(userId: string | null = FOUNDER_USER): Express {
   const app = express();
   app.use(express.json());
+  app.use((req, _res, next) => {
+    if (userId) req.user = { id: userId, email: null, firstName: null, lastName: null, profileImageUrl: null };
+    next();
+  });
   app.use("/api", founderRouter);
   return app;
 }
 
 let app: Express;
 
-beforeAll(() => {
+beforeAll(async () => {
+  await db.insert(usersTable).values({ id: FOUNDER_USER, role: "founder" }).onConflictDoNothing();
   app = makeTestApp();
 });
 
 afterAll(async () => {
+  await db.delete(usersTable).where(eq(usersTable.id, FOUNDER_USER));
   await pool.end();
 });
 
@@ -155,7 +162,7 @@ describe("GET /api/founder/ocr-mismatches", () => {
   it("aggregates per-field correction counts and ranks topDiffs by frequency", async () => {
     const res = await request(app)
       .get("/api/founder/ocr-mismatches")
-      .set("x-founder-key", "nldc2024");
+      ;
     expect(res.status).toBe(200);
 
     const { summary, perField, recent } = res.body;
@@ -249,7 +256,7 @@ describe("GET /api/founder/ocr-mismatches", () => {
 
     const res7 = await request(app)
       .get("/api/founder/ocr-mismatches?window=7")
-      .set("x-founder-key", "nldc2024");
+      ;
     expect(res7.status).toBe(200);
     expect(res7.body.summary.windowDays).toBe(7);
     expect(typeof res7.body.summary.since).toBe("string");
@@ -264,7 +271,7 @@ describe("GET /api/founder/ocr-mismatches", () => {
     // With a 90-day window, the backdated rileyDup audit comes back.
     const res90 = await request(app)
       .get("/api/founder/ocr-mismatches?window=90")
-      .set("x-founder-key", "nldc2024");
+      ;
     expect(res90.body.summary.windowDays).toBe(90);
     const recent90 = res90.body.recent as Array<{ auditId: number }>;
     expect(recent90.some((r) => r.auditId === ids.rileyDupId)).toBe(true);
@@ -272,14 +279,14 @@ describe("GET /api/founder/ocr-mismatches", () => {
     // An invalid window value falls back to the default (no time filter).
     const resBad = await request(app)
       .get("/api/founder/ocr-mismatches?window=42")
-      .set("x-founder-key", "nldc2024");
+      ;
     expect(resBad.body.summary.windowDays).toBeNull();
   });
 
   it("supports sort=top to rank perField by the single top diff", async () => {
     const resTotal = await request(app)
       .get("/api/founder/ocr-mismatches?sort=total")
-      .set("x-founder-key", "nldc2024");
+      ;
     expect(resTotal.body.summary.sort).toBe("total");
     // perField sorted by correctionsCount desc.
     const totals = resTotal.body.perField as Array<{
@@ -293,7 +300,7 @@ describe("GET /api/founder/ocr-mismatches", () => {
 
     const resTop = await request(app)
       .get("/api/founder/ocr-mismatches?sort=top")
-      .set("x-founder-key", "nldc2024");
+      ;
     expect(resTop.body.summary.sort).toBe("top");
     const tops = resTop.body.perField as Array<{ topDiffCount: number }>;
     for (let i = 0; i < tops.length - 1; i++) {
@@ -303,14 +310,20 @@ describe("GET /api/founder/ocr-mismatches", () => {
     }
   });
 
-  it("rejects requests without the founder key", async () => {
-    const resNoKey = await request(app).get("/api/founder/ocr-mismatches");
+  it("rejects anonymous requests even when they invent a legacy key", async () => {
+    const anonymousApp = makeTestApp(null);
+    const resNoKey = await request(anonymousApp).get("/api/founder/ocr-mismatches");
     expect(resNoKey.status).toBe(401);
-    expect(resNoKey.body).toEqual({ error: "Founder key required." });
+    expect(resNoKey.body).toEqual({
+      error: "Sign in with a founder account.",
+    });
 
-    const resWrongKey = await request(app)
+    const resWrongKey = await request(anonymousApp)
       .get("/api/founder/ocr-mismatches")
       .set("x-founder-key", "not-the-right-key");
     expect(resWrongKey.status).toBe(401);
+    expect(resWrongKey.body).toEqual({
+      error: "Sign in with a founder account.",
+    });
   });
 });

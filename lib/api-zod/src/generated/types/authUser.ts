@@ -5,6 +5,7 @@
  * MatchLab Club API
  * OpenAPI spec version: 0.1.0
  */
+import type { AuthUserRole } from './authUserRole';
 
 export interface AuthUser {
   id: string;
@@ -16,4 +17,6 @@ export interface AuthUser {
   lastName: string | null;
   /** @nullable */
   profileImageUrl: string | null;
+  /** Access role resolved by the server. Founder privileges are never granted by a client-supplied key. */
+  role?: AuthUserRole;
 }

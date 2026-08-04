@@ -5,6 +5,7 @@ import {
   compatibilityReadsTable,
   journalEntriesTable,
   wellnessAnswersTable,
+  dataPermissionEventsTable,
   importedSourcesTable,
   postDateNotesTable,
   datingWinsTable,
@@ -78,6 +79,9 @@ async function clearTestUserSignals(userId: string): Promise<void> {
       .delete(compatibilityReadsTable)
       .where(eq(compatibilityReadsTable.userId, userId)),
     db.delete(journalEntriesTable).where(eq(journalEntriesTable.userId, userId)),
+    db
+      .delete(dataPermissionEventsTable)
+      .where(eq(dataPermissionEventsTable.userId, userId)),
     db.delete(wellnessAnswersTable).where(eq(wellnessAnswersTable.userId, userId)),
     db.delete(importedSourcesTable).where(eq(importedSourcesTable.userId, userId)),
     db.delete(postDateNotesTable).where(eq(postDateNotesTable.userId, userId)),
@@ -154,17 +158,38 @@ const WELLNESS_DIMENSIONS = [
 
 async function seedPowerSignals(userId: string): Promise<void> {
   // Wellness: 16 of 18 dimensions answered, so coverage reads close to full.
-  await db.insert(wellnessAnswersTable).values(
-    WELLNESS_DIMENSIONS.map((dimension, i) => ({
-      userId,
-      questionId: `${dimension}.seed_${i}`,
-      dimension,
-      category: "seed",
-      questionText: `How do you tend to show up around ${dimension.replace("_", " ")}?`,
-      answer:
-        "I have thought about this a fair amount and I know what I need here, and where I am still growing.",
-      consentLevel: "all" as const,
-    })),
+  const seededWellness = await db
+    .insert(wellnessAnswersTable)
+    .values(
+      WELLNESS_DIMENSIONS.map((dimension, i) => ({
+        userId,
+        questionId: `${dimension}.seed_${i}`,
+        dimension,
+        category: "seed",
+        questionText: `How do you tend to show up around ${dimension.replace("_", " ")}?`,
+        answer:
+          "I have thought about this a fair amount and I know what I need here, and where I am still growing.",
+        consentLevel: "coaching" as const,
+        echoUseApproved: true,
+        mirrorConfirmed: true,
+        matchingUseApproved: true,
+        researchUseApproved: false,
+        permissionUpdatedAt: new Date(),
+      })),
+    )
+    .returning({ id: wellnessAnswersTable.id });
+  await db.insert(dataPermissionEventsTable).values(
+    seededWellness.flatMap((answer) =>
+      (["echo", "mirror", "matching"] as const).map((purpose) => ({
+        userId,
+        resourceType: "wellness_answer",
+        resourceId: String(answer.id),
+        purpose,
+        granted: true,
+        actorType: "migration",
+        reason: "development_seed",
+      })),
+    ),
   );
 
   // Compass: 5 reads, full coverage for that lane.

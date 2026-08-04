@@ -5,6 +5,17 @@
  * MatchLab Club API
  * OpenAPI spec version: 0.1.0
  */
+/**
+ * Access role resolved by the server. Founder privileges are never granted by a client-supplied key.
+ */
+export type AuthUserRole = typeof AuthUserRole[keyof typeof AuthUserRole];
+
+
+export const AuthUserRole = {
+  member: 'member',
+  founder: 'founder',
+} as const;
+
 export interface AuthUser {
   id: string;
   /** @nullable */
@@ -15,6 +26,8 @@ export interface AuthUser {
   lastName: string | null;
   /** @nullable */
   profileImageUrl: string | null;
+  /** Access role resolved by the server. Founder privileges are never granted by a client-supplied key. */
+  role?: AuthUserRole;
 }
 
 export interface AuthUserEnvelope {
@@ -1232,6 +1245,35 @@ export interface AccountSummary {
   postDateNotes: number;
 }
 
+export type AccountExportRecordsItem = { [key: string]: unknown };
+
+/**
+ * Complete account-owned records grouped by database source. Tables
+containing live credentials or delivery tokens are omitted.
+Sessions and verification records use redacted projections.
+
+ */
+export type AccountExportRecords = {[key: string]: AccountExportRecordsItem[]};
+
+export type AccountExportUserRole = typeof AccountExportUserRole[keyof typeof AccountExportUserRole];
+
+
+export const AccountExportUserRole = {
+  member: 'member',
+  founder: 'founder',
+} as const;
+
+/**
+ * @nullable
+ */
+export type AccountExportUserTierSource = typeof AccountExportUserTierSource[keyof typeof AccountExportUserTierSource] | null;
+
+
+export const AccountExportUserTierSource = {
+  founder: 'founder',
+  stripe: 'stripe',
+} as const;
+
 export interface AccountExportUser {
   id: string;
   /** @nullable */
@@ -1242,7 +1284,22 @@ export interface AccountExportUser {
   lastName: string | null;
   /** @nullable */
   profileImageUrl: string | null;
+  role: AccountExportUserRole;
+  aiContentConsentGranted: boolean;
+  /** @nullable */
+  aiContentConsentGrantedAt: string | null;
+  /** @nullable */
+  aiContentConsentRevokedAt: string | null;
+  /** @nullable */
+  aiContentConsentUpdatedAt: string | null;
+  /** @nullable */
+  tier: string | null;
+  /** @nullable */
+  tierGrantedAt: string | null;
+  /** @nullable */
+  tierSource: AccountExportUserTierSource;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface JournalEntry {
@@ -1296,6 +1353,80 @@ export interface PostDateNote {
   deletedAt?: string | null;
 }
 
+/**
+ * Legacy compatibility field. Purpose-specific permissions are canonical.
+ * @deprecated
+ */
+export type WellnessConsentLevel = typeof WellnessConsentLevel[keyof typeof WellnessConsentLevel];
+
+
+export const WellnessConsentLevel = {
+  coaching: 'coaching',
+  matching: 'matching',
+  research: 'research',
+  all: 'all',
+} as const;
+
+export interface WellnessAnswerPermissions {
+  echo: boolean;
+  mirror: boolean;
+  matching: boolean;
+  research: boolean;
+}
+
+export interface WellnessAnswer {
+  id: number;
+  questionId: string;
+  dimension: string;
+  /** @nullable */
+  category?: string | null;
+  questionText: string;
+  answer: string;
+  consentLevel: WellnessConsentLevel;
+  permissions: WellnessAnswerPermissions;
+  /** @nullable */
+  permissionUpdatedAt: string | null;
+  /** @nullable */
+  deletedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type DataPermissionEventPurpose = typeof DataPermissionEventPurpose[keyof typeof DataPermissionEventPurpose];
+
+
+export const DataPermissionEventPurpose = {
+  echo: 'echo',
+  mirror: 'mirror',
+  matching: 'matching',
+  research: 'research',
+} as const;
+
+export type DataPermissionEventActorType = typeof DataPermissionEventActorType[keyof typeof DataPermissionEventActorType];
+
+
+export const DataPermissionEventActorType = {
+  member: 'member',
+  system: 'system',
+  founder: 'founder',
+  migration: 'migration',
+} as const;
+
+export interface DataPermissionEvent {
+  id: number;
+  userId: string;
+  resourceType: string;
+  resourceId: string;
+  purpose: DataPermissionEventPurpose;
+  granted: boolean;
+  actorType: DataPermissionEventActorType;
+  /** @nullable */
+  actorId: string | null;
+  /** @nullable */
+  reason: string | null;
+  createdAt: string;
+}
+
 export interface AccountExport {
   /** ISO timestamp of when the export was generated. */
   exportedAt: string;
@@ -1306,6 +1437,100 @@ export interface AccountExport {
   insights: EmailInsight[];
   journalEntries: JournalEntry[];
   postDateNotes: PostDateNote[];
+  wellnessAnswers: WellnessAnswer[];
+  dataPermissionEvents: DataPermissionEvent[];
+  /** Complete account-owned records grouped by database source. Tables
+  containing live credentials or delivery tokens are omitted.
+  Sessions and verification records use redacted projections.
+   */
+  records: AccountExportRecords;
+}
+
+export type BillingEntitlementTier = typeof BillingEntitlementTier[keyof typeof BillingEntitlementTier];
+
+
+export const BillingEntitlementTier = {
+  free: 'free',
+  reset: 'reset',
+  wingman: 'wingman',
+} as const;
+
+export type BillingEntitlementStatus = typeof BillingEntitlementStatus[keyof typeof BillingEntitlementStatus];
+
+
+export const BillingEntitlementStatus = {
+  free: 'free',
+  active: 'active',
+  canceling: 'canceling',
+  past_due: 'past_due',
+  incomplete: 'incomplete',
+  unpaid: 'unpaid',
+  canceled: 'canceled',
+} as const;
+
+export type BillingEntitlementSource = typeof BillingEntitlementSource[keyof typeof BillingEntitlementSource];
+
+
+export const BillingEntitlementSource = {
+  free: 'free',
+  founder: 'founder',
+  stripe: 'stripe',
+} as const;
+
+export interface BillingEntitlement {
+  tier: BillingEntitlementTier;
+  status: BillingEntitlementStatus;
+  active: boolean;
+  source: BillingEntitlementSource;
+  /** @nullable */
+  accessUntil: string | null;
+  cancelAtPeriodEnd: boolean;
+  canManageBilling: boolean;
+}
+
+export type CreateBillingCheckoutInputProduct = typeof CreateBillingCheckoutInputProduct[keyof typeof CreateBillingCheckoutInputProduct];
+
+
+export const CreateBillingCheckoutInputProduct = {
+  'signal-audit': 'signal-audit',
+  'dating-reset': 'dating-reset',
+  wingman: 'wingman',
+} as const;
+
+export interface CreateBillingCheckoutInput {
+  product: CreateBillingCheckoutInputProduct;
+}
+
+export interface BillingRedirect {
+  url: string;
+}
+
+export type BillingCheckoutStatusPaymentStatus = typeof BillingCheckoutStatusPaymentStatus[keyof typeof BillingCheckoutStatusPaymentStatus];
+
+
+export const BillingCheckoutStatusPaymentStatus = {
+  paid: 'paid',
+  unpaid: 'unpaid',
+  no_payment_required: 'no_payment_required',
+} as const;
+
+/**
+ * @nullable
+ */
+export type BillingCheckoutStatusProduct = typeof BillingCheckoutStatusProduct[keyof typeof BillingCheckoutStatusProduct] | null;
+
+
+export const BillingCheckoutStatusProduct = {
+  'signal-audit': 'signal-audit',
+  'dating-reset': 'dating-reset',
+  wingman: 'wingman',
+} as const;
+
+export interface BillingCheckoutStatus {
+  confirmed: boolean;
+  paymentStatus: BillingCheckoutStatusPaymentStatus;
+  /** @nullable */
+  product: BillingCheckoutStatusProduct;
 }
 
 export interface BulkDeleteAuditsInput {
@@ -1423,18 +1648,6 @@ export interface RevokeSessionsResult {
   success: true;
   /** Number of sessions actually deleted. */
   revoked: number;
-}
-
-export type DeleteMyAccountResultDeleted = {
-  audits: number;
-  profiles: number;
-  messages: number;
-  insights: number;
-};
-
-export interface DeleteMyAccountResult {
-  success: true;
-  deleted: DeleteMyAccountResultDeleted;
 }
 
 export interface DeleteAccountInput {
@@ -2382,15 +2595,12 @@ export interface DeletePostDateNoteResult {
   deletedId: number;
 }
 
-export type WellnessConsentLevel = typeof WellnessConsentLevel[keyof typeof WellnessConsentLevel];
-
-
-export const WellnessConsentLevel = {
-  coaching: 'coaching',
-  matching: 'matching',
-  research: 'research',
-  all: 'all',
-} as const;
+export interface WellnessAnswerPermissionsPatch {
+  echo?: boolean;
+  mirror?: boolean;
+  matching?: boolean;
+  research?: boolean;
+}
 
 export interface WellnessAnswerInput {
   /**
@@ -2418,6 +2628,7 @@ export interface WellnessAnswerInput {
      * @maxLength 5000
      */
   answer: string;
+  /** @deprecated */
   consentLevel?: WellnessConsentLevel;
 }
 
@@ -2427,22 +2638,8 @@ export interface WellnessAnswerPatch {
      * @maxLength 5000
      */
   answer?: string;
+  /** @deprecated */
   consentLevel?: WellnessConsentLevel;
-}
-
-export interface WellnessAnswer {
-  id: number;
-  questionId: string;
-  dimension: string;
-  /** @nullable */
-  category?: string | null;
-  questionText: string;
-  answer: string;
-  consentLevel: WellnessConsentLevel;
-  /** @nullable */
-  deletedAt?: string | null;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface WellnessAnswerList {

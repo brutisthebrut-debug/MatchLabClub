@@ -56,22 +56,14 @@ import {
   useGetConnectors,
   useSyncConnector,
   useDisconnectConnector,
+  useGetCurrentAuthUser,
   getGetMatchingStateQueryKey,
 } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useToast } from "@/hooks/use-toast";
 import { syncGoogleCalendar, disconnectGoogleCalendar } from "@/lib/apiClient";
 
-const FOUNDER_KEY_CLIENT =
-  (import.meta.env as Record<string, string>).VITE_FOUNDER_KEY || "nldc2024";
-
-function isFounderBrowser(): boolean {
-  try {
-    return localStorage.getItem("founder_key") === FOUNDER_KEY_CLIENT;
-  } catch {
-    return false;
-  }
-}
+const FOUNDER_KEY_CLIENT = "";
 
 const fadeUpVariants: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -862,16 +854,17 @@ function formatSyncedAt(iso: string | null): string | null {
 /**
  * Live read-only status for the founder-managed Google Calendar sync. Everyone
  * sees the honest status (read-only via the contract endpoint, with a demo
- * fallback so the panel is never empty); only a founder browser gets the
+ * fallback so the panel is never empty); only a signed-in founder account gets the
  * sync/disconnect controls. The derived count is the only number we surface, and
  * the copy is explicit that raw events are never stored.
  */
 function GoogleCalendarLivePanel() {
   const { data, isLoading, isError, refetch } = useGetConnectors();
+  const { data: auth } = useGetCurrentAuthUser();
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState<null | "sync" | "disconnect">(null);
   const [error, setError] = useState<string | null>(null);
-  const founder = isFounderBrowser();
+  const founder = auth?.user?.role === "founder";
 
   const connector = data?.connectors.find(
     (c) => c.provider === "google-calendar",

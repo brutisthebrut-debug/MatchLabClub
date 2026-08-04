@@ -25,11 +25,13 @@ export const COMPANION_PERSONAS: CompanionPersona[] = [
   "calm_mentor",
 ];
 
+export const DEFAULT_COMPANION_PERSONA: CompanionPersona = "witty_sibling";
+
 export function normalizePersona(raw: string | null | undefined): CompanionPersona {
   if (raw && (COMPANION_PERSONAS as string[]).includes(raw)) {
     return raw as CompanionPersona;
   }
-  return "best_friend";
+  return DEFAULT_COMPANION_PERSONA;
 }
 
 export function clampCandor(raw: number | null | undefined): number {
@@ -40,7 +42,7 @@ export function clampCandor(raw: number | null | undefined): number {
 const PERSONA_LABEL: Record<CompanionPersona, string> = {
   best_friend: "Echo, your honest best friend",
   tough_coach: "Echo, your tough coach",
-  witty_sibling: "Echo, your sharp sibling",
+  witty_sibling: "Echo, the sibling who tells you the truth",
   calm_mentor: "Echo, your calm mentor",
 };
 
@@ -74,9 +76,9 @@ function greetingFor(persona: CompanionPersona, stageLabel: string): string {
     case "tough_coach":
       return `Here is where you actually stand. Your picture is at "${base}". No spin.`;
     case "witty_sibling":
-      return `Alright, let me read you back to you. Right now you are at "${base}".`;
+      return `Okay, I have a read. You are at "${base}". I know enough to be useful and not enough to get cocky.`;
     case "calm_mentor":
-      return `Let us take an honest look together. Your model is at "${base}".`;
+      return `Let us take an honest look together. I know you at "${base}" right now.`;
     case "best_friend":
     default:
       return `Hey, it is me. Here is the real read on you right now: "${base}".`;
@@ -119,7 +121,7 @@ function buildChallenge(input: CompanionViewInput): string | null {
   if (portrait.blindSpots.length > 0) {
     const spot = portrait.blindSpots[0];
     if (candor >= 3) {
-      return `Straight up: the machine still cannot see your ${spot.label.toLowerCase()}. You keep skipping it. That is the gap holding your matches back, not bad luck.`;
+      return `Straight up: I still cannot see your ${spot.label.toLowerCase()}. You keep skipping it. That is the gap holding your matches back, not bad luck.`;
     }
     if (candor <= 1) {
       return `One soft nudge: we have never looked at your ${spot.label.toLowerCase()} together. When you are ready, that is the piece that would teach me the most about you.`;

@@ -7,6 +7,7 @@ import { db, aiRequestMetricsTable, usersTable, aiUsageCountersTable } from "@wo
 import { logger } from "./logger";
 import type { PhotoAnalysis } from "./aiEngine";
 import { effectiveAiCaps } from "./brainConfig";
+import { loadEffectivePaidTier } from "./billingEntitlements";
 
 export type AiMode = "live" | "fallback" | "setup-needed";
 export type AiProvider = "openai" | "anthropic";
@@ -391,10 +392,10 @@ type CallOnce = (model: string, userContent: string) => Promise<RawCallResult>;
 // abuser running thousands of large prompts through Anthropic in a day.
 //
 // Bucketing choices:
-//  - Authed users: keyed by userId. Free tier gets 30/day. A user with a paid
-//    tier on usersTable.tier (granted manually by the founder during beta) gets
-//    the higher paid cap. The anon/free caps are founder-tunable from the brain
-//    control center; the paid cap is a fixed constant here.
+//  - Authed users: keyed by userId. Free tier gets 30/day. A user with an
+//    active server-authoritative paid entitlement gets the higher paid cap.
+//    The anon/free caps are founder-tunable from the brain control center; the
+//    paid cap is a fixed constant here.
 //  - Anonymous users (no userId): hard-capped at 5/day, keyed by the
 //    sentinel "__anon__". This is a single shared bucket across all anon
 //    callers; we accept the false-positive risk for anon to avoid storing
@@ -403,9 +404,6 @@ const ANON_USER_BUCKET = "__anon__";
 const ANON_DAILY_CAP = 5;
 const FREE_TIER_DAILY_CAP = 30;
 const PAID_TIER_DAILY_CAP = 200;
-// Explicit allowlist of paid tier values that unlock the higher cap. Kept as an
-// allowlist (not "any non-free value") because usersTable.tier is unconstrained.
-const PAID_TIERS = new Set(["reset", "wingman"]);
 
 function todayDateString(): string {
   return new Date().toISOString().slice(0, 10);
@@ -421,20 +419,12 @@ async function resolveCapForUser(userId: string | null): Promise<number> {
     // keep the constant defaults
   }
   if (!userId) return caps.anon;
-  // A founder-granted paid tier raises the daily cap. Tier is granted manually
-  // during beta; this is where that grant turns into a tangible benefit. We
-  // match an explicit allowlist (not "anything non-free") because usersTable
-  // .tier is an unconstrained varchar: a future or stale value like "trial" or
-  // "cancelled" must NOT silently unlock the paid cap. Fail open to the free
-  // cap on any read error so a transient DB hiccup never hard-blocks a user.
+  // The entitlement resolver supports founder beta grants and Stripe records,
+  // including paid-through cancellation and failed-renewal boundaries. Fail
+  // open to the free cap on read error so a transient DB hiccup never blocks a
+  // user completely.
   try {
-    const rows = await db
-      .select({ tier: usersTable.tier })
-      .from(usersTable)
-      .where(eq(usersTable.id, userId))
-      .limit(1);
-    const tier = rows[0]?.tier;
-    if (tier && PAID_TIERS.has(tier)) return PAID_TIER_DAILY_CAP;
+    if (await loadEffectivePaidTier(userId)) return PAID_TIER_DAILY_CAP;
   } catch {
     // fall through to the free cap
   }

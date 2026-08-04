@@ -7,6 +7,11 @@ import {
   Clock, Mail, BookOpen, Heart,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import {
+  getGetBillingCheckoutStatusQueryKey,
+  useGetBillingCheckoutStatus,
+} from "@workspace/api-client-react";
+import { useAuth } from "@workspace/replit-auth-web";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -137,9 +142,69 @@ export default function CheckoutSuccess() {
   typeof window !== "undefined" ? window.location.search : ""
   );
   const product = params.get("product") || "signal-audit";
+  const sessionId = params.get("session_id") ?? "";
   const copy = PRODUCT_COPY[product] ?? PRODUCT_COPY["signal-audit"]!;
+  const { isAuthenticated, isLoading: authLoading, login } = useAuth();
+  const checkoutStatus = useGetBillingCheckoutStatus(sessionId, {
+    query: {
+      queryKey: getGetBillingCheckoutStatusQueryKey(sessionId),
+      enabled: isAuthenticated && sessionId.length > 0,
+      retry: 2,
+    },
+  });
 
-  useMeta("Order Confirmed", "Your order is confirmed. Welcome to MatchLab Club.");
+  useMeta(
+    checkoutStatus.data?.confirmed ? "Order Confirmed" : "Confirming Payment",
+    "MatchLab Club verifies checkout with Stripe before paid access begins.",
+  );
+
+  if (
+    authLoading ||
+    (isAuthenticated && sessionId.length > 0 && checkoutStatus.isLoading)
+  ) {
+    return (
+      <AppLayout>
+        <div className="container mx-auto px-4 py-24 max-w-xl text-center">
+          <Clock className="w-10 h-10 mx-auto mb-5 text-[hsl(248_62%_62%)] animate-pulse" />
+          <h1 className="font-serif text-3xl font-bold text-foreground">Confirming your payment…</h1>
+          <p className="text-muted-foreground mt-3">Stripe gets the final word. This usually takes a moment.</p>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (!isAuthenticated || !checkoutStatus.data?.confirmed) {
+    return (
+      <AppLayout>
+        <div className="container mx-auto px-4 py-24 max-w-xl text-center">
+          <Clock className="w-12 h-12 mx-auto mb-6 text-amber-400" />
+          <h1 className="font-serif text-3xl font-bold text-foreground">
+            Payment is not confirmed yet.
+          </h1>
+          <p className="text-muted-foreground leading-relaxed mt-4 mb-8">
+            Paid access starts only after MatchLab verifies the Stripe session.
+            An incomplete payment never unlocks a plan.
+          </p>
+          {!isAuthenticated ? (
+            <button
+              type="button"
+              onClick={() => login()}
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-[hsl(248_62%_52%)] text-white font-semibold"
+            >
+              Sign in to verify checkout
+            </button>
+          ) : (
+            <Link
+              href={`/checkout/${product}`}
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-[hsl(248_62%_52%)] text-white font-semibold"
+            >
+              Return to checkout <ArrowRight className="w-4 h-4" />
+            </Link>
+          )}
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
   <AppLayout>

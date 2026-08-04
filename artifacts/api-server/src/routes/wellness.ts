@@ -3,6 +3,7 @@ import { and, desc, eq, isNull, sql, type SQL } from "drizzle-orm";
 import {
   db,
   wellnessAnswersTable,
+  dataPermissionEventsTable,
   wellnessInferencesTable,
   wellnessTagsTable,
   journalEntriesTable,
@@ -12,6 +13,7 @@ import {
 import {
   CreateWellnessAnswerBody,
   UpdateWellnessAnswerBody,
+  UpdateWellnessAnswerPermissionsBody,
   CreateWellnessTagBody,
   UpdateWellnessTagBody,
   ConfirmWellnessInferenceBody,
@@ -58,10 +60,63 @@ function serializeAnswer(row: AnswerRow) {
     questionText: row.questionText,
     answer:       row.answer,
     consentLevel: row.consentLevel,
+    permissions: {
+      echo: row.echoUseApproved,
+      mirror: row.mirrorConfirmed,
+      matching: row.matchingUseApproved,
+      research: row.researchUseApproved,
+    },
+    permissionUpdatedAt:
+      row.permissionUpdatedAt instanceof Date
+        ? row.permissionUpdatedAt.toISOString()
+        : (row.permissionUpdatedAt ?? null),
     deletedAt:    row.deletedAt instanceof Date ? row.deletedAt.toISOString() : (row.deletedAt ?? null),
     createdAt:    row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
     updatedAt:    row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
   };
+}
+
+const PERMISSION_COLUMNS = {
+  echo: "echoUseApproved",
+  mirror: "mirrorConfirmed",
+  matching: "matchingUseApproved",
+  research: "researchUseApproved",
+} as const;
+
+type PermissionPurpose = keyof typeof PERMISSION_COLUMNS;
+
+function permissionState(row: AnswerRow): Record<PermissionPurpose, boolean> {
+  return {
+    echo: row.echoUseApproved,
+    mirror: row.mirrorConfirmed,
+    matching: row.matchingUseApproved,
+    research: row.researchUseApproved,
+  };
+}
+
+function changedPermissionEvents(args: {
+  before: Record<PermissionPurpose, boolean>;
+  after: Record<PermissionPurpose, boolean>;
+  userId: string;
+  resourceId: number;
+  explicitPurposes?: ReadonlySet<PermissionPurpose>;
+  memberReason: string;
+  systemReason?: string;
+}) {
+  return (Object.keys(PERMISSION_COLUMNS) as PermissionPurpose[])
+    .filter((purpose) => args.before[purpose] !== args.after[purpose])
+    .map((purpose) => ({
+      userId: args.userId,
+      resourceType: "wellness_answer",
+      resourceId: String(args.resourceId),
+      purpose,
+      granted: args.after[purpose],
+      actorType: args.explicitPurposes?.has(purpose) ? "member" : "system",
+      actorId: args.explicitPurposes?.has(purpose) ? args.userId : null,
+      reason: args.explicitPurposes?.has(purpose)
+        ? args.memberReason
+        : (args.systemReason ?? args.memberReason),
+    }));
 }
 
 function serializeTag(row: TagRow) {
@@ -114,92 +169,286 @@ router.post("/wellness/answers", async (req, res): Promise<void> => {
     return;
   }
   const { questionId, dimension, category, questionText, answer } = parsed.data;
-  // Capture policy is fixed: every wellness answer is stored at "all" for all uses.
-  // We ignore any caller-supplied consentLevel so the policy is enforced server-side,
-  // not just in the UI. Users still control deletion/export from the Data Vault.
-  const consentLevel = "all" as const;
+  const userId = req.user.id;
 
-  // Upsert: one answer per questionId per user (overwrite if they answer again)
-  const existing = await db
-    .select({ id: wellnessAnswersTable.id })
-    .from(wellnessAnswersTable)
-    .where(
-      and(
-        eq(wellnessAnswersTable.userId, req.user.id),
-        eq(wellnessAnswersTable.questionId, questionId),
-        isNull(wellnessAnswersTable.deletedAt),
-      ) as SQL,
-    )
-    .limit(1);
+  // Saving and approving are deliberately separate. New answers begin as
+  // stored source material with no downstream purpose permission.
+  const result = await db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select()
+      .from(wellnessAnswersTable)
+      .where(
+        and(
+          eq(wellnessAnswersTable.userId, userId),
+          eq(wellnessAnswersTable.questionId, questionId),
+          isNull(wellnessAnswersTable.deletedAt),
+        ) as SQL,
+      )
+      .limit(1);
 
-  let row: AnswerRow;
-  if (existing.length > 0) {
-    const [updated] = await db
-      .update(wellnessAnswersTable)
-      .set({ answer, consentLevel, updatedAt: new Date() })
-      .where(eq(wellnessAnswersTable.id, existing[0]!.id))
-      .returning();
-    row = updated!;
-    res.status(200).json(serializeAnswer(row));
-  } else {
-    const [inserted] = await db
+    if (existing) {
+      const contentChanged = existing.answer !== answer;
+      const before = permissionState(existing);
+      const after = contentChanged
+        ? { echo: false, mirror: false, matching: false, research: false }
+        : before;
+      const permissionUpdatedAt = contentChanged ? new Date() : existing.permissionUpdatedAt;
+
+      const [updated] = await tx
+        .update(wellnessAnswersTable)
+        .set({
+          answer,
+          consentLevel: "coaching",
+          echoUseApproved: after.echo,
+          mirrorConfirmed: after.mirror,
+          matchingUseApproved: after.matching,
+          researchUseApproved: after.research,
+          permissionUpdatedAt,
+          updatedAt: new Date(),
+        })
+        .where(eq(wellnessAnswersTable.id, existing.id))
+        .returning();
+
+      const events = changedPermissionEvents({
+        before,
+        after,
+        userId,
+        resourceId: existing.id,
+        memberReason: "answer_content_changed",
+      });
+      if (events.length > 0) {
+        await tx.insert(dataPermissionEventsTable).values(events);
+      }
+      return { row: updated!, created: false };
+    }
+
+    const [inserted] = await tx
       .insert(wellnessAnswersTable)
       .values({
-        userId:       req.user.id,
+        userId,
         questionId,
         dimension,
-        category:     category ?? null,
+        category: category ?? null,
         questionText,
         answer,
-        consentLevel,
+        consentLevel: "coaching",
       })
       .returning();
-    row = inserted!;
+    return { row: inserted!, created: true };
+  });
+
+  if (result.created) {
     void recordJourneyEvent({
       eventType: "signal_fed",
-      userId: req.user.id,
+      userId,
       props: { source: "wellness" },
     });
-    res.status(201).json(serializeAnswer(row));
   }
+  res.status(result.created ? 201 : 200).json(serializeAnswer(result.row));
 });
 
 router.patch("/wellness/answers/:id", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Authentication required" });
+    return;
+  }
   const id = parseId(req.params["id"]);
   if (id === null) { res.status(400).json({ error: "Invalid id" }); return; }
 
   const parsed = UpdateWellnessAnswerBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const [existing] = await db
-    .select()
-    .from(wellnessAnswersTable)
-    .where(and(eq(wellnessAnswersTable.id, id), answerScope(req)) as SQL);
-  if (!existing) { res.status(404).json({ error: "Not found" }); return; }
+  const userId = req.user.id;
+  const updated = await db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select()
+      .from(wellnessAnswersTable)
+      .where(
+        and(
+          eq(wellnessAnswersTable.id, id),
+          eq(wellnessAnswersTable.userId, userId),
+          isNull(wellnessAnswersTable.deletedAt),
+        ) as SQL,
+      );
+    if (!existing) return null;
 
-  const patch: Partial<typeof wellnessAnswersTable.$inferInsert> = { updatedAt: new Date() };
-  if (parsed.data.answer !== undefined) patch.answer = parsed.data.answer;
-  // consentLevel is fixed at "all" by capture policy; we never let a caller change it here.
-
-  const [updated] = await db
-    .update(wellnessAnswersTable)
-    .set(patch)
-    .where(eq(wellnessAnswersTable.id, id))
-    .returning();
+    const contentChanged =
+      parsed.data.answer !== undefined &&
+      parsed.data.answer !== existing.answer;
+    const before = permissionState(existing);
+    const after = contentChanged
+      ? { echo: false, mirror: false, matching: false, research: false }
+      : before;
+    const [row] = await tx
+      .update(wellnessAnswersTable)
+      .set({
+        answer: parsed.data.answer ?? existing.answer,
+        consentLevel: "coaching",
+        echoUseApproved: after.echo,
+        mirrorConfirmed: after.mirror,
+        matchingUseApproved: after.matching,
+        researchUseApproved: after.research,
+        permissionUpdatedAt: contentChanged
+          ? new Date()
+          : existing.permissionUpdatedAt,
+        updatedAt: new Date(),
+      })
+      .where(eq(wellnessAnswersTable.id, id))
+      .returning();
+    const events = changedPermissionEvents({
+      before,
+      after,
+      userId,
+      resourceId: id,
+      memberReason: "answer_content_changed",
+    });
+    if (events.length > 0) {
+      await tx.insert(dataPermissionEventsTable).values(events);
+    }
+    return row!;
+  });
+  if (!updated) { res.status(404).json({ error: "Not found" }); return; }
   res.json(serializeAnswer(updated!));
 });
 
+router.patch("/wellness/answers/:id/permissions", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Authentication required" });
+    return;
+  }
+  const id = parseId(req.params["id"]);
+  if (id === null) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+  const parsed = UpdateWellnessAnswerPermissionsBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const explicitPurposes = new Set(
+    (Object.keys(PERMISSION_COLUMNS) as PermissionPurpose[]).filter(
+      (purpose) => parsed.data[purpose] !== undefined,
+    ),
+  );
+  if (explicitPurposes.size === 0) {
+    res.status(400).json({ error: "At least one permission is required" });
+    return;
+  }
+
+  const userId = req.user.id;
+  const result = await db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select()
+      .from(wellnessAnswersTable)
+      .where(
+        and(
+          eq(wellnessAnswersTable.id, id),
+          eq(wellnessAnswersTable.userId, userId),
+          isNull(wellnessAnswersTable.deletedAt),
+        ) as SQL,
+      );
+    if (!existing) return { kind: "not_found" as const };
+
+    const before = permissionState(existing);
+    const after = { ...before };
+    for (const purpose of explicitPurposes) {
+      after[purpose] = parsed.data[purpose]!;
+    }
+    if (parsed.data.matching === true && !after.mirror) {
+      return {
+        kind: "invalid" as const,
+        error: "Confirm this answer in Mirror before allowing matching use",
+      };
+    }
+    if (!after.mirror) {
+      after.matching = false;
+    }
+
+    const events = changedPermissionEvents({
+      before,
+      after,
+      userId,
+      resourceId: id,
+      explicitPurposes,
+      memberReason: "member_permission_update",
+      systemReason: "matching_revoked_with_mirror",
+    });
+    if (events.length === 0) {
+      return { kind: "ok" as const, row: existing };
+    }
+
+    const [updated] = await tx
+      .update(wellnessAnswersTable)
+      .set({
+        echoUseApproved: after.echo,
+        mirrorConfirmed: after.mirror,
+        matchingUseApproved: after.matching,
+        researchUseApproved: after.research,
+        permissionUpdatedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(wellnessAnswersTable.id, id))
+      .returning();
+    await tx.insert(dataPermissionEventsTable).values(events);
+    return { kind: "ok" as const, row: updated! };
+  });
+
+  if (result.kind === "not_found") {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  if (result.kind === "invalid") {
+    res.status(400).json({ error: result.error });
+    return;
+  }
+  res.json(serializeAnswer(result.row));
+});
+
 router.delete("/wellness/answers/:id", async (req, res): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ error: "Authentication required" });
+    return;
+  }
   const id = parseId(req.params["id"]);
   if (id === null) { res.status(400).json({ error: "Invalid id" }); return; }
 
-  const [existing] = await db
-    .select({ id: wellnessAnswersTable.id })
-    .from(wellnessAnswersTable)
-    .where(and(eq(wellnessAnswersTable.id, id), answerScope(req), isNull(wellnessAnswersTable.deletedAt)) as SQL);
-  if (!existing) { res.status(404).json({ error: "Not found" }); return; }
-
-  await db.update(wellnessAnswersTable).set({ deletedAt: new Date() }).where(eq(wellnessAnswersTable.id, id));
+  const userId = req.user.id;
+  const deleted = await db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select({ id: wellnessAnswersTable.id })
+      .from(wellnessAnswersTable)
+      .where(
+        and(
+          eq(wellnessAnswersTable.id, id),
+          eq(wellnessAnswersTable.userId, userId),
+          isNull(wellnessAnswersTable.deletedAt),
+        ) as SQL,
+      );
+    if (!existing) return false;
+    await tx
+      .update(wellnessAnswersTable)
+      .set({
+        echoUseApproved: false,
+        mirrorConfirmed: false,
+        matchingUseApproved: false,
+        researchUseApproved: false,
+        permissionUpdatedAt: new Date(),
+        deletedAt: new Date(),
+      })
+      .where(eq(wellnessAnswersTable.id, id));
+    await tx
+      .delete(dataPermissionEventsTable)
+      .where(
+        and(
+          eq(dataPermissionEventsTable.userId, userId),
+          eq(dataPermissionEventsTable.resourceType, "wellness_answer"),
+          eq(dataPermissionEventsTable.resourceId, String(id)),
+        ),
+      );
+    return true;
+  });
+  if (!deleted) { res.status(404).json({ error: "Not found" }); return; }
   res.json({ success: true as const, deletedId: id });
 });
 
@@ -467,10 +716,36 @@ router.get("/wellness/profile", async (req, res): Promise<void> => {
     };
   });
 
-  // Matching readiness: dimensions with >40% completion = strong
-  const strongDimensions = dimensions.filter(d => d.completionPct >= 40).map(d => d.dimension);
-  const weakDimensions   = dimensions.filter(d => d.completionPct < 40).map(d => d.dimension);
-  const overallPct       = Math.round(dimensions.reduce((s, d) => s + d.completionPct, 0) / dimensions.length);
+  // The visible Mirror can show every saved answer, but matching readiness may
+  // only use dimensions the member separately approved for matching.
+  const approvedByDimension = new Map<string, number>();
+  for (const answer of answers) {
+    if (!answer.matchingUseApproved) continue;
+    approvedByDimension.set(
+      answer.dimension,
+      (approvedByDimension.get(answer.dimension) ?? 0) + 1,
+    );
+  }
+  const matchingDimensions = Object.keys(DIMENSION_LABELS).map((dimension) => {
+    const total = DIMENSION_QUESTION_COUNTS[dimension] ?? 10;
+    const approved = approvedByDimension.get(dimension) ?? 0;
+    return {
+      dimension,
+      completionPct: Math.min(100, Math.round((approved / total) * 100)),
+    };
+  });
+  const strongDimensions = matchingDimensions
+    .filter((dimension) => dimension.completionPct >= 40)
+    .map((dimension) => dimension.dimension);
+  const weakDimensions = matchingDimensions
+    .filter((dimension) => dimension.completionPct < 40)
+    .map((dimension) => dimension.dimension);
+  const overallPct = Math.round(
+    matchingDimensions.reduce(
+      (sum, dimension) => sum + dimension.completionPct,
+      0,
+    ) / matchingDimensions.length,
+  );
   const readyForMatching = overallPct >= 30 && strongDimensions.length >= 5;
 
   res.json({
@@ -748,83 +1023,160 @@ router.post("/me/wellness/inferences/:id/confirm", async (req, res): Promise<voi
     return;
   }
 
-  const [inference] = await db
-    .select()
-    .from(wellnessInferencesTable)
-    .where(
-      and(
-        eq(wellnessInferencesTable.userId, req.user.id),
-        eq(wellnessInferencesTable.id, id),
-      ) as SQL,
-    )
-    .limit(1);
-  if (!inference) {
+  const userId = req.user.id;
+  const result = await db.transaction(async (tx) => {
+    const [inference] = await tx
+      .select()
+      .from(wellnessInferencesTable)
+      .where(
+        and(
+          eq(wellnessInferencesTable.userId, userId),
+          eq(wellnessInferencesTable.id, id),
+        ) as SQL,
+      )
+      .limit(1);
+    if (!inference) return { kind: "not_found" as const };
+    if (inference.status !== "pending") {
+      return { kind: "resolved" as const };
+    }
+
+    const answerText = (
+      parsed.data.answer ?? inference.suggestedAnswer
+    ).trim();
+    if (answerText.length === 0) {
+      return { kind: "empty" as const };
+    }
+
+    const [existing] = await tx
+      .select()
+      .from(wellnessAnswersTable)
+      .where(
+        and(
+          eq(wellnessAnswersTable.userId, userId),
+          eq(wellnessAnswersTable.questionId, inference.inferredQuestionId),
+          isNull(wellnessAnswersTable.deletedAt),
+        ) as SQL,
+      )
+      .limit(1);
+
+    let answerRow: AnswerRow;
+    let created = false;
+    if (existing) {
+      const before = permissionState(existing);
+      const after = {
+        echo: true,
+        mirror: true,
+        matching: false,
+        research: false,
+      };
+      const [updated] = await tx
+        .update(wellnessAnswersTable)
+        .set({
+          answer: answerText,
+          consentLevel: "coaching",
+          echoUseApproved: true,
+          mirrorConfirmed: true,
+          matchingUseApproved: false,
+          researchUseApproved: false,
+          permissionUpdatedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(wellnessAnswersTable.id, existing.id))
+        .returning();
+      answerRow = updated!;
+      const events = changedPermissionEvents({
+        before,
+        after,
+        userId,
+        resourceId: existing.id,
+        explicitPurposes: new Set<PermissionPurpose>(["echo", "mirror"]),
+        memberReason: "member_confirmed_echo_inference",
+        systemReason: "inference_content_replaced",
+      });
+      if (events.length > 0) {
+        await tx.insert(dataPermissionEventsTable).values(events);
+      }
+    } else {
+      const [inserted] = await tx
+        .insert(wellnessAnswersTable)
+        .values({
+          userId,
+          questionId: inference.inferredQuestionId,
+          dimension: inference.dimension,
+          category: null,
+          questionText: inference.questionText,
+          answer: answerText,
+          consentLevel: "coaching",
+          echoUseApproved: true,
+          mirrorConfirmed: true,
+          matchingUseApproved: false,
+          researchUseApproved: false,
+          permissionUpdatedAt: new Date(),
+        })
+        .returning();
+      answerRow = inserted!;
+      created = true;
+      await tx.insert(dataPermissionEventsTable).values([
+        {
+          userId,
+          resourceType: "wellness_answer",
+          resourceId: String(answerRow.id),
+          purpose: "echo",
+          granted: true,
+          actorType: "member",
+          actorId: userId,
+          reason: "member_confirmed_echo_inference",
+        },
+        {
+          userId,
+          resourceType: "wellness_answer",
+          resourceId: String(answerRow.id),
+          purpose: "mirror",
+          granted: true,
+          actorType: "member",
+          actorId: userId,
+          reason: "member_confirmed_echo_inference",
+        },
+      ]);
+    }
+
+    const [updatedInference] = await tx
+      .update(wellnessInferencesTable)
+      .set({ status: "confirmed", updatedAt: new Date() })
+      .where(eq(wellnessInferencesTable.id, id))
+      .returning();
+    return {
+      kind: "ok" as const,
+      answerRow,
+      updatedInference: updatedInference!,
+      created,
+    };
+  });
+
+  if (result.kind === "not_found") {
     res.status(404).json({ error: "Not found" });
     return;
   }
-  if (inference.status !== "pending") {
+  if (result.kind === "resolved") {
     res.status(409).json({ error: "Already resolved" });
     return;
   }
-
-  const answerText = (parsed.data.answer ?? inference.suggestedAnswer).trim();
-  if (answerText.length === 0) {
+  if (result.kind === "empty") {
     res.status(400).json({ error: "Answer required" });
     return;
   }
-
-  // Write through the normal wellness-answer upsert (one row per questionId).
-  const existing = await db
-    .select({ id: wellnessAnswersTable.id })
-    .from(wellnessAnswersTable)
-    .where(
-      and(
-        eq(wellnessAnswersTable.userId, req.user.id),
-        eq(wellnessAnswersTable.questionId, inference.inferredQuestionId),
-        isNull(wellnessAnswersTable.deletedAt),
-      ) as SQL,
-    )
-    .limit(1);
-
-  let answerRow: AnswerRow;
-  if (existing.length > 0) {
-    const [updated] = await db
-      .update(wellnessAnswersTable)
-      .set({ answer: answerText, consentLevel: "all", updatedAt: new Date() })
-      .where(eq(wellnessAnswersTable.id, existing[0]!.id))
-      .returning();
-    answerRow = updated!;
-  } else {
-    const [inserted] = await db
-      .insert(wellnessAnswersTable)
-      .values({
-        userId:       req.user.id,
-        questionId:   inference.inferredQuestionId,
-        dimension:    inference.dimension,
-        category:     null,
-        questionText: inference.questionText,
-        answer:       answerText,
-        consentLevel: "all",
-      })
-      .returning();
-    answerRow = inserted!;
+  if (result.created) {
     void recordJourneyEvent({
       eventType: "signal_fed",
-      userId: req.user.id,
+      userId,
       props: { source: "wellness_inference" },
     });
   }
 
-  const [updatedInference] = await db
-    .update(wellnessInferencesTable)
-    .set({ status: "confirmed", updatedAt: new Date() })
-    .where(eq(wellnessInferencesTable.id, id))
-    .returning();
-
   res.status(200).json({
     confirmed: true,
-    answer: serializeAnswer(answerRow),
-    inference: serializeInference(updatedInference!),
+    answer: serializeAnswer(result.answerRow),
+    inference: serializeInference(result.updatedInference),
   });
 });
 

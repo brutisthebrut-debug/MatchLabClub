@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // ---------------------------------------------------------------------------
 // End-to-end coverage for the OCR Mismatch trend chart on the Founder page.
-// We mount the real Founder page, unlock the dashboard with the default key,
+// We mount the real Founder page as a server-authorized founder,
 // switch to the OCR Mismatches tab, and assert the trend chart section renders
 // in both the no-data empty state and the seeded-data (chart) state.
 // All network calls are mocked so the test is hermetic.
@@ -16,6 +16,10 @@ const getOcrMismatchesMock = vi.fn();
 const getOcrMismatchesTrendsMock = vi.fn();
 
 vi.mock("@workspace/api-client-react", () => ({
+  useGetCurrentAuthUser: () => ({
+    data: { user: { id: "founder-test", role: "founder" } },
+    isLoading: false,
+  }),
   useListAudits: () => ({ data: [] }),
   useAskFounderCopilot: () => ({
     mutate: vi.fn(),
@@ -198,9 +202,6 @@ function renderFounder() {
 }
 
 async function unlockAndOpenOcrTab() {
-  const input = await screen.findByPlaceholderText(/Founder key/i);
-  fireEvent.change(input, { target: { value: "nldc2024" } });
-  fireEvent.click(screen.getByRole("button", { name: /Open Dashboard/i }));
   await screen.findByRole("button", { name: /OCR Mismatches/i });
   fireEvent.click(screen.getByRole("button", { name: /OCR Mismatches/i }));
   await screen.findByTestId("ocr-mismatches-panel");

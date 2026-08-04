@@ -37,6 +37,10 @@ const ocrPayload = {
 // ---------------------------------------------------------------------------
 
 vi.mock("@workspace/api-client-react", () => ({
+  useGetCurrentAuthUser: () => ({
+    data: { user: { id: "founder-test", role: "founder" } },
+    isLoading: false,
+  }),
   useListAudits: () => ({ data: [] }),
   useAskFounderCopilot: () => ({
     mutate: vi.fn(),
@@ -135,7 +139,7 @@ beforeEach(() => {
       headers: { "content-type": "application/json" },
     }),
   ) as typeof fetch;
-  window.history.replaceState({}, "", "/founder?key=nldc2024");
+  window.history.replaceState({}, "", "/founder");
 });
 
 afterEach(() => {

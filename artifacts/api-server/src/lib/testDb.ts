@@ -173,7 +173,9 @@ function makeTable(name: string): FakeTable {
 
 export const auditsTable = makeTable("audits");
 export const auditReportVersionsTable = makeTable("audit_report_versions");
-export const messageCoachingSessionsTable = makeTable("message_coaching_sessions");
+export const messageCoachingSessionsTable = makeTable(
+  "message_coaching_sessions",
+);
 export const emailInsightsTable = makeTable("email_insights");
 export const ocrLearnedRulesTable = makeTable("ocr_learned_rules");
 ensureStore("ocr_rule_review_log");
@@ -294,11 +296,63 @@ stores.user_blocks = {
     reason: null,
   },
 };
+stores.match_connections = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    userLowId: null,
+    userHighId: null,
+    status: "active",
+    closedReason: null,
+    closedByUserId: null,
+    lastMessageAt: null,
+  },
+};
+stores.match_pool_membership = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    userId: null,
+    status: "off",
+    readyAt: null,
+    pausedReason: null,
+    tier: null,
+    revealConsent: false,
+  },
+};
+stores.profile_photos = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    userId: null,
+    objectPath: null,
+    ordinal: 0,
+  },
+};
 ensureStore("leads");
 ensureStore("waitlist");
 ensureStore("purchase_interest");
+stores.billing_entitlements = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    source: "stripe",
+    amountCents: null,
+    stripeCustomerId: null,
+    stripeCheckoutSessionId: null,
+    stripeSubscriptionId: null,
+    accessEndsAt: null,
+    cancelAtPeriodEnd: false,
+    lastStripeEventCreatedAt: null,
+  },
+};
+ensureStore("stripe_webhook_events");
 ensureStore("data_export_tokens");
-ensureStore("users");
+stores.users = {
+  rows: [],
+  nextId: 1,
+  defaults: { role: "member", tier: null, tierSource: null, tierGrantedAt: null },
+};
 ensureStore("sessions");
 export const aiRequestMetricsTable = makeTable("ai_request_metrics");
 export const profilesTable = makeTable("profiles");
@@ -306,6 +360,8 @@ export const coachFollowUpsTable = makeTable("coach_follow_ups");
 export const leadsTable = makeTable("leads");
 export const waitlistTable = makeTable("waitlist");
 export const purchaseInterestTable = makeTable("purchase_interest");
+export const billingEntitlementsTable = makeTable("billing_entitlements");
+export const stripeWebhookEventsTable = makeTable("stripe_webhook_events");
 export const dataExportTokensTable = makeTable("data_export_tokens");
 export const usersTable = makeTable("users");
 export const sessionsTable = makeTable("sessions");
@@ -324,14 +380,35 @@ export const userVerificationsTable = makeTable("user_verifications");
 export const userReportsTable = makeTable("user_reports");
 export const careDialectProfilesTable = makeTable("care_dialect_profiles");
 export const userBlocksTable = makeTable("user_blocks");
+export const matchConnectionsTable = makeTable("match_connections");
+export const matchPoolMembershipTable = makeTable("match_pool_membership");
+export const profilePhotosTable = makeTable("profile_photos");
+export const MAX_PROFILE_PHOTOS = 6;
 ensureStore("match_proposals");
 export const matchProposalsTable = makeTable("match_proposals");
 ensureStore("compatibility_reads");
 export const compatibilityReadsTable = makeTable("compatibility_reads");
 ensureStore("journal_entries");
 export const journalEntriesTable = makeTable("journal_entries");
-ensureStore("wellness_answers");
+stores.wellness_answers = {
+  rows: [],
+  nextId: 1,
+  defaults: {
+    userId: null,
+    anonymousClaimToken: null,
+    category: null,
+    consentLevel: "coaching",
+    echoUseApproved: false,
+    mirrorConfirmed: false,
+    matchingUseApproved: false,
+    researchUseApproved: false,
+    permissionUpdatedAt: null,
+    deletedAt: null,
+  },
+};
 export const wellnessAnswersTable = makeTable("wellness_answers");
+ensureStore("data_permission_events");
+export const dataPermissionEventsTable = makeTable("data_permission_events");
 ensureStore("wellness_inferences");
 export const wellnessInferencesTable = makeTable("wellness_inferences");
 ensureStore("imported_sources");
@@ -372,33 +449,49 @@ function isColRef(x: unknown): x is ColumnRef {
 
 export type DrizzlePred = Pred;
 
-export const eq = (col: ColumnRef, val: unknown): Pred => (row) =>
-  row[col.__col] === val;
+export const eq =
+  (col: ColumnRef, val: unknown): Pred =>
+  (row) =>
+    row[col.__col] === val;
 
-export const ne = (col: ColumnRef, val: unknown): Pred => (row) =>
-  row[col.__col] !== val;
+export const ne =
+  (col: ColumnRef, val: unknown): Pred =>
+  (row) =>
+    row[col.__col] !== val;
 
-export const isNull = (col: ColumnRef): Pred => (row) =>
-  row[col.__col] === null || row[col.__col] === undefined;
+export const isNull =
+  (col: ColumnRef): Pred =>
+  (row) =>
+    row[col.__col] === null || row[col.__col] === undefined;
 
-export const isNotNull = (col: ColumnRef): Pred => (row) =>
-  row[col.__col] !== null && row[col.__col] !== undefined;
+export const isNotNull =
+  (col: ColumnRef): Pred =>
+  (row) =>
+    row[col.__col] !== null && row[col.__col] !== undefined;
 
-export const and = (...preds: Array<Pred | undefined | false | null>): Pred => (row) =>
-  preds.every((p) => (typeof p === "function" ? p(row) : true));
+export const and =
+  (...preds: Array<Pred | undefined | false | null>): Pred =>
+  (row) =>
+    preds.every((p) => (typeof p === "function" ? p(row) : true));
 
-export const or = (...preds: Array<Pred | undefined | false | null>): Pred => (row) =>
-  preds.some((p) => (typeof p === "function" ? p(row) : false));
+export const or =
+  (...preds: Array<Pred | undefined | false | null>): Pred =>
+  (row) =>
+    preds.some((p) => (typeof p === "function" ? p(row) : false));
 
-export const gte = (col: ColumnRef, val: number): Pred => (row) => {
-  const v = row[col.__col];
-  return typeof v === "number" && v >= val;
-};
+export const gte =
+  (col: ColumnRef, val: number): Pred =>
+  (row) => {
+    const v = row[col.__col];
+    return typeof v === "number" && v >= val;
+  };
 
-export const lt = (col: ColumnRef, val: number): Pred => (row) => {
-  const v = row[col.__col];
-  return typeof v === "number" && v < val;
-};
+export const lt =
+  (col: ColumnRef, val: number): Pred =>
+  (row) => {
+    const v = row[col.__col];
+    return typeof v === "number" && v < val;
+  };
 
 export const ilike = (col: ColumnRef, pattern: string): Pred => {
   const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&");
@@ -412,11 +505,19 @@ export const ilike = (col: ColumnRef, pattern: string): Pred => {
   };
 };
 
-export const inArray = (col: ColumnRef, vals: unknown[]): Pred => (row) =>
-  vals.includes(row[col.__col]);
+export const inArray =
+  (col: ColumnRef, vals: unknown[]): Pred =>
+  (row) =>
+    vals.includes(row[col.__col]);
 
-export const desc = (col: ColumnRef): OrderSpec => ({ col: col.__col, dir: "desc" });
-export const asc = (col: ColumnRef): OrderSpec => ({ col: col.__col, dir: "asc" });
+export const desc = (col: ColumnRef): OrderSpec => ({
+  col: col.__col,
+  dir: "desc",
+});
+export const asc = (col: ColumnRef): OrderSpec => ({
+  col: col.__col,
+  dir: "asc",
+});
 
 // `sql` is a tag function that captures its template parts so the SelectChain
 // can interpret a handful of well-known shapes used by route handlers (e.g.
@@ -429,7 +530,11 @@ interface SqlMeta {
   reconstructed: string;
 }
 type SqlPred = Pred & SqlMeta;
-type SqlTag = ((strings: TemplateStringsArray, ...values: unknown[]) => SqlPred) & Record<string, unknown>;
+type SqlTag = ((
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+) => SqlPred) &
+  Record<string, unknown>;
 
 function reconstructSql(
   strings: ArrayLike<string>,
@@ -490,7 +595,11 @@ export const sql: SqlTag = ((
   return fn;
 }) as SqlTag;
 
-function compareForOrder(av: unknown, bv: unknown, dir: "asc" | "desc"): number {
+function compareForOrder(
+  av: unknown,
+  bv: unknown,
+  dir: "asc" | "desc",
+): number {
   if (av === bv) return 0;
   if (av === null || av === undefined) return 1;
   if (bv === null || bv === undefined) return -1;
@@ -501,9 +610,7 @@ function compareForOrder(av: unknown, bv: unknown, dir: "asc" | "desc"): number 
 }
 
 function parseLiteralList(listStr: string): string[] {
-  return listStr
-    .split(",")
-    .map((s) => s.trim().replace(/^'(.*)'$/, "$1"));
+  return listStr.split(",").map((s) => s.trim().replace(/^'(.*)'$/, "$1"));
 }
 
 function computeAggregate(spec: unknown, rows: Row[]): unknown {
@@ -621,7 +728,10 @@ class SelectChain extends AsyncChain<Row[]> {
       if (isSqlMeta(a)) {
         const m = a.reconstructed.match(/^\{\{COL:(\w+)\}\}\s+(asc|desc)$/i);
         if (m) {
-          this.orders.push({ col: m[1], dir: m[2].toLowerCase() as "asc" | "desc" });
+          this.orders.push({
+            col: m[1],
+            dir: m[2].toLowerCase() as "asc" | "desc",
+          });
         }
       } else if ((a as OrderSpec).dir) {
         this.orders.push(a as OrderSpec);
@@ -640,11 +750,13 @@ class SelectChain extends AsyncChain<Row[]> {
     return this;
   }
   protected execute(): Row[] {
-    let rows = (ensureStore(this.tableName).rows).filter((r) =>
+    let rows = ensureStore(this.tableName).rows.filter((r) =>
       this.filters.every((p) => p(r)),
     );
     for (const ord of [...this.orders].reverse()) {
-      rows = [...rows].sort((a, b) => compareForOrder(a[ord.col], b[ord.col], ord.dir));
+      rows = [...rows].sort((a, b) =>
+        compareForOrder(a[ord.col], b[ord.col], ord.dir),
+      );
     }
     const end =
       this.limitVal !== undefined ? this.offsetVal + this.limitVal : undefined;
@@ -664,7 +776,8 @@ class SelectChain extends AsyncChain<Row[]> {
       const projected: Row = {};
       for (const [key, spec] of Object.entries(this.projection!)) {
         if (isColRef(spec)) projected[key] = row[spec.__col];
-        else if (isSqlMeta(spec)) projected[key] = computeAggregate(spec, [row]);
+        else if (isSqlMeta(spec))
+          projected[key] = computeAggregate(spec, [row]);
         else projected[key] = spec;
       }
       return projected;
@@ -678,6 +791,7 @@ class InsertChain extends AsyncChain<Row[]> {
   private returningSpec: Record<string, ColumnRef> | true | null = null;
   private conflictTarget: ColumnRef | ColumnRef[] | null = null;
   private conflictSet: Row | null = null;
+  private conflictDoNothing = false;
   constructor(tableName: string) {
     super();
     this.tableName = tableName;
@@ -690,7 +804,10 @@ class InsertChain extends AsyncChain<Row[]> {
     this.returningSpec = spec ?? true;
     return this;
   }
-  onConflictDoUpdate(opts: { target: ColumnRef | ColumnRef[]; set: Row }): this {
+  onConflictDoUpdate(opts: {
+    target: ColumnRef | ColumnRef[];
+    set: Row;
+  }): this {
     this.conflictTarget = opts.target;
     this.conflictSet = opts.set;
     return this;
@@ -698,6 +815,7 @@ class InsertChain extends AsyncChain<Row[]> {
   onConflictDoNothing(_opts?: { target?: ColumnRef | ColumnRef[] }): this {
     this.conflictTarget = _opts?.target ?? null;
     this.conflictSet = null;
+    this.conflictDoNothing = true;
     return this;
   }
   protected execute(): Row[] {
@@ -743,6 +861,7 @@ class InsertChain extends AsyncChain<Row[]> {
         targets.every((t) => r[t.__col] === v[t.__col]),
       );
       if (existing) {
+        if (this.conflictDoNothing) return [];
         if (this.conflictSet) Object.assign(existing, this.conflictSet);
         if (this.returningSpec === null || this.returningSpec === true) {
           return [existing];
@@ -901,3 +1020,12 @@ export const db: FakeDb = {
 export const pool = {
   end: async () => undefined,
 };
+
+export function orderConnectionPair(
+  a: string,
+  b: string,
+): { userLowId: string; userHighId: string } {
+  return a < b
+    ? { userLowId: a, userHighId: b }
+    : { userLowId: b, userHighId: a };
+}

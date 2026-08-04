@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ArrowRight, Share2, Check, RefreshCw } from "lucide-react";
 import { Glyph } from "@/lib/glyphs";
 import { useToast } from "@/hooks/use-toast";
+import { rememberPendingPlayRead } from "@/lib/onboardingState";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -232,7 +233,13 @@ export default function Quiz() {
   setSelected(null);
   } else {
   const key = scoreAnswers(newAnswers);
-  setArchetype(ARCHETYPES[key]);
+  const result = ARCHETYPES[key];
+  setArchetype(result);
+  rememberPendingPlayRead({
+    archetypeKey: result.key,
+    archetypeName: result.name,
+    summary: `${result.tagline}. ${result.whatYouNeed}`,
+  });
   setStep("result");
   }
   }
@@ -266,11 +273,19 @@ export default function Quiz() {
   <AnimatePresence mode="wait">
 
   {step === "intro" && (
-  <motion.div key="intro" {...fadeUp(0)} className="space-y-6">
+  <motion.div
+  key="intro"
+  {...fadeUp(0)}
+  className="space-y-6"
+  data-testid="journey-play"
+  >
   <div className="text-center space-y-4 pt-8 pb-2">
   <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[hsl(248_62%_52%)] to-[hsl(348_55%_65%)] flex items-center justify-center shadow-[0_0_40px_hsl(248_62%_52%/0.4)]">
   <Sparkles className="w-7 h-7 text-white" />
   </div>
+  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[hsl(var(--brand-pink))]">
+  Chapter 3 of 8 · Play
+  </p>
   <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Dating Signal Type</h1>
   <p className="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-sm mx-auto">
   8 honest questions. 6 archetypes. A clear picture of your dating style, and what you actually need right now.
@@ -294,6 +309,7 @@ export default function Quiz() {
   </div>
 
   <Button onClick={() => setStep("quiz")}
+  data-testid="journey-play-start"
   className="w-full h-12 rounded-full font-semibold bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(348_55%_65%)] border-0 text-white glow-pulse">
   Start the quiz <ArrowRight className="ml-2 h-4 w-4" />
   </Button>
@@ -332,6 +348,7 @@ export default function Quiz() {
   <button
   key={i}
   onClick={() => selectOption(i)}
+  data-testid={`journey-play-option-${i}`}
   className={`w-full text-left px-4 py-3.5 rounded-xl border text-sm transition-all leading-snug ${
   selected === i
   ? "border-[hsl(248_62%_52%/0.6)] bg-[hsl(248_62%_52%/0.12)] text-foreground"
@@ -347,6 +364,7 @@ export default function Quiz() {
   <Button
   onClick={next}
   disabled={selected === null}
+  data-testid="journey-play-next"
   className="w-full h-11 rounded-full font-semibold bg-gradient-to-r from-[hsl(248_62%_52%)] to-[hsl(348_55%_65%)] border-0 disabled:opacity-40"
   >
   {qIdx < QUESTIONS.length - 1 ? "Next →" : "See my type →"}
@@ -355,7 +373,12 @@ export default function Quiz() {
   )}
 
   {step === "result" && archetype && (
-  <motion.div key="result" {...fadeUp(0)} className="space-y-4">
+  <motion.div
+  key="result"
+  {...fadeUp(0)}
+  className="space-y-4"
+  data-testid="journey-play-result"
+  >
   {/* Hero card */}
   <div className="glass border border-white/8 rounded-3xl p-7 text-center space-y-4"
   style={{ boxShadow: `0 0 60px ${withAlpha(archetype.color, 0.15)}` }}>
@@ -405,12 +428,21 @@ export default function Quiz() {
   <p className="text-sm text-muted-foreground leading-relaxed">{archetype.whatYouNeed}</p>
   </div>
 
-  {/* CTA */}
-  <Button onClick={() => navigate(archetype.cta.href)}
+  {/* Journey handoff */}
+  <Button onClick={() => navigate("/your-mirror")}
+  data-testid="journey-play-confirm"
   className="w-full h-12 rounded-full font-semibold border-0"
   style={{ background: `linear-gradient(135deg, ${archetype.color}, hsl(var(--brand-indigo)))` }}>
-  {archetype.cta.label}
+  Bring this read to my Mirror
   </Button>
+
+  <button
+  type="button"
+  onClick={() => navigate(archetype.cta.href)}
+  className="mx-auto flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+  >
+  {archetype.cta.label}
+  </button>
 
   {/* Share + retry */}
   <div className="flex items-center justify-center gap-4">

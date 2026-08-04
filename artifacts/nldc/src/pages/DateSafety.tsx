@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useMeta } from "@/hooks/useMeta";
 import { motion } from "framer-motion";
@@ -16,12 +17,17 @@ import {
   Car,
   Wine,
   HeartHandshake,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import {
+  hasPendingDate,
+  markReflectionPending,
+} from "@/lib/onboardingState";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -77,6 +83,7 @@ export default function DateSafety() {
   const [time, setTime] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [copied, setCopied] = useState(false);
+  const [journeyDate] = useState(() => hasPendingDate());
 
   const message = useMemo(() => {
     const who = name.trim() || "someone I met on a dating app";
@@ -145,6 +152,32 @@ export default function DateSafety() {
             screen.
           </p>
         </motion.div>
+
+        {journeyDate && (
+          <motion.section
+            {...fadeUp(0.04)}
+            className="mb-6 rounded-[2rem] border border-[hsl(var(--brand-gold)/0.28)] bg-[hsl(var(--brand-gold)/0.08)] p-6"
+            data-testid="date-safety-journey"
+          >
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[hsl(var(--brand-gold))]">
+              Chapter 7 of 8 · Date
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Make the plan, then go be present. MatchLab does not need a
+              play-by-play. What matters afterward is how the date actually felt
+              to you.
+            </p>
+            <Link
+              href="/reflection"
+              onClick={markReflectionPending}
+              className="mt-4 inline-flex items-center gap-2 rounded-full border border-foreground/15 px-4 py-2 text-sm font-bold text-foreground"
+              data-testid="date-safety-reflect"
+            >
+              Reflect after the date
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </motion.section>
+        )}
 
         <motion.div
           {...fadeUp(0.08)}

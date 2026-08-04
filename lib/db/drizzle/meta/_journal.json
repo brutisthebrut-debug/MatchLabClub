@@ -288,6 +288,34 @@
       "when": 1783366711529,
       "tag": "0040_skinny_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1785228397840,
+      "tag": "0041_violet_rocket_raccoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1785229867345,
+      "tag": "0042_modern_fallen_one",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1785258954030,
+      "tag": "0043_giant_marvex",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1785269048108,
+      "tag": "0044_spicy_champions",
+      "breakpoints": true
     }
   ]
 }

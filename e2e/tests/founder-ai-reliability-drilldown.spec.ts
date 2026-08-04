@@ -1,9 +1,8 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import pg from "pg";
+import crypto from "crypto";
 
 const { Pool } = pg;
-
-const FOUNDER_KEY = process.env.VITE_FOUNDER_KEY ?? "nldc2024";
 
 // Primary tool: seeded 35 days ago — visible in 90d/180d windows but NOT in 30d.
 const TOOL_NAME = "E2E-ReliabilityDrillTest";
@@ -13,9 +12,34 @@ const SECONDARY_TOOL_NAME = "E2E-ReliabilitySecondary";
 
 let pool: pg.Pool;
 let seededIds: number[] = [];
+let founderSid: string;
+const FOUNDER_USER_ID = `e2e-founder-ai-${crypto.randomBytes(6).toString("hex")}`;
+const FOUNDER_EMAIL = `${FOUNDER_USER_ID}@example.com`;
 
 test.beforeAll(async () => {
   pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  founderSid = crypto.randomBytes(32).toString("hex");
+  const sessJson = JSON.stringify({
+    user: {
+      id: FOUNDER_USER_ID,
+      email: FOUNDER_EMAIL,
+      firstName: "Founder",
+      lastName: "AI",
+      profileImageUrl: null,
+      role: "founder",
+    },
+    access_token: "e2e-founder-ai-token",
+  });
+  await pool.query(
+    `INSERT INTO users (id, email, role)
+     VALUES ($1, $2, 'founder')`,
+    [FOUNDER_USER_ID, FOUNDER_EMAIL],
+  );
+  await pool.query(
+    `INSERT INTO sessions (sid, sess, expire, user_id)
+     VALUES ($1, $2::jsonb, NOW() + INTERVAL '1 hour', $3)`,
+    [founderSid, sessJson, FOUNDER_USER_ID],
+  );
 
   const result = await pool.query<{ id: number }>(`
     INSERT INTO ai_request_metrics_daily
@@ -44,17 +68,22 @@ test.afterAll(async () => {
       [seededIds],
     );
   }
+  await pool.query(`DELETE FROM sessions WHERE sid = $1`, [founderSid]);
+  await pool.query(`DELETE FROM users WHERE id = $1`, [FOUNDER_USER_ID]);
   await pool.end();
 });
 
-test("AI Reliability drill-in: selector, summary tiles, focused chart, and back button", async ({ page }) => {
-  // ── 1. Navigate and sign in ──────────────────────────────────────────────
+async function openFounderDashboard(page: Page): Promise<void> {
+  await page.setExtraHTTPHeaders({ Cookie: `sid=${founderSid}` });
   await page.goto("/founder");
+  await expect(
+    page.locator('[data-testid="select-trend-focus-tool"]'),
+  ).toBeVisible({ timeout: 20_000 });
+}
 
-  const keyInput = page.locator('input[type="password"]');
-  await expect(keyInput).toBeVisible();
-  await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Open Dashboard")').click();
+test("AI Reliability drill-in: selector, summary tiles, focused chart, and back button", async ({ page }) => {
+  // ── 1. Navigate with a real server-authorized founder session ────────────
+  await openFounderDashboard(page);
 
   // ── 2. Locate the AI Reliability Trends panel ────────────────────────────
   // It lives in the default "overview" tab — no tab click needed.
@@ -91,13 +120,8 @@ test("AI Reliability drill-in: selector, summary tiles, focused chart, and back 
 });
 
 test("AI Reliability trends: metric toggle switches displayed metric label", async ({ page }) => {
-  // ── 1. Sign in ───────────────────────────────────────────────────────────
-  await page.goto("/founder");
-
-  const keyInput = page.locator('input[type="password"]');
-  await expect(keyInput).toBeVisible();
-  await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Open Dashboard")').click();
+  // ── 1. Sign in with a server-authorized founder session ─────────────────
+  await openFounderDashboard(page);
 
   // ── 2. Wait for the panel to appear and data to load ─────────────────────
   const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
@@ -126,13 +150,8 @@ test("AI Reliability trends: metric toggle switches displayed metric label", asy
 });
 
 test("AI Reliability trends: Download CSV button is enabled once data loads and produces a correctly-named file", async ({ page }) => {
-  // ── 1. Sign in ───────────────────────────────────────────────────────────
-  await page.goto("/founder");
-
-  const keyInput = page.locator('input[type="password"]');
-  await expect(keyInput).toBeVisible();
-  await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Open Dashboard")').click();
+  // ── 1. Sign in with a server-authorized founder session ─────────────────
+  await openFounderDashboard(page);
 
   // ── 2. Wait for panel and data ────────────────────────────────────────────
   const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
@@ -155,13 +174,8 @@ test("AI Reliability trends: Download CSV button is enabled once data loads and 
 });
 
 test("AI Reliability trends: metric toggle is hidden when a tool is focused and reappears after clearing focus", async ({ page }) => {
-  // ── 1. Sign in ───────────────────────────────────────────────────────────
-  await page.goto("/founder");
-
-  const keyInput = page.locator('input[type="password"]');
-  await expect(keyInput).toBeVisible();
-  await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Open Dashboard")').click();
+  // ── 1. Sign in with a server-authorized founder session ─────────────────
+  await openFounderDashboard(page);
 
   // ── 2. Wait for the panel and seeded tool to be available ────────────────
   const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
@@ -188,13 +202,8 @@ test("AI Reliability trends: metric toggle is hidden when a tool is focused and 
 });
 
 test("AI Reliability trends: Download CSV filename includes focused tool slug suffix", async ({ page }) => {
-  // ── 1. Sign in ───────────────────────────────────────────────────────────
-  await page.goto("/founder");
-
-  const keyInput = page.locator('input[type="password"]');
-  await expect(keyInput).toBeVisible();
-  await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Open Dashboard")').click();
+  // ── 1. Sign in with a server-authorized founder session ─────────────────
+  await openFounderDashboard(page);
 
   // ── 2. Wait for panel and data ────────────────────────────────────────────
   const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');
@@ -226,13 +235,8 @@ test("AI Reliability trends: Download CSV filename includes focused tool slug su
 });
 
 test("AI Reliability drill-in: focus clears automatically when tool has no data in the active window", async ({ page }) => {
-  // ── 1. Sign in ───────────────────────────────────────────────────────────
-  await page.goto("/founder");
-
-  const keyInput = page.locator('input[type="password"]');
-  await expect(keyInput).toBeVisible();
-  await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Open Dashboard")').click();
+  // ── 1. Sign in with a server-authorized founder session ─────────────────
+  await openFounderDashboard(page);
 
   // ── 2. Confirm the panel is in the 90d window (default) ─────────────────
   const focusSelect = page.locator('[data-testid="select-trend-focus-tool"]');

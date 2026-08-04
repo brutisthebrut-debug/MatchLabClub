@@ -159,9 +159,6 @@ importers:
       stripe:
         specifier: 20.0.0
         version: 20.0.0(@types/node@25.6.2)
-      stripe-replit-sync:
-        specifier: 1.0.0
-        version: 1.0.0(stripe@20.0.0(@types/node@25.6.2))
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -6979,11 +6976,6 @@ packages:
   strip-json-comments@5.0.3:
     resolution: {integrity: sha512-1tB5mhVo7U+ETBKNf92xT4hrQa3pm0MZ0PQvuDnWgAAGHDsfp4lPSpiS6psrSiet87wyGPh9ft6wmhOMQ0hDiw==}
     engines: {node: '>=14.16'}
-
-  stripe-replit-sync@1.0.0:
-    resolution: {integrity: sha512-Bkbih3k+IX/GugN8bKWNpwDiI2xkSLOAR+P34W7pjaR8fXyVay/QqztbrvbHZcU1JlfXncmBhuODY5TYY6DXlw==}
-    peerDependencies:
-      stripe: '> 11'
 
   stripe@20.0.0:
     resolution: {integrity: sha512-EaZeWpbJOCcDytdjKSwdrL5BxzbDGNueiCfHjHXlPdBQvLqoxl6AAivC35SPzTmVXJb5duXQlXFGS45H0+e6Gg==}
@@ -14604,18 +14596,6 @@ snapshots:
   strip-json-comments@2.0.1: {}
 
   strip-json-comments@5.0.3: {}
-
-  stripe-replit-sync@1.0.0(stripe@20.0.0(@types/node@25.6.2)):
-    dependencies:
-      pg: 8.20.0
-      pg-node-migrations: 0.0.8
-      stripe: 20.0.0(@types/node@25.6.2)
-      ws: 8.20.1
-      yesql: 7.0.0
-    transitivePeerDependencies:
-      - bufferutil
-      - pg-native
-      - utf-8-validate
 
   stripe@20.0.0(@types/node@25.6.2):
     dependencies:

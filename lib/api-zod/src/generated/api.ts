@@ -21,7 +21,8 @@ export const GetCurrentAuthUserResponse = zod.object({
   "email": zod.string().email().nullable(),
   "firstName": zod.string().nullable(),
   "lastName": zod.string().nullable(),
-  "profileImageUrl": zod.string().nullable()
+  "profileImageUrl": zod.string().nullable(),
+  "role": zod.enum(['member', 'founder']).optional().describe('Access role resolved by the server. Founder privileges are never granted by a client-supplied key.')
 }),zod.null()])
 })
 
@@ -208,9 +209,10 @@ export const GetAnonymousClaimHandoffStatusResponse = zod.object({
 
 /**
  * Returns a single JSON document containing the authenticated user's
-profile record plus every audit, dating profile, message coaching
-session, and email insight tied to that user. Intended to power a
-"Download my data" button on the account page.
+account, Echo, Play, Journey, matching, consent, profile, coaching,
+wellness, verification, and connection records. Live credentials,
+provider tokens, session payloads, and device delivery tokens are
+deliberately excluded.
 
  * @summary Download all of the signed-in user's data as JSON
  */
@@ -230,7 +232,16 @@ export const ExportMyDataResponse = zod.object({
   "firstName": zod.string().nullable(),
   "lastName": zod.string().nullable(),
   "profileImageUrl": zod.string().nullable(),
-  "createdAt": zod.string()
+  "role": zod.enum(['member', 'founder']),
+  "aiContentConsentGranted": zod.boolean(),
+  "aiContentConsentGrantedAt": zod.coerce.date().nullable(),
+  "aiContentConsentRevokedAt": zod.coerce.date().nullable(),
+  "aiContentConsentUpdatedAt": zod.coerce.date().nullable(),
+  "tier": zod.string().nullable(),
+  "tierGrantedAt": zod.coerce.date().nullable(),
+  "tierSource": zod.union([zod.literal('founder'),zod.literal('stripe'),zod.literal(null)]).nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
 }),
   "audits": zod.array(zod.object({
   "id": zod.number(),
@@ -405,7 +416,39 @@ export const ExportMyDataResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "deletedAt": zod.coerce.date().nullish()
-}))
+})),
+  "wellnessAnswers": zod.array(zod.object({
+  "id": zod.number(),
+  "questionId": zod.string(),
+  "dimension": zod.string(),
+  "category": zod.string().nullish(),
+  "questionText": zod.string(),
+  "answer": zod.string(),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).describe('Legacy compatibility field. Purpose-specific permissions are canonical.'),
+  "permissions": zod.object({
+  "echo": zod.boolean(),
+  "mirror": zod.boolean(),
+  "matching": zod.boolean(),
+  "research": zod.boolean()
+}),
+  "permissionUpdatedAt": zod.coerce.date().nullable(),
+  "deletedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "dataPermissionEvents": zod.array(zod.object({
+  "id": zod.number(),
+  "userId": zod.string(),
+  "resourceType": zod.string(),
+  "resourceId": zod.string(),
+  "purpose": zod.enum(['echo', 'mirror', 'matching', 'research']),
+  "granted": zod.boolean(),
+  "actorType": zod.enum(['member', 'system', 'founder', 'migration']),
+  "actorId": zod.string().nullable(),
+  "reason": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
+})),
+  "records": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.unknown()))).describe('Complete account-owned records grouped by database source. Tables\ncontaining live credentials or delivery tokens are omitted.\nSessions and verification records use redacted projections.\n')
 })
 
 
@@ -427,6 +470,78 @@ export const GetAccountSummaryResponse = zod.object({
   "insights": zod.number(),
   "journalEntries": zod.number(),
   "postDateNotes": zod.number()
+})
+
+
+/**
+ * Resolves founder beta grants and Stripe-backed entitlements using the
+paid-through date. A cancellation or failed renewal keeps access only
+through time already paid for; an incomplete payment grants nothing.
+
+ * @summary Get the signed-in user's effective paid access
+ */
+export const GetBillingEntitlementHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetBillingEntitlementResponse = zod.object({
+  "tier": zod.enum(['free', 'reset', 'wingman']),
+  "status": zod.enum(['free', 'active', 'canceling', 'past_due', 'incomplete', 'unpaid', 'canceled']),
+  "active": zod.boolean(),
+  "source": zod.enum(['free', 'founder', 'stripe']),
+  "accessUntil": zod.coerce.date().nullable(),
+  "cancelAtPeriodEnd": zod.boolean(),
+  "canManageBilling": zod.boolean()
+})
+
+
+/**
+ * @summary Create an attributed Stripe Checkout session
+ */
+export const CreateBillingCheckoutHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const CreateBillingCheckoutBody = zod.object({
+  "product": zod.enum(['signal-audit', 'dating-reset', 'wingman'])
+})
+
+export const CreateBillingCheckoutResponse = zod.object({
+  "url": zod.string().url()
+})
+
+
+/**
+ * @summary Confirm the signed-in member's returned Stripe Checkout session
+ */
+export const GetBillingCheckoutStatusParams = zod.object({
+  "sessionId": zod.coerce.string()
+})
+
+export const GetBillingCheckoutStatusHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetBillingCheckoutStatusResponse = zod.object({
+  "confirmed": zod.boolean(),
+  "paymentStatus": zod.enum(['paid', 'unpaid', 'no_payment_required']),
+  "product": zod.union([zod.literal('signal-audit'),zod.literal('dating-reset'),zod.literal('wingman'),zod.literal(null)]).nullable()
+})
+
+
+/**
+ * Creates a short-lived Stripe portal session where the member can update
+payment details or cancel Monthly Wingman. Stripe webhooks remain the
+source of truth for when cancellation actually changes access.
+
+ * @summary Open Stripe's self-service billing portal
+ */
+export const CreateBillingPortalHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const CreateBillingPortalResponse = zod.object({
+  "url": zod.string().url()
 })
 
 
@@ -1037,7 +1152,16 @@ export const DownloadEmailedExportResponse = zod.object({
   "firstName": zod.string().nullable(),
   "lastName": zod.string().nullable(),
   "profileImageUrl": zod.string().nullable(),
-  "createdAt": zod.string()
+  "role": zod.enum(['member', 'founder']),
+  "aiContentConsentGranted": zod.boolean(),
+  "aiContentConsentGrantedAt": zod.coerce.date().nullable(),
+  "aiContentConsentRevokedAt": zod.coerce.date().nullable(),
+  "aiContentConsentUpdatedAt": zod.coerce.date().nullable(),
+  "tier": zod.string().nullable(),
+  "tierGrantedAt": zod.coerce.date().nullable(),
+  "tierSource": zod.union([zod.literal('founder'),zod.literal('stripe'),zod.literal(null)]).nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
 }),
   "audits": zod.array(zod.object({
   "id": zod.number(),
@@ -1212,7 +1336,39 @@ export const DownloadEmailedExportResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
   "deletedAt": zod.coerce.date().nullish()
-}))
+})),
+  "wellnessAnswers": zod.array(zod.object({
+  "id": zod.number(),
+  "questionId": zod.string(),
+  "dimension": zod.string(),
+  "category": zod.string().nullish(),
+  "questionText": zod.string(),
+  "answer": zod.string(),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).describe('Legacy compatibility field. Purpose-specific permissions are canonical.'),
+  "permissions": zod.object({
+  "echo": zod.boolean(),
+  "mirror": zod.boolean(),
+  "matching": zod.boolean(),
+  "research": zod.boolean()
+}),
+  "permissionUpdatedAt": zod.coerce.date().nullable(),
+  "deletedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "dataPermissionEvents": zod.array(zod.object({
+  "id": zod.number(),
+  "userId": zod.string(),
+  "resourceType": zod.string(),
+  "resourceId": zod.string(),
+  "purpose": zod.enum(['echo', 'mirror', 'matching', 'research']),
+  "granted": zod.boolean(),
+  "actorType": zod.enum(['member', 'system', 'founder', 'migration']),
+  "actorId": zod.string().nullable(),
+  "reason": zod.string().nullable(),
+  "createdAt": zod.coerce.date()
+})),
+  "records": zod.record(zod.string(), zod.array(zod.record(zod.string(), zod.unknown()))).describe('Complete account-owned records grouped by database source. Tables\ncontaining live credentials or delivery tokens are omitted.\nSessions and verification records use redacted projections.\n')
 })
 
 
@@ -1280,29 +1436,6 @@ export const RevokeOneSessionHeader = zod.object({
 export const RevokeOneSessionResponse = zod.object({
   "success": zod.boolean(),
   "revoked": zod.number().describe('Number of sessions actually deleted.')
-})
-
-
-/**
- * Permanently removes the authenticated user along with every audit,
-dating profile, message coaching session, and email insight tied to
-that user. Also clears every active session for the user and the
-browser session cookie, effectively signing them out.
-
- * @summary Permanently delete the signed-in user's account and all data
- */
-export const DeleteMyAccountHeader = zod.object({
-  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
-})
-
-export const DeleteMyAccountResponse = zod.object({
-  "success": zod.boolean(),
-  "deleted": zod.object({
-  "audits": zod.number(),
-  "profiles": zod.number(),
-  "messages": zod.number(),
-  "insights": zod.number()
-})
 })
 
 
@@ -1924,7 +2057,14 @@ export const ListWellnessAnswersResponse = zod.object({
   "category": zod.string().nullish(),
   "questionText": zod.string(),
   "answer": zod.string(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).describe('Legacy compatibility field. Purpose-specific permissions are canonical.'),
+  "permissions": zod.object({
+  "echo": zod.boolean(),
+  "mirror": zod.boolean(),
+  "matching": zod.boolean(),
+  "research": zod.boolean()
+}),
+  "permissionUpdatedAt": zod.coerce.date().nullable(),
   "deletedAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -1958,12 +2098,12 @@ export const CreateWellnessAnswerBody = zod.object({
   "category": zod.string().max(createWellnessAnswerBodyCategoryMax).nullish(),
   "questionText": zod.string().min(1).max(createWellnessAnswerBodyQuestionTextMax),
   "answer": zod.string().min(1).max(createWellnessAnswerBodyAnswerMax),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).optional()
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).optional().describe('Legacy compatibility field. Purpose-specific permissions are canonical.')
 })
 
 
 /**
- * @summary Update a wellness answer or consent level
+ * @summary Update a wellness answer
  */
 export const UpdateWellnessAnswerParams = zod.object({
   "id": zod.coerce.number()
@@ -1979,7 +2119,7 @@ export const updateWellnessAnswerBodyAnswerMax = 5000;
 
 export const UpdateWellnessAnswerBody = zod.object({
   "answer": zod.string().min(1).max(updateWellnessAnswerBodyAnswerMax).optional(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).optional()
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).optional().describe('Legacy compatibility field. Purpose-specific permissions are canonical.')
 })
 
 export const UpdateWellnessAnswerResponse = zod.object({
@@ -1989,7 +2129,14 @@ export const UpdateWellnessAnswerResponse = zod.object({
   "category": zod.string().nullish(),
   "questionText": zod.string(),
   "answer": zod.string(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).describe('Legacy compatibility field. Purpose-specific permissions are canonical.'),
+  "permissions": zod.object({
+  "echo": zod.boolean(),
+  "mirror": zod.boolean(),
+  "matching": zod.boolean(),
+  "research": zod.boolean()
+}),
+  "permissionUpdatedAt": zod.coerce.date().nullable(),
   "deletedAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -2010,6 +2157,51 @@ export const DeleteWellnessAnswerHeader = zod.object({
 export const DeleteWellnessAnswerResponse = zod.object({
   "success": zod.boolean(),
   "deletedId": zod.number()
+})
+
+
+/**
+ * Saving an answer does not grant Echo, Mirror, matching, or research
+use. This endpoint changes those purposes explicitly and records an
+append-only actor audit event for every changed permission. Matching
+permission requires Mirror confirmation. Revoking Mirror confirmation
+also revokes matching permission.
+
+ * @summary Change purpose-specific permissions for one wellness answer
+ */
+export const UpdateWellnessAnswerPermissionsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateWellnessAnswerPermissionsHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const UpdateWellnessAnswerPermissionsBody = zod.object({
+  "echo": zod.boolean().optional(),
+  "mirror": zod.boolean().optional(),
+  "matching": zod.boolean().optional(),
+  "research": zod.boolean().optional()
+})
+
+export const UpdateWellnessAnswerPermissionsResponse = zod.object({
+  "id": zod.number(),
+  "questionId": zod.string(),
+  "dimension": zod.string(),
+  "category": zod.string().nullish(),
+  "questionText": zod.string(),
+  "answer": zod.string(),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).describe('Legacy compatibility field. Purpose-specific permissions are canonical.'),
+  "permissions": zod.object({
+  "echo": zod.boolean(),
+  "mirror": zod.boolean(),
+  "matching": zod.boolean(),
+  "research": zod.boolean()
+}),
+  "permissionUpdatedAt": zod.coerce.date().nullable(),
+  "deletedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
 })
 
 
@@ -2119,7 +2311,14 @@ export const ConfirmWellnessInferenceResponse = zod.object({
   "category": zod.string().nullish(),
   "questionText": zod.string(),
   "answer": zod.string(),
-  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']),
+  "consentLevel": zod.enum(['coaching', 'matching', 'research', 'all']).describe('Legacy compatibility field. Purpose-specific permissions are canonical.'),
+  "permissions": zod.object({
+  "echo": zod.boolean(),
+  "mirror": zod.boolean(),
+  "matching": zod.boolean(),
+  "research": zod.boolean()
+}),
+  "permissionUpdatedAt": zod.coerce.date().nullable(),
   "deletedAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -3765,7 +3964,7 @@ export const CheckOutgoingMessageResponse = zod.object({
 
 /**
  * Returns Trust & Safety reports for the founder review queue, newest
-first. Requires founder key.
+first. Requires an authenticated founder account.
 
  * @summary List member reports for founder review
  */
@@ -3774,7 +3973,7 @@ export const GetFounderReportsQueryParams = zod.object({
 })
 
 export const GetFounderReportsHeader = zod.object({
-  "x-founder-key": zod.string()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const GetFounderReportsResponse = zod.object({
@@ -3796,7 +3995,7 @@ export const GetFounderReportsResponse = zod.object({
 
 
 /**
- * Requires founder key.
+ * Requires an authenticated founder account.
  * @summary Update the review status of a member report
  */
 export const UpdateFounderReportStatusParams = zod.object({
@@ -3804,7 +4003,7 @@ export const UpdateFounderReportStatusParams = zod.object({
 })
 
 export const UpdateFounderReportStatusHeader = zod.object({
-  "x-founder-key": zod.string()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const UpdateFounderReportStatusBody = zod.object({
@@ -4564,7 +4763,7 @@ export const GetAiFallbackRateResponse = zod.object({
 
 
 /**
- * Safe diagnostic endpoint — runs a tiny generation request. Requires founder key. Falls back gracefully if AI is unavailable.
+ * Safe diagnostic endpoint — runs a tiny generation request. Requires an authenticated founder account. Falls back gracefully if AI is unavailable.
  * @summary Send a sample prompt through the server-side AI helper
  */
 export const TestAiQueryParams = zod.object({
@@ -4572,7 +4771,7 @@ export const TestAiQueryParams = zod.object({
 })
 
 export const TestAiHeader = zod.object({
-  "x-founder-key": zod.string().optional()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const testAiBodySampleMax = 2000;
@@ -4611,12 +4810,12 @@ export const TestAiResponse = zod.object({
  * Runs `purgeExpiredTrashedAudits()` synchronously and returns the number
 of records deleted. Useful after adjusting the retention window or to
 confirm the purge job is working without waiting for the timer.
-Requires founder key.
+Requires an authenticated founder account.
 
  * @summary Manually trigger an immediate audit trash purge
  */
 export const PurgeTrashNowHeader = zod.object({
-  "x-founder-key": zod.string()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const PurgeTrashNowResponse = zod.object({
@@ -4627,7 +4826,7 @@ export const PurgeTrashNowResponse = zod.object({
 /**
  * Runs the GeoIP updater immediately (the same routine the monthly job calls).
 Useful after rotating the MaxMind license key or when the dataset is suspected
-to be stale. Requires founder key.
+to be stale. Requires an authenticated founder account.
 
  * @summary Trigger a manual GeoIP database refresh
  */
@@ -4636,7 +4835,7 @@ export const RefreshGeoipQueryParams = zod.object({
 })
 
 export const RefreshGeoipHeader = zod.object({
-  "x-founder-key": zod.string().optional()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const RefreshGeoipResponse = zod.object({
@@ -4647,12 +4846,12 @@ export const RefreshGeoipResponse = zod.object({
 
 /**
  * Returns the timestamp of the last successful `audit_trash_purge` job run,
-together with the elapsed time and a staleness flag. Requires founder key.
+together with the elapsed time and a staleness flag. Requires an authenticated founder account.
 
  * @summary When did the audit trash purge job last succeed?
  */
 export const GetTrashPurgeHeartbeatHeader = zod.object({
-  "x-founder-key": zod.string().optional()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const GetTrashPurgeHeartbeatResponse = zod.object({
@@ -4672,7 +4871,7 @@ A referred user is counted as "paid" if they have any matching
 of the founder dashboard's purchase view, which treats `status = 'paid'`
 as the canonical signal that money actually moved.
 
-Requires founder key.
+Requires an authenticated founder account.
 
  * @summary Referral attribution summary for the founder dashboard
  */
@@ -4681,7 +4880,7 @@ export const GetFounderReferralsQueryParams = zod.object({
 })
 
 export const GetFounderReferralsHeader = zod.object({
-  "x-founder-key": zod.string().optional()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const GetFounderReferralsResponse = zod.object({
@@ -4727,7 +4926,7 @@ directional drop-off read, not a strict nested cohort. Anonymous visits
 are tracked client-side via analytics, so the first server-visible stage
 is accounts.
 
-Requires founder key.
+Requires an authenticated founder account.
 
  * @summary Readiness-to-revenue funnel for the founder dashboard
  */
@@ -4736,7 +4935,7 @@ export const GetFounderFunnelQueryParams = zod.object({
 })
 
 export const GetFounderFunnelHeader = zod.object({
-  "x-founder-key": zod.string().optional()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const GetFounderFunnelResponse = zod.object({
@@ -4757,7 +4956,7 @@ export const GetFounderFunnelResponse = zod.object({
 The full strategic playbook is embedded in the system prompt so the
 reply can reference prior decisions. On model failure or unavailable
 provider, returns a fallback answer pointing at the closest playbook
-entry. Requires founder key.
+entry. Requires an authenticated founder account.
 
  * @summary Ask Echo a free-form strategic question
  */
@@ -4766,7 +4965,7 @@ export const AskFounderCopilotQueryParams = zod.object({
 })
 
 export const AskFounderCopilotHeader = zod.object({
-  "x-founder-key": zod.string().optional()
+  "x-founder-key": zod.string().optional().describe('Ignored legacy compatibility header. Founder access is resolved from the signed-in account.')
 })
 
 export const askFounderCopilotBodyQuestionMin = 4;

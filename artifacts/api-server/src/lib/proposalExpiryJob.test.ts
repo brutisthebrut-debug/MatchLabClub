@@ -78,10 +78,10 @@ describe("runProposalExpirySweep", () => {
     const expiredCount = await runProposalExpirySweep({
       jobName: `test-${suffix}`,
     });
-    expect(expiredCount).toBeGreaterThanOrEqual(2);
+    expect(expiredCount).toBeGreaterThanOrEqual(1);
 
     expect(await statusOf(staleProposed)).toBe("expired");
-    expect(await statusOf(staleUserNo)).toBe("expired");
+    expect(await statusOf(staleUserNo)).toBe("user_no");
     expect(await statusOf(fresh)).toBe("proposed");
     expect(await statusOf(settled)).toBe("mutual_yes");
   });

@@ -1,0 +1,350 @@
+diff --git a/app/api/candidacy/route.ts b/app/api/candidacy/route.ts
+index 94a992d..d5fe7a2 100644
+--- a/app/api/candidacy/route.ts
++++ b/app/api/candidacy/route.ts
+@@ -7,7 +7,7 @@ import {
+ } from "../../../db/schema";
+ import { getChatGPTUser } from "../../chatgpt-auth";
+ import { validateCandidacy, type CandidacyInput } from "../../candidacy-policy";
+-import { isCandidacyConsentCurrent } from "../../matching-policy";
++import { getCandidacyConsentStatus } from "../../matching-policy";
+ import {
+   accountBindingConflict,
+   accountBindingMatches,
+@@ -62,16 +62,14 @@ export async function GET() {
+       candidacy: candidacy
+         ? {
+             ...candidacy.candidacy,
+-            status: isCandidacyConsentCurrent(candidacy.candidacy, {
++            status: getCandidacyConsentStatus(candidacy.candidacy, {
+               revision: candidacy.journeyRevision ?? -1,
+               mirrorLearning: candidacy.mirrorLearning ?? "",
+               mirrorRejected: Boolean(candidacy.mirrorRejected),
+               mirrorConfirmed: Boolean(candidacy.mirrorConfirmed),
+               mirrorMatchingUse: Boolean(candidacy.mirrorMatchingUse),
+               matchingPilotJoined: Boolean(candidacy.matchingPilotJoined),
+-            })
+-              ? "active"
+-              : "paused",
++            }),
+           }
+         : null,
+     },
+@@ -121,6 +119,7 @@ export async function PUT(request: Request) {
+       mirrorConfirmed: journeyStates.mirrorConfirmed,
+       mirrorMatchingUse: journeyStates.mirrorMatchingUse,
+       mirrorLearning: journeyStates.mirrorLearning,
++      stage: journeyStates.stage,
+       revision: journeyStates.revision,
+     })
+     .from(journeyStates)
+@@ -160,7 +159,7 @@ export async function PUT(request: Request) {
+   const candidacy = {
+     userEmail: auth.user.email,
+     displayName: auth.user.displayName,
+-    status: "active",
++    status: "pending_review",
+     ...validated.value,
+     approvedLearning: journey.mirrorLearning,
+     consentRevision: revision,
+@@ -179,8 +178,8 @@ export async function PUT(request: Request) {
+     db
+       .update(journeyStates)
+       .set({
+-        matchingPilotJoined: true,
+-        stage: 4,
++        matchingPilotJoined: false,
++        stage: journey.stage,
+         revision,
+         updatedAt: now,
+       })
+@@ -271,12 +270,7 @@ export async function DELETE(request: Request) {
+         pausedAt: now,
+         updatedAt: now,
+       })
+-      .where(
+-        and(
+-          eq(matchingCandidacies.userEmail, auth.user.email),
+-          eq(matchingCandidacies.status, "active"),
+-        ),
+-      ),
++      .where(eq(matchingCandidacies.userEmail, auth.user.email)),
+     db
+       .update(journeyStates)
+       .set({ matchingPilotJoined: false, revision, updatedAt: now })
+diff --git a/app/api/journey/route.ts b/app/api/journey/route.ts
+index 145eb62..2f30852 100644
+--- a/app/api/journey/route.ts
++++ b/app/api/journey/route.ts
+@@ -9,6 +9,7 @@ import { getChatGPTUser } from "../../chatgpt-auth";
+ import { normalizeEchoThreads } from "../../echo-thread-policy";
+ import {
+   applyJourneySaveConsentBoundary,
++  isCandidacyConsentEligible,
+   isCandidacyConsentCurrent,
+ } from "../../matching-policy";
+ import { getHighestAvailableMemberStage } from "../../progress-policy";
+@@ -195,6 +196,9 @@ export async function PUT(request: Request) {
+     existingCandidacy,
+     existingJourney,
+   );
++  const candidacyPendingReview =
++    existingCandidacy?.status === "pending_review" &&
++    isCandidacyConsentEligible(existingCandidacy, existingJourney);
+   const matchingPilotJoined = savedDecision.matchingPilotJoined &&
+     candidacyActive;
+   const stage = Math.min(
+@@ -250,9 +254,13 @@ export async function PUT(request: Request) {
+   const syncCandidacy = db
+     .update(matchingCandidacies)
+     .set({
+-      status: matchingPilotJoined ? "active" : "paused",
++      status: matchingPilotJoined
++        ? "active"
++        : candidacyPendingReview
++          ? "pending_review"
++          : "paused",
+       consentRevision: nextRevision,
+-      pausedAt: matchingPilotJoined ? null : now,
++      pausedAt: matchingPilotJoined || candidacyPendingReview ? null : now,
+       updatedAt: now,
+     })
+     .where(eq(matchingCandidacies.userEmail, auth.user.email));
+diff --git a/app/api/member-state/route.ts b/app/api/member-state/route.ts
+index 0afd618..3d52873 100644
+--- a/app/api/member-state/route.ts
++++ b/app/api/member-state/route.ts
+@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
+ import { getDb } from "../../../db";
+ import { journeyStates, matchingCandidacies } from "../../../db/schema";
+ import { getChatGPTUser } from "../../chatgpt-auth";
+-import { isCandidacyConsentCurrent } from "../../matching-policy";
++import { getCandidacyConsentStatus } from "../../matching-policy";
+ 
+ export const dynamic = "force-dynamic";
+ 
+@@ -34,9 +34,7 @@ export async function GET() {
+     state && savedCandidacy
+       ? {
+           ...savedCandidacy,
+-          status: isCandidacyConsentCurrent(savedCandidacy, state)
+-            ? "active"
+-            : "paused",
++          status: getCandidacyConsentStatus(savedCandidacy, state),
+         }
+       : null;
+ 
+diff --git a/app/matching-policy.ts b/app/matching-policy.ts
+index 52cd441..2a4f0aa 100644
+--- a/app/matching-policy.ts
++++ b/app/matching-policy.ts
+@@ -23,6 +23,8 @@ export type SavedJourneyConsent = SavedMatchingDecision & {
+   revision: number;
+ };
+ 
++export type CandidacyConsentStatus = "active" | "pending_review" | "paused";
++
+ export function normalizeMatchingDecision(input: MatchingDecisionInput) {
+   const mirrorRejected = Boolean(input.mirrorRejected);
+   const mirrorConfirmed =
+@@ -89,3 +91,32 @@ export function isCandidacyConsentCurrent(
+       journey.matchingPilotJoined,
+   );
+ }
++
++export function isCandidacyConsentEligible(
++  candidacy: SavedCandidacyConsent | null | undefined,
++  journey: SavedJourneyConsent | null | undefined,
++) {
++  return Boolean(
++    candidacy &&
++      journey &&
++      candidacy.consentRevision === journey.revision &&
++      candidacy.approvedLearning === journey.mirrorLearning &&
++      !journey.mirrorRejected &&
++      journey.mirrorConfirmed &&
++      journey.mirrorMatchingUse,
++  );
++}
++
++export function getCandidacyConsentStatus(
++  candidacy: SavedCandidacyConsent | null | undefined,
++  journey: SavedJourneyConsent | null | undefined,
++): CandidacyConsentStatus {
++  if (isCandidacyConsentCurrent(candidacy, journey)) return "active";
++  if (
++    candidacy?.status === "pending_review" &&
++    isCandidacyConsentEligible(candidacy, journey)
++  ) {
++    return "pending_review";
++  }
++  return "paused";
++}
+diff --git a/app/page.tsx b/app/page.tsx
+index 93bb614..057c4f7 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -68,7 +68,7 @@ type SavedJourney = {
+ type MatchingCandidacy = {
+   userEmail: string;
+   displayName: string;
+-  status: "active" | "paused";
++  status: "active" | "pending_review" | "paused";
+   city: string;
+   age: number;
+   ageMin: number;
+@@ -1097,6 +1097,7 @@ function MatchesView({
+   const phases: Array<[MatchPhase,string]> = [["proposal","Proposed"],["mutual","Mutual yes"],["introduced","Reveal"],["conversation","Connect"],["date","Date"],["reflect","Reflect"]];
+   const activeIndex = Math.max(0, phases.findIndex(([id]) => id === phase));
+   const candidacyActive = candidacy?.status === "active";
++  const candidacyPendingReview = candidacy?.status === "pending_review";
+   const matchingActive =
+     mirrorConfirmed &&
+     mirrorMatchingUse &&
+@@ -1104,6 +1105,8 @@ function MatchesView({
+     candidacyActive;
+   const matchingStatus = matchingActive
+     ? "Active"
++    : candidacyPendingReview
++      ? "Pending review"
+     : candidacy
+       ? "Paused"
+       : "Off";
+@@ -1158,21 +1161,21 @@ function MatchesView({
+     <div className="matching-consent-card">
+       <div>
+         <span>Matching consent</span>
+-        <h2>{matchingActive ? "You are in the pilot." : "Matching is still off."}</h2>
+-        <p>{matchingActive ? "MatchLab may use only the confirmed learning you separately approved. You can pause matching at any time by turning that permission off in My MatchLab." : "Saving a learning is not consent to use it. Approving matching use is not consent to join the pilot. Each decision stays separate."}</p>
++        <h2>{matchingActive ? "You are in the pilot." : candidacyPendingReview ? "Your candidacy is awaiting founder review." : "Matching is still off."}</h2>
++        <p>{matchingActive ? "MatchLab may use only the confirmed learning you separately approved. You can pause matching at any time by turning that permission off in My MatchLab." : candidacyPendingReview ? "Submitting a candidacy does not activate matching. An authorized founder review must clear the record before it can enter the controlled pool." : "Saving a learning is not consent to use it. Approving matching use is not consent to join the pilot. Each decision stays separate."}</p>
+       </div>
+       <div className="matching-consent-steps">
+         <article className={mirrorConfirmed ? "complete" : ""}><b>{mirrorConfirmed ? "✓" : "01"}</b><div><span>Confirm the learning</span><p>{mirrorConfirmed ? "You said the Repair learning is true." : "Echo’s proposed learning remains a draft."}</p></div></article>
+         <article className={mirrorMatchingUse ? "complete" : ""}><b>{mirrorMatchingUse ? "✓" : "02"}</b><div><span>Approve matching use</span><p>{mirrorMatchingUse ? "This learning may support matching." : "Nothing from this learning may enter matching."}</p></div></article>
+-        <article className={matchingActive ? "complete" : ""}><b>{matchingActive ? "✓" : "03"}</b><div><span>Create candidacy and join</span><p>{matchingActive ? "Your saved candidacy is active in the controlled pilot." : candidacy ? "Your candidacy is saved but paused." : "No pool participation until you create and activate candidacy."}</p></div></article>
++        <article className={matchingActive ? "complete" : candidacyPendingReview ? "pending" : ""}><b>{matchingActive ? "✓" : candidacyPendingReview ? "…" : "03"}</b><div><span>Submit for founder review</span><p>{matchingActive ? "Your reviewed candidacy is active in the controlled pilot." : candidacyPendingReview ? "Submitted and held outside the pool until review." : candidacy ? "Your candidacy is saved but paused." : "No pool participation until you submit a candidacy and it is approved."}</p></div></article>
+       </div>
+       <div className="matching-consent-actions">
+-        {!mirrorConfirmed || !mirrorMatchingUse ? <button className="primary-action" onClick={openMirror}>Review in My MatchLab →</button> : !matchingActive ? <button className="primary-action" onClick={openCandidacy}>{candidacy ? "Review and rejoin the pilot →" : "Create candidacy and join →"}</button> : <><button onClick={openCandidacy}>Edit candidacy →</button><button className="pause-matching" disabled={saving} onClick={pauseCandidacy}>Pause matching</button></>}
+-        <small>Turning off the approved learning or its matching permission clears pilot enrollment. Rejoining always requires a new explicit choice.</small>
++        {!mirrorConfirmed || !mirrorMatchingUse ? <button className="primary-action" onClick={openMirror}>Review in My MatchLab →</button> : !matchingActive ? <button className="primary-action" onClick={openCandidacy}>{candidacyPendingReview ? "Review submitted candidacy →" : candidacy ? "Review and resubmit →" : "Create candidacy →"}</button> : <><button onClick={openCandidacy}>Edit candidacy →</button><button className="pause-matching" disabled={saving} onClick={pauseCandidacy}>Pause matching</button></>}
++        <small>Submitting is not activation. Turning off the approved learning or its matching permission clears any pending or active participation.</small>
+       </div>
+     </div>
+-    {matchingActive && candidacy && <div className="candidacy-summary">
+-      <div><span>Live candidacy</span><h2>{candidacy.displayName}</h2><p>{candidacy.age} · {candidacy.genderIdentity} · {candidacy.city}</p></div>
++    {candidacy && candidacy.status !== "paused" && <div className="candidacy-summary">
++      <div><span>{matchingActive ? "Live candidacy" : "Submitted candidacy · pending founder review"}</span><h2>{candidacy.displayName}</h2><p>{candidacy.age} · {candidacy.genderIdentity} · {candidacy.city}</p></div>
+       <dl>
+         <div><dt>Interested in</dt><dd>{candidacy.interestedIn}</dd></div>
+         <div><dt>Relationship goal</dt><dd>{candidacy.relationshipGoal}</dd></div>
+@@ -1196,7 +1199,7 @@ function MatchesView({
+         </div>
+         <div className="candidacy-learning"><span>Approved matching learning</span><blockquote>{mirrorLearning}</blockquote><small>Echo reads the current member-confirmed learning directly from My MatchLab when this candidacy saves.</small></div>
+         {candidateError && <p className="form-error" role="alert">{candidateError}</p>}
+-        <div className="candidacy-actions"><button type="button" onClick={() => setEditorOpen(false)}>Not now</button><button className="primary-action" disabled={saving}>{saving ? "Saving…" : candidacyActive ? "Save candidacy" : "Save and join the pilot →"}</button></div>
++        <div className="candidacy-actions"><button type="button" onClick={() => setEditorOpen(false)}>Not now</button><button className="primary-action" disabled={saving}>{saving ? "Saving…" : candidacyActive ? "Save candidacy" : candidacyPendingReview ? "Update review submission →" : "Submit for founder review →"}</button></div>
+       </form>
+     </div>}
+     {matchingActive && <div className="market-state"><div className="market-orbit"><span>AUS</span><i/><i/><i/></div><div><span>Your market right now</span><h2>Small by design. Honestly early.</h2><p>There is no live pool evidence to report yet. MatchLab will not manufacture member counts, match activity, or momentum.</p><div className="market-facts"><div><b>Pilot</b><span>controlled matching mode</span></div><div><b>On</b><span>member-authorized learning</span></div><div><b>—</b><span>no live pool data yet</span></div></div><button className="primary-action" onClick={() => setPhase("proposal")}>Open fictional founder walkthrough →</button></div></div>}
+@@ -2423,8 +2426,7 @@ export default function Home() {
+       if (typeof payload.revision === "number") {
+         journeyRevisionRef.current = payload.revision;
+       }
+-      setMatchingPilotJoined(true);
+-      setStage(4);
++      setMatchingPilotJoined(false);
+     });
+   };
+ 
+diff --git a/tests/rendered-html.test.mjs b/tests/rendered-html.test.mjs
+index be7acd4..cfdcaf7 100644
+--- a/tests/rendered-html.test.mjs
++++ b/tests/rendered-html.test.mjs
+@@ -237,7 +237,7 @@ test("rejects stale writes instead of overwriting newer member decisions", async
+   assert.match(schema, /consentRevision: integer\("consent_revision"\)/);
+   assert.match(journeySource, /eq\(journeyStates\.revision/);
+   assert.match(controlSource, /eq\(journeyStates\.revision/);
+-  assert.match(candidacySource, /isCandidacyConsentCurrent/);
++  assert.match(candidacySource, /getCandidacyConsentStatus/);
+   assert.match(pageSource, /Newer saved version/);
+   assert.match(pageSource, /Nothing on this screen will overwrite it/);
+ });
+@@ -569,6 +569,7 @@ test("keeps saved Echo threads bounded to real chapters and safe messages", asyn
+ test("keeps pilot enrollment behind all three consent decisions", async () => {
+   const {
+     applyJourneySaveConsentBoundary,
++    getCandidacyConsentStatus,
+     isCandidacyConsentCurrent,
+     normalizeMatchingDecision,
+   } = await loadMatchingPolicy();
+@@ -663,6 +664,17 @@ test("keeps pilot enrollment behind all three consent decisions", async () => {
+     ),
+     false,
+   );
++  assert.equal(
++    getCandidacyConsentStatus(
++      {
++        status: "pending_review",
++        approvedLearning: approved.mirrorLearning,
++        consentRevision: 7,
++      },
++      { ...approved, matchingPilotJoined: false, revision: 7 },
++    ),
++    "pending_review",
++  );
+ });
+ 
+ test("keeps generic Journey saves outside the consent grant path", async () => {
+@@ -740,10 +752,8 @@ test("prevents decorative chapter navigation from advancing member progress", as
+   assert.match(pageSource, /disabled=\{locked\}/);
+   assert.match(pageSource, /Keep this learning as a draft/);
+   assert.match(journeyRouteSource, /getHighestAvailableMemberStage/);
+-  assert.match(
+-    candidacyRouteSource,
+-    /matchingPilotJoined: true,[\s\S]*stage: 4/,
+-  );
++  assert.match(candidacyRouteSource, /status: "pending_review"/);
++  assert.match(candidacyRouteSource, /matchingPilotJoined: false/);
+ });
+ 
+ test("writes matching revocation and candidacy pause together", async () => {
+@@ -814,14 +824,21 @@ test("labels the Adrian flow as fictional and omits invented market counts", asy
+   assert.doesNotMatch(source, />3<\/b><span>possibilities under review/);
+ });
+ 
+-test("requires a saved candidacy before pilot enrollment is treated as active", async () => {
+-  const source = await readFile(
+-    new URL("../app/page.tsx", import.meta.url),
+-    "utf8",
+-  );
++test("holds submitted candidacies outside matching until founder review", async () => {
++  const [source, routeSource, memberStateSource, journeySource] = await Promise.all([
++    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
++    readFile(new URL("../app/api/candidacy/route.ts", import.meta.url), "utf8"),
++    readFile(new URL("../app/api/member-state/route.ts", import.meta.url), "utf8"),
++    readFile(new URL("../app/api/journey/route.ts", import.meta.url), "utf8"),
++  ]);
+ 
+-  assert.match(source, /Create candidacy and join/);
+-  assert.match(source, /matchingPilotJoined &&\s*candidacyActive/);
++  assert.match(source, /Submit for founder review/);
++  assert.match(source, /Pending review/);
++  assert.match(source, /Submitting is not activation/);
++  assert.match(routeSource, /status: "pending_review"/);
++  assert.match(routeSource, /matchingPilotJoined: false/);
++  assert.match(memberStateSource, /getCandidacyConsentStatus/);
++  assert.match(journeySource, /candidacyPendingReview/);
+   assert.doesNotMatch(
+     source,
+     /onJoinPilot=\{\(\) => setMatchingPilotJoined\(true\)\}/,
+@@ -873,7 +890,7 @@ test("hydrates Journey and candidacy from one authoritative account snapshot", a
+   assert.match(routeSource, /snapshotRevision: state\?\.revision/);
+   assert.match(
+     routeSource,
+-    /isCandidacyConsentCurrent\(savedCandidacy, state\)/,
++    /getCandidacyConsentStatus\(savedCandidacy, state\)/,
+   );
+ });
+ 

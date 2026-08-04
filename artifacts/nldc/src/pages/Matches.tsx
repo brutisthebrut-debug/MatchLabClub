@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { ArrowRight, Heart, MessageCircle, Users } from "lucide-react";
@@ -11,6 +12,11 @@ import {
   getGetConnectionsQueryKey,
   type Connection,
 } from "@workspace/api-client-react";
+import {
+  clearPendingIntroduction,
+  hasPendingIntroduction,
+  markDatePending,
+} from "@/lib/onboardingState";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -133,6 +139,18 @@ export default function Matches() {
   });
 
   const connections = isDemo ? DEMO_CONNECTIONS : (serverData ?? []);
+  const [introductionPending, setIntroductionPending] = useState(
+    () => hasPendingIntroduction(),
+  );
+  const firstActiveConnection = connections.find(
+    (connection) => connection.status !== "closed",
+  );
+
+  function finishIntroductionHandoff(): void {
+    clearPendingIntroduction();
+    markDatePending();
+    setIntroductionPending(false);
+  }
 
   return (
     <AppLayout>
@@ -157,6 +175,44 @@ export default function Matches() {
               ready to talk.
             </p>
           </motion.div>
+
+          {!isDemo && introductionPending && (
+            <motion.section
+              {...fadeUp(0.03)}
+              className="mb-6 rounded-[2rem] border border-[hsl(var(--brand-pink)/0.3)] bg-gradient-to-br from-[hsl(var(--brand-indigo)/0.12)] via-card/95 to-[hsl(var(--brand-pink)/0.1)] p-6 shadow-lg"
+              data-testid="matches-introduction-handoff"
+            >
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[hsl(var(--brand-pink))]">
+                Chapter 6 of 8 · Introduction
+              </p>
+              <h2 className="mt-2 font-serif text-2xl font-bold text-foreground">
+                Meet the person. Keep the score in its place.
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                You both chose this introduction. Echo can help with the awkward
+                first line, but the conversation belongs to the two of you.
+              </p>
+              {firstActiveConnection ? (
+                <Link
+                  href={`/matches/${firstActiveConnection.id}`}
+                  onClick={finishIntroductionHandoff}
+                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3D35CC] to-[#FF2D9B] px-5 py-2.5 text-sm font-bold text-white"
+                  data-testid="matches-introduction-open"
+                >
+                  Say hello
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              ) : (
+                <Link
+                  href="/matching"
+                  className="mt-5 inline-flex items-center gap-2 rounded-full border border-foreground/15 px-5 py-2.5 text-sm font-bold text-foreground"
+                >
+                  Check the introduction
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              )}
+            </motion.section>
+          )}
 
           {isDemo && (
             <motion.div

@@ -1,0 +1,305 @@
+diff --git a/app/globals.css b/app/globals.css
+index cd72696..b062410 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -53,6 +53,8 @@ button { color: inherit; }
+ .journey-save.saved > span { background: #53c98b; box-shadow: 0 0 10px rgba(83,201,139,.32); }
+ .journey-save.error { color: #d85b83; border-color: color-mix(in srgb, #d85b83 45%, var(--line)); cursor: pointer; }
+ .journey-save.error > span { background: #d85b83; box-shadow: 0 0 10px rgba(216,91,131,.28); }
++.journey-save.uncertain { color: #d8ad5b; border-color: color-mix(in srgb, #d8ad5b 48%, var(--line)); cursor: pointer; }
++.journey-save.uncertain > span { background: #d8ad5b; box-shadow: 0 0 10px rgba(216,173,91,.28); }
+ .journey-save.reauth { color: #d88c5b; border-color: color-mix(in srgb, #d88c5b 48%, var(--line)); text-decoration: none; }
+ .journey-save.reauth > span { background: #d88c5b; box-shadow: 0 0 10px rgba(216,140,91,.28); }
+ .journey-save.outdated { color: #b89aff; border-color: color-mix(in srgb, #b89aff 52%, var(--line)); cursor: pointer; }
+diff --git a/app/page.tsx b/app/page.tsx
+index 144ac4b..d2c9201 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -37,6 +37,7 @@ type JourneySaveState =
+   | "saving"
+   | "saved"
+   | "error"
++  | "uncertain"
+   | "reauth"
+   | "outdated"
+   | "offline";
+@@ -96,6 +97,34 @@ function journeyFingerprint(input: JourneyFingerprintInput) {
+   return JSON.stringify(input);
+ }
+ 
++class RequestOutcomeUnknownError extends Error {
++  constructor() {
++    super(
++      "The connection ended before MatchLab could confirm what saved. Check the latest saved version before trying again.",
++    );
++    this.name = "RequestOutcomeUnknownError";
++  }
++}
++
++async function fetchWithDeadline(
++  input: RequestInfo | URL,
++  init?: RequestInit,
++  timeoutMs = 10_000,
++) {
++  const controller = new AbortController();
++  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
++  try {
++    return await fetch(input, { ...init, signal: controller.signal });
++  } catch (error) {
++    if (controller.signal.aborted) {
++      throw new RequestOutcomeUnknownError();
++    }
++    throw error;
++  } finally {
++    window.clearTimeout(timeout);
++  }
++}
++
+ type CandidacyDraft = {
+   city: string;
+   age: string;
+@@ -427,6 +456,19 @@ function JourneySaveIndicator({
+       </button>
+     );
+   }
++  if (state === "uncertain") {
++    return (
++      <button
++        className="journey-save uncertain"
++        type="button"
++        onClick={onLoadLatest}
++        aria-label="Save outcome is unknown. Check the latest saved version."
++      >
++        <span aria-hidden="true" />
++        <b>Outcome unknown · Check</b>
++      </button>
++    );
++  }
+   if (state === "outdated") {
+     return (
+       <button
+@@ -1429,7 +1471,7 @@ function TrustView({
+     setDeleteError("");
+     try {
+       await onProtectedWrite(async () => {
+-        const response = await fetch("/api/account", {
++        const response = await fetchWithDeadline("/api/account", {
+           method: "DELETE",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify({
+@@ -1437,7 +1479,7 @@ function TrustView({
+             revision: deleteRevision,
+             accountEmail: user?.email,
+           }),
+-        });
++        }, 10_000);
+         const payload = (await response.json()) as {
+           conflict?: boolean;
+           error?: string;
+@@ -1727,6 +1769,7 @@ export default function Home() {
+   const [isOnline, setIsOnline] = useState(true);
+   const journeyRevisionRef = useRef<number | null>(null);
+   const sessionExpiredRef = useRef(false);
++  const outcomeUnknownRef = useRef(false);
+   const memberWriteQueueRef = useRef<Promise<unknown>>(Promise.resolve());
+   const autosaveGenerationRef = useRef(0);
+   const [savedJourneyFingerprint, setSavedJourneyFingerprint] =
+@@ -1752,7 +1795,20 @@ export default function Home() {
+       operation: () => Promise<T>,
+     ): Promise<T> {
+       autosaveGenerationRef.current += 1;
+-      return queueMemberWrite(operation);
++      return queueMemberWrite(async () => {
++        if (outcomeUnknownRef.current) {
++          throw new RequestOutcomeUnknownError();
++        }
++        try {
++          return await operation();
++        } catch (error) {
++          if (error instanceof RequestOutcomeUnknownError) {
++            outcomeUnknownRef.current = true;
++            setJourneySaveState("uncertain");
++          }
++          throw error;
++        }
++      });
+     },
+     [queueMemberWrite],
+   );
+@@ -1789,9 +1845,9 @@ export default function Home() {
+       setHydrationError(null);
+       setAccountOutdated(false);
+       try {
+-        const sessionResponse = await fetch("/api/session", {
++        const sessionResponse = await fetchWithDeadline("/api/session", {
+           cache: "no-store",
+-        });
++        }, 12_000);
+         if (!sessionResponse.ok) {
+           throw new Error("Session could not be loaded.");
+         }
+@@ -1800,9 +1856,9 @@ export default function Home() {
+         setSession(nextSession);
+ 
+         if (nextSession.authenticated) {
+-          const memberStateResponse = await fetch("/api/member-state", {
++          const memberStateResponse = await fetchWithDeadline("/api/member-state", {
+             cache: "no-store",
+-          });
++          }, 12_000);
+           if (!memberStateResponse.ok) {
+             throw new Error("Saved member data could not be loaded.");
+           }
+@@ -1987,9 +2043,9 @@ export default function Home() {
+           setIsOnline(true);
+           return;
+         }
+-        const response = await fetch("/api/member-state", {
++        const response = await fetchWithDeadline("/api/member-state", {
+           cache: "no-store",
+-        });
++        }, 8_000);
+         if (response.status === 401) {
+           sessionExpiredRef.current = true;
+           setIsOnline(true);
+@@ -2057,9 +2113,9 @@ export default function Home() {
+       ) return;
+       checking = true;
+       try {
+-        const response = await fetch("/api/member-state", {
++        const response = await fetchWithDeadline("/api/member-state", {
+           cache: "no-store",
+-        });
++        }, 8_000);
+         if (response.status === 401) {
+           sessionExpiredRef.current = true;
+           setJourneySaveState("reauth");
+@@ -2113,6 +2169,7 @@ export default function Home() {
+       !journeyReady ||
+       !isOnline ||
+       accountOutdated ||
++      outcomeUnknownRef.current ||
+       sessionExpiredRef.current
+     ) return;
+ 
+@@ -2122,7 +2179,7 @@ export default function Home() {
+         if (generation !== autosaveGenerationRef.current) return;
+         setJourneySaveState("saving");
+         try {
+-          const response = await fetch("/api/journey", {
++          const response = await fetchWithDeadline("/api/journey", {
+             method: "PUT",
+             headers: { "Content-Type": "application/json" },
+             body: JSON.stringify({
+@@ -2141,7 +2198,7 @@ export default function Home() {
+               revision: journeyRevisionRef.current,
+               accountEmail: session.user?.email,
+             }),
+-          });
++          }, 10_000);
+           if (response.status === 401) {
+             sessionExpiredRef.current = true;
+             setJourneySaveState("reauth");
+@@ -2162,8 +2219,13 @@ export default function Home() {
+           setSavedJourneyFingerprint(currentJourneyFingerprint);
+           setJourneySaveState("saved");
+           setJourneySavedAt(new Date(payload.state.updatedAt));
+-        } catch {
+-          setJourneySaveState("error");
++        } catch (error) {
++          if (error instanceof RequestOutcomeUnknownError) {
++            outcomeUnknownRef.current = true;
++            setJourneySaveState("uncertain");
++          } else {
++            setJourneySaveState("error");
++          }
+         }
+       });
+     }, 350);
+@@ -2212,6 +2274,7 @@ export default function Home() {
+   };
+ 
+   const loadLatestAccount = () => {
++    outcomeUnknownRef.current = false;
+     setAccountOutdated(false);
+     setHydrateRevision((revision) => revision + 1);
+   };
+@@ -2340,7 +2403,7 @@ export default function Home() {
+         setJourneySaveState("offline");
+         throw new Error("You are offline. Reconnect before joining matching.");
+       }
+-      const response = await fetch("/api/candidacy", {
++      const response = await fetchWithDeadline("/api/candidacy", {
+         method: "PUT",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+@@ -2352,7 +2415,7 @@ export default function Home() {
+           revision: journeyRevisionRef.current,
+           accountEmail: session?.user?.email,
+         }),
+-      });
++      }, 10_000);
+       const payload = (await response.json()) as {
+         candidacy?: MatchingCandidacy;
+         revision?: number;
+@@ -2382,14 +2445,14 @@ export default function Home() {
+         setJourneySaveState("offline");
+         throw new Error("You are offline. Reconnect before changing matching.");
+       }
+-      const response = await fetch("/api/candidacy", {
++      const response = await fetchWithDeadline("/api/candidacy", {
+         method: "DELETE",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+           revision: journeyRevisionRef.current,
+           accountEmail: session?.user?.email,
+         }),
+-      });
++      }, 10_000);
+       const payload = (await response.json()) as {
+         error?: string;
+         revision?: number;
+@@ -2430,7 +2493,7 @@ export default function Home() {
+         setJourneySaveState("offline");
+         throw new Error("You are offline. Reconnect before changing consent.");
+       }
+-      const response = await fetch("/api/matching-control", {
++      const response = await fetchWithDeadline("/api/matching-control", {
+         method: "PATCH",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+@@ -2439,7 +2502,7 @@ export default function Home() {
+           revision: journeyRevisionRef.current,
+           accountEmail: session?.user?.email,
+         }),
+-      });
++      }, 10_000);
+       const payload = (await response.json()) as {
+         state?: {
+           mirrorLearning: string;
+diff --git a/tests/rendered-html.test.mjs b/tests/rendered-html.test.mjs
+index df85d70..76d3fa1 100644
+--- a/tests/rendered-html.test.mjs
++++ b/tests/rendered-html.test.mjs
+@@ -313,6 +313,21 @@ test("warns before leaving only when local Journey work is unsaved", async () =>
+   assert.match(source, /event\.returnValue = ""/);
+ });
+ 
++test("stops protected writes when a request outcome cannot be confirmed", async () => {
++  const source = await readFile(
++    new URL("../app/page.tsx", import.meta.url),
++    "utf8",
++  );
++
++  assert.match(source, /class RequestOutcomeUnknownError extends Error/);
++  assert.match(source, /const controller = new AbortController\(\)/);
++  assert.match(source, /window\.setTimeout\(\(\) => controller\.abort\(\), timeoutMs\)/);
++  assert.match(source, /outcomeUnknownRef\.current = true/);
++  assert.match(source, /setJourneySaveState\("uncertain"\)/);
++  assert.match(source, /Outcome unknown · Check/);
++  assert.match(source, /Check the latest saved version before trying again/);
++});
++
+ test("renders development preview metadata", async () => {
+   const worker = await loadWorker();
+   const response = await worker.fetch(

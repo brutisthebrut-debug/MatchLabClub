@@ -29,7 +29,7 @@ import {
   useListAudits,
   getListAuditsQueryKey,
   exportMyData,
-  useDeleteMyAccount,
+  useDeleteMyAccountConfirmed,
   useGetAccountSummary,
   getGetAccountSummaryQueryKey,
   useEmailMyDataExport,
@@ -39,6 +39,9 @@ import {
   useGetDigestPreferences,
   useSetDigestPreferences,
   getGetDigestPreferencesQueryKey,
+  useGetBillingEntitlement,
+  getGetBillingEntitlementQueryKey,
+  useCreateBillingPortal,
   type SetDigestPreferencesInputFrequency,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -57,6 +60,7 @@ import {
   Smartphone,
   Brain,
   Sparkles,
+  CreditCard,
 } from "lucide-react";
 
 const DIGEST_FREQUENCY_OPTIONS: {
@@ -106,10 +110,12 @@ export default function Account() {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isExporting, setIsExporting] = useState(false);
-  const DELETE_CONFIRM_PHRASE = "delete";
+  const DELETE_CONFIRM_PHRASE = user?.email?.trim() ?? "";
   const isDeleteConfirmed =
-    deleteConfirmText.trim().toLowerCase() === DELETE_CONFIRM_PHRASE;
-  const deleteAccount = useDeleteMyAccount();
+    DELETE_CONFIRM_PHRASE.length > 0 &&
+    deleteConfirmText.trim().toLowerCase() ===
+      DELETE_CONFIRM_PHRASE.toLowerCase();
+  const deleteAccount = useDeleteMyAccountConfirmed();
   const summaryQuery = useGetAccountSummary({
     query: {
       queryKey: getGetAccountSummaryQueryKey(),
@@ -183,6 +189,26 @@ export default function Account() {
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useAutoRefreshPref();
   const [trashRemindersEnabled, setTrashRemindersEnabled] = useTrashReminderPref();
   const [copyDuration, setCopyDuration] = useCopyDurationPref();
+  const billing = useGetBillingEntitlement({
+    query: {
+      queryKey: getGetBillingEntitlementQueryKey(),
+      enabled: isAuthenticated,
+    },
+  });
+  const billingPortal = useCreateBillingPortal();
+
+  const handleOpenBillingPortal = async () => {
+    try {
+      const result = await billingPortal.mutateAsync();
+      window.location.assign(result.url);
+    } catch (err) {
+      toast({
+        title: "Couldn't open billing",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const auditCount = auditsQuery.data?.length ?? 0;
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "Friend";
@@ -234,8 +260,11 @@ export default function Account() {
   };
 
   const handleConfirmDelete = async () => {
+    if (!user?.email) return;
     try {
-      await deleteAccount.mutateAsync();
+      await deleteAccount.mutateAsync({
+        data: { confirmation: user.email },
+      });
       toast({
         title: "Account deleted",
         description: "Your account and all associated data have been removed.",
@@ -384,6 +413,66 @@ export default function Account() {
                   <div className="text-sm text-muted-foreground mt-1">Scores, strengths, recent audits</div>
                 </div>
               </Link>
+            </motion.div>
+
+            {/* Paid access and Stripe self-service */}
+            <motion.div
+              variants={itemVariants}
+              className="glass rounded-[2rem] p-8 md:p-10 space-y-6 border border-[hsl(43_65%_55%/0.2)] shadow-sm"
+              data-testid="card-account-billing"
+            >
+              <div className="flex flex-col md:flex-row items-start gap-6">
+                <div className="h-14 w-14 rounded-[1.5rem] bg-[hsl(43_65%_55%/0.12)] flex items-center justify-center flex-shrink-0 border border-[hsl(43_65%_55%/0.25)]">
+                  <CreditCard className="h-6 w-6 text-[hsl(43_65%_48%)]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-widest text-[hsl(43_65%_48%)]">
+                    Plan & billing
+                  </p>
+                  <h3 className="font-serif text-2xl font-bold text-foreground tracking-tight mt-1">
+                    {billing.isLoading
+                      ? "Checking your access…"
+                      : billing.data?.tier === "wingman"
+                        ? "Monthly Wingman"
+                        : billing.data?.tier === "reset"
+                          ? "The Dating Reset"
+                          : "Free"}
+                  </h3>
+                  <p className="text-base text-muted-foreground mt-3 leading-relaxed">
+                    {billing.data?.status === "canceling" && billing.data.accessUntil
+                      ? `Cancellation is scheduled. Your Wingman access stays active through ${new Date(billing.data.accessUntil).toLocaleDateString()}.`
+                      : billing.data?.status === "past_due" && billing.data.accessUntil
+                        ? `Your renewal needs attention. Access remains available through ${new Date(billing.data.accessUntil).toLocaleDateString()}, the time already paid for.`
+                        : billing.data?.status === "incomplete"
+                          ? "Payment was not completed, so paid access has not started."
+                          : billing.data?.tier === "wingman"
+                            ? `Active${billing.data.accessUntil ? ` through ${new Date(billing.data.accessUntil).toLocaleDateString()}` : ""}.`
+                            : billing.data?.tier === "reset"
+                              ? "Your one-time Dating Reset access does not expire."
+                              : "Start free, or choose a paid plan when you want the deeper lane."}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 md:ml-[5rem]">
+                {billing.data?.canManageBilling && (
+                  <Button
+                    type="button"
+                    onClick={() => void handleOpenBillingPortal()}
+                    disabled={billingPortal.isPending}
+                    variant="outline"
+                    className="rounded-full h-11 px-6 font-semibold"
+                    data-testid="button-manage-billing"
+                  >
+                    {billingPortal.isPending && (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    )}
+                    Manage payment or cancellation
+                  </Button>
+                )}
+                <Button asChild variant="ghost" className="rounded-full h-11 px-6">
+                  <Link href="/pricing">See plans</Link>
+                </Button>
+              </div>
             </motion.div>
 
             {/* Actions */}
@@ -634,9 +723,15 @@ export default function Account() {
                 <div className="flex-grow hidden sm:block"></div>
                 <Button
                   onClick={() => setConfirmDeleteOpen(true)}
+                  disabled={!user?.email}
                   variant="outline"
                   className="w-full sm:w-auto rounded-full h-11 px-6 text-sm font-semibold border-[hsl(348_55%_65%/0.4)] text-[hsl(348_55%_55%)] hover:bg-[hsl(348_55%_65%/0.1)] hover:text-[hsl(348_55%_65%)] mt-2 sm:mt-0"
                   data-testid="button-account-delete"
+                  title={
+                    !user?.email
+                      ? "An account email is required to confirm deletion"
+                      : undefined
+                  }
                 >
                   <Trash2 className="w-5 h-5 mr-2" /> Delete my account
                 </Button>
@@ -707,13 +802,17 @@ export default function Account() {
             </AlertDialogHeader>
             <div className="space-y-3 my-6">
               <Label htmlFor="delete-confirm-input" className="text-base text-center block">
-                Type <span className="font-bold text-foreground">delete</span> to confirm
+                Type{" "}
+                <span className="font-bold text-foreground">
+                  {DELETE_CONFIRM_PHRASE}
+                </span>{" "}
+                to confirm
               </Label>
               <Input
                 id="delete-confirm-input"
                 value={deleteConfirmText}
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
-                placeholder="delete"
+                placeholder={DELETE_CONFIRM_PHRASE}
                 autoComplete="off"
                 autoCapitalize="off"
                 autoCorrect="off"

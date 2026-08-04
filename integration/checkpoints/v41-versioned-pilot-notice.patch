@@ -1,0 +1,732 @@
+diff --git a/app/api/candidacy/route.ts b/app/api/candidacy/route.ts
+index d5fe7a2..218dd6e 100644
+--- a/app/api/candidacy/route.ts
++++ b/app/api/candidacy/route.ts
+@@ -18,6 +18,7 @@ import {
+   normalizeOperationId,
+   replayMutationReceipt,
+ } from "../../mutation-receipt";
++import { validatePilotNoticeAcceptance } from "../../pilot-notice-policy";
+ 
+ export const dynamic = "force-dynamic";
+ 
+@@ -87,6 +88,8 @@ export async function PUT(request: Request) {
+     revision?: number | null;
+     accountEmail?: string;
+     operationId?: string;
++    pilotNoticeAccepted?: unknown;
++    pilotNoticeVersion?: unknown;
+   };
+   if (!accountBindingMatches(payload.accountEmail, auth.user.email)) {
+     return accountBindingConflict();
+@@ -112,6 +115,10 @@ export async function PUT(request: Request) {
+   if (!validated.ok) {
+     return Response.json({ error: validated.error }, { status: 400 });
+   }
++  const pilotNotice = validatePilotNoticeAcceptance(payload);
++  if (!pilotNotice.ok) {
++    return Response.json({ error: pilotNotice.error }, { status: 400 });
++  }
+ 
+   const [journey] = await db
+     .select({
+@@ -163,6 +170,8 @@ export async function PUT(request: Request) {
+     ...validated.value,
+     approvedLearning: journey.mirrorLearning,
+     consentRevision: revision,
++    pilotNoticeVersion: pilotNotice.version,
++    pilotNoticeAcceptedAt: now,
+     pausedAt: null,
+     updatedAt: now,
+   };
+diff --git a/app/api/journey/route.ts b/app/api/journey/route.ts
+index 2f30852..44dbc53 100644
+--- a/app/api/journey/route.ts
++++ b/app/api/journey/route.ts
+@@ -134,6 +134,7 @@ export async function PUT(request: Request) {
+         status: matchingCandidacies.status,
+         approvedLearning: matchingCandidacies.approvedLearning,
+         consentRevision: matchingCandidacies.consentRevision,
++        pilotNoticeVersion: matchingCandidacies.pilotNoticeVersion,
+       })
+       .from(matchingCandidacies)
+       .where(eq(matchingCandidacies.userEmail, auth.user.email))
+diff --git a/app/globals.css b/app/globals.css
+index b062410..199c64a 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -456,6 +456,13 @@ button { color: inherit; }
+ .candidacy-learning { margin-top: 18px; padding: 15px; border-radius: 12px; background: color-mix(in srgb, var(--ultraviolet) 8%, var(--surface-2)); }
+ .candidacy-learning blockquote { margin: 8px 0 6px; font: 14px/1.45 Georgia, serif; }
+ .candidacy-learning small { color: var(--muted); font-size: 7px; line-height: 1.45; }
++.pilot-notice { margin-top: 14px; padding: 15px; border: 1px solid var(--line); border-radius: 12px; background: color-mix(in srgb, var(--surface-2) 88%, var(--ultraviolet) 12%); }
++.pilot-notice > span { color: var(--ultraviolet-soft); font-size: 7px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
++.pilot-notice h3 { margin: 7px 0 9px; font-size: 15px; }
++.pilot-notice ul { margin: 0; padding-left: 17px; color: var(--muted); font-size: 8px; line-height: 1.45; }
++.pilot-notice li + li { margin-top: 5px; }
++.pilot-notice label { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; color: var(--ink); font-size: 8px; line-height: 1.4; }
++.pilot-notice input { margin-top: 2px; accent-color: var(--ultraviolet); }
+ .candidacy-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+ .candidacy-actions > button:first-child { border: 1px solid var(--line); border-radius: 11px; background: var(--surface-2); color: var(--ink); padding: 11px 14px; font-size: 9px; }
+ .form-error { color: #d85e84; background: color-mix(in srgb, #d85e84 10%, var(--surface)); border-radius: 9px; padding: 9px 11px; font-size: 8px; }
+diff --git a/app/matching-policy.ts b/app/matching-policy.ts
+index 2a4f0aa..2953507 100644
+--- a/app/matching-policy.ts
++++ b/app/matching-policy.ts
+@@ -1,3 +1,5 @@
++export const PILOT_NOTICE_VERSION = "2026-08-04.1";
++
+ export type MatchingDecisionInput = {
+   mirrorRejected?: boolean;
+   mirrorConfirmed?: boolean;
+@@ -17,6 +19,7 @@ export type SavedCandidacyConsent = {
+   status: string;
+   approvedLearning: string;
+   consentRevision: number;
++  pilotNoticeVersion?: string;
+ };
+ 
+ export type SavedJourneyConsent = SavedMatchingDecision & {
+@@ -85,6 +88,7 @@ export function isCandidacyConsentCurrent(
+       candidacy.status === "active" &&
+       candidacy.consentRevision === journey.revision &&
+       candidacy.approvedLearning === journey.mirrorLearning &&
++      candidacy.pilotNoticeVersion === PILOT_NOTICE_VERSION &&
+       !journey.mirrorRejected &&
+       journey.mirrorConfirmed &&
+       journey.mirrorMatchingUse &&
+@@ -101,6 +105,7 @@ export function isCandidacyConsentEligible(
+       journey &&
+       candidacy.consentRevision === journey.revision &&
+       candidacy.approvedLearning === journey.mirrorLearning &&
++      candidacy.pilotNoticeVersion === PILOT_NOTICE_VERSION &&
+       !journey.mirrorRejected &&
+       journey.mirrorConfirmed &&
+       journey.mirrorMatchingUse,
+diff --git a/app/page.tsx b/app/page.tsx
+index 057c4f7..c28b79d 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -23,6 +23,10 @@ import {
+   repairLanguagePrompts as quizPrompts,
+   type RepairLanguageResult,
+ } from "./repair-language-policy";
++import {
++  PILOT_NOTICE_VERSION,
++  pilotNoticePoints,
++} from "./pilot-notice-policy";
+ 
+ type View = "today" | "play" | "matches" | "mirror" | "journey" | "trust";
+ type SessionUser = {
+@@ -79,6 +83,8 @@ type MatchingCandidacy = {
+   maxDistanceMiles: number;
+   approvedLearning: string;
+   consentRevision: number;
++  pilotNoticeVersion: string;
++  pilotNoticeAcceptedAt: string | null;
+   joinedAt: string;
+   pausedAt: string | null;
+   updatedAt: string;
+@@ -1064,7 +1070,10 @@ function MatchesView({
+   mirrorLearning: string;
+   matchingPilotJoined: boolean;
+   candidacy: MatchingCandidacy | null;
+-  onSaveCandidacy: (draft: CandidacyDraft) => Promise<void>;
++  onSaveCandidacy: (
++    draft: CandidacyDraft,
++    noticeAccepted: boolean,
++  ) => Promise<void>;
+   onPausePilot: () => Promise<void>;
+   openMirror: () => void;
+ }) {
+@@ -1094,6 +1103,9 @@ function MatchesView({
+   const [draft, setDraft] = useState<CandidacyDraft>(candidacyDraft);
+   const [saving, setSaving] = useState(false);
+   const [candidateError, setCandidateError] = useState("");
++  const [noticeAccepted, setNoticeAccepted] = useState(
++    candidacy?.pilotNoticeVersion === PILOT_NOTICE_VERSION,
++  );
+   const phases: Array<[MatchPhase,string]> = [["proposal","Proposed"],["mutual","Mutual yes"],["introduced","Reveal"],["conversation","Connect"],["date","Date"],["reflect","Reflect"]];
+   const activeIndex = Math.max(0, phases.findIndex(([id]) => id === phase));
+   const candidacyActive = candidacy?.status === "active";
+@@ -1117,6 +1129,7 @@ function MatchesView({
+ 
+   const openCandidacy = () => {
+     setDraft(candidacyDraft);
++    setNoticeAccepted(candidacy?.pilotNoticeVersion === PILOT_NOTICE_VERSION);
+     setCandidateError("");
+     setEditorOpen(true);
+   };
+@@ -1126,7 +1139,7 @@ function MatchesView({
+     setSaving(true);
+     setCandidateError("");
+     try {
+-      await onSaveCandidacy(draft);
++      await onSaveCandidacy(draft, noticeAccepted);
+       setEditorOpen(false);
+     } catch (error) {
+       setCandidateError(
+@@ -1198,8 +1211,14 @@ function MatchesView({
+           <label className="wide"><span>Maximum matching distance</span><select value={draft.maxDistanceMiles} onChange={(event) => updateDraft("maxDistanceMiles", event.target.value)}>{[10,25,50,100,250].map((miles) => <option key={miles} value={miles}>Within {miles} miles</option>)}</select></label>
+         </div>
+         <div className="candidacy-learning"><span>Approved matching learning</span><blockquote>{mirrorLearning}</blockquote><small>Echo reads the current member-confirmed learning directly from My MatchLab when this candidacy saves.</small></div>
++        <div className="pilot-notice">
++          <span>Controlled-pilot notice · {PILOT_NOTICE_VERSION}</span>
++          <h3>Know what submitting means.</h3>
++          <ul>{pilotNoticePoints.map((point) => <li key={point}>{point}</li>)}</ul>
++          <label><input type="checkbox" checked={noticeAccepted} onChange={(event) => setNoticeAccepted(event.target.checked)}/><b>I understand these beta boundaries and want to submit my candidacy for review.</b></label>
++        </div>
+         {candidateError && <p className="form-error" role="alert">{candidateError}</p>}
+-        <div className="candidacy-actions"><button type="button" onClick={() => setEditorOpen(false)}>Not now</button><button className="primary-action" disabled={saving}>{saving ? "Saving…" : candidacyActive ? "Save candidacy" : candidacyPendingReview ? "Update review submission →" : "Submit for founder review →"}</button></div>
++        <div className="candidacy-actions"><button type="button" onClick={() => setEditorOpen(false)}>Not now</button><button className="primary-action" disabled={saving || !noticeAccepted}>{saving ? "Saving…" : candidacyActive ? "Save candidacy" : candidacyPendingReview ? "Update review submission →" : "Submit for founder review →"}</button></div>
+       </form>
+     </div>}
+     {matchingActive && <div className="market-state"><div className="market-orbit"><span>AUS</span><i/><i/><i/></div><div><span>Your market right now</span><h2>Small by design. Honestly early.</h2><p>There is no live pool evidence to report yet. MatchLab will not manufacture member counts, match activity, or momentum.</p><div className="market-facts"><div><b>Pilot</b><span>controlled matching mode</span></div><div><b>On</b><span>member-authorized learning</span></div><div><b>—</b><span>no live pool data yet</span></div></div><button className="primary-action" onClick={() => setPhase("proposal")}>Open fictional founder walkthrough →</button></div></div>}
+@@ -1391,12 +1410,21 @@ function TrustView({
+     {
+       name: "Matching candidacy",
+       detail: candidacy
+-        ? `${candidacy.status === "active" ? "Active" : "Paused"} · ${candidacy.city}`
++        ? `${candidacy.status === "active" ? "Active" : candidacy.status === "pending_review" ? "Pending review" : "Paused"} · ${candidacy.city}`
+         : "No candidacy created",
+       echo: false,
+       match: candidacyActive,
+       manage: onOpenMatches,
+     },
++    {
++      name: "Pilot participation notice",
++      detail: candidacy?.pilotNoticeVersion === PILOT_NOTICE_VERSION
++        ? `Accepted ${PILOT_NOTICE_VERSION}`
++        : "Current beta notice not accepted",
++      echo: false,
++      match: false,
++      manage: onOpenMatches,
++    },
+     {
+       name: "Save safety receipts",
+       detail: journeySavedAt
+@@ -2388,7 +2416,10 @@ export default function Home() {
+     setView("today");
+   };
+ 
+-  const saveCandidacy = async (draft: CandidacyDraft) => {
++  const saveCandidacy = async (
++    draft: CandidacyDraft,
++    pilotNoticeAccepted: boolean,
++  ) => {
+     return runProtectedMemberWrite(async () => {
+       if (!isOnline) {
+         setJourneySaveState("offline");
+@@ -2406,6 +2437,8 @@ export default function Home() {
+           maxDistanceMiles: Number(draft.maxDistanceMiles),
+           revision: journeyRevisionRef.current,
+           accountEmail: session?.user?.email,
++          pilotNoticeAccepted,
++          pilotNoticeVersion: PILOT_NOTICE_VERSION,
+         }),
+       }, 10_000);
+       const payload = (await response.json()) as {
+diff --git a/app/pilot-notice-policy.ts b/app/pilot-notice-policy.ts
+new file mode 100644
+index 0000000..d602baa
+--- /dev/null
++++ b/app/pilot-notice-policy.ts
+@@ -0,0 +1,27 @@
++import { PILOT_NOTICE_VERSION } from "./matching-policy";
++
++export { PILOT_NOTICE_VERSION };
++
++export const pilotNoticePoints = [
++  "This is a controlled Austin beta with intentionally limited availability. MatchLab does not guarantee an introduction or a timeline.",
++  "Submitting a candidacy starts founder review. It does not activate matching or place me in a live pool.",
++  "Matching may use only my structured candidacy and the specific Mirror learning I separately confirmed and approved.",
++  "MatchLab and Echo are not emergency, clinical, or wellness services.",
++] as const;
++
++export function validatePilotNoticeAcceptance(input: {
++  pilotNoticeAccepted?: unknown;
++  pilotNoticeVersion?: unknown;
++}) {
++  if (
++    input.pilotNoticeAccepted !== true ||
++    input.pilotNoticeVersion !== PILOT_NOTICE_VERSION
++  ) {
++    return {
++      ok: false as const,
++      error:
++        "Review and accept the current controlled-pilot notice before submitting candidacy.",
++    };
++  }
++  return { ok: true as const, version: PILOT_NOTICE_VERSION };
++}
+diff --git a/db/schema.ts b/db/schema.ts
+index ca1141a..6fa9d44 100644
+--- a/db/schema.ts
++++ b/db/schema.ts
+@@ -49,6 +49,8 @@ export const matchingCandidacies = sqliteTable("matching_candidacies", {
+   maxDistanceMiles: integer("max_distance_miles").notNull(),
+   approvedLearning: text("approved_learning").notNull(),
+   consentRevision: integer("consent_revision").notNull().default(0),
++  pilotNoticeVersion: text("pilot_notice_version").notNull().default(""),
++  pilotNoticeAcceptedAt: text("pilot_notice_accepted_at"),
+   joinedAt: text("joined_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+   pausedAt: text("paused_at"),
+   updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+diff --git a/drizzle/0008_quick_abomination.sql b/drizzle/0008_quick_abomination.sql
+new file mode 100644
+index 0000000..b80eb7e
+--- /dev/null
++++ b/drizzle/0008_quick_abomination.sql
+@@ -0,0 +1,2 @@
++ALTER TABLE `matching_candidacies` ADD `pilot_notice_version` text DEFAULT '' NOT NULL;--> statement-breakpoint
++ALTER TABLE `matching_candidacies` ADD `pilot_notice_accepted_at` text;
+\ No newline at end of file
+diff --git a/drizzle/meta/0008_snapshot.json b/drizzle/meta/0008_snapshot.json
+new file mode 100644
+index 0000000..4190887
+--- /dev/null
++++ b/drizzle/meta/0008_snapshot.json
+@@ -0,0 +1,364 @@
++{
++  "version": "6",
++  "dialect": "sqlite",
++  "id": "68c7fa26-26b4-44e4-9707-956fe92840c4",
++  "prevId": "eae5a37e-9772-47f9-aa2e-037661c633c3",
++  "tables": {
++    "journey_states": {
++      "name": "journey_states",
++      "columns": {
++        "user_email": {
++          "name": "user_email",
++          "type": "text",
++          "primaryKey": true,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "display_name": {
++          "name": "display_name",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "entered": {
++          "name": "entered",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": false
++        },
++        "first_intent": {
++          "name": "first_intent",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "''"
++        },
++        "stage": {
++          "name": "stage",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": 0
++        },
++        "view": {
++          "name": "view",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "'today'"
++        },
++        "match_phase": {
++          "name": "match_phase",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "'waiting'"
++        },
++        "repair_answers": {
++          "name": "repair_answers",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "'[]'"
++        },
++        "echo_threads": {
++          "name": "echo_threads",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "'{}'"
++        },
++        "repair_completed": {
++          "name": "repair_completed",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": false
++        },
++        "mirror_learning": {
++          "name": "mirror_learning",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "'After conflict, I need a clear signal that we are still on the same team before either of us takes space.'"
++        },
++        "mirror_rejected": {
++          "name": "mirror_rejected",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": false
++        },
++        "mirror_confirmed": {
++          "name": "mirror_confirmed",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": false
++        },
++        "mirror_matching_use": {
++          "name": "mirror_matching_use",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": false
++        },
++        "matching_pilot_joined": {
++          "name": "matching_pilot_joined",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": false
++        },
++        "revision": {
++          "name": "revision",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": 0
++        },
++        "updated_at": {
++          "name": "updated_at",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "CURRENT_TIMESTAMP"
++        }
++      },
++      "indexes": {},
++      "foreignKeys": {},
++      "compositePrimaryKeys": {},
++      "uniqueConstraints": {},
++      "checkConstraints": {}
++    },
++    "matching_candidacies": {
++      "name": "matching_candidacies",
++      "columns": {
++        "user_email": {
++          "name": "user_email",
++          "type": "text",
++          "primaryKey": true,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "display_name": {
++          "name": "display_name",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "status": {
++          "name": "status",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "'paused'"
++        },
++        "city": {
++          "name": "city",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "age": {
++          "name": "age",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "age_min": {
++          "name": "age_min",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "age_max": {
++          "name": "age_max",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "gender_identity": {
++          "name": "gender_identity",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "interested_in": {
++          "name": "interested_in",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "relationship_goal": {
++          "name": "relationship_goal",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "max_distance_miles": {
++          "name": "max_distance_miles",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "approved_learning": {
++          "name": "approved_learning",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "consent_revision": {
++          "name": "consent_revision",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": 0
++        },
++        "pilot_notice_version": {
++          "name": "pilot_notice_version",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "''"
++        },
++        "pilot_notice_accepted_at": {
++          "name": "pilot_notice_accepted_at",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": false,
++          "autoincrement": false
++        },
++        "joined_at": {
++          "name": "joined_at",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "CURRENT_TIMESTAMP"
++        },
++        "paused_at": {
++          "name": "paused_at",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": false,
++          "autoincrement": false
++        },
++        "updated_at": {
++          "name": "updated_at",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "CURRENT_TIMESTAMP"
++        }
++      },
++      "indexes": {},
++      "foreignKeys": {},
++      "compositePrimaryKeys": {},
++      "uniqueConstraints": {},
++      "checkConstraints": {}
++    },
++    "mutation_receipts": {
++      "name": "mutation_receipts",
++      "columns": {
++        "receipt_key": {
++          "name": "receipt_key",
++          "type": "text",
++          "primaryKey": true,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "user_email": {
++          "name": "user_email",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "operation_id": {
++          "name": "operation_id",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "operation_kind": {
++          "name": "operation_kind",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "response_json": {
++          "name": "response_json",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false
++        },
++        "status_code": {
++          "name": "status_code",
++          "type": "integer",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": 200
++        },
++        "created_at": {
++          "name": "created_at",
++          "type": "text",
++          "primaryKey": false,
++          "notNull": true,
++          "autoincrement": false,
++          "default": "CURRENT_TIMESTAMP"
++        }
++      },
++      "indexes": {},
++      "foreignKeys": {},
++      "compositePrimaryKeys": {},
++      "uniqueConstraints": {},
++      "checkConstraints": {}
++    }
++  },
++  "views": {},
++  "enums": {},
++  "_meta": {
++    "schemas": {},
++    "tables": {},
++    "columns": {}
++  },
++  "internal": {
++    "indexes": {}
++  }
++}
+\ No newline at end of file
+diff --git a/drizzle/meta/_journal.json b/drizzle/meta/_journal.json
+index dec3cc3..222cce1 100644
+--- a/drizzle/meta/_journal.json
++++ b/drizzle/meta/_journal.json
+@@ -57,6 +57,13 @@
+       "when": 1785478118996,
+       "tag": "0007_glamorous_young_avengers",
+       "breakpoints": true
++    },
++    {
++      "idx": 8,
++      "version": "6",
++      "when": 1785823560666,
++      "tag": "0008_quick_abomination",
++      "breakpoints": true
+     }
+   ]
+ }
+\ No newline at end of file
+diff --git a/tests/rendered-html.test.mjs b/tests/rendered-html.test.mjs
+index cfdcaf7..fd6e51f 100644
+--- a/tests/rendered-html.test.mjs
++++ b/tests/rendered-html.test.mjs
+@@ -648,6 +648,7 @@ test("keeps pilot enrollment behind all three consent decisions", async () => {
+         status: "active",
+         approvedLearning: approved.mirrorLearning,
+         consentRevision: 7,
++        pilotNoticeVersion: "2026-08-04.1",
+       },
+       { ...approved, revision: 7 },
+     ),
+@@ -659,6 +660,7 @@ test("keeps pilot enrollment behind all three consent decisions", async () => {
+         status: "active",
+         approvedLearning: "Different approved wording",
+         consentRevision: 7,
++        pilotNoticeVersion: "2026-08-04.1",
+       },
+       { ...approved, revision: 7 },
+     ),
+@@ -670,6 +672,7 @@ test("keeps pilot enrollment behind all three consent decisions", async () => {
+         status: "pending_review",
+         approvedLearning: approved.mirrorLearning,
+         consentRevision: 7,
++        pilotNoticeVersion: "2026-08-04.1",
+       },
+       { ...approved, matchingPilotJoined: false, revision: 7 },
+     ),
+@@ -845,6 +848,30 @@ test("holds submitted candidacies outside matching until founder review", async
+   );
+ });
+ 
++test("requires the current versioned pilot notice before candidacy submission", async () => {
++  const [pageSource, routeSource, policySource, schema, matchingPolicy] =
++    await Promise.all([
++      readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
++      readFile(new URL("../app/api/candidacy/route.ts", import.meta.url), "utf8"),
++      readFile(new URL("../app/pilot-notice-policy.ts", import.meta.url), "utf8"),
++      readFile(new URL("../db/schema.ts", import.meta.url), "utf8"),
++      readFile(new URL("../app/matching-policy.ts", import.meta.url), "utf8"),
++    ]);
++
++  assert.match(policySource, /PILOT_NOTICE_VERSION/);
++  assert.match(policySource, /does not guarantee an introduction/);
++  assert.match(policySource, /not emergency, clinical, or wellness services/);
++  assert.match(pageSource, /I understand these beta boundaries/);
++  assert.match(pageSource, /disabled=\{saving \|\| !noticeAccepted\}/);
++  assert.match(routeSource, /validatePilotNoticeAcceptance/);
++  assert.match(routeSource, /pilotNoticeAcceptedAt: now/);
++  assert.match(schema, /pilotNoticeVersion: text\("pilot_notice_version"\)/);
++  assert.match(
++    matchingPolicy,
++    /candidacy\.pilotNoticeVersion === PILOT_NOTICE_VERSION/,
++  );
++});
++
+ test("shows the real Journey save result and offers a retry on failure", async () => {
+   const source = await readFile(
+     new URL("../app/page.tsx", import.meta.url),

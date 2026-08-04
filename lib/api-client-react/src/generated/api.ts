@@ -49,6 +49,9 @@ import type {
   AuthErrorEnvelope,
   AuthUserEnvelope,
   BeginBrowserLoginParams,
+  BillingCheckoutStatus,
+  BillingEntitlement,
+  BillingRedirect,
   BlockUserInput,
   BulkDeleteAuditsInput,
   BulkDeleteAuditsResult,
@@ -98,6 +101,7 @@ import type {
   CosmicRelocationInput,
   CosmicRelocationState,
   CosmicWeather,
+  CreateBillingCheckoutInput,
   CreateInstagramPasteInput,
   CreateInstagramPasteResult,
   CreateQuizResultInput,
@@ -119,7 +123,6 @@ import type {
   DeleteImportResult,
   DeleteInsightResult,
   DeleteJournalEntryResult,
-  DeleteMyAccountResult,
   DeletePostDateNoteResult,
   DeleteProfileResult,
   DeleteWellnessAnswerResult,
@@ -280,6 +283,7 @@ import type {
   WellnessAnswerInput,
   WellnessAnswerList,
   WellnessAnswerPatch,
+  WellnessAnswerPermissionsPatch,
   WellnessDaily,
   WellnessInferenceConfirmInput,
   WellnessInferenceConfirmResult,
@@ -1096,9 +1100,10 @@ export const getExportMyDataUrl = () => {
 
 /**
  * Returns a single JSON document containing the authenticated user's
-profile record plus every audit, dating profile, message coaching
-session, and email insight tied to that user. Intended to power a
-"Download my data" button on the account page.
+account, Echo, Play, Journey, matching, consent, profile, coaching,
+wellness, verification, and connection records. Live credentials,
+provider tokens, session payloads, and device delivery tokens are
+deliberately excluded.
 
  * @summary Download all of the signed-in user's data as JSON
  */
@@ -1248,6 +1253,309 @@ export function useGetAccountSummary<TData = Awaited<ReturnType<typeof getAccoun
 
 
 
+
+export const getGetBillingEntitlementUrl = () => {
+
+
+
+
+  return `/api/billing/entitlement`
+}
+
+/**
+ * Resolves founder beta grants and Stripe-backed entitlements using the
+paid-through date. A cancellation or failed renewal keeps access only
+through time already paid for; an incomplete payment grants nothing.
+
+ * @summary Get the signed-in user's effective paid access
+ */
+export const getBillingEntitlement = async ( options?: RequestInit): Promise<BillingEntitlement> => {
+
+  return customFetch<BillingEntitlement>(getGetBillingEntitlementUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBillingEntitlementQueryKey = () => {
+    return [
+    `/api/billing/entitlement`
+    ] as const;
+    }
+
+
+export const getGetBillingEntitlementQueryOptions = <TData = Awaited<ReturnType<typeof getBillingEntitlement>>, TError = ErrorType<AuthErrorEnvelope>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBillingEntitlement>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBillingEntitlementQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBillingEntitlement>>> = ({ signal }) => getBillingEntitlement({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBillingEntitlement>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetBillingEntitlementQueryResult = NonNullable<Awaited<ReturnType<typeof getBillingEntitlement>>>
+export type GetBillingEntitlementQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Get the signed-in user's effective paid access
+ */
+
+export function useGetBillingEntitlement<TData = Awaited<ReturnType<typeof getBillingEntitlement>>, TError = ErrorType<AuthErrorEnvelope>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBillingEntitlement>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetBillingEntitlementQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateBillingCheckoutUrl = () => {
+
+
+
+
+  return `/api/billing/checkout`
+}
+
+/**
+ * @summary Create an attributed Stripe Checkout session
+ */
+export const createBillingCheckout = async (createBillingCheckoutInput: CreateBillingCheckoutInput, options?: RequestInit): Promise<BillingRedirect> => {
+
+  return customFetch<BillingRedirect>(getCreateBillingCheckoutUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createBillingCheckoutInput,)
+  }
+);}
+
+
+
+
+export const getCreateBillingCheckoutMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBillingCheckout>>, TError,{data: BodyType<CreateBillingCheckoutInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createBillingCheckout>>, TError,{data: BodyType<CreateBillingCheckoutInput>}, TContext> => {
+
+const mutationKey = ['createBillingCheckout'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBillingCheckout>>, {data: BodyType<CreateBillingCheckoutInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createBillingCheckout(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateBillingCheckoutMutationResult = NonNullable<Awaited<ReturnType<typeof createBillingCheckout>>>
+    export type CreateBillingCheckoutMutationBody = BodyType<CreateBillingCheckoutInput>
+    export type CreateBillingCheckoutMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Create an attributed Stripe Checkout session
+ */
+export const useCreateBillingCheckout = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBillingCheckout>>, TError,{data: BodyType<CreateBillingCheckoutInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createBillingCheckout>>,
+        TError,
+        {data: BodyType<CreateBillingCheckoutInput>},
+        TContext
+      > => {
+      return useMutation(getCreateBillingCheckoutMutationOptions(options));
+    }
+
+export const getGetBillingCheckoutStatusUrl = (sessionId: string,) => {
+
+
+
+
+  return `/api/billing/checkout-session/${sessionId}`
+}
+
+/**
+ * @summary Confirm the signed-in member's returned Stripe Checkout session
+ */
+export const getBillingCheckoutStatus = async (sessionId: string, options?: RequestInit): Promise<BillingCheckoutStatus> => {
+
+  return customFetch<BillingCheckoutStatus>(getGetBillingCheckoutStatusUrl(sessionId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBillingCheckoutStatusQueryKey = (sessionId: string,) => {
+    return [
+    `/api/billing/checkout-session/${sessionId}`
+    ] as const;
+    }
+
+
+export const getGetBillingCheckoutStatusQueryOptions = <TData = Awaited<ReturnType<typeof getBillingCheckoutStatus>>, TError = ErrorType<AuthErrorEnvelope>>(sessionId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBillingCheckoutStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBillingCheckoutStatusQueryKey(sessionId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBillingCheckoutStatus>>> = ({ signal }) => getBillingCheckoutStatus(sessionId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(sessionId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBillingCheckoutStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetBillingCheckoutStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getBillingCheckoutStatus>>>
+export type GetBillingCheckoutStatusQueryError = ErrorType<AuthErrorEnvelope>
+
+
+/**
+ * @summary Confirm the signed-in member's returned Stripe Checkout session
+ */
+
+export function useGetBillingCheckoutStatus<TData = Awaited<ReturnType<typeof getBillingCheckoutStatus>>, TError = ErrorType<AuthErrorEnvelope>>(
+ sessionId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBillingCheckoutStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetBillingCheckoutStatusQueryOptions(sessionId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateBillingPortalUrl = () => {
+
+
+
+
+  return `/api/billing/portal`
+}
+
+/**
+ * Creates a short-lived Stripe portal session where the member can update
+payment details or cancel Monthly Wingman. Stripe webhooks remain the
+source of truth for when cancellation actually changes access.
+
+ * @summary Open Stripe's self-service billing portal
+ */
+export const createBillingPortal = async ( options?: RequestInit): Promise<BillingRedirect> => {
+
+  return customFetch<BillingRedirect>(getCreateBillingPortalUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCreateBillingPortalMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBillingPortal>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createBillingPortal>>, TError,void, TContext> => {
+
+const mutationKey = ['createBillingPortal'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBillingPortal>>, void> = () => {
+
+
+          return  createBillingPortal(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateBillingPortalMutationResult = NonNullable<Awaited<ReturnType<typeof createBillingPortal>>>
+
+    export type CreateBillingPortalMutationError = ErrorType<AuthErrorEnvelope>
+
+    /**
+ * @summary Open Stripe's self-service billing portal
+ */
+export const useCreateBillingPortal = <TError = ErrorType<AuthErrorEnvelope>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBillingPortal>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createBillingPortal>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCreateBillingPortalMutationOptions(options));
+    }
 
 export const getGetMeConsentUrl = () => {
 
@@ -3097,81 +3405,6 @@ export const useRevokeOneSession = <TError = ErrorType<AuthErrorEnvelope>,
       return useMutation(getRevokeOneSessionMutationOptions(options));
     }
 
-export const getDeleteMyAccountUrl = () => {
-
-
-
-
-  return `/api/account`
-}
-
-/**
- * Permanently removes the authenticated user along with every audit,
-dating profile, message coaching session, and email insight tied to
-that user. Also clears every active session for the user and the
-browser session cookie, effectively signing them out.
-
- * @summary Permanently delete the signed-in user's account and all data
- */
-export const deleteMyAccount = async ( options?: RequestInit): Promise<DeleteMyAccountResult> => {
-
-  return customFetch<DeleteMyAccountResult>(getDeleteMyAccountUrl(),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-export const getDeleteMyAccountMutationOptions = <TError = ErrorType<AuthErrorEnvelope>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyAccount>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteMyAccount>>, TError,void, TContext> => {
-
-const mutationKey = ['deleteMyAccount'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMyAccount>>, void> = () => {
-
-
-          return  deleteMyAccount(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteMyAccountMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMyAccount>>>
-
-    export type DeleteMyAccountMutationError = ErrorType<AuthErrorEnvelope>
-
-    /**
- * @summary Permanently delete the signed-in user's account and all data
- */
-export const useDeleteMyAccount = <TError = ErrorType<AuthErrorEnvelope>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyAccount>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof deleteMyAccount>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getDeleteMyAccountMutationOptions(options));
-    }
-
 export const getDeleteMyAccountConfirmedUrl = () => {
 
 
@@ -4654,7 +4887,7 @@ export const getUpdateWellnessAnswerUrl = (id: number,) => {
 }
 
 /**
- * @summary Update a wellness answer or consent level
+ * @summary Update a wellness answer
  */
 export const updateWellnessAnswer = async (id: number,
     wellnessAnswerPatch: WellnessAnswerPatch, options?: RequestInit): Promise<WellnessAnswer> => {
@@ -4704,7 +4937,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateWellnessAnswerMutationError = ErrorType<void>
 
     /**
- * @summary Update a wellness answer or consent level
+ * @summary Update a wellness answer
  */
 export const useUpdateWellnessAnswer = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWellnessAnswer>>, TError,{id: number;data: BodyType<WellnessAnswerPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -4785,6 +5018,84 @@ export const useDeleteWellnessAnswer = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteWellnessAnswerMutationOptions(options));
+    }
+
+export const getUpdateWellnessAnswerPermissionsUrl = (id: number,) => {
+
+
+
+
+  return `/api/wellness/answers/${id}/permissions`
+}
+
+/**
+ * Saving an answer does not grant Echo, Mirror, matching, or research
+use. This endpoint changes those purposes explicitly and records an
+append-only actor audit event for every changed permission. Matching
+permission requires Mirror confirmation. Revoking Mirror confirmation
+also revokes matching permission.
+
+ * @summary Change purpose-specific permissions for one wellness answer
+ */
+export const updateWellnessAnswerPermissions = async (id: number,
+    wellnessAnswerPermissionsPatch: WellnessAnswerPermissionsPatch, options?: RequestInit): Promise<WellnessAnswer> => {
+
+  return customFetch<WellnessAnswer>(getUpdateWellnessAnswerPermissionsUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      wellnessAnswerPermissionsPatch,)
+  }
+);}
+
+
+
+
+export const getUpdateWellnessAnswerPermissionsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWellnessAnswerPermissions>>, TError,{id: number;data: BodyType<WellnessAnswerPermissionsPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateWellnessAnswerPermissions>>, TError,{id: number;data: BodyType<WellnessAnswerPermissionsPatch>}, TContext> => {
+
+const mutationKey = ['updateWellnessAnswerPermissions'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWellnessAnswerPermissions>>, {id: number;data: BodyType<WellnessAnswerPermissionsPatch>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateWellnessAnswerPermissions(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateWellnessAnswerPermissionsMutationResult = NonNullable<Awaited<ReturnType<typeof updateWellnessAnswerPermissions>>>
+    export type UpdateWellnessAnswerPermissionsMutationBody = BodyType<WellnessAnswerPermissionsPatch>
+    export type UpdateWellnessAnswerPermissionsMutationError = ErrorType<void>
+
+    /**
+ * @summary Change purpose-specific permissions for one wellness answer
+ */
+export const useUpdateWellnessAnswerPermissions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWellnessAnswerPermissions>>, TError,{id: number;data: BodyType<WellnessAnswerPermissionsPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateWellnessAnswerPermissions>>,
+        TError,
+        {id: number;data: BodyType<WellnessAnswerPermissionsPatch>},
+        TContext
+      > => {
+      return useMutation(getUpdateWellnessAnswerPermissionsMutationOptions(options));
     }
 
 export const getGetWellnessDailyUrl = () => {
@@ -8212,7 +8523,7 @@ export const getGetFounderReportsUrl = (params?: GetFounderReportsParams,) => {
 
 /**
  * Returns Trust & Safety reports for the founder review queue, newest
-first. Requires founder key.
+first. Requires an authenticated founder account.
 
  * @summary List member reports for founder review
  */
@@ -8291,7 +8602,7 @@ export const getUpdateFounderReportStatusUrl = (id: number,) => {
 }
 
 /**
- * Requires founder key.
+ * Requires an authenticated founder account.
  * @summary Update the review status of a member report
  */
 export const updateFounderReportStatus = async (id: number,
@@ -10358,7 +10669,7 @@ export const getTestAiUrl = (params?: TestAiParams,) => {
 }
 
 /**
- * Safe diagnostic endpoint — runs a tiny generation request. Requires founder key. Falls back gracefully if AI is unavailable.
+ * Safe diagnostic endpoint — runs a tiny generation request. Requires an authenticated founder account. Falls back gracefully if AI is unavailable.
  * @summary Send a sample prompt through the server-side AI helper
  */
 export const testAi = async (aiTestInput: AiTestInput,
@@ -10434,7 +10745,7 @@ export const getPurgeTrashNowUrl = () => {
  * Runs `purgeExpiredTrashedAudits()` synchronously and returns the number
 of records deleted. Useful after adjusting the retention window or to
 confirm the purge job is working without waiting for the timer.
-Requires founder key.
+Requires an authenticated founder account.
 
  * @summary Manually trigger an immediate audit trash purge
  */
@@ -10515,7 +10826,7 @@ export const getRefreshGeoipUrl = (params?: RefreshGeoipParams,) => {
 /**
  * Runs the GeoIP updater immediately (the same routine the monthly job calls).
 Useful after rotating the MaxMind license key or when the dataset is suspected
-to be stale. Requires founder key.
+to be stale. Requires an authenticated founder account.
 
  * @summary Trigger a manual GeoIP database refresh
  */
@@ -10588,7 +10899,7 @@ export const getGetTrashPurgeHeartbeatUrl = () => {
 
 /**
  * Returns the timestamp of the last successful `audit_trash_purge` job run,
-together with the elapsed time and a staleness flag. Requires founder key.
+together with the elapsed time and a staleness flag. Requires an authenticated founder account.
 
  * @summary When did the audit trash purge job last succeed?
  */
@@ -10682,7 +10993,7 @@ A referred user is counted as "paid" if they have any matching
 of the founder dashboard's purchase view, which treats `status = 'paid'`
 as the canonical signal that money actually moved.
 
-Requires founder key.
+Requires an authenticated founder account.
 
  * @summary Referral attribution summary for the founder dashboard
  */
@@ -10781,7 +11092,7 @@ directional drop-off read, not a strict nested cohort. Anonymous visits
 are tracked client-side via analytics, so the first server-visible stage
 is accounts.
 
-Requires founder key.
+Requires an authenticated founder account.
 
  * @summary Readiness-to-revenue funnel for the founder dashboard
  */
@@ -10871,7 +11182,7 @@ export const getAskFounderCopilotUrl = (params?: AskFounderCopilotParams,) => {
 The full strategic playbook is embedded in the system prompt so the
 reply can reference prior decisions. On model failure or unavailable
 provider, returns a fallback answer pointing at the closest playbook
-entry. Requires founder key.
+entry. Requires an authenticated founder account.
 
  * @summary Ask Echo a free-form strategic question
  */

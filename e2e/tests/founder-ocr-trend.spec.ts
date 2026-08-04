@@ -1,15 +1,39 @@
 import { test, expect } from "@playwright/test";
 import pg from "pg";
+import crypto from "crypto";
 
 const { Pool } = pg;
 
-const FOUNDER_KEY = process.env.VITE_FOUNDER_KEY ?? "nldc2024";
-
 let pool: pg.Pool;
 let seededAuditIds: number[] = [];
+let founderSid: string;
+const FOUNDER_USER_ID = `e2e-founder-ocr-${crypto.randomBytes(6).toString("hex")}`;
+const FOUNDER_EMAIL = `${FOUNDER_USER_ID}@example.com`;
 
 test.beforeAll(async () => {
   pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  founderSid = crypto.randomBytes(32).toString("hex");
+  const sessJson = JSON.stringify({
+    user: {
+      id: FOUNDER_USER_ID,
+      email: FOUNDER_EMAIL,
+      firstName: "Founder",
+      lastName: "OCR",
+      profileImageUrl: null,
+      role: "founder",
+    },
+    access_token: "e2e-founder-ocr-token",
+  });
+  await pool.query(
+    `INSERT INTO users (id, email, role)
+     VALUES ($1, $2, 'founder')`,
+    [FOUNDER_USER_ID, FOUNDER_EMAIL],
+  );
+  await pool.query(
+    `INSERT INTO sessions (sid, sess, expire, user_id)
+     VALUES ($1, $2::jsonb, NOW() + INTERVAL '1 hour', $3)`,
+    [founderSid, sessJson, FOUNDER_USER_ID],
+  );
 
   // The trend series now includes today (loop is d <= days), so seeding with
   // NOW() is sufficient to ensure the entry falls inside the chart's visible range.
@@ -41,16 +65,14 @@ test.afterAll(async () => {
       [seededAuditIds],
     );
   }
+  await pool.query(`DELETE FROM sessions WHERE sid = $1`, [founderSid]);
+  await pool.query(`DELETE FROM users WHERE id = $1`, [FOUNDER_USER_ID]);
   await pool.end();
 });
 
 test("OCR trend chart shows Total legend label", async ({ page }) => {
+  await page.setExtraHTTPHeaders({ Cookie: `sid=${founderSid}` });
   await page.goto("/founder");
-
-  const keyInput = page.locator('input[type="password"]');
-  await expect(keyInput).toBeVisible();
-  await keyInput.fill(FOUNDER_KEY);
-  await page.locator('button:has-text("Open Dashboard")').click();
 
   await page.locator('button:has-text("OCR Mismatches")').click();
 

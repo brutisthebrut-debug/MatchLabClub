@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { DateChapterCard } from "@/components/journey/DateChapterCard";
 import {
   useGetConnection,
   getGetConnectionQueryKey,
@@ -469,6 +470,8 @@ export default function MatchThread() {
               </Button>
             </div>
           </div>
+
+          {!closed && <DateChapterCard />}
 
           {reveal?.compatibilityScore != null && (
             <CompatibilityCard

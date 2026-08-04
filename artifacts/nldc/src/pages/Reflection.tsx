@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { HubTabs } from "@/components/layout/HubTabs";
 import { ToolHandoff } from "@/components/ToolHandoff";
@@ -8,13 +9,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { WelcomePanel } from "@/components/WelcomePanel";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Sparkles, RefreshCw, Copy, Check, AlertCircle, Heart } from "lucide-react";
+import { ArrowRight, Loader2, Sparkles, RefreshCw, Copy, Check, AlertCircle, Heart, Route } from "lucide-react";
 import { useEnhanceAi } from "@workspace/api-client-react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { useSavedContext } from "@/hooks/useSavedContext";
 import { SavedContextChip } from "@/components/SavedContextChip";
 import { FallbackNotice } from "@/components/FallbackNotice";
 import { FallbackRateBadge } from "@/components/FallbackRateBadge";
+import {
+  clearPendingReflection,
+  hasPendingReflection,
+} from "@/lib/onboardingState";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -173,6 +178,7 @@ export default function Reflection() {
   const { isAuthenticated } = useAuth();
   const isBrandNewUser = isAuthenticated && !result;
   const savedCtx = useSavedContext();
+  const [journeyReflect] = useState(() => hasPendingReflection());
 
   const canSubmit = before && during && mutual && afterward;
 
@@ -312,6 +318,25 @@ export default function Reflection() {
   <p className="text-muted-foreground mt-2">Process how it felt, get a pattern read, and decide what's next, with a suggested message if you want one.</p>
   </motion.div>
 
+  {journeyReflect && (
+  <motion.section
+  {...fadeUp(0.03)}
+  className="mb-6 rounded-[2rem] border border-[hsl(var(--brand-green)/0.28)] bg-[hsl(var(--brand-green)/0.08)] p-6"
+  data-testid="journey-reflect"
+  >
+  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[hsl(var(--brand-green))]">
+  Chapter 8 of 8 · Reflect
+  </p>
+  <h2 className="mt-2 font-serif text-2xl font-bold text-foreground">
+  The date is over. The useful part is what you noticed.
+  </h2>
+  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+  This is not a grade for you or the other person. Name what felt easy, what
+  tightened you up, and whether interest and effort were actually mutual.
+  </p>
+  </motion.section>
+  )}
+
   {isBrandNewUser && (
   <WelcomePanel
   icon={<Heart className="w-6 h-6 text-primary" />}
@@ -432,6 +457,34 @@ export default function Reflection() {
   </div>
   </div>
   {result && (
+  <>
+  {journeyReflect && (
+  <div
+  className="mt-6 rounded-[2rem] border border-[hsl(var(--brand-green)/0.3)] bg-[hsl(var(--brand-green)/0.08)] p-6"
+  data-testid="journey-reflect-complete"
+  >
+  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[hsl(var(--brand-green))]">
+  Journey complete
+  </p>
+  <h3 className="mt-2 font-serif text-2xl font-bold text-foreground">
+  You did not just go on a date. You gave the next one better information.
+  </h3>
+  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+  Save the debrief if you want this pattern in your Mirror, then watch how your
+  dating story changes over time.
+  </p>
+  <Link
+  href="/progress/timeline"
+  onClick={clearPendingReflection}
+  className="mt-4 inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-bold text-background"
+  data-testid="journey-reflect-finish"
+  >
+  <Route className="h-4 w-4" aria-hidden="true" />
+  See my Journey
+  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+  </Link>
+  </div>
+  )}
   <div className="mt-6">
   <ToolHandoff
   testId="reflection-handoff"
@@ -443,6 +496,7 @@ export default function Reflection() {
   ]}
   />
   </div>
+  </>
   )}
   {result && (
   <div className="mt-5 flex justify-center">

@@ -41,6 +41,7 @@ import {
   clampCandor,
   personaLabel,
   buildReaction,
+  DEFAULT_COMPANION_PERSONA,
   type CompanionPersona,
   type MessageDirection,
 } from "../lib/companionEngine";
@@ -203,7 +204,7 @@ async function refreshObservations(
       lastReactedScore: portrait.readinessScore,
       lastReactedCoverage: coverage,
       lastReactedAt: now,
-      persona: state?.persona ?? "best_friend",
+      persona: state?.persona ?? DEFAULT_COMPANION_PERSONA,
       candor: state?.candor ?? 2,
       updatedAt: now,
     })
@@ -551,7 +552,7 @@ router.post("/me/companion/pulse", async (req, res): Promise<void> => {
           lastReactedScore: portrait.readinessScore,
           lastReactedCoverage: coverage,
           lastReactedAt: now,
-          persona: state?.persona ?? "best_friend",
+          persona: state?.persona ?? DEFAULT_COMPANION_PERSONA,
           candor: state?.candor ?? 2,
           updatedAt: now,
         })

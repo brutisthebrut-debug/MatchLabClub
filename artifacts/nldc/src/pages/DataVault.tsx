@@ -17,6 +17,7 @@ import {
   useListWellnessAnswers,
   useListWellnessTags,
   useDeleteWellnessAnswer,
+  useUpdateWellnessAnswerPermissions,
   useDeleteMyAccountConfirmed,
   useGetCurrentAuthUser,
   useGetTrustLedger,
@@ -31,6 +32,7 @@ import {
 import { DIMENSION_META } from "@/lib/wellnessQuestionBank";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -243,6 +245,8 @@ function WellnessDataSection() {
   const { data: answersData, refetch } = useListWellnessAnswers({});
   const { data: tagsData } = useListWellnessTags({});
   const { mutate: deleteAnswer } = useDeleteWellnessAnswer();
+  const updatePermissions = useUpdateWellnessAnswerPermissions();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
 
@@ -259,6 +263,63 @@ function WellnessDataSection() {
         void refetch();
       },
     });
+  }
+
+  function handlePermission(
+    id: number,
+    purpose: "echo" | "mirror" | "matching" | "research",
+    approved: boolean,
+  ) {
+    const data =
+      purpose === "echo"
+        ? { echo: approved }
+        : purpose === "mirror"
+          ? { mirror: approved }
+          : purpose === "matching"
+            ? { matching: approved }
+            : { research: approved };
+    updatePermissions.mutate(
+      { id, data },
+      {
+        onSuccess: () => {
+          const descriptions = {
+            echo: approved
+              ? "Echo may use this answer in your conversations."
+              : "Echo will no longer use this answer.",
+            mirror: approved
+              ? "This answer is now confirmed in your Mirror."
+              : "Removed from Mirror. Matching use was also turned off.",
+            matching: approved
+              ? "This answer may now contribute to matching."
+              : "This answer will not contribute to matching.",
+            research: approved
+              ? "Research use is on for this answer."
+              : "Research use is off for this answer.",
+          };
+          toast({
+            title: "Permission updated",
+            description: descriptions[purpose],
+          });
+          void refetch();
+          void queryClient.invalidateQueries({
+            queryKey: getGetMatchingStateQueryKey(),
+          });
+          void queryClient.invalidateQueries({
+            queryKey: getGetTrustLedgerQueryKey(),
+          });
+        },
+        onError: (err: unknown) => {
+          toast({
+            title: "Permission not changed",
+            description:
+              err instanceof Error
+                ? err.message
+                : "Try again in a moment.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
   }
 
   const byDimension = new Map<string, typeof answers>();
@@ -282,7 +343,10 @@ function WellnessDataSection() {
                 {answers.length} answer{answers.length !== 1 ? "s" : ""}{tags.length > 0 ? ` · ${tags.length} tag${tags.length !== 1 ? "s" : ""}` : ""}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground/55 mt-0.5 leading-relaxed">Your answers across 18 wellness dimensions. Delete any single answer here, or purge the whole source above.</p>
+            <p className="text-xs text-muted-foreground/55 mt-0.5 leading-relaxed">
+              Saving an answer does not quietly approve it for Echo, Mirror,
+              matching, or research. You choose each purpose here.
+            </p>
           </div>
         </div>
 
@@ -310,18 +374,79 @@ function WellnessDataSection() {
                   </p>
                   <div className="space-y-2">
                     {dimAnswers.map(a => (
-                      <div key={a.id} className="flex items-start gap-2 text-xs">
-                        <div className="flex-1 min-w-0">
+                      <div
+                        key={a.id}
+                        className="rounded-lg border border-white/5 bg-black/5 p-3 text-xs"
+                      >
+                        <div className="flex items-start gap-2">
+                          <div className="flex-1 min-w-0">
                           <p className="text-muted-foreground/50 mb-0.5 leading-snug truncate">{a.questionText}</p>
                           <p className="text-foreground/80 leading-relaxed">"{a.answer}"</p>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteAnswer(a.id)}
+                            className="flex-shrink-0 p-1 text-[hsl(348_55%_65%/0.5)] hover:text-[hsl(348_55%_65%)] transition-colors"
+                            aria-label="Delete answer"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleDeleteAnswer(a.id)}
-                          className="flex-shrink-0 p-1 text-[hsl(348_55%_65%/0.5)] hover:text-[hsl(348_55%_65%)] transition-colors"
-                          aria-label="Delete answer"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                          {[
+                            {
+                              purpose: "echo" as const,
+                              label: "Echo may use it",
+                              checked: a.permissions.echo,
+                            },
+                            {
+                              purpose: "mirror" as const,
+                              label: "Confirmed in Mirror",
+                              checked: a.permissions.mirror,
+                            },
+                            {
+                              purpose: "matching" as const,
+                              label: "May inform matching",
+                              checked: a.permissions.matching,
+                              disabled: !a.permissions.mirror,
+                            },
+                            {
+                              purpose: "research" as const,
+                              label: "May support research",
+                              checked: a.permissions.research,
+                            },
+                          ].map((permission) => (
+                            <label
+                              key={permission.purpose}
+                              className="flex items-center justify-between gap-3 rounded-lg bg-white/3 px-2.5 py-2 text-[11px] text-muted-foreground/70"
+                            >
+                              <span>
+                                {permission.label}
+                                {permission.purpose === "matching" &&
+                                  permission.disabled && (
+                                    <span className="block text-[9px] text-muted-foreground/40">
+                                      Confirm in Mirror first
+                                    </span>
+                                  )}
+                              </span>
+                              <Switch
+                                checked={permission.checked}
+                                disabled={
+                                  permission.disabled ||
+                                  (updatePermissions.isPending &&
+                                    updatePermissions.variables?.id === a.id)
+                                }
+                                onCheckedChange={(checked) =>
+                                  handlePermission(
+                                    a.id,
+                                    permission.purpose,
+                                    checked,
+                                  )
+                                }
+                                aria-label={permission.label}
+                              />
+                            </label>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -583,7 +708,9 @@ export default function DataVault() {
             <Shield className="w-4 h-4 text-muted-foreground/40 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground/50 leading-relaxed">
               <strong className="text-muted-foreground/65">No third-party sharing. No selling. No training on your content.</strong>{" "}
-              Every source here was added by you, used only to understand and match you, and is controlled entirely by you.
+              Saving something is not permission to use it everywhere. For
+              profile answers, you separately control Echo, Mirror, matching,
+              and research use.
             </p>
           </motion.div>
 

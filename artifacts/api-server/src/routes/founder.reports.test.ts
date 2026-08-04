@@ -1,23 +1,28 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import express, { type Express } from "express";
 import request from "supertest";
-import { pool, db, userReportsTable } from "@workspace/db";
+import { pool, db, userReportsTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
 import founderRouter from "./founder";
 
+const FOUNDER_USER = "founder-reports-route-test";
 function makeTestApp(): Express {
   const app = express();
   app.use(express.json());
+  app.use((req, _res, next) => {
+    req.user = { id: FOUNDER_USER, email: null, firstName: null, lastName: null, profileImageUrl: null };
+    next();
+  });
   app.use("/api", founderRouter);
   return app;
 }
 
 let app: Express;
-const VALID_KEY = "nldc2024";
 const createdIds: number[] = [];
 
-beforeAll(() => {
+beforeAll(async () => {
+  await db.insert(usersTable).values({ id: FOUNDER_USER, role: "founder" }).onConflictDoNothing();
   app = makeTestApp();
 });
 
@@ -25,6 +30,7 @@ afterAll(async () => {
   for (const id of createdIds) {
     await db.delete(userReportsTable).where(eq(userReportsTable.id, id));
   }
+  await db.delete(usersTable).where(eq(usersTable.id, FOUNDER_USER));
   await pool.end();
 });
 
@@ -48,7 +54,7 @@ describe("PATCH /founder/reports/:id/status", () => {
 
     const res = await request(app)
       .patch(`/api/founder/reports/${row!.id}/status`)
-      .set("x-founder-key", VALID_KEY)
+      
       .send({ status: "reviewed" });
 
     expect(res.status).toBe(200);
@@ -83,7 +89,7 @@ describe("PATCH /founder/reports/:id/status", () => {
 
     const res = await request(app)
       .patch(`/api/founder/reports/${row!.id}/status`)
-      .set("x-founder-key", VALID_KEY)
+      
       .send({ status: "dismissed" });
 
     expect(res.status).toBe(200);

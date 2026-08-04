@@ -6,9 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type DeleteMyAccountResultDeleted = {
-  audits: number;
-  profiles: number;
-  messages: number;
-  insights: number;
-};
+export interface BillingRedirect {
+  url: string;
+}

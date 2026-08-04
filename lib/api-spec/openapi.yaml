@@ -282,9 +282,10 @@ paths:
       summary: Download all of the signed-in user's data as JSON
       description: |
         Returns a single JSON document containing the authenticated user's
-        profile record plus every audit, dating profile, message coaching
-        session, and email insight tied to that user. Intended to power a
-        "Download my data" button on the account page.
+        account, Echo, Play, Journey, matching, consent, profile, coaching,
+        wellness, verification, and connection records. Live credentials,
+        provider tokens, session payloads, and device delivery tokens are
+        deliberately excluded.
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -323,6 +324,143 @@ paths:
                 $ref: '#/components/schemas/AccountSummary'
         '401':
           description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /billing/entitlement:
+    get:
+      tags: [Auth]
+      operationId: getBillingEntitlement
+      summary: Get the signed-in user's effective paid access
+      description: |
+        Resolves founder beta grants and Stripe-backed entitlements using the
+        paid-through date. A cancellation or failed renewal keeps access only
+        through time already paid for; an incomplete payment grants nothing.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Current effective billing state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingEntitlement'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /billing/checkout:
+    post:
+      tags: [Auth]
+      operationId: createBillingCheckout
+      summary: Create an attributed Stripe Checkout session
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBillingCheckoutInput'
+      responses:
+        '200':
+          description: Stripe-hosted checkout URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingRedirect'
+        '400':
+          description: The product or account email is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '503':
+          description: Stripe or the requested product price is not configured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /billing/checkout-session/{sessionId}:
+    get:
+      tags: [Auth]
+      operationId: getBillingCheckoutStatus
+      summary: Confirm the signed-in member's returned Stripe Checkout session
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Server-read payment state from Stripe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingCheckoutStatus'
+        '400':
+          description: Invalid session identifier.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '404':
+          description: The session does not belong to the signed-in account.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+
+  /billing/portal:
+    post:
+      tags: [Auth]
+      operationId: createBillingPortal
+      summary: Open Stripe's self-service billing portal
+      description: |
+        Creates a short-lived Stripe portal session where the member can update
+        payment details or cancel Monthly Wingman. Stripe webhooks remain the
+        source of truth for when cancellation actually changes access.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Stripe-hosted billing portal URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingRedirect'
+        '401':
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorEnvelope'
+        '409':
+          description: The account has no Stripe customer record.
           content:
             application/json:
               schema:
@@ -1089,33 +1227,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthErrorEnvelope'
 
-  /account:
-    delete:
-      tags: [Auth]
-      operationId: deleteMyAccount
-      summary: Permanently delete the signed-in user's account and all data
-      description: |
-        Permanently removes the authenticated user along with every audit,
-        dating profile, message coaching session, and email insight tied to
-        that user. Also clears every active session for the user and the
-        browser session cookie, effectively signing them out.
-      parameters:
-        - $ref: '#/components/parameters/AuthorizationSessionHeader'
-        - $ref: '#/components/parameters/SessionCookie'
-      responses:
-        '200':
-          description: Account and all associated data were deleted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeleteMyAccountResult'
-        '401':
-          description: Not authenticated.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthErrorEnvelope'
-
   /me/account/delete:
     post:
       tags: [Auth]
@@ -1742,7 +1853,7 @@ paths:
     patch:
       operationId: updateWellnessAnswer
       tags: [wellness]
-      summary: Update a wellness answer or consent level
+      summary: Update a wellness answer
       parameters:
         - $ref: '#/components/parameters/AuthorizationSessionHeader'
         - $ref: '#/components/parameters/SessionCookie'
@@ -1787,6 +1898,43 @@ paths:
                 $ref: "#/components/schemas/DeleteWellnessAnswerResult"
         "404":
           description: Not found
+
+  /wellness/answers/{id}/permissions:
+    patch:
+      operationId: updateWellnessAnswerPermissions
+      tags: [wellness]
+      summary: Change purpose-specific permissions for one wellness answer
+      description: |
+        Saving an answer does not grant Echo, Mirror, matching, or research
+        use. This endpoint changes those purposes explicitly and records an
+        append-only actor audit event for every changed permission. Matching
+        permission requires Mirror confirmation. Revoking Mirror confirmation
+        also revokes matching permission.
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WellnessAnswerPermissionsPatch"
+      responses:
+        "200":
+          description: Permissions updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WellnessAnswer"
+        "400":
+          description: Invalid permission transition
+        "404":
+          description: Answer not found
 
   /wellness/daily:
     get:
@@ -2875,11 +3023,13 @@ paths:
       summary: List member reports for founder review
       description: |
         Returns Trust & Safety reports for the founder review queue, newest
-        first. Requires founder key.
+        first. Requires an authenticated founder account.
       parameters:
         - name: x-founder-key
           in: header
-          required: true
+          required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
         - name: status
@@ -2896,14 +3046,14 @@ paths:
               schema:
                 $ref: "#/components/schemas/ListFounderReportsResponse"
         "401":
-          description: Missing or invalid founder key.
+          description: Not authenticated as a founder.
 
   /founder/reports/{id}/status:
     patch:
       operationId: updateFounderReportStatus
       tags: [founder]
       summary: Update the review status of a member report
-      description: Requires founder key.
+      description: Requires an authenticated founder account.
       parameters:
         - name: id
           in: path
@@ -2912,7 +3062,9 @@ paths:
             type: integer
         - name: x-founder-key
           in: header
-          required: true
+          required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
       requestBody:
@@ -2929,7 +3081,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/FounderReport"
         "401":
-          description: Missing or invalid founder key.
+          description: Not authenticated as a founder.
         "404":
           description: Report not found.
 
@@ -3636,11 +3788,13 @@ paths:
       operationId: testAi
       tags: [ai]
       summary: Send a sample prompt through the server-side AI helper
-      description: Safe diagnostic endpoint — runs a tiny generation request. Requires founder key. Falls back gracefully if AI is unavailable.
+      description: Safe diagnostic endpoint — runs a tiny generation request. Requires an authenticated founder account. Falls back gracefully if AI is unavailable.
       parameters:
         - name: x-founder-key
           in: header
           required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
         - name: key
@@ -3668,7 +3822,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/AiError"
         "401":
-          description: Founder key required
+          description: Founder account required
           content:
             application/json:
               schema:
@@ -3689,11 +3843,13 @@ paths:
         Runs `purgeExpiredTrashedAudits()` synchronously and returns the number
         of records deleted. Useful after adjusting the retention window or to
         confirm the purge job is working without waiting for the timer.
-        Requires founder key.
+        Requires an authenticated founder account.
       parameters:
         - name: x-founder-key
           in: header
-          required: true
+          required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
       responses:
@@ -3704,7 +3860,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TrashPurgeResult"
         "401":
-          description: Founder key required
+          description: Founder account required
           content:
             application/json:
               schema:
@@ -3718,11 +3874,13 @@ paths:
       description: |
         Runs the GeoIP updater immediately (the same routine the monthly job calls).
         Useful after rotating the MaxMind license key or when the dataset is suspected
-        to be stale. Requires founder key.
+        to be stale. Requires an authenticated founder account.
       parameters:
         - name: x-founder-key
           in: header
           required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
         - name: key
@@ -3738,7 +3896,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/GeoipRefreshResult"
         "401":
-          description: Founder key required
+          description: Founder account required
           content:
             application/json:
               schema:
@@ -3751,11 +3909,13 @@ paths:
       summary: When did the audit trash purge job last succeed?
       description: |
         Returns the timestamp of the last successful `audit_trash_purge` job run,
-        together with the elapsed time and a staleness flag. Requires founder key.
+        together with the elapsed time and a staleness flag. Requires an authenticated founder account.
       parameters:
         - name: x-founder-key
           in: header
           required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
       responses:
@@ -3766,7 +3926,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TrashPurgeHeartbeat"
         "401":
-          description: Founder key required
+          description: Founder account required
           content:
             application/json:
               schema:
@@ -3786,11 +3946,13 @@ paths:
         of the founder dashboard's purchase view, which treats `status = 'paid'`
         as the canonical signal that money actually moved.
 
-        Requires founder key.
+        Requires an authenticated founder account.
       parameters:
         - name: x-founder-key
           in: header
           required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
         - name: key
@@ -3806,7 +3968,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/FounderReferralsSummary"
         "401":
-          description: Founder key required
+          description: Founder account required
           content:
             application/json:
               schema:
@@ -3831,11 +3993,13 @@ paths:
         are tracked client-side via analytics, so the first server-visible stage
         is accounts.
 
-        Requires founder key.
+        Requires an authenticated founder account.
       parameters:
         - name: x-founder-key
           in: header
           required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
         - name: key
@@ -3851,7 +4015,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/FounderFunnelSummary"
         "401":
-          description: Founder key required
+          description: Founder account required
           content:
             application/json:
               schema:
@@ -3867,11 +4031,13 @@ paths:
         The full strategic playbook is embedded in the system prompt so the
         reply can reference prior decisions. On model failure or unavailable
         provider, returns a fallback answer pointing at the closest playbook
-        entry. Requires founder key.
+        entry. Requires an authenticated founder account.
       parameters:
         - name: x-founder-key
           in: header
           required: false
+          deprecated: true
+          description: Ignored legacy compatibility header. Founder access is resolved from the signed-in account.
           schema:
             type: string
         - name: key
@@ -3899,7 +4065,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/AiError"
         "401":
-          description: Founder key required
+          description: Founder account required
           content:
             application/json:
               schema:
@@ -6523,6 +6689,10 @@ components:
           type: [string, 'null']
         profileImageUrl:
           type: [string, 'null']
+        role:
+          type: string
+          enum: [member, founder]
+          description: Access role resolved by the server. Founder privileges are never granted by a client-supplied key.
     AuthUserEnvelope:
       type: object
       required: [user]
@@ -8001,7 +8171,7 @@ components:
 
     AccountExport:
       type: object
-      required: [exportedAt, user, audits, profiles, messages, insights, journalEntries, postDateNotes]
+      required: [exportedAt, user, audits, profiles, messages, insights, journalEntries, postDateNotes, wellnessAnswers, dataPermissionEvents, records]
       properties:
         exportedAt:
           type: string
@@ -8032,10 +8202,57 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PostDateNote'
+        wellnessAnswers:
+          type: array
+          items:
+            $ref: '#/components/schemas/WellnessAnswer'
+        dataPermissionEvents:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataPermissionEvent'
+        records:
+          type: object
+          description: |
+            Complete account-owned records grouped by database source. Tables
+            containing live credentials or delivery tokens are omitted.
+            Sessions and verification records use redacted projections.
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              additionalProperties: true
+
+    DataPermissionEvent:
+      type: object
+      required: [id, userId, resourceType, resourceId, purpose, granted, actorType, actorId, reason, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        resourceType:
+          type: string
+        resourceId:
+          type: string
+        purpose:
+          type: string
+          enum: [echo, mirror, matching, research]
+        granted:
+          type: boolean
+        actorType:
+          type: string
+          enum: [member, system, founder, migration]
+        actorId:
+          type: [string, "null"]
+        reason:
+          type: [string, "null"]
+        createdAt:
+          type: string
+          format: date-time
 
     AccountExportUser:
       type: object
-      required: [id, email, firstName, lastName, profileImageUrl, createdAt]
+      required: [id, email, firstName, lastName, profileImageUrl, role, aiContentConsentGranted, aiContentConsentGrantedAt, aiContentConsentRevokedAt, aiContentConsentUpdatedAt, tier, tierGrantedAt, tierSource, createdAt, updatedAt]
       properties:
         id:
           type: string
@@ -8048,8 +8265,86 @@ components:
           type: [string, 'null']
         profileImageUrl:
           type: [string, 'null']
+        role:
+          type: string
+          enum: [member, founder]
+        aiContentConsentGranted:
+          type: boolean
+        aiContentConsentGrantedAt:
+          type: [string, 'null']
+          format: date-time
+        aiContentConsentRevokedAt:
+          type: [string, 'null']
+          format: date-time
+        aiContentConsentUpdatedAt:
+          type: [string, 'null']
+          format: date-time
+        tier:
+          type: [string, 'null']
+        tierGrantedAt:
+          type: [string, 'null']
+          format: date-time
+        tierSource:
+          type: [string, 'null']
+          enum: [founder, stripe, null]
         createdAt:
           type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    BillingEntitlement:
+      type: object
+      required: [tier, status, active, source, accessUntil, cancelAtPeriodEnd, canManageBilling]
+      properties:
+        tier:
+          type: string
+          enum: [free, reset, wingman]
+        status:
+          type: string
+          enum: [free, active, canceling, past_due, incomplete, unpaid, canceled]
+        active:
+          type: boolean
+        source:
+          type: string
+          enum: [free, founder, stripe]
+        accessUntil:
+          type: [string, 'null']
+          format: date-time
+        cancelAtPeriodEnd:
+          type: boolean
+        canManageBilling:
+          type: boolean
+
+    CreateBillingCheckoutInput:
+      type: object
+      required: [product]
+      properties:
+        product:
+          type: string
+          enum: [signal-audit, dating-reset, wingman]
+
+    BillingRedirect:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          format: uri
+
+    BillingCheckoutStatus:
+      type: object
+      required: [confirmed, paymentStatus, product]
+      properties:
+        confirmed:
+          type: boolean
+        paymentStatus:
+          type: string
+          enum: [paid, unpaid, no_payment_required]
+        product:
+          type: [string, 'null']
+          enum: [signal-audit, dating-reset, wingman, null]
 
     BulkDeleteAuditsInput:
       type: object
@@ -8219,26 +8514,6 @@ components:
         revoked:
           type: integer
           description: Number of sessions actually deleted.
-
-    DeleteMyAccountResult:
-      type: object
-      required: [success, deleted]
-      properties:
-        success:
-          type: boolean
-          const: true
-        deleted:
-          type: object
-          required: [audits, profiles, messages, insights]
-          properties:
-            audits:
-              type: integer
-            profiles:
-              type: integer
-            messages:
-              type: integer
-            insights:
-              type: integer
 
     DeleteAccountInput:
       type: object
@@ -9664,6 +9939,35 @@ components:
     WellnessConsentLevel:
       type: string
       enum: [coaching, matching, research, all]
+      deprecated: true
+      description: Legacy compatibility field. Purpose-specific permissions are canonical.
+
+    WellnessAnswerPermissions:
+      type: object
+      required: [echo, mirror, matching, research]
+      properties:
+        echo:
+          type: boolean
+        mirror:
+          type: boolean
+        matching:
+          type: boolean
+        research:
+          type: boolean
+
+    WellnessAnswerPermissionsPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        echo:
+          type: boolean
+        mirror:
+          type: boolean
+        matching:
+          type: boolean
+        research:
+          type: boolean
 
     WellnessAnswerInput:
       type: object
@@ -9690,6 +9994,7 @@ components:
           maxLength: 5000
         consentLevel:
           $ref: "#/components/schemas/WellnessConsentLevel"
+          deprecated: true
 
     WellnessAnswerPatch:
       type: object
@@ -9700,10 +10005,11 @@ components:
           maxLength: 5000
         consentLevel:
           $ref: "#/components/schemas/WellnessConsentLevel"
+          deprecated: true
 
     WellnessAnswer:
       type: object
-      required: [id, questionId, dimension, questionText, answer, consentLevel, createdAt, updatedAt]
+      required: [id, questionId, dimension, questionText, answer, consentLevel, permissions, permissionUpdatedAt, createdAt, updatedAt]
       properties:
         id:
           type: integer
@@ -9719,6 +10025,11 @@ components:
           type: string
         consentLevel:
           $ref: "#/components/schemas/WellnessConsentLevel"
+        permissions:
+          $ref: "#/components/schemas/WellnessAnswerPermissions"
+        permissionUpdatedAt:
+          type: [string, "null"]
+          format: date-time
         deletedAt:
           type: [string, "null"]
           format: date-time
