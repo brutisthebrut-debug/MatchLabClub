@@ -1,4 +1,9 @@
-import express, { type Express, type Request, type Response, type NextFunction } from "express";
+import express, {
+  type Express,
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
@@ -7,29 +12,7 @@ import { logger } from "./lib/logger";
 import { authMiddleware } from "./middlewares/authMiddleware";
 import { WebhookHandlers } from "./lib/webhookHandlers";
 import { handleIdentityWebhook } from "./lib/identityVerification";
-
-/**
- * Build the set of origins that are trusted for credentialed CORS requests.
- * Sources:
- *   REPLIT_DOMAINS  , comma-separated list of all domains for this Repl
- *                      (dev previews and published production domains)
- *   REPLIT_EXPO_DEV_DOMAIN, Expo tunnel domain used by the mobile app in dev
- */
-function buildAllowedOrigins(): Set<string> {
-  const origins = new Set<string>();
-  const domains = process.env["REPLIT_DOMAINS"];
-  if (domains) {
-    for (const d of domains.split(",")) {
-      const trimmed = d.trim();
-      if (trimmed) origins.add(`https://${trimmed}`);
-    }
-  }
-  const expoDomain = process.env["REPLIT_EXPO_DEV_DOMAIN"];
-  if (expoDomain) {
-    origins.add(`https://${expoDomain}`);
-  }
-  return origins;
-}
+import { buildAllowedOrigins } from "./lib/allowedOrigins";
 
 const allowedOrigins = buildAllowedOrigins();
 
