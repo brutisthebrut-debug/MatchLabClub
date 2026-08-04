@@ -249,7 +249,7 @@ Status: **Complete in `agent/echo-shell-phase-0`; validated by CI run #82**
 
 #### Batch 7B — Authenticated billing and connected runtime
 
-Status: **Implemented in code; repository validation and connected-runtime evidence pending**
+Status: **Backend slice implemented and validated by CI run #87; approved-design UI hookup and connected-runtime evidence pending**
 
 - Create authenticated canonical-plan Checkout Sessions with member and plan
   metadata; legacy public Payment Links must not assign beta packages.
