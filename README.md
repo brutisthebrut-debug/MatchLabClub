@@ -11,12 +11,25 @@ account.
 
 New to the codebase? Read in this order:
 
-1. `ARCHITECTURE.md`: guided map of the monorepo and how a request flows.
-2. `MIGRATION.md`: the plan to move off Replit to production.
-3. `replit.md`: conventions, gotchas, and product overview.
+1. `ROADMAP.md`: the current approved milestone, delivery batches, and drift guards.
+2. `ARCHITECTURE.md`: guided map of the monorepo and how a request flows.
+3. `MIGRATION.md`: the plan to move off Replit to production.
+4. `replit.md`: conventions, gotchas, and product overview.
 
 More detail: `PROJECT_SPECIFICATION.md` and `VISION.md` (product), `OPERATIONS.md`
 (runbooks), `CI.md` (the CI gate).
+
+## Current product shell
+
+The approved signed-in v1 has five primary destinations: **Today, Matches, My
+MatchLab, Journey, and Play**. Echo remains present across the signed-in
+experience. Existing tools and routes are preserved behind contextual hubs and
+secondary navigation, so consolidation must not delete or orphan working
+capability.
+
+Readiness, search activity, and market availability are separate states. A
+member becoming profile-ready must never be presented as proof that an
+introduction is available.
 
 ## Quick start
 
