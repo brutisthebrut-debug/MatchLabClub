@@ -32,8 +32,17 @@ export function MatchPathBar() {
   const score = Math.round(data.readiness?.score ?? 0);
   const threshold = data.readinessThreshold ?? 50;
   const eligible = data.eligible ?? false;
+  const searchActive = ["building", "ready", "concierge_only"].includes(
+    data.poolStatus,
+  );
+  const searchLabel = searchActive
+    ? "Search active"
+    : data.poolStatus === "paused"
+      ? "Search paused"
+      : "Search not started";
+  const nearbyMembers = Math.max(0, data.cityDensity ?? 0);
   const topAction = data.nextActions?.[0] ?? null;
-  const pointsToMatch = Math.max(0, threshold - score);
+  const pointsToReady = Math.max(0, threshold - score);
   const pct = Math.min(100, Math.round((score / Math.max(1, threshold)) * 100));
 
   if (eligible) {
@@ -50,17 +59,22 @@ export function MatchPathBar() {
                 aria-hidden="true"
               />
             </span>
-            You are match ready
+            Profile ready
           </span>
-          <span className="hidden text-sm text-muted-foreground sm:inline">
-            The introductions pool is open to you.
+          <span className="rounded-full border border-foreground/10 bg-background/50 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+            {searchLabel}
+          </span>
+          <span className="hidden rounded-full border border-foreground/10 bg-background/50 px-2.5 py-1 text-xs font-medium text-muted-foreground sm:inline">
+            {nearbyMembers > 0
+              ? `${nearbyMembers} nearby ${nearbyMembers === 1 ? "member" : "members"}`
+              : "Nearby market still building"}
           </span>
           <Link
             href="/matching"
             className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-1.5 text-sm font-semibold text-background transition-opacity hover:opacity-90"
             data-testid="match-path-bar-cta"
           >
-            See your matches
+            {searchActive ? "Review search" : "Choose search settings"}
             <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </div>
@@ -87,8 +101,8 @@ export function MatchPathBar() {
           </span>
           <span className="min-w-0">
             <span className="block text-sm font-semibold leading-tight text-foreground">
-              <span data-testid="match-path-bar-points">{pointsToMatch}</span>{" "}
-              {pointsToMatch === 1 ? "point" : "points"} to your first match
+              <span data-testid="match-path-bar-points">{pointsToReady}</span>{" "}
+              {pointsToReady === 1 ? "point" : "points"} to profile ready
             </span>
             <span className="mt-1 flex items-center gap-2">
               <span className="h-1.5 w-28 overflow-hidden rounded-full bg-foreground/10 sm:w-40">
@@ -98,7 +112,7 @@ export function MatchPathBar() {
                 />
               </span>
               <span className="text-[11px] font-medium text-muted-foreground underline-offset-2 group-hover:underline">
-                What it takes
+                How readiness works
               </span>
             </span>
           </span>
