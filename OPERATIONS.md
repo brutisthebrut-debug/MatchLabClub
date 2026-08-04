@@ -76,7 +76,9 @@ the canonical beta packages.
 | -------------------------------- | --------------------------------------------------------------------------------------------- |
 | `STRIPE_SECRET_KEY`              | Server-side Stripe API key. Never expose it to Vite or the browser.                           |
 | `STRIPE_WEBHOOK_SECRET`          | Verifies the raw body received at `/api/stripe/webhook`.                                      |
-| `API_PUBLIC_URL`                 | Public API origin used to register the webhook, for example `https://api.beta.matchlab.club`. |
+| `API_PUBLIC_URL`                 | Public API origin used for OIDC callbacks and webhook registration.                           |
+| `WEB_PUBLIC_URL`                 | Approved web origin used for post-auth, Checkout, Portal, and cancellation returns.           |
+| `OIDC_CLIENT_ID`                 | Portable OIDC client identifier; `REPL_ID` remains a migration fallback only.                 |
 | `STRIPE_WEBHOOK_URL`             | Optional exact webhook URL override.                                                          |
 | `STRIPE_PRICE_INSIGHT_MONTHLY`   | Maps the monthly Insight Stripe Price to `insight`.                                           |
 | `STRIPE_PRICE_INSIGHT_ANNUAL`    | Maps the annual Insight Stripe Price to `insight`.                                            |
@@ -112,9 +114,13 @@ backfill performs the same bounded reconciliation to recover missed webhooks.
    monthly/quarterly. Do not create a public Guided checkout yet.
 2. Set the server environment variables above. Price IDs begin with `price_`;
    never use Product IDs in the mapping.
+   Configure the Billing Portal in Stripe for cancellation, payment-method
+   recovery, invoice history, and any permitted Insight-to-Match change.
 3. Configure the public API URL and confirm the managed webhook targets
    `/api/stripe/webhook` over HTTPS.
-4. Ensure subscription or Checkout metadata contains
+4. Start Checkout only through authenticated `POST /api/billing/checkout`; the
+   legacy public Payment Links are purchase-interest history, not beta package
+   assignment. Ensure subscription or Checkout metadata contains
    `matchlabUserId=<users.id>` and `matchlabPlan=insight|match`. Email matching
    is a compatibility fallback, not the preferred identity key.
 5. In Stripe test mode, exercise initial payment, renewal, failed payment,
@@ -122,6 +128,9 @@ backfill performs the same bounded reconciliation to recover missed webhooks.
 6. Confirm founder-granted beta users retain their explicit override throughout
    the same event sequence.
 
-This batch does not yet create authenticated Checkout Sessions or Billing Portal
-sessions. Those endpoints, account billing controls, and the connected
-web/API/auth/Postgres deployment remain the next beta-runtime lane.
+Authenticated endpoints now create canonical Insight/Match Checkout Sessions,
+return billing status, and open Stripe Billing Portal sessions. They require a
+signed-in member, use only server-owned Price IDs, attach member/package metadata,
+block duplicate live or recovery subscriptions, preserve founder grants, and do
+not sell Guided. The approved account/checkout UI hookup and the connected
+web/API/auth/Postgres/Stripe test-mode journey remain open evidence gates.
