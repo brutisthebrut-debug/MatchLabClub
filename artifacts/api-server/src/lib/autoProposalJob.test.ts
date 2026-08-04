@@ -8,6 +8,7 @@ import {
   matchPreferencesTable,
   matchPoolMembershipTable,
   matchProposalsTable,
+  usersTable,
 } from "@workspace/db";
 import { runAutoProposalSweep } from "./autoProposalJob";
 
@@ -17,6 +18,19 @@ const USER_B = `auto-b-${suffix}`;
 const USER_FAR = `auto-far-${suffix}`;
 const ALL_USERS = [USER_A, USER_B, USER_FAR];
 
+
+async function grantPlan(
+  userId: string,
+  tier: "member" | "insight" | "match",
+): Promise<void> {
+  await db
+    .insert(usersTable)
+    .values({ id: userId, tier, tierGrantedAt: new Date() })
+    .onConflictDoUpdate({
+      target: usersTable.id,
+      set: { tier, tierGrantedAt: new Date() },
+    });
+}
 async function seedMember(
   userId: string,
   opts: {
@@ -82,6 +96,7 @@ async function cleanup(): Promise<void> {
       .delete(matchProposalsTable)
       .where(eq(matchProposalsTable.proposedToUserId, u));
   }
+  await db.delete(usersTable).where(inArray(usersTable.id, ALL_USERS));
 }
 
 beforeEach(async () => {
@@ -95,6 +110,7 @@ afterAll(async () => {
 
 describe("runAutoProposalSweep", () => {
   it("mints mutual internal proposals across the pool and is idempotent", async () => {
+    await grantPlan(USER_A, "match");
     // Use a city away from other test fixtures (which seed Austin). With the
     // radius gate now active, cross-file members in distant cities cannot match,
     // and scoping the sweep to our own user ids keeps the count deterministic.
@@ -154,6 +170,7 @@ describe("runAutoProposalSweep", () => {
   });
 
   it("respects the radius hard filter: far members are never paired", async () => {
+    await grantPlan(USER_A, "match");
     // Both want each other on gender/age, but each caps radius at 25 miles and
     // they sit thousands of miles apart, so the radius gate must exclude them.
     await seedMember(USER_A, {
