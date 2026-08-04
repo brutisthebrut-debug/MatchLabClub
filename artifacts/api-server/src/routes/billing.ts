@@ -234,7 +234,7 @@ router.post("/billing/checkout", async (req, res): Promise<void> => {
     line_items: [{ price: priceId, quantity: 1 }],
     allow_promotion_codes: true,
     success_url: `${webOrigin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${webOrigin}/pricing?checkout=cancelled`,
+    cancel_url: `${webOrigin}/checkout/cancel`,
     metadata: {
       matchlabUserId: user.id,
       matchlabPlan: planKey,
@@ -284,7 +284,7 @@ router.post("/billing/portal", async (req, res): Promise<void> => {
 
   const session = await stripe.billingPortal.sessions.create({
     customer: customer.id,
-    return_url: `${webOrigin}/account`,
+    return_url: `${webOrigin}/me?billing=return`,
   });
   res.status(201).json({ url: session.url });
 });

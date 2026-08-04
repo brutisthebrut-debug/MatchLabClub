@@ -88,8 +88,8 @@ webhooks converge on one result. Authenticated Insight/Match Checkout Sessions,
 billing status, and Billing Portal sessions are implemented server-side. Founder
 beta grants remain explicit overrides, duplicate live subscriptions are blocked,
 and Guided billing stays disabled until human capacity is defined. The approved
-account/checkout UI hookup and one connected test-mode runtime journey remain
-open evidence gates.
+pricing, checkout return, and My MatchLab billing controls now use the same typed
+contract. One connected test-mode runtime journey remains an open evidence gate.
 
 ## Legacy capability guardrail
 
@@ -97,9 +97,10 @@ The original route surface remains an inventory, not a second product. Matching
 and Future Connections belong under Matches; profile, wellness, photos, voice,
 and verification belong under My MatchLab; history and learning belong under
 Journey; quizzes and games belong under Play. Working capability must be
-integrated, preserved contextually, or explicitly parked. The old Signal Audit,
-Dating Reset, and Wingman checkout copy is retired and cannot assign canonical
-beta access.
+integrated into a better member job, preserved contextually, or explicitly
+parked. This is not route parity: the old tool drawer must not be recreated in
+new cards. The old Signal Audit, Dating Reset, and Wingman checkout copy is
+retired and cannot assign canonical beta access.
 
 ## Quick start
 

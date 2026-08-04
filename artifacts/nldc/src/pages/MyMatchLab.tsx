@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import {
   ArrowRight,
   Brain,
+  CreditCard,
   Database,
   Eye,
   HeartHandshake,
@@ -14,14 +15,18 @@ import {
 import { Link } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { useMeta } from "@/hooks/useMeta";
 import { useAuth } from "@workspace/replit-auth-web";
 import {
   getGetAccountSummaryQueryKey,
   getGetAiContentConsentQueryKey,
+  getGetBillingStatusQueryKey,
   getGetMatchingStateQueryKey,
+  useCreateBillingPortal,
   useGetAccountSummary,
   useGetAiContentConsent,
+  useGetBillingStatus,
   useGetMatchingState,
 } from "@workspace/api-client-react";
 
@@ -107,6 +112,7 @@ export default function MyMatchLab() {
   );
 
   const { isAuthenticated, login } = useAuth();
+  const { toast } = useToast();
   const summary = useGetAccountSummary({
     query: {
       queryKey: getGetAccountSummaryQueryKey(),
@@ -128,6 +134,27 @@ export default function MyMatchLab() {
       retry: false,
     },
   });
+  const billing = useGetBillingStatus({
+    query: {
+      queryKey: getGetBillingStatusQueryKey(),
+      enabled: isAuthenticated,
+      retry: false,
+    },
+  });
+  const portal = useCreateBillingPortal({
+    mutation: {
+      onSuccess: ({ url }) => window.location.assign(url),
+      onError: (error) =>
+        toast({
+          title: "Billing controls could not open",
+          description:
+            error instanceof Error
+              ? error.message.replace(/^HTTP \d+ [^:]+:\s*/, "")
+              : "Try again in a moment.",
+          variant: "destructive",
+        }),
+    },
+  });
 
   const state = matching.data;
   const account = summary.data;
@@ -139,17 +166,26 @@ export default function MyMatchLab() {
       account.journalEntries +
       account.postDateNotes
     : 0;
-  const searchActive = ["building", "ready", "concierge_only"].includes(
-    state?.poolStatus ?? "off",
-  );
-  const searchLabel = searchActive
+  const searchLabel = state?.searchActive
     ? "Active"
     : state?.poolStatus === "paused"
       ? "Paused"
       : "Not started";
   const nearbyMembers = Math.max(0, state?.cityDensity ?? 0);
-  const readinessScore = Math.round(state?.readiness.score ?? 0);
-  const threshold = state?.readinessThreshold ?? 50;
+  const evidenceLabel = state?.eligible
+    ? "Profile evidence ready"
+    : "Still gathering evidence";
+  const billingStateLabel =
+    billing.data?.billingState === "beta_grant"
+      ? "Founder beta access"
+      : billing.data?.billingState === "past_due"
+        ? "Payment needs attention"
+        : billing.data?.billingState === "incomplete"
+          ? "Activation incomplete"
+          : billing.data?.billingState === "active" ||
+              billing.data?.billingState === "trialing"
+            ? "Billing active"
+            : "No paid subscription";
 
   return (
     <AppLayout>
@@ -229,17 +265,13 @@ export default function MyMatchLab() {
                     <p className="text-xs font-bold uppercase tracking-wider text-[hsl(326_100%_50%)]">
                       Readiness evidence
                     </p>
-                    <div className="mt-2 flex items-end gap-2">
-                      <span className="font-serif text-5xl font-bold text-foreground">
-                        {readinessScore}
-                      </span>
-                      <span className="pb-1 text-sm font-semibold text-muted-foreground">
-                        of {threshold} to profile ready
-                      </span>
-                    </div>
+                    <h2 className="mt-2 font-serif text-3xl font-bold text-foreground sm:text-4xl">
+                      {evidenceLabel}
+                    </h2>
                     <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
-                      This score reflects profile evidence. Search activity and
-                      nearby availability remain separate decisions and states.
+                      This reflects profile evidence, not worth or access to a
+                      person. Search activity and nearby availability remain
+                      separate decisions and states.
                     </p>
                   </div>
                   <Link
@@ -270,6 +302,59 @@ export default function MyMatchLab() {
                         : "Still building"
                     }
                   />
+                </div>
+              </motion.section>
+
+              <motion.section
+                {...fadeUp(0.045)}
+                className="mt-5 rounded-[2rem] border border-foreground/10 bg-background/55 p-6 sm:p-7"
+                data-testid="my-matchlab-billing"
+              >
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#3D35CC]/15 to-[#FF2D9B]/15">
+                      <CreditCard
+                        className="h-5 w-5 text-[#3D35CC]"
+                        aria-hidden="true"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Package & billing
+                      </p>
+                      <h2 className="mt-1 font-serif text-2xl font-bold text-foreground">
+                        {billing.data?.assignment.label ?? state.plan.label}
+                      </h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {billing.isLoading
+                          ? "Checking billing status…"
+                          : billing.isError
+                            ? "Package access is available; billing status could not load."
+                            : billingStateLabel}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+                    {billing.data?.portalAvailable ? (
+                      <Button
+                        onClick={() => portal.mutate()}
+                        disabled={portal.isPending}
+                        className="rounded-full"
+                      >
+                        {portal.isPending
+                          ? "Opening billing…"
+                          : "Manage billing"}
+                      </Button>
+                    ) : (
+                      <Button asChild className="rounded-full">
+                        <Link href="/pricing">See packages</Link>
+                      </Button>
+                    )}
+                    <p className="max-w-xs text-xs leading-relaxed text-muted-foreground sm:text-right">
+                      Package access never changes your priority or guarantees
+                      that a compatible person is available.
+                    </p>
+                  </div>
                 </div>
               </motion.section>
 

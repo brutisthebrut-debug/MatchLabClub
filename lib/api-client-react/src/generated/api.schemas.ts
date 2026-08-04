@@ -5347,6 +5347,66 @@ export interface CommercialPlansResponse {
   plans: CommercialPlan[];
 }
 
+export type BillingCheckoutRequestPlanKey = typeof BillingCheckoutRequestPlanKey[keyof typeof BillingCheckoutRequestPlanKey];
+
+
+export const BillingCheckoutRequestPlanKey = {
+  insight: 'insight',
+  match: 'match',
+} as const;
+
+export type BillingCheckoutRequestCadence = typeof BillingCheckoutRequestCadence[keyof typeof BillingCheckoutRequestCadence];
+
+
+export const BillingCheckoutRequestCadence = {
+  monthly: 'monthly',
+  annual: 'annual',
+  quarterly: 'quarterly',
+} as const;
+
+export interface BillingCheckoutRequest {
+  planKey: BillingCheckoutRequestPlanKey;
+  cadence: BillingCheckoutRequestCadence;
+}
+
+export interface BillingRedirectResponse {
+  url: string;
+}
+
+export type BillingStatusResponseBillingState = typeof BillingStatusResponseBillingState[keyof typeof BillingStatusResponseBillingState];
+
+
+export const BillingStatusResponseBillingState = {
+  beta_grant: 'beta_grant',
+  active: 'active',
+  trialing: 'trialing',
+  past_due: 'past_due',
+  incomplete: 'incomplete',
+  inactive: 'inactive',
+  unavailable: 'unavailable',
+} as const;
+
+/**
+ * @nullable
+ */
+export type BillingStatusResponseStripePlanKey = typeof BillingStatusResponseStripePlanKey[keyof typeof BillingStatusResponseStripePlanKey] | null;
+
+
+export const BillingStatusResponseStripePlanKey = {
+  insight: 'insight',
+  match: 'match',
+  guided: 'guided',
+} as const;
+
+export interface BillingStatusResponse {
+  configured: boolean;
+  assignment: CommercialPlanAssignment;
+  billingState: BillingStatusResponseBillingState;
+  /** @nullable */
+  stripePlanKey: BillingStatusResponseStripePlanKey;
+  portalAvailable: boolean;
+}
+
 /**
  * Opaque session token — `Bearer <sid>`.
  */

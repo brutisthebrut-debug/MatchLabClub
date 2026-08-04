@@ -7345,6 +7345,52 @@ export const ReportConnectionResponse = zod.object({
 
 
 /**
+ * @summary Get the signed-in member's package and billing state
+ */
+export const GetBillingStatusHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const GetBillingStatusResponse = zod.object({
+  "configured": zod.boolean(),
+  "assignment": zod.object({
+  "key": zod.enum(['member', 'insight', 'match', 'guided']),
+  "label": zod.string(),
+  "source": zod.enum(['default', 'canonical', 'legacy']),
+  "grantedAt": zod.coerce.date().nullable(),
+  "canActivateSearch": zod.boolean(),
+  "includesHumanGuidance": zod.boolean(),
+  "nextPlanKey": zod.union([zod.literal('member'),zod.literal('insight'),zod.literal('match'),zod.literal('guided'),zod.literal(null)]).nullable(),
+  "upgradeCta": zod.string().nullable()
+}),
+  "billingState": zod.enum(['beta_grant', 'active', 'trialing', 'past_due', 'incomplete', 'inactive', 'unavailable']),
+  "stripePlanKey": zod.union([zod.literal('insight'),zod.literal('match'),zod.literal('guided'),zod.literal(null)]).nullable(),
+  "portalAvailable": zod.boolean()
+})
+
+
+/**
+ * @summary Create an authenticated Insight or Match Checkout Session
+ */
+export const CreateBillingCheckoutHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+export const CreateBillingCheckoutBody = zod.object({
+  "planKey": zod.enum(['insight', 'match']),
+  "cadence": zod.enum(['monthly', 'annual', 'quarterly'])
+})
+
+
+/**
+ * @summary Create a Stripe Billing Portal Session
+ */
+export const CreateBillingPortalHeader = zod.object({
+  "Authorization": zod.string().optional().describe('Opaque session token — `Bearer <sid>`.')
+})
+
+
+/**
  * Returns the approved Member, Insight, Match, and Guided outcome ladder,
 including prices, progression prompts, included services, and bounded
 entitlements. These are commercial packages, not numbered product

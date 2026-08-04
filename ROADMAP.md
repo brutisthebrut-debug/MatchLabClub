@@ -90,15 +90,22 @@ primary screens. Every working capability must have one explicit disposition:
 integrated into a primary hub, preserved as a secondary tool, or parked with a
 reason.
 
-| Original capability family | Beta home | Disposition |
-| --- | --- | --- |
-| Matching, Future Connections, proposals, reveal, safety, date, debrief | **Matches** | Consolidate into the honest lifecycle; keep deep preferences secondary. |
-| Profile, readiness evidence, wellness, life context, photos, voice, verification, permissions | **My MatchLab** | Preserve under the member model and detailed workspace. |
-| Timeline, journal, patterns, scorecard/trends, wins, weekly plan | **Journey** | Use server-backed history; preserve working tools contextually. |
-| Quizzes, games, results | **Play** | Preserve through the bounded catalog and saved outcomes. |
-| Echo, coaching, preparation, reply help, reflection | **Today / persistent Echo** | Reuse the working contracts through one next action; do not restore a tool dashboard. |
-| Signal Audit, Dating Reset, Wingman public checkout | **Canonical billing surface** | Retired commercial presentation. Must be replaced by authenticated Insight/Match checkout before beta; legacy links cannot grant canonical access. |
-| Referrals/sharing, broad integrations, Experiments, audio-native claims | **None in beta** | Explicitly parked until the core journey produces evidence. |
+Disposition is not route parity. The original feature set is intentionally too
+large for the beta. A useful behavior may be absorbed into Echo's orchestration,
+combined with adjacent tools into one coherent job, shown only at the moment it
+is relevant, or parked entirely. Do not recreate the old tool drawer inside new
+cards, keep a legacy route merely because it exists, or measure migration by the
+number of old pages still visible.
+
+| Original capability family                                                                    | Beta home                     | Disposition                                                                                                                                        |
+| --------------------------------------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Matching, Future Connections, proposals, reveal, safety, date, debrief                        | **Matches**                   | Consolidate into the honest lifecycle; keep deep preferences secondary.                                                                            |
+| Profile, readiness evidence, wellness, life context, photos, voice, verification, permissions | **My MatchLab**               | Preserve under the member model and detailed workspace.                                                                                            |
+| Timeline, journal, patterns, scorecard/trends, wins, weekly plan                              | **Journey**                   | Use server-backed history; preserve working tools contextually.                                                                                    |
+| Quizzes, games, results                                                                       | **Play**                      | Preserve through the bounded catalog and saved outcomes.                                                                                           |
+| Echo, coaching, preparation, reply help, reflection                                           | **Today / persistent Echo**   | Reuse the working contracts through one next action; do not restore a tool dashboard.                                                              |
+| Signal Audit, Dating Reset, Wingman public checkout                                           | **Canonical billing surface** | Retired commercial presentation. Must be replaced by authenticated Insight/Match checkout before beta; legacy links cannot grant canonical access. |
+| Referrals/sharing, broad integrations, Experiments, audio-native claims                       | **None in beta**              | Explicitly parked until the core journey produces evidence.                                                                                        |
 
 ## Delivery batches
 
@@ -249,7 +256,7 @@ Status: **Complete in `agent/echo-shell-phase-0`; validated by CI run #82**
 
 #### Batch 7B — Authenticated billing and connected runtime
 
-Status: **Backend slice implemented and validated by CI run #87; approved-design UI hookup and connected-runtime evidence pending**
+Status: **Backend slice validated by CI run #87; approved-design UI hookup implemented with repository validation and connected-runtime evidence pending**
 
 - Create authenticated canonical-plan Checkout Sessions with member and plan
   metadata; legacy public Payment Links must not assign beta packages.
@@ -259,8 +266,14 @@ Status: **Backend slice implemented and validated by CI run #87; approved-design
   duplicate.
 - Add account billing status and Stripe Billing Portal controls for cancellation,
   payment recovery, and invoice history. **Implemented as authenticated API
-  controls; the approved Echo Journey account surface still needs the final UI
-  hookup.**
+  controls and wired into My MatchLab. The canonical pricing surface reads the
+  server-owned catalog, opens authenticated Insight/Match Checkout Sessions, and
+  keeps Guided unavailable.**
+- Replace the retired Signal Audit, Dating Reset, and Wingman presentation
+  without recreating it inside the new shell. **Implemented in the UI batch:**
+  legacy checkout URLs hand into one canonical package decision; success waits
+  for server-confirmed subscription truth; cancellation preserves the member's
+  current access; My MatchLab owns billing status and Portal access.
 - Replace the runtime's hard dependency on the Replit OIDC client ID and request
   host with explicit `OIDC_CLIENT_ID`, `API_PUBLIC_URL`, and `WEB_PUBLIC_URL`
   settings while retaining documented migration fallbacks. **Implemented in
@@ -289,6 +302,10 @@ Status: **Pending**
   grant Member/Insight/Match/Guided access.
 - **Completion rule:** backend billing code, approved-design UI hookup, and live
   runtime evidence are tracked separately; none substitutes for the others.
+- **Migration clarification:** accounting for original functionality does not
+  mean preserving every page or feature. Capabilities are consolidated around a
+  better member job, made contextual, or parked; visible route count is not a
+  beta-completeness metric.
 
 ## Definition of done
 

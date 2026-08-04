@@ -6557,13 +6557,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/AuthErrorEnvelope"
         "409":
-          description: Founder grant or live subscription already exists.
+          description: Existing subscription or founder beta grant.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthErrorEnvelope"
         "503":
-          description: Checkout price or public web origin is not configured.
+          description: Checkout runtime is not configured.
           content:
             application/json:
               schema:
@@ -6592,6 +6592,12 @@ paths:
                 $ref: "#/components/schemas/AuthErrorEnvelope"
         "404":
           description: No Stripe customer exists for this member.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+        "503":
+          description: Billing runtime is not configured.
           content:
             application/json:
               schema:
@@ -13572,6 +13578,15 @@ components:
         entitlements:
           $ref: "#/components/schemas/CommercialPlanEntitlements"
 
+    CommercialPlansResponse:
+      type: object
+      required: [plans]
+      properties:
+        plans:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommercialPlan"
+
     BillingCheckoutRequest:
       type: object
       additionalProperties: false
@@ -13604,21 +13619,20 @@ components:
         billingState:
           type: string
           enum:
-            [beta_grant, active, trialing, past_due, incomplete, inactive, unavailable]
+            [
+              beta_grant,
+              active,
+              trialing,
+              past_due,
+              incomplete,
+              inactive,
+              unavailable,
+            ]
         stripePlanKey:
           type: [string, "null"]
           enum: [insight, match, guided, null]
         portalAvailable:
           type: boolean
-
-    CommercialPlansResponse:
-      type: object
-      required: [plans]
-      properties:
-        plans:
-          type: array
-          items:
-            $ref: "#/components/schemas/CommercialPlan"
 
     CommercialPlanAssignment:
       type: object
