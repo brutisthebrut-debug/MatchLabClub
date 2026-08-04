@@ -6,15 +6,48 @@ interface StripeCredentials {
   webhookSecret?: string;
 }
 
+type StripeEnvironment = Partial<
+  Record<
+    | "STRIPE_SECRET_KEY"
+    | "STRIPE_WEBHOOK_SECRET"
+    | "REPLIT_CONNECTORS_HOSTNAME"
+    | "REPL_IDENTITY"
+    | "WEB_REPL_RENEWAL",
+    string
+  >
+>;
+
+function trimmed(value: string | undefined): string | undefined {
+  const result = value?.trim();
+  return result || undefined;
+}
+
 /**
- * Resolve the Replit connector token from the environment. Returns null when
- * the process is not running inside a Repl with connector access, which lets
- * callers treat Stripe as an optional, opt-in integration instead of crashing.
+ * Direct credentials are the connected-beta and production path. Keeping this
+ * resolver pure makes it possible to verify that a non-Replit runtime can boot
+ * without ever logging or persisting the secret values.
  */
-function getReplitConnectorToken(): { hostname: string; token: string } | null {
-  const hostname = process.env["REPLIT_CONNECTORS_HOSTNAME"];
-  const replIdentity = process.env["REPL_IDENTITY"];
-  const webRenewal = process.env["WEB_REPL_RENEWAL"];
+export function getDirectStripeCredentials(
+  env: StripeEnvironment = process.env,
+): StripeCredentials | null {
+  const secretKey = trimmed(env.STRIPE_SECRET_KEY);
+  if (!secretKey) return null;
+  return {
+    secretKey,
+    webhookSecret: trimmed(env.STRIPE_WEBHOOK_SECRET),
+  };
+}
+
+/**
+ * Resolve the legacy Replit connector token. This remains a compatibility path
+ * while the controlled beta moves to explicit deployment credentials.
+ */
+function getReplitConnectorToken(
+  env: StripeEnvironment = process.env,
+): { hostname: string; token: string } | null {
+  const hostname = trimmed(env.REPLIT_CONNECTORS_HOSTNAME);
+  const replIdentity = trimmed(env.REPL_IDENTITY);
+  const webRenewal = trimmed(env.WEB_REPL_RENEWAL);
 
   const token = replIdentity
     ? "repl " + replIdentity
@@ -22,22 +55,23 @@ function getReplitConnectorToken(): { hostname: string; token: string } | null {
       ? "depl " + webRenewal
       : null;
 
-  if (!hostname || !token) {
-    return null;
-  }
+  if (!hostname || !token) return null;
   return { hostname, token };
 }
 
 /**
- * Fetches Stripe credentials from the Replit connection API.
- * Not cached: tokens can rotate, so we fetch fresh each time.
- * Throws when the integration is not connected.
+ * Resolve Stripe credentials without coupling beta deployment to Replit.
+ * Explicit runtime secrets win; the connector is retained only as a migration
+ * fallback. Credentials are fetched fresh so rotations take effect.
  */
 async function getStripeCredentials(): Promise<StripeCredentials> {
+  const direct = getDirectStripeCredentials();
+  if (direct) return direct;
+
   const connector = getReplitConnectorToken();
   if (!connector) {
     throw new Error(
-      "Missing Replit connector environment. Connect Stripe via the Integrations tab.",
+      "Stripe is not configured. Set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET.",
     );
   }
 
@@ -56,14 +90,14 @@ async function getStripeCredentials(): Promise<StripeCredentials> {
   }
 
   const data = (await resp.json()) as {
-    items?: Array<{ settings?: { secret_key?: string; webhook_secret?: string } }>;
+    items?: Array<{
+      settings?: { secret_key?: string; webhook_secret?: string };
+    }>;
   };
   const settings = data.items?.[0]?.settings;
 
   if (!settings?.secret_key) {
-    throw new Error(
-      "Stripe integration not connected or missing secret key. Connect Stripe via the Integrations tab first.",
-    );
+    throw new Error("Stripe connector is missing its secret key.");
   }
 
   return {
@@ -72,13 +106,9 @@ async function getStripeCredentials(): Promise<StripeCredentials> {
   };
 }
 
-/**
- * Returns true when the Stripe integration appears to be connected. Used to
- * guard startup so the server boots cleanly when Stripe is not configured.
- */
 export async function isStripeConnected(): Promise<boolean> {
-  const connector = getReplitConnectorToken();
-  if (!connector) return false;
+  if (getDirectStripeCredentials()) return true;
+  if (!getReplitConnectorToken()) return false;
   try {
     await getStripeCredentials();
     return true;
@@ -87,20 +117,11 @@ export async function isStripeConnected(): Promise<boolean> {
   }
 }
 
-/**
- * Returns a fresh authenticated Stripe client.
- * Not cached: fetches credentials on every call so rotated keys are picked up.
- */
 export async function getUncachableStripeClient(): Promise<Stripe> {
   const { secretKey } = await getStripeCredentials();
   return new Stripe(secretKey);
 }
 
-/**
- * Verify and construct a Stripe webhook event from the raw payload and
- * signature. Returns null when no webhook secret is configured (so callers can
- * fall back to other processing). Throws when the signature does not verify.
- */
 export async function constructStripeEvent(
   payload: Buffer,
   signature: string,
@@ -111,10 +132,6 @@ export async function constructStripeEvent(
   return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
 }
 
-/**
- * Returns a fresh StripeSync instance for webhook processing and data sync.
- * Not cached: fetches credentials on every call so rotated keys are picked up.
- */
 export async function getStripeSync(): Promise<StripeSync> {
   const databaseUrl = process.env["DATABASE_URL"];
   if (!databaseUrl) {
