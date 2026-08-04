@@ -13,6 +13,10 @@ export type MatchPoolMembershipTier = typeof MatchPoolMembershipTier[keyof typeo
 
 
 export const MatchPoolMembershipTier = {
+  member: 'member',
+  insight: 'insight',
+  match: 'match',
+  guided: 'guided',
   free: 'free',
   reset: 'reset',
   wingman: 'wingman',
