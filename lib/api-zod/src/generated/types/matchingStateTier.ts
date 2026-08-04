@@ -7,13 +7,15 @@
  */
 
 /**
- * @nullable
+ * Canonical plan key retained for compatibility. Prefer plan.key.
+ * @deprecated
  */
-export type MatchingStateTier = typeof MatchingStateTier[keyof typeof MatchingStateTier] | null;
+export type MatchingStateTier = typeof MatchingStateTier[keyof typeof MatchingStateTier];
 
 
 export const MatchingStateTier = {
-  free: 'free',
-  reset: 'reset',
-  wingman: 'wingman',
+  member: 'member',
+  insight: 'insight',
+  match: 'match',
+  guided: 'guided',
 } as const;
