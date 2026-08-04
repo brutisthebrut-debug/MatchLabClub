@@ -77,13 +77,17 @@ Status: **Complete in `agent/echo-shell-phase-0`**
 
 ### Batch 2 — Matches lifecycle consolidation
 
-Status: **Planned**
+Status: **Complete in `agent/echo-shell-phase-0`**
 
 - Present controlled-pilot waiting, proposal, mutual reveal, date, and debrief as
   one legible lifecycle.
 - Use seeded/demo states for product review without confusing them with real
   member availability.
 - Keep safety, consent, blocking, and reveal controls explicit.
+- Keep signed-out review to a clearly labeled process preview. Never render fake
+  people, messages, or availability as though they are active matches.
+- Bring real proposals and mutual introductions into Matches while preserving
+  the deeper matching-preferences route as a secondary settings surface.
 
 ### Batch 3 — My MatchLab, Journey, and Play
 
