@@ -39,6 +39,10 @@ My MatchLab brings the member's profile model, source coverage, permissions, and
 readiness evidence into one decision view. The detailed profile workspace stays
 available at `/me/details`; consolidation does not delete it.
 
+Journey is a server-backed history of saved insights, reflections, compatibility
+reads, introductions, dates, and wins. The older client-local timeline remains a
+secondary experimental tool and never stands in for real member history.
+
 ## Quick start
 
 ```bash
