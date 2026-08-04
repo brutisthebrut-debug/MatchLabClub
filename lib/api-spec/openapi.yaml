@@ -6501,6 +6501,102 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
 
+  /billing/status:
+    get:
+      tags: [Commerce]
+      operationId: getBillingStatus
+      summary: Get the signed-in member's package and billing state
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      responses:
+        "200":
+          description: Current canonical package assignment and Stripe state.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingStatusResponse"
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+
+  /billing/checkout:
+    post:
+      tags: [Commerce]
+      operationId: createBillingCheckout
+      summary: Create an authenticated Insight or Match Checkout Session
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BillingCheckoutRequest"
+      responses:
+        "201":
+          description: Stripe-hosted Checkout Session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingRedirectResponse"
+        "400":
+          description: Unsupported package or cadence.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+        "409":
+          description: Founder grant or live subscription already exists.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+        "503":
+          description: Checkout price or public web origin is not configured.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+
+  /billing/portal:
+    post:
+      tags: [Commerce]
+      operationId: createBillingPortal
+      summary: Create a Stripe Billing Portal Session
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      responses:
+        "201":
+          description: Stripe-hosted Billing Portal Session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingRedirectResponse"
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+        "404":
+          description: No Stripe customer exists for this member.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+
   /plans:
     get:
       tags: [Commerce]
@@ -13475,6 +13571,45 @@ components:
           enum: [member, insight, match, guided, null]
         entitlements:
           $ref: "#/components/schemas/CommercialPlanEntitlements"
+
+    BillingCheckoutRequest:
+      type: object
+      additionalProperties: false
+      required: [planKey, cadence]
+      properties:
+        planKey:
+          type: string
+          enum: [insight, match]
+        cadence:
+          type: string
+          enum: [monthly, annual, quarterly]
+
+    BillingRedirectResponse:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          format: uri
+
+    BillingStatusResponse:
+      type: object
+      required:
+        [configured, assignment, billingState, stripePlanKey, portalAvailable]
+      properties:
+        configured:
+          type: boolean
+        assignment:
+          $ref: "#/components/schemas/CommercialPlanAssignment"
+        billingState:
+          type: string
+          enum:
+            [beta_grant, active, trialing, past_due, incomplete, inactive, unavailable]
+        stripePlanKey:
+          type: [string, "null"]
+          enum: [insight, match, guided, null]
+        portalAvailable:
+          type: boolean
 
     CommercialPlansResponse:
       type: object
