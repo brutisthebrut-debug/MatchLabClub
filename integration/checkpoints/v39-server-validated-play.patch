@@ -1,0 +1,610 @@
+diff --git a/app/api/journey/route.ts b/app/api/journey/route.ts
+index f1f9200..145eb62 100644
+--- a/app/api/journey/route.ts
++++ b/app/api/journey/route.ts
+@@ -116,7 +116,7 @@ export async function PUT(request: Request) {
+     typeof payload.firstIntent === "string"
+       ? payload.firstIntent.trim().slice(0, 500)
+       : "";
+-  const repairAnswers = Array.isArray(payload.repairAnswers)
++  const incomingRepairAnswers = Array.isArray(payload.repairAnswers)
+     ? payload.repairAnswers
+         .filter((answer): answer is string => typeof answer === "string")
+         .slice(0, 3)
+@@ -139,6 +139,8 @@ export async function PUT(request: Request) {
+       .limit(1),
+     db
+       .select({
++        repairAnswers: journeyStates.repairAnswers,
++        repairCompleted: journeyStates.repairCompleted,
+         mirrorLearning: journeyStates.mirrorLearning,
+         mirrorRejected: journeyStates.mirrorRejected,
+         mirrorConfirmed: journeyStates.mirrorConfirmed,
+@@ -168,6 +170,17 @@ export async function PUT(request: Request) {
+     );
+   }
+   const nextRevision = (existingJourney?.revision ?? 0) + 1;
++  const repairCompleted = existingJourney?.repairCompleted ?? false;
++  const repairAnswers = repairCompleted
++    ? (() => {
++        try {
++          const stored = JSON.parse(existingJourney?.repairAnswers ?? "[]");
++          return Array.isArray(stored) ? stored : [];
++        } catch {
++          return [];
++        }
++      })()
++    : incomingRepairAnswers;
+   const savedDecision = applyJourneySaveConsentBoundary(
+     existingJourney ?? null,
+     mirrorLearning,
+@@ -189,7 +202,7 @@ export async function PUT(request: Request) {
+     getHighestAvailableMemberStage({
+       entered: Boolean(payload.entered),
+       firstIntent,
+-      repairCompleted: Boolean(payload.repairCompleted),
++      repairCompleted,
+       mirrorConfirmed,
+       mirrorMatchingUse,
+       matchingPilotJoined,
+@@ -208,7 +221,7 @@ export async function PUT(request: Request) {
+     matchPhase,
+     repairAnswers: JSON.stringify(repairAnswers),
+     echoThreads: JSON.stringify(echoThreads),
+-    repairCompleted: Boolean(payload.repairCompleted),
++    repairCompleted,
+     mirrorLearning: savedMirrorLearning,
+     mirrorRejected,
+     mirrorConfirmed,
+diff --git a/app/api/play/repair-language/route.ts b/app/api/play/repair-language/route.ts
+new file mode 100644
+index 0000000..c706c09
+--- /dev/null
++++ b/app/api/play/repair-language/route.ts
+@@ -0,0 +1,153 @@
++import { and, eq } from "drizzle-orm";
++import { getDb } from "../../../../db";
++import {
++  journeyStates,
++  matchingCandidacies,
++  mutationReceipts,
++} from "../../../../db/schema";
++import { accountBindingConflict, accountBindingMatches } from "../../../account-binding";
++import { getChatGPTUser } from "../../../chatgpt-auth";
++import {
++  mutationReceiptKey,
++  normalizeOperationId,
++  replayMutationReceipt,
++} from "../../../mutation-receipt";
++import {
++  getRepairLanguageResult,
++  validateRepairLanguageAnswers,
++} from "../../../repair-language-policy";
++import { readBoundedJsonObject } from "../../../request-policy";
++
++export const dynamic = "force-dynamic";
++
++export async function POST(request: Request) {
++  const user = await getChatGPTUser();
++  if (!user) {
++    return Response.json(
++      { error: "Sign in to save a Play result." },
++      { status: 401 },
++    );
++  }
++
++  const parsed = await readBoundedJsonObject(request, 8 * 1024);
++  if (!parsed.ok) return parsed.response;
++  const payload = parsed.value as {
++    answers?: unknown;
++    revision?: number | null;
++    accountEmail?: string;
++    operationId?: string;
++  };
++  if (!accountBindingMatches(payload.accountEmail, user.email)) {
++    return accountBindingConflict();
++  }
++  const operationId = normalizeOperationId(payload.operationId);
++  if (!operationId) {
++    return Response.json(
++      { error: "A valid operation identifier is required to save safely." },
++      { status: 400 },
++    );
++  }
++
++  const db = getDb();
++  const receiptKey = mutationReceiptKey(user.email, operationId);
++  const [existingReceipt] = await db
++    .select()
++    .from(mutationReceipts)
++    .where(eq(mutationReceipts.receiptKey, receiptKey))
++    .limit(1);
++  if (existingReceipt) {
++    return replayMutationReceipt(existingReceipt, "repair-language-complete");
++  }
++
++  const validated = validateRepairLanguageAnswers(payload.answers);
++  if (!validated.ok) {
++    return Response.json({ error: validated.error }, { status: 400 });
++  }
++  const [journey] = await db
++    .select()
++    .from(journeyStates)
++    .where(eq(journeyStates.userEmail, user.email))
++    .limit(1);
++  if (!journey) {
++    return Response.json(
++      { error: "Open your saved MatchLab before completing Play." },
++      { status: 409 },
++    );
++  }
++  if (!Number.isInteger(payload.revision) || payload.revision !== journey.revision) {
++    return Response.json(
++      {
++        error:
++          "Your MatchLab changed in another save. Reload the latest version before trying again.",
++        conflict: true,
++      },
++      { status: 409 },
++    );
++  }
++
++  const result = getRepairLanguageResult(validated.answers);
++  const now = new Date().toISOString();
++  const revision = journey.revision + 1;
++  const saveJourney = db
++    .update(journeyStates)
++    .set({
++      repairAnswers: JSON.stringify(validated.answers),
++      repairCompleted: true,
++      mirrorLearning: result.learning,
++      mirrorRejected: false,
++      mirrorConfirmed: false,
++      mirrorMatchingUse: false,
++      matchingPilotJoined: false,
++      stage: Math.max(journey.stage, 3),
++      revision,
++      updatedAt: now,
++    })
++    .where(
++      and(
++        eq(journeyStates.userEmail, user.email),
++        eq(journeyStates.revision, journey.revision),
++      ),
++    )
++    .returning();
++  const [savedRows] = await db.batch([
++    saveJourney,
++    db
++      .update(matchingCandidacies)
++      .set({
++        status: "paused",
++        consentRevision: revision,
++        pausedAt: now,
++        updatedAt: now,
++      })
++      .where(eq(matchingCandidacies.userEmail, user.email)),
++  ]);
++  if (!savedRows.length) {
++    return Response.json(
++      {
++        error:
++          "Your MatchLab changed in another save. Reload the latest version before trying again.",
++        conflict: true,
++      },
++      { status: 409 },
++    );
++  }
++
++  const responseBody = {
++    state: savedRows[0],
++    result: { ...result, answers: validated.answers },
++  };
++  await db
++    .insert(mutationReceipts)
++    .values({
++      receiptKey,
++      userEmail: user.email,
++      operationId,
++      operationKind: "repair-language-complete",
++      responseJson: JSON.stringify(responseBody),
++      statusCode: 200,
++      createdAt: now,
++    })
++    .onConflictDoNothing();
++
++  return Response.json(responseBody);
++}
+diff --git a/app/page.tsx b/app/page.tsx
+index 7a44035..93bb614 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -17,6 +17,12 @@ import {
+   type EchoThreads,
+ } from "./echo-thread-policy";
+ import { getHighestAvailableMemberStage } from "./progress-policy";
++import {
++  getRepairLanguageResult,
++  repairLanguageChoices as quizChoices,
++  repairLanguagePrompts as quizPrompts,
++  type RepairLanguageResult,
++} from "./repair-language-policy";
+ 
+ type View = "today" | "play" | "matches" | "mirror" | "journey" | "trust";
+ type SessionUser = {
+@@ -315,73 +321,6 @@ const timeline = [
+   { at: 7, date: "Friday · 10:08 AM", kind: "Reflection", title: "Safety felt like less self-monitoring", text: "Saved as a possible learning about you—not a verdict about Adrian." },
+ ];
+ 
+-const quizPrompts = [
+-  "After tension, what helps you believe the relationship is still safe?",
+-  "If someone needs space, what makes that space feel caring rather than distancing?",
+-  "What matters most when you reconnect?",
+-];
+-
+-const quizChoices = [
+-  ["A quick ‘we’re okay’ before taking space", "Talking until we find the full resolution", "Physical reassurance before words"],
+-  ["A clear time to come back together", "A warm message while we cool down", "Freedom to return when ready"],
+-  ["Knowing we understood each other", "Hearing a genuine apology", "Feeling like we are a team again"],
+-];
+-
+-function getRepairRead(answers: string[]) {
+-  const scores = { reassurance: 0, resolution: 0, space: 0 };
+-
+-  for (const answer of answers) {
+-    if (
+-      answer.includes("we’re okay") ||
+-      answer.includes("Physical reassurance") ||
+-      answer.includes("warm message") ||
+-      answer.includes("genuine apology") ||
+-      answer.includes("team again")
+-    ) {
+-      scores.reassurance += 1;
+-    } else if (
+-      answer.includes("full resolution") ||
+-      answer.includes("understood each other")
+-    ) {
+-      scores.resolution += 1;
+-    } else {
+-      scores.space += 1;
+-    }
+-  }
+-
+-  const strongest = (Object.entries(scores) as Array<
+-    [keyof typeof scores, number]
+-  >).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "reassurance";
+-  const reads = {
+-    reassurance: {
+-      title: "Reassurance before resolution",
+-      learning:
+-        "After conflict, I need a clear signal that we are still on the same team before either of us takes space.",
+-    },
+-    resolution: {
+-      title: "Understanding creates safety",
+-      learning:
+-        "After conflict, I feel safest when we stay with the conversation long enough to understand what happened—even if agreement takes longer.",
+-    },
+-    space: {
+-      title: "Space needs a clear return",
+-      learning:
+-        "After conflict, space can feel caring to me when we name how and when we will come back together.",
+-    },
+-  };
+-  const percentage = (score: number) =>
+-    answers.length ? Math.round(34 + (score / answers.length) * 66) : 34;
+-
+-  return {
+-    ...reads[strongest],
+-    spectrum: {
+-      reassurance: percentage(scores.reassurance),
+-      resolution: percentage(scores.resolution),
+-      space: percentage(scores.space),
+-    },
+-  };
+-}
+-
+ function getOnboardingFirstRead(repair: string) {
+   if (repair.includes("full resolution")) {
+     return {
+@@ -868,7 +807,7 @@ function PlayView({
+   stage: number;
+   repairAnswers: string[];
+   repairCompleted: boolean;
+-  onRepairComplete: (answers: string[], learning: string) => void;
++  onRepairComplete: (answers: string[]) => Promise<RepairLanguageResult>;
+   onEcho: (stage: number) => void;
+   autoOpenRepair: boolean;
+ }) {
+@@ -880,7 +819,10 @@ function PlayView({
+     autoOpenRepair ? repairCompleted : false,
+   );
+   const [answers, setAnswers] = useState<string[]>(repairAnswers);
+-  const repairRead = getRepairRead(answers.length ? answers : repairAnswers);
++  const [savingResult, setSavingResult] = useState(false);
++  const [resultError, setResultError] = useState("");
++  const [acceptedResult, setAcceptedResult] = useState<RepairLanguageResult | null>(null);
++  const repairRead = acceptedResult ?? getRepairLanguageResult(answers.length ? answers : repairAnswers);
+   const completed = repairCompleted ? 1 : 0;
+ 
+   const openItem = (item: (typeof playItems)[number]) => {
+@@ -890,13 +832,26 @@ function PlayView({
+     setFinished(item === playItems[0] ? repairCompleted : false);
+   };
+ 
+-  const answer = (choice: string) => {
++  const answer = async (choice: string) => {
+     const nextAnswers = [...answers.slice(0, step), choice];
+     setAnswers(nextAnswers);
+     if (step === quizPrompts.length - 1) {
+-      setFinished(true);
+       if (selected === playItems[0]) {
+-        onRepairComplete(nextAnswers, getRepairRead(nextAnswers).learning);
++        setSavingResult(true);
++        setResultError("");
++        try {
++          const result = await onRepairComplete(nextAnswers);
++          setAcceptedResult(result);
++          setFinished(true);
++        } catch (error) {
++          setResultError(
++            error instanceof Error
++              ? error.message
++              : "Your Play result could not be saved.",
++          );
++        } finally {
++          setSavingResult(false);
++        }
+       }
+     } else {
+       setStep((value) => value + 1);
+@@ -943,7 +898,7 @@ function PlayView({
+       {selected && <div className="studio-backdrop" role="dialog" aria-modal="true" aria-label={`${selected.title} studio`}>
+         <div className="play-studio">
+           <header><div><span>Play with Echo</span><b>{selected.title}</b></div><button aria-label="Close play studio" onClick={() => setSelected(null)}>×</button></header>
+-          {selected !== playItems[0] ? <div className="quiz-stage preview-stage"><small>Beta preview · not playable or saved</small><h2>{selected.title}</h2><p>{selected.note}</p><blockquote>“{selected.result}” is an illustrative direction, not a result about you.</blockquote><div className="result-actions"><button className="primary-action" onClick={() => { setSelected(null); onEcho(stage); }}>Explore the topic with Echo →</button><button onClick={() => setSelected(null)}>Close preview</button></div></div> : !finished ? <div className="quiz-stage"><div className="studio-progress"><span style={{width:`${((step + 1) / quizPrompts.length) * 100}%`}}/></div><small>Moment {step + 1} of {quizPrompts.length}</small><h2>{quizPrompts[step]}</h2><div className="studio-choices">{quizChoices[step].map((choice) => <button className={answers[step] === choice ? "selected" : ""} key={choice} onClick={() => answer(choice)}>{choice}<span>→</span></button>)}</div><p>No perfect answer. Choose what feels most true today.</p></div> : <div className="result-stage"><span>Your saved read · not a diagnosis</span><h2>{repairRead.title}</h2><blockquote>“{repairRead.learning}”</blockquote><div className="result-spectrum"><div><span>Reassurance</span><b style={{width:`${repairRead.spectrum.reassurance}%`}}/></div><div><span>Resolution</span><b style={{width:`${repairRead.spectrum.resolution}%`}}/></div><div><span>Space</span><b style={{width:`${repairRead.spectrum.space}%`}}/></div></div><div className="result-actions"><button className="primary-action" onClick={() => { setSelected(null); onEcho(3); }}>Review this with Echo →</button><button onClick={() => {setStep(0);setFinished(false);setAnswers([]);}}>Replay</button></div><small>This result is saved in Play. It enters your Mirror only after you and Echo clarify it together.</small></div>}
++          {selected !== playItems[0] ? <div className="quiz-stage preview-stage"><small>Beta preview · not playable or saved</small><h2>{selected.title}</h2><p>{selected.note}</p><blockquote>“{selected.result}” is an illustrative direction, not a result about you.</blockquote><div className="result-actions"><button className="primary-action" onClick={() => { setSelected(null); onEcho(stage); }}>Explore the topic with Echo →</button><button onClick={() => setSelected(null)}>Close preview</button></div></div> : !finished ? <div className="quiz-stage"><div className="studio-progress"><span style={{width:`${((step + 1) / quizPrompts.length) * 100}%`}}/></div><small>Moment {step + 1} of {quizPrompts.length}</small><h2>{quizPrompts[step]}</h2><div className="studio-choices">{quizChoices[step].map((choice) => <button disabled={savingResult} className={answers[step] === choice ? "selected" : ""} key={choice} onClick={() => void answer(choice)}>{choice}<span>→</span></button>)}</div>{savingResult && <p role="status">Saving your validated result…</p>}{resultError && <p className="form-error" role="alert">{resultError}</p>}<p>No perfect answer. Choose what feels most true today.</p></div> : <div className="result-stage"><span>Your server-validated read · not a diagnosis</span><h2>{repairRead.title}</h2><blockquote>“{repairRead.learning}”</blockquote><div className="result-spectrum"><div><span>Reassurance</span><b style={{width:`${repairRead.spectrum.reassurance}%`}}/></div><div><span>Resolution</span><b style={{width:`${repairRead.spectrum.resolution}%`}}/></div><div><span>Space</span><b style={{width:`${repairRead.spectrum.space}%`}}/></div></div><div className="result-actions"><button className="primary-action" onClick={() => { setSelected(null); onEcho(3); }}>Review this with Echo →</button><button onClick={() => {setStep(0);setFinished(false);setAnswers([]);setAcceptedResult(null);}}>Replay</button></div><small>The server validated all three choices before saving this result. It enters your Mirror only after you and Echo clarify it together.</small></div>}
+         </div>
+       </div>}
+     </section>
+@@ -2587,23 +2542,51 @@ export default function Home() {
+   };
+ 
+   const destination = () => {
+-    if (view === "play") return <PlayView stage={stage} repairAnswers={repairAnswers} repairCompleted={repairCompleted} autoOpenRepair={stage === 2 && !repairCompleted} onRepairComplete={(answers, learning) => {
+-      setRepairAnswers(answers);
+-      setRepairCompleted(true);
+-      if (!mirrorConfirmed) {
+-        setMirrorLearning(learning);
+-        setMirrorRejected(false);
++    if (view === "play") return <PlayView stage={stage} repairAnswers={repairAnswers} repairCompleted={repairCompleted} autoOpenRepair={stage === 2 && !repairCompleted} onRepairComplete={async (answers) => {
++      const response = await fetchWithDeadline("/api/play/repair-language", {
++        method: "POST",
++        headers: { "Content-Type": "application/json" },
++        body: JSON.stringify({
++          operationId: newOperationId(),
++          answers,
++          revision: journeyRevisionRef.current,
++          accountEmail: session?.user?.email,
++        }),
++      }, 10_000);
++      const payload = (await response.json()) as {
++        state?: SavedJourney;
++        result?: RepairLanguageResult & { answers: string[] };
++        conflict?: boolean;
++        error?: string;
++      };
++      if (!response.ok || !payload.state || !payload.result) {
++        if (response.status === 401) markSessionExpired();
++        if (payload.conflict) {
++          setAccountOutdated(true);
++          setJourneySaveState("outdated");
++        }
++        throw new Error(payload.error || "Your Play result could not be saved.");
+       }
++      journeyRevisionRef.current = payload.state.revision;
++      setRepairAnswers(payload.result.answers);
++      setRepairCompleted(true);
++      setMirrorLearning(payload.result.learning);
++      setMirrorRejected(false);
++      setMirrorConfirmed(false);
++      setMirrorMatchingUse(false);
++      setMatchingPilotJoined(false);
++      setCandidacy((current) => current ? { ...current, status: "paused", pausedAt: payload.state?.updatedAt ?? new Date().toISOString() } : current);
+       setEchoThreads((threads) => ({
+         ...threads,
+         confirm: [
+           ...(threads.confirm ?? []),
+           { who: "you", text: "I finished Repair Language. Show me what it may mean without turning it into a label." },
+-          { who: "echo", text: `My proposed learning: ${learning}` },
++          { who: "echo", text: `My proposed learning: ${payload.result?.learning}` },
+           { who: "echo", text: "This is still a draft. You can correct it, confirm it, or keep it out of matching." },
+         ].slice(-12) as EchoMessage[],
+       }));
+-      if (stage < 2) changeStage(2);
++      if (stage < 3) changeStage(3);
++      return payload.result;
+     }} onEcho={openEcho}/>;
+     if (view === "matches") return <MatchesView phase={matchPhase} setPhase={setMatchPhase} mirrorConfirmed={mirrorConfirmed} mirrorMatchingUse={mirrorMatchingUse} mirrorLearning={mirrorLearning} matchingPilotJoined={matchingPilotJoined} candidacy={candidacy} onSaveCandidacy={saveCandidacy} onPausePilot={pausePilot} openMirror={() => setView("mirror")}/>;
+     if (view === "mirror") return <MirrorView stage={stage} firstIntent={firstIntent} repairAnswers={repairAnswers} repairCompleted={repairCompleted} mirrorLearning={mirrorLearning} mirrorRejected={mirrorRejected} mirrorConfirmed={mirrorConfirmed} mirrorMatchingUse={mirrorMatchingUse} onMirrorLearning={(learning) => applyMatchingControl("rewrite-learning", learning)} onMirrorRejected={async (rejected) => {
+diff --git a/app/repair-language-policy.ts b/app/repair-language-policy.ts
+new file mode 100644
+index 0000000..ddb0a5d
+--- /dev/null
++++ b/app/repair-language-policy.ts
+@@ -0,0 +1,114 @@
++export const repairLanguagePrompts = [
++  "After tension, what helps you believe the relationship is still safe?",
++  "If someone needs space, what makes that space feel caring rather than distancing?",
++  "What matters most when you reconnect?",
++] as const;
++
++export const repairLanguageChoices = [
++  [
++    "A quick ‘we’re okay’ before taking space",
++    "Talking until we find the full resolution",
++    "Physical reassurance before words",
++  ],
++  [
++    "A clear time to come back together",
++    "A warm message while we cool down",
++    "Freedom to return when ready",
++  ],
++  [
++    "Knowing we understood each other",
++    "Hearing a genuine apology",
++    "Feeling like we are a team again",
++  ],
++] as const;
++
++export type RepairLanguageResult = {
++  title: string;
++  learning: string;
++  spectrum: {
++    reassurance: number;
++    resolution: number;
++    space: number;
++  };
++};
++
++export function validateRepairLanguageAnswers(value: unknown) {
++  if (!Array.isArray(value) || value.length !== repairLanguagePrompts.length) {
++    return {
++      ok: false as const,
++      error: "Complete all three Repair Language moments before saving a result.",
++    };
++  }
++
++  const answers = value.map((answer) =>
++    typeof answer === "string" ? answer.trim() : "",
++  );
++  const valid = answers.every((answer, index) =>
++    repairLanguageChoices[index].some((choice) => choice === answer),
++  );
++  if (!valid) {
++    return {
++      ok: false as const,
++      error: "Choose one of the offered answers for each Repair Language moment.",
++    };
++  }
++
++  return { ok: true as const, answers };
++}
++
++export function getRepairLanguageResult(
++  answers: readonly string[],
++): RepairLanguageResult {
++  const scores = { reassurance: 0, resolution: 0, space: 0 };
++
++  for (const answer of answers) {
++    if (
++      answer.includes("we’re okay") ||
++      answer.includes("Physical reassurance") ||
++      answer.includes("warm message") ||
++      answer.includes("genuine apology") ||
++      answer.includes("team again")
++    ) {
++      scores.reassurance += 1;
++    } else if (
++      answer.includes("full resolution") ||
++      answer.includes("understood each other")
++    ) {
++      scores.resolution += 1;
++    } else {
++      scores.space += 1;
++    }
++  }
++
++  const strongest = (Object.entries(scores) as Array<
++    [keyof typeof scores, number]
++  >).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "reassurance";
++  const reads = {
++    reassurance: {
++      title: "Reassurance before resolution",
++      learning:
++        "After conflict, I need a clear signal that we are still on the same team before either of us takes space.",
++    },
++    resolution: {
++      title: "Understanding creates safety",
++      learning:
++        "After conflict, I feel safest when we stay with the conversation long enough to understand what happened—even if agreement takes longer.",
++    },
++    space: {
++      title: "Space needs a clear return",
++      learning:
++        "After conflict, space can feel caring to me when we name how and when we will come back together.",
++    },
++  };
++  const percentage = (score: number) =>
++    answers.length ? Math.round(34 + (score / answers.length) * 66) : 34;
++
++  return {
++    ...reads[strongest],
++    spectrum: {
++      reassurance: percentage(scores.reassurance),
++      resolution: percentage(scores.resolution),
++      space: percentage(scores.space),
++    },
++  };
++}
+diff --git a/tests/rendered-html.test.mjs b/tests/rendered-html.test.mjs
+index 0812318..be7acd4 100644
+--- a/tests/rendered-html.test.mjs
++++ b/tests/rendered-html.test.mjs
+@@ -131,6 +131,57 @@ async function loadMatchingControlPolicy() {
+   );
+ }
+ 
++async function loadRepairLanguagePolicy() {
++  const source = await readFile(
++    new URL("../app/repair-language-policy.ts", import.meta.url),
++    "utf8",
++  );
++  const compiled = ts.transpileModule(source, {
++    compilerOptions: {
++      module: ts.ModuleKind.ESNext,
++      target: ts.ScriptTarget.ES2022,
++    },
++  }).outputText;
++
++  return import(
++    `data:text/javascript,${encodeURIComponent(compiled)}#${Date.now()}`
++  );
++}
++
++test("validates Repair Language evidence on the server before progress", async () => {
++  const policy = await loadRepairLanguagePolicy();
++  const validAnswers = policy.repairLanguageChoices.map(
++    (choices) => choices[0],
++  );
++  assert.equal(policy.validateRepairLanguageAnswers(validAnswers).ok, true);
++  assert.equal(policy.validateRepairLanguageAnswers(validAnswers.slice(0, 2)).ok, false);
++  assert.equal(
++    policy.validateRepairLanguageAnswers([
++      validAnswers[0],
++      "invented browser answer",
++      validAnswers[2],
++    ]).ok,
++    false,
++  );
++
++  const [pageSource, routeSource, journeySource] = await Promise.all([
++    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
++    readFile(
++      new URL("../app/api/play/repair-language/route.ts", import.meta.url),
++      "utf8",
++    ),
++    readFile(new URL("../app/api/journey/route.ts", import.meta.url), "utf8"),
++  ]);
++  assert.match(pageSource, /fetchWithDeadline\("\/api\/play\/repair-language"/);
++  assert.match(pageSource, /Your server-validated read/);
++  assert.match(routeSource, /validateRepairLanguageAnswers/);
++  assert.match(routeSource, /repairCompleted: true/);
++  assert.match(routeSource, /mirrorConfirmed: false/);
++  assert.match(routeSource, /status: "paused"/);
++  assert.match(journeySource, /const repairCompleted = existingJourney\?\.repairCompleted/);
++  assert.doesNotMatch(journeySource, /repairCompleted: Boolean\(payload\.repairCompleted\)/);
++});
++
+ test("requires real evidence before granting matching consent", async () => {
+   const { applyMatchingControlTransition } =
+     await loadMatchingControlPolicy();
