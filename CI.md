@@ -1,27 +1,37 @@
 # CI Gate
 
-This project uses Replit's validation system as its blocking CI gate. All checks
-below must pass before changes can be merged.
+This project uses GitHub Actions as its repository CI gate. The workflow at
+`.github/workflows/ci.yml` runs on pull requests, pushes to `main`, and manual
+dispatches. All checks below must pass before changes can be merged.
 
-| Validation name | Command                                | Blocking |
-|-----------------|----------------------------------------|----------|
-| `typecheck`     | `pnpm run typecheck`                   | yes      |
-| `api-tests`     | `pnpm --filter @workspace/api-server run test` | yes      |
-| `lint`          | `pnpm run lint`                        | yes      |
+| Validation name | Command                                                                   | Blocking |
+| --------------- | ------------------------------------------------------------------------- | -------- |
+| `typecheck`     | `pnpm run typecheck`                                                      | yes      |
+| `api-tests`     | `pnpm --filter @workspace/api-server run test`                            | yes      |
+| `lint`          | `pnpm run lint`                                                           | yes      |
+| `schema-drift`  | `pnpm --filter @workspace/db run check-schema-drift`                      | yes      |
+| `voice-lint`    | `pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts` | yes      |
+| `web-tests`     | `pnpm --filter @workspace/nldc run test`                                  | yes      |
 
-A red `typecheck`, `api-tests`, or `lint` blocks merges.
+Any red validation blocks merges.
 
-## CI off Replit (Bitbucket Pipelines)
+## GitHub Actions
 
-The table above is the blocking gate while development happens on Replit,
-enforced by Replit's validation system. When the repo is hosted on Bitbucket,
-the same commands run from `bitbucket-pipelines.yml` at the repo root, on every
-pull request and on pushes to `main`. That pipeline runs the three blocking
-gates (`typecheck`, `api-tests`, `lint`) plus `schema-drift`, the `voice-lint`
-file, and the full `nldc` web test suite in parallel. The Playwright e2e suite
-is a manually triggered `custom: e2e` pipeline (see `MIGRATION.md` section 6.9).
-If the command set changes, update this file, `bitbucket-pipelines.yml`, and the
-registered Replit validations together.
+The GitHub workflow groups the gate into two jobs:
+
+- `Typecheck, lint, schema, voice, and web` installs once and runs the canonical
+  full typecheck, root lint, schema drift, voice lint, and nldc web tests.
+- `API tests` uses an ephemeral Postgres 16 service, pushes the current schema,
+  and runs the API suite.
+
+The Playwright e2e suite remains manual until its Replit-only reverse-proxy
+assumption is removed. See `MIGRATION.md` section 6.9.
+
+## Bitbucket Pipelines mirror
+
+`bitbucket-pipelines.yml` mirrors the same command set for compatibility with the
+older hosting plan. If the command set changes, update this file, the GitHub
+workflow, and the Bitbucket mirror together.
 
 ## Running locally
 
@@ -29,6 +39,9 @@ registered Replit validations together.
 pnpm run typecheck
 pnpm --filter @workspace/api-server run test
 pnpm run lint
+pnpm --filter @workspace/db run check-schema-drift
+pnpm --filter @workspace/nldc exec vitest run src/lib/voiceLint.test.ts
+pnpm --filter @workspace/nldc run test
 ```
 
 `pnpm run typecheck` is the canonical full check: it first builds the composite
@@ -56,14 +69,14 @@ real correctness signals (parse errors, React hook misuse, `no-var`,
 stricter over time, flip rules on in `eslint.config.mjs` and clean up the
 fallout in the same task.
 
-## How the validations are registered
+## Legacy Replit registrations
 
-The three validations above are registered with the Replit validation system
-(see `.local/skills/validation/SKILL.md`). They are upserted by name:
+The three original validations may still be registered with the Replit
+validation system (see `.local/skills/validation/SKILL.md`):
 
 - `typecheck` -> `pnpm run typecheck`
 - `api-tests` -> `pnpm --filter @workspace/api-server run test`
 - `lint` -> `pnpm run lint`
 
-This file is the source-of-truth documentation for the gate. If the registered
-commands ever drift from what's listed here, update both.
+They are no longer the repository gate. This file and `.github/workflows/ci.yml`
+are the source of truth.
