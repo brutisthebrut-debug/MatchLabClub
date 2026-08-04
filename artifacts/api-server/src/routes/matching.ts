@@ -56,19 +56,25 @@ import {
   type BrainControls,
 } from "../lib/brainConfig";
 import { recordJourneyEvent } from "../lib/journeyEvents";
-import {
-  rankCandidates,
-  type MatchCandidate,
-} from "../lib/matchEngine";
+import { rankCandidates, type MatchCandidate } from "../lib/matchEngine";
 import { ensureConnection, notifyNewMatch } from "../lib/matchConnections";
+import {
+  resolveCommercialPlan,
+  serializePlanAssignment,
+} from "../lib/commercialPlans";
 
-async function loadUserTier(userId: string): Promise<string | null> {
+async function loadUserPlanAssignment(userId: string) {
   const rows = await db
-    .select({ tier: usersTable.tier })
+    .select({ tier: usersTable.tier, grantedAt: usersTable.tierGrantedAt })
     .from(usersTable)
     .where(eq(usersTable.id, userId))
     .limit(1);
-  return rows[0]?.tier ?? null;
+  const row = rows[0];
+  return {
+    storedTier: row?.tier ?? null,
+    grantedAt: row?.grantedAt ?? null,
+    ...resolveCommercialPlan(row?.tier),
+  };
 }
 
 const router: IRouter = Router();
@@ -385,7 +391,10 @@ export interface ReweightingLane {
 export async function computeReweightingDetail(
   userId: string,
   controls: BrainControls,
-): Promise<{ observation: ReweightingObservation; leanLanes: ReweightingLane[] }> {
+): Promise<{
+  observation: ReweightingObservation;
+  leanLanes: ReweightingLane[];
+}> {
   const breakdown = await readinessBreakdownFor(userId, controls);
   const outcome = await computeOutcomeInsightForUser(userId);
   const observation = evaluateReweighting(
@@ -592,7 +601,10 @@ async function loadBenchmarks(userId: string): Promise<BenchmarksResult> {
 
   // Latest goal per user (most recent generated audit), so we can bucket the
   // whole population by normalized goal in JS.
-  const goalByUser = await db.execute<{ user_id: string; dating_goal: string }>(sql`
+  const goalByUser = await db.execute<{
+    user_id: string;
+    dating_goal: string;
+  }>(sql`
     SELECT DISTINCT ON (user_id) user_id, dating_goal
     FROM audits
     WHERE report_generated_at IS NOT NULL AND deleted_at IS NULL
@@ -751,16 +763,23 @@ router.get("/me/matching/state", async (req, res): Promise<void> => {
     return;
   }
   const userId = req.user.id;
-  const [prefs, membership, readiness, total, tier, outcomeInsight, controls] =
-    await Promise.all([
-      loadPreferences(userId),
-      loadMembership(userId),
-      computeReadiness(userId),
-      totalPoolCount(),
-      loadUserTier(userId),
-      computeOutcomeInsightForUser(userId),
-      loadBrainControls(),
-    ]);
+  const [
+    prefs,
+    membership,
+    readiness,
+    total,
+    assignment,
+    outcomeInsight,
+    controls,
+  ] = await Promise.all([
+    loadPreferences(userId),
+    loadMembership(userId),
+    computeReadiness(userId),
+    totalPoolCount(),
+    loadUserPlanAssignment(userId),
+    computeOutcomeInsightForUser(userId),
+    loadBrainControls(),
+  ]);
   const readinessLearning = buildReadinessLearning(
     controls,
     readiness,
@@ -787,6 +806,14 @@ router.get("/me/matching/state", async (req, res): Promise<void> => {
 
   const threshold = await readinessThreshold();
   const eligible = readiness.score >= threshold;
+  const plan = serializePlanAssignment(
+    assignment.storedTier,
+    assignment.grantedAt,
+  );
+  const searchActive =
+    plan.canActivateSearch &&
+    membership != null &&
+    ["building", "ready", "concierge_only"].includes(membership.status);
 
   // Persist today's score so the trend line has fresh data, then read the
   // (now-current) history back. A failed snapshot must not break the state read.
@@ -817,7 +844,9 @@ router.get("/me/matching/state", async (req, res): Promise<void> => {
     preferences: prefs ? serializePreferences(prefs) : null,
     poolStatus: membership?.status ?? "off",
     revealConsent: membership?.revealConsent ?? false,
-    tier,
+    tier: plan.key,
+    plan,
+    searchActive,
     readiness,
     eligible,
     readinessThreshold: threshold,
@@ -926,24 +955,26 @@ router.put("/me/matching/pool-membership", async (req, res): Promise<void> => {
       return;
     }
   }
-  const [existing, tier] = await Promise.all([
+  const [existing, assignment] = await Promise.all([
     loadMembership(userId),
-    loadUserTier(userId),
+    loadUserPlanAssignment(userId),
   ]);
   let nextStatus: "off" | "building" | "ready" | "paused" | "concierge_only" =
     requested;
-  if (nextStatus === "building" && tier === "wingman") {
+  if (nextStatus === "building" && assignment.plan.entitlements.humanGuidance) {
     nextStatus = "concierge_only";
     req.log.info(
       { userId },
-      "Wingman tier opted into pool, routed to concierge_only for founder review",
+      "Guided member opted into pool, routed to concierge_only for founder review",
     );
   }
   const pausedReason =
-    nextStatus === "paused" ? parsed.data.pausedReason ?? null : null;
+    nextStatus === "paused" ? (parsed.data.pausedReason ?? null) : null;
   const now = new Date();
   const readyAt =
-    nextStatus === "ready" ? existing?.readyAt ?? now : existing?.readyAt ?? null;
+    nextStatus === "ready"
+      ? (existing?.readyAt ?? now)
+      : (existing?.readyAt ?? null);
   const [row] = await db
     .insert(matchPoolMembershipTable)
     .values({
@@ -951,7 +982,7 @@ router.put("/me/matching/pool-membership", async (req, res): Promise<void> => {
       status: nextStatus,
       readyAt,
       pausedReason,
-      tier,
+      tier: assignment.plan.key,
       updatedAt: now,
     })
     .onConflictDoUpdate({
@@ -1061,7 +1092,11 @@ function coerceExternalReadAi(value: unknown): ExternalReadAiOutput | null {
   const score = Math.max(0, Math.min(100, Math.round(rawScore)));
   const toStringArray = (x: unknown): string[] =>
     Array.isArray(x)
-      ? x.filter((s): s is string => typeof s === "string" && s.trim().length > 0).slice(0, 6)
+      ? x
+          .filter(
+            (s): s is string => typeof s === "string" && s.trim().length > 0,
+          )
+          .slice(0, 6)
       : [];
   const summary = typeof v.summary === "string" ? v.summary.trim() : "";
   if (summary.length === 0) return null;
@@ -1189,7 +1224,11 @@ router.post("/me/matching/external-read", async (req, res): Promise<void> => {
   void recordJourneyEvent({
     eventType: "match_step",
     userId,
-    props: { step: "proposal_created", source: "external_paste", score: final.score },
+    props: {
+      step: "proposal_created",
+      source: "external_paste",
+      score: final.score,
+    },
   });
 
   res.json(final);
@@ -1670,9 +1709,7 @@ async function buildMatchCandidate(
 // direction (they blocked the other, or the other blocked them). Matching is a
 // hard, symmetric gate: a block from either side removes the pair from the
 // candidate pool entirely, so neither person can ever be proposed the other.
-export async function loadBlockedUserIds(
-  userId: string,
-): Promise<Set<string>> {
+export async function loadBlockedUserIds(userId: string): Promise<Set<string>> {
   const rows = await db
     .select({
       blockerUserId: userBlocksTable.blockerUserId,
@@ -1700,6 +1737,9 @@ export async function loadBlockedUserIds(
 export async function mintInternalProposalsForMember(
   userId: string,
 ): Promise<number> {
+  const assignment = await loadUserPlanAssignment(userId);
+  if (!assignment.plan.entitlements.activeMatching) return 0;
+
   // Eligible counterparts are other members actively in the pool. concierge_only
   // (Wingman, founder-curated) is intentionally left out of automated pairing.
   const [memberRows, blockedIds] = await Promise.all([
@@ -1713,8 +1753,7 @@ export async function mintInternalProposalsForMember(
   const otherUserIds = memberRows
     .map((r) => r.userId)
     .filter(
-      (id): id is string =>
-        Boolean(id) && id !== userId && !blockedIds.has(id),
+      (id): id is string => Boolean(id) && id !== userId && !blockedIds.has(id),
     )
     .slice(0, MAX_DISCOVER_CANDIDATES);
 
@@ -1815,6 +1854,18 @@ router.post("/me/matching/discover", async (req, res): Promise<void> => {
     return;
   }
   const userId = req.user.id;
+
+  const assignment = await loadUserPlanAssignment(userId);
+  if (!assignment.plan.entitlements.activeMatching) {
+    res.status(403).json({
+      error:
+        "Active search is included with Match or Guided. You can still build your profile and opt into the candidate pool on Member or Insight.",
+      code: "active_matching_plan_required",
+      requiredPlan: "match",
+      currentPlan: assignment.plan.key,
+    });
+    return;
+  }
 
   const membership = await loadMembership(userId);
   const inPool =
