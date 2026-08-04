@@ -111,14 +111,20 @@ Status: **In progress in `agent/echo-shell-phase-0`**
 - Align landing promises and signed-in language around the same journey.
   **Complete in code.** Public copy now separates readiness from availability and
   ends at the signed-in Today destination.
+- Remove numeric readiness from primary member-facing surfaces and avoid any
+  language that frames access, disclosure, or completion as earning a person.
+  **Complete in code after visual checkpoint QA.** Landing and Today now use
+  qualitative evidence states, and commercial copy separates paid depth from
+  worth, priority, or entitlement.
 - Tune Echo's voice with a dedicated copy pass. **Initial pass complete in code.**
   Echo states uncertainty and challenges without cruelty or false intimacy.
 - Run Daniel + Lissa acceptance review against the canonical build.
 - Capture pilot evidence and the next decision before expanding scope.
 
 Repository validation is now executable through `.github/workflows/ci.yml` on
-every pull request and push to `main`. Human acceptance and pilot evidence remain
-open even when CI is green.
+every pull request and push to `main`. The same workflow packages the exact web
+build used for the canonical visual checkpoint. Human acceptance and pilot
+evidence remain open even when CI is green.
 
 ## Definition of done
 
