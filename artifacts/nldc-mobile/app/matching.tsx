@@ -815,8 +815,8 @@ export default function MatchingScreen() {
           <Text style={[styles.bodyText, { color: colors.mutedForeground }]}>
             Off by default. Turn it on and we hold your spot in the pool. Status
             today: {poolStatus}.
-            {tier === "wingman"
-              ? " Your Wingman tier routes you to the concierge queue."
+            {tier === "guided"
+              ? " Your Guided plan routes you to the human-review queue."
               : ""}
           </Text>
           {poolLocked ? (
