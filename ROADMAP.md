@@ -96,8 +96,10 @@ Status: **In progress in `agent/echo-shell-phase-0`**
 - My MatchLab: **Complete.** Profile model, data sources, permissions, and
   readiness evidence now share one decision view; the detailed legacy profile
   workspace remains reachable at `/me/details`.
-- Journey: durable history of meaningful changes, introductions, dates, and
-  learning afterward.
+- Journey: **Complete.** The primary destination now renders durable server-backed
+  history of meaningful signals, introductions, dates, and learning afterward.
+  The client-local experimental timeline remains reachable at
+  `/progress/timeline` but no longer stands in for member history.
 - Play: a catalog of bounded, signal-producing activities with clear outcomes.
 
 ### Batch 4 — Landing-to-app continuity and acceptance
