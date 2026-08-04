@@ -91,7 +91,7 @@ Status: **Complete in `agent/echo-shell-phase-0`**
 
 ### Batch 3 — My MatchLab, Journey, and Play
 
-Status: **In progress in `agent/echo-shell-phase-0`**
+Status: **Complete in `agent/echo-shell-phase-0`**
 
 - My MatchLab: **Complete.** Profile model, data sources, permissions, and
   readiness evidence now share one decision view; the detailed legacy profile
@@ -100,7 +100,9 @@ Status: **In progress in `agent/echo-shell-phase-0`**
   history of meaningful signals, introductions, dates, and learning afterward.
   The client-local experimental timeline remains reachable at
   `/progress/timeline` but no longer stands in for member history.
-- Play: a catalog of bounded, signal-producing activities with clear outcomes.
+- Play: **Complete.** The primary destination is a catalog of bounded activities
+  that states duration, what each activity teaches Echo, and the saved outcome.
+  Existing games and quiz routes remain intact behind the catalog.
 
 ### Batch 4 — Landing-to-app continuity and acceptance
 
