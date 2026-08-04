@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 104145)
-Total output lines: 13521
-
 openapi: 3.1.0
 info:
   title: Api
@@ -5744,7 +5741,498 @@ paths:
     post:
       tags: [Matching]
       operationId: createMatchingEchoRead
-      summary: Echo's read on the signed-in user for mat…4145 tokens truncated…on/json:
+      summary: Echo's read on the signed-in user for matching
+      description: |
+        Returns Echo's read of the user grounded in their own aggregate signal
+        coverage: what the machine can see, the kind of person it would put in
+        front of them, the confidence of the read, and the gap to the pool.
+        Deterministic baseline is always-on; the Claude layer is opt-in via the
+        per-account content consent toggle and daily-capped. Only aggregate or
+        derived signal coverage is ever sent to Claude, never raw content.
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      responses:
+        "200":
+          description: Echo's read.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EchoMatchRead"
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+
+  /me/matching/proposals/{id}/response:
+    put:
+      tags: [Matching]
+      operationId: respondToMatchProposal
+      summary: Record the user's interest in a match proposal
+      description: |
+        Lets the user act on a proposal instead of hitting a dead-end preview.
+        Recording interest moves it to user_yes (routing it into the founder
+        intro queue); passing moves it to user_no. Only the proposal owner may
+        respond, and only while it is still in the proposed state.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatchProposalResponseInput"
+      responses:
+        "200":
+          description: The updated proposal.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchProposal"
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+        "404":
+          description: Proposal not found or not owned by the caller.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+
+  /storage/uploads/request-url:
+    post:
+      tags: [Storage]
+      operationId: requestUploadUrl
+      summary: Request a presigned URL for file upload
+      description: |
+        Returns a presigned GCS URL for direct upload. The client sends JSON
+        metadata here, then uploads the file directly to the returned URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadUrlRequest"
+      responses:
+        "200":
+          description: Presigned upload URL generated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadUrlResponse"
+        "400":
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Failed to generate upload URL.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /storage/public-objects/{filePath}:
+    get:
+      tags: [Storage]
+      operationId: getPublicObject
+      summary: Serve a public asset from PUBLIC_OBJECT_SEARCH_PATHS
+      description: |
+        Unconditionally public. Searches PUBLIC_OBJECT_SEARCH_PATHS for the
+        given file path.
+      parameters:
+        - name: filePath
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Relative file path within the public search paths.
+      responses:
+        "200":
+          description: Object content streamed with correct Content-Type.
+          content:
+            "*/*":
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: File not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Failed to serve public object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /storage/objects/{objectPath}:
+    get:
+      tags: [Storage]
+      operationId: getStorageObject
+      summary: Serve an object entity from PRIVATE_OBJECT_DIR
+      description: |
+        Serves private object entities uploaded via presigned URLs. The caller
+        must be signed in. A profile photo is readable by its owner, and by a
+        counterpart in an active connection once the owner turned reveal consent
+        on; otherwise the request is refused so private photos never leak by
+        path knowledge.
+      parameters:
+        - name: objectPath
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Object path within the private object dir.
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      responses:
+        "200":
+          description: Object content streamed with correct Content-Type.
+          content:
+            "*/*":
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: The caller may not read this object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Object not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Failed to serve object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /me/photos:
+    get:
+      tags: [Photos]
+      operationId: getMyPhotos
+      summary: List the signed-in user's profile photos
+      description: |
+        Returns the caller's photos ordered by ordinal, each with a relative
+        serving URL. Anonymous callers get a 401.
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      responses:
+        "200":
+          description: The caller's photos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProfilePhoto"
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+    post:
+      tags: [Photos]
+      operationId: addMyPhoto
+      summary: Record a profile photo after uploading it to storage
+      description: |
+        Persists the normalized object path returned by the storage upload flow
+        as a profile photo for the caller. Appends to the end of the order.
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddProfilePhotoInput"
+      responses:
+        "201":
+          description: The created photo.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfilePhoto"
+        "400":
+          description: Invalid input.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+        "409":
+          description: Maximum number of photos reached.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /me/photos/{id}:
+    delete:
+      tags: [Photos]
+      operationId: deleteMyPhoto
+      summary: Delete one of the signed-in user's profile photos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      responses:
+        "200":
+          description: The remaining photos after deletion.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProfilePhoto"
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+        "404":
+          description: Photo not found or not owned by the caller.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /me/photos/reorder:
+    put:
+      tags: [Photos]
+      operationId: reorderMyPhotos
+      summary: Reorder the signed-in user's profile photos
+      description: |
+        Accepts the full list of photo ids in the desired order. Photos not
+        listed keep their relative order after the listed ones.
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderPhotosInput"
+      responses:
+        "200":
+          description: The reordered photos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProfilePhoto"
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+
+  /me/matching/reveal-consent:
+    put:
+      tags: [Matching]
+      operationId: setRevealConsent
+      summary: Toggle whether the user shares their reveal card with matches
+      description: |
+        Off by default. When on, a mutual match can see the caller's curated
+        reveal card (name, photos, a few prompts). Never gates being matched.
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RevealConsentInput"
+      responses:
+        "200":
+          description: The updated consent state.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RevealConsentState"
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+
+  /me/connections:
+    get:
+      tags: [Connections]
+      operationId: getConnections
+      summary: List the signed-in user's match conversations
+      description: |
+        Returns the caller's connections, most recently active first, each with
+        the counterpart id, unread count, and a short preview of the latest
+        message.
+      parameters:
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      responses:
+        "200":
+          description: The caller's connections.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Connection"
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+
+  /me/connections/{id}:
+    get:
+      tags: [Connections]
+      operationId: getConnection
+      summary: Get one of the signed-in user's conversations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      responses:
+        "200":
+          description: The connection.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Connection"
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+        "404":
+          description: Connection not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /me/connections/{id}/profile:
+    get:
+      tags: [Connections]
+      operationId: getConnectionProfile
+      summary: The counterpart's curated reveal card for a conversation
+      description: |
+        Returns the consented view of the other member: name and photos only if
+        they turned reveal consent on, plus an aggregate readiness and values
+        summary. Never raw signals or PII.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      responses:
+        "200":
+          description: The reveal card.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RevealCard"
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorEnvelope"
+        "404":
+          description: Connection not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /me/connections/{id}/starters:
+    get:
+      tags: [Connections]
+      operationId: getConnectionStarters
+      summary: Conversation openers for a connection
+      description: |
+        Three opener suggestions for the signed-in user to send. Generated only
+        from reveal-safe aggregate fields (readiness phrasing, the aggregate match
+        summary, the compatibility score, and the counterpart's display name when
+        they turned reveal consent on). Never raw signals, lane breakdowns, or PII.
+        Hybrid: a deterministic baseline always runs, with the deep AI lane layered
+        on when the account opted in.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/AuthorizationSessionHeader"
+        - $ref: "#/components/parameters/SessionCookie"
+      responses:
+        "200":
+          description: The opener suggestions.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConnectionStarters"
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
               schema:
                 $ref: "#/components/schemas/AuthErrorEnvelope"
         "404":
