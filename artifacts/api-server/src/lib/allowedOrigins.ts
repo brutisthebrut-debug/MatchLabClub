@@ -1,6 +1,8 @@
-type OriginEnv = Pick<
-  NodeJS.ProcessEnv,
-  "APP_ORIGINS" | "REPLIT_DOMAINS" | "REPLIT_EXPO_DEV_DOMAIN"
+type OriginEnv = Partial<
+  Pick<
+    NodeJS.ProcessEnv,
+    "APP_ORIGINS" | "REPLIT_DOMAINS" | "REPLIT_EXPO_DEV_DOMAIN"
+  >
 >;
 
 function addOrigin(origins: Set<string>, raw: string): void {
