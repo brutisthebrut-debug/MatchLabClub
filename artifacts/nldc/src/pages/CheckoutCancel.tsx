@@ -28,7 +28,8 @@ export default function CheckoutCancel() {
           </h1>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">
             Your current MatchLab access is unchanged. The package should earn
-            its place by solving the next job—not by pressuring you at checkout.
+            its place by solving the next job, not by pressuring you at
+            checkout.
           </p>
           <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
             <Button asChild className="rounded-full">
