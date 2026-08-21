@@ -383,6 +383,37 @@ Status: **Complete in code; validated by CI run #115. Connected-runtime evidence
   drift, voice lint, web tests/build, artifact packaging, and the complete
   Postgres-backed API suite.
 
+#### Batch 8B — Play record-to-Journey integration
+
+Status: **Complete in code; validated by CI run #117. Connected-runtime evidence remains pending.**
+
+- Keep the bounded six-activity Play catalog unchanged. This batch integrates the
+  selected member jobs; it does not restore retired games or add navigation.
+- Read Daily Spark, This or That, Scenario Reels, Would You Rather, Quiz Lab, and
+  Time Capsule history from their durable server records into the Journey
+  timeline, with links back to the canonical activity.
+- Record direct Play saves as Journey signal events so weekly summaries and the
+  visible record agree that a saved activity happened.
+- Count Daily Spark, Green/Red Flags, and Care Dialect activity in the shared
+  consistency-day source of truth; their profile contribution no longer moves
+  without the corresponding day being recognized.
+- Keep answer content out of generic Journey event metadata. The member can open
+  the owning activity to review the detailed record.
+- Add a focused six-family history regression. CI run #117 passed full monorepo
+  typecheck, lint, schema drift, voice lint, web tests/build, artifact packaging,
+  and the complete Postgres-backed API suite.
+- Connected signup/claim and cross-device Journey proof remain open. Play-table
+  export/deletion parity remains a blocking Batch 9 privacy item.
+
+##### Roadmap delta — 2026-08-21 (Batch 8B)
+
+| Decision | Before | After | Why |
+| --- | --- | --- | --- |
+| Play completion | A route and signal count could be mistaken for a complete activity integration | Every activity in the bounded catalog now has a durable record represented in Journey | Members need to see what became part of their MatchLab history |
+| Consistency | Daily Spark, Flags, and Care Dialect could move profile evidence without counting the activity day | Those sources now share the same activity-day truth as the other selected games | The product should not contradict itself about whether the member showed up |
+| Scope | Audit could be misread as permission to restore old games | Catalog and navigation remain unchanged | Consolidation, not route parity, remains binding |
+| Remaining proof | Repository health could be read as full completion | Hosted account claim, cross-device history, privacy export/deletion, and E2E evidence stay open | Code truth and launch evidence are separate gates |
+
 ### Batch 9 — Production safety and launch operations
 
 Status: **Pending; required before an unrestricted full-beta launch**
