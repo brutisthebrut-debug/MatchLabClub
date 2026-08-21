@@ -206,10 +206,32 @@ function ScrollToTop() {
   return null;
 }
 
+export function RouteLoadingFallback() {
+  return (
+    <div
+      className="mesh-bg flex min-h-screen items-center justify-center px-4"
+      data-testid="route-loading"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="glass-strong w-full max-w-md rounded-[2rem] p-7 text-center">
+        <div className="mx-auto h-10 w-10 animate-pulse rounded-full bg-gradient-to-br from-[#3D35CC] to-[#FF2D9B]" />
+        <p className="mt-4 text-sm font-semibold text-foreground">
+          Echo is getting this ready.
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Your account data will appear when the page is ready. No placeholder
+          data will take its place.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function Router() {
   usePageTracking();
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<RouteLoadingFallback />}>
       <Switch>
         <Route path="/" component={Landing} />
         <Route path="/today" component={Today} />
