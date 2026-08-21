@@ -544,7 +544,7 @@ session.
 
 ## Batch 8D — Echo-confirmed learning and loading integrity
 
-Status: **Implementation complete; final repository validation pending**
+Status: **Complete and green**
 
 Goal: consolidate the existing confirm-before-write inference capability into
 Echo's primary flow and ensure signed-in navigation never substitutes a blank
@@ -565,6 +565,11 @@ route or sample account data while real data is loading.
   instead of temporarily replacing the whole application with a blank screen.
 - The landing page remains intentionally untouched. Its final alignment is
   scheduled after the signed-in backend-connected journey is accepted.
+
+Validation evidence: [CI run #128](https://github.com/brutisthebrut-debug/MatchLabClub/actions/runs/32522225255)
+passed full monorepo typecheck, lint, schema drift, Echo voice lint, every web
+test, the production web build/artifact gate, and the complete Postgres-backed
+API suite.
 
 ### Signed-in loading audit
 
