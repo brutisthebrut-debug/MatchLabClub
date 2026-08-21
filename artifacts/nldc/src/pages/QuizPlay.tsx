@@ -97,7 +97,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
     query: { queryKey: getGetMatchingStateQueryKey(), enabled: isAuthenticated },
   });
   // The single highest-leverage signal to feed next, surfaced on the result so
-  // every quiz ends by pointing at the next thing that moves readiness.
+  // every quiz ends by pointing at the next thing that deepens the picture.
   const nextSignal = matchingState.data?.nextActions?.[0] ?? null;
   const [answers, setAnswers] = useState<number[]>(() =>
     quiz ? Array(quiz.questions.length).fill(-1) : [],
@@ -549,7 +549,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                     ) : (
                       <>
                         <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                          Open your Mirror to see the full picture I have of you, and the single next thing that moves your readiness.
+                          Open your Mirror to see the full picture I have of you, and the single next thing that would deepen it.
                         </p>
                         <Button asChild variant="outline" className="rounded-full font-bold border-foreground/20 hover:bg-foreground/5">
                           <Link href="/your-mirror">See your Mirror <ArrowRight className="ml-2 w-4 h-4" /></Link>
@@ -637,7 +637,7 @@ export default function QuizPlay({ slug }: QuizPlayProps) {
                     }
                     steps={[
                       { label: "See your Mirror", href: "/your-mirror", desc: "See the full picture I have of you." },
-                      { label: "Map your wellness", href: "/wellness", desc: "Answer a few more questions to raise your readiness." },
+                      { label: "Map your wellness", href: "/wellness", desc: "Help Echo understand another part of how you connect." },
                       { label: "Take another quiz", href: "/quizzes", desc: "Each one adds a new angle on you." },
                     ]}
                   />
