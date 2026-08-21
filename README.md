@@ -109,12 +109,12 @@ through a deployed browser journey.
 Quiz integration illustrates the distinction. The canonical Quiz Lab stores a
 derived archetype and informed dimensions on the server, deduplicates retakes,
 survives anonymous account claim, records Journey activity, and contributes to
-the Mirror/matching signal registry. Care Dialect is server-scored. The older
-standalone `/quiz` remains browser-only, however, and the visible Quiz Lab badge
-history is still read from browser storage. Full beta therefore remains gated on
-the Batch 8 capability matrix in `ROADMAP.md`, including server-backed result
-history, the legacy-quiz consolidation decision, and connected quiz-to-profile
-acceptance.
+the Mirror/matching signal registry. Care Dialect is server-scored. Batch 8A now
+uses those server rows as the visible result history, labels browser storage as a
+degraded fallback, redirects the old browser-only `/quiz` into Quiz Lab, and
+shows whether the profile write actually succeeded. Granular wellness mappings
+remain an explicit member choice. Full beta still requires connected
+signup-to-quiz-to-profile acceptance against the hosted runtime.
 
 An unrestricted full beta also requires Batch 9 production hardening. Scheduled
 jobs currently start inside each API process, production schema application still
