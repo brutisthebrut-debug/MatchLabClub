@@ -138,6 +138,18 @@ backup/restore, privacy export/deletion, and staffed safety-operation gates rema
 open. Until those are closed, any live cohort must be founder-controlled and the
 API topology explicitly constrained to one job-running instance.
 
+Echo now owns the signed-in next-action decision on the backend. A pending
+proposal, unread mutual conversation, or overdue commitment takes priority over
+profile enrichment; otherwise Echo surfaces one qualitative uncertainty that
+would help it understand the member better. Today renders that server decision
+instead of assembling a separate priority from page-level API calls. Internal
+coverage math remains available for system diagnostics, but member-facing Echo
+copy does not expose readiness points, imply that a threshold opens matching, or
+say profile work earns access to another person. The next integration gate is a
+member-confirmed learning loop: Echo proposes what it inferred, the member
+confirms or corrects it, and only then may that structured learning affect the
+profile or matching.
+
 ## Legacy capability guardrail
 
 The original route surface remains an inventory, not a second product. Matching
