@@ -150,6 +150,17 @@ member-confirmed learning loop: Echo proposes what it inferred, the member
 confirms or corrects it, and only then may that structured learning affect the
 profile or matching.
 
+Echo's confirm-before-write learning loop now reuses the existing wellness
+inference contract rather than creating a second profile-memory system. Pending
+learnings are prioritized by Echo after real relationship activity and overdue
+commitments. A member can accept the wording, correct it, or set it aside;
+only accepted or corrected wording becomes a normal wellness answer and Journey
+event. Loading, empty, and failure states remain distinct, and confirmation
+refreshes Echo, wellness, matching, and Journey together. Lazy route navigation
+also has a visible Echo loading state instead of a blank screen. The landing
+page is intentionally deferred until the connected signed-in journey is
+accepted.
+
 ## Legacy capability guardrail
 
 The original route surface remains an inventory, not a second product. Matching
