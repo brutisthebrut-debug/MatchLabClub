@@ -93,9 +93,10 @@ export default function Quizzes() {
               The Quiz Lab.
             </h1>
             <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-              Short, revealing assessments that name the pattern beneath your dating life. 
-              They quietly map to your <Link href="/wellness" className="text-[hsl(248_62%_62%)] font-medium hover:underline">wellness profile</Link> so 
-              your second-brain gets smarter the more you play.
+              Short, revealing assessments that name the pattern beneath your dating life.
+              Each derived result feeds your Mirror. When a quiz maps to deeper{" "}
+              <Link href="/wellness" className="text-[hsl(248_62%_62%)] font-medium hover:underline">wellness details</Link>,
+              you decide whether to add those details to your profile.
             </p>
           </motion.div>
 
@@ -228,7 +229,7 @@ export default function Quizzes() {
             <BookOpen className="w-8 h-8 mx-auto text-[hsl(248_62%_52%)] mb-4" />
             <p className="text-base font-medium text-foreground mb-2">Everything here is free.</p>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xl mx-auto">
-              Sign in to save results across devices and let your answers compound into your full Connection Style readout.
+              Sign in to carry results across devices and let each derived read add a new angle to your member record.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Link
