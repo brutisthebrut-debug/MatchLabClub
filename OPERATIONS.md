@@ -74,11 +74,16 @@ the canonical beta packages.
 
 | Variable                         | Purpose                                                                                       |
 | -------------------------------- | --------------------------------------------------------------------------------------------- |
+| `CONNECTED_BETA`                 | Set to `true` to enforce the complete fail-closed beta startup contract.                       |
+| `NODE_ENV`                       | Must be `production` when `CONNECTED_BETA=true`.                                               |
+| `DATABASE_URL`                   | Postgres connection used by application data, sessions, and entitlement state.                |
 | `STRIPE_SECRET_KEY`              | Server-side Stripe API key. Never expose it to Vite or the browser.                           |
 | `STRIPE_WEBHOOK_SECRET`          | Verifies the raw body received at `/api/stripe/webhook`.                                      |
 | `API_PUBLIC_URL`                 | Public API origin used for OIDC callbacks and webhook registration.                           |
 | `WEB_PUBLIC_URL`                 | Approved web origin used for post-auth, Checkout, Portal, and cancellation returns.           |
 | `OIDC_CLIENT_ID`                 | Portable OIDC client identifier; `REPL_ID` remains a migration fallback only.                 |
+| `ANON_CLAIM_HANDOFF_SECRET`      | Explicit HMAC key for cross-device anonymous claim handoff; no Replit-derived beta fallback.   |
+| `ALLOW_DEV_AUTH`                 | Leave unset in beta. Seeded test-login requires explicit `true` outside production only.       |
 | `STRIPE_WEBHOOK_URL`             | Optional exact webhook URL override.                                                          |
 | `STRIPE_PRICE_INSIGHT_MONTHLY`   | Maps the monthly Insight Stripe Price to `insight`.                                           |
 | `STRIPE_PRICE_INSIGHT_ANNUAL`    | Maps the annual Insight Stripe Price to `insight`.                                            |
@@ -89,6 +94,23 @@ the canonical beta packages.
 
 Explicit runtime credentials are the beta/production path. The Replit Stripe
 connector remains a compatibility fallback only while migration is unfinished.
+
+### Connected-beta startup preflight
+
+When `CONNECTED_BETA=true`, the API exits before listening unless all of the
+following agree:
+
+- `NODE_ENV=production`, a positive `PORT`, and a non-empty `DATABASE_URL`;
+- valid HTTPS `API_PUBLIC_URL` and `WEB_PUBLIC_URL`, with the exact web origin in
+  `APP_ORIGINS`;
+- explicit non-Replit `ISSUER_URL` and `OIDC_CLIENT_ID`;
+- secure cookies, explicit `ANON_CLAIM_HANDOFF_SECRET`, and development auth off;
+- Stripe test-mode secret and webhook keys plus all four canonical Price IDs;
+- Guided billing disabled.
+
+This is deliberately provider-neutral. It prevents a half-configured deployment
+from looking healthy, but it does not replace the live signup, Checkout, Portal
+cancellation, webhook, and payment-recovery acceptance journey.
 
 ### Entitlement policy
 
