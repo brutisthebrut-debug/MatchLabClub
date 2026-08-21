@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { desc, eq } from "drizzle-orm";
 import { db, timeCapsulesTable } from "@workspace/db";
+import { recordJourneyEvent } from "../lib/journeyEvents";
 import { CreateTimeCapsuleBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -52,6 +53,11 @@ router.post("/me/time-capsules", async (req, res): Promise<void> => {
       body: parsed.data.body,
     })
     .returning();
+  void recordJourneyEvent({
+    eventType: "signal_fed",
+    userId: req.user.id,
+    props: { source: "time-capsule" },
+  });
   res.status(201).json(serialize(row));
 });
 
