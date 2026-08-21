@@ -18,8 +18,17 @@ import { eq, sql } from "drizzle-orm";
 import {
   db,
   pool,
+  careDialectProfilesTable,
+  dailySparkAnswersTable,
   dataExportTokensTable,
+  flagSelectionsTable,
+  importedSourcesTable,
+  journeyEventsTable,
+  predictionResponsesTable,
+  scenarioResponsesTable,
+  timeCapsulesTable,
   usersTable,
+  wyrAnswersTable,
 } from "@workspace/db";
 import accountRouter from "./account";
 
@@ -30,6 +39,10 @@ function makeTestApp(): Express {
     const noop = () => undefined;
     // @ts-expect-error — test stub for pino logger
     req.log = { info: noop, warn: noop, error: noop, debug: noop };
+    const testUserId = req.header("x-test-user-id");
+    if (testUserId) {
+      req.user = { id: testUserId } as NonNullable<Request["user"]>;
+    }
     next();
   });
   app.use("/api", accountRouter);
@@ -186,5 +199,127 @@ describe("GET /api/account/export/download/:token", () => {
           .where(eq(dataExportTokensTable.token, token));
       }
     });
+  });
+});
+
+
+describe("POST /api/me/account/delete Play privacy", () => {
+  it("purges every selected Play record and its Journey instrumentation", async () => {
+    const userId = `test-play-delete-${crypto.randomBytes(6).toString("hex")}`;
+    const email = `${userId}@example.com`;
+
+    await db.insert(usersTable).values({ id: userId, email });
+    await Promise.all([
+      db.insert(wyrAnswersTable).values({
+        userId,
+        promptId: "privacy-wyr",
+        choice: "a",
+      }),
+      db.insert(dailySparkAnswersTable).values({
+        userId,
+        questionId: "privacy-spark",
+        choice: "a",
+      }),
+      db.insert(flagSelectionsTable).values({
+        userId,
+        bringFlags: ["consistent"],
+        seekFlags: ["kind"],
+      }),
+      db.insert(scenarioResponsesTable).values({
+        userId,
+        scenarioId: "privacy-scenario",
+        optionId: "a",
+      }),
+      db.insert(predictionResponsesTable).values({
+        userId,
+        itemId: "privacy-prediction",
+        predicted: 2,
+        actual: 3,
+      }),
+      db.insert(timeCapsulesTable).values({
+        userId,
+        body: "A private future-facing note.",
+      }),
+      db.insert(careDialectProfilesTable).values({
+        userId,
+        testedGiveTop: "steadyPresence",
+        testedReceiveTop: "undividedTime",
+      }),
+      db.insert(journeyEventsTable).values({
+        userId,
+        eventType: "signal_fed",
+        props: { source: "daily-spark" },
+      }),
+      db.insert(importedSourcesTable).values({
+        userId,
+        source: "quiz",
+        status: "complete",
+        parsedSummary: { slug: "privacy-quiz" },
+      }),
+      db.insert(importedSourcesTable).values({
+        userId,
+        source: "preferences-paste",
+        status: "complete",
+        parsedSummary: { counts: { items: 2 } },
+      }),
+    ]);
+
+    const res = await request(app)
+      .post("/api/me/account/delete")
+      .set("x-test-user-id", userId)
+      .send({ confirmation: email });
+
+    expect(res.status).toBe(200);
+    expect(res.body.deleted).toBe(true);
+    expect(res.body.tables).toMatchObject({
+      wyr_answers: 1,
+      daily_spark_answers: 1,
+      flag_selections: 1,
+      scenario_responses: 1,
+      prediction_responses: 1,
+      time_capsules: 1,
+      care_dialect_profiles: 1,
+      journey_events: 1,
+      imported_sources: 2,
+      users: 1,
+    });
+
+    const remaining = await Promise.all([
+      db.select().from(wyrAnswersTable).where(eq(wyrAnswersTable.userId, userId)),
+      db
+        .select()
+        .from(dailySparkAnswersTable)
+        .where(eq(dailySparkAnswersTable.userId, userId)),
+      db
+        .select()
+        .from(flagSelectionsTable)
+        .where(eq(flagSelectionsTable.userId, userId)),
+      db
+        .select()
+        .from(scenarioResponsesTable)
+        .where(eq(scenarioResponsesTable.userId, userId)),
+      db
+        .select()
+        .from(predictionResponsesTable)
+        .where(eq(predictionResponsesTable.userId, userId)),
+      db
+        .select()
+        .from(timeCapsulesTable)
+        .where(eq(timeCapsulesTable.userId, userId)),
+      db
+        .select()
+        .from(careDialectProfilesTable)
+        .where(eq(careDialectProfilesTable.userId, userId)),
+      db
+        .select()
+        .from(journeyEventsTable)
+        .where(eq(journeyEventsTable.userId, userId)),
+      db
+        .select()
+        .from(importedSourcesTable)
+        .where(eq(importedSourcesTable.userId, userId)),
+    ]);
+
+    expect(remaining.every((rows) => rows.length === 0)).toBe(true);
   });
 });
