@@ -57,7 +57,7 @@ Repository evidence on audit head `fc341c6`:
 | Member job / platform area | Actual code truth | Status now | Blocking proof or work |
 | --- | --- | --- | --- |
 | Echo orchestration | Companion API owns one next move across proposals, unread conversations, commitments, reviewed learning, and profile uncertainty. Confirm/correct/dismiss writes use the existing wellness record. | **Code-proven; runtime pending** | Prove a hosted Echo-directed journey and verify every selected write refreshes My MatchLab/Journey across devices. |
-| Signed-in shell | Five overview destinations exist. The audit found persistent numeric readiness, reward, and competing matching-action components plus a broad legacy “Show all” drawer. Batch 8E removes those active-shell conflicts and keeps only deliberate secondary workspaces. | **Correction in progress** | CI the corrected shell; then complete the route disposition ledger instead of exposing legacy route parity. |
+| Signed-in shell | Five overview destinations exist. The audit found persistent numeric readiness, reward, and competing matching-action components plus a broad legacy “Show all” drawer. Batch 8E removed those active-shell conflicts and kept only deliberate secondary workspaces. | **Code-proven; route disposition ongoing** | Prove the corrected shell in the connected runtime; then complete the remaining route disposition ledger instead of exposing legacy route parity. |
 | My MatchLab / Mirror | Account summary, Mirror, wellness, journal, photos, imports, consent, matching, and billing contracts are durable. My MatchLab reads real account state. | **Partial** | Consolidate the selected sources into one understandable member model; prove correction, permission changes, and cross-device visibility. |
 | Quiz Lab and bounded Play | Quiz results persist/dedupe/claim and write Journey events; six selected Play families have durable records represented in Journey; selected Play deletion is tested. | **Code-proven; runtime and export pending** | Hosted signup/claim/retake proof, explicit wellness-save acceptance, and export parity. |
 | Matches | Proposal decisions, mutual yes, reveal consent, connections, messages, unmatch, report/block, reveal-safe profile, starters, and date ideas are implemented. | **Partial** | Date planned/completed and debrief are currently presentation/links, not a connection-level persisted state machine. Add that state and test the full proposal-to-learning journey. |
@@ -656,14 +656,14 @@ to-learning matrix before the final landing-page alignment.
 
 ## Batch 8E — Audit reconciliation and Echo shell truth
 
-Status: **Implementation in progress; repository validation pending**
+Status: **Code-proven; validated by CI run #133. Runtime acceptance pending**
 
 Goal: make the persistent signed-in shell obey the same Echo-owned, qualitative
 contract already applied to Today and the Echo page.
 
 - Remove the global readiness reward watcher from the active application.
 - Remove the persistent points-to-ready Match Path bar from the active shell.
-- Make the sidebar suggestion read Echo's server-owned `oneThing`, not the
+- Make the sidebar suggestion read Echo's server-owned `nextMove`, not the
   matching endpoint's independent next-action list.
 - Remove the broad legacy “Show all” tool drawer from signed-in navigation while
   retaining the small set of deliberately secondary workspaces.
@@ -675,7 +675,15 @@ contract already applied to Today and the Echo page.
 - Fix the toast test harness so accessibility metadata does not leak onto a DOM
   element and hide real React warnings.
 
-After this code correction, the next implementation slice is the persisted
+Validation evidence: [CI run #133](https://github.com/brutisthebrut-debug/MatchLabClub/actions/runs/32524782792)
+passed full monorepo typecheck, lint, schema drift, Echo voice lint, all 219 web
+tests, the production web build, and the complete Postgres-backed API suite. The
+obsolete DOM warning is gone. Recharts still emits zero-size warnings under
+jsdom; that is tracked as test-harness cleanup and is not connected-browser
+loading evidence. GitHub again rejected best-effort artifact upload because the
+repository quota remains full.
+
+After this code-proven correction, the next implementation slice is the persisted
 Matches date/debrief state machine, followed by the complete privacy registry
 and connected-runtime acceptance. The landing page remains last.
 
