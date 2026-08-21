@@ -116,6 +116,13 @@ the Batch 8 capability matrix in `ROADMAP.md`, including server-backed result
 history, the legacy-quiz consolidation decision, and connected quiz-to-profile
 acceptance.
 
+An unrestricted full beta also requires Batch 9 production hardening. Scheduled
+jobs currently start inside each API process, production schema application still
+uses `drizzle-kit push`, and the required security-header/rate-limit, tested
+backup/restore, privacy export/deletion, and staffed safety-operation gates remain
+open. Until those are closed, any live cohort must be founder-controlled and the
+API topology explicitly constrained to one job-running instance.
+
 ## Legacy capability guardrail
 
 The original route surface remains an inventory, not a second product. Matching
