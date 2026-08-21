@@ -321,6 +321,56 @@ Status: **Pending**
 - Record Daniel + Lissa acceptance evidence and select the next milestone from
   observed gaps.
 
+### Batch 8 — Full-beta feature integration and acceptance
+
+Status: **In progress in `agent/echo-shell-phase-0`; integration audit opened 2026-08-21**
+
+A green repository and a coherent connected runtime are necessary, but they do
+not prove that every feature selected for the beta works as one product. Full
+beta therefore has a feature-integration gate in addition to the controlled-beta
+runtime gate.
+
+- Maintain one authoritative beta capability matrix. Every original capability
+  remains consolidated, contextual, or parked; only capabilities explicitly
+  selected for beta must pass the full integration contract.
+- For each included member job, prove: canonical entry point, authenticated or
+  anonymous ownership as intended, durable server persistence, safe retry or
+  deduplication, account-claim behavior where applicable, visible effect in
+  My MatchLab/Mirror or Journey, intentional matching use or non-use,
+  consent/export/deletion behavior, and automated end-to-end acceptance.
+- Reconcile Play before full beta:
+  - Canonical Quiz Lab results already persist derived archetypes and dimensions,
+    dedupe retakes, survive anonymous claim, record Journey activity, and feed
+    the quiz signal lane.
+  - Wellness-mapped quiz answers currently enter the wellness profile only when
+    the member explicitly saves them; this interaction and its language require
+    connected-runtime acceptance.
+  - Care Dialect is server-scored and participates in compatibility reasoning.
+  - The legacy standalone `/quiz` remains browser-only and still points at a
+    retired offer. Consolidate its useful archetype into Quiz Lab or park the
+    route and remove the obsolete handoff; do not redesign it as a second quiz
+    system.
+  - Browser-local result badges are a convenience cache, not the source of
+    member truth. A signed-in result history must come from the server before
+    full-beta acceptance.
+- Run the same integration audit across the bounded Play games, My MatchLab
+  profile sources, Echo handoffs, Journey events, and the complete Matches
+  lifecycle. Presence of a route or a readiness counter alone does not pass.
+- Add blocking connected-runtime journeys for the chosen beta paths, including
+  signup/claim, quiz-to-profile, package checkout, search/proposal/reveal,
+  report/block, date/debrief, cancellation, and account deletion/export.
+- Complete cofounder acceptance against the same deployed build and cohort
+  policy that beta members will use.
+
+### Roadmap delta — 2026-08-21 (full-beta clarification)
+
+| Decision | Before this audit | After this audit | Why |
+| --- | --- | --- | --- |
+| Release claim | Green code plus a connected runtime could be read as the remaining beta boundary | Those gates qualify a controlled beta only; full-feature beta additionally requires Batch 8 integration evidence | CI proves contracts compile and tests pass, not that every selected member job forms a complete product journey |
+| Feature completeness | Original capability disposition was tracked at the family level | Every beta-included capability now needs a route-to-record-to-learning acceptance row | The quiz audit found a healthy canonical server path alongside a local-only legacy path and local-only result presentation |
+| Quiz truth | “Quizzes, games, results” could be read as uniformly complete | Canonical Quiz Lab and Care Dialect are partially/strongly integrated; legacy `/quiz` and server-backed result history remain open decisions | We must not tell beta members or founders that all quizzes update the profile when they do not |
+| Scope | Preserve useful original capability without route parity | Unchanged | This is a verification and consolidation gate, not permission to restore the old tool drawer |
+
 ### Roadmap note — 2026-08-04 (Batch 7B)
 
 - **Milestone change:** none. The active lane remains connected-beta foundations.
@@ -349,7 +399,13 @@ The milestone is complete when:
 
 - Only the five approved primary destinations appear in signed-in navigation.
 - Echo is persistent and provides a useful next action without overclaiming.
-- No working legacy route is orphaned.
+- Every original capability has an explicit integrated, contextual, or parked
+  disposition; no working behavior disappears silently.
+- Every capability selected for beta passes its route-to-record-to-learning
+  matrix, including persistence, ownership/claim, profile or Journey effect,
+  consent/deletion, and connected end-to-end acceptance.
+- No browser-local result or readiness counter is treated as proof of durable
+  profile integration.
 - Readiness, search activity, and market availability are visibly distinct.
 - Member, Insight, Match, and Guided are represented by one backend contract;
   Match/Guided search access is enforced server-side.
