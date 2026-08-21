@@ -296,7 +296,7 @@ Status: **Backend and approved-design UI hookup validated by CI run #91; connect
 
 ##### Connected runtime safety slice — 2026-08-21
 
-Status: **Implemented in `agent/echo-shell-phase-0`; repository validation pending**
+Status: **Complete in `agent/echo-shell-phase-0`; validated by CI run #102**
 
 - Opt a hosted beta into strict validation with `CONNECTED_BETA=true`.
 - Refuse startup when API/web origins, non-Replit OIDC, Postgres, Stripe test
@@ -338,6 +338,10 @@ Status: **Pending**
 - **Validation evidence:** CI run #91 passed full monorepo typecheck, lint,
   schema drift, voice lint, web tests/build, and the complete Postgres-backed API
   suite on the canonical package UI and typed billing contract.
+- **Runtime-safety evidence:** CI run #102 passed the complete gate on the
+  fail-closed beta preflight and explicit development-auth boundary. The web
+  production build remains blocking; its downloadable artifact is best-effort
+  when GitHub account storage is full.
 
 ## Definition of done
 
