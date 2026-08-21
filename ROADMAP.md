@@ -364,7 +364,7 @@ runtime gate.
 
 #### Batch 8A — Canonical quiz record and consolidation
 
-Status: **Implemented in `agent/echo-shell-phase-0`; final repository and connected-runtime evidence pending**
+Status: **Complete in code; validated by CI run #115. Connected-runtime evidence remains pending.**
 
 - Make the server-owned derived result the Quiz Lab history across devices;
   browser storage remains a degraded display fallback only.
@@ -379,6 +379,9 @@ Status: **Implemented in `agent/echo-shell-phase-0`; final repository and connec
   the same evidence-without-worth-scoring contract as the primary experience.
 - Add focused result-history regression tests. Connected signup → quiz → account
   claim → Mirror/Journey proof remains open until the hosted runtime exists.
+- Validation evidence: CI run #115 passed full monorepo typecheck, lint, schema
+  drift, voice lint, web tests/build, artifact packaging, and the complete
+  Postgres-backed API suite.
 
 ### Batch 9 — Production safety and launch operations
 
