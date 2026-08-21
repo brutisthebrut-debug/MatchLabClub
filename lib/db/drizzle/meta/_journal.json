@@ -288,6 +288,12 @@
       "when": 1783366711529,
       "tag": "0040_skinny_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1787353397308,
+      "tag": "0041_true_black_bird",
+      "breakpoints": true
     }
   ]
-}
