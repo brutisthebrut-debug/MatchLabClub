@@ -542,6 +542,55 @@ selected Play result must prove its structured write reaches Mirror/Journey; and
 the connected runtime must prove the Echo-directed route through a real browser
 session.
 
+## Batch 8D — Echo-confirmed learning and loading integrity
+
+Status: **Implementation complete; final repository validation pending**
+
+Goal: consolidate the existing confirm-before-write inference capability into
+Echo's primary flow and ensure signed-in navigation never substitutes a blank
+route or sample account data while real data is loading.
+
+- Echo's backend next-move policy now detects pending member learnings after
+  relationship activity and overdue commitments, but before generic profile
+  work. The member is brought back to one confirm, correct, or dismiss decision.
+- The existing wellness-inference table and endpoints remain the only write
+  path. Confirmation writes the member's accepted or corrected wording through
+  the normal wellness-answer contract; dismissal never changes profile truth.
+- Echo's learning surface now has explicit loading, error, empty, confirmation,
+  correction, dismissal, and mutation-failure states. Signed-in empty/error
+  states no longer display example inferences.
+- Confirmation refreshes Echo, wellness, matching-state, and Journey-summary
+  caches together so the same durable write is visible across the experience.
+- The router now renders a neutral Echo loading shell while lazy page code loads
+  instead of temporarily replacing the whole application with a blank screen.
+- The landing page remains intentionally untouched. Its final alignment is
+  scheduled after the signed-in backend-connected journey is accepted.
+
+### Signed-in loading audit
+
+| Destination | Account-backed inputs | Loading and failure contract |
+| --- | --- | --- |
+| Today | Echo companion and matching state | Waits for both; never builds a sample next move |
+| Matches | Matching state, proposals, and mutual connections | Waits for all three; never inserts sample people |
+| My MatchLab | Account summary, matching, AI consent, and billing | Core account failure is explicit; billing degrades in its own bounded state |
+| Journey | Durable insights, journal, dates, connections, Play records, and imports | Waits for every selected record family; never replaces history with a demo feed |
+| Play | Bounded activity catalog | Static catalog is immediately usable; each activity owns its account write state |
+| Echo | Companion, matching, notifications, and pending learnings | Companion state remains primary; tentative learnings load and fail independently without sample substitution |
+
+### Roadmap delta — 2026-08-21 (confirmed learning and loading)
+
+| Decision | Before this batch | After this batch | Why |
+| --- | --- | --- | --- |
+| Confirm-before-write | Backend and older wellness UI already supported it, but Echo did not prioritize the pending decision | Echo directs the member to the existing confirm/correct/dismiss record | Consolidation means moving a working capability into the right member job, not rebuilding it |
+| Cross-surface refresh | Confirmation refreshed wellness and matching only | Echo and Journey summary refresh from the same durable write | Every page must reflect one shared member record |
+| Empty and loading truth | Pending-inference loading could look like example content; lazy routes could be blank | Explicit loading/error/empty states and a router-level Echo loader | A signed-in member should always know whether real account data is loading, empty, or unavailable |
+| Landing page | Could be changed while backend integration was still moving | Explicitly deferred to the final alignment pass | The front door should describe the accepted product, not chase an unfinished backend |
+
+Remaining work after this batch: prove the confirm/correct journey in the
+connected runtime, extend the same reviewed-learning contract to any additional
+structured Echo inference selected for beta, and complete the route-to-record-
+to-learning matrix before the final landing-page alignment.
+
 ## Definition of done
 
 The milestone is complete when:
