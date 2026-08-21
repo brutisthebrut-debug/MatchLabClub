@@ -116,6 +116,14 @@ shows whether the profile write actually succeeded. Granular wellness mappings
 remain an explicit member choice. Full beta still requires connected
 signup-to-quiz-to-profile acceptance against the hosted runtime.
 
+Play now follows the same record rule. The bounded catalog remains Daily Spark,
+This or That, Scenario Reels, Would You Rather, Quiz Lab, and Time Capsule; no
+legacy directory was restored. Their durable server records now appear in
+Journey, direct saves update Journey summary truth, and Daily Spark plus the
+preserved Flags/Care Dialect sources count toward consistency days. Batch 8B is
+code-complete and green, but hosted claim/cross-device proof and Play-table
+privacy export/deletion parity remain open beta gates.
+
 An unrestricted full beta also requires Batch 9 production hardening. Scheduled
 jobs currently start inside each API process, production schema application still
 uses `drizzle-kit push`, and the required security-header/rate-limit, tested
