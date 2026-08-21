@@ -370,7 +370,7 @@ describe("buildReaction", () => {
     expect(r.tone).toBe("dip");
     expect(r.delta).toBeLessThan(0);
     expect(r.nowSee).toBeNull();
-    expect(r.headline).toMatch(/slip|down/i);
+    expect(r.headline).toMatch(/less certain|went quiet|fuzzy/i);
   });
 
   it("treats a flat read with no lane movement as steady and silent", () => {
