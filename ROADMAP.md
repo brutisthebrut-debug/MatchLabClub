@@ -362,6 +362,35 @@ runtime gate.
 - Complete cofounder acceptance against the same deployed build and cohort
   policy that beta members will use.
 
+### Batch 9 — Production safety and launch operations
+
+Status: **Pending; required before an unrestricted full-beta launch**
+
+A small founder-controlled cohort may run on one explicitly constrained API
+instance while this batch is completed. It must not be described or operated as
+a horizontally scaled public beta.
+
+- Move scheduled matching, proposal, Echo, import, retention, cleanup, and digest
+  work out of every API process into a single-executor worker or queue. Prove
+  idempotency and duplicate-delivery safety before adding API replicas.
+- Replace production `drizzle-kit push` and the current post-merge schema push
+  with committed, versioned migrations plus a reviewed deploy/rollback
+  procedure.
+- Add production HTTP hardening: security headers and Content Security Policy,
+  global and sensitive-route rate limits, and a small default request-body limit
+  with larger limits scoped only to real upload endpoints.
+- Configure automated Postgres backups, retention, and a restore drill. A backup
+  is not accepted until a restore has been tested.
+- Verify error monitoring, job-failure alerts, health checks, and an incident
+  response/rollback runbook on the deployed environment.
+- Reconcile account export, account deletion, admin deletion, retention jobs,
+  and consent revocation against every table that stores member data. Add a
+  blocking guard when a new first-party table is missing from export or purge.
+- Staff report/escalation handling and define response ownership before inviting
+  members outside the founder-controlled cohort.
+- Run a launch rehearsal with rollback, lost-webhook recovery, database restore,
+  duplicate-job, and safety-report scenarios.
+
 ### Roadmap delta — 2026-08-21 (full-beta clarification)
 
 | Decision | Before this audit | After this audit | Why |
@@ -420,6 +449,9 @@ The milestone is complete when:
   pass the startup preflight.
 - A connected beta proves web, API, auth/session, Postgres, and plan assignment
   together; a static artifact does not satisfy this gate.
+- Full beta runs scheduled work through a single-executor model, deploys only
+  versioned database migrations, and has verified HTTP hardening, monitoring,
+  backup/restore, privacy export/deletion, and staffed safety operations.
 - The next milestone is selected from evidence, not from feature enthusiasm.
 
 ## Explicitly parked during this milestone
